@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -11,12 +12,15 @@ def require(name: str) -> None:
 
 
 def _cookie_args(cookies: str | None) -> list[str]:
-    if not cookies:
-        return []
-    path = Path(cookies).expanduser()
-    if not path.is_file():
-        raise RuntimeError(f"YouTube cookies file not found: {path}")
-    return ["--cookies", str(path)]
+    if cookies:
+        path = Path(cookies).expanduser()
+        if not path.is_file():
+            raise RuntimeError(f"YouTube cookies file not found: {path}")
+        return ["--cookies", str(path)]
+    cookie_header = os.environ.get("SELEKYT_YOUTUBE_COOKIE")
+    if cookie_header:
+        return ["--add-header", f"Cookie: {cookie_header}"]
+    return []
 
 
 def download(url: str, out_dir: Path, cookies: str | None = None) -> tuple[Path, dict]:
@@ -29,12 +33,11 @@ def download(url: str, out_dir: Path, cookies: str | None = None) -> tuple[Path,
         info = json.loads(subprocess.check_output(info_cmd, text=True, stderr=subprocess.STDOUT))
     except subprocess.CalledProcessError as exc:
         output = exc.output or ""
-        if "Sign in to confirm you're not a bot" in output:
+        if "Sign in to confirm you're not a bot" in output or "Sign in to confirm you’re not a bot" in output:
             raise RuntimeError(
                 "YouTube blocked this Codespace request as automated traffic. "
-                "Export fresh YouTube cookies from a browser where you are signed in, "
-                "upload the cookies.txt file to the Codespace, then rerun with "
-                "--cookies /path/to/cookies.txt. Do not commit the cookies file."
+                "Set SELEKYT_YOUTUBE_COOKIE to a fresh Cookie header from your own signed-in browser, "
+                "or use --cookies /path/to/cookies.txt. Never commit credentials to the repository."
             ) from exc
         raise RuntimeError(f"yt-dlp could not read the YouTube video metadata:\n{output.strip()}") from exc
 
