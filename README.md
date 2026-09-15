@@ -2,15 +2,72 @@
 
 Local-first long-form → social video editorial engine.
 
-SelekyT accepts a YouTube URL (or local video), finds the strongest complete stories, and renders publishable Facebook cuts plus correctly reframed 9:16 Shorts/Reels with minimal subtitles.
+**Input:** one YouTube URL.
 
-## Example
+**Output:** a small ranked set of publishable Facebook cuts and 9:16 Shorts/Reels, with minimal language-preserving subtitles and subject-aware reframing.
+
+## One command
 
 ```bash
-pip install -e .
+pip install -e '.[transcription]'
 selekyt "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
-The pipeline is: download → probe → word-timestamp transcription → thought segmentation → candidate stories → editorial/virality scoring → context guard → ranking/deduplication → retention edit plan → dynamic reframing/captions → FFmpeg render → QA.
+Optional controls:
 
-Default dependencies are local/open-source: yt-dlp, FFmpeg, faster-whisper, OpenCV, and optional Ollama. Use only videos you own, have permission to edit, or are otherwise legally entitled to process and republish.
+```bash
+selekyt "URL" --model small --language te --limit 6
+```
+
+`--language te` can be used for Telugu; the same option works for other Whisper-supported languages. By default the source language is detected and preserved.
+
+## What SelekyT actually does
+
+1. Downloads a single supplied YouTube video with `yt-dlp`.
+2. Transcribes locally with faster-whisper using word timestamps and VAD.
+3. Groups transcript segments into complete thoughts rather than arbitrary 30-second windows.
+4. Scores stories for hook strength, curiosity, contrast, information density, surprise, emotional pull, payoff, context and visual potential.
+5. Applies a context/truth guard so sensational framing cannot outrun the source.
+6. Removes conservative amounts of dead-air between recognized words instead of applying a fake universal cut rate.
+7. Produces a normal 16:9 Facebook edit and a separate 9:16 vertical edit.
+8. Tracks a face when available; otherwise estimates the visually active region and moves the crop over time. This avoids the common "center crop chopped the speaker" failure.
+9. Burns minimal subtitles using a Unicode-capable font profile. Set `SELEKYT_FONT` if the machine uses a different installed font.
+10. Writes selections, transcript and report JSON alongside the MP4s.
+
+## Output
+
+```text
+out/project/
+├── source/
+├── transcript.json
+├── selections.json
+├── report.json
+├── facebook/
+│   ├── 01.mp4
+│   └── 02.mp4
+├── shorts/
+│   ├── 01.mp4
+│   └── 02.mp4
+└── captions/
+    ├── 01.ass
+    └── 02.ass
+```
+
+## Retention philosophy
+
+SelekyT does **not** claim that viewers universally want a specific cut every 2 or 3 seconds. YouTube's own analytics guidance says audience retention reveals dips, spikes, top moments and gradual declines, and recommends improving the opening and moving compelling later material earlier when appropriate. YouTube also explicitly advises editing for pacing/rhythm and using retention data to understand where viewers leave. SelekyT encodes these as editorial principles: hook quickly, remove dead air and redundant setup, preserve complete thoughts, vary visual information, and pay off the opening promise.
+
+For vertical delivery, Meta recommends native 9:16 creative with audio and important creative elements inside safe zones. SelekyT therefore treats reframing as a subject-composition problem rather than a blind center crop.
+
+## Roadmap
+
+- Local Ollama editorial pass for deeper semantic story selection.
+- Better person/object tracking for vertical reframing.
+- Motion-aware cut points and B-roll-aware visual rhythm.
+- Channel-specific retention learning from exported analytics.
+- Native SRT export and platform-specific caption presets.
+- Automated title/hook variants without fabricating claims.
+
+## Rights
+
+Use SelekyT only with videos you own, have permission to edit, or are otherwise legally entitled to process and republish. A public YouTube URL does not itself grant republication rights.
