@@ -2,14 +2,25 @@ from __future__ import annotations
 from models.core import Candidate
 
 
-def retention_intervals(c: Candidate, min_pause: float = 0.55, keep_edge: float = 0.08) -> list[tuple[float, float]]:
-    """Return source intervals after conservative pause removal.
-
-    We only remove unusually long gaps between recognized words. We do not impose a
-    universal cut-per-second target: the source's actual speech rhythm controls cuts.
-    """
+def retention_intervals(c: Candidate, min_pause: float = 0.55, keep_edge: float = 0.06) -> list[tuple[float, float]]:
+    """Conservatively remove long speech gaps while preserving natural rhythm."""
     if not c.text.strip():
         return []
-    # Candidate text is already complete; without word timestamps, keep it contiguous.
-    # The pipeline can pass word timing later as an extension without changing the API.
-    return [(c.start + keep_edge, max(c.start + keep_edge, c.end - keep_edge))]
+    words = c.words or []
+    if not words:
+        return [(c.start + keep_edge, max(c.start + keep_edge, c.end - keep_edge))]
+    intervals: list[tuple[float, float]] = []
+    cur_start = max(c.start, words[0].start - keep_edge)
+    prev_end = words[0].end
+    for w in words[1:]:
+        gap = w.start - prev_end
+        if gap >= min_pause:
+            end = min(c.end, prev_end + keep_edge)
+            if end - cur_start >= 0.35:
+                intervals.append((cur_start, end))
+            cur_start = max(c.start, w.start - keep_edge)
+        prev_end = max(prev_end, w.end)
+    end = min(c.end, prev_end + keep_edge)
+    if end - cur_start >= 0.35:
+        intervals.append((cur_start, end))
+    return intervals or [(c.start, c.end)]
