@@ -52,7 +52,11 @@ Cross-language agreement for segmentation is checked against the live
 
 This is cadence-independent: it operates on the score's own frame grid, so
 Python (energy backend, 32ms) and the Rust core (Silero/energy, 32ms) agree
-on segment boundaries for identical score arrays.
+on segment boundaries for identical score arrays. Both scorers drop trailing
+samples short of a full 512-sample chunk (Rust `score_energy`, Python
+`EnergyVAD.analyze`), so they always emit the same frame count for the same
+input; only a sub-32ms input is padded to a single frame so the score array is
+never empty.
 
 ### CutList inversion (`from_speech_segments`)
 
@@ -97,6 +101,14 @@ Rust: `editalgebra::resolve_for_export`.
 
 ## Test coverage
 
+- `tests/test_sidecar_parity.py` — **wired cross-language check**: spawns the
+  compiled `selekyt-mech` binary over its JSON-RPC pipe and asserts the Python
+  core agrees on the 32ms scoring cadence + VAD provenance
+  (`test_score_cadence_and_provenance_match_python`), segmentation for identical
+  score arrays (hysteresis / strict merge / min-speech), CutList inversion, and
+  that both sidecars answer with the same envelope
+  (`test_envelope_shape_matches_the_python_sidecar`). Runs in CI via
+  `SELEKYT_MECH`; set `SELEKYT_PARITY_MEDIA` to cross-check a real file.
 - `tests/test_vad.py::test_parity_reference_boundaries_32ms` — exact 32ms run
   boundaries.
 - `tests/test_vad.py::test_parity_reference_gap_stays_split` — strict

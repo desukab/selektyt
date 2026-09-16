@@ -305,6 +305,41 @@ def test_segment_contract_matches_across_languages(
     assert _norm_segs(rust) == py == expected
 
 
+# ── envelope symmetry: either sidecar can serve the Tauri shell ──
+
+@skip_no_mech
+def test_envelope_shape_matches_the_python_sidecar():
+    """The Rust and Python sidecars answer the same request with the same
+    envelope, so the shell can target either implementation (`server.py` pins
+    PROTOCOL_RUST_COMPAT). This is the mitigation for the blocked Tauri build —
+    see docs/tauri-termux-blocker.md."""
+    from selekyt.server import process_line as python_process_line
+
+    scores = [0.9] * 4 + [0.0] * 4 + [0.9] * 4
+    req = {"op": "segment", "params": {
+        "scores": scores, "threshold": 0.5,
+        "min_silence_ms": 100, "min_speech_ms": 0,
+    }}
+    with mech() as m:
+        rust = m.call("segment", **req["params"])
+    py = json.loads(python_process_line(json.dumps(req)))["data"]["segments"]
+
+    assert _norm_segs(rust) == _norm_segs(py)
+
+
+@skip_no_mech
+def test_error_envelope_shape_matches_the_python_sidecar():
+    from selekyt.server import process_line as python_process_line
+
+    with mech() as m:
+        with pytest.raises(MechError):
+            m.call("segment", scores="not-an-array")
+    resp = json.loads(python_process_line(
+        json.dumps({"op": "segment", "params": {"scores": "not-an-array"}})))
+    assert resp["ok"] is False
+    assert isinstance(resp["error"], str)
+
+
 # ── optional real-media cross-check (set SELEKYT_PARITY_MEDIA) ──
 
 _REAL = os.environ.get("SELEKYT_PARITY_MEDIA")
