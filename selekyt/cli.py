@@ -65,6 +65,11 @@ def main() -> None:
         help="Netscape cookies.txt OR browser Cookie-header file; credentials stay local",
     )
     p.add_argument("--doctor", action="store_true", help="Check the local processing environment")
+    p.add_argument(
+        "--ollama-url",
+        default=None,
+        help="Ollama server URL (e.g. http://localhost:11434) for optional LLM editorial metadata",
+    )
     args = p.parse_args()
     if args.doctor or not args.source:
         raise SystemExit(_doctor())
@@ -79,6 +84,7 @@ def main() -> None:
         args.chunk_minutes,
         args.beam_size,
         args.cpu_threads,
+        args.ollama_url,
     )
     print(f"SelekyT complete: {project}")
 

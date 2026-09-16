@@ -35,6 +35,7 @@ class Candidate:
     reason: str
     visual_potential: float = 0.0
     words: list[Word] | None = None
+    llm_metadata: dict | None = None
 
     @property
     def total_score(self) -> float:

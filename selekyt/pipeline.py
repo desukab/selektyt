@@ -10,9 +10,10 @@ from engine.captions import ass_for_candidate
 from engine.caption_director import caption_metadata
 from engine.content_pack import build_content_pack
 from engine.context_guard import validate
-from engine.edit_plan import retention_intervals
+from engine.edit_plan import retention_intervals, pacing_report, aggregate_pacing_report
 from engine.qa import write_report
 from engine.render import render_clip
+from engine.llm_editorial import attach_metadata
 from providers.youtube import download
 from providers.whisper import transcribe
 from models.core import Segment, Word
@@ -54,6 +55,7 @@ def run(
     chunk_minutes: int = 5,
     beam_size: int = 1,
     cpu_threads: int | None = None,
+    ollama_url: str | None = None,
 ) -> Path:
     project = out_root / "project"
     project.mkdir(parents=True, exist_ok=True)
@@ -123,10 +125,41 @@ def run(
     thoughts = make_thoughts(transcript)
     ranked = rank(thoughts, limit=max(limit * 3, limit))
     selected = [c for c in ranked if validate(c)[0]][:limit]
+    context_guard_rejections = len(ranked) - len(selected)
     if not selected:
         raise RuntimeError("No complete standalone stories passed the editorial/context gate.")
+    if ollama_url:
+        selected = [attach_metadata(c, ollama_url) for c in selected]
     (project / "selections.json").write_text(
         json.dumps([c.to_dict() for c in selected], ensure_ascii=False, indent=2)
+    )
+
+    editorial_report = []
+    for c in selected:
+        editorial_report.append({
+            "start": round(c.start, 3),
+            "end": round(c.end, 3),
+            "text": c.text,
+            "story_type": c.story_type,
+            "hook": c.hook,
+            "payoff": c.payoff,
+            "editorial_score": round(c.editorial_score, 3),
+            "virality_score": round(c.virality_score, 3),
+            "context_score": round(c.context_score, 3),
+            "confidence": round(c.confidence, 3),
+            "visual_potential": round(c.visual_potential, 3),
+            "total_score": round(c.total_score, 3),
+            "reason": c.reason,
+            "llm_metadata": c.llm_metadata,
+        })
+    (project / "editorial_report.json").write_text(
+        json.dumps(editorial_report, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    rejected = [c for c in ranked if not validate(c)[0]]
+    pacing = aggregate_pacing_report(selected, rejected, context_guard_rejections)
+    (project / "pacing_report.json").write_text(
+        json.dumps(pacing, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
     outputs = []
@@ -185,10 +218,12 @@ def run(
         "language": detected,
         "candidate_count": len(thoughts),
         "selected_count": len(selected),
-        "rejected_by_context_guard": len(ranked) - len(selected),
+        "rejected_by_context_guard": context_guard_rejections,
         "outputs": {"facebook": str(project / "facebook"), "shorts": str(project / "shorts")},
         "captions": str(project / "captions"),
         "content_pack": str(project / "content_pack.json"),
+        "editorial_report": str(project / "editorial_report.json"),
+        "pacing_report": str(project / "pacing_report.json"),
         "qa": str(qa_path),
         "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
     }
