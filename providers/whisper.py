@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 from models.core import Segment, Word
@@ -34,11 +36,11 @@ def _extract_audio(media: Path, audio: Path) -> None:
     tmp.replace(audio)
 
 
-def _transcribe_chunk(model, path: Path, offset: float, language: str | None):
+def _transcribe_chunk(model, path: Path, offset: float, language: str | None, beam_size: int = 1):
     segments, info = model.transcribe(
         str(path),
         language=language,
-        beam_size=1,
+        beam_size=beam_size,
         word_timestamps=True,
         vad_filter=True,
         condition_on_previous_text=False,
@@ -70,8 +72,10 @@ def transcribe(
     model_name: str = "small",
     language: str | None = None,
     checkpoint_dir: Path | None = None,
-    chunk_minutes: int = 10,
+    chunk_minutes: int = 5,
     overlap_seconds: float = 15.0,
+    cpu_threads: int | None = None,
+    beam_size: int = 1,
 ) -> tuple[list[Segment], str]:
     """Transcribe long media in bounded, resumable chunks.
 
@@ -111,9 +115,14 @@ def transcribe(
         flush=True,
     )
 
-    model = WhisperModel(model_name, device="auto", compute_type="int8")
+    _threads = cpu_threads or int(os.environ.get("SELEKYT_CPU_THREADS", str(os.cpu_count() or 4)))
+    initial_model_name = model_name
+    model = WhisperModel(model_name, device="auto", compute_type="int8", cpu_threads=_threads)
     all_segments: list[Segment] = []
     detected_languages: list[str] = []
+    running_wall = 0.0
+    running_duration = 0.0
+    slow_count = 0
 
     for index in range(count):
         start = index * step
@@ -121,6 +130,8 @@ def transcribe(
         decode_start = max(0.0, start - overlap_seconds) if index else 0.0
         decode_duration = end - decode_start
         chunk_path = chunks_dir / f"chunk_{index:04d}.json"
+        was_cached = False
+        wall = 0.0
 
         if chunk_path.exists():
             try:
@@ -135,6 +146,7 @@ def transcribe(
                     for s in data.get("segments", [])
                 ]
                 detected = str(data.get("language") or "unknown")
+                was_cached = True
                 print(f"[transcribe] chunk {index + 1}/{count}: cached", flush=True)
             except (OSError, ValueError, TypeError, KeyError):
                 chunk_segments = []
@@ -154,8 +166,15 @@ def transcribe(
                 stderr=subprocess.DEVNULL,
             )
             tmp.replace(wav)
+            t0 = time.time()
             print(f"[transcribe] chunk {index + 1}/{count}: {start / 60:.1f}-{end / 60:.1f} min", flush=True)
-            chunk_segments, detected = _transcribe_chunk(model, wav, decode_start, language)
+            try:
+                chunk_segments, detected = _transcribe_chunk(model, wav, decode_start, language, beam_size)
+            except Exception as exc:
+                print(f"    FAILED after {time.time() - t0:.1f}s: {exc}", flush=True)
+                chunk_segments = []
+                detected = "unknown"
+            wall = time.time() - t0
             try:
                 wav.unlink()
             except OSError:
@@ -192,6 +211,28 @@ def transcribe(
         all_segments.extend(chunk_segments)
         if detected and detected != "unknown":
             detected_languages.append(detected)
+
+        if not was_cached:
+            fallback_tag = " (fallback)" if model_name != initial_model_name else ""
+            rt = wall / max(0.1, decode_duration)
+            running_wall += wall
+            running_duration += decode_duration
+            print(
+                f"    chunk {index + 1}/{count}: {wall:.1f}s wall, {rt:.2f}x RT, "
+                f"model={model_name}, threads={_threads}{fallback_tag}, "
+                f"segments={len(chunk_segments)}",
+                flush=True,
+            )
+
+            if index >= 2 and running_duration > 0:
+                avg_rt = running_wall / running_duration
+                remaining_audio = max(0.0, total - end)
+                eta = avg_rt * remaining_audio
+                print(
+                    f"    ETA: ~{eta / 60:.1f} min remaining "
+                    f"({count - (index + 1)} chunks, {avg_rt:.2f}x avg RT)",
+                    flush=True,
+                )
 
     all_segments.sort(key=lambda s: (s.start, s.end))
     merged: list[Segment] = []

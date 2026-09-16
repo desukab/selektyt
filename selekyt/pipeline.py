@@ -51,7 +51,9 @@ def run(
     language: str | None = None,
     limit: int = 6,
     cookies: str | None = None,
-    chunk_minutes: int = 10,
+    chunk_minutes: int = 5,
+    beam_size: int = 1,
+    cpu_threads: int | None = None,
 ) -> Path:
     project = out_root / "project"
     project.mkdir(parents=True, exist_ok=True)
@@ -82,6 +84,8 @@ def run(
             language=language,
             checkpoint_dir=project / "transcription",
             chunk_minutes=chunk_minutes,
+            beam_size=beam_size,
+            cpu_threads=cpu_threads,
         )
         transcript_path.write_text(
             json.dumps(

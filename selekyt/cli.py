@@ -41,7 +41,18 @@ def main() -> None:
     p.add_argument("--model", default="small", help="faster-whisper model size")
     p.add_argument("--language", default=None, help="Force transcription language, e.g. te, hi, ta")
     p.add_argument("--limit", type=int, default=6, help="Number of selected stories")
-    p.add_argument("--chunk-minutes", type=int, default=10, help="Whisper chunk size for long videos")
+    p.add_argument(
+        "--chunk-minutes", type=int, default=5, help="Whisper chunk size for long videos"
+    )
+    p.add_argument(
+        "--beam-size", type=int, default=1, help="Beam size for Whisper decoding (>=1)"
+    )
+    p.add_argument(
+        "--cpu-threads",
+        type=int,
+        default=None,
+        help="CPU threads for Whisper (default: all available)",
+    )
     p.add_argument(
         "--caption-style",
         choices=["minimal", "punch", "spotlight", "noir"],
@@ -66,6 +77,8 @@ def main() -> None:
         args.limit,
         args.cookies,
         args.chunk_minutes,
+        args.beam_size,
+        args.cpu_threads,
     )
     print(f"SelekyT complete: {project}")
 
