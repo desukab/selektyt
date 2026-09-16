@@ -91,7 +91,9 @@ def test_pipeline_audio_off_by_default(tmp_path):
         with patch.object(p, "_fingerprint", return_value=fp):
             p.run("https://example.com/v", tmp_path, model="small")
     report = json.loads((project / "report.json").read_text())
-    assert "audio" not in report
+    # Absence is explicit, not silent: a B2B consumer can tell "not run" apart
+    # from a failure.
+    assert report["audio"] == {"enabled": False}
     assert not (project / "audio").exists()
 
 
@@ -144,7 +146,11 @@ def test_pipeline_audio_enriches_pacing_via_real_helper(tmp_path):
     """The real run_pipeline_audio writes VAD fields into the pacing dict."""
     from engine.pipeline_audio import run_pipeline_audio
     summary = {
-        "vad_backend": "energy", "speech_ratio": 0.5, "silence_ratio": 0.5,
+        "vad_backend": "energy", "vad_model": "energy-rms",
+        "fallback_reason": "silero unavailable", "frame_ms": 32,
+        "hysteresis": {"threshold": 0.5, "release": 0.35,
+                       "min_speech_ms": 150, "min_silence_ms": 100},
+        "speech_ratio": 0.5, "silence_ratio": 0.5,
         "dead_air_ratio": 0.3, "speech_regions": 2, "compression_ratio": 0.7,
     }
     pacing = {"total_candidates": 1}
@@ -156,6 +162,30 @@ def test_pipeline_audio_enriches_pacing_via_real_helper(tmp_path):
     assert got == summary
     assert pacing["vad"]["vad_backend"] == "energy"
     assert pacing["vad"]["vad_speech_ratio"] == 0.5
+    # provenance must travel to the pacing report, not just the backend name
+    assert pacing["vad"]["vad_model"] == "energy-rms"
+    assert pacing["vad"]["fallback_reason"] == "silero unavailable"
+    assert pacing["vad"]["frame_ms"] == 32
+    assert pacing["vad"]["hysteresis"]["release"] == 0.35
+
+
+def test_pipeline_audio_provenance_is_tolerant_of_partial_summary(tmp_path):
+    """Older/partial summaries must not crash the pacing enrichment."""
+    from engine.pipeline_audio import run_pipeline_audio
+    partial = {
+        "vad_backend": "ffmpeg", "speech_ratio": 0.4, "silence_ratio": 0.6,
+        "dead_air_ratio": 0.2, "speech_regions": 1, "compression_ratio": 0.9,
+    }
+    pacing: dict = {}
+    with patch("engine.pipeline_audio.run_audio_analysis", return_value=partial):
+        got = run_pipeline_audio(
+            tmp_path / "v.mp4", tmp_path, words=None, source="x.mp4",
+            pacing=pacing,
+        )
+    assert got == partial
+    assert pacing["vad"]["vad_backend"] == "ffmpeg"
+    assert pacing["vad"]["vad_model"] is None
+    assert pacing["vad"]["scores_cached"] is False
 
 
 def test_pipeline_audio_passes_thresholds_to_engine(tmp_path):

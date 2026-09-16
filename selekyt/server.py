@@ -14,6 +14,7 @@ plus the VAD analysis and the full audio stage with provenance fields
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import sys
 from pathlib import Path
@@ -150,6 +151,24 @@ def handle(op: str, params: dict) -> Any:
     return fn(params)
 
 
+@contextlib.contextmanager
+def _progress_to_stderr():
+    """Keep the JSON-RPC stdout stream pure.
+
+    Engine stages emit human progress lines via ``print(..., flush=True)``.
+    On the wire those would corrupt the one-JSON-object-per-line protocol, so
+    for the duration of a request the process's ``sys.stdout`` is pointed at
+    stderr. ``serve()``'s response writer holds the real stdout object and is
+    unaffected, same convention as the Rust sidecar (stdout = JSON only).
+    """
+    real = sys.stdout
+    sys.stdout = sys.stderr
+    try:
+        yield
+    finally:
+        sys.stdout = real
+
+
 def process_line(line: str) -> str:
     """Handle one request line, return one JSON response line."""
     try:
@@ -161,7 +180,8 @@ def process_line(line: str) -> str:
     if not isinstance(params, dict):
         params = {}
     try:
-        data = handle(op, params)
+        with _progress_to_stderr():
+            data = handle(op, params)
         return json.dumps({"ok": True, "op": op, "data": data}, ensure_ascii=False)
     except Exception as exc:  # noqa: BLE001 — JSON-RPC boundary converts to envelope
         return json.dumps({"ok": False, "op": op, "error": str(exc)}, ensure_ascii=False)

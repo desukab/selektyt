@@ -140,3 +140,34 @@ def test_audio_analysis_delegates(tmp_path, monkeypatch):
     assert data == summary
     assert called["media"] == str(media)
     assert called["project"] == str(tmp_path / "project")
+
+
+# ── wire integrity ──
+
+def test_progress_prints_never_corrupt_the_json_stream(tmp_path):
+    """Engine progress lines (print(..., flush=True)) must leave stdout so the
+    one-JSON-object-per-line protocol stays parseable — same convention as the
+    Rust sidecar."""
+    path = _write_tone_wav(tmp_path)
+    fake_stdout = io.StringIO()
+    import selekyt.server as server_mod
+
+    def loud_engine(media_path, project, **kw):
+        print("[vad] this progress line must not reach the wire", flush=True)
+        return {"vad_backend": "energy", "vad_model": "energy-rms"}
+
+    orig = server_mod.run_pipeline_audio
+    server_mod.run_pipeline_audio = loud_engine
+    try:
+        serve(io.StringIO(json.dumps({
+            "op": "audio_analysis",
+            "params": {"media": str(path), "project": str(tmp_path / "p")},
+        }) + "\n"), fake_stdout)
+    finally:
+        server_mod.run_pipeline_audio = orig
+
+    lines = fake_stdout.getvalue().splitlines()
+    assert len(lines) == 1, f"stdout must carry exactly one JSON line, got {lines}"
+    resp = json.loads(lines[0])
+    assert resp["ok"] is True
+    assert resp["data"]["vad_model"] == "energy-rms"

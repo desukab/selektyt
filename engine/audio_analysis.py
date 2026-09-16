@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from engine.vad import (
-    get_vad_backend, segment_from_scores, silence_from_speech,
+    get_vad_backend, segment_with_meta, silence_from_speech,
     save_scores, load_scores, VADResult, SpeechRegion,
 )
 from engine.pause_classifier import PauseClassifier
@@ -58,27 +58,33 @@ def run_audio_analysis(
     audio_dir.mkdir(exist_ok=True)
 
     fp = source_fingerprint(media, source)
-    score_path = audio_dir / f"{fp}.vad_raw.json"
     wav_path = audio_dir / f"{fp}.wav"
 
     # 1. PCM extraction (cached by fingerprint)
-    if not wav_path.exists():
+    pcm_cached = wav_path.exists()
+    if not pcm_cached:
         extract_pcm_wav(media, wav_path, sample_rate=16000)
     else:
         print("[cache] reusing extracted PCM", flush=True)
 
-    # 2. VAD scoring (cached; backend recorded for provenance)
+    # 2. VAD scoring (cached; backend recorded for provenance). The backend is
+    #    part of the cache key so switching backends never silently serves
+    #    another backend's cached scores — the pluggable-VAD contract requires
+    #    the report to name the backend that *actually* ran.
+    backend = get_vad_backend(vad_backend, words=words)
+    score_path = audio_dir / f"{fp}.{backend.name}.vad_raw.json"
     result = load_scores(score_path) if not force else None
-    if result is not None:
+    scores_cached = result is not None
+    if scores_cached:
         print(f"[cache] reusing VAD scores ({result.backend})", flush=True)
     else:
-        backend = get_vad_backend(vad_backend, words=words)
         result = backend.analyze(wav_path)
         save_scores(result, score_path)
         print(f"[vad] backend={result.backend} frames={len(result.scores)}", flush=True)
 
-    # 3. Segmentation (post-hoc on cached scores — never re-runs model)
-    speech = segment_from_scores(
+    # 3. Segmentation (post-hoc on cached scores — never re-runs the model).
+    #    segment_with_meta records the hysteresis params that actually ran.
+    speech, seg_meta = segment_with_meta(
         result.scores,
         sample_rate=result.sample_rate,
         frame_ms=result.frame_ms,
@@ -171,6 +177,14 @@ def run_audio_analysis(
 
     return {
         "vad_backend": result.backend,
+        "vad_model": result.vad_model,
+        "fallback_reason": result.fallback_reason,
+        "frame_ms": result.frame_ms,
+        "duration": round(result.duration, 3),
+        "n_frames": len(result.scores),
+        "hysteresis": seg_meta.get("hysteresis"),
+        "scores_cached": scores_cached,
+        "pcm_cached": pcm_cached,
         "vad_score_file": str(score_path),
         "vad_regions": str(audio_dir / "vad_regions.json"),
         "pause_analysis": str(audio_dir / "pause_analysis.json"),

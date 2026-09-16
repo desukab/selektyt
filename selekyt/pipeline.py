@@ -260,8 +260,10 @@ def run(
         "qa": str(qa_path),
         "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
     }
-    if audio_summary:
-        report["audio"] = audio_summary
+    # The audio section is always present: either the full provenance summary,
+    # or an explicit `enabled: False` so a B2B consumer can distinguish
+    # "not run" from "failed silently".
+    report["audio"] = audio_summary if audio_summary else {"enabled": False}
     (project / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
     state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "selected_count": len(selected), "qa": str(qa_path), "complete": True})
     state_path.write_text(json.dumps(state, indent=2))

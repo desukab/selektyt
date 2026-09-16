@@ -56,5 +56,13 @@ def run_pipeline_audio(
         "vad_speech_regions": summary["speech_regions"],
         "compression_ratio": summary["compression_ratio"],
         "vad_backend": summary["vad_backend"],
+        # Provenance the pluggable-VAD contract requires: which model actually
+        # ran, why it was chosen, and the hysteresis segmentation used.
+        "vad_model": summary.get("vad_model"),
+        "fallback_reason": summary.get("fallback_reason"),
+        "frame_ms": summary.get("frame_ms"),
+        "hysteresis": summary.get("hysteresis"),
+        "scores_cached": summary.get("scores_cached", False),
+        "pcm_cached": summary.get("pcm_cached", False),
     }
     return summary
