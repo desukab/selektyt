@@ -244,7 +244,7 @@ def run(
     (project / "content_pack.json").write_text(
         json.dumps(content_packs, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    qa_path = write_report(project, outputs)
+    qa_path = write_report(project, outputs, source_path=str(media))
     report = {
         "source": source,
         "title": info.get("title"),
