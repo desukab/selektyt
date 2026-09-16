@@ -61,7 +61,7 @@ fn ffprobe_bin() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("ffprobe"))
 }
 
-fn params<'a>(req: &'a Value) -> Result<&'a Value> {
+fn params(req: &Value) -> Result<&Value> {
     Ok(req.get("params").unwrap_or(&Value::Null))
 }
 
@@ -499,7 +499,7 @@ mod tests {
         assert_eq!(intervals[0]["kind"], "remove");
         assert_eq!(intervals[0]["end"].as_f64().unwrap(), 6.0);
         assert_eq!(intervals[1]["kind"], "keep");
-        assert!(intervals[1].get("disabled").map(Value::as_bool).unwrap_or(Some(true)).unwrap() != true);
+        assert!(!intervals[1].get("disabled").map(Value::as_bool).unwrap_or(Some(true)).unwrap());
     }
 
     #[test]
@@ -513,7 +513,7 @@ mod tests {
                 }
             }),
         ));
-        assert_eq!(data["exportable"].as_bool().unwrap(), false);
+        assert!(!data["exportable"].as_bool().unwrap());
     }
 
     #[test]
@@ -580,7 +580,7 @@ mod tests {
     fn timecode_ops_roundtrip_drop_frame() {
         let data = ok(&call("detect_rate", json!({"fps": 29.97, "drop_frame": true})));
         assert_eq!(data["nominal_fps"].as_u64().unwrap(), 30);
-        assert_eq!(data["is_drop_frame"].as_bool().unwrap(), true);
+        assert!(data["is_drop_frame"].as_bool().unwrap());
         assert_eq!(data["frame_duration_den"].as_u64().unwrap(), 30000);
         let d = ok(&call("parse_smpte", json!({"tc": "01:00:00;00", "fps": 30000.0 / 1001.0})));
         assert!((d["seconds"].as_f64().unwrap() - 3600.0).abs() < 0.01);
