@@ -70,6 +70,43 @@ def main() -> None:
         default=None,
         help="Ollama server URL (e.g. http://localhost:11434) for optional LLM editorial metadata",
     )
+    p.add_argument(
+        "--audio-analysis", action="store_true",
+        help="Run VAD analysis + jump-cut engine (silence removal, FCPXML export)",
+    )
+    p.add_argument(
+        "--vad-backend", default=None,
+        choices=["energy", "ffmpeg", "silero", "whisper"],
+        help="Force VAD backend (default: auto-select best available)",
+    )
+    p.add_argument(
+        "--silence-threshold", type=float, default=0.5,
+        help="Seconds of silence to remove as dead air (default: 0.5)",
+    )
+    p.add_argument(
+        "--silence-padding", type=float, default=0.0,
+        help="Seconds to pad each speech region boundary (default: 0.0)",
+    )
+    p.add_argument(
+        "--min-speech-ms", type=int, default=150,
+        help="Minimum speech duration in ms to keep (default: 150)",
+    )
+    p.add_argument(
+        "--min-silence-ms", type=int, default=100,
+        help="Minimum silence duration in ms to merge into speech (default: 100)",
+    )
+    p.add_argument(
+        "--keep-pauses", action="store_true", default=True,
+        help="Preserve intentional and breathing pauses (default: True)",
+    )
+    p.add_argument(
+        "--remove-filler", action="store_true", default=True,
+        help="Remove hesitation/filler pauses in audio analysis (default: True)",
+    )
+    p.add_argument(
+        "--export-fcpxml", action="store_true",
+        help="Export Final Cut Pro XML (FCPXML 1.11) alongside cut list",
+    )
     args = p.parse_args()
     if args.doctor or not args.source:
         raise SystemExit(_doctor())
@@ -85,6 +122,15 @@ def main() -> None:
         args.beam_size,
         args.cpu_threads,
         args.ollama_url,
+        audio_analysis=args.audio_analysis,
+        vad_backend=args.vad_backend,
+        silence_threshold=args.silence_threshold,
+        silence_padding=args.silence_padding,
+        min_speech_ms=args.min_speech_ms,
+        min_silence_ms=args.min_silence_ms,
+        keep_pauses=args.keep_pauses,
+        remove_filler=args.remove_filler,
+        export_fcpxml=args.export_fcpxml,
     )
     print(f"SelekyT complete: {project}")
 

@@ -14,6 +14,7 @@ from engine.edit_plan import retention_intervals, pacing_report, aggregate_pacin
 from engine.qa import write_report
 from engine.render import render_clip
 from engine.llm_editorial import attach_metadata
+from engine.pipeline_audio import run_pipeline_audio
 from providers.youtube import download
 from providers.whisper import transcribe
 from models.core import Segment, Word
@@ -56,6 +57,15 @@ def run(
     beam_size: int = 1,
     cpu_threads: int | None = None,
     ollama_url: str | None = None,
+    audio_analysis: bool = False,
+    vad_backend: str | None = None,
+    silence_threshold: float = 0.5,
+    silence_padding: float = 0.0,
+    min_speech_ms: int = 150,
+    min_silence_ms: int = 100,
+    keep_pauses: bool = True,
+    remove_filler: bool = True,
+    export_fcpxml: bool = False,
 ) -> Path:
     project = out_root / "project"
     project.mkdir(parents=True, exist_ok=True)
@@ -158,6 +168,29 @@ def run(
 
     rejected = [c for c in ranked if not validate(c)[0]]
     pacing = aggregate_pacing_report(selected, rejected, context_guard_rejections)
+
+    audio_summary: dict = {}
+    if audio_analysis:
+        all_words: list[Word] = []
+        for s in transcript:
+            all_words.extend(s.words or [])
+        audio_summary = run_pipeline_audio(
+            media,
+            project,
+            words=all_words or None,
+            source=source,
+            pacing=pacing,
+            min_speech_ms=min_speech_ms,
+            min_silence_ms=min_silence_ms,
+            silence_threshold=silence_threshold,
+            silence_padding=silence_padding,
+            keep_pauses=keep_pauses,
+            remove_filler=remove_filler,
+            export_fcpxml=export_fcpxml,
+            vad_backend=vad_backend,
+            force=False,
+        )
+        (project / "audio").mkdir(exist_ok=True)
     (project / "pacing_report.json").write_text(
         json.dumps(pacing, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -227,6 +260,8 @@ def run(
         "qa": str(qa_path),
         "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
     }
+    if audio_summary:
+        report["audio"] = audio_summary
     (project / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
     state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "selected_count": len(selected), "qa": str(qa_path), "complete": True})
     state_path.write_text(json.dumps(state, indent=2))
