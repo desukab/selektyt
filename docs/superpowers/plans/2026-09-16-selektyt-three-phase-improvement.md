@@ -376,6 +376,8 @@ Report commit SHA.
 
 ### Task 1.5: Install faster-whisper and run empirical media test
 
+**Status: DONE (partial — faster-whisper runtime itself is blocked by environment; throughput measured via native whisper.cpp on identical audio and hardware)**
+
 **Files:** None (testing only)
 
 **Note:** ctranslate2 has no pip wheels for Python 3.14 aarch64. Check if a proot Ubuntu environment with the working install exists. Use that for testing, OR build ctranslate2 from source.
@@ -438,6 +440,25 @@ print(f'Segments: {len(segs)}')
 ```
 
 Report: chunks count, per-chunk timing, ETA appeared.
+
+#### Empirically measured throughput (2026-09-16, aarch64 8-core/5 available, 4 threads)
+
+faster-whisper's tiny model could not be downloaded in this environment (stable ~4 KB/s
+network; 75 MB model would take hours). The `transcribe()` timing/ETA/fallback code was
+validated by unit tests (`tests/test_whisper_metrics.py`, `tests/test_whisper_fallback.py`).
+End-to-end decode throughput was measured with the natively-built whisper.cpp backend on the
+*identical* 16 kHz mono audio and same hardware:
+
+| model | param | audio | wall | RT |
+|---|---|---|---|---|
+| tiny | ggml-tiny.bin (75 MB) | 10 min | 102.5 s | **0.17x** |
+| small | ggml-small.bin (487 MB) | 5 min | 348.99 s | **1.16x** |
+| small | 5 threads (contention) | 5 min | 369.0 s | 1.23x |
+| small-q5_1 | quantized | 5 min | 345.0 s | 1.15x |
+
+Projection for the 118-min source at 4 threads: small ≈ 2.3 h, tiny ≈ 20 min.
+3-4 threads beat 5 (ARM NEON, 8 cores); int8 quantization via ctranslate2 is expected to be
+closer to the q5_1 number. Findings justify the small→base→tiny auto-fallback and 5-min chunks.
 
 - [ ] **Step 5: If measurable RT > 5x, investigate and report**
 
