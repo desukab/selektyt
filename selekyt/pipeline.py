@@ -7,6 +7,8 @@ from pathlib import Path
 
 from engine.editorial import make_thoughts, rank
 from engine.captions import ass_for_candidate
+from engine.caption_director import caption_metadata
+from engine.content_pack import build_content_pack
 from engine.context_guard import validate
 from engine.edit_plan import retention_intervals
 from engine.qa import write_report
@@ -114,9 +116,22 @@ def run(
 
     outputs = []
     edit_report = []
+    content_packs = []
     for idx, c in enumerate(selected, 1):
         intervals = retention_intervals(c)
         caption = ass_for_candidate(c, project / "captions" / f"{idx:02d}.ass")
+        (project / "captions" / f"{idx:02d}.json").write_text(
+            json.dumps(caption_metadata(c), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        pack = build_content_pack(c)
+        pack["clip_index"] = idx
+        (project / "content_pack" / f"{idx:02d}.json").parent.mkdir(parents=True, exist_ok=True)
+        (project / "content_pack" / f"{idx:02d}.json").write_text(
+            json.dumps(pack, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        content_packs.append(pack)
+
         fb = project / "facebook" / f"{idx:02d}.mp4"
         sh = project / "shorts" / f"{idx:02d}.mp4"
         render_clip(media, c, fb, caption, vertical=False)
@@ -136,6 +151,9 @@ def run(
             }
         )
     (project / "edit_plan.json").write_text(json.dumps(edit_report, indent=2))
+    (project / "content_pack.json").write_text(
+        json.dumps(content_packs, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     qa_path = write_report(project, outputs)
     report = {
         "source": source,
@@ -145,6 +163,8 @@ def run(
         "selected_count": len(selected),
         "rejected_by_context_guard": len(ranked) - len(selected),
         "outputs": {"facebook": str(project / "facebook"), "shorts": str(project / "shorts")},
+        "captions": str(project / "captions"),
+        "content_pack": str(project / "content_pack.json"),
         "qa": str(qa_path),
         "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
     }
