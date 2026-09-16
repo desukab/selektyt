@@ -34,14 +34,21 @@ def parse_cookie_header(header: str) -> list[tuple[str, str]]:
 
 
 def to_netscape(pairs: list[tuple[str, str]], domain: str = DEFAULT_DOMAIN) -> str:
-    """Create Netscape cookie-file text for yt-dlp."""
+    """Create Netscape cookie-file text for yt-dlp.
+
+    The format is tab-delimited with exactly seven fields per line, so a tab
+    inside a value would shift the fields and make yt-dlp drop or misparse the
+    cookie. Tabs are replaced with a space (values are otherwise verbatim).
+    """
     lines = [
         "# Netscape HTTP Cookie File",
         "# Generated locally by selekyt. Keep this file private.",
         "",
     ]
     for name, value in pairs:
-        lines.append(f"{domain}\tTRUE\t/\tTRUE\t2147483647\t{name}\t{value}")
+        safe_name = name.replace("\t", " ").replace("\n", " ")
+        safe_value = value.replace("\t", " ").replace("\n", " ")
+        lines.append(f"{domain}\tTRUE\t/\tTRUE\t2147483647\t{safe_name}\t{safe_value}")
     return "\n".join(lines) + "\n"
 
 
