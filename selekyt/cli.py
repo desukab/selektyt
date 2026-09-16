@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 from pathlib import Path
 
@@ -40,11 +41,12 @@ def main() -> None:
     p.add_argument("--model", default="small", help="faster-whisper model size")
     p.add_argument("--language", default=None, help="Force transcription language, e.g. te, hi, ta")
     p.add_argument("--limit", type=int, default=6, help="Number of selected stories")
+    p.add_argument("--chunk-minutes", type=int, default=10, help="Whisper chunk size for long videos")
     p.add_argument(
-        "--chunk-minutes",
-        type=int,
-        default=10,
-        help="Whisper chunk size for long videos (default: 10)",
+        "--caption-style",
+        choices=["minimal", "punch", "spotlight", "noir"],
+        default="minimal",
+        help="Caption visual preset",
     )
     p.add_argument(
         "--cookies",
@@ -55,6 +57,7 @@ def main() -> None:
     args = p.parse_args()
     if args.doctor or not args.source:
         raise SystemExit(_doctor())
+    os.environ["SELEKYT_CAPTION_STYLE"] = args.caption_style
     project = run(
         args.source,
         Path(args.out),
