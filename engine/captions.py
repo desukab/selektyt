@@ -5,6 +5,7 @@ import unicodedata
 from pathlib import Path
 
 from models.core import Candidate, Word
+from engine.caption_director import build_blocks, style_name
 
 
 def _ts(v: float) -> str:
@@ -35,27 +36,71 @@ def _group_words(words: list[Word], max_words: int = 6, max_width: int = 34) -> 
     return groups
 
 
+def _escape(text: str) -> str:
+    return text.replace("{", "(").replace("}", ")").replace("\\", "")
+
+
+def _karaoke_text(words: list[Word], emphasis: set[int]) -> str:
+    """Render word timings with ASS karaoke tags and subtle emphasis."""
+    pieces: list[str] = []
+    for idx, word in enumerate(words):
+        duration_cs = max(1, int(round((word.end - word.start) * 100)))
+        text = _escape(word.text.strip())
+        if not text:
+            continue
+        if idx in emphasis:
+            text = r"{\\c&H00D7FF&\\b1}" + text + r"{\\c&HFFFFFF&\\b0}"
+        pieces.append(rf"{{\\k{duration_cs}}}{text}")
+    return " ".join(pieces)
+
+
 def ass_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
-    """Write minimal, word-timed ASS captions relative to the candidate start."""
+    """Write Replix-inspired, word-timed ASS captions locally.
+
+    Features: multilingual-safe grouping, active-word karaoke timing, keyword
+    emphasis, and a few compact styles selected by SELEKYT_CAPTION_STYLE.
+    """
     out.parent.mkdir(parents=True, exist_ok=True)
     words = sorted(c.words or [], key=lambda w: (w.start, w.end))
     if not words:
-        # Fallback for candidates produced without word timestamps.
         raw = c.text.split()
         duration = max(0.1, c.end - c.start)
         step = duration / max(1, (len(raw) + words_per_line - 1) // words_per_line)
-        words = [Word(" ".join(raw[i:i + words_per_line]), c.start + (i // words_per_line) * step, min(c.end, c.start + (i // words_per_line + 1) * step)) for i in range(0, len(raw), words_per_line)]
+        words = [
+            Word(
+                " ".join(raw[i : i + words_per_line]),
+                c.start + (i // words_per_line) * step,
+                min(c.end, c.start + (i // words_per_line + 1) * step),
+            )
+            for i in range(0, len(raw), words_per_line)
+        ]
 
-    groups = _group_words(words, max_words=words_per_line)
+    blocks = build_blocks(c, max_words=words_per_line)
+    if not blocks:
+        groups = _group_words(words, max_words=words_per_line)
+        blocks = []
+        from engine.caption_director import CaptionBlock
+        for group in groups:
+            blocks.append(CaptionBlock(group, set()))
+
+    style = style_name()
+    presets = {
+        "minimal": dict(fontsize=54, primary="&H00FFFFFF", outline="&H99000000", back="&H00000000", bold=0, outline_w=2, shadow=1, margin_v=170),
+        "punch": dict(fontsize=58, primary="&H00FFFFFF", outline="&HCC000000", back="&H00000000", bold=1, outline_w=3, shadow=1, margin_v=180),
+        "spotlight": dict(fontsize=56, primary="&H00FFFFFF", outline="&H99000000", back="&H00000000", bold=1, outline_w=2, shadow=2, margin_v=170),
+        "noir": dict(fontsize=52, primary="&H00EAEAEA", outline="&HCC111111", back="&H00000000", bold=0, outline_w=2, shadow=2, margin_v=165),
+    }
+    p = presets.get(style, presets["minimal"])
+    font = os.getenv("SELEKYT_FONT", "Noto Sans")
+
     lines: list[str] = []
-    for group in groups:
-        st = max(0.0, group[0].start - c.start)
-        en = min(max(0.1, c.end - c.start), group[-1].end - c.start + 0.10)
-        text = " ".join(w.text.strip() for w in group if w.text.strip()).replace("{", "(").replace("}", ")")
+    for block in blocks:
+        st = max(0.0, block.start - c.start)
+        en = min(max(0.1, c.end - c.start), block.end - c.start + 0.12)
+        text = _karaoke_text(block.words, block.emphasis)
         if text:
             lines.append(f"Dialogue: 0,{_ts(st)},{_ts(max(st + 0.08, en))},Default,,0,0,0,,{text}")
 
-    font = os.getenv("SELEKYT_FONT", "Noto Sans")
-    content = f"""[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Default,{font},54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n""" + "\n".join(lines) + "\n"
+    content = f"""[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Default,{font},{p['fontsize']},{p['primary']},&H00FFFFFF,{p['outline']},{p['back']},{p['bold']},0,0,0,100,100,0,0,1,{p['outline_w']},{p['shadow']},2,70,70,{p['margin_v']},1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n""" + "\n".join(lines) + "\n"
     out.write_text(content, encoding="utf-8")
     return out
