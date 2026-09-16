@@ -57,16 +57,27 @@ def run(
 ) -> Path:
     project = out_root / "project"
     project.mkdir(parents=True, exist_ok=True)
+    state_path = project / "pipeline_state.json"
+    state = json.loads(state_path.read_text()) if state_path.exists() else {}
     if source.startswith(("http://", "https://")):
-        media, info = download(source, project / "source", cookies=cookies)
+        media_path = state.get("media_path")
+        if (
+            media_path
+            and Path(media_path).is_file()
+            and state.get("source") == source
+        ):
+            media, info = Path(media_path), state.get("media_info", {})
+            print(f"[cache] reusing downloaded source: {media}", flush=True)
+        else:
+            media, info = download(source, project / "source", cookies=cookies)
+            state.update({"source": source, "media_path": str(media), "media_info": info})
+            state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
     else:
         media, info = Path(source).expanduser(), {}
         if not media.is_file():
             raise RuntimeError(f"Local video not found: {media}")
 
     fingerprint = _fingerprint(media, source, model, language)
-    state_path = project / "pipeline_state.json"
-    state = json.loads(state_path.read_text()) if state_path.exists() else {}
     transcript_path = project / "transcript.json"
     cached = _load_transcript(transcript_path) if state.get("fingerprint") == fingerprint else None
     if cached and not language:
@@ -138,8 +149,17 @@ def run(
 
         fb = project / "facebook" / f"{idx:02d}.mp4"
         sh = project / "shorts" / f"{idx:02d}.mp4"
-        render_clip(media, c, fb, caption, vertical=False)
-        render_clip(media, c, sh, caption, vertical=True)
+        if (
+            state.get("render_fingerprint") == fingerprint
+            and fb.is_file()
+            and sh.is_file()
+            and fb.stat().st_size > 0
+            and sh.stat().st_size > 0
+        ):
+            print(f"[cache] reusing rendered clip {idx:02d}", flush=True)
+        else:
+            render_clip(media, c, fb, caption, vertical=False)
+            render_clip(media, c, sh, caption, vertical=True)
         outputs += [fb, sh]
         edited = sum(b - a for a, b in intervals)
         edit_report.append(
@@ -173,6 +193,6 @@ def run(
         "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
     }
     (project / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
-    state.update({"fingerprint": fingerprint, "selected_count": len(selected), "qa": str(qa_path), "complete": True})
+    state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "selected_count": len(selected), "qa": str(qa_path), "complete": True})
     state_path.write_text(json.dumps(state, indent=2))
     return project
