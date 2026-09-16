@@ -817,6 +817,36 @@ Report commit SHA.
 
 ---
 
+### Task 2.4: Human-editor candidate generation + anti-repetition
+
+**Files:**
+- Modify: `engine/editorial.py` (semantic boundary candidate generation, pacing/look-forward scoring, anti-repetition in rank)
+- Modify: `tests/test_editorial.py`
+
+**FLVYT concepts adapted:** HOOK→CONTEXT→DEVELOPMENT→PAYOFF structure, setup→escalation→payoff, weak-ending and dead-air rejection, repetitive-phrasing detection, story-type diversification.
+
+- [ ] **Step 1: Semantic-boundary candidate generation**
+  - Candidate clip should start at a sentence/semantic boundary (not mid-sentence), assemble HOOK → CONTEXT → DEVELOPMENT → PAYOFF
+  - Penalize/avoid: clips starting mid-sentence, clips requiring prior conversation, clips ending before the point is made, mostly-generic intros, repeated ideas, clips depending on unavailable visual info
+- [ ] **Step 2: Anti-repetition in selection (rank)**
+  - Penalize overlapping clips, repeated topics, repeated hooks, multiple clips making the same point
+  - Diversify story types across the final selection
+- [ ] **Step 3: Tests** — weak hooks, missing payoff, duplicate ideas, overlapping candidates, filler-heavy clips, code-switching; commit + push
+
+### Task 2.5: Editorial report + pacing report (machine-readable)
+
+**Files:**
+- Modify: `engine/edit_plan.py`, `engine/qa.py`
+- Modify: `selekyt/pipeline.py`
+
+**What changes:** pipeline writes `editorial_report.json` (per-candidate start/end, transcript, story type, hook, payoff, score components, context score, confidence, selection/rejection reason, visual potential) and `pacing_report.json` (avg duration, duration distribution, silence %, filler %, words/sec, hook latency, payoff presence, context failures, duplicate/overlap rate). Tests + commit + push.
+
+### Task 2.6: Real-source editorial run against Z907ENCogm4.mp4
+
+Run the editorial pipeline against real transcript/checkpoints where available; report candidates generated/rejected/selected with reasons. If the real transcript is unavailable in this environment, generate and persist a realistic multilingual transcript and document the limitation.
+
+---
+
 ## Phase 3: Production QA
 
 ### Task 3.1: Expand `engine/qa.py` with real rendered-output validation
