@@ -1,0 +1,235 @@
+"""VAD backend tests — unit tests use synthetic signals (deterministic,
+no media files); integration tests use the local WAV corpus when present."""
+import wave
+import numpy as np
+import pytest
+
+from engine.vad import (
+    EnergyVAD, FFmpegVADBackend, WhisperVADBackend, SileroVADBackend,
+    get_vad_backend, segment_from_scores, silence_from_speech,
+    save_scores, load_scores, SpeechRegion, SilenceRegion, VADResult,
+)
+
+
+def _write_tone_wav(tmp_path, freq=440, duration=1.0, amplitude=0.5, sr=16000):
+    path = tmp_path / "tone.wav"
+    t = np.linspace(0, duration, int(sr * duration), endpoint=False)
+    sig = (amplitude * np.sin(2 * np.pi * freq * t)).astype(np.float32)
+    with wave.open(str(path), "wb") as f:
+        f.setnchannels(1)
+        f.setsampwidth(2)
+        f.setframerate(sr)
+        f.writeframes((sig * 32767).astype(np.int16).tobytes())
+    return path
+
+
+def _write_speech_silence_wav(tmp_path, sr=16000):
+    """0-2s silence, 2-5s tone (speech), 5-7s silence, 7-9s tone."""
+    path = tmp_path / "mix.wav"
+    dur = 9.0
+    n = int(sr * dur)
+    sig = np.zeros(n, dtype=np.float32)
+    t2 = np.linspace(0, 3, 3 * sr, endpoint=False)
+    speech1 = 0.4 * np.sin(2 * np.pi * 220 * t2)
+    t4 = np.linspace(0, 2, 2 * sr, endpoint=False)
+    speech2 = 0.4 * np.sin(2 * np.pi * 180 * t4)
+    sig[2 * sr:5 * sr] = speech1[:3 * sr]
+    sig[7 * sr:9 * sr] = speech2[:2 * sr]
+    with wave.open(str(path), "wb") as f:
+        f.setnchannels(1); f.setsampwidth(2); f.setframerate(sr)
+        f.writeframes((sig * 32767).astype(np.int16).tobytes())
+    return path
+
+
+# ── segmentation (pure functions) ──
+
+def test_segment_identifies_speech():
+    scores = [0.0] * 10 + [0.9] * 20 + [0.0] * 10 + [0.8] * 15
+    regions = segment_from_scores(scores, frame_ms=30, threshold=0.5,
+                                  min_speech_ms=100, min_silence_ms=50)
+    assert len(regions) == 2
+    assert abs(regions[0].start - 10 * 0.03) < 0.05
+    assert abs(regions[1].start - 40 * 0.03) < 0.05
+
+
+def test_segment_hysteresis_keeps_mid_speech_dips():
+    scores = [0.0] * 5 + [0.9] * 10 + [0.45] * 5 + [0.9] * 10
+    strict = segment_from_scores(scores, frame_ms=30, threshold=0.5,
+                                 release=0.35, min_speech_ms=100, min_silence_ms=50)
+    assert len(strict) == 1, "hysteresis release=0.35 keeps dip at 0.45"
+
+
+def test_segment_release_stricter_splits():
+    scores = [0.0] * 5 + [0.9] * 10 + [0.2] * 5 + [0.9] * 10
+    regions = segment_from_scores(scores, frame_ms=30, threshold=0.5,
+                                  release=0.35, min_speech_ms=50, min_silence_ms=20)
+    assert len(regions) == 2
+
+
+def test_segment_min_speech_drops_short():
+    scores = [0.9] * 2  # 60ms < 150ms
+    regions = segment_from_scores(scores, frame_ms=30, min_speech_ms=150)
+    assert regions == []
+
+
+def test_segment_min_speech_keeps_longer():
+    scores = [0.9] * 6  # 180ms >= 150ms
+    regions = segment_from_scores(scores, frame_ms=30, min_speech_ms=150)
+    assert len(regions) == 1
+
+
+def test_segment_min_silence_merges_close():
+    scores = [0.9] * 10 + [0.0] * 2 + [0.9] * 10  # 60ms gap
+    regions = segment_from_scores(scores, frame_ms=30, min_silence_ms=100)
+    assert len(regions) == 1
+
+
+def test_segment_min_silence_splits_large_gap():
+    scores = [0.9] * 10 + [0.0] * 8 + [0.9] * 10  # 240ms gap
+    regions = segment_from_scores(scores, frame_ms=30, min_silence_ms=100)
+    assert len(regions) == 2
+
+
+def test_segment_threshold_controls_sensitivity():
+    scores = [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4]
+    assert segment_from_scores(scores, frame_ms=30, threshold=0.5, min_speech_ms=100) == []
+    assert len(segment_from_scores(scores, frame_ms=30, threshold=0.3, min_speech_ms=100)) == 1
+
+
+def test_silence_from_speech_complement():
+    speech = [SpeechRegion(2.0, 5.0)]
+    sil = silence_from_speech(speech, 9.0)
+    assert len(sil) == 2
+    assert sil[0].start == 0.0 and abs(sil[0].end - 2.0) < 0.01
+    assert abs(sil[1].start - 5.0) < 0.01 and abs(sil[1].end - 9.0) < 0.01
+
+
+def test_silence_from_speech_no_speech():
+    sil = silence_from_speech([], 5.0)
+    assert sil == [SilenceRegion(0.0, 5.0, 5.0)]
+
+
+# ── Energy VAD ──
+
+def test_energy_vad_detects_tone(tmp_path):
+    path = _write_tone_wav(tmp_path)
+    backend = EnergyVAD()
+    result = backend.analyze(path)
+    assert result.backend == "energy"
+    assert len(result.scores) > 0
+    assert any(s > 0.5 for s in result.scores)
+
+
+def test_energy_vad_silence_then_speech_regions(tmp_path):
+    path = _write_speech_silence_wav(tmp_path)
+    backend = EnergyVAD()
+    result = backend.analyze(path)
+    regions = segment_from_scores(result.scores, result.sample_rate, result.frame_ms,
+                                  threshold=0.5, min_speech_ms=200, min_silence_ms=100)
+    assert len(regions) == 2
+    assert regions[0].start > 1.0  # skip leading silence
+    assert abs(regions[-1].end - 9.0) < 1.0
+
+
+def test_cached_scores_resegment_with_different_params(tmp_path):
+    """The core caching architecture: one scoring pass, many segmentations."""
+    path = _write_speech_silence_wav(tmp_path)
+    backend = EnergyVAD()
+    result = backend.analyze(path)
+
+    # Two different parameter sets over the SAME cached scores
+    loose = segment_from_scores(result.scores, result.sample_rate, result.frame_ms,
+                                threshold=0.3, min_speech_ms=100, min_silence_ms=50)
+    strict = segment_from_scores(result.scores, result.sample_rate, result.frame_ms,
+                                 threshold=0.8, min_speech_ms=500, min_silence_ms=400)
+
+    # Loose params should find at least as much speech as strict; and one
+    # parameter set must be sufficient — never re-run the backend.
+    assert len(loose) >= len(strict)
+    total_loose = sum(r.end - r.start for r in loose)
+    total_strict = sum(r.end - r.start for r in strict)
+    assert total_loose >= total_strict
+
+
+# ── FFmpeg backend ──
+
+def test_ffmpeg_backend_available():
+    backend = FFmpegVADBackend()
+    assert backend.is_available()  # ffmpeg present on this device
+    assert backend.name == "ffmpeg"
+
+
+def test_ffmpeg_backend_analyze_silence_tone(tmp_path):
+    _write_speech_silence_wav(tmp_path)
+    path = next(tmp_path.glob("mix.wav"))
+    backend = FFmpegVADBackend()
+    result = backend.analyze(path)
+    assert result.backend == "ffmpeg"
+    assert len(result.scores) > 0
+    assert result.duration > 0
+    regions = segment_from_scores(result.scores, result.sample_rate, result.frame_ms,
+                                  threshold=0.5, min_speech_ms=200, min_silence_ms=100)
+    assert len(regions) == 2
+
+
+# ── Whisper backend ──
+
+def test_whisper_backend_uses_word_timestamps(tmp_path):
+    words = [type("W", (), {"start": 1.0, "end": 2.0})(),
+             type("W", (), {"start": 4.0, "end": 5.0})()]
+    backend = WhisperVADBackend(words, duration=6.0)
+    result = backend.analyze(tmp_path)
+    assert result.backend == "whisper"
+    regions = segment_from_scores(result.scores, result.sample_rate, result.frame_ms,
+                                  threshold=0.5, min_speech_ms=100, min_silence_ms=100)
+    assert len(regions) == 2
+    assert abs(regions[0].start - 1.0) < 0.1
+    assert abs(regions[1].start - 4.0) < 0.1
+
+
+# ── Silero (never available here) ──
+
+def test_silero_not_available_unless_onnxruntime():
+    backend = SileroVADBackend()
+    # on this environment onnxruntime is not installed → unavailable
+    assert backend.is_available() is False
+
+
+# ── backend selection and persistence ──
+
+def test_get_vad_backend_default_is_energy_or_ffmpeg():
+    backend = get_vad_backend()
+    assert backend.name in ("energy", "ffmpeg")
+    assert backend.is_available()
+
+
+def test_get_vad_backend_force_energy():
+    backend = get_vad_backend(force="energy")
+    assert backend.name == "energy"
+
+
+def test_get_vad_backend_force_unknown():
+    with pytest.raises(ValueError):
+        get_vad_backend(force="bogus")
+
+
+def test_save_load_scores_roundtrip(tmp_path):
+    result = VADResult(scores=[0.1, 0.2, 0.9, 0.8], sample_rate=16000,
+                       backend="energy", frame_ms=30, duration=0.5)
+    path = tmp_path / "analysis" / "vad_raw.json"
+    save_scores(result, path)
+    loaded = load_scores(path)
+    assert loaded is not None
+    assert loaded.scores == [0.1, 0.2, 0.9, 0.8]
+    assert loaded.backend == "energy"
+    assert loaded.duration == 0.5
+
+
+def test_load_scores_missing(tmp_path):
+    assert load_scores(tmp_path / "nope.json") is None
+
+
+def test_load_scores_corrupt(tmp_path):
+    p = tmp_path / "bad.json"
+    p.write_text("{not json", encoding="utf-8")
+    assert load_scores(p) is None
