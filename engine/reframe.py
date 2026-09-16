@@ -17,27 +17,68 @@ def _fallback_center(frame: np.ndarray) -> float:
     return float(np.clip((xs * profile).sum() / total / len(profile), 0.05, 0.95))
 
 
+def _smooth_centers(
+    centers: list[tuple[float, float]], window: int = 5
+) -> list[tuple[float, float]]:
+    """Symmetric moving average over the tracked center column.
+
+    The crop expression interpolates between sampled centers, so a single
+    misdetection (the largest face switching subjects, an edge-dense
+    background region) becomes a visible crop jump. Smoothing the offline
+    sample run keeps the subject lead while damping those spikes. Timing is
+    left untouched; only the center column is averaged.
+    """
+    if len(centers) < 3 or window < 2:
+        return list(centers)
+    half = window // 2
+    out: list[tuple[float, float]] = []
+    for i, (t, _c) in enumerate(centers):
+        lo = max(0, i - half)
+        hi = min(len(centers), i + half + 1)
+        mean = float(np.mean([c for _, c in centers[lo:hi]]))
+        out.append((t, mean))
+    return out
+
+
+def _load_face_cascade() -> "cv2.CascadeClassifier | None":
+    """Haar cascade is optional: some opencv builds (e.g. opencv-python-headless
+    on constrained hosts) ship without ``cv2.data``. Absent or unusable cascade
+    data must not crash reframing — the edge-density fallback tracks every
+    frame instead."""
+    try:
+        cascade = cv2.CascadeClassifier(
+            cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        )
+    except Exception:
+        return None
+    return None if cascade.empty() else cascade
+
+
 def track_subject_center(video: Path, start: float, end: float, samples: int = 28) -> list[tuple[float, float]]:
     cap = cv2.VideoCapture(str(video))
     if not cap.isOpened():
         return []
     centers: list[tuple[float, float]] = []
-    cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    cascade = _load_face_cascade()
     for t_abs in np.linspace(start, end, max(2, samples)):
         cap.set(cv2.CAP_PROP_POS_MSEC, float(t_abs * 1000))
         ok, frame = cap.read()
         if not ok:
             continue
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(48, 48))
-        if len(faces):
-            x, y, w, h = max(faces, key=lambda f: f[2] * f[3])
-            center = (x + w / 2) / frame.shape[1]
+        center: float
+        if cascade is not None:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(48, 48))
+            if len(faces):
+                x, y, w, h = max(faces, key=lambda f: f[2] * f[3])
+                center = (x + w / 2) / frame.shape[1]
+            else:
+                center = _fallback_center(frame)
         else:
             center = _fallback_center(frame)
         centers.append((t_abs - start, float(center)))
     cap.release()
-    return centers
+    return _smooth_centers(centers)
 
 
 def crop_x_expression(video: Path, start: float, end: float) -> str:
