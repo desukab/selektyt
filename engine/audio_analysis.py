@@ -25,7 +25,7 @@ from engine.vad import (
 from engine.pause_classifier import PauseClassifier
 from engine.audio_fusion import fuse_audio_truth
 from engine.jumpcut import JumpCutEngine
-from engine.fcpxml import export_fcpxml
+from engine.fcpxml import export_fcpxml as write_fcpxml
 from engine import cut_algebra
 from providers.audio import source_fingerprint, audio_fingerprint, extract_pcm_wav
 
@@ -173,7 +173,7 @@ def run_audio_analysis(
 
     fcpxml_path = None
     if export_fcpxml:
-        fcpxml_path = export_fcpxml(cut, audio_dir / "cutlist.fcpxml", source_path=str(media))
+        fcpxml_path = write_fcpxml(cut, audio_dir / "cutlist.fcpxml", source_path=str(media))
 
     return {
         "vad_backend": result.backend,

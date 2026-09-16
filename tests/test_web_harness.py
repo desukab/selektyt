@@ -11,6 +11,7 @@ import select
 import shutil
 import subprocess
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -177,6 +178,23 @@ def test_cutlist_pad_widens_keeps(base):
     tight_keep = sum(i["end"] - i["start"] for i in tight["intervals"] if i["kind"] == "keep")
     padded_keep = sum(i["end"] - i["start"] for i in padded["intervals"] if i["kind"] == "keep")
     assert padded_keep > tight_keep
+
+
+def test_export_produces_downloadable_artifacts(base):
+    data = _expect_ok(base, "export", {"sample": True})
+    assert data["vad_backend"] == "energy"
+    assert data["compression_ratio"] > 0
+    assert data["fcpxml"], "export must produce an FCPXML path"
+    cut = _get(base, f"/api/file?path={urllib.parse.quote(data['cutlist'])}")
+    assert b'"segments"' in cut
+    fcpxml = _get(base, f"/api/file?path={urllib.parse.quote(data['fcpxml'])}")
+    assert b"<fcpxml" in fcpxml
+
+
+def test_out_of_project_paths_are_rejected(base):
+    resp = _post(base, "export", {"path": "/etc/hostname"})
+    assert resp["ok"] is False
+    assert isinstance(resp["error"], str)
 
 
 def test_bad_upload_is_a_clean_error(base):

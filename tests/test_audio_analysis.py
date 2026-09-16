@@ -61,6 +61,25 @@ def test_summary_records_hysteresis_that_actually_ran(tmp_path, media):
     assert h["min_silence_ms"] == 120
 
 
+def test_export_fcpxml_produces_a_readable_file(tmp_path, media):
+    """The `export_fcpxml` flag must actually write FCPXML. Regression: the
+    bool parameter once shadowed the imported writer, so the flag silently
+    raised 'bool' object is not callable whenever it was True."""
+    summary = run_audio_analysis(
+        media, tmp_path / "proj", source="clip.wav", export_fcpxml=True,
+    )
+    fcpxml = Path(summary["fcpxml"])
+    assert fcpxml.is_file(), "fcpxml path must exist when export_fcpxml is set"
+    text = fcpxml.read_text(encoding="utf-8")
+    assert "<fcpxml" in text
+    assert Path(summary["cutlist"]).is_file()
+
+
+def test_export_fcpxml_off_by_default(tmp_path, media):
+    summary = run_audio_analysis(media, tmp_path / "proj", source="clip.wav")
+    assert summary["fcpxml"] is None
+
+
 def test_release_floor_clamps_for_low_threshold(tmp_path, media):
     summary = run_audio_analysis(
         media, tmp_path / "proj", source="clip.wav", threshold=0.1,

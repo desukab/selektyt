@@ -142,3 +142,12 @@ dd { margin: 2px 0 0; font-size: 14px; overflow-wrap: anywhere; }
   background: rgba(240, 166, 90, 0.18);
   color: #d8b48c;
 }
+
+.export { margin-top: 18px; }
+
+.links { display: flex; gap: 16px; flex-wrap: wrap; }
+
+.links a {
+  color: var(--accent);
+  font-size: 14px;
+}

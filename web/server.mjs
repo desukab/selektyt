@@ -16,7 +16,7 @@ import {
   readFileSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, extname, join, normalize, resolve } from "node:path";
+import { basename, dirname, extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   encodeWav,
@@ -102,6 +102,12 @@ function rpc(op, params = {}) {
   });
 }
 
+async function rpcData(op, params = {}) {
+  const resp = await rpc(op, params);
+  if (!resp.ok) throw new Error(resp.error || `op failed: ${op}`);
+  return resp.data;
+}
+
 // ── HTTP helpers ──
 
 function send(res, status, body, headers = {}) {
@@ -164,11 +170,33 @@ function ensureSample() {
   }
 }
 
+async function resolveMedia(body) {
+  if (body.wav) {
+    mkdirSync(UPLOADS, { recursive: true });
+    const name = sanitizeName(body.name);
+    const target = join(UPLOADS, name);
+    const wav = Buffer.from(body.wav, "base64");
+    if (wav.length < 44) throw new Error("uploaded file is too small to be a WAV");
+    writeFileSync(target, wav);
+    return target;
+  }
+  if (body.sample || body.path === SAMPLE_NAME) {
+    ensureSample();
+    return SAMPLE_PATH;
+  }
+  if (body.path) {
+    const path = guardedPath(body.path);
+    if (!existsSync(path)) throw new Error(`no such file: ${path}`);
+    return path;
+  }
+  throw new Error("provide 'path', 'sample', or a base64 'wav'");
+}
+
 // ── routes ──
 
 async function route(req, res, url, method) {
   if ((method === "GET" || method === "POST") && url.pathname === "/api/ping") {
-    return sendJson(res, { ok: true, op: "ping", data: (await rpc("ping")).data });
+    return sendJson(res, { ok: true, op: "ping", data: await rpcData("ping") });
   }
   if (method === "GET" && url.pathname === "/api/sample.wav") {
     ensureSample();
@@ -179,32 +207,40 @@ async function route(req, res, url, method) {
   }
   if (method === "POST" && url.pathname === "/api/vad_analyze") {
     const body = await getJson(req);
-    let path;
-    if (body.wav) {
-      mkdirSync(UPLOADS, { recursive: true });
-      const name = sanitizeName(body.name);
-      const target = join(UPLOADS, name);
-      const wav = Buffer.from(body.wav, "base64");
-      if (wav.length < 44) throw new Error("uploaded file is too small to be a WAV");
-      writeFileSync(target, wav);
-      path = target;
-    } else if (body.sample || body.path === SAMPLE_NAME) {
-      ensureSample();
-      path = SAMPLE_PATH;
-    } else if (body.path) {
-      path = guardedPath(body.path);
-      if (!existsSync(path)) throw new Error(`no such file: ${path}`);
-    } else {
-      throw new Error("provide 'path', 'sample', or a base64 'wav'");
-    }
-    const data = (await rpc("vad_analyze", {
+    const path = await resolveMedia(body);
+    const data = await rpcData("vad_analyze", {
       path,
       threshold: body.threshold,
       min_speech_ms: body.min_speech_ms,
       min_silence_ms: body.min_silence_ms,
       return_scores: true,
-    })).data;
+    });
     return sendJson(res, { ok: true, op: "vad_analyze", data });
+  }
+  if (method === "POST" && url.pathname === "/api/export") {
+    const body = await getJson(req);
+    const media = await resolveMedia(body);
+    const data = await rpcData("audio_analysis", {
+      media,
+      project: join(OUT_WEB, "project"),
+      source: body.source || String(media),
+      min_speech_ms: body.min_speech_ms,
+      min_silence_ms: body.min_silence_ms,
+      silence_threshold: body.silence_threshold,
+      silence_padding: body.silence_padding,
+      keep_pauses: body.keep_pauses,
+      remove_filler: body.remove_filler,
+      export_fcpxml: body.export_fcpxml !== false,
+    });
+    return sendJson(res, { ok: true, op: "export", data });
+  }
+  if (method === "GET" && url.pathname === "/api/file") {
+    const file = guardedPath(url.searchParams.get("path") || "");
+    if (!existsSync(file)) throw new Error(`no such file: ${file}`);
+    return send(res, 200, readFileSync(file), {
+      "Content-Type": MIME[extname(file)] || "application/octet-stream",
+      "Content-Disposition": `attachment; filename="${sanitizeName(basename(file))}"`,
+    });
   }
   if (method === "POST" && url.pathname === "/api/segment") {
     const body = await getJson(req);

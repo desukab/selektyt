@@ -9,6 +9,7 @@ const state = {
   duration: 0,
   frameMs: 32,
   meta: null,
+  media: { sample: true },
 };
 
 async function post(op, params) {
@@ -146,10 +147,45 @@ async function resegment() {
 
 async function analyze(params) {
   setStatus("analyzing…");
+  state.media = params;
   try {
     renderAudio(await post("vad_analyze", params));
   } catch (err) {
     setStatus(err.message, false);
+  }
+}
+
+async function exportCut() {
+  const panel = $("export-panel");
+  const links = $("export-links");
+  links.innerHTML = "";
+  panel.hidden = false;
+  $("export-summary").textContent = "running editorial stage…";
+  try {
+    const data = await post("export", state.media);
+    const pct = (v) => `${Math.round(100 * (v || 0))}%`;
+    $("export-summary").textContent =
+      `compression ${data.compression_ratio?.toFixed(2)}× · speech ${pct(data.speech_ratio)} · dead air ${pct(data.dead_air_ratio)} · ${data.speech_regions} speech regions · backend ${data.vad_backend}`;
+    const artifacts = [
+      ["cutlist", data.cutlist],
+      ["FCPXML", data.fcpxml],
+    ];
+    for (const [label, p] of artifacts) {
+      if (!p) continue;
+      const a = document.createElement("a");
+      a.href = `/api/file?path=${encodeURIComponent(p)}`;
+      a.download = "";
+      a.textContent = `download ${label}`;
+      links.appendChild(a);
+    }
+    if (!data.fcpxml) {
+      const note = document.createElement("span");
+      note.className = "muted";
+      note.textContent = "FCPXML off";
+      links.appendChild(note);
+    }
+  } catch (err) {
+    $("export-summary").textContent = `export failed: ${err.message}`;
   }
 }
 
@@ -162,6 +198,7 @@ async function init() {
     $("engine").textContent = `sidecar unreachable: ${err.message}`;
   }
   $("analyze-sample").addEventListener("click", () => analyze({ sample: true }));
+  $("export-fcpxml").addEventListener("click", exportCut);
   $("file-input").addEventListener("change", (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
