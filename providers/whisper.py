@@ -10,6 +10,9 @@ from pathlib import Path
 from models.core import Segment, Word
 
 
+FALLBACK_CHAIN = ["small", "base", "tiny"]
+
+
 def _require(name: str) -> None:
     if shutil.which(name) is None:
         raise RuntimeError(f"{name} is required and must be on PATH")
@@ -116,6 +119,8 @@ def transcribe(
     )
 
     _threads = cpu_threads or int(os.environ.get("SELEKYT_CPU_THREADS", str(os.cpu_count() or 4)))
+    fallback_rt = float(os.environ.get("SELEKYT_FALLBACK_RT", "10.0"))
+    fallback_consecutive = int(os.environ.get("SELEKYT_FALLBACK_CONSECUTIVE", "3"))
     initial_model_name = model_name
     model = WhisperModel(model_name, device="auto", compute_type="int8", cpu_threads=_threads)
     all_segments: list[Segment] = []
@@ -233,6 +238,24 @@ def transcribe(
                     f"({count - (index + 1)} chunks, {avg_rt:.2f}x avg RT)",
                     flush=True,
                 )
+
+            if index > 0 and rt > fallback_rt:
+                slow_count += 1
+                if slow_count >= fallback_consecutive:
+                    fallback_idx = FALLBACK_CHAIN.index(model_name) if model_name in FALLBACK_CHAIN else -1
+                    if fallback_idx != -1 and fallback_idx < len(FALLBACK_CHAIN) - 1:
+                        model_name = FALLBACK_CHAIN[fallback_idx + 1]
+                        print(
+                            f"[transcribe] falling back to {model_name} after "
+                            f"{slow_count} consecutive slow chunks",
+                            flush=True,
+                        )
+                        model = WhisperModel(
+                            model_name, device="auto", compute_type="int8", cpu_threads=_threads
+                        )
+                        slow_count = 0
+            else:
+                slow_count = 0
 
     all_segments.sort(key=lambda s: (s.start, s.end))
     merged: list[Segment] = []
