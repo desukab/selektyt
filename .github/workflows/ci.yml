@@ -64,7 +64,11 @@ jobs:
         # requests is imported at collection time via engine.llm_editorial;
         # faster-whisper is imported lazily and mocked in tests.
         run: pip install -e ".[dev,llm]"
+      - name: Node (for the web shell harness tests)
+        run: node --version
       - name: Pytest
         env:
           SELEKYT_MECH: ${{ github.workspace }}/rust/target/release/selekyt-mech
-        run: python -m pytest tests/ -q
+        # -rs surfaces skip reasons so a silently-skipped suite never passes
+        # as green without coverage (the harness tests need node on PATH).
+        run: python -m pytest tests/ -q -rs
