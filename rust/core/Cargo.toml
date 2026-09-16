@@ -1,0 +1,31 @@
+# SelekyT mechanical core — the Rust layer of the hybrid product.
+#
+# Reuses proven AutoCut components (vad segmentation, cutlist, timecode,
+# probe, FCPXML + MP4 export) with the author's permission. See
+# docs/autocut-provenance.md. Attribution is retained in every reused file.
+#
+# Silero V5 scoring arrives via the `voice_activity_detector` crate, but that
+# pulls in onnxruntime and is only enabled on request (desktop/CI builds).
+# The crate is fully buildable without it via `fallback::score_energy` — same
+# 32ms chunk cadence, no neural weights.
+[package]
+name = "selekyt-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "selekyt_core"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+voice_activity_detector = { version = "0.2", optional = true }
+
+[features]
+default = []
+silero = ["dep:voice_activity_detector"]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(feature, values("silero"))'] }
