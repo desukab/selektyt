@@ -5,7 +5,7 @@ import unicodedata
 from pathlib import Path
 
 from models.core import Candidate, Word
-from engine.caption_director import build_blocks, style_name
+from engine.caption_director import build_blocks, style_name, CaptionBlock
 
 
 def _ts(v: float) -> str:
@@ -49,8 +49,8 @@ def _karaoke_text(words: list[Word], emphasis: set[int]) -> str:
         if not text:
             continue
         if idx in emphasis:
-            text = r"{\\c&H00D7FF&\\b1}" + text + r"{\\c&HFFFFFF&\\b0}"
-        pieces.append(rf"{{\\k{duration_cs}}}{text}")
+            text = r"{\c&H00D7FF&\b1}" + text + r"{\c&HFFFFFF&\b0}"
+        pieces.append(rf"{{\k{duration_cs}}}{text}")
     return " ".join(pieces)
 
 
@@ -58,7 +58,7 @@ def ass_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
     """Write Replix-inspired, word-timed ASS captions locally.
 
     Features: multilingual-safe grouping, active-word karaoke timing, keyword
-    emphasis, and a few compact styles selected by SELEKYT_CAPTION_STYLE.
+    emphasis, and compact visual presets selected by SELEKYT_CAPTION_STYLE.
     """
     out.parent.mkdir(parents=True, exist_ok=True)
     words = sorted(c.words or [], key=lambda w: (w.start, w.end))
@@ -78,10 +78,7 @@ def ass_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
     blocks = build_blocks(c, max_words=words_per_line)
     if not blocks:
         groups = _group_words(words, max_words=words_per_line)
-        blocks = []
-        from engine.caption_director import CaptionBlock
-        for group in groups:
-            blocks.append(CaptionBlock(group, set()))
+        blocks = [CaptionBlock(group, set()) for group in groups]
 
     style = style_name()
     presets = {
