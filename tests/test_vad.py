@@ -6,7 +6,7 @@ import pytest
 
 from engine.vad import (
     EnergyVAD, FFmpegVADBackend, WhisperVADBackend, SileroVADBackend,
-    get_vad_backend, segment_from_scores, silence_from_speech,
+    get_vad_backend, segment_from_scores, segment_with_meta, silence_from_speech,
     save_scores, load_scores, SpeechRegion, SilenceRegion, VADResult,
 )
 
@@ -233,3 +233,78 @@ def test_load_scores_corrupt(tmp_path):
     p = tmp_path / "bad.json"
     p.write_text("{not json", encoding="utf-8")
     assert load_scores(p) is None
+
+
+# ── AutoCut parity (reference values computed from rust/core/src/vad.rs) ──
+
+def test_parity_reference_boundaries_32ms():
+    """AutoCut-exact run boundaries at the 32ms Silero cadence (2-chunk gap merges)."""
+    scores = [0.9] * 10 + [0.0] * 2 + [0.9] * 10
+    regions = segment_from_scores(scores, frame_ms=32, threshold=0.5,
+                                  min_silence_ms=100, min_speech_ms=150)
+    assert len(regions) == 1
+    assert regions[0].start == 0.0
+    assert abs(regions[0].end - 22 * 0.032) < 1e-9
+
+
+def test_parity_reference_gap_stays_split():
+    """4-chunk gap (128ms) strictly exceeds min_silence 100ms → two regions."""
+    scores = [0.9] * 10 + [0.0] * 4 + [0.9] * 10
+    regions = segment_from_scores(scores, frame_ms=32, threshold=0.5,
+                                  min_silence_ms=100, min_speech_ms=150)
+    assert len(regions) == 2
+    assert regions[0].start == 0.0
+    assert abs(regions[0].end - 10 * 0.032) < 1e-9
+    assert abs(regions[1].start - 14 * 0.032) < 1e-9
+    assert abs(regions[1].end - 24 * 0.032) < 1e-9
+
+
+def test_parity_release_floor_clamps_low_threshold():
+    """release = max(threshold-0.15, 0.05): a dip at 0.04 splits, 0.06 survives."""
+    dip_below = [0.2] * 6 + [0.04] * 4 + [0.2] * 6
+    dip_above = [0.2] * 6 + [0.06] * 4 + [0.2] * 6
+    kw = dict(frame_ms=32, threshold=0.1, min_speech_ms=10, min_silence_ms=0)
+    assert len(segment_from_scores(dip_below, **kw)) == 2
+    assert len(segment_from_scores(dip_above, **kw)) == 1
+
+
+def test_segment_with_meta_reports_hysteresis():
+    scores = [0.9] * 10 + [0.0] * 2 + [0.9] * 10
+    regions, meta = segment_with_meta(scores, frame_ms=32, threshold=0.5,
+                                      min_speech_ms=100, min_silence_ms=100)
+    assert len(regions) == 1
+    assert meta["hysteresis"]["threshold"] == 0.5
+    assert meta["hysteresis"]["release"] == 0.35
+    assert meta["speech_regions"] == 1
+    assert meta["speech_seconds"] > 0
+
+
+# ── backend provenance (which model actually ran) ──
+
+def test_energy_backend_reports_model_and_fallback_reason(tmp_path):
+    path = _write_tone_wav(tmp_path)
+    backend = EnergyVAD(fallback_reason="silero unavailable")
+    result = backend.analyze(path)
+    assert result.vad_model == "energy-rms"
+    assert result.fallback_reason == "silero unavailable"
+
+
+def test_default_backend_reports_fallback_reason():
+    backend = get_vad_backend()
+    # This device never has silero; the selected backend must say so.
+    if backend.name != "silero":
+        assert backend.fallback_reason is not None
+        assert "silero" in backend.fallback_reason
+
+
+def test_save_load_preserves_provenance(tmp_path):
+    result = VADResult(scores=[0.1, 0.9], sample_rate=16000, backend="energy",
+                       frame_ms=32, duration=0.1,
+                       vad_model="energy-rms", hysteresis={"release": 0.35},
+                       fallback_reason="silero unavailable on this device")
+    path = tmp_path / "vad_raw.json"
+    save_scores(result, path)
+    loaded = load_scores(path)
+    assert loaded.vad_model == "energy-rms"
+    assert loaded.hysteresis == {"release": 0.35}
+    assert loaded.fallback_reason == "silero unavailable on this device"

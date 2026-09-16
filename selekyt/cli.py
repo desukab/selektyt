@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 from pathlib import Path
 
 from selekyt.pipeline import run
+from selekyt.server import serve_stdio as serve_python
 
 
 def _doctor() -> int:
@@ -107,7 +109,17 @@ def main() -> None:
         "--export-fcpxml", action="store_true",
         help="Export Final Cut Pro XML (FCPXML 1.11) alongside cut list",
     )
+    p.add_argument(
+        "--json", action="store_true",
+        help="Print the final machine-readable report as JSON on stdout",
+    )
+    p.add_argument(
+        "--server", action="store_true",
+        help="Run the Python JSON-RPC sidecar loop instead of the pipeline",
+    )
     args = p.parse_args()
+    if args.server:
+        raise SystemExit(serve_python())
     if args.doctor or not args.source:
         raise SystemExit(_doctor())
     os.environ["SELEKYT_CAPTION_STYLE"] = args.caption_style
@@ -132,7 +144,12 @@ def main() -> None:
         remove_filler=args.remove_filler,
         export_fcpxml=args.export_fcpxml,
     )
-    print(f"SelekyT complete: {project}")
+    if args.json:
+        report_path = project / "report.json"
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    else:
+        print(f"SelekyT complete: {project}")
 
 
 if __name__ == "__main__":

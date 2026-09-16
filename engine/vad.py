@@ -26,7 +26,7 @@ from providers.ffmpeg import run_capture
 
 log = logging.getLogger(__name__)
 
-FRAME_MS = 30  # Silero V5 uses 512-sample frames at 16kHz (32ms); use 30ms to match WakeWord-style cadence
+FRAME_MS = 32  # Silero V5 fixed window: 512 samples at 16kHz = 32ms (matches rust core)
 
 
 @dataclass
@@ -50,6 +50,9 @@ class VADResult:
     backend: str
     frame_ms: int
     duration: float
+    vad_model: str | None = None
+    hysteresis: dict | None = None
+    fallback_reason: str | None = None
 
 
 class VADBackend:
@@ -66,6 +69,7 @@ class VADBackend:
 
 class EnergyVAD(VADBackend):
     name = "energy"
+    vad_model = "energy-rms"
 
     def __init__(
         self,
@@ -75,6 +79,7 @@ class EnergyVAD(VADBackend):
         speech_ceiling: float = 0.08,
         zcr_min: float = 0.02,
         zcr_max: float = 0.45,
+        fallback_reason: str | None = None,
     ):
         self.sample_rate = sample_rate
         self.frame_ms = frame_ms
@@ -82,6 +87,7 @@ class EnergyVAD(VADBackend):
         self.speech_ceiling = speech_ceiling
         self.zcr_min = zcr_min
         self.zcr_max = zcr_max
+        self.fallback_reason = fallback_reason
 
     def _read_mono(self, audio: Path) -> np.ndarray:
         wav = Path(str(audio))
@@ -121,6 +127,8 @@ class EnergyVAD(VADBackend):
             backend=self.name,
             frame_ms=self.frame_ms,
             duration=len(data) / self.sample_rate,
+            vad_model=self.vad_model,
+            fallback_reason=self.fallback_reason,
         )
 
 
@@ -128,11 +136,14 @@ class EnergyVAD(VADBackend):
 
 class FFmpegVADBackend(VADBackend):
     name = "ffmpeg"
+    vad_model = "silencedetect"
 
-    def __init__(self, noise_db: float = -35.0, sample_rate: int = 16000, frame_ms: int = FRAME_MS):
+    def __init__(self, noise_db: float = -35.0, sample_rate: int = 16000, frame_ms: int = FRAME_MS,
+                 fallback_reason: str | None = None):
         self.noise_db = noise_db
         self.sample_rate = sample_rate
         self.frame_ms = frame_ms
+        self.fallback_reason = fallback_reason
 
     def is_available(self) -> bool:
         return shutil.which("ffmpeg") is not None
@@ -182,6 +193,8 @@ class FFmpegVADBackend(VADBackend):
             backend=self.name,
             frame_ms=self.frame_ms,
             duration=duration,
+            vad_model=self.vad_model,
+            fallback_reason=self.fallback_reason,
         )
 
 
@@ -189,12 +202,15 @@ class FFmpegVADBackend(VADBackend):
 
 class WhisperVADBackend(VADBackend):
     name = "whisper"
+    vad_model = "whisper-wordtimestamps"
 
-    def __init__(self, words: list, sample_rate: int = 16000, frame_ms: int = FRAME_MS, duration: float = 0.0):
+    def __init__(self, words: list, sample_rate: int = 16000, frame_ms: int = FRAME_MS, duration: float = 0.0,
+                 fallback_reason: str | None = None):
         self.words = words
         self.sample_rate = sample_rate
         self.frame_ms = frame_ms
         self.duration = duration
+        self.fallback_reason = fallback_reason
 
     def analyze(self, audio: Path) -> VADResult:
         frame = self.frame_ms / 1000.0
@@ -211,6 +227,8 @@ class WhisperVADBackend(VADBackend):
             backend=self.name,
             frame_ms=self.frame_ms,
             duration=total,
+            vad_model=self.vad_model,
+            fallback_reason=self.fallback_reason,
         )
 
 
@@ -218,6 +236,7 @@ class SileroVADBackend(VADBackend):
     """Silero V5 via onnxruntime — preferred when the package is installable."""
 
     name = "silero"
+    vad_model = "silero-v5"
 
     def __init__(self, model_path: str | None = None):
         self.model_path = model_path
@@ -257,9 +276,11 @@ def get_vad_backend(force: str | None = None,
             raise ValueError(f"unknown VAD backend '{force}'; choose from {sorted(_BACKENDS)}")
         backend = _BACKENDS[force]
         if force == "whisper":
-            instance: VADBackend = backend(words or [], duration=duration)
-        else:
+            instance: VADBackend = backend(words or [], duration=duration, fallback_reason="forced")
+        elif force == "silero":
             instance = backend()
+        else:
+            instance = backend(fallback_reason="forced")
         if not instance.is_available():
             raise RuntimeError(f"VAD backend '{force}' unavailable")
         return instance
@@ -268,13 +289,16 @@ def get_vad_backend(force: str | None = None,
         log.info("selecting Silero VAD backend")
         return SileroVADBackend()
     if EnergyVAD().is_available():
-        log.info("selecting energy VAD backend (device default — Silero not installable)")
-        return EnergyVAD()
+        reason = "silero unavailable: onnxruntime/model not present"
+        log.info("selecting energy VAD backend (%s)", reason)
+        return EnergyVAD(fallback_reason=reason)
     if FFmpegVADBackend().is_available():
-        log.info("selecting FFmpeg silencedetect VAD backend")
-        return FFmpegVADBackend()
-    log.info("selecting Whisper-timestamp VAD backend (last resort)")
-    return WhisperVADBackend(words or [], duration=duration)
+        reason = "silero and energy unavailable"
+        log.info("selecting FFmpeg silencedetect VAD backend (%s)", reason)
+        return FFmpegVADBackend(fallback_reason=reason)
+    reason = "silero, energy and ffmpeg unavailable"
+    log.info("selecting Whisper-timestamp VAD backend (last resort: %s)", reason)
+    return WhisperVADBackend(words or [], duration=duration, fallback_reason=reason)
 
 
 # ── Segmentation (post-hoc, deterministic) ──
@@ -291,16 +315,18 @@ def segment_from_scores(
 ) -> list[SpeechRegion]:
     """Convert per-frame speech probabilities into speech regions.
 
-    Uses hysteresis: speech starts when a frame exceeds `threshold`, but only
-    ends when it drops below `release` (default threshold - 0.15, i.e. the
-    Silero-style hysteresis gap). Short speech runs below `min_speech_ms` are
-    dropped; short silences below `min_silence_ms` are merged into speech.
-    Pure function — given the same cached scores + params, output is identical.
+    AutoCut-exact hysteresis segmentation (parity with `rust/core/src/vad.rs`):
+    speech starts when a frame reaches `threshold` and continues while frames
+    stay at or above `release = max(threshold - 0.15, 0.05)`; runs are grouped,
+    gaps strictly shorter than `min_silence_ms` are merged, runs shorter than
+    `min_speech_ms` are dropped. Pure function — given the same cached scores +
+    params, output is identical, and it is cadence-independent: it operates on
+    the score's own frame grid.
     """
     arr = np.asarray(scores, dtype=np.float32)
     frame_dur = frame_ms / 1000.0
     if release is None:
-        release = threshold - 0.15
+        release = max(threshold - 0.15, 0.05)
 
     active = False
     active_start = 0
@@ -341,6 +367,37 @@ def segment_from_scores(
     return result
 
 
+def segment_with_meta(
+    scores: list[float] | np.ndarray,
+    sample_rate: int = 16000,
+    frame_ms: int = FRAME_MS,
+    **kwargs,
+) -> tuple[list[SpeechRegion], dict]:
+    """`segment_from_scores` plus the report record: which segmentation params
+    (threshold/release/min-speech/min-silence) actually ran and what came out.
+    The pipeline stamps this onto the analysis report for provenance."""
+    threshold = kwargs.get("threshold", 0.5)
+    release = kwargs.get("release")
+    if release is None:
+        release = max(threshold - 0.15, 0.05)
+    min_speech_ms = kwargs.get("min_speech_ms", 150)
+    min_silence_ms = kwargs.get("min_silence_ms", 100)
+    regions = segment_from_scores(scores, sample_rate, frame_ms, **kwargs)
+    meta = {
+        "hysteresis": {
+            "threshold": threshold,
+            "release": round(release, 4),
+            "min_speech_ms": min_speech_ms,
+            "min_silence_ms": min_silence_ms,
+        },
+        "frame_ms": frame_ms,
+        "n_frames": int(np.asarray(scores).size),
+        "speech_regions": len(regions),
+        "speech_seconds": round(sum(r.end - r.start for r in regions), 3),
+    }
+    return regions, meta
+
+
 def silence_from_speech(
     regions: list[SpeechRegion], duration: float
 ) -> list[SilenceRegion]:
@@ -372,6 +429,12 @@ def save_scores(result: VADResult, path: Path) -> None:
         "n_frames": len(result.scores),
         "scores": result.scores,
     }
+    if result.vad_model is not None:
+        payload["vad_model"] = result.vad_model
+    if result.hysteresis is not None:
+        payload["hysteresis"] = result.hysteresis
+    if result.fallback_reason is not None:
+        payload["fallback_reason"] = result.fallback_reason
     tmp.write_text(json.dumps(payload), encoding="utf-8")
     tmp.replace(path)
 
@@ -389,4 +452,7 @@ def load_scores(path: Path) -> VADResult | None:
         backend=payload.get("backend", "unknown"),
         frame_ms=payload.get("frame_ms", FRAME_MS),
         duration=payload.get("duration", 0.0),
+        vad_model=payload.get("vad_model"),
+        hysteresis=payload.get("hysteresis"),
+        fallback_reason=payload.get("fallback_reason"),
     )

@@ -5,6 +5,77 @@ No external dependencies. Used by: jumpcut, FCPXML, renderer, multi-track, QA.
 """
 from __future__ import annotations
 
+from collections import namedtuple
+
+# Canonical typed interval: ("keep"|"remove", start, end). This is the shape
+# the Rust core's EditCut produces and every exporter consumes.
+CutSpan = namedtuple("CutSpan", ["kind", "start", "end"])
+
+
+def cutlist_from_intervals(
+    intervals: list[tuple[float, float]],
+    source_duration: float,
+    pad: float = 0.3,
+) -> list[CutSpan]:
+    """AutoCut-exact VAD→CutList inversion (parity with `CutList::from_speech_segments`).
+
+    Pipeline, in the same order as AutoCut:
+      1. pad every keep by `pad` on both sides
+      2. clamp into [0, source_duration]
+      3. drop degenerate intervals (end <= start)
+      4. sort by start
+      5. merge when the next start `<=` the previous end (touching intervals
+         merge too)
+      6. tile the gaps as Remove — the result covers [0, source_duration].
+
+    Pure and deterministic; the renderer/export path uses this shape directly.
+    """
+    keeps = sorted(
+        (
+            (max(0.0, s - pad), min(source_duration, e + pad))
+            for s, e in intervals
+            if min(source_duration, e + pad) > max(0.0, s - pad)
+        ),
+        key=lambda iv: iv[0],
+    )
+
+    merged: list[tuple[float, float]] = []
+    for s, e in keeps:
+        if merged and s <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], e))
+        else:
+            merged.append((s, e))
+
+    spans: list[CutSpan] = []
+    cursor = 0.0
+    for s, e in merged:
+        if s > cursor:
+            spans.append(CutSpan("remove", cursor, s))
+        spans.append(CutSpan("keep", s, e))
+        cursor = e
+    if cursor < source_duration:
+        spans.append(CutSpan("remove", cursor, source_duration))
+    return spans
+
+
+def resolve_for_export(spans: list[CutSpan], coalesce: float = 1e-6) -> list[CutSpan]:
+    """Coalesce adjacent same-kind spans closer than `coalesce` (AutoCut
+    `resolveForExport`). Disabled-keep handling is a frontend concept; the
+    Python editor represents those as `remove` spans already."""
+    if not spans:
+        return []
+    out: list[CutSpan] = [spans[0]]
+    for span in spans[1:]:
+        last = out[-1]
+        if (
+            last.kind == span.kind
+            and abs(last.end - span.start) < coalesce
+        ):
+            out[-1] = CutSpan(last.kind, last.start, max(last.end, span.end))
+        else:
+            out.append(span)
+    return out
+
 
 def merge_intervals(intervals: list[tuple[float, float]], gap: float = 0.0) -> list[tuple[float, float]]:
     """Merge overlapping or adjacent intervals.

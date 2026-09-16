@@ -6,7 +6,8 @@ from engine.cut_algebra import (
     merge_intervals, subtract_intervals, pad_intervals, trim_intervals,
     split_intervals, word_safe_filter, is_adjacent, is_nested,
     source_to_output_time, concat_kept_ranges, enforce_duration,
-    remove_overlaps, tile_cutlist,
+    remove_overlaps, tile_cutlist, cutlist_from_intervals, resolve_for_export,
+    CutSpan,
 )
 
 
@@ -377,3 +378,69 @@ def test_enforce_duration_all_too_short():
 def test_concat_nested_intervals():
     result = concat_kept_ranges([(1.0, 5.0), (2.0, 3.0)])
     assert result == 4.0
+
+
+# ── AutoCut parity: cutlist_from_intervals (CutList::from_speech_segments) ──
+# Reference values computed by hand from the AutoCut algorithm: pad -> clamp
+# to [0, source_duration] -> drop degenerate -> sort -> merge `s <= last.1`
+# -> tile gaps as remove.
+
+def test_parity_inversion_pad_clamp_tile():
+    # Single speech region, pad expands then tiles to two removes.
+    spans = cutlist_from_intervals([(1.0, 2.0)], source_duration=5.0, pad=0.3)
+    assert spans == [
+        CutSpan("remove", 0.0, 0.7),
+        CutSpan("keep", 0.7, 2.3),
+        CutSpan("remove", 2.3, 5.0),
+    ]
+
+
+def test_parity_inversion_clamps_into_bounds():
+    spans = cutlist_from_intervals([(0.1, 4.95)], source_duration=5.0, pad=0.3)
+    assert spans == [CutSpan("keep", 0.0, 5.0)]
+
+
+def test_parity_inversion_merge_touching():
+    # start == previous end (1.0) still merges under the `s <= last.1` rule.
+    spans = cutlist_from_intervals([(0.5, 1.0), (1.0, 2.0)], source_duration=2.0, pad=0.0)
+    assert spans == [
+        CutSpan("remove", 0.0, 0.5),
+        CutSpan("keep", 0.5, 2.0),
+    ]
+
+
+def test_parity_inversion_merges_overlapping_padded():
+    # (1.0,2.0)->(0.7,2.3) and (2.2,3.0)->(1.9,3.3) overlap -> single keep.
+    spans = cutlist_from_intervals([(1.0, 2.0), (2.2, 3.0)], source_duration=5.0, pad=0.3)
+    assert spans == [
+        CutSpan("remove", 0.0, 0.7),
+        CutSpan("keep", 0.7, 3.3),
+        CutSpan("remove", 3.3, 5.0),
+    ]
+
+
+def test_parity_inversion_drops_degenerate():
+    spans = cutlist_from_intervals([(0.0, 0.0)], source_duration=5.0, pad=0.0)
+    assert spans == [CutSpan("remove", 0.0, 5.0)]
+
+
+def test_parity_resolve_for_export_coalesces_adjacent_removes():
+    spans = [
+        CutSpan("remove", 0.0, 1.0),
+        CutSpan("remove", 1.0, 2.0),
+        CutSpan("keep", 2.0, 4.0),
+    ]
+    resolved = resolve_for_export(spans)
+    assert resolved == [
+        CutSpan("remove", 0.0, 2.0),
+        CutSpan("keep", 2.0, 4.0),
+    ]
+
+
+def test_parity_resolve_for_export_keeps_real_gap():
+    spans = [
+        CutSpan("remove", 0.0, 1.0),
+        CutSpan("remove", 1.5, 2.0),
+        CutSpan("keep", 2.0, 4.0),
+    ]
+    assert resolve_for_export(spans) == spans

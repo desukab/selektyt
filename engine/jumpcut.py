@@ -145,19 +145,23 @@ class JumpCutEngine:
     def _derive_segments(
         self, keep_intervals: list[tuple[float, float]], duration: float
     ) -> list[CutSegment]:
-        """Convert KEEP intervals into annotated CUT segments with gaps."""
+        """Convert KEEP intervals into annotated CUT segments with gaps.
+
+        AutoCut-exact tiling: keeps have already been merged with the `s <=
+        last.1` rule, so every gap between them (and the leading/trailing
+        silence) becomes a Remove segment covering [0, duration] exactly.
+        """
         segments: list[CutSegment] = []
         prev_end = 0.0
 
         for start, end in keep_intervals:
-            if start > prev_end + 0.001:
-                gap_dur = start - prev_end
+            if start > prev_end:
                 gap_type = self._classify_gap(prev_end, start)
                 segments.append(CutSegment(prev_end, start, gap_type, gap_type.value))
             segments.append(CutSegment(start, end, SegmentType.KEEP, "speech"))
             prev_end = end
 
-        if prev_end < duration - 0.001:
+        if prev_end < duration:
             gap_type = self._classify_gap(prev_end, duration)
             segments.append(CutSegment(prev_end, duration, gap_type, gap_type.value))
 
