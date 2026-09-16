@@ -34,6 +34,49 @@ selekyt "URL" --model small --language te --limit 6
 9. Burns minimal subtitles using a Unicode-capable font profile. Set `SELEKYT_FONT` if the machine uses a different installed font.
 10. Writes selections, transcript and report JSON alongside the MP4s.
 
+## Architecture
+
+SelekyT is three layers, each independently usable:
+
+| Layer | What it is | Entry point |
+| --- | --- | --- |
+| CLI | the one-command pipeline above | `selekyt "URL"` |
+| Rust core (`rust/`) | mechanical parity layer: AutoCut-derived cut algebra, energy VAD scoring, FCPXML/ffconcat export | `selekyt-mech` (JSON-RPC over stdio) |
+| Python sidecar (`selekyt/server.py`) | intelligence layer: pluggable VAD backends, provenance, audio stage | `selekyt --server` |
+
+Both sidecars speak the same JSON-RPC envelope (
+`{"op","params"}` → `{"ok","op","data"|"error"}`), so tooling can target
+either implementation. Cross-language agreement is pinned by
+`tests/test_sidecar_parity.py`; the parity contract is documented in
+`docs/autocut-parity.md`.
+
+## Shell harness
+
+`web/` holds a minimal zero-dependency shell: a Node process spawns the Python
+sidecar and serves a UI that renders segmentation, the score curve and the
+provenance record (`backend`, `vad_model`, `fallback_reason`, `hysteresis`).
+The frontend is designed to be reused unchanged inside the Tauri webview once a
+desktop webkit2gtk host is available (`docs/tauri-termux-blocker.md`).
+
+```bash
+node web/server.mjs      # → http://127.0.0.1:4242
+```
+
+Click **Analyze sample WAV** (a deterministic generated clip, no external
+media) or choose your own 16 kHz mono WAV; the threshold slider re-segments the
+cached scores live.
+
+## Development
+
+```bash
+python -m pytest -q                          # Python + sidecar + shell tests
+cargo test --manifest-path rust/Cargo.toml   # Rust mechanical core
+node web/server.mjs                          # manual shell check
+```
+
+CI (`.github/workflows/ci.yml`) runs pytest on Python 3.11–3.13 plus
+`cargo test` and `cargo clippy -- -D warnings` on every push.
+
 ## Output
 
 ```text

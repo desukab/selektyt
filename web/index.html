@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SelekyT · shell</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header>
+  <h1>SelekyT</h1>
+  <span id="engine" class="muted">connecting…</span>
+</header>
+<main>
+  <section class="controls">
+    <button id="analyze-sample" class="primary">Analyze sample WAV</button>
+    <label class="file">
+      <input type="file" id="file-input" accept="audio/wav,.wav" hidden />
+      <span>or choose a WAV on disk</span>
+    </label>
+    <label class="slider">
+      threshold
+      <input type="range" id="threshold" min="0.10" max="0.9" step="0.01" value="0.5" />
+      <output id="threshold-out">0.50</output>
+    </label>
+  </section>
+  <section id="status" class="status muted">Select a source to begin.</section>
+  <section class="canvas-wrap"><canvas id="scores" width="1200" height="240"></canvas></section>
+  <section class="meta">
+    <dl id="audit">
+      <div><dt>backend</dt><dd id="m-backend">—</dd></div>
+      <div><dt>vad model</dt><dd id="m-model">—</dd></div>
+      <div><dt>fallback</dt><dd id="m-fallback">—</dd></div>
+      <div><dt>hysteresis</dt><dd id="m-hyst">—</dd></div>
+      <div><dt>frames</dt><dd id="m-frames">—</dd></div>
+      <div><dt>duration</dt><dd id="m-dur">—</dd></div>
+      <div><dt>segments</dt><dd id="m-segs">—</dd></div>
+    </dl>
+    <pre id="meta-detail" class="detail"></pre>
+  </section>
+</main>
+<script type="module" src="/app.mjs"></script>
+</body>
+</html>

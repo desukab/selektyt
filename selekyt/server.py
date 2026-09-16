@@ -98,7 +98,7 @@ def op_vad_analyze(params: dict) -> dict:
         min_speech_ms=int(params.get("min_speech_ms", 150)),
         min_silence_ms=int(params.get("min_silence_ms", 100)),
     )
-    return {
+    out: dict = {
         "backend": result.backend,
         "vad_model": result.vad_model,
         "fallback_reason": result.fallback_reason,
@@ -109,6 +109,9 @@ def op_vad_analyze(params: dict) -> dict:
         "segments": [{"start": r.start, "end": r.end} for r in segments],
         "meta": meta,
     }
+    if params.get("return_scores"):
+        out["scores"] = [round(float(s), 6) for s in result.scores]
+    return out
 
 
 def op_audio_analysis(params: dict) -> dict:

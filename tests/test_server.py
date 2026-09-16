@@ -115,6 +115,14 @@ def test_vad_analyze_reports_provenance(tmp_path):
     assert data["meta"]["speech_regions"] == len(data["segments"])
 
 
+def test_vad_analyze_can_return_scores(tmp_path):
+    path = _write_tone_wav(tmp_path)
+    data = _handle("vad_analyze", {"path": str(path), "force": "energy", "return_scores": True})
+    assert isinstance(data["scores"], list)
+    assert len(data["scores"]) == data["n_frames"]
+    assert all(isinstance(s, float) for s in data["scores"])
+
+
 def test_vad_analyze_missing_path():
     resp = json.loads(process_line(json.dumps({"op": "vad_analyze", "params": {}})))
     assert resp["ok"] is False
