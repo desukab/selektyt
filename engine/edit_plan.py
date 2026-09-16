@@ -60,12 +60,13 @@ def filler_words(c: Candidate) -> list[str]:
     return [w.text for w in (c.words or []) if _is_filler(w.text)]
 
 
-def pacing_report(c: Candidate) -> dict:
+def pacing_report(c: Candidate, truth: dict | None = None) -> dict:
     """Per-candidate pacing diagnostics.
 
     Returns a dict with: words_per_second, total_words, long_pauses,
     silence_fraction, filler_pct, natural_rhythm, edit_ratio,
-    hook_latency, payoff_presence, duration.
+    hook_latency, payoff_presence, duration, and when VAD `truth` is
+    supplied, VAD-enhanced fields: vad_speech_ratio, vad_dead_air_ratio.
     """
     duration = max(0.01, c.end - c.start)
     words = c.words or []
@@ -109,7 +110,7 @@ def pacing_report(c: Candidate) -> dict:
     # Payoff presence: clip ends with terminal punctuation and has substance
     payoff_presence = bool(re.search(r"[.!?।॥？！]$", c.text.strip())) and total_words >= 15
 
-    return {
+    result: dict = {
         "words_per_second": words_per_second,
         "total_words": total_words,
         "long_pauses": long_pauses,
@@ -120,6 +121,30 @@ def pacing_report(c: Candidate) -> dict:
         "hook_latency": hook_latency,
         "payoff_presence": payoff_presence,
         "duration": round(duration, 2),
+    }
+
+    if truth:
+        result.update(_vad_pacing_fields(truth))
+    return result
+
+
+def _vad_pacing_fields(truth) -> dict:
+    """VAD-enhanced pacing fields (speech ratio, dead-air ratio, spike count).
+
+    Expects an AudioTruth-like object with vad_speech, vad_silence, and
+    pauses (with a `pause_type` str-compareable to 'dead_air'). All values
+    computed from VAD regions; Whisper words remain untouched.
+    """
+    duration = max(0.01, getattr(truth, "duration", 0.0))
+    speech_secs = sum(s.end - s.start for s in truth.vad_speech)
+    dead_secs = sum(
+        p.duration for p in truth.pauses
+        if getattr(p.pause_type, "value", p.pause_type) == "dead_air"
+    ) if truth.pauses else 0.0
+    return {
+        "vad_speech_ratio": round(speech_secs / duration, 3),
+        "vad_dead_air_ratio": round(dead_secs / duration, 3),
+        "vad_speech_regions": len(truth.vad_speech),
     }
 
 

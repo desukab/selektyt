@@ -79,6 +79,33 @@ def _dead_air_fraction(words: list, duration: float, pause_threshold: float = 0.
     return min(1.0, silence / max(0.01, duration))
 
 
+def _audio_quality_features(words: list, duration: float) -> dict | None:
+    """Audio-derived pacing features from word timestamps.
+
+    Returns None when word timestamps are unavailable (pipeline runs
+    without audio analysis), so callers can fall back to neutral scoring.
+    Features (each 0.0 → 1.0, higher is worse):
+      - silence_ratio: total inter-word gap / clip duration
+      - long_gap_ratio: fraction of gaps >= 0.7s
+    """
+    if not words or duration <= 0 or len(words) < 2:
+        return None
+    sorted_words = sorted(words, key=lambda w: w.start)
+    gaps = [
+        max(0.0, sorted_words[i].start - sorted_words[i - 1].end)
+        for i in range(1, len(sorted_words))
+    ]
+    if not gaps:
+        return None
+    silence_ratio = min(1.0, sum(gaps) / max(0.01, duration))
+    long_gap_ratio = min(1.0, sum(1 for g in gaps if g >= 0.7) / len(gaps))
+    return {
+        "silence_ratio": round(silence_ratio, 3),
+        "long_gap_ratio": round(long_gap_ratio, 3),
+        "gap_count": len(gaps),
+    }
+
+
 def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float = 55.0) -> list[Segment]:
     """Generate candidate clips respecting semantic boundaries.
 
@@ -149,7 +176,16 @@ def _score(s: Segment) -> tuple[float, float, float, float, str, str]:
     standalone = _standalone_score(low)
     repetition = _repetition_score(tokens)
     visual_dep = min(1.0, len(re.findall(VISUAL_DEICTICS, low, re.I)) / 1)
+    audio_q = _audio_quality_features(s.words or [], duration)
+    # Base formula identical to original; audio only ADDS a small adjustment
+    # when timestamps are available, and is exactly zero otherwise.
     editorial = max(0.0, min(1.0, .24*density + .22*substance + .22*progression + .18*opening + .14*payoff - .30*filler - .12*(1 - standalone)))
+    if audio_q:
+        silence_ratio = audio_q["silence_ratio"]
+        long_gap_ratio = audio_q["long_gap_ratio"]
+        audio_pace = max(0.0, 1.0 - 0.8 * silence_ratio - 0.4 * long_gap_ratio)
+        editing_adj = 0.05 * audio_pace - 0.08 * long_gap_ratio
+        editorial = max(0.0, min(1.0, editorial + editing_adj))
     virality = max(0.0, min(1.0, .34*opening + .24*contrast + .18*questions + .14*numbers + .10*substance))
     context = min(1.0, .40 + .30*substance + .20*progression + .10*payoff - .12*(1 - standalone))
     visual = min(1.0, .35 + .20*numbers + .20*contrast + .15*questions + .10*(n >= 35) - .15*visual_dep)
@@ -161,6 +197,12 @@ def _score(s: Segment) -> tuple[float, float, float, float, str, str]:
     reason = (f"opening={opening:.2f}; progression={progression:.2f}; payoff={payoff:.2f}; "
               f"density={density:.2f}; fillers={int(filler*4)}; standalone={standalone:.2f}; "
               f"repetition={repetition:.2f}")
+    if audio_q:
+        silence_ratio = audio_q["silence_ratio"]
+        long_gap_ratio = audio_q["long_gap_ratio"]
+        audio_pace = max(0.0, 1.0 - 0.8 * silence_ratio - 0.4 * long_gap_ratio)
+        reason += (f"; audio_pace={audio_pace:.2f}; "
+                   f"silence={audio_q['silence_ratio']:.3f}")
     return editorial, virality, context, visual, story_type, reason
 
 
