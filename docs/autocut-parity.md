@@ -79,9 +79,22 @@ Rust: `editalgebra::resolve_for_export`.
 ## Intentional deviations
 
 - **Energy VAD scoring curve.** The energy backend's RMS→probability curve
-  (`energy-rms`) is SelekyT-native and is **not** an AutoCut algorithm. It
-  must only agree on the *cadence* (32ms) and feed the same segmentation, not
-  on score values.
+  (`energy-rms`) is SelekyT-native and is **not** an AutoCut algorithm. It must
+  agree on the *cadence* (one 512-sample @16kHz score per chunk) and on the
+  speech/silence *decision* that feeds segmentation, not on raw score values.
+  The two implementations deliberately use different RMS→probability anchors:
+
+  | | silence floor | speech ceiling | ZCR gate |
+  | --- | --- | --- | --- |
+  | Rust `fallback::score_energy` | `QUIET_RMS` 0.0025 | `LOUD_RMS` 0.08 | none |
+  | Python `EnergyVAD` | `base_threshold` 0.02 | `speech_ceiling` 0.08 | frames with ZCR outside [0.02, 0.45] are damped ×0.3 |
+
+  Both saturate to 1.0 on voiced bursts and 0.0 on silence, so the 0.5
+  threshold decision agrees on clear content; divergence is confined to
+  mid-range transitions (measured ≤ 0.09 on the wired fixture, 0 of 128 frames
+  disagreeing at the threshold). The ZCR refinement is Python-only by design —
+  the Rust core keeps a fixed, well-defined curve so parity tests can assert
+  exact numbers.
 - **Word-safe editorial snapping.** `JumpCutEngine` snaps keep edges outward
   to word boundaries and keeps intentional/breathing pauses instead of raw
   `pad=0.3`. This is a deliberate editorial layer on top of the parity core;

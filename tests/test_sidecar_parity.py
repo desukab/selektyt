@@ -232,6 +232,28 @@ def test_score_cadence_and_provenance_match_python(proxy_wav):
 
 
 @skip_no_mech
+def test_energy_curves_agree_on_the_threshold_decision(proxy_wav):
+    """The two RMS->probability curves use different anchors (see the parity
+    doc's intentional-deviations table), so raw scores are not compared — but
+    the speech/silence decision at the 0.5 threshold must agree on clear
+    content, with divergence confined to mid-range transitions."""
+    py = EnergyVAD().analyze(proxy_wav)
+    with mech() as m:
+        rs = m.call("score", path=str(proxy_wav))
+    py_scores = np.asarray(py.scores, dtype=np.float64)
+    rust_scores = np.asarray(rs["scores"], dtype=np.float64)
+
+    # Saturated content: both scorers land on the same decision.
+    decisions = (py_scores >= 0.5) != (rust_scores >= 0.5)
+    assert not decisions.any(), f"{int(decisions.sum())} frames disagree"
+
+    # Mid-range divergence is bounded (transition frames only).
+    mid = (py_scores > 0.05) & (py_scores < 0.95)
+    drift = float(np.abs(py_scores - rust_scores)[mid].max()) if mid.any() else 0.0
+    assert drift < 0.15, f"curve drift grew to {drift:.3f}; update the parity doc"
+
+
+@skip_no_mech
 def test_fixture_segmentation_agrees_across_languages(proxy_wav, fixture_segments):
     """Curves agree on saturated bursts/silence, so segmentation must match."""
     with mech() as m:
