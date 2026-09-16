@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import argparse
 import shutil
 from pathlib import Path
@@ -30,7 +31,7 @@ def main() -> None:
     p.add_argument("--model", default="small", help="faster-whisper model size")
     p.add_argument("--language", default=None, help="Force transcription language, e.g. te, hi, ta")
     p.add_argument("--limit", type=int, default=6, help="Number of selected stories")
-    p.add_argument("--cookies", default=None, help="Netscape cookies.txt path; credentials stay local")
+    p.add_argument("--cookies", default=None, help="Netscape cookies.txt OR browser Cookie-header file; credentials stay local")
     p.add_argument("--doctor", action="store_true", help="Check the local processing environment")
     args = p.parse_args()
     if args.doctor or not args.source:
