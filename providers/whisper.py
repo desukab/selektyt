@@ -121,6 +121,7 @@ def transcribe(
     _threads = cpu_threads or int(os.environ.get("SELEKYT_CPU_THREADS", str(os.cpu_count() or 4)))
     fallback_rt = float(os.environ.get("SELEKYT_FALLBACK_RT", "10.0"))
     fallback_consecutive = int(os.environ.get("SELEKYT_FALLBACK_CONSECUTIVE", "3"))
+    chunk_timeout = int(os.environ.get("SELEKYT_CHUNK_TIMEOUT_MIN", "20")) * 60
     initial_model_name = model_name
     model = WhisperModel(model_name, device="auto", compute_type="int8", cpu_threads=_threads)
     all_segments: list[Segment] = []
@@ -222,6 +223,12 @@ def transcribe(
             rt = wall / max(0.1, decode_duration)
             running_wall += wall
             running_duration += decode_duration
+            if wall > chunk_timeout:
+                print(
+                    f"[transcribe] WARNING: chunk {index + 1}/{count} took {wall / 60:.1f} min "
+                    f"(> {chunk_timeout / 60:.0f} min timeout); check for a stall",
+                    flush=True,
+                )
             print(
                 f"    chunk {index + 1}/{count}: {wall:.1f}s wall, {rt:.2f}x RT, "
                 f"model={model_name}, threads={_threads}{fallback_tag}, "

@@ -83,3 +83,45 @@ def test_transcribe_reports_eta_after_three_chunks(tmp_path):
     """Verify empirical ETA appears once enough chunks have completed."""
     segs, lang, output = _run_transcribe_with_mocks(tmp_path, duration=180.0, chunk_minutes=1)
     assert "ETA" in output, f"Missing ETA in: {output}"
+
+
+def test_transcribe_warns_on_stalled_chunk(tmp_path):
+    """Verify a warning appears when a chunk exceeds the timeout."""
+
+    def fake_ffmpeg(cmd, *_a, **_kw):
+        target = Path(cmd[-1])
+        src = next(Path(a) for a in cmd if str(a).endswith("audio.wav"))
+        target.write_bytes(src.read_bytes())
+
+    mock_model = MagicMock()
+    mock_segment = MagicMock()
+    mock_segment.start = 0.0
+    mock_segment.end = 2.0
+    mock_segment.text = "hello world"
+    mock_segment.words = []
+    mock_info = MagicMock()
+    mock_info.language = "en"
+    mock_model.transcribe.return_value = ([mock_segment], mock_info)
+    _fake_faster_whisper(mock_model)
+
+    old_stdout = sys.stdout
+    buffer = io.StringIO()
+    sys.stdout = buffer
+    try:
+        with patch("providers.whisper._duration", return_value=120.0):
+            with patch("providers.whisper._extract_audio") as mock_extract:
+                mock_extract.side_effect = lambda media, out: _write_minimal_wav(out)
+                with patch("providers.whisper.subprocess.run", side_effect=fake_ffmpeg):
+                    with patch("providers.whisper._require"):
+                        with patch("providers.whisper.time.time", side_effect=[0.0, 1300.0]):
+                            with patch.dict("os.environ", {"SELEKYT_CHUNK_TIMEOUT_MIN": "20"}):
+                                from providers.whisper import transcribe
+
+                                audio = tmp_path / "fake.wav"
+                                audio.write_bytes(b"x")
+                                transcribe(audio, chunk_minutes=60, cpu_threads=2)
+    finally:
+        sys.stdout = old_stdout
+        sys.modules.pop("faster_whisper", None)
+    output = buffer.getvalue()
+    assert "WARNING" in output, f"Missing stall warning in: {output}"
