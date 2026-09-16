@@ -109,6 +109,12 @@ class EnergyVAD(VADBackend):
     def analyze(self, audio: Path) -> VADResult:
         data = self._read_mono(audio)
         frame = int(self.sample_rate * self.frame_ms / 1000)
+        # Cadence contract (docs/autocut-parity.md): one score per 512-sample
+        # (32ms) chunk, trailing samples short of a full chunk are dropped —
+        # same grid as the Rust `score_energy` scorer, so `segment_from_scores`
+        # reads either scorer's output identically. Only a sub-frame input
+        # (<32ms) is padded up to a single frame so the score array is never
+        # empty for downstream division.
         n_frames = max(1, len(data) // frame)
         if n_frames * frame > len(data):
             data = np.pad(data, (0, n_frames * frame - len(data)))
