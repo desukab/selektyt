@@ -28,7 +28,7 @@ def _extract_audio(media: Path, audio: Path) -> None:
     tmp = audio.with_suffix(".wav.tmp")
     cmd = [
         "ffmpeg", "-y", "-i", str(media), "-vn", "-ac", "1", "-ar", "16000",
-        "-c:a", "pcm_s16le", str(tmp),
+        "-c:a", "pcm_s16le", "-f", "wav", str(tmp),
     ]
     subprocess.run(cmd, check=True)
     tmp.replace(audio)
@@ -118,8 +118,6 @@ def transcribe(
     for index in range(count):
         start = index * step
         end = min(total, start + chunk_seconds)
-        # Every chunk after the first reaches backwards into the preceding
-        # chunk. The earlier chunk wins for the overlap during merge.
         decode_start = max(0.0, start - overlap_seconds) if index else 0.0
         decode_duration = end - decode_start
         chunk_path = chunks_dir / f"chunk_{index:04d}.json"
@@ -149,7 +147,7 @@ def transcribe(
                 [
                     "ffmpeg", "-y", "-ss", f"{decode_start:.3f}", "-i", str(audio),
                     "-t", f"{decode_duration:.3f}", "-ac", "1", "-ar", "16000",
-                    "-c:a", "pcm_s16le", str(tmp),
+                    "-c:a", "pcm_s16le", "-f", "wav", str(tmp),
                 ],
                 check=True,
                 stdout=subprocess.DEVNULL,
@@ -196,7 +194,6 @@ def transcribe(
             detected_languages.append(detected)
 
     all_segments.sort(key=lambda s: (s.start, s.end))
-    # Guard against accidental duplicate segments at chunk boundaries.
     merged: list[Segment] = []
     for segment in all_segments:
         if merged and segment.start < merged[-1].end - 0.05 and segment.text.strip() == merged[-1].text.strip():
