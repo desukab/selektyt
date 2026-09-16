@@ -11,3 +11,4 @@ cookies.txt
 *.cookies.txt
 *.cookie
 rust/target/
+.worktrees/
