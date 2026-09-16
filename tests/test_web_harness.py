@@ -162,6 +162,23 @@ def test_cutlist_from_segments(base):
     assert all({"kind", "start", "end"} <= set(i) for i in cut["intervals"])
 
 
+def test_cutlist_pad_widens_keeps(base):
+    data = _expect_ok(base, "vad_analyze", {"sample": True})
+    tight = _expect_ok(base, "cutlist_from_segments", {
+        "segments": data["segments"],
+        "source_duration": data["duration"],
+        "pad": 0.0,
+    })
+    padded = _expect_ok(base, "cutlist_from_segments", {
+        "segments": data["segments"],
+        "source_duration": data["duration"],
+        "pad": 0.3,
+    })
+    tight_keep = sum(i["end"] - i["start"] for i in tight["intervals"] if i["kind"] == "keep")
+    padded_keep = sum(i["end"] - i["start"] for i in padded["intervals"] if i["kind"] == "keep")
+    assert padded_keep > tight_keep
+
+
 def test_bad_upload_is_a_clean_error(base):
     resp = _post(base, "vad_analyze", {"wav": "bm90LXdhdg==", "name": "tiny.wav"})
     assert resp["ok"] is False

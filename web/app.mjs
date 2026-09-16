@@ -2,7 +2,14 @@ const $ = (id) => document.getElementById(id);
 const canvas = $("scores");
 const ctx = canvas.getContext("2d");
 
-const state = { scores: [], segments: [], duration: 0, frameMs: 32, meta: null };
+const state = {
+  scores: [],
+  segments: [],
+  cutlist: [],
+  duration: 0,
+  frameMs: 32,
+  meta: null,
+};
 
 async function post(op, params) {
   const res = await fetch(`/api/${op}`, {
@@ -67,9 +74,53 @@ function renderAudio(meta) {
   $("m-segs").textContent = meta.segments.length;
   $("meta-detail").textContent = JSON.stringify({ ...meta, scores: undefined }, null, 2);
   draw();
+  renderCutlist();
   setStatus(
     `analyzed with ${meta.backend}${meta.vad_model ? " (" + meta.vad_model + ")" : ""} · ${meta.segments.length} segments`,
   );
+}
+
+function fmt(sec) {
+  return `${Math.floor(sec / 60)}:${(sec % 60).toFixed(2).padStart(5, "0")}`;
+}
+
+async function renderCutlist() {
+  const box = $("cutlist");
+  const blocks = $("cutlist-blocks");
+  blocks.innerHTML = "";
+  if (!state.segments.length || !state.duration) {
+    box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  const pad = parseFloat($("pad").value) || 0;
+  let data;
+  try {
+    data = await post("cutlist_from_segments", {
+      segments: state.segments,
+      source_duration: state.duration,
+      pad,
+    });
+  } catch (err) {
+    $("cutlist-summary").textContent = `cutlist failed: ${err.message}`;
+    return;
+  }
+  state.cutlist = data.intervals;
+  const kept = state.cutlist.filter((i) => i.kind === "keep");
+  const kept_s = kept.reduce((a, i) => a + (i.end - i.start), 0);
+  $("cutlist-summary").textContent =
+    `keep ${fmt(kept_s)} of ${fmt(state.duration)} · ${Math.round(
+      (100 * kept_s) / state.duration,
+    )}% · ${kept.length} clips`;
+  for (const iv of state.cutlist) {
+    const el = document.createElement("div");
+    el.className = `block ${iv.kind}`;
+    el.style.left = `${(100 * iv.start) / state.duration}%`;
+    el.style.width = `${(100 * (iv.end - iv.start)) / state.duration}%`;
+    el.title = `${iv.kind} ${fmt(iv.start)} → ${fmt(iv.end)}`;
+    el.textContent = `${iv.kind === "keep" ? "keep" : "cut"} ${fmt(iv.end - iv.start)}`;
+    blocks.appendChild(el);
+  }
 }
 
 async function resegment() {
@@ -87,6 +138,7 @@ async function resegment() {
     state.segments = data.segments;
     draw();
     $("m-segs").textContent = data.segments.length;
+    renderCutlist();
   } catch (err) {
     setStatus(`resegment failed: ${err.message}`, false);
   }
@@ -119,6 +171,7 @@ async function init() {
     reader.readAsDataURL(file);
   });
   $("threshold").addEventListener("input", resegment);
+  $("pad").addEventListener("change", renderCutlist);
   draw();
 }
 

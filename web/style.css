@@ -99,3 +99,46 @@ dd { margin: 2px 0 0; font-size: 14px; overflow-wrap: anywhere; }
   overflow: auto;
   max-height: 260px;
 }
+
+.cutlist { margin-top: 16px; }
+
+.cutlist-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.blocks {
+  position: relative;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0c0f13;
+}
+
+.block {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  font: 10px ui-monospace, Menlo, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.block.keep {
+  background: rgba(78, 201, 168, 0.35);
+  color: #bdf3e2;
+  border-left: 1px solid var(--accent);
+}
+
+.block.remove {
+  background: rgba(240, 166, 90, 0.18);
+  color: #d8b48c;
+}

@@ -26,6 +26,14 @@
   </section>
   <section id="status" class="status muted">Select a source to begin.</section>
   <section class="canvas-wrap"><canvas id="scores" width="1200" height="240"></canvas></section>
+  <section id="cutlist" class="cutlist" hidden>
+    <div class="cutlist-head">
+      <span>cutlist</span>
+      <label class="slider">pad <input type="number" id="pad" min="0" max="1" step="0.05" value="0.3" style="width:4.5ch" /></label>
+      <span id="cutlist-summary" class="muted"></span>
+    </div>
+    <div id="cutlist-blocks" class="blocks"></div>
+  </section>
   <section class="meta">
     <dl id="audit">
       <div><dt>backend</dt><dd id="m-backend">—</dd></div>
