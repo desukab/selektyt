@@ -93,7 +93,11 @@ out/project/
 │   └── 02.mp4
 └── captions/
     ├── 01.ass
-    └── 02.ass
+    ├── 01.srt
+    ├── 01.json
+    ├── 02.ass
+    ├── 02.srt
+    └── 02.json
 ```
 
 ## Retention philosophy

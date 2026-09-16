@@ -6,7 +6,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from engine.editorial import make_thoughts, rank
-from engine.captions import ass_for_candidate
+from engine.captions import ass_for_candidate, srt_for_candidate
 from engine.caption_director import caption_metadata
 from engine.content_pack import build_content_pack
 from engine.context_guard import validate
@@ -201,6 +201,7 @@ def run(
     for idx, c in enumerate(selected, 1):
         intervals = retention_intervals(c)
         caption = ass_for_candidate(c, project / "captions" / f"{idx:02d}.ass")
+        srt_for_candidate(c, project / "captions" / f"{idx:02d}.srt")
         (project / "captions" / f"{idx:02d}.json").write_text(
             json.dumps(caption_metadata(c), ensure_ascii=False, indent=2),
             encoding="utf-8",
