@@ -1,9 +1,12 @@
 from __future__ import annotations
+
 import json
 import os
 import shutil
 import subprocess
 from pathlib import Path
+
+from selekyt.cookies import convert
 
 
 def require(name: str) -> None:
@@ -12,10 +15,20 @@ def require(name: str) -> None:
 
 
 def _cookie_args(cookies: str | None) -> list[str]:
+    """Return yt-dlp auth args, converting a browser header file when needed."""
     if cookies:
         path = Path(cookies).expanduser()
-        if not path.is_file(): raise RuntimeError(f"YouTube cookies file not found: {path}")
-        return ["--cookies", str(path)]
+        if not path.is_file():
+            raise RuntimeError(f"YouTube cookies file not found: {path}")
+        # Accept either an existing Netscape file or a raw browser Cookie header.
+        first = path.read_text(encoding="utf-8", errors="replace")[:256]
+        if "# Netscape HTTP Cookie File" in first:
+            return ["--cookies", str(path)]
+        generated = path.with_name(path.stem + ".cookies.txt")
+        if not generated.exists() or generated.stat().st_mtime_ns < path.stat().st_mtime_ns:
+            convert(path, generated)
+        return ["--cookies", str(generated)]
+
     header = os.environ.get("SELEKYT_YOUTUBE_COOKIE")
     return ["--add-header", f"Cookie: {header}"] if header else []
 
@@ -26,7 +39,8 @@ def _runtime_args() -> list[str]:
 
 
 def download(url: str, out_dir: Path, cookies: str | None = None) -> tuple[Path, dict]:
-    require("yt-dlp"); out_dir.mkdir(parents=True, exist_ok=True)
+    require("yt-dlp")
+    out_dir.mkdir(parents=True, exist_ok=True)
     auth = [*_cookie_args(cookies), *_runtime_args()]
     info_cmd = ["yt-dlp", *auth, "--dump-single-json", "--no-download", "--no-playlist", url]
     try:
@@ -35,7 +49,7 @@ def download(url: str, out_dir: Path, cookies: str | None = None) -> tuple[Path,
     except subprocess.CalledProcessError as exc:
         err = (exc.stderr or exc.stdout or "").strip()
         if "Sign in to confirm" in err or "not a bot" in err.lower():
-            raise RuntimeError("YouTube rejected automated traffic. Use --cookies with a fresh local cookies.txt or a valid SELEKYT_YOUTUBE_COOKIE. Do not commit credentials.") from exc
+            raise RuntimeError("YouTube rejected automated traffic. Use --cookies with a fresh local cookie/header file or a valid SELEKYT_YOUTUBE_COOKIE. Do not commit credentials.") from exc
         raise RuntimeError(f"yt-dlp metadata lookup failed:\n{err}") from exc
     except json.JSONDecodeError as exc:
         raise RuntimeError("yt-dlp returned invalid metadata JSON; check yt-dlp/EJS configuration.") from exc
@@ -46,8 +60,9 @@ def download(url: str, out_dir: Path, cookies: str | None = None) -> tuple[Path,
     try:
         subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError as exc:
-        raise RuntimeError("yt-dlp failed while downloading the YouTube video. Try a fresh cookie file or local download.") from exc
+        raise RuntimeError("yt-dlp failed while downloading the YouTube video. Try a fresh cookie/header file or local download.") from exc
     files = sorted(out_dir.glob(f"{vid}.*"))
     media = next((p for p in files if p.suffix.lower() in {".mp4", ".mkv", ".webm", ".mov"}), None)
-    if not media: raise RuntimeError("yt-dlp completed but no video file was found")
+    if not media:
+        raise RuntimeError("yt-dlp completed but no video file was found")
     return media, info
