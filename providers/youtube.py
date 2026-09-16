@@ -14,51 +14,40 @@ def require(name: str) -> None:
 def _cookie_args(cookies: str | None) -> list[str]:
     if cookies:
         path = Path(cookies).expanduser()
-        if not path.is_file():
-            raise RuntimeError(f"YouTube cookies file not found: {path}")
+        if not path.is_file(): raise RuntimeError(f"YouTube cookies file not found: {path}")
         return ["--cookies", str(path)]
-    cookie_header = os.environ.get("SELEKYT_YOUTUBE_COOKIE")
-    if cookie_header:
-        return ["--add-header", f"Cookie: {cookie_header}"]
-    return []
+    header = os.environ.get("SELEKYT_YOUTUBE_COOKIE")
+    return ["--add-header", f"Cookie: {header}"] if header else []
+
+
+def _runtime_args() -> list[str]:
+    runtime = os.environ.get("SELEKYT_JS_RUNTIME")
+    return ["--js-runtimes", runtime] if runtime else []
 
 
 def download(url: str, out_dir: Path, cookies: str | None = None) -> tuple[Path, dict]:
-    require("yt-dlp")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    cookie_args = _cookie_args(cookies)
-
-    info_cmd = ["yt-dlp", *cookie_args, "--dump-single-json", "--no-download", "--no-playlist", url]
+    require("yt-dlp"); out_dir.mkdir(parents=True, exist_ok=True)
+    auth = [*_cookie_args(cookies), *_runtime_args()]
+    info_cmd = ["yt-dlp", *auth, "--dump-single-json", "--no-download", "--no-playlist", url]
     try:
-        info = json.loads(subprocess.check_output(info_cmd, text=True, stderr=subprocess.STDOUT))
+        proc = subprocess.run(info_cmd, check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        info = json.loads(proc.stdout)
     except subprocess.CalledProcessError as exc:
-        output = exc.output or ""
-        if "Sign in to confirm you're not a bot" in output or "Sign in to confirm you’re not a bot" in output:
-            raise RuntimeError(
-                "YouTube blocked this Codespace request as automated traffic. "
-                "Set SELEKYT_YOUTUBE_COOKIE to a fresh Cookie header from your own signed-in browser, "
-                "or use --cookies /path/to/cookies.txt. Never commit credentials to the repository."
-            ) from exc
-        raise RuntimeError(f"yt-dlp could not read the YouTube video metadata:\n{output.strip()}") from exc
+        err = (exc.stderr or exc.stdout or "").strip()
+        if "Sign in to confirm" in err or "not a bot" in err.lower():
+            raise RuntimeError("YouTube rejected automated traffic. Use --cookies with a fresh local cookies.txt or a valid SELEKYT_YOUTUBE_COOKIE. Do not commit credentials.") from exc
+        raise RuntimeError(f"yt-dlp metadata lookup failed:\n{err}") from exc
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("yt-dlp returned invalid metadata JSON; check yt-dlp/EJS configuration.") from exc
 
     vid = info.get("id", "video")
     target = out_dir / f"{vid}.%(ext)s"
-    cmd = [
-        "yt-dlp",
-        *cookie_args,
-        "-f", "bv*+ba/b",
-        "--merge-output-format", "mp4",
-        "-o", str(target),
-        "--no-playlist",
-        url,
-    ]
+    cmd = ["yt-dlp", *auth, "-f", "bv*+ba/b", "--merge-output-format", "mp4", "-o", str(target), "--no-playlist", url]
     try:
         subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError as exc:
-        raise RuntimeError("yt-dlp failed while downloading the YouTube video") from exc
-
+        raise RuntimeError("yt-dlp failed while downloading the YouTube video. Try a fresh cookie file or local download.") from exc
     files = sorted(out_dir.glob(f"{vid}.*"))
     media = next((p for p in files if p.suffix.lower() in {".mp4", ".mkv", ".webm", ".mov"}), None)
-    if not media:
-        raise RuntimeError("yt-dlp completed but no video file was found")
+    if not media: raise RuntimeError("yt-dlp completed but no video file was found")
     return media, info
