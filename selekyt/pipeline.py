@@ -129,7 +129,9 @@ def run(
             ),
             encoding="utf-8",
         )
-        state = {"fingerprint": fingerprint, "model": model, "language": detected}
+        # merge, not replace: the download cache (source/media_path/media_info)
+        # must survive transcription so a resumed run reuses the local file
+        state.update({"fingerprint": fingerprint, "model": model, "language": detected})
         state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
     thoughts = make_thoughts(transcript)
