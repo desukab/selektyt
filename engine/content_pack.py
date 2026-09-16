@@ -15,23 +15,32 @@ def _sentence(text: str) -> str:
     return text[0].upper() + text[1:]
 
 
+def _densest_phrase(text: str) -> str:
+    """Extractive title variant: the information-densest clause of the text.
+
+    Every variant must trace to spoken source words (the 'no fabricated
+    claims' policy), so instead of a boilerplate frame we pick the clause with
+    the highest content-word density. Clauses need at least three words to be
+    title candidates; ties go to the clause carrying more content words.
+    """
+    clauses = [c.strip() for c in re.split(r"[,;.]|\s–\s|\s-\s", text) if len(c.split()) >= 3]
+    if not clauses:
+        return ""
+
+    def density(clause: str) -> tuple[float, int]:
+        toks = _words(clause)
+        return len(toks) / len(clause.split()), len(toks)
+
+    best = max(clauses, key=density)
+    return _sentence(best)[:90]
+
+
 def _title_options(c: Candidate) -> list[str]:
     hook = _sentence(c.hook or c.text)
     payoff = _sentence(c.payoff or "")
-    options = []
-    if hook:
-        options.append(hook[:90])
-    if payoff and payoff.lower() != hook.lower():
-        options.append(payoff[:90])
-    if c.story_type == "revelation":
-        options.append("The detail most people miss")
-    elif c.story_type == "conflict":
-        options.append("What actually happened")
-    elif c.story_type == "question":
-        options.append("The question behind the story")
-    else:
-        options.append("The part worth knowing")
-    return list(dict.fromkeys(options))[:3]
+    dense = _densest_phrase(c.text)
+    options = [hook, payoff, dense]
+    return list(dict.fromkeys(o for o in options if o))[:3]
 
 
 def _hashtags(c: Candidate) -> list[str]:
