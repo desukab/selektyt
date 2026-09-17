@@ -154,8 +154,10 @@ def test_fcpxml_export_proxy():
     out = export_fcpxml(cl, Path(pcm).parent / "test_cutlist.fcpxml",
                         source_path=str(_proxy))
     content = out.read_text()
-    assert "fcpxml" in content
-    assert "keep_" in content or "remove" in content
+    assert '<fcpxml version="1.11">' in content
+    # AutoCut-format emitter: keeps become asset-clips on the primary
+    # storyline, so a real proxy cutlist must produce at least one.
+    assert "<asset-clip" in content, "no keeps survived to the export"
     print(f"\n[proxy fcpxml] output={out} size={out.stat().st_size} bytes")
 
 

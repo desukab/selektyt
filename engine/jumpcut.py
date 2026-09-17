@@ -60,6 +60,23 @@ class CutList:
             )
 
 
+def cutlist_from_wire(intervals: list[dict], source_duration: float) -> CutList:
+    """Build a CutList from the JSON-RPC wire format the Rust sidecar speaks
+    (``{"start", "end", "kind"}`` where kind is ``keep``/``remove``), so the
+    two implementations can be handed identical params."""
+    kind_map = {"keep": SegmentType.KEEP}
+    segments = [
+        CutSegment(
+            start=float(i["start"]),
+            end=float(i["end"]),
+            segment_type=kind_map.get(str(i.get("kind", "remove")), SegmentType.REMOVE_SILENCE),
+            reason=str(i.get("kind", "remove")),
+        )
+        for i in intervals
+    ]
+    return CutList(segments=segments, original_duration=float(source_duration))
+
+
 class JumpCutEngine:
     """Configurable jump-cut engine.
 

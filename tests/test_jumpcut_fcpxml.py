@@ -139,9 +139,16 @@ def test_fcpxml_export(tmp_path):
     out = export_fcpxml(cl, tmp_path / "out.fcpxml", source_path="test.mp4")
     assert out.exists()
     content = out.read_text()
-    assert "fcpxml" in content
-    assert "keep_0.00" in content
-    assert "remove_silence" in content
+    # The emitter now matches the Rust core / AutoCut format exactly (see
+    # docs/autocut-parity.md): a 1.11 document with one asset-clip per keep on
+    # the primary storyline, no keep/remove markers.
+    assert '<fcpxml version="1.11">' in content
+    assert "<asset " in content
+    assert content.count("<asset-clip") == 2, "one clip per keep segment"
+    # Both keeps read from the source asset, in order.
+    assert 'ref="r1"' in content
+    # Removes are not emitted as clips — they're the gaps between keeps.
+    assert "remove_silence" not in content
 
 
 def test_simple_xml_export(tmp_path):

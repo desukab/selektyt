@@ -1,62 +1,294 @@
 """FCPXML export — Final Cut Pro XML format from CutList.
 
-Produces FCPXML 1.11 documents that can be imported into Final Cut Pro
-to visualize or further edit the SelekyT cut decisions.
+Multi-track emitter producing FCPXML 1.11 documents that import into Final
+Cut Pro, DaVinci Resolve and Premiere Pro. Ported behavior-identical from
+`rust/core/src/export_fcpxml.rs` (adapted from AutoCut's
+src-tauri/src/export_fcpxml.rs, reused with the author's permission — see
+docs/autocut-provenance.md) so a cutlist rendered on either side of the
+hybrid produces the same XML.
+
+The critical detail, carried over from AutoCut: DaVinci binds an asset to its
+source media by THREE checks (path, source-media start TC, frame rate
+format). If the MP4 carries an embedded TC like `15:33:27;24` but the FCPXML
+asset starts at `0s`, the relink dialog fires even when the path is correct.
+
+We:
+  - Emit the asset's `start` attribute = embedded source TC seconds
+  - Shift every asset-clip's `start` by the same offset
+  - Stamp `tcFormat="DF"` for NTSC drop-frame, `"NDF"` otherwise
 
 The export is optional and behind the --export-fcpxml flag.
 """
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass, field
 from pathlib import Path
+
+from engine import timecode
 from engine.jumpcut import CutList, SegmentType
 
 
-def export_fcpxml(cutlist: CutList, output: str | Path, source_path: str = "") -> Path:
+@dataclass
+class Track:
+    """One piece of source media on the timeline.
+
+    The reference track defines project time: project second ``t`` is
+    reference source second ``t``. Every other track states where its own
+    media begins in that same project time via ``offset``, which is what lets
+    one cutlist govern all of them.
+    """
+
+    name: str
+    duration: float
+    has_video: bool = True
+    has_audio: bool = True
+    """SMPTE timecode this media starts at, if it carries one. Shifts where
+    inside the file a clip reads from, independently of ``offset``."""
+    start_timecode: str | None = None
+    """Project-time second at which this track's media begins. Zero for the
+    reference by definition."""
+    offset: float = 0.0
+    path: str | None = None
+
+
+@dataclass
+class FcpxmlParams:
+    fps: float
+    title: str
+    reference: Track
+    """Extra tracks cut in lockstep with the reference. Video tracks stack
+    upward from lane 1, audio-only tracks downward from lane -1, in the order
+    given."""
+    linked: list[Track] = field(default_factory=list)
+
+
+def kept_intervals(cutlist: CutList) -> list[tuple[float, float]]:
+    """The KEEP segments of a CutList, in order (what the Rust core calls
+    ``kept_intervals``)."""
+    return [
+        (s.start, s.end)
+        for s in cutlist.segments
+        if s.segment_type == SegmentType.KEEP
+    ]
+
+
+def ensure_exportable(cutlist: CutList) -> None:
+    """Structural, not a courtesy check: an FCPXML with an empty spine is
+    well-formed XML that imports as an empty timeline, so there is no later
+    point at which anything would notice."""
+    if not kept_intervals(cutlist):
+        raise ValueError("nothing to keep: the cutlist removes the whole timeline")
+
+
+def _xml_escape(s: str) -> str:
+    return (
+        s.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&apos;")
+    )
+
+
+def _to_file_uri(path: str) -> str:
+    if path.startswith(("file://", "http://", "https://")):
+        return path
+    # Best-effort canonical absolute path; fall back to raw.
+    try:
+        abs_path = str(Path(path).resolve())
+    except (OSError, ValueError):
+        abs_path = path
+    encoded = ["file://"]
+    for byte in abs_path.encode("utf-8", errors="surrogateescape"):
+        # Unreserved per RFC 3986, plus '/' and ':' which are safe in a path
+        # and in a Windows drive letter.
+        if byte in b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~/:":
+            encoded.append(chr(byte))
+        else:
+            encoded.append(f"%{byte:02X}")
+    return "".join(encoded)
+
+
+def _asset_element(track_id: int, track: Track, fps: float, rate: timecode.TimecodeRate) -> str:
+    src = _to_file_uri(track.path) if track.path else "source.mp4"
+    start = timecode.seconds_to_rational(
+        timecode.parse_smpte(track.start_timecode, fps), rate
+    )
+    duration = timecode.seconds_to_rational(track.duration, rate)
+    video_attrs = (
+        ' hasVideo="1" videoSources="1"' if track.has_video else ' hasVideo="0"'
+    )
+    audio_attrs = (
+        ' hasAudio="1" audioSources="1" audioChannels="2"'
+        if track.has_audio
+        else ' hasAudio="0"'
+    )
+    return (
+        f'    <asset id="r{track_id}" name="{_xml_escape(track.name)}" '
+        f'start="{start}" duration="{duration}"{video_attrs}{audio_attrs}>\n'
+        f'      <media-rep kind="original-media" src="{_xml_escape(src)}"/>\n'
+        f"    </asset>\n"
+    )
+
+
+@dataclass
+class _ClipTimes:
+    offset: float
+    start: float
+    duration: float
+
+
+def _clip_attrs(
+    track_id: int,
+    lane: int | None,
+    times: _ClipTimes,
+    rate: timecode.TimecodeRate,
+    tc_format: str,
+) -> str:
+    lane_attr = f' lane="{lane}"' if lane is not None else ""
+    return (
+        f'<asset-clip ref="r{track_id}"{lane_attr} '
+        f'offset="{timecode.seconds_to_rational(times.offset, rate)}" '
+        f'start="{timecode.seconds_to_rational(times.start, rate)}" '
+        f'duration="{timecode.seconds_to_rational(times.duration, rate)}" '
+        f'tcFormat="{tc_format}"'
+    )
+
+
+def render(cutlist: CutList, params: FcpxmlParams) -> str:
+    """Render a CutList as FCPXML 1.11 with optional linked tracks.
+
+    Output is byte-identical to ``rust/core/src/export_fcpxml.rs::render`` for
+    equal inputs — asserted in ``tests/test_sidecar_parity.py``.
+    """
+    ensure_exportable(cutlist)
+
+    drop_frame = bool(
+        params.reference.start_timecode and ";" in params.reference.start_timecode
+    )
+    rate = timecode.detect_rate(params.fps, drop_frame)
+    tc_format = (
+        "DF"
+        if rate.is_drop_frame and rate.nominal_fps in (30, 60)
+        else "NDF"
+    )
+    safe_title = _xml_escape(params.title)
+    frame_duration = f"{rate.frame_duration_num}/{rate.frame_duration_den}s"
+
+    # r1 is the reference; linked tracks follow in list order. Lanes fan out
+    # from the primary storyline: video upward, audio-only downward.
+    resources = ""
+    lanes: list[int] = []
+    next_video_lane = 1
+    next_audio_lane = -1
+    all_tracks = [params.reference, *params.linked]
+    for i, track in enumerate(all_tracks):
+        resources += _asset_element(i + 1, track, params.fps, rate)
+        if i > 0:
+            if track.has_video:
+                lanes.append(next_video_lane)
+                next_video_lane += 1
+            else:
+                lanes.append(next_audio_lane)
+                next_audio_lane -= 1
+
+    reference_tc = timecode.parse_smpte(params.reference.start_timecode, params.fps)
+    spine = ""
+    record_cursor = 0.0
+    for cut_start, cut_end in kept_intervals(cutlist):
+        cut_duration = cut_end - cut_start
+        clip = _ClipTimes(
+            offset=record_cursor,
+            start=reference_tc + cut_start,
+            duration=cut_duration,
+        )
+
+        connected = ""
+        for i, track in enumerate(params.linked):
+            # Project time the track actually has media for, intersected with
+            # this keep. A track that rolled late, stopped early, or is simply
+            # shorter contributes nothing here rather than pointing the NLE
+            # past the end of its file.
+            visible_from = max(cut_start, track.offset)
+            visible_to = min(cut_end, track.offset + track.duration)
+            if visible_to - visible_from <= 0.0:
+                continue
+            track_tc = timecode.parse_smpte(track.start_timecode, params.fps)
+            times = _ClipTimes(
+                offset=record_cursor + (visible_from - cut_start),
+                start=track_tc + (visible_from - track.offset),
+                duration=visible_to - visible_from,
+            )
+            connected += " " * 12 + _clip_attrs(
+                i + 2, lanes[i], times, rate, tc_format
+            ) + " />\n"
+
+        if not connected:
+            spine += " " * 8 + _clip_attrs(1, None, clip, rate, tc_format) + " />\n"
+        else:
+            spine += " " * 8 + _clip_attrs(1, None, clip, rate, tc_format) + ">\n"
+            spine += connected
+            spine += " " * 8 + "</asset-clip>\n"
+        record_cursor += cut_duration
+
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        "<!DOCTYPE fcpxml>\n"
+        '<fcpxml version="1.11">\n'
+        "  <resources>\n"
+        f'    <format id="f1" name="FFVideoFormat" frameDuration="{frame_duration}" />\n'
+        f"{resources}  </resources>\n"
+        "  <library>\n"
+        f'    <event name="{safe_title}">\n'
+        f'      <project name="{safe_title}">\n'
+        f'        <sequence format="f1" tcFormat="{tc_format}">\n'
+        "          <spine>\n"
+        f"{spine}          </spine>\n"
+        "        </sequence>\n"
+        "      </project>\n"
+        "    </event>\n"
+        "  </library>\n"
+        "</fcpxml>\n"
+    )
+
+
+def export_fcpxml(
+    cutlist: CutList,
+    output: str | Path,
+    source_path: str = "",
+    fps: float = 30.0,
+    title: str = "SelekyT Edit",
+    linked: list[Track] | None = None,
+) -> Path:
     """Export a CutList as FCPXML 1.11.
 
-    Creates an event with a single project containing spine of KEEP
-    segments and skip markers for REMOVE segments.
+    Backward-compatible single-track entry point: with no ``linked`` tracks it
+    emits the reference media on the primary storyline. Pass ``linked`` (from
+    ``engine.multitrack``) to cut extra cameras or an external recorder in
+    lockstep with the reference.
     """
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
 
-    fcpxml = ET.Element("fcpxml", version="1.11")
-    resources = ET.SubElement(fcpxml, "resources")
-    format_el = ET.SubElement(resources, "format",
-                              id="r1", name="FFVideoFormat1080p2997",
-                              frameDuration="1/30000s", width="1920", height="1080")
-    asset = ET.SubElement(resources, "asset",
-                          id="r2", name="source",
-                          src=source_path,
-                          hasAudio="1", hasVideo="1",
-                          duration=f"{cutlist.original_duration}s")
-
-    library = ET.SubElement(fcpxml, "library")
-    event = ET.SubElement(library, "event", name="SelekyT Edit")
-    project = ET.SubElement(event, "project", name="SelekyT Output")
-
-    spine = ET.SubElement(project, "spine")
-
-    for seg in cutlist.segments:
-        if seg.segment_type == SegmentType.KEEP:
-            clip = ET.SubElement(spine, "clip",
-                                 name=f"keep_{seg.start:.2f}_{seg.end:.2f}",
-                                 offset=f"{seg.start}s",
-                                 duration=f"{seg.duration}s",
-                                 start=f"{seg.start}s")
-            clip.set("ref", "r2")
-        else:
-            marker = ET.SubElement(spine, "marker",
-                                   value=seg.segment_type.value,
-                                   start=f"{seg.start}s",
-                                   duration=f"{seg.duration}s")
-            comment = ET.SubElement(marker, "comment")
-            comment.text = f"{seg.reason} ({seg.duration:.2f}s)"
-
-    tree = ET.ElementTree(fcpxml)
-    ET.indent(tree, space="  ")
-    tree.write(str(output), encoding="unicode", xml_declaration=True)
+    xml = render(
+        cutlist,
+        FcpxmlParams(
+            fps=fps,
+            title=title,
+            reference=Track(
+                name=Path(source_path).name or "source",
+                duration=cutlist.original_duration,
+                start_timecode=None,
+                has_video=True,
+                has_audio=True,
+                offset=0.0,
+                path=source_path or None,
+            ),
+            linked=linked or [],
+        ),
+    )
+    output.write_text(xml, encoding="utf-8")
     return output
 
 
