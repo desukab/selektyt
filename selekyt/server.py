@@ -20,6 +20,9 @@ import sys
 from pathlib import Path
 from typing import Any, TextIO
 
+from engine import timecode
+from engine import fcpxml
+from engine import jumpcut
 from engine import vad as vad_mod
 from engine.cut_algebra import cutlist_from_intervals
 from engine.pipeline_audio import run_pipeline_audio
@@ -52,6 +55,7 @@ def op_segment(params: dict) -> dict:
     min_speech_ms = int(params.get("min_speech_ms", 150))
     min_silence_ms = int(params.get("min_silence_ms", 100))
     release = params.get("release")
+    time_offset = float(params.get("time_offset", 0.0))
     regions, meta = vad_mod.segment_with_meta(
         scores,
         frame_ms=frame_ms,
@@ -59,6 +63,7 @@ def op_segment(params: dict) -> dict:
         release=release,
         min_speech_ms=min_speech_ms,
         min_silence_ms=min_silence_ms,
+        time_offset=time_offset,
     )
     return {
         "segments": [{"start": r.start, "end": r.end} for r in regions],
@@ -114,6 +119,68 @@ def op_vad_analyze(params: dict) -> dict:
     return out
 
 
+def op_detect_rate(params: dict) -> dict:
+    rate = timecode.detect_rate(float(params["fps"]), bool(params.get("drop_frame", False)))
+    return {
+        "nominal_fps": rate.nominal_fps,
+        "is_drop_frame": rate.is_drop_frame,
+        "frame_duration_num": rate.frame_duration_num,
+        "frame_duration_den": rate.frame_duration_den,
+    }
+
+
+def op_parse_smpte(params: dict) -> dict:
+    return {"seconds": timecode.parse_smpte(params.get("tc"), float(params["fps"]))}
+
+
+def op_seconds_to_rational(params: dict) -> dict:
+    rate = timecode.detect_rate(float(params["fps"]), bool(params.get("drop_frame", False)))
+    return {"rational": timecode.seconds_to_rational(float(params["seconds"]), rate)}
+
+
+def op_track_offset_from_timecode(params: dict) -> dict:
+    """Where a linked track sits on the timeline when both it and the
+    reference carry embedded timecode (AutoCut's ``open_track`` behavior)."""
+    return {
+        "offset": timecode.track_offset_from_timecode(
+            params.get("reference_timecode"),
+            params.get("track_timecode"),
+            float(params["fps"]),
+        )
+    }
+
+
+def _track_from_params(t: dict) -> fcpxml.Track:
+    return fcpxml.Track(
+        name=t["name"],
+        duration=float(t["duration"]),
+        has_video=bool(t.get("has_video", True)),
+        has_audio=bool(t.get("has_audio", True)),
+        start_timecode=t.get("start_timecode"),
+        offset=float(t.get("offset", 0.0)),
+        path=t.get("path"),
+    )
+
+
+def op_render_fcpxml(params: dict) -> dict:
+    """FCPXML 1.11 with optional linked tracks, behavior-identical to the
+    Rust sidecar's ``render_fcpxml`` op (asserted in test_sidecar_parity)."""
+    wire = params["cutlist"]
+    cutlist = jumpcut.cutlist_from_wire(
+        wire["intervals"], wire["source_duration"]
+    )
+    xml = fcpxml.render(
+        cutlist,
+        fcpxml.FcpxmlParams(
+            fps=float(params["fps"]),
+            title=str(params["title"]),
+            reference=_track_from_params(params["reference"]),
+            linked=[_track_from_params(t) for t in params.get("linked", [])],
+        ),
+    )
+    return {"xml": xml}
+
+
 def op_audio_analysis(params: dict) -> dict:
     media = params.get("media")
     project = params.get("project", "out/project")
@@ -144,6 +211,11 @@ _HANDLERS = {
     "cutlist_from_segments": op_cutlist_from_segments,
     "vad_analyze": op_vad_analyze,
     "audio_analysis": op_audio_analysis,
+    "detect_rate": op_detect_rate,
+    "parse_smpte": op_parse_smpte,
+    "seconds_to_rational": op_seconds_to_rational,
+    "track_offset_from_timecode": op_track_offset_from_timecode,
+    "render_fcpxml": op_render_fcpxml,
 }
 
 

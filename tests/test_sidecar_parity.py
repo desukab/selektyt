@@ -392,3 +392,210 @@ def test_parity_on_real_media():
     )
     assert _norm_segs(rust_segs) == [{"start": r.start, "end": r.end} for r in py_regions]
     assert meta["hysteresis"]["release"] == 0.35
+
+
+# ── linked-track detection offset (AutoCut DetectParams::source_offset) ──
+
+@skip_no_mech
+@pytest.mark.parametrize("time_offset", [0.0, 3.0, 120.5])
+def test_segment_time_offset_matches_across_languages(time_offset):
+    """A linked track that rolled after the reference is scored in its own
+    media time but the cutlist lives in project time, so every boundary is
+    shifted by `time_offset`. Both implementations must shift identically."""
+    scores = [0.0] * 4 + [0.9] * 6 + [0.0] * 4
+    with mech() as m:
+        rust = m.call(
+            "segment", scores=scores, threshold=0.5,
+            min_silence_ms=100, min_speech_ms=0, time_offset=time_offset,
+        )
+    py_regions, meta = segment_with_meta(
+        scores, frame_ms=32, threshold=0.5,
+        min_speech_ms=0, min_silence_ms=100, time_offset=time_offset,
+    )
+    py = [{"start": r.start, "end": r.end} for r in py_regions]
+    assert meta["time_offset"] == time_offset
+    assert _norm_segs(rust) == py, "time_offset diverged across languages"
+    if time_offset:
+        # The shift is real, not a no-op: boundaries move by exactly the offset.
+        assert all(abs(s["start"] - time_offset - 4 * _FRAME) < 1e-9 for s in py)
+
+
+# ── SMPTE timecode ops ──
+
+@skip_no_mech
+@pytest.mark.parametrize("fps,drop_frame", [
+    (29.97, True), (29.97, False), (30000 / 1001, True),
+    (25.0, False), (23.976, False), (59.94, True),
+])
+def test_detect_rate_matches_across_languages(fps, drop_frame):
+    from engine.timecode import detect_rate
+    with mech() as m:
+        rust = m.call("detect_rate", fps=fps, drop_frame=drop_frame)
+    py = detect_rate(fps, drop_frame)
+    assert rust["nominal_fps"] == py.nominal_fps
+    assert rust["is_drop_frame"] == py.is_drop_frame
+    assert rust["frame_duration_num"] == py.frame_duration_num
+    assert rust["frame_duration_den"] == py.frame_duration_den
+
+
+@skip_no_mech
+@pytest.mark.parametrize("tc,fps", [
+    ("00:00:01:00", 25.0),
+    ("01:00:00;00", 30000 / 1001),   # DF: exactly one hour
+    ("00:01:00;00", 30000 / 1001),   # DF: drops 2 frames in the first minute
+    (None, 30.0),
+    ("", 30.0),
+    ("garbage", 30.0),
+    ("1:2", 30.0),                   # too few fields
+])
+def test_parse_smpte_matches_across_languages(tc, fps):
+    from engine.timecode import parse_smpte
+    with mech() as m:
+        rust = m.call("parse_smpte", tc=tc, fps=fps)
+    py = parse_smpte(tc, fps)
+    assert rust["seconds"] == pytest.approx(py, abs=1e-9)
+
+
+@skip_no_mech
+@pytest.mark.parametrize("seconds,fps,drop_frame", [
+    (1.0, 29.97, True), (1.0, 25.0, False), (0.0, 30.0, False), (2.5, 23.976, False),
+])
+def test_seconds_to_rational_matches_across_languages(seconds, fps, drop_frame):
+    from engine.timecode import detect_rate, seconds_to_rational
+    with mech() as m:
+        rust = m.call("seconds_to_rational", seconds=seconds, fps=fps, drop_frame=drop_frame)
+    py = seconds_to_rational(seconds, detect_rate(fps, drop_frame))
+    assert rust["rational"] == py
+
+
+# ── multi-track FCPXML: byte-identical across languages ──
+
+_FCPXML_CASES = [
+    # single track, NDF, integer rate
+    {
+        "fps": 25.0, "title": "demo",
+        "cutlist": {"source_duration": 3.0, "intervals": [
+            {"start": 0.0, "end": 1.0, "kind": "keep"},
+            {"start": 1.0, "end": 2.0, "kind": "remove"},
+            {"start": 2.0, "end": 3.0, "kind": "keep"}]},
+        "reference": {"name": "cam", "duration": 3.0, "has_video": True, "has_audio": True, "offset": 0.0},
+        "linked": [],
+    },
+    # drop-frame reference TC + an audio-only linked track below the primary
+    {
+        "fps": 29.97, "title": "demo",
+        "cutlist": {"source_duration": 3.0, "intervals": [
+            {"start": 0.0, "end": 1.0, "kind": "keep"},
+            {"start": 1.0, "end": 2.0, "kind": "remove"},
+            {"start": 2.0, "end": 3.0, "kind": "keep"}]},
+        "reference": {"name": "cam", "duration": 3.0, "start_timecode": "01:00:00;00",
+                      "has_video": True, "has_audio": True, "offset": 0.0},
+        "linked": [{"name": "lav", "duration": 3.0, "has_video": False, "has_audio": True, "offset": 0.0}],
+    },
+    # late-rolling recorder + partial coverage + its own source TC
+    {
+        "fps": 25.0, "title": "multi",
+        "cutlist": {"source_duration": 10.0, "intervals": [
+            {"start": 0.0, "end": 2.0, "kind": "keep"},
+            {"start": 2.0, "end": 4.0, "kind": "remove"},
+            {"start": 4.0, "end": 6.0, "kind": "keep"},
+            {"start": 6.0, "end": 10.0, "kind": "remove"}]},
+        "reference": {"name": "cam", "duration": 10.0, "has_video": True, "has_audio": True, "offset": 0.0},
+        "linked": [
+            {"name": "cam-b", "duration": 5.0, "start_timecode": "00:00:10:00",
+             "has_video": True, "has_audio": True, "offset": 0.0},
+            {"name": "lav", "duration": 10.0, "has_video": False, "has_audio": True, "offset": 3.0},
+        ],
+    },
+]
+
+
+@skip_no_mech
+@pytest.mark.parametrize("case", _FCPXML_CASES, ids=["single-ndf", "drop-frame-audio", "late-partial-tc"])
+def test_render_fcpxml_is_byte_identical_across_languages(case):
+    """The Python emitter is a port of the Rust one; equal inputs must produce
+    equal XML, so the shell can hand a cutlist to either sidecar."""
+    from selekyt.server import process_line as python_process_line
+    from engine import fcpxml, jumpcut
+
+    with mech() as m:
+        rust = m.call("render_fcpxml", **case)
+    py_resp = json.loads(python_process_line(json.dumps({"op": "render_fcpxml", "params": case})))
+    assert py_resp["ok"], py_resp.get("error")
+    assert rust["xml"] == py_resp["data"]["xml"], (
+        "FCPXML diverged across languages:\n"
+        f"--- rust\n{rust['xml']}\n--- python\n{py_resp['data']['xml']}"
+    )
+
+    # And the in-process Python port agrees with the Python sidecar op.
+    wire = case["cutlist"]
+    direct = fcpxml.render(
+        jumpcut.cutlist_from_wire(wire["intervals"], wire["source_duration"]),
+        fcpxml.FcpxmlParams(
+            fps=case["fps"],
+            title=case["title"],
+            reference=fcpxml.Track(
+                name=case["reference"]["name"],
+                duration=case["reference"]["duration"],
+                has_video=case["reference"]["has_video"],
+                has_audio=case["reference"]["has_audio"],
+                start_timecode=case["reference"].get("start_timecode"),
+                offset=case["reference"].get("offset", 0.0),
+            ),
+            linked=[
+                fcpxml.Track(
+                    name=t["name"], duration=t["duration"],
+                    has_video=t["has_video"], has_audio=t["has_audio"],
+                    start_timecode=t.get("start_timecode"),
+                    offset=t.get("offset", 0.0),
+                )
+                for t in case["linked"]
+            ],
+        ),
+    )
+    assert direct == py_resp["data"]["xml"]
+
+
+@skip_no_mech
+def test_render_fcpxml_refuses_an_empty_timeline_in_both_languages():
+    from selekyt.server import process_line as python_process_line
+
+    case = {
+        "fps": 25.0, "title": "demo",
+        "cutlist": {"source_duration": 3.0, "intervals": [
+            {"start": 0.0, "end": 3.0, "kind": "remove"}]},
+        "reference": {"name": "cam", "duration": 3.0, "has_video": True, "has_audio": True, "offset": 0.0},
+        "linked": [],
+    }
+    with mech() as m:
+        with pytest.raises(MechError, match="nothing to keep"):
+            m.call("render_fcpxml", **case)
+    resp = json.loads(python_process_line(json.dumps({"op": "render_fcpxml", "params": case})))
+    assert resp["ok"] is False
+    assert "nothing to keep" in resp["error"]
+
+
+@skip_no_mech
+def test_track_offset_from_timecode_matches_open_track_behavior():
+    """AutoCut's `open_track`: when both reference and track carry timecode,
+    the track's media begins at project time trackTC - referenceTC."""
+    from engine.timecode import track_offset_from_timecode
+    from selekyt.server import process_line as python_process_line
+
+    fps = 30000 / 1001
+    with mech() as m:
+        # The Rust sidecar has no dedicated op; derive via parse_smpte both
+        # sides and confirm the Python helper reproduces the arithmetic.
+        ref = m.call("parse_smpte", tc="01:00:00;00", fps=fps)["seconds"]
+        track = m.call("parse_smpte", tc="01:00:10;00", fps=fps)["seconds"]
+    assert track_offset_from_timecode("01:00:00;00", "01:00:10;00", fps) == pytest.approx(track - ref)
+
+    # Missing timecode on either side: nothing to derive from, starts at zero.
+    assert track_offset_from_timecode(None, "01:00:10;00", fps) == 0.0
+    assert track_offset_from_timecode("01:00:00;00", None, fps) == 0.0
+
+    # The Python sidecar exposes it as an op for the shell.
+    resp = json.loads(python_process_line(json.dumps({"op": "track_offset_from_timecode", "params": {
+        "reference_timecode": "01:00:00;00", "track_timecode": "01:00:10;00", "fps": fps}})))
+    assert resp["ok"], resp.get("error")
+    assert resp["data"]["offset"] == pytest.approx(track - ref)

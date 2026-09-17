@@ -32,11 +32,14 @@ as "MIT", "Apache", or any other OSI-licensed project.
 | `src-tauri/src/waveform.rs` | `rust/core/src/waveform.rs` | Copied, attribution header |
 | `src/lib/cuts.ts` | `rust/core/src/editalgebra.rs` | Rust port (same semantics) |
 | `src/lib/types.ts` (cut types) | `rust/core/src/cutlist.rs` | Rust port |
+| `src-tauri/src/timecode.rs` | `engine/timecode.py` | Python port (same semantics), attribution header |
+| `src-tauri/src/export_fcpxml.rs` | `engine/fcpxml.py` | Python port (same semantics), attribution header |
+| `src-tauri/src/commands.rs` (`open_track`) | `engine/timecode.py: track_offset_from_timecode` | Python port of the TC-derived track offset |
 
 Every reused/ported file carries a header naming the upstream path and the
 permission basis. `rust/core/src/fallback.rs` (energy-RMS scoring), the
-`rust/sidecar` binary, and `rust/core/src/lib.rs` selection helpers are
-SelekyT-native and are not derived from AutoCut.
+`rust/sidecar` binary, `rust/core/src/lib.rs` selection helpers, and
+`engine/multitrack.py` are SelekyT-native and are not derived from AutoCut.
 
 ## Adjustments made to copied files
 
@@ -46,6 +49,12 @@ SelekyT-native and are not derived from AutoCut.
   `is_cancelled`) is gated behind the `silero` cargo feature so the crate
   builds without onnxruntime. `segments_from_scores` and the hysteresis /
   merge / drop helpers are unconditional.
+- `engine/fcpxml.py`: rewritten as a Python port of `export_fcpxml.rs`. The
+  previous SelekyT-native spine (`<clip name="keep_…">` + `<marker
+  value="remove_…">`) is retired in favor of the AutoCut `<asset>` /
+  `<asset-clip>` vocabulary, which is what makes the two sides emit
+  byte-identical documents. The single-track entry point
+  `export_fcpxml(cutlist, output, source_path)` keeps its signature.
 - `.gitignore`: `rust/target/` is ignored.
 
 ## Behavioral parity
