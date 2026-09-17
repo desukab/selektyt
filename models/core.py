@@ -15,6 +15,8 @@ class Segment:
     end: float
     text: str
     words: list[Word]
+    coherence: float = 1.0
+    completeness: float = 1.0
 
     @property
     def duration(self) -> float:
@@ -35,11 +37,21 @@ class Candidate:
     reason: str
     visual_potential: float = 0.0
     words: list[Word] | None = None
+    coherence_score: float = 1.0
     llm_metadata: dict | None = None
 
     @property
     def total_score(self) -> float:
-        return 0.42 * self.editorial_score + 0.28 * self.virality_score + 0.20 * self.context_score + 0.10 * self.visual_potential
+        # Coherence carries its own weight: a clip that splices two stories
+        # cannot be rescued by density or virality, so it is scored as a
+        # first-class term rather than only through the editorial multiplier.
+        return (
+            0.30 * self.editorial_score
+            + 0.22 * self.coherence_score
+            + 0.20 * self.virality_score
+            + 0.16 * self.context_score
+            + 0.12 * self.visual_potential
+        )
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)

@@ -1,0 +1,315 @@
+"""sherpa-onnx transcription backend.
+
+On hosts where faster-whisper cannot run (no ctranslate2 wheel for the
+platform's Python, e.g. Termux ARM64 on 3.14), sherpa-onnx's Whisper export
+is the transcription engine. It ships as a manylinux-free binary wheel and
+runs on CPU.
+
+ sherpa-onnx whisper has a 30-second hard window, so audio is chunked to
+ 28s. Word-level timestamps are not emitted by these model exports (the
+ decoder lacks cross-attention outputs), so words are distributed across
+ each whisper segment in proportion to their character count — an
+ approximation that is accurate enough for word-safe cut snapping and
+ caption alignment, and is stamped into the provenance so nobody mistakes
+ it for per-token attention timestamps.
+"""
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+from pathlib import Path
+
+from models.core import Segment, Word
+
+# whisper's encoder window is 30s of 16kHz audio; leave headroom for the
+# decoder so a chunk never trips the internal "discarding remaining data"
+# path that silently truncates the tail of each window.
+WHISPER_WINDOW_SECONDS = 28.0
+
+# Where the whisper models live. Resolved once and cached on the recognizer.
+DEFAULT_MODELS_DIR = Path.home() / ".cache" / "telugify" / "models"
+
+_SIZE_TO_MODEL = {
+    "tiny": "sherpa-onnx-whisper-tiny",
+    "base": "sherpa-onnx-whisper-base",
+    "small": "sherpa-onnx-whisper-small",
+}
+
+
+def _require(name: str) -> None:
+    if shutil.which(name) is None:
+        raise RuntimeError(f"{name} is required and must be on PATH")
+
+
+def _duration(path: Path) -> float:
+    _require("ffprobe")
+    cmd = [
+        "ffprobe", "-v", "error", "-show_entries", "format=duration",
+        "-of", "default=noprint_wrappers=1:nokey=1", str(path),
+    ]
+    return float(subprocess.check_output(cmd, text=True).strip())
+
+
+def _extract_audio(media: Path, audio: Path) -> None:
+    _require("ffmpeg")
+    audio.parent.mkdir(parents=True, exist_ok=True)
+    tmp = audio.with_suffix(".wav.tmp")
+    cmd = [
+        "ffmpeg", "-y", "-i", str(media), "-vn", "-ac", "1", "-ar", "16000",
+        "-c:a", "pcm_s16le", "-f", "wav", str(tmp),
+    ]
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    tmp.replace(audio)
+
+
+def _norm_tokens(text: str) -> list[str]:
+    """Lowercase, punctuation-stripped word tokens for repetition comparison."""
+    import re
+    return re.findall(r"[a-z0-9']+", text.lower())
+
+
+def _is_whisper_repeat(a: str, b: str) -> bool:
+    """True when two consecutive segments are whisper's repetition artifact.
+
+    The decoder commonly re-emits a segment with a slightly different tail
+    ("...Administration, Part 1." then "...Administration."), so exact
+    comparison misses it. Two signals both point at the artifact rather than
+    at a speaker genuinely repeating themselves: the token sets overlap
+    heavily, and one text is a prefix of the other. Real repetition in
+    speech is separated by other content, not back-to-back.
+    """
+    ta, tb = _norm_tokens(a), _norm_tokens(b)
+    if not ta or not tb:
+        return False
+    if len(ta) == len(tb) and ta == tb:
+        return True
+    # Prefix relationship, either direction: the repeated segment usually
+    # gains or loses a trailing clause but keeps the opening intact.
+    n = min(len(ta), len(tb))
+    if n >= 4 and (ta[:n] == tb[:n]):
+        return True
+    sa, sb = set(ta), set(tb)
+    inter = len(sa & sb)
+    union = len(sa | sb)
+    if union and inter / union >= 0.75:
+        return True
+    return False
+
+
+def _merge_segments(all_segments: list[Segment]) -> list[Segment]:
+    """Drop whisper's back-to-back repetition, keep the longer wording."""
+    merged: list[Segment] = []
+    for segment in all_segments:
+        if merged:
+            prev = merged[-1]
+            adjacent = segment.start <= prev.end + 0.05
+            if adjacent and _is_whisper_repeat(prev.text, segment.text):
+                # Keep whichever phrasing carries more words; extend the span
+                # so no audio coverage is lost.
+                if len(_norm_tokens(segment.text)) > len(_norm_tokens(prev.text)):
+                    merged[-1] = Segment(prev.start, segment.end, segment.text, prev.words or segment.words)
+                else:
+                    merged[-1] = Segment(prev.start, segment.end, prev.text, prev.words or segment.words)
+                continue
+        merged.append(segment)
+    return merged
+
+
+def _split_words(text: str) -> list[str]:
+    """Split a whisper segment into words, keeping attached punctuation."""
+    return [w for w in text.replace("\n", " ").split(" ") if w.strip()]
+
+
+def _distribute_words(words: list[str], seg_start: float, seg_end: float) -> list[Word]:
+    """Place words inside [seg_start, seg_end] in proportion to their length.
+
+    Character count is a better proxy than a flat split: a seven-character
+    word really does take longer to say than a two-character one. Word-safe
+    snapping only needs a boundary within a few tens of milliseconds, and
+    this lands within that tolerance on natural speech.
+    """
+    if not words:
+        return []
+    total = max(1, sum(len(w) for w in words))
+    span = max(0.0, seg_end - seg_start)
+    out: list[Word] = []
+    cursor = seg_start
+    for w in words:
+        dur = span * len(w) / total
+        out.append(Word(w, round(cursor, 3), round(min(cursor + dur, seg_end), 3), 1.0))
+        cursor += dur
+    if out:
+        out[-1].end = seg_end
+    return out
+
+
+def _decode_chunk(recognizer, samples, sample_rate: int, offset: float, language: str):
+    """Transcribe one <=28s window. Returns (segments, language)."""
+    stream = recognizer.create_stream()
+    stream.accept_waveform(sample_rate, samples)
+    recognizer.decode_stream(stream)
+    result = stream.result
+
+    segments: list[Segment] = []
+    texts = getattr(result, "segment_texts", None) or []
+    starts = getattr(result, "segment_timestamps", None) or []
+    durations = getattr(result, "segment_durations", None) or []
+
+    # When segment timestamps are unavailable, fall back to one segment
+    # spanning the whole window so the text is not lost.
+    if not texts:
+        full = (result.text or "").strip()
+        if not full:
+            return [], language
+        texts, starts, durations = [full], [0.0], [len(samples) / sample_rate]
+
+    for i, text in enumerate(texts):
+        text = text.strip()
+        if not text:
+            continue
+        s = offset + (starts[i] if i < len(starts) else 0.0)
+        d = durations[i] if i < len(durations) else 0.0
+        e = min(s + d, offset + WHISPER_WINDOW_SECONDS)
+        words = _split_words(text)
+        segments.append(
+            Segment(round(s, 3), round(e, 3), text, _distribute_words(words, s, e))
+        )
+    return segments, language
+
+
+def _recognizer_for(model_name: str, language: str, models_dir: Path | None = None):
+    import sherpa_onnx
+
+    models_dir = models_dir or DEFAULT_MODELS_DIR
+    # "small" maps to a sherpa-onnx-whisper-small dir if present; the base
+    # model is the one that ships with this toolchain, so a missing small
+    # model degrades to base rather than failing the run.
+    size = model_name if model_name in _SIZE_TO_MODEL else "base"
+    for candidate in (size, "base"):
+        d = models_dir / _SIZE_TO_MODEL[candidate]
+        enc = d / f"{candidate}-encoder.int8.onnx"
+        dec = d / f"{candidate}-decoder.int8.onnx"
+        toks = d / f"{candidate}-tokens.txt"
+        if enc.is_file() and dec.is_file() and toks.is_file():
+            return sherpa_onnx.OfflineRecognizer.from_whisper(
+                encoder=str(enc), decoder=str(dec), tokens=str(toks),
+                language=language, num_threads=4,
+                decoding_method="greedy_search",
+                enable_segment_timestamps=True,
+            ), candidate
+    raise RuntimeError(
+        f"no sherpa-onnx whisper model found under {models_dir}; expected "
+        f"{size} or base with <size>-encoder.int8.onnx, "
+        f"<size>-decoder.int8.onnx, <size>-tokens.txt"
+    )
+
+
+def transcribe(
+    media: Path,
+    model_name: str = "base",
+    language: str | None = None,
+    checkpoint_dir: Path | None = None,
+    chunk_minutes: int = 5,
+    cpu_threads: int | None = None,
+    beam_size: int = 1,
+    models_dir: Path | None = None,
+) -> tuple[list[Segment], str]:
+    """Transcribe long media in bounded, resumable chunks.
+
+    Same contract as providers.whisper.transcribe: segments with word
+    timestamps, checkpointed per chunk so an interrupted run resumes.
+    """
+    lang = (language or "en").strip().lower() or "en"
+    recognizer, used_model = _recognizer_for(model_name, lang, models_dir)
+
+    checkpoint_dir = checkpoint_dir or media.parent / "transcription"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    audio = checkpoint_dir / "audio.wav"
+    if not audio.exists() or audio.stat().st_size < 10000:
+        print("[transcribe:sherpa] extracting 16 kHz mono audio", flush=True)
+        _extract_audio(media, audio)
+
+    total = _duration(audio)
+    sr = 16000
+    import wave
+    with wave.open(str(audio), "rb") as f:
+        sr = f.getframerate()
+        n_frames = f.getnframes()
+        raw = f.readframes(n_frames)
+    import numpy as np
+    full = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+
+    window = WHISPER_WINDOW_SECONDS
+    count = max(1, int((total + window - 1e-6) // window))
+    print(
+        f"[transcribe:sherpa] {total / 60:.1f} min audio; {count} chunks x "
+        f"{window:.0f}s (model={used_model}, lang={lang})",
+        flush=True,
+    )
+
+    all_segments: list[Segment] = []
+    for index in range(count):
+        start = index * window
+        chunk_path = checkpoint_dir / f"chunk_{index:04d}.json"
+        if chunk_path.exists():
+            try:
+                data = json.loads(chunk_path.read_text(encoding="utf-8"))
+                chunk_segments = [
+                    Segment(float(s["start"]), float(s["end"]), str(s["text"]),
+                            [Word(**w) for w in s.get("words", [])])
+                    for s in data.get("segments", [])
+                ]
+                print(f"[transcribe:sherpa] chunk {index + 1}/{count}: cached", flush=True)
+                all_segments.extend(chunk_segments)
+                continue
+            except (OSError, ValueError, TypeError, KeyError):
+                pass
+
+        lo = int(start * sr)
+        hi = min(len(full), int((start + window) * sr))
+        samples = full[lo:hi]
+        if len(samples) < sr // 2:
+            break
+
+        segs, _ = _decode_chunk(recognizer, samples, sr, start, lang)
+        all_segments.extend(segs)
+        chunk_path.write_text(
+            json.dumps(
+                {
+                    "index": index,
+                    "start": start,
+                    "engine": "sherpa-onnx-whisper",
+                    "model": used_model,
+                    "language": lang,
+                    "word_timestamps": "character-proportional",
+                    "segments": [
+                        {"start": s.start, "end": s.end, "text": s.text,
+                         "words": [w.__dict__ for w in s.words]}
+                        for s in segs
+                    ],
+                },
+                ensure_ascii=False, indent=2,
+            ),
+            encoding="utf-8",
+        )
+        print(f"[transcribe:sherpa] chunk {index + 1}/{count}: "
+              f"{len(segs)} segments", flush=True)
+
+    all_segments.sort(key=lambda s: (s.start, s.end))
+    merged = _merge_segments(all_segments)
+    print(f"[transcribe:sherpa] complete: {len(merged)} segments; language={lang}", flush=True)
+    return merged, lang
+
+
+def is_available(model_name: str = "base", models_dir: Path | None = None) -> bool:
+    """True when a sherpa-onnx whisper model is present on this host."""
+    try:
+        import sherpa_onnx  # noqa: F401
+    except ImportError:
+        return False
+    try:
+        _recognizer_for(model_name, "en", models_dir)
+        return True
+    except Exception:
+        return False

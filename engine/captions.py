@@ -88,6 +88,24 @@ def _cue_bounds(c: Candidate, block: CaptionBlock) -> tuple[float, float]:
     return st, max(st + 0.08, en)
 
 
+def _cue_sequence(c: Candidate, blocks: list[CaptionBlock]) -> list[tuple[float, float]]:
+    """Non-overlapping cue bounds for a candidate's blocks.
+
+    ``_cue_bounds`` holds each cue ~0.12s past its last spoken word so the
+    caption does not vanish mid-sentence at a block boundary. That tail would
+    run into the next cue, so every end is clamped to the following cue's
+    start. SRT and ASS players both render overlapping cues badly (flicker,
+    stacked lines), and a hard gap of one frame keeps the two tracks clean.
+    """
+    bounds = [_cue_bounds(c, b) for b in blocks]
+    for i in range(len(bounds) - 1):
+        st, en = bounds[i]
+        next_start = bounds[i + 1][0]
+        # Hold the tail only while nobody else needs the screen.
+        bounds[i] = (st, max(st + 0.08, min(en, next_start - 0.033)))
+    return bounds
+
+
 def _srt_ts(v: float) -> str:
     v = max(0.0, v)
     h = int(v // 3600)
@@ -106,8 +124,9 @@ def srt_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
     """
     out.parent.mkdir(parents=True, exist_ok=True)
     cues: list[str] = []
-    for i, block in enumerate(_blocks_for_candidate(c, words_per_line), 1):
-        st, en = _cue_bounds(c, block)
+    blocks = _blocks_for_candidate(c, words_per_line)
+    for i, (st, en) in enumerate(_cue_sequence(c, blocks), 1):
+        block = blocks[i - 1]
         text = " ".join(w.text.strip() for w in block.words if w.text.strip())
         if not text:
             continue
@@ -135,8 +154,8 @@ def ass_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
     font = os.getenv("SELEKYT_FONT", "Noto Sans")
 
     lines: list[str] = []
-    for block in _blocks_for_candidate(c, words_per_line):
-        st, en = _cue_bounds(c, block)
+    blocks = _blocks_for_candidate(c, words_per_line)
+    for (st, en), block in zip(_cue_sequence(c, blocks), blocks):
         text = _karaoke_text(block.words, block.emphasis)
         if text:
             lines.append(f"Dialogue: 0,{_ts(st)},{_ts(en)},Default,,0,0,0,,{text}")

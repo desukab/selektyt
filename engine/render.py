@@ -51,8 +51,13 @@ def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None 
         parts.append(part)
     if len(parts) == 1:
         shutil.move(str(parts[0]), str(out)); shutil.rmtree(tmp, ignore_errors=True); return out
+    # The concat demuxer resolves relative entries against the concat file's
+    # own directory, not the process CWD — CWD-relative paths get doubled and
+    # the whole render fails. Entries must be absolute.
     concat = tmp / "concat.txt"
-    concat.write_text("\n".join(f"file '{p.as_posix()}'" for p in parts), encoding="utf-8")
+    concat.write_text(
+        "\n".join(f"file '{p.resolve().as_posix()}'" for p in parts), encoding="utf-8"
+    )
     subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat), "-c", "copy", "-movflags", "+faststart", str(out)], check=True)
     shutil.rmtree(tmp, ignore_errors=True)
     return out

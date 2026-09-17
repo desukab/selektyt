@@ -1,0 +1,74 @@
+"""Transcription backend selector.
+
+faster-whisper is the preferred engine (attention-based, per-token
+timestamps). It cannot run everywhere: ctranslate2 has no wheel for some
+platform/Python pairs (e.g. Termux ARM64 on Python 3.14). sherpa-onnx ships
+as a plain wheel and runs on CPU, so it is the fallback that keeps the
+pipeline working on this class of device.
+
+Selection is recorded in the returned provenance so a run never silently
+uses a different ASR engine than the operator thinks it did.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+
+from models.core import Segment
+
+
+def _faster_whisper_available() -> bool:
+    try:
+        import faster_whisper  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+def transcribe(
+    media: Path,
+    model_name: str = "small",
+    language: str | None = None,
+    checkpoint_dir: Path | None = None,
+    chunk_minutes: int = 5,
+    cpu_threads: int | None = None,
+    beam_size: int = 1,
+) -> tuple[list[Segment], str, dict]:
+    """Transcribe with the best engine available on this host.
+
+    Returns (segments, detected_language, provenance). Provenance records
+    which engine ran and why, plus the word-timestamp fidelity.
+    """
+    if _faster_whisper_available():
+        from providers.whisper import transcribe as _fw
+        segments, lang = _fw(
+            media, model_name, language, checkpoint_dir,
+            chunk_minutes=chunk_minutes, cpu_threads=cpu_threads, beam_size=beam_size,
+        )
+        return segments, lang, {
+            "engine": "faster-whisper",
+            "model": model_name,
+            "word_timestamps": "per-token",
+            "fallback_reason": None,
+        }
+
+    from providers.sherpa import transcribe as _so, is_available
+    if is_available(model_name):
+        segments, lang = _so(
+            media, model_name, language, checkpoint_dir,
+            chunk_minutes=chunk_minutes, cpu_threads=cpu_threads, beam_size=beam_size,
+        )
+        return segments, lang, {
+            "engine": "sherpa-onnx-whisper",
+            "model": model_name,
+            # sherpa's whisper export has no cross-attention outputs, so word
+            # times are distributed by character proportion within each
+            # whisper segment — an approximation, not attention timestamps.
+            "word_timestamps": "character-proportional",
+            "fallback_reason": "faster-whisper unavailable (no ctranslate2 wheel for this platform)",
+        }
+
+    raise RuntimeError(
+        "no transcription engine available: install faster-whisper "
+        "(pip install -e '.[transcription]') or place a sherpa-onnx whisper "
+        "model under ~/.cache/telugify/models/sherpa-onnx-whisper-base"
+    )

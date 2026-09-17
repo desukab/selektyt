@@ -16,7 +16,7 @@ from engine.render import render_clip
 from engine.llm_editorial import attach_metadata
 from engine.pipeline_audio import run_pipeline_audio
 from providers.youtube import download
-from providers.whisper import transcribe
+from providers.transcribe import transcribe as transcribe_auto
 from models.core import Segment, Word
 
 
@@ -43,6 +43,18 @@ def _load_transcript(path: Path) -> tuple[list[Segment], str] | None:
 def _fingerprint(media: Path, source: str, model: str, language: str | None) -> str:
     st = media.stat()
     raw = f"{source}|{media.resolve()}|{st.st_size}|{st.st_mtime_ns}|{model}|{language or 'auto'}"
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _selection_digest(selected: list) -> str:
+    """Digest of the chosen clips.
+
+    The render cache is keyed on the source and settings, but two different
+    selections of the same source are different videos: without this digest
+    a re-run that picked new clips would silently re-render nothing and ship
+    the previous selection's files under the new indices.
+    """
+    raw = "|".join(f"{c.start:.3f},{c.end:.3f},{c.text}" for c in selected)
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
@@ -101,7 +113,7 @@ def run(
             f"chunk={chunk_minutes}min",
             flush=True,
         )
-        transcript, detected = transcribe(
+        transcript, detected, asr_provenance = transcribe_auto(
             media,
             model_name=model,
             language=language,
@@ -110,10 +122,17 @@ def run(
             beam_size=beam_size,
             cpu_threads=cpu_threads,
         )
+        print(
+            f"[transcribe] engine={asr_provenance['engine']} "
+            f"word_timestamps={asr_provenance['word_timestamps']}"
+            + (f" ({asr_provenance['fallback_reason']})" if asr_provenance["fallback_reason"] else ""),
+            flush=True,
+        )
         transcript_path.write_text(
             json.dumps(
                 {
                     "language": detected,
+                    "asr": asr_provenance,
                     "segments": [
                         {
                             "start": s.start,
@@ -200,6 +219,7 @@ def run(
     outputs = []
     edit_report = []
     content_packs = []
+    sel_digest = _selection_digest(selected)
     for idx, c in enumerate(selected, 1):
         intervals = retention_intervals(c)
         caption = ass_for_candidate(c, project / "captions" / f"{idx:02d}.ass")
@@ -220,6 +240,7 @@ def run(
         sh = project / "shorts" / f"{idx:02d}.mp4"
         if (
             state.get("render_fingerprint") == fingerprint
+            and state.get("render_selection_digest") == sel_digest
             and fb.is_file()
             and sh.is_file()
             and fb.stat().st_size > 0
@@ -268,6 +289,6 @@ def run(
     # "not run" from "failed silently".
     report["audio"] = audio_summary if audio_summary else {"enabled": False}
     (project / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
-    state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "selected_count": len(selected), "qa": str(qa_path), "complete": True})
+    state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "render_selection_digest": sel_digest, "selected_count": len(selected), "qa": str(qa_path), "complete": True})
     state_path.write_text(json.dumps(state, indent=2))
     return project

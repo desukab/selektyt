@@ -2,6 +2,7 @@
 from __future__ import annotations
 import re
 from models.core import Candidate
+from engine.story_units import boilerplate_fraction
 
 _SCRIPT_RANGES: dict[str, str] = {
     "telugu": r"[\u0C00-\u0C7F]",
@@ -104,6 +105,7 @@ def validate(c: Candidate) -> tuple[bool, str]:
 
     Rules:
       - confidence and context_score thresholds
+      - reject clips dominated by article boilerplate (byline, issue, date)
       - reject unsupported absolute claims (multilingual)
       - reject clips starting mid-conversation (connectives)
       - reject clips whose opening anaphoric reference depends on prior context
@@ -112,6 +114,11 @@ def validate(c: Candidate) -> tuple[bool, str]:
         return False, "low factual confidence"
     if c.context_score < 0.70:
         return False, "insufficient standalone context"
+    bp_frac, bp_kinds = boilerplate_fraction(c.text)
+    if bp_frac >= 0.35:
+        return False, f"dominated by article boilerplate ({', '.join(bp_kinds)})"
+    if bp_frac >= 0.18 and c.coherence_score < 0.5:
+        return False, f"boilerplate inside an incoherent span ({', '.join(bp_kinds)})"
     abs_found = _find_absolute(c.text) or _find_absolute(c.hook)
     if _unsupported_absolute(c):
         return False, f"unsupported absolute claim outside clip: {'; '.join(abs_found)}"

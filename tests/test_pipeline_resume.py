@@ -6,6 +6,9 @@ from unittest.mock import MagicMock, patch
 from models.core import Candidate, Segment, Word
 
 
+from selekyt.pipeline import _selection_digest
+
+
 def _fake_transcript():
     words = [Word("hello", 0.0, 0.5)]
     seg = Segment(10.0, 20.0, "This is a great important thing to say in a video.", words)
@@ -81,9 +84,11 @@ def test_pipeline_skips_render_when_clips_exist(tmp_path):
     (project / "content_pack").mkdir(exist_ok=True)
 
     fp = "test-fingerprint"
+    cand = _fake_candidate()
     state = {"source": "https://example.com/v", "media_path": str(media),
              "media_info": {"title": "t"}, "fingerprint": fp,
-             "render_fingerprint": fp}
+             "render_fingerprint": fp,
+             "render_selection_digest": _selection_digest([cand])}
     (project / "pipeline_state.json").write_text(json.dumps(state), encoding="utf-8")
     (project / "transcript.json").write_text(json.dumps({
         "language": "en",

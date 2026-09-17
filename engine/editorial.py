@@ -2,6 +2,16 @@ from __future__ import annotations
 import re
 from collections import Counter
 from models.core import Segment, Candidate
+from engine.story_units import (
+    boilerplate_fraction,
+    coherence_score,
+    split_sentences,
+    _classify,
+    _containment,
+    _content_tokens,
+    _continues_prior,
+    segment_story_units,
+)
 
 CONTRAST = r"\b(?:but|however|instead|actually|although|yet|rather|because|so|therefore|అయితే|కానీ|ఎందుకంటే|అందుకే|లెకిన|मगर|क्योंकि|इसलिए|ஆனால்|எனவே|ಆದರೆ|ಏಕೆಂದರೆ|কিন্তু|কারণ|তাই)\b"
 HOOK = r"\b(?:why|how|what happened|the reason|the truth|first|worst|problem|mistake|changed|never|secret|surprising|actually|ఎందుకు|ఎలా|నిజం|సమస్య|తప్పు|మారింది|क्यों|कैसे|सच|समस्या|गलती|ஏன்|எப்படி|உண்மை|சிக்கல்|ಮಾರ್ಪು|কেন|কীভাবে|সত্য|সমস্যা)\b"
@@ -106,58 +116,125 @@ def _audio_quality_features(words: list, duration: float) -> dict | None:
     }
 
 
-def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float = 55.0) -> list[Segment]:
-    """Generate candidate clips respecting semantic boundaries.
-
-    Only starts new candidates at sentence boundaries (after the previous
-    segment ends with terminal punctuation) or at the very first segment.
-    Falls back to starting at every segment if no boundary is found within
-    max_sec of the current position, preserving original behaviour for
-    edge cases.
-    """
-    clean = [s for s in segments if s.text.strip() and s.end > s.start]
-    if not clean:
-        return []
-
-    thoughts: list[Segment] = []
-    boundary_found = False
-    for i in range(len(clean)):
-        if _is_semantic_boundary(clean, i):
-            boundary_found = True
-        if not boundary_found and i > 0:
+def _words_in(segs: list[Segment], start: float, end: float) -> list:
+    """Words overlapping [start, end], clipped to it, for a span's timestamps."""
+    out = []
+    for seg in segs:
+        if seg.end < start or seg.start > end:
             continue
+        for w in seg.words or []:
+            if w.end <= start or w.start >= end:
+                continue
+            out.append(w)
+    return out
 
-        cur: list[Segment] = []
-        for s in clean[i:]:
+
+def _spans_from_unit(unit, segs: list[Segment], min_sec: float, max_sec: float) -> list[Segment]:
+    """Every candidate span starting inside one story unit.
+
+    A span may run past the unit's end into the next one — crossing a weak
+    boundary is allowed and penalised later by the coherence score, since a
+    lexically diverse paragraph and a genuine story splice are not the same
+    thing. A span may never include a boilerplate sentence: bylines and
+    section markers are cut points, not content.
+    """
+    sents = unit.sentences
+    out: list[Segment] = []
+    for i in range(len(sents)):
+        cur: list = []
+        for s in sents[i:]:
+            if s.boilerplate:
+                break
             cur.append(s)
             duration = cur[-1].end - cur[0].start
             if duration > max_sec:
                 break
             if duration >= min_sec and (_sentence_end(s.text) or duration >= max_sec - 2):
-                thoughts.append(Segment(
+                out.append(Segment(
                     cur[0].start, cur[-1].end,
                     " ".join(x.text for x in cur).strip(),
-                    [w for x in cur for w in x.words],
+                    _words_in(segs, cur[0].start, cur[-1].end),
                 ))
+    return out
 
-    if not thoughts:
-        for i in range(len(clean)):
-            cur: list[Segment] = []
-            for s in clean[i:]:
-                cur.append(s)
-                duration = cur[-1].end - cur[0].start
-                if duration > max_sec:
-                    break
-                if duration >= min_sec and (_sentence_end(s.text) or duration >= max_sec - 2):
-                    thoughts.append(Segment(
-                        cur[0].start, cur[-1].end,
-                        " ".join(x.text for x in cur).strip(),
-                        [w for x in cur for w in x.words],
-                    ))
+
+def _completeness(unit, thought: Segment) -> float:
+    """1.0 = the clip closes its story; low = it cuts a flowing thought.
+
+    Ending exactly on the unit boundary is a complete arc. Ending early is
+    only penalised when the next sentence continues the same topic — a
+    clip that stops at a natural sub-point keeps most of its value.
+    """
+    if thought.end >= unit.end - 0.05:
+        return 1.0
+    rest = [s for s in unit.sentences if s.start >= thought.end - 0.05]
+    if not rest:
+        return 1.0
+    pieces = split_sentences(thought.text)
+    last = pieces[-1] if pieces else thought.text
+    if _continues_prior(rest[0].text, last):
+        return 0.35
+    continuity = _containment(_content_tokens(last), _content_tokens(rest[0].text))
+    if continuity >= 0.30:
+        return 0.35
+    return 0.75
+
+
+def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float = 55.0) -> list[Segment]:
+    """Generate candidate clips over the whole transcript, sentence by sentence.
+
+    Story units (see engine.story_units) are computed first and supply each
+    candidate's coherence and completeness, but they do not hard-wall the
+    search: a span may cross a weak boundary and let its coherence score
+    argue against it, because a lexically diverse paragraph is not a splice.
+    Boilerplate sentences are the one hard stop — a byline is never clip
+    content.
+    """
+    clean = [s for s in segments if s.text.strip() and s.end > s.start]
+    if not clean:
+        return []
+
+    units = segment_story_units(clean)
+    # A segment can sit in two units when a boundary is drawn inside it (the
+    # marker peel splits one segment's sentences across units). Collecting
+    # words per unit would then emit those words twice and the caption track
+    # would show a ghost cue, so the pool is deduplicated by index.
+    seen: set[int] = set()
+    all_segs: list[Segment] = []
+    for u in units:
+        for i in u.segment_indices:
+            if 0 <= i < len(clean) and i not in seen:
+                seen.add(i)
+                all_segs.append(clean[i])
+    sentences: list = []
+    for u in units:
+        for s in u.sentences:
+            sentences.append((s, u))
+    if not sentences:
+        return []
+
+    thoughts: list[Segment] = []
+    for i in range(len(sentences)):
+        cur: list = []
+        for s, u in sentences[i:]:
+            if s.boilerplate:
+                break
+            cur.append(s)
+            duration = cur[-1].end - cur[0].start
+            if duration > max_sec:
+                break
+            if duration >= min_sec and (_sentence_end(s.text) or duration >= max_sec - 2):
+                text = " ".join(x.text for x in cur).strip()
+                thoughts.append(Segment(
+                    cur[0].start, cur[-1].end, text,
+                    _words_in(all_segs, cur[0].start, cur[-1].end),
+                    coherence=coherence_score(text),
+                    completeness=_completeness(u, Segment(cur[0].start, cur[-1].end, text, [])),
+                ))
     return thoughts[:4000]
 
 
-def _score(s: Segment) -> tuple[float, float, float, float, str, str]:
+def _score(s: Segment) -> tuple[float, float, float, float, str, str, float]:
     text = s.text.strip(); low = text.lower()
     tokens = re.findall(r"\w+", low, flags=re.UNICODE)
     n = max(1, len(tokens)); duration = max(0.1, s.duration)
@@ -177,6 +254,21 @@ def _score(s: Segment) -> tuple[float, float, float, float, str, str]:
     repetition = _repetition_score(tokens)
     visual_dep = min(1.0, len(re.findall(VISUAL_DEICTICS, low, re.I)) / 1)
     audio_q = _audio_quality_features(s.words or [], duration)
+
+    # Editorial coherence: one story stays on topic, a splice of two
+    # collapses at the seam. This scales the whole score so a clip that
+    # wanders cannot rank on density alone.
+    coherence = getattr(s, "coherence", 1.0) or 1.0
+    coherence_factor = 0.35 + 0.65 * coherence
+    # A clip that cuts a flowing thought short is unfinished, however well
+    # its text scores; closing the story is worth keeping.
+    completeness = getattr(s, "completeness", 1.0) or 1.0
+    completeness_factor = 0.45 + 0.55 * completeness
+    # Boilerplate (byline, issue, dateline) is the article's colophon, not
+    # its content; it costs editorial value but cannot simply be deleted,
+    # because the audio still has to be cut somewhere.
+    bp_frac, bp_kinds = boilerplate_fraction(text)
+
     # Base formula identical to original; audio only ADDS a small adjustment
     # when timestamps are available, and is exactly zero otherwise.
     editorial = max(0.0, min(1.0, .24*density + .22*substance + .22*progression + .18*opening + .14*payoff - .30*filler - .12*(1 - standalone)))
@@ -186,8 +278,15 @@ def _score(s: Segment) -> tuple[float, float, float, float, str, str]:
         audio_pace = max(0.0, 1.0 - 0.8 * silence_ratio - 0.4 * long_gap_ratio)
         editing_adj = 0.05 * audio_pace - 0.08 * long_gap_ratio
         editorial = max(0.0, min(1.0, editorial + editing_adj))
+    editorial = max(0.0, min(1.0, editorial * coherence_factor * completeness_factor * (1.0 - 1.5 * bp_frac)))
     virality = max(0.0, min(1.0, .34*opening + .24*contrast + .18*questions + .14*numbers + .10*substance))
-    context = min(1.0, .40 + .30*substance + .20*progression + .10*payoff - .12*(1 - standalone))
+    # Context asks "can this stand alone?" — a clip that fills its screen time
+    # has enough material to be self-supporting even when delivery is slow,
+    # so duration floors the substance estimate that context uses. Editorial
+    # density still uses the word-count term above, where sparseness matters.
+    substance_ctx = min(1.0, max(substance, duration / 30.0))
+    completeness_ctx = getattr(s, "completeness", 1.0) or 1.0
+    context = min(1.0, .40 + .30*substance_ctx + .20*progression + .10*payoff - .12*(1 - standalone) + .10*completeness_ctx)
     visual = min(1.0, .35 + .20*numbers + .20*contrast + .15*questions + .10*(n >= 35) - .15*visual_dep)
     if contrast >= .5 or progression > .70: story_type = "conflict" if contrast >= 1 else "revelation"
     elif questions: story_type = "question"
@@ -196,29 +295,50 @@ def _score(s: Segment) -> tuple[float, float, float, float, str, str]:
     else: story_type = "insight"
     reason = (f"opening={opening:.2f}; progression={progression:.2f}; payoff={payoff:.2f}; "
               f"density={density:.2f}; fillers={int(filler*4)}; standalone={standalone:.2f}; "
-              f"repetition={repetition:.2f}")
+              f"repetition={repetition:.2f}; coherence={coherence:.2f}; "
+              f"completeness={completeness:.2f}"
+              + (f"; boilerplate={bp_frac:.2f}({','.join(bp_kinds)})" if bp_kinds else ""))
     if audio_q:
         silence_ratio = audio_q["silence_ratio"]
         long_gap_ratio = audio_q["long_gap_ratio"]
         audio_pace = max(0.0, 1.0 - 0.8 * silence_ratio - 0.4 * long_gap_ratio)
         reason += (f"; audio_pace={audio_pace:.2f}; "
                    f"silence={audio_q['silence_ratio']:.3f}")
-    return editorial, virality, context, visual, story_type, reason
+    return editorial, virality, context, visual, story_type, reason, coherence
+
+
+def _clean_hook_payoff(text: str) -> tuple[str, str]:
+    """Hook and payoff drawn from real content, skipping boilerplate.
+
+    A byline or dateline must never be offered as the payoff of a clip even
+    when it happens to be the last sentence the transcript produced. ASR
+    often omits sentence-final punctuation, leaving one long unpunctuated
+    span; in that case the hook opens the clip and the payoff closes it,
+    rather than both being the same string.
+    """
+    pieces = split_sentences(text)
+    clean = [p for p in pieces if not _classify(p)]
+    if not clean:
+        clean = [text.strip()]
+    body = " ".join(clean).strip()
+    if len(clean) == 1:
+        cut = min(120, max(20, len(body) // 3))
+        return body[:cut], body[-220:]
+    return clean[0][:160], clean[-1][-220:]
 
 
 def score_candidate(s: Segment) -> Candidate:
-    editorial, virality, context, visual, story_type, detail = _score(s)
-    text = s.text.strip()
-    first = re.split(r"(?<=[.!?।॥？！])\s+", text, maxsplit=1)[0]
+    editorial, virality, context, visual, story_type, detail, coherence = _score(s)
+    hook, payoff = _clean_hook_payoff(s.text.strip())
     words = s.words or []
     dead_air = _dead_air_fraction(words, s.duration) if words else None
     if dead_air is not None:
         detail += f"; dead_air={dead_air:.2f}"
     return Candidate(
-        s.start, s.end, text, story_type, first[:160], text[-220:],
+        s.start, s.end, s.text.strip(), story_type, hook, payoff,
         editorial, virality, context, .90,
         f"Structural editorial score: {detail}.",
-        visual, s.words,
+        visual, s.words, coherence,
     )
 
 

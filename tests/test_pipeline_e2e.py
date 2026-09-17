@@ -121,8 +121,13 @@ def patched_pipeline(monkeypatch, media):
         p, "download", lambda source, dest, cookies=None: (media, {"title": "synthetic clip"}),
     )
     monkeypatch.setattr(
-        p, "transcribe",
-        lambda media, **kw: (_transcript(), "en"),
+        p, "transcribe_auto",
+        lambda media, **kw: (
+            _transcript(),
+            "en",
+            {"engine": "test", "model": "test", "word_timestamps": "test",
+             "fallback_reason": ""},
+        ),
     )
     return p
 
