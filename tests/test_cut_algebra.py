@@ -444,3 +444,113 @@ def test_parity_resolve_for_export_keeps_real_gap():
         CutSpan("keep", 2.0, 4.0),
     ]
     assert resolve_for_export(spans) == spans
+
+
+# ── editorial transport algebra (AutoCut src/lib/cuts.ts) ──
+
+from engine.cut_algebra import (
+    DEGENERATE_SECONDS, MIN_KEEP_SECONDS, SKIP_SETTLED_SECONDS,
+    RESTART_WINDOW_SECONDS, NEXT_EPSILON_SECONDS,
+    Keep, EditCut, EditCutList,
+    normalize_keeps, omitted_intervals, clamp_keep_edge,
+    skip_target_for, previous_keep_target, next_keep_target,
+)
+
+
+def test_transport_constants_are_the_autocut_values():
+    assert DEGENERATE_SECONDS == 0.01
+    assert MIN_KEEP_SECONDS == 0.05
+    assert SKIP_SETTLED_SECONDS == 0.005
+    assert RESTART_WINDOW_SECONDS == 1.0
+    assert NEXT_EPSILON_SECONDS == 0.05
+
+
+def test_normalize_keeps_drops_degenerate_and_clips():
+    out = normalize_keeps([(-1.0, 0.005, False), (1.0, 9.0, False)], 5.0)
+    assert [(k.start, k.end) for k in out] == [(1.0, 5.0)]
+
+
+def test_normalize_keeps_touching_stays_two_keeps():
+    # Sharing a boundary is not overlapping; fusing would renumber later
+    # keeps that a drag gesture still holds an index into.
+    out = normalize_keeps([(0.0, 1.0, False), (1.0, 2.0, False)], 5.0)
+    assert [(k.start, k.end) for k in out] == [(0.0, 1.0), (1.0, 2.0)]
+
+
+def test_normalize_keeps_active_wins_over_disabled_overlap():
+    out = normalize_keeps([(0.0, 2.0, True), (1.0, 3.0, False)], 5.0)
+    assert len(out) == 1
+    assert (out[0].start, out[0].end) == (0.0, 3.0)
+    assert out[0].disabled is False, "a tiny drag overlap must not remove footage"
+
+
+def test_normalize_keeps_accepts_keep_objects_or_tuples():
+    tuples = normalize_keeps([(0.0, 1.0, False)], 5.0)
+    objects = normalize_keeps([Keep(0.0, 1.0, False)], 5.0)
+    assert tuples == objects
+
+
+def test_omitted_intervals_covers_removes_and_disabled_keeps():
+    cl = EditCutList(10.0, [
+        EditCut(0.0, 2.0, "keep"),
+        EditCut(2.0, 2.5, "remove"),
+        EditCut(2.5, 4.0, "keep", disabled=True),
+        EditCut(4.0, 6.0, "keep"),
+    ])
+    out = omitted_intervals(cl)
+    assert [(c.start, c.end) for c in out] == [(2.0, 2.5), (2.5, 4.0)]
+
+
+def test_omitted_intervals_accepts_a_wire_dict():
+    wire = {
+        "source_duration": 5.0,
+        "intervals": [
+            {"start": 0.0, "end": 1.0, "kind": "keep"},
+            {"start": 1.0, "end": 2.0, "kind": "remove"},
+        ],
+    }
+    assert [(c.start, c.end) for c in omitted_intervals(wire)] == [(1.0, 2.0)]
+
+
+def test_skip_target_for_uses_binary_search_and_two_candidates():
+    omitted = [(1.0, 2.0), (5.0, 6.0)]
+    # Inside the first removed region -> its end.
+    assert skip_target_for(omitted, 1.5, 0.0) == 2.0
+    # Settled in the tail of the first while the second is in reach: the first
+    # declines, the second candidate inside the lookahead wins.
+    assert skip_target_for(omitted, 1.998, 4.0) == 6.0
+    # Nowhere relevant -> keep rolling.
+    assert skip_target_for(omitted, 3.0, 0.0) is None
+    # Empty timeline never skips.
+    assert skip_target_for([], 1.0, 1.0) is None
+
+
+def test_clamp_keep_edge_keeps_min_length_and_neighbours():
+    keeps = [Keep(0.0, 2.0), Keep(2.5, 4.0)]
+    # In-edge of the first: floor 0, ceil end - MIN_KEEP.
+    assert clamp_keep_edge(keeps, 0, "in", -5.0, 10.0) == 0.0
+    assert clamp_keep_edge(keeps, 0, "in", 5.0, 10.0) == pytest.approx(1.95)
+    # Out-edge: floor start + MIN_KEEP, ceil the next keep's start.
+    assert clamp_keep_edge(keeps, 0, "out", 9.0, 10.0) == 2.5
+    # Last keep's out-edge ceilings at duration.
+    assert clamp_keep_edge(keeps, 1, "out", 99.0, 10.0) == 10.0
+    # Out-of-range index is left alone.
+    assert clamp_keep_edge(keeps, 5, "in", 3.0, 10.0) == 3.0
+
+
+def test_previous_keep_target_restarts_past_the_window():
+    keeps = [Keep(0.0, 2.0), Keep(2.5, 4.0), Keep(4.5, 6.0, disabled=True)]
+    assert previous_keep_target(keeps, 0.5) == 0.0   # inside keep 0, restart
+    assert previous_keep_target(keeps, 1.5) == 0.0   # past 1s -> restart
+    assert previous_keep_target(keeps, 3.0) == 0.0   # inside keep 1 -> step back
+    assert previous_keep_target(keeps, 9.0) == 2.5   # tail -> last enabled start
+    # Nothing enabled -> nothing to seek to.
+    assert previous_keep_target([Keep(0.0, 1.0, disabled=True)], 0.5) is None
+
+
+def test_next_keep_target_skips_disabled_and_runs_to_duration():
+    keeps = [Keep(0.0, 2.0), Keep(2.5, 4.0), Keep(4.5, 6.0, disabled=True)]
+    assert next_keep_target(keeps, 0.0, 10.0) == 2.5
+    assert next_keep_target(keeps, 2.51, 10.0) == 4.0  # inside keep 1 -> its end
+    assert next_keep_target(keeps, 9.0, 10.0) == 10.0  # tail -> duration
+    assert next_keep_target([Keep(0.0, 1.0, disabled=True)], 0.0, 5.0) is None

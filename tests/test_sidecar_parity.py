@@ -599,3 +599,150 @@ def test_track_offset_from_timecode_matches_open_track_behavior():
         "reference_timecode": "01:00:00;00", "track_timecode": "01:00:10;00", "fps": fps}})))
     assert resp["ok"], resp.get("error")
     assert resp["data"]["offset"] == pytest.approx(track - ref)
+
+
+# ── editorial transport algebra (AutoCut src/lib/cuts.ts) ──
+
+def _keeps_wire(keeps) -> list[dict]:
+    return [{"start": k.start, "end": k.end, "disabled": k.disabled} for k in keeps]
+
+
+@skip_no_mech
+@pytest.mark.parametrize("keeps_input,duration,expected", [
+    # degenerate interval is dropped outright, so only the real keep survives
+    ([(0.0, 0.005, False), (1.0, 2.0, False)], 5.0, [(1.0, 2.0)]),
+    # touching stays two keeps; only genuine overlap fuses
+    ([(0.0, 1.0, False), (1.0, 2.0, False)], 5.0, [(0.0, 1.0), (1.0, 2.0)]),
+    ([(0.0, 1.5, False), (1.0, 2.0, False)], 5.0, [(0.0, 2.0)]),
+    # clipped to [0, duration]
+    ([(-1.0, 1.0, False), (4.0, 9.0, False)], 5.0, [(0.0, 1.0), (4.0, 5.0)]),
+    # active content wins over a disabled keep it overlaps
+    ([(0.0, 2.0, True), (1.0, 3.0, False)], 5.0, [(0.0, 3.0)]),
+])
+def test_normalize_keeps_matches_across_languages(keeps_input, duration, expected):
+    from engine.cut_algebra import normalize_keeps
+
+    wire = [{"start": s, "end": e, "disabled": d} for s, e, d in keeps_input]
+    with mech() as m:
+        rust = m.call("normalize_keeps", keeps=wire, duration=duration)
+    py = normalize_keeps(keeps_input, duration)
+    assert [(k["start"], k["end"]) for k in rust] == expected
+    assert [(k.start, k.end) for k in py] == expected
+    assert _keeps_wire(py) == rust
+
+
+@skip_no_mech
+@pytest.mark.parametrize("index,edge,proposed,want", [
+    (0, "in", -5.0, 0.0),    # floor is 0 for the first keep
+    (0, "out", 9.0, 2.5),    # ceil is the next keep's start (touching stays two keeps)
+    (1, "in", 0.0, 2.0),     # floor is the previous keep's end
+    (1, "out", 99.0, 10.0),  # ceil is duration for the last keep
+])
+def test_clamp_keep_edge_matches_across_languages(index, edge, proposed, want):
+    from engine.cut_algebra import Keep, clamp_keep_edge
+
+    keeps = [Keep(0.0, 2.0), Keep(2.5, 4.0)]
+    wire = _keeps_wire(keeps)
+    with mech() as m:
+        rust = m.call(
+            "clamp_keep_edge", keeps=wire, index=index, edge=edge,
+            proposed=proposed, duration=10.0,
+        )
+    py = clamp_keep_edge(keeps, index, edge, proposed, 10.0)
+    assert rust["clamped"] == pytest.approx(py)
+    assert py == pytest.approx(want)
+
+
+@skip_no_mech
+@pytest.mark.parametrize("time,lookahead,want", [
+    (2.2, 0.0, 2.5),     # inside a removed region -> jump to its end
+    (1.9, 0.5, 2.5),     # upcoming gap inside the lookahead -> pre-empt it
+    (1.0, 0.1, None),    # too far ahead -> keep rolling
+    (2.49, 0.0, 2.5),    # 2.49 < 2.495 (end minus settled) -> still skips
+    (2.497, 0.0, None),  # settled tail: already leaving, no re-issue
+])
+def test_skip_target_for_matches_across_languages(time, lookahead, want):
+    from engine.cut_algebra import skip_target_for
+
+    omitted = [(2.0, 2.5)]
+    with mech() as m:
+        rust = m.call("skip_target_for", omitted=omitted, time=time, lookahead=lookahead)
+    py = skip_target_for(omitted, time, lookahead)
+    assert rust["target"] == py
+    assert py == want
+
+
+@skip_no_mech
+@pytest.mark.parametrize("time,want", [
+    (0.5, 0.0),   # inside keep 0, under the restart window -> restart it
+    (1.5, 0.0),   # past 1s into keep 0 -> restart it (standard player behaviour)
+    (3.0, 0.0),   # inside keep 1 -> step back to keep 0's start
+    (9.0, 2.5),   # past everything -> last enabled keep's start
+])
+def test_previous_keep_target_matches_across_languages(time, want):
+    from engine.cut_algebra import Keep, previous_keep_target
+
+    keeps = [Keep(0.0, 2.0), Keep(2.5, 4.0), Keep(4.5, 6.0, disabled=True)]
+    with mech() as m:
+        rust = m.call("previous_keep_target", keeps=_keeps_wire(keeps), time=time)
+    py = previous_keep_target(keeps, time)
+    assert rust["target"] == py
+    assert py == want
+
+
+@skip_no_mech
+@pytest.mark.parametrize("time,want", [
+    (0.0, 2.5),   # next enabled keep after the playhead
+    (2.4, 2.5),   # 2.5 > 2.4 + 0.05 -> keep 1 is the upcoming one
+    (2.51, 4.0),  # inside keep 1 -> its end (the disabled keep is not a target)
+    (9.0, 10.0),  # past the last enabled keep -> duration
+])
+def test_next_keep_target_matches_across_languages(time, want):
+    from engine.cut_algebra import Keep, next_keep_target
+
+    keeps = [Keep(0.0, 2.0), Keep(2.5, 4.0), Keep(4.5, 6.0, disabled=True)]
+    with mech() as m:
+        rust = m.call(
+            "next_keep_target", keeps=_keeps_wire(keeps), time=time, duration=10.0
+        )
+    py = next_keep_target(keeps, time, 10.0)
+    assert rust["target"] == py
+    assert py == want
+
+
+@skip_no_mech
+def test_omitted_intervals_matches_across_languages():
+    from engine.cut_algebra import EditCut, EditCutList, omitted_intervals
+
+    wire = {
+        "source_duration": 10.0,
+        "intervals": [
+            {"start": 0.0, "end": 2.0, "kind": "keep"},
+            {"start": 2.0, "end": 2.5, "kind": "remove"},
+            {"start": 2.5, "end": 4.0, "kind": "keep", "disabled": True},
+            {"start": 4.0, "end": 6.0, "kind": "keep"},
+        ],
+    }
+    with mech() as m:
+        rust = m.call("omitted_intervals", cutlist=wire)
+    py = omitted_intervals(_edit_cutlist(wire))
+    # Both drops: the real remove and the disabled keep.
+    assert [(c["start"], c["end"]) for c in rust] == [(2.0, 2.5), (2.5, 4.0)]
+    assert [(c.start, c.end) for c in py] == [(2.0, 2.5), (2.5, 4.0)]
+
+
+def _edit_cutlist(wire: dict):
+    from engine.cut_algebra import EditCut, EditCutList
+
+    return EditCutList(
+        source_duration=float(wire["source_duration"]),
+        intervals=[
+            EditCut(
+                start=float(c["start"]),
+                end=float(c["end"]),
+                kind=str(c.get("kind", "remove")),
+                disabled=bool(c.get("disabled", False)),
+            )
+            for c in wire["intervals"]
+        ],
+    )
