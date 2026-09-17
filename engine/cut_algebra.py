@@ -6,6 +6,7 @@ No external dependencies. Used by: jumpcut, FCPXML, renderer, multi-track, QA.
 from __future__ import annotations
 
 from collections import namedtuple
+from dataclasses import dataclass
 
 # Canonical typed interval: ("keep"|"remove", start, end). This is the shape
 # the Rust core's EditCut produces and every exporter consumes.
@@ -344,3 +345,225 @@ def tile_cutlist(keeps: list[tuple[float, float]], total_duration: float) -> lis
     if sorted_kept[-1][1] < total_duration:
         removes.append((sorted_kept[-1][1], total_duration))
     return removes
+
+
+# ── Editorial transport algebra (AutoCut src/lib/cuts.ts) ──
+#
+# These are the shell-facing player helpers: they decide where playback jumps
+# and how far a dragged keep edge may move. Ported behavior-identical from
+# rust/core/src/editalgebra.rs (itself a port of cuts.ts) so the Python and
+# Rust sidecars answer identically — asserted in tests/test_sidecar_parity.py.
+
+DEGENERATE_SECONDS = 0.01
+MIN_KEEP_SECONDS = 0.05
+SKIP_SETTLED_SECONDS = 0.005
+RESTART_WINDOW_SECONDS = 1.0
+NEXT_EPSILON_SECONDS = 0.05
+
+
+@dataclass(frozen=True)
+class Keep:
+    """A keep as normalized: absolute bounds plus the frontend-only disabled
+    flag (the export collapses it into a remove via resolve_for_export)."""
+
+    start: float
+    end: float
+    disabled: bool = False
+
+
+@dataclass(frozen=True)
+class EditCut:
+    """A cutlist interval that may still carry the editorial disabled flag."""
+
+    start: float
+    end: float
+    kind: str  # "keep" | "remove"
+    disabled: bool = False
+
+
+@dataclass
+class EditCutList:
+    """Canonical editorial cutlist: tiles the source, every interval is either
+    a keep (possibly disabled) or a remove. This is the single representation
+    the Python sidecar, the Rust core, and eventually the Tauri shell speak."""
+
+    source_duration: float
+    intervals: list[EditCut]
+
+
+def normalize_keeps(
+    keeps: list[tuple[float, float, bool] | Keep], duration: float
+) -> list[Keep]:
+    """Clip keeps to [0, duration], drop degenerate ones, sort by start, and
+    fuse the ones that genuinely overlap.
+
+    Touching is not overlapping: two keeps sharing a boundary stay two keeps.
+    They render identically in the export either way, but fusing them
+    renumbers every later keep, and callers (a timeline edge drag) hold an
+    index across the whole gesture.
+    """
+    clipped: list[Keep] = []
+    for k in keeps:
+        if isinstance(k, Keep):
+            start, end, disabled = k.start, k.end, k.disabled
+        else:
+            start, end, disabled = k[0], k[1], k[2]
+        start = min(max(start, 0.0), duration)
+        end = min(max(end, 0.0), duration)
+        if end - start > DEGENERATE_SECONDS:
+            clipped.append(Keep(start, end, bool(disabled)))
+    clipped.sort(key=lambda k: k.start)
+
+    merged: list[Keep] = []
+    for k in clipped:
+        if merged and k.start < merged[-1].end:
+            last = merged[-1]
+            merged[-1] = Keep(
+                last.start,
+                max(last.end, k.end),
+                # When an active keep overlaps a disabled one, active content
+                # wins — otherwise a tiny drag overlap can silently remove
+                # good footage.
+                last.disabled and k.disabled,
+            )
+        else:
+            merged.append(k)
+    return merged
+
+
+def omitted_intervals(cutlist: EditCutList | dict) -> list[EditCut]:
+    """Everything the export will drop: real removes plus disabled keeps.
+    Sorted and non-overlapping, because the cutlist it comes from tiles the
+    source in order."""
+    intervals = (
+        cutlist["intervals"]
+        if isinstance(cutlist, dict)
+        else cutlist.intervals
+    )
+    normalized = [
+        c
+        if isinstance(c, EditCut)
+        else EditCut(
+            start=float(c["start"]),
+            end=float(c["end"]),
+            kind=str(c.get("kind", "remove")),
+            disabled=bool(c.get("disabled", False)),
+        )
+        for c in intervals
+    ]
+    return [
+        c
+        for c in normalized
+        if c.kind == "remove" or (c.kind == "keep" and c.disabled)
+    ]
+
+
+def skip_target_for(
+    omitted: list[tuple[float, float]], time: float, lookahead: float
+) -> float | None:
+    """Where playback should jump to from ``time``, or None to keep rolling.
+
+    ``lookahead`` is how far ahead to pre-empt an upcoming omitted interval so
+    the dead frame is never rendered. Pass 0 while paused: that leaves only the
+    "the playhead is sitting inside a removed region" rule active, which is
+    what a manual seek into a gap needs.
+
+    Binary search rather than a scan: this runs once per decoded video frame,
+    and an hour of detected speech is easily a couple thousand intervals.
+    """
+    # First interval that hasn't already ended. Anything earlier is behind the
+    # playhead and can't be relevant.
+    lo, hi = 0, len(omitted)
+    while lo < hi:
+        mid = (lo + hi) >> 1
+        if omitted[mid][1] > time:
+            hi = mid
+        else:
+            lo = mid + 1
+    # Two candidates, not one: when the playhead is in the settled tail of an
+    # interval that abuts the next one, the first candidate declines and the
+    # second is the one inside the lookahead window.
+    for c in omitted[lo : lo + 2]:
+        if time >= c[0] and time < c[1] - SKIP_SETTLED_SECONDS:
+            return c[1]
+        if time < c[0] and c[0] - time < lookahead:
+            return c[1]
+    return None
+
+
+def clamp_keep_edge(
+    keeps: list[Keep],
+    index: int,
+    edge: str,
+    proposed: float,
+    duration: float,
+) -> float:
+    """Clamp a proposed new in/out point for ``keeps[index]`` so it stays
+    between its neighbours, inside [0, duration], and leaves the keep at least
+    MIN_KEEP_SECONDS long.
+
+    Both edit surfaces route through this: a timeline edge drag and the numeric
+    fields in a cuts panel. Without it, typing an overlapping value fuses two
+    keeps and renumbers everything after them.
+    """
+    if not 0 <= index < len(keeps):
+        return proposed
+    own = keeps[index]
+    if edge == "in":
+        floor = keeps[index - 1].end if index > 0 else 0.0
+        ceil = own.end - MIN_KEEP_SECONDS
+    else:
+        floor = own.start + MIN_KEEP_SECONDS
+        ceil = keeps[index + 1].start if index < len(keeps) - 1 else duration
+    return min(max(proposed, floor), ceil)
+
+
+def _enabled(keeps: list[Keep]) -> list[Keep]:
+    """Disabled keeps are excluded from the export, so the transport treats
+    them as if they weren't there. Stopping on one would be navigating to
+    footage the user has already said they don't want."""
+    return [k for k in keeps if not k.disabled]
+
+
+def previous_keep_target(keeps: list[Keep], time: float) -> float | None:
+    """Where the "previous cut" button should seek to, or None if there is
+    nothing enabled to seek to.
+
+    Past RESTART_WINDOW_SECONDS into a keep, "previous" restarts it rather than
+    stepping back a keep — standard media-player behaviour.
+    """
+    active = _enabled(keeps)
+    if not active:
+        return None
+    for idx, k in enumerate(active):
+        if k.start <= time < k.end:
+            if time - k.start > RESTART_WINDOW_SECONDS:
+                return k.start
+            return active[idx - 1].start if idx > 0 else k.start
+    previous = None
+    for k in active:
+        if k.end <= time:
+            previous = k.start
+        else:
+            break
+    return previous if previous is not None else active[0].start
+
+
+def next_keep_target(keeps: list[Keep], time: float, duration: float) -> float | None:
+    """Where the "next cut" button should seek to, or None if there is nothing
+    enabled to seek to. Past the last keep this runs out to ``duration`` so the
+    button still does something at the tail of the timeline.
+
+    Ignores keeps starting within NEXT_EPSILON_SECONDS, so pressing it while
+    sitting exactly on an in-point doesn't land on the same keep again.
+    """
+    active = _enabled(keeps)
+    if not active:
+        return None
+    for k in active:
+        if k.start > time + NEXT_EPSILON_SECONDS:
+            return k.start
+    for k in active:
+        if k.start <= time < k.end:
+            return k.end
+    return duration
