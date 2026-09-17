@@ -173,12 +173,17 @@ fn handle(op: &str, params: &Value) -> Result<Value> {
                 .get("min_speech_ms")
                 .and_then(Value::as_u64)
                 .unwrap_or(150) as u32;
+            // Project-time second the scored audio begins at. Non-zero when
+            // detection ran on a linked track that rolled after the reference;
+            // the cutlist is always expressed in project time (AutoCut
+            // DetectParams::source_offset).
+            let time_offset = params.get("time_offset").and_then(Value::as_f64).unwrap_or(0.0);
             let vp = selekyt_core::vad::VadParams {
                 threshold,
                 min_silence_ms,
                 min_speech_ms,
             };
-            let segs = selekyt_core::vad::segments_from_scores(&scores, vp, 0.0);
+            let segs = selekyt_core::vad::segments_from_scores(&scores, vp, time_offset);
             Ok(serde_json::to_value(
                 segs.into_iter()
                     .map(|s| json!({"start": s.start, "end": s.end, "score": 1.0}))

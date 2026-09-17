@@ -318,6 +318,7 @@ def segment_from_scores(
     release: float | None = None,
     min_speech_ms: int = 150,
     min_silence_ms: int = 100,
+    time_offset: float = 0.0,
 ) -> list[SpeechRegion]:
     """Convert per-frame speech probabilities into speech regions.
 
@@ -328,6 +329,11 @@ def segment_from_scores(
     `min_speech_ms` are dropped. Pure function — given the same cached scores +
     params, output is identical, and it is cadence-independent: it operates on
     the score's own frame grid.
+
+    `time_offset` is added to every region boundary, mirroring the Rust
+    `time_offset` parameter: when detection scores a windowed slice of the
+    audio (a linked track that rolled after the reference), the regions must
+    still land in project time.
     """
     arr = np.asarray(scores, dtype=np.float32)
     frame_dur = frame_ms / 1000.0
@@ -369,7 +375,11 @@ def segment_from_scores(
             merged.append((s, e))
 
     # drop short speech
-    result = [SpeechRegion(s, e) for s, e in merged if (e - s) >= min_speech_ms / 1000.0]
+    result = [
+        SpeechRegion(time_offset + s, time_offset + e)
+        for s, e in merged
+        if (e - s) >= min_speech_ms / 1000.0
+    ]
     return result
 
 
@@ -388,6 +398,7 @@ def segment_with_meta(
         release = max(threshold - 0.15, 0.05)
     min_speech_ms = kwargs.get("min_speech_ms", 150)
     min_silence_ms = kwargs.get("min_silence_ms", 100)
+    time_offset = kwargs.get("time_offset", 0.0)
     regions = segment_from_scores(scores, sample_rate, frame_ms, **kwargs)
     meta = {
         "hysteresis": {
@@ -398,6 +409,7 @@ def segment_with_meta(
         },
         "frame_ms": frame_ms,
         "n_frames": int(np.asarray(scores).size),
+        "time_offset": time_offset,
         "speech_regions": len(regions),
         "speech_seconds": round(sum(r.end - r.start for r in regions), 3),
     }

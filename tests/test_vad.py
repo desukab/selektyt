@@ -277,6 +277,38 @@ def test_segment_with_meta_reports_hysteresis():
     assert meta["hysteresis"]["release"] == 0.35
     assert meta["speech_regions"] == 1
     assert meta["speech_seconds"] > 0
+    assert meta["time_offset"] == 0.0
+
+
+def test_parity_time_offset_shifts_boundaries_not_durations():
+    """`time_offset` is AutoCut's DetectParams::source_offset: detection on a
+    linked track that rolled after the reference still yields project-time
+    boundaries. Durations are untouched — only placement moves."""
+    scores = [0.9] * 10 + [0.0] * 4 + [0.9] * 10
+    base = segment_from_scores(scores, frame_ms=32, threshold=0.5,
+                               min_silence_ms=100, min_speech_ms=150)
+    shifted = segment_from_scores(scores, frame_ms=32, threshold=0.5,
+                                  min_silence_ms=100, min_speech_ms=150,
+                                  time_offset=120.5)
+    assert len(shifted) == len(base) == 2
+    for b, s in zip(base, shifted):
+        assert s.start == pytest.approx(b.start + 120.5)
+        assert s.end == pytest.approx(b.end + 120.5)
+        assert (s.end - s.start) == pytest.approx(b.end - b.start), "offset must not rescale"
+
+
+def test_time_offset_zero_is_the_default_and_a_no_op():
+    scores = [0.9] * 6 + [0.0] * 3 + [0.9] * 6
+    kw = dict(frame_ms=32, threshold=0.5, min_silence_ms=100, min_speech_ms=0)
+    assert segment_from_scores(scores, **kw) == segment_from_scores(scores, time_offset=0.0, **kw)
+
+
+def test_segment_with_meta_records_the_offset():
+    scores = [0.9] * 8
+    _, meta = segment_with_meta(scores, frame_ms=32, time_offset=7.0, min_speech_ms=0)
+    assert meta["time_offset"] == 7.0
+    # speech_seconds is a duration, so the offset must not inflate it.
+    assert abs(meta["speech_seconds"] - 8 * 0.032) < 1e-9
 
 
 # ── backend provenance (which model actually ran) ──
