@@ -20,11 +20,11 @@ import sys
 from pathlib import Path
 from typing import Any, TextIO
 
+from engine import cut_algebra
 from engine import timecode
 from engine import fcpxml
 from engine import jumpcut
 from engine import vad as vad_mod
-from engine.cut_algebra import cutlist_from_intervals
 from engine.pipeline_audio import run_pipeline_audio
 from selekyt import __version__
 
@@ -77,7 +77,7 @@ def op_cutlist_from_segments(params: dict) -> dict:
         raise ValueError("'segments' must be an array")
     duration = float(params["source_duration"])
     pad = float(params.get("pad", 0.3))
-    spans = cutlist_from_intervals(
+    spans = cut_algebra.cutlist_from_intervals(
         [(float(s["start"]), float(s["end"])) for s in segments],
         source_duration=duration,
         pad=pad,
@@ -181,6 +181,84 @@ def op_render_fcpxml(params: dict) -> dict:
     return {"xml": xml}
 
 
+def _keeps_from_params(items: list) -> list[cut_algebra.Keep]:
+    return [
+        cut_algebra.Keep(
+            start=float(k["start"]),
+            end=float(k["end"]),
+            disabled=bool(k.get("disabled", False)),
+        )
+        for k in items
+    ]
+
+
+def _edit_cutlist_from_params(cutlist: dict) -> cut_algebra.EditCutList:
+    return cut_algebra.EditCutList(
+        source_duration=float(cutlist["source_duration"]),
+        intervals=[
+            cut_algebra.EditCut(
+                start=float(c["start"]),
+                end=float(c["end"]),
+                kind=str(c.get("kind", "remove")),
+                disabled=bool(c.get("disabled", False)),
+            )
+            for c in cutlist.get("intervals", [])
+        ],
+    )
+
+
+def op_omitted_intervals(params: dict) -> list[dict]:
+    cutlist = _edit_cutlist_from_params(params["cutlist"])
+    return [
+        {"start": c.start, "end": c.end, "kind": c.kind, "disabled": c.disabled}
+        for c in cut_algebra.omitted_intervals(cutlist)
+    ]
+
+
+def op_clamp_keep_edge(params: dict) -> dict:
+    keeps = _keeps_from_params(params["keeps"])
+    return {
+        "clamped": cut_algebra.clamp_keep_edge(
+            keeps,
+            index=int(params["index"]),
+            edge=str(params.get("edge", "in")),
+            proposed=float(params["proposed"]),
+            duration=float(params["duration"]),
+        )
+    }
+
+
+def op_skip_target_for(params: dict) -> dict:
+    omitted = [(float(i[0]), float(i[1])) for i in params["omitted"]]
+    return {
+        "target": cut_algebra.skip_target_for(
+            omitted, time=float(params["time"]), lookahead=float(params["lookahead"])
+        )
+    }
+
+
+def op_previous_keep_target(params: dict) -> dict:
+    keeps = _keeps_from_params(params["keeps"])
+    return {"target": cut_algebra.previous_keep_target(keeps, time=float(params["time"]))}
+
+
+def op_next_keep_target(params: dict) -> dict:
+    keeps = _keeps_from_params(params["keeps"])
+    return {
+        "target": cut_algebra.next_keep_target(
+            keeps, time=float(params["time"]), duration=float(params["duration"])
+        )
+    }
+
+
+def op_normalize_keeps(params: dict) -> list[dict]:
+    keeps = _keeps_from_params(params["keeps"])
+    return [
+        {"start": k.start, "end": k.end, "disabled": k.disabled}
+        for k in cut_algebra.normalize_keeps(keeps, float(params["duration"]))
+    ]
+
+
 def op_audio_analysis(params: dict) -> dict:
     media = params.get("media")
     project = params.get("project", "out/project")
@@ -216,6 +294,13 @@ _HANDLERS = {
     "seconds_to_rational": op_seconds_to_rational,
     "track_offset_from_timecode": op_track_offset_from_timecode,
     "render_fcpxml": op_render_fcpxml,
+    # Editorial transport algebra (AutoCut src/lib/cuts.ts)
+    "normalize_keeps": op_normalize_keeps,
+    "omitted_intervals": op_omitted_intervals,
+    "clamp_keep_edge": op_clamp_keep_edge,
+    "skip_target_for": op_skip_target_for,
+    "previous_keep_target": op_previous_keep_target,
+    "next_keep_target": op_next_keep_target,
 }
 
 

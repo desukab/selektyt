@@ -42,6 +42,10 @@ use selekyt_core::editalgebra::{self, EditCutList, Keep};
 use selekyt_core::export_fcpxml::{FcpxmlParams, Track};
 use selekyt_core::timecode::{detect_rate, parse_smpte, seconds_to_rational};
 
+// The wire shape for a keep: [start, end, disabled]. Matches the Python
+// cut_algebra.Keep tuple order so a shell can hand the same array to either
+// sidecar.
+
 /// Wire-format stand-in for `SpeechSegment` (which carries no serde derive).
 #[derive(Deserialize)]
 struct SegReq {
@@ -255,6 +259,92 @@ fn handle(op: &str, params: &Value) -> Result<Value> {
             .context("parsing cutlist")?;
             serde_json::to_value(editalgebra::resolve_for_export(&cutlist))
                 .context("serializing cutlist")
+        }
+        "omitted_intervals" => {
+            let cutlist: EditCutList = serde_json::from_value(
+                params
+                    .get("cutlist")
+                    .cloned()
+                    .ok_or_else(|| anyhow!("'cutlist' must be an object"))?,
+            )
+            .context("parsing cutlist")?;
+            serde_json::to_value(editalgebra::omitted_intervals(&cutlist))
+                .context("serializing intervals")
+        }
+        "clamp_keep_edge" => {
+            // keeps arrive as the normalize_keeps wire shape: [start, end, disabled]
+            let keeps: Vec<KeepReq> = serde_json::from_value(
+                params
+                    .get("keeps")
+                    .cloned()
+                    .ok_or_else(|| anyhow!("'keeps' must be an array"))?,
+            )
+            .context("parsing keeps")?;
+            let keeps: Vec<Keep> = keeps
+                .into_iter()
+                .map(|k| Keep { start: k.start, end: k.end, disabled: k.disabled })
+                .collect();
+            let index = params
+                .get("index")
+                .and_then(Value::as_u64)
+                .ok_or_else(|| anyhow!("'index' must be a number"))?
+                as usize;
+            let edge = match params
+                .get("edge")
+                .and_then(Value::as_str)
+                .unwrap_or("in")
+            {
+                "out" => editalgebra::Edge::Out,
+                _ => editalgebra::Edge::In,
+            };
+            let proposed = num(params, "proposed")?;
+            let duration = num(params, "duration")?;
+            Ok(json!({"clamped": editalgebra::clamp_keep_edge(
+                &keeps, index, edge, proposed, duration,
+            )}))
+        }
+        "skip_target_for" => {
+            let omitted: Vec<(f64, f64)> = serde_json::from_value(
+                params
+                    .get("omitted")
+                    .cloned()
+                    .ok_or_else(|| anyhow!("'omitted' must be an array"))?,
+            )
+            .context("parsing omitted intervals")?;
+            let time = num(params, "time")?;
+            let lookahead = num(params, "lookahead")?;
+            Ok(json!({"target": editalgebra::skip_target_for(&omitted, time, lookahead)}))
+        }
+        "previous_keep_target" => {
+            let keeps: Vec<KeepReq> = serde_json::from_value(
+                params
+                    .get("keeps")
+                    .cloned()
+                    .ok_or_else(|| anyhow!("'keeps' must be an array"))?,
+            )
+            .context("parsing keeps")?;
+            let keeps: Vec<Keep> = keeps
+                .into_iter()
+                .map(|k| Keep { start: k.start, end: k.end, disabled: k.disabled })
+                .collect();
+            let time = num(params, "time")?;
+            Ok(json!({"target": editalgebra::previous_keep_target(&keeps, time)}))
+        }
+        "next_keep_target" => {
+            let keeps: Vec<KeepReq> = serde_json::from_value(
+                params
+                    .get("keeps")
+                    .cloned()
+                    .ok_or_else(|| anyhow!("'keeps' must be an array"))?,
+            )
+            .context("parsing keeps")?;
+            let keeps: Vec<Keep> = keeps
+                .into_iter()
+                .map(|k| Keep { start: k.start, end: k.end, disabled: k.disabled })
+                .collect();
+            let time = num(params, "time")?;
+            let duration = num(params, "duration")?;
+            Ok(json!({"target": editalgebra::next_keep_target(&keeps, time, duration)}))
         }
         "cutlist_to_export" => {
             let cutlist: EditCutList = serde_json::from_value(
