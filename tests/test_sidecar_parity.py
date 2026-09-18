@@ -22,9 +22,11 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import wave
 from contextlib import contextmanager
+from fractions import Fraction
 from pathlib import Path
 
 import numpy as np
@@ -507,11 +509,27 @@ _FCPXML_CASES = [
             {"name": "lav", "duration": 10.0, "has_video": False, "has_audio": True, "offset": 3.0},
         ],
     },
+    # keeps that do not land on the frame grid. Rounding each clip's offset and
+    # duration independently opened 1-frame gaps at the seams on the real
+    # 304-clip cutlist; the record cursor must count frames instead.
+    {
+        "fps": 30.0, "title": "subframe",
+        "cutlist": {"source_duration": 10.0, "intervals": [
+            {"start": 0.0, "end": 0.517, "kind": "keep"},
+            {"start": 0.517, "end": 0.983, "kind": "remove"},
+            {"start": 0.983, "end": 2.011, "kind": "keep"},
+            {"start": 2.011, "end": 2.494, "kind": "remove"},
+            {"start": 2.494, "end": 3.877, "kind": "keep"},
+            {"start": 3.877, "end": 10.0, "kind": "remove"}]},
+        "reference": {"name": "cam", "duration": 10.0, "has_video": True, "has_audio": True, "offset": 0.0},
+        "linked": [],
+    },
 ]
 
 
 @skip_no_mech
-@pytest.mark.parametrize("case", _FCPXML_CASES, ids=["single-ndf", "drop-frame-audio", "late-partial-tc"])
+@pytest.mark.parametrize("case", _FCPXML_CASES, ids=[
+    "single-ndf", "drop-frame-audio", "late-partial-tc", "subframe-keeps"])
 def test_render_fcpxml_is_byte_identical_across_languages(case):
     """The Python emitter is a port of the Rust one; equal inputs must produce
     equal XML, so the shell can hand a cutlist to either sidecar."""
@@ -573,6 +591,91 @@ def test_render_fcpxml_refuses_an_empty_timeline_in_both_languages():
     resp = json.loads(python_process_line(json.dumps({"op": "render_fcpxml", "params": case})))
     assert resp["ok"] is False
     assert "nothing to keep" in resp["error"]
+
+
+@skip_no_mech
+@pytest.mark.parametrize("case", _FCPXML_CASES, ids=[
+    "single-ndf", "drop-frame-audio", "late-partial-tc", "subframe-keeps"])
+def test_render_fcpxml_clips_tile_the_timeline_with_no_gaps(case):
+    """A timeline whose clips do not abut has a black frame at every seam, and
+    an editor's first impression of the export is that it stutters. Offset and
+    duration are both rounded to the frame grid, so they must be rounded
+    *consistently*: each clip starts exactly where the previous one ended.
+
+    The old code rounded each independently from a float record cursor and
+    produced one-frame gaps on real cutlists.
+    """
+    from selekyt.server import process_line as python_process_line
+
+    for xml in _all_language_xml(case):
+        clips = _primary_clips(xml)
+        assert len(clips) >= 2, "this case must have more than one keep"
+        cursor = Fraction(0)
+        for clip in clips:
+            offset = Fraction(clip["offset"].rstrip("s"))
+            duration = Fraction(clip["duration"].rstrip("s"))
+            assert offset == cursor, (
+                f"clip does not abut the previous one: offset {offset} != {cursor} "
+                f"(gap {float(offset - cursor) * 30:+.2f} frames @30p)"
+            )
+            assert duration > 0
+            cursor = offset + duration
+
+
+def _all_language_xml(case):
+    """The same FCPXML from the Rust sidecar, the Python sidecar op, and the
+    in-process Python port — all three must be gap-free."""
+    from selekyt.server import process_line as python_process_line
+    from engine import fcpxml, jumpcut
+
+    out = []
+    with mech() as m:
+        out.append(m.call("render_fcpxml", **case)["xml"])
+    resp = json.loads(python_process_line(json.dumps({"op": "render_fcpxml", "params": case})))
+    assert resp["ok"], resp.get("error")
+    out.append(resp["data"]["xml"])
+    wire = case["cutlist"]
+    out.append(
+        fcpxml.render(
+            jumpcut.cutlist_from_wire(wire["intervals"], wire["source_duration"]),
+            fcpxml.FcpxmlParams(
+                fps=case["fps"],
+                title=case["title"],
+                reference=fcpxml.Track(
+                    name=case["reference"]["name"],
+                    duration=case["reference"]["duration"],
+                    has_video=case["reference"]["has_video"],
+                    has_audio=case["reference"]["has_audio"],
+                    start_timecode=case["reference"].get("start_timecode"),
+                    offset=case["reference"].get("offset", 0.0),
+                ),
+                linked=[
+                    fcpxml.Track(
+                        name=t["name"], duration=t["duration"],
+                        has_video=t["has_video"], has_audio=t["has_audio"],
+                        start_timecode=t.get("start_timecode"),
+                        offset=t.get("offset", 0.0),
+                    )
+                    for t in case["linked"]
+                ],
+            ),
+        )
+    )
+    # Byte-identity is still the contract; contiguity is a property of it.
+    assert len(set(out)) == 1, "FCPXML diverged across languages"
+    return out
+
+
+def _primary_clips(xml):
+    """Primary-storyline asset-clips: children of the spine with no `lane`
+    attribute. A lane marks a connected clip riding inside a parent, which is
+    offset relative to that parent rather than to the timeline."""
+    import xml.etree.ElementTree as ET
+
+    root = ET.fromstring(xml)
+    spine = root.find("./library/event/project/sequence/spine")
+    assert spine is not None, "no spine in the exported FCPXML"
+    return [c.attrib for c in spine if c.get("lane") is None]
 
 
 @skip_no_mech

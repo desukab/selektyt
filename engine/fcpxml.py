@@ -195,13 +195,21 @@ def render(cutlist: CutList, params: FcpxmlParams) -> str:
 
     reference_tc = timecode.parse_smpte(params.reference.start_timecode, params.fps)
     spine = ""
-    record_cursor = 0.0
+    # The record cursor runs in whole frames, not seconds. Emitting each clip's
+    # offset and duration as a float and rounding them to the frame grid
+    # independently lets drift open a one-frame gap between neighbours — small,
+    # but enough for an NLE to insert a black frame at every seam. On the real
+    # 304-clip cutlist this measured 71 such gaps. Counting frames makes each
+    # clip begin exactly where the previous one ended.
+    frame_secs = rate.frame_seconds()
+    record_frames = 0
     for cut_start, cut_end in kept_intervals(cutlist):
         cut_duration = cut_end - cut_start
+        dur_frames = max(1, int(round(cut_duration / frame_secs)))
         clip = _ClipTimes(
-            offset=record_cursor,
+            offset=record_frames * frame_secs,
             start=reference_tc + cut_start,
-            duration=cut_duration,
+            duration=dur_frames * frame_secs,
         )
 
         connected = ""
@@ -215,10 +223,20 @@ def render(cutlist: CutList, params: FcpxmlParams) -> str:
             if visible_to - visible_from <= 0.0:
                 continue
             track_tc = timecode.parse_smpte(track.start_timecode, params.fps)
+            # Snapped to the same grid as the parent, and clamped to it: a
+            # connected clip must not outrun the asset-clip it rides inside.
+            rel_frames = int(round((visible_from - cut_start) / frame_secs))
+            conn_frames = max(
+                1,
+                min(
+                    dur_frames - rel_frames,
+                    int(round((visible_to - visible_from) / frame_secs)),
+                ),
+            )
             times = _ClipTimes(
-                offset=record_cursor + (visible_from - cut_start),
+                offset=(record_frames + rel_frames) * frame_secs,
                 start=track_tc + (visible_from - track.offset),
-                duration=visible_to - visible_from,
+                duration=conn_frames * frame_secs,
             )
             connected += " " * 12 + _clip_attrs(
                 i + 2, lanes[i], times, rate, tc_format
@@ -230,7 +248,7 @@ def render(cutlist: CutList, params: FcpxmlParams) -> str:
             spine += " " * 8 + _clip_attrs(1, None, clip, rate, tc_format) + ">\n"
             spine += connected
             spine += " " * 8 + "</asset-clip>\n"
-        record_cursor += cut_duration
+        record_frames += dur_frames
 
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'

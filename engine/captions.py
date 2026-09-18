@@ -6,6 +6,7 @@ from pathlib import Path
 
 from models.core import Candidate, Word
 from engine.caption_director import build_blocks, style_name, CaptionBlock
+from engine.edit_plan import retention_intervals
 
 
 def _ts(v: float) -> str:
@@ -82,9 +83,45 @@ def _blocks_for_candidate(c: Candidate, words_per_line: int) -> list[CaptionBloc
     return blocks
 
 
+def _edited_duration(c: Candidate) -> float:
+    """Seconds of media the rendered clip actually contains.
+
+    ``retention_intervals`` shortens long pauses rather than deleting them, so
+    this is shorter than ``c.end - c.start`` whenever the candidate has a cut.
+    """
+    return sum(b - a for a, b in retention_intervals(c))
+
+
+def _source_to_edited(c: Candidate, source_t: float) -> float:
+    """Map a source second onto the candidate's edited timeline.
+
+    The rendered file is the concatenation of the retention intervals: the
+    pauses between them are removed from the picture and the soundtrack, so a
+    caption timed by a flat ``source_t - c.start`` offset drifts by every gap
+    that was cut. On the real 8.9-minute source, clip 1 removed 1.04s in two
+    gaps and every cue after the first one ran up to 0.48s early, with the last
+    cue landing past the end of the rendered file.
+
+    Summing the kept duration up to the interval that contains the instant
+    puts the cue where the word is actually heard. Instants in a removed gap
+    clamp to the end of the preceding interval — they have no position of
+    their own, and rounding them up would push the cue into the next word.
+    """
+    out = 0.0
+    for a, b in retention_intervals(c):
+        if source_t <= a:
+            return out
+        if source_t <= b:
+            return out + (source_t - a)
+        out += b - a
+    return out
+
+
 def _cue_bounds(c: Candidate, block: CaptionBlock) -> tuple[float, float]:
-    st = max(0.0, block.start - c.start)
-    en = min(max(0.1, c.end - c.start), block.end - c.start + 0.12)
+    st = max(0.0, _source_to_edited(c, block.start))
+    en = _source_to_edited(c, block.end)
+    total = max(0.1, _edited_duration(c))
+    en = min(total, en + 0.12)
     return st, max(st + 0.08, en)
 
 
