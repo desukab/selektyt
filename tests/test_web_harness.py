@@ -13,6 +13,7 @@ import subprocess
 import os
 import time
 import urllib.parse
+import urllib.error
 import urllib.request
 from pathlib import Path
 from os.path import dirname
@@ -83,6 +84,26 @@ def _expect_ok(base, op, params):
     assert resp["ok"] is True, resp
     assert resp["op"] == op
     return resp["data"]
+
+
+def _post_or_error(base, op, params) -> dict:
+    """Same call, but capture the failure envelope instead of raising.
+
+    The bridge answers a bad request with HTTP 200 and ``{"ok": false, ...}``;
+    only an internal error becomes a non-2xx. Both shapes must surface the
+    error string a user would read.
+    """
+    req = urllib.request.Request(
+        base + f"/api/{op}",
+        data=json.dumps(params).encode(),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        return json.loads(e.read())
 
 
 def test_serves_index(base):
@@ -195,6 +216,34 @@ def test_export_produces_downloadable_artifacts(base):
 
 def test_out_of_project_paths_are_rejected(base):
     resp = _post(base, "export", {"path": "/etc/hostname"})
+    assert resp["ok"] is False
+    assert isinstance(resp["error"], str)
+
+
+def test_run_pipeline_rejects_an_out_of_project_path(base):
+    """The new route hands a path to the pipeline, which downloads and renders.
+    The traversal guard must apply to it too, not just to /api/file."""
+    resp = _post_or_error(base, "run_pipeline", {"path": "/etc/hostname"})
+    assert resp["ok"] is False
+    assert "inside the project" in resp["error"], resp
+
+
+def test_run_pipeline_rejects_a_missing_source(base):
+    resp = _post_or_error(base, "run_pipeline", {"path": "definitely/not/here.mp4"})
+    assert resp["ok"] is False
+    assert isinstance(resp["error"], str)
+
+
+def test_run_pipeline_requires_a_source(base):
+    resp = _post_or_error(base, "run_pipeline", {})
+    assert resp["ok"] is False
+    assert isinstance(resp["error"], str)
+
+
+def test_run_pipeline_rejects_a_non_http_url(base):
+    """`file://` is not a source to fetch; handing it to a downloader is how
+    local files get read through a URL-shaped hole."""
+    resp = _post_or_error(base, "run_pipeline", {"source": "file:///etc/hostname"})
     assert resp["ok"] is False
     assert isinstance(resp["error"], str)
 
