@@ -12,5 +12,6 @@ cookies.txt
 *.cookie
 rust/target/
 .worktrees/
+.claude/worktrees/
 .coverage*
 htmlcov/
