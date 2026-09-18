@@ -125,12 +125,16 @@ def srt_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
     out.parent.mkdir(parents=True, exist_ok=True)
     cues: list[str] = []
     blocks = _blocks_for_candidate(c, words_per_line)
-    for i, (st, en) in enumerate(_cue_sequence(c, blocks), 1):
-        block = blocks[i - 1]
+    # Cue numbers are sequential over the cues actually written. Enumerating
+    # the blocks and skipping an empty one would leave a gap in the numbering
+    # (cue 4 jumping to cue 6), which players tolerate but which is still an
+    # invalid SubRip index and breaks anything that renumbers or diffs cues.
+    for i, (st, en) in enumerate(_cue_sequence(c, blocks)):
+        block = blocks[i]
         text = " ".join(w.text.strip() for w in block.words if w.text.strip())
         if not text:
             continue
-        cues.append(f"{i}\n{_srt_ts(st)} --> {_srt_ts(en)}\n{text}")
+        cues.append(f"{len(cues) + 1}\n{_srt_ts(st)} --> {_srt_ts(en)}\n{text}")
     out.write_text(("\n\n".join(cues) + "\n") if cues else "", encoding="utf-8")
     return out
 

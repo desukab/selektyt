@@ -4,8 +4,12 @@ import numpy as np
 from pathlib import Path
 
 
-def _fallback_center(frame: np.ndarray) -> float:
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+def _fallback_center(frame: np.ndarray, gray: np.ndarray | None = None) -> float:
+    # ``gray`` is reused when the caller already converted for the Haar pass;
+    # recomputing it here would double the per-sample work on the no-cascade
+    # path, which is the path every constrained host takes.
+    if gray is None:
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray, 60, 160)
     profile = edges.mean(axis=0).astype(np.float32)
     kernel = np.ones(81, np.float32) / 81.0
@@ -40,24 +44,47 @@ def _smooth_centers(
     return out
 
 
+_CACHED_CASCADE: "cv2.CascadeClassifier | None | bool" = False
+
+
 def _load_face_cascade() -> "cv2.CascadeClassifier | None":
     """Haar cascade is optional: some opencv builds (e.g. opencv-python-headless
     on constrained hosts) ship without ``cv2.data``. Absent or unusable cascade
     data must not crash reframing — the edge-density fallback tracks every
-    frame instead."""
+    frame instead.
+
+    Loaded once per process: the XML is the same for every clip, and probing it
+    again per clip (or per render of every 9:16 output) is pure duplicated IO.
+    """
+    global _CACHED_CASCADE
+    if _CACHED_CASCADE is not False:
+        return _CACHED_CASCADE  # type: ignore[return-value]
     try:
         cascade = cv2.CascadeClassifier(
             cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
         )
     except Exception:
-        return None
-    return None if cascade.empty() else cascade
+        cascade = None
+    else:
+        cascade = None if cascade.empty() else cascade
+    _CACHED_CASCADE = cascade
+    return cascade
 
 
-def track_subject_center(video: Path, start: float, end: float, samples: int = 28) -> list[tuple[float, float]]:
+def _probe_and_track(
+    video: Path, start: float, end: float, samples: int = 28
+) -> tuple[int, int, list[tuple[float, float]]]:
+    """Open the source once, read its dimensions and track the subject.
+
+    ``crop_x_expression`` needs the frame size and the tracked centers; doing
+    those in two separate ``VideoCapture`` opens decoded the seek-heavy
+    metadata pass twice per vertical clip.
+    """
     cap = cv2.VideoCapture(str(video))
     if not cap.isOpened():
-        return []
+        return 0, 0, []
+    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1920)
+    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1080)
     centers: list[tuple[float, float]] = []
     cascade = _load_face_cascade()
     for t_abs in np.linspace(start, end, max(2, samples)):
@@ -65,30 +92,33 @@ def track_subject_center(video: Path, start: float, end: float, samples: int = 2
         ok, frame = cap.read()
         if not ok:
             continue
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         center: float
         if cascade is not None:
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             faces = cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(48, 48))
             if len(faces):
-                x, y, w, h = max(faces, key=lambda f: f[2] * f[3])
-                center = (x + w / 2) / frame.shape[1]
+                x, y, fw, fh = max(faces, key=lambda f: f[2] * f[3])
+                center = (x + fw / 2) / frame.shape[1]
             else:
-                center = _fallback_center(frame)
+                center = _fallback_center(frame, gray)
         else:
-            center = _fallback_center(frame)
+            center = _fallback_center(frame, gray)
         centers.append((t_abs - start, float(center)))
     cap.release()
-    return _smooth_centers(centers)
+    return w, h, _smooth_centers(centers)
+
+
+def track_subject_center(video: Path, start: float, end: float, samples: int = 28) -> list[tuple[float, float]]:
+    _, _, centers = _probe_and_track(video, start, end, samples)
+    return centers
 
 
 def crop_x_expression(video: Path, start: float, end: float) -> str:
-    cap = cv2.VideoCapture(str(video))
-    w = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1920
-    h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 1080
-    cap.release()
+    w, h, points = _probe_and_track(video, start, end)
+    if not w or not h:
+        w, h = 1920, 1080
     crop_w = h * 9 / 16
     max_x = max(0.0, w - crop_w)
-    points = track_subject_center(video, start, end)
     if not points:
         return str(int(max_x / 2))
     expr = str(max(0.0, min(max_x, max_x * points[-1][1] - crop_w / 2)))

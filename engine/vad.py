@@ -65,6 +65,65 @@ class VADBackend:
         raise NotImplementedError
 
 
+def _conforming_wav(wav: Path, sample_rate: int) -> Path:
+    """Return a mono ``sample_rate`` Hz 16-bit PCM WAV for ``wav``.
+
+    Converts in place (to a sibling file) only when the source is not already
+    what the scorer needs. Non-PCM containers are handled by ffmpeg, which
+    downmixes and resamples; multichannel PCM is averaged to mono rather than
+    dropping channels, so a stereo recording does not lose a speaker on one
+    side of the mix.
+    """
+    import wave
+
+    try:
+        with wave.open(str(wav), "rb") as f:
+            channels = f.getnchannels()
+            rate = f.getframerate()
+            width = f.getsampwidth()
+    except (OSError, ValueError):
+        # Not a WAV the stdlib can open at all — let ffmpeg decode it.
+        channels, rate, width = 0, 0, 0
+
+    if channels == 1 and rate == sample_rate and width == 2:
+        return wav
+    converted = wav.parent / f"{wav.stem}_{sample_rate}hz_mono.wav"
+    if not converted.is_file():
+        extract_pcm_wav(wav, converted, sample_rate)
+    return converted
+
+
+def _read_mono_samples(wav: Path) -> tuple[np.ndarray, int]:
+    """Read a PCM WAV to mono float32 in [-1, 1], plus its sample rate.
+
+    Shared by the readers that must load a window of audio. Multichannel PCM
+    is averaged to mono; widths other than 16-bit are scaled from their own
+    integer range so 8/24/32-bit files do not clip or wrap.
+    """
+    import wave
+
+    with wave.open(str(wav), "rb") as f:
+        channels = f.getnchannels()
+        rate = f.getframerate()
+        width = f.getsampwidth()
+        n = f.getnframes()
+        if n <= 0:
+            return np.zeros(0, dtype=np.float32), rate
+        raw = f.readframes(n)
+    if width == 2:
+        data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+    elif width == 1:
+        # 8-bit PCM is unsigned, centred on 128.
+        data = (np.frombuffer(raw, dtype=np.uint8).astype(np.float32) - 128.0) / 128.0
+    elif width == 4:
+        data = np.frombuffer(raw, dtype=np.int32).astype(np.float32) / 2147483648.0
+    else:
+        raise ValueError(f"unsupported PCM sample width: {width * 8}-bit")
+    if channels > 1:
+        data = data.reshape(-1, channels).mean(axis=1)
+    return data, rate
+
+
 # ── Energy-based VAD (pure numpy, deterministic, no deps) ──
 
 class EnergyVAD(VADBackend):
@@ -90,18 +149,21 @@ class EnergyVAD(VADBackend):
         self.fallback_reason = fallback_reason
 
     def _read_mono(self, audio: Path) -> np.ndarray:
+        """Read mono PCM at the expected rate, converting any other PCM WAV.
+
+        The pipeline always extracts 16 kHz mono itself, but a WAV handed in
+        directly (the web shell, a user drop) is routinely stereo or 44.1/48
+        kHz. Downmixing and resampling is correct; refusing used to fail the
+        whole analysis on a perfectly good file.
+        """
         wav = Path(str(audio))
         if wav.suffix.lower() != ".wav":
             probe = wav.parent / f"{wav.stem}_probe.wav"
             extract_pcm_wav(audio, probe, self.sample_rate)
             wav = probe
+        wav = _conforming_wav(wav, self.sample_rate)
         import wave
         with wave.open(str(wav), "rb") as f:
-            if f.getnchannels() != 1 or f.getframerate() != self.sample_rate:
-                raise ValueError(
-                    f"expected mono {self.sample_rate}Hz WAV, got "
-                    f"{f.getnchannels()}ch {f.getframerate()}Hz"
-                )
             raw = f.readframes(f.getnframes())
         data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
         return data
@@ -167,24 +229,26 @@ class FFmpegVADBackend(VADBackend):
             "-af", f"silencedetect=noise={self.noise_db}dB:d=0.2", "-f", "null", "-",
         ]
         proc = run_capture(cmd, stage="vad-ffmpeg", source=str(wav))
-        # silencedetect prints silence_start, then silence_end, per silence run
-        events = []
+        # silencedetect prints silence_start, then silence_end, per silence run.
+        # A run that is still open at EOF prints no silence_end, so it must be
+        # closed here — otherwise a file whose tail is silent scores as speech
+        # all the way to the end and the trailing dead air is never reported.
+        # A start and its end can also land on one line for very short runs, so
+        # both markers are parsed per line rather than elif-chained.
+        starts: list[float] = []
+        ends: list[float] = []
         for line in proc.stderr.splitlines():
-            line = line.strip()
             if "silence_start:" in line:
-                events.append(("start", float(line.split("silence_start:")[1].strip())))
-            elif "silence_end:" in line:
-                end_part = line.split("silence_end:")[1].strip()
-                end = float(end_part.split("|")[0].split()[0])
-                events.append(("end", end))
+                starts.append(float(line.split("silence_start:")[1].strip()))
+            if "silence_end:" in line:
+                ends.append(float(line.split("silence_end:")[1].split("|")[0].split()[0]))
         sil_ranges: list[tuple[float, float]] = []
-        pending: float | None = None
-        for kind, ts in events:
-            if kind == "start":
-                pending = ts
-            elif kind == "end" and pending is not None:
-                sil_ranges.append((pending, ts))
-                pending = None
+        pending = list(starts)
+        for e in ends:
+            if pending:
+                sil_ranges.append((pending.pop(0), e))
+        if pending:
+            sil_ranges.append((pending[-1], duration))
         # Build per-frame scores: 1.0 in speech, 0.0 in silence (uniform schema).
         frame = self.frame_ms / 1000.0
         n = max(1, int(np.ceil(duration / frame)))

@@ -82,7 +82,8 @@ def test_detect_silent_tail_positive():
     with tempfile.TemporaryDirectory() as td:
         mp4 = Path(td) / "tail.mp4"
         _lavfi_video(mp4, duration=6.0, silent_tail=2.0)
-        has_tail, sec = detect_silent_tail(mp4, min_sec=1.0)
+        has_tail, sec, error = detect_silent_tail(mp4, min_sec=1.0)
+        assert error is None, f"a clean probe must not report an error: {error}"
         assert has_tail
         assert sec > 0
 
@@ -91,7 +92,8 @@ def test_detect_silent_tail_negative():
     with tempfile.TemporaryDirectory() as td:
         mp4 = Path(td) / "notail.mp4"
         _lavfi_video(mp4, duration=6.0)
-        has_tail, sec = detect_silent_tail(mp4, min_sec=1.0)
+        has_tail, sec, error = detect_silent_tail(mp4, min_sec=1.0)
+        assert error is None
         assert not has_tail
         assert sec == 0.0
 
@@ -100,8 +102,27 @@ def test_detect_silent_tail_short_video_noop():
     with tempfile.TemporaryDirectory() as td:
         mp4 = Path(td) / "short.mp4"
         _lavfi_video(mp4, duration=1.0)
-        has_tail, sec = detect_silent_tail(mp4)
-        assert not has_tail and sec == 0.0
+        has_tail, sec, error = detect_silent_tail(mp4)
+        assert not has_tail and sec == 0.0 and error is None
+
+
+def test_detect_silent_tail_reports_probe_failure_not_silence():
+    """A probe that cannot run is not the same as "no silent tail".
+
+    This is the failure mode F14 fixed: an ffmpeg error used to return
+    (False, 0.0) through a bare except, so a genuinely broken render could
+    pass QA as though it were clean. The third return value must carry the
+    failure so the caller can fail the file.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        junk = Path(td) / "not-a-video.mp4"
+        junk.write_bytes(b"definitely not a media container")
+        has_tail, sec, error = detect_silent_tail(junk)
+        # Either ffprobe refuses it (error set) or the probe reports failure;
+        # either way it must not read as a verified-clean file.
+        assert error is not None, "an unprobeable file must not look clean"
+        assert has_tail is False
+        assert sec == 0.0
 
 
 # ── black frame percentage ──
@@ -172,6 +193,7 @@ def test_validate_outputs_expanded_shape():
         report = validate_outputs_expanded([fb, sh])
         assert report["ok"] is True
         assert report["errors"] == []
+        assert report["warnings"] == []
         assert report["diversity"] == 1.0  # facebook has only one clip
         for f in (fb, sh):
             fff = report["per_file"][str(f)]
@@ -241,7 +263,13 @@ def test_write_report_full():
         assert "per_file" in data
 
 
-def test_write_report_raises_on_silent_tail():
+def test_write_report_silent_tail_is_advisory_not_fatal():
+    """A trailing silence run is an editorial warning, not a broken render.
+
+    F2 split the two tiers: the clip is a real, playable video with a quiet
+    tail, so QA records it in ``warnings`` and stays ``ok`` — the render is
+    reusable and an editor decides. Hard failures (below) still raise.
+    """
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
         (td / "facebook").mkdir()
@@ -253,5 +281,34 @@ def test_write_report_raises_on_silent_tail():
         (td / "selections.json").write_text(json.dumps([{"start": 1, "end": 3}]))
         src = td / "src.mp4"
         _lavfi_video(src, duration=30.0)
-        with pytest.raises(RuntimeError, match="silent tail"):
+        qa_path = write_report(td, [fb, sh], source_path=str(src))
+        data = json.loads(qa_path.read_text())
+        assert data["ok"] is True, "a silent tail must not fail the run"
+        assert data["errors"] == []
+        assert any("silent tail" in w for w in data["warnings"]), \
+            "the tail must still be reported as a warning"
+        for f in (fb, sh):
+            assert data["per_file"][str(f)]["silent_tail"] is True
+
+
+def test_write_report_raises_on_hard_render_failure():
+    """A file that is not a valid render is a hard failure and must raise.
+
+    This is the other half of F2: weakening QA for advisory findings must not
+    weaken detection of genuinely broken output.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        (td / "facebook").mkdir()
+        (td / "shorts").mkdir()
+        fb = td / "facebook" / "01.mp4"
+        sh = td / "shorts" / "01.mp4"
+        _lavfi_video(fb, duration=3.0, size="640x360")
+        # Vertical slot holds a landscape video: wrong orientation is a hard
+        # structural error, not an advisory quality note.
+        _lavfi_video(sh, duration=3.0, size="640x360")
+        (td / "selections.json").write_text(json.dumps([{"start": 1, "end": 3}]))
+        src = td / "src.mp4"
+        _lavfi_video(src, duration=30.0)
+        with pytest.raises(RuntimeError):
             write_report(td, [fb, sh], source_path=str(src))

@@ -17,9 +17,18 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
     vf: list[str] = []
     if vertical:
         x = crop_x_expression(source, start, end)
-        vf += [f"crop=ih*9/16:ih:x='{x}':y=0", "scale=1080:1920:flags=lanczos"]
+        # Cap at 1080 wide rather than always scaling to it: upscaling a
+        # sub-1080p source adds no detail, costs encode time and softens the
+        # image. The crop already produced an exact 9:16 frame, so scaling by
+        # width with an even height keeps the aspect without enlarging.
+        vf += [
+            f"crop=ih*9/16:ih:x='{x}':y=0",
+            r"scale=min(1080\,iw):-2:flags=lanczos",
+        ]
     else:
-        vf.append("scale=1920:-2:flags=lanczos")
+        # Same reasoning for landscape: never enlarge, only downscale to the
+        # 1920-wide delivery size.
+        vf.append(r"scale=min(1920\,iw):-2:flags=lanczos")
     if ass:
         safe = ass.as_posix().replace("'", "\\'")
         vf.append(f"subtitles='{safe}'")

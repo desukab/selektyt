@@ -69,11 +69,34 @@ def test_render_horizontal_clip(tmp_path):
         capture_output=True, text=True, check=True,
     )
     w, h = (int(x) for x in probe.stdout.strip().split(","))
-    # horizontal render scales to 1920 wide and preserves the source aspect
-    assert w == 1920
+    # F12: a sub-1080p source must not be upscaled. The source is 320x320, so
+    # the render keeps 320 wide — enlarging it would add no detail, cost encode
+    # time and soften the image. A larger source is still scaled down to 1920.
+    assert w == 320, f"expected source-width passthrough, got {w}"
     assert h / w == pytest.approx(1.0, abs=0.02)
     # no leftover part directories on the single-interval path
     assert not (tmp_path / "fb" / ".01_parts").exists()
+
+
+def test_render_downscales_larger_sources(tmp_path):
+    """A source wider than the delivery size is scaled down to 1920."""
+    import subprocess
+
+    wide = tmp_path / "wide.mp4"
+    subprocess.run(
+        ["ffmpeg", "-y", "-f", "lavfi", "-i",
+         "color=c=blue:s=2560x1440:d=1.5", "-c:v", "libx264",
+         "-preset", "ultrafast", "-pix_fmt", "yuv420p", str(wide)],
+        check=True, capture_output=True,
+    )
+    out = render_clip(wide, _candidate_with_words(0.0, 1.2), tmp_path / "fb" / "01.mp4")
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=width,height", "-of", "csv=p=0", str(out)],
+        capture_output=True, text=True, check=True,
+    )
+    w, h = (int(x) for x in probe.stdout.strip().split(","))
+    assert w == 1920 and h == 1080, f"expected downscale to 1920x1080, got {w}x{h}"
 
 
 def test_render_vertical_clip_is_9_16(tmp_path):
