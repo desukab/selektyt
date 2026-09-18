@@ -86,6 +86,7 @@ has opened them.
 | CLI | complete and verified | `--doctor` verified both pass and fail paths; every flag forwarded, pinned by tests |
 | Web shell, local-file path | complete and verified | caption style, audio analysis and cookies now exposed; two styles produced genuinely different burned-in styling through `process_line` |
 | Web shell, URL path | usable but unverified | the bridge forwards the URL and cookies; not exercised against a real YouTube fetch |
+| Web shell, video upload | missing | only `/api/vad_analyze` accepts an uploaded file, and it is WAV-only. A video must be placed inside the project tree and referenced by relative path, because `guardedPath` deliberately confines local media to the project root. The CLI has no such restriction, so the two entry points disagree about what a user can point at |
 | Desktop shell (Tauri) | incomplete, by environment | compiles and passes clippy, but no binary has been packaged on any platform and the webview has never rendered (no webkit2gtk). See `docs/agent-worktrees.md` |
 
 ## The critical path
