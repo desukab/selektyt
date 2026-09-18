@@ -52,19 +52,6 @@
     "fs:allow-rename",
     "fs:allow-remove",
     "fs:allow-write-text-file",
-    "fs:allow-read-text-file",
-    {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        { "name": "binaries/selekyt-mech", "sidecar": true, "args": true },
-        { "name": "binaries/selekyt-python", "sidecar": true, "args": true }
-      ]
-    },
-    "shell:allow-spawn",
-    "shell:allow-stdin-write",
-    "shell:allow-stderr-read",
-    "shell:allow-stdout-read",
-    "shell:allow-kill",
-    "shell:allow-terminate"
+    "fs:allow-read-text-file"
   ]
 }
