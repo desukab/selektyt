@@ -62,7 +62,7 @@ def _run_transcribe_with_mocks(tmp_path: Path, duration: float, chunk_minutes: f
 
                         audio = tmp_path / "fake.wav"
                         audio.write_bytes(b"x")
-                        segs, lang = transcribe(
+                        segs, lang, provenance = transcribe(
                             audio, chunk_minutes=chunk_minutes, cpu_threads=2
                         )
     finally:

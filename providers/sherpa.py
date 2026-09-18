@@ -15,13 +15,14 @@ runs on CPU.
 """
 from __future__ import annotations
 
-import json
+import os
 import re
 import shutil
 import subprocess
 from pathlib import Path
 
 from models.core import Segment, Word
+from providers.atomic import read_json, write_json_atomic
 
 # whisper's encoder window is 30s of 16kHz audio; leave headroom for the
 # decoder so a chunk never trips the internal "discarding remaining data"
@@ -245,10 +246,33 @@ def _sherpa_onnx():
     return sherpa_onnx
 
 
-def _recognizer_for(model_name: str, language: str, models_dir: Path | None = None):
+def _default_threads() -> int:
+    """Threads for the sherpa recognizer when the caller did not ask for one.
+
+    Capped at 4: whisper's sherpa export does not scale past a handful of
+    threads on CPU and requesting more only contends with the encoder's own
+    parallelism.
+    """
+    return max(1, min(4, os.cpu_count() or 4))
+
+
+def _recognizer_for(
+    model_name: str,
+    language: str,
+    models_dir: Path | None = None,
+    num_threads: int | None = None,
+):
+    """Build a recognizer for the best available model.
+
+    Returns ``(recognizer, used_model, downgrade_reason)``. ``downgrade_reason``
+    is non-None exactly when the requested model was not installed and a
+    smaller one was used instead — the run must be able to report that it used
+    base when the operator asked for small, rather than silently degrading.
+    """
     sherpa_onnx = _sherpa_onnx()
 
     models_dir = models_dir or DEFAULT_MODELS_DIR
+    threads = num_threads or _default_threads()
     # "small" maps to a sherpa-onnx-whisper-small dir if present; the base
     # model is the one that ships with this toolchain, so a missing small
     # model degrades to base rather than failing the run.
@@ -257,17 +281,71 @@ def _recognizer_for(model_name: str, language: str, models_dir: Path | None = No
         if files is None:
             continue
         enc, dec, toks = files
-        return sherpa_onnx.OfflineRecognizer.from_whisper(
+        recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
             encoder=str(enc), decoder=str(dec), tokens=str(toks),
-            language=language, num_threads=4,
+            language=language, num_threads=threads,
             decoding_method="greedy_search",
             enable_segment_timestamps=True,
-        ), candidate
+        )
+        reason = None if candidate == model_name else (
+            f"requested model '{model_name}' not installed under {models_dir}; "
+            f"using '{candidate}'"
+        )
+        return recognizer, candidate, reason
     raise RuntimeError(
         f"no sherpa-onnx whisper model found under {models_dir}; expected "
         f"{model_name} or base with <size>-encoder.int8.onnx, "
         f"<size>-decoder.int8.onnx, <size>-tokens.txt"
     )
+
+
+class _WindowedWav:
+    """Random-access reader over a PCM WAV that loads one window at a time.
+
+    Reading the entire source into memory (the previous implementation) makes
+    the whole point of chunked transcription moot: a three-hour 16 kHz mono
+    file is ~350 MB of float32 resident before the first decode. The window is
+    read with ``setpos``/``readframes`` on demand, so peak audio memory stays
+    bounded by one whisper window regardless of source length.
+    """
+
+    def __init__(self, path: Path):
+        import wave
+
+        self._f = wave.open(str(path), "rb")
+        self.sample_rate = self._f.getframerate()
+        self.channels = self._f.getnchannels()
+        self.sampwidth = self._f.getsampwidth()
+        self.n_frames = self._f.getnframes()
+
+    def window(self, start_sec: float, end_sec: float) -> np.ndarray:
+        import numpy as np
+
+        lo = max(0, int(start_sec * self.sample_rate))
+        hi = min(self.n_frames, int(end_sec * self.sample_rate))
+        if hi <= lo:
+            return np.zeros(0, dtype=np.float32)
+        self._f.setpos(lo)
+        raw = self._f.readframes(hi - lo)
+        if self.sampwidth == 2:
+            data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+        elif self.sampwidth == 1:
+            data = (np.frombuffer(raw, dtype=np.uint8).astype(np.float32) - 128.0) / 128.0
+        elif self.sampwidth == 4:
+            data = np.frombuffer(raw, dtype=np.int32).astype(np.float32) / 2147483648.0
+        else:
+            raise ValueError(f"unsupported PCM sample width: {self.sampwidth * 8}-bit")
+        if self.channels > 1:
+            # Average to mono: dropping a channel could lose a speaker on one
+            # side of a stereo mix.
+            data = data.reshape(-1, self.channels).mean(axis=1)
+        return data
+
+    def close(self) -> None:
+        try:
+            self._f.close()
+        except OSError:
+            pass
 
 
 def transcribe(
@@ -283,10 +361,20 @@ def transcribe(
     """Transcribe long media in bounded, resumable chunks.
 
     Same contract as providers.whisper.transcribe: segments with word
-    timestamps, checkpointed per chunk so an interrupted run resumes.
+    timestamps, checkpointed per chunk so an interrupted run resumes. Failed
+    chunks are checkpointed as failures and retried on the next run, never
+    hardened into empty results.
+
+    ``chunk_minutes`` is accepted for signature parity with the whisper backend
+    but does not select the chunk size here: sherpa-onnx's whisper export has a
+    hard 30-second encoder window, so every chunk is WHISPER_WINDOW_SECONDS
+    regardless. That is recorded in the returned provenance so nobody reads a
+    run as though it honoured the requested chunk size.
     """
     lang = (language or "en").strip().lower() or "en"
-    recognizer, used_model = _recognizer_for(model_name, lang, models_dir)
+    recognizer, used_model, downgrade_reason = _recognizer_for(
+        model_name, lang, models_dir, num_threads=cpu_threads
+    )
 
     checkpoint_dir = checkpoint_dir or media.parent / "transcription"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -296,75 +384,140 @@ def transcribe(
         _extract_audio(media, audio)
 
     total = _duration(audio)
-    sr = 16000
-    import wave
-    with wave.open(str(audio), "rb") as f:
-        sr = f.getframerate()
-        n_frames = f.getnframes()
-        raw = f.readframes(n_frames)
-    import numpy as np
-    full = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+    reader = _WindowedWav(audio)
+    sr = reader.sample_rate
+    if sr != 16000:
+        # The whisper encoder is fixed at 16 kHz; the extractor above produces
+        # exactly that, so a mismatch means the file was not ours.
+        reader.close()
+        raise ValueError(
+            f"sherpa-onnx whisper expects 16 kHz audio, got {sr} Hz in {audio}"
+        )
 
     window = WHISPER_WINDOW_SECONDS
     count = max(1, int((total + window - 1e-6) // window))
+    threads = cpu_threads or _default_threads()
     print(
         f"[transcribe:sherpa] {total / 60:.1f} min audio; {count} chunks x "
-        f"{window:.0f}s (model={used_model}, lang={lang})",
+        f"{window:.0f}s (model={used_model}, lang={lang}, threads={threads}; "
+        f"chunk_minutes={chunk_minutes} ignored — fixed whisper window)",
         flush=True,
     )
 
     all_segments: list[Segment] = []
-    for index in range(count):
-        start = index * window
-        chunk_path = checkpoint_dir / f"chunk_{index:04d}.json"
-        if chunk_path.exists():
-            try:
-                data = json.loads(chunk_path.read_text(encoding="utf-8"))
-                chunk_segments = [
-                    Segment(float(s["start"]), float(s["end"]), str(s["text"]),
-                            [Word(**w) for w in s.get("words", [])])
-                    for s in data.get("segments", [])
-                ]
+    failed_chunks: list[int] = []
+    try:
+        for index in range(count):
+            start = index * window
+            chunk_path = checkpoint_dir / f"chunk_{index:04d}.json"
+            cached = _load_sherpa_checkpoint(chunk_path)
+            if cached is not None:
+                chunk_segments = cached
                 print(f"[transcribe:sherpa] chunk {index + 1}/{count}: cached", flush=True)
                 all_segments.extend(chunk_segments)
                 continue
-            except (OSError, ValueError, TypeError, KeyError):
-                pass
 
-        lo = int(start * sr)
-        hi = min(len(full), int((start + window) * sr))
-        samples = full[lo:hi]
-        if len(samples) < sr // 2:
-            break
+            samples = reader.window(start, start + window)
+            if len(samples) < sr // 2:
+                break
 
-        segs, _ = _decode_chunk(recognizer, samples, sr, start, lang)
-        all_segments.extend(segs)
-        chunk_path.write_text(
-            json.dumps(
-                {
-                    "index": index,
-                    "start": start,
-                    "engine": "sherpa-onnx-whisper",
-                    "model": used_model,
-                    "language": lang,
-                    "word_timestamps": "character-proportional",
-                    "segments": [
-                        {"start": s.start, "end": s.end, "text": s.text,
-                         "words": [w.__dict__ for w in s.words]}
-                        for s in segs
-                    ],
-                },
-                ensure_ascii=False, indent=2,
-            ),
-            encoding="utf-8",
-        )
-        print(f"[transcribe:sherpa] chunk {index + 1}/{count}: "
-              f"{len(segs)} segments", flush=True)
+            try:
+                segs, _ = _decode_chunk(recognizer, samples, sr, start, lang)
+            except Exception as exc:
+                # Same rule as the whisper backend: record the failure so it is
+                # visible on disk, but never write an empty segments list as
+                # though the window were silent.
+                _write_sherpa_checkpoint(
+                    chunk_path, index, start, used_model, lang, [],
+                    status="failed", error=f"{type(exc).__name__}: {exc}",
+                )
+                failed_chunks.append(index + 1)
+                print(
+                    f"[transcribe:sherpa] chunk {index + 1}/{count}: FAILED: {exc}",
+                    flush=True,
+                )
+                continue
+            all_segments.extend(segs)
+            _write_sherpa_checkpoint(
+                chunk_path, index, start, used_model, lang, segs,
+            )
+            print(f"[transcribe:sherpa] chunk {index + 1}/{count}: "
+                  f"{len(segs)} segments", flush=True)
+    finally:
+        reader.close()
 
     all_segments.sort(key=lambda s: (s.start, s.end))
     merged = _merge_segments(all_segments)
+    if failed_chunks:
+        raise RuntimeError(
+            f"{len(failed_chunks)} of {count} sherpa chunks failed: "
+            f"{', '.join(str(n) for n in failed_chunks[:20])}"
+            + (" …" if len(failed_chunks) > 20 else "")
+            + ". Successful chunks are checkpointed and will not be repeated; "
+            "re-run to retry the failures."
+        )
     print(f"[transcribe:sherpa] complete: {len(merged)} segments; language={lang}", flush=True)
-    return merged, lang
+    return merged, lang, {
+        "engine": "sherpa-onnx-whisper",
+        "requested_model": model_name,
+        "model": used_model,
+        "downgrade_reason": downgrade_reason,
+        "word_timestamps": "character-proportional",
+        "chunking": f"{window:.0f}s fixed whisper encoder window "
+                    f"(chunk_minutes={chunk_minutes} not applicable)",
+        "num_threads": threads,
+    }
+
+
+def _load_sherpa_checkpoint(path: Path) -> list[Segment] | None:
+    """Load a completed chunk, or None when it must be re-decoded.
+
+    Only ``status == "ok"`` counts: a failed decode is stored so the failure is
+    visible on disk, but it is not a result, so the chunk is retried. A
+    genuinely silent window is an ``ok`` record with an empty segment list and
+    stays cached — silence and failure stay distinguishable.
+    """
+    data = read_json(path)
+    if not isinstance(data, dict) or data.get("status") != "ok":
+        return None
+    try:
+        return [
+            Segment(float(s["start"]), float(s["end"]), str(s["text"]),
+                    [Word(**w) for w in s.get("words", [])])
+            for s in data.get("segments", [])
+        ]
+    except (TypeError, KeyError, ValueError):
+        return None
+
+
+def _write_sherpa_checkpoint(
+    path: Path,
+    index: int,
+    start: float,
+    used_model: str,
+    lang: str,
+    segments: list[Segment],
+    *,
+    status: str = "ok",
+    error: str | None = None,
+) -> None:
+    payload: dict = {
+        "index": index,
+        "start": start,
+        "engine": "sherpa-onnx-whisper",
+        "model": used_model,
+        "language": lang,
+        "word_timestamps": "character-proportional",
+        "status": status,
+    }
+    if status == "failed":
+        payload["error"] = error or "unknown error"
+    payload["segments"] = [
+        {"start": s.start, "end": s.end, "text": s.text,
+         "words": [w.__dict__ for w in s.words]}
+        for s in segments
+    ]
+    write_json_atomic(path, payload)
 
 
 def is_available(model_name: str = "base", models_dir: Path | None = None) -> bool:
@@ -381,3 +534,9 @@ def is_available(model_name: str = "base", models_dir: Path | None = None) -> bo
     except Exception:
         return False
     return True
+
+
+# Keep an explicit note for the parity reader: is_available intentionally does
+# not report the downgrade. Callers that need it read the transcribe()
+# provenance instead, which records requested_model, model and
+# downgrade_reason together.

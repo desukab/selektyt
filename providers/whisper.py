@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 import shutil
 import subprocess
@@ -8,9 +7,81 @@ import time
 from pathlib import Path
 
 from models.core import Segment, Word
+from providers.atomic import read_json, write_json_atomic
 
 
 FALLBACK_CHAIN = ["small", "base", "tiny"]
+
+
+def _write_chunk_checkpoint(
+    path: Path,
+    *,
+    index: int,
+    start: float,
+    end: float,
+    decode_start: float,
+    language: str,
+    segments: list[Segment],
+    status: str = "ok",
+    error: str | None = None,
+) -> None:
+    """Record one chunk's outcome atomically.
+
+    A failed decode is written down too — with ``status: "failed"`` — so the
+    failure is still visible on disk after the run dies. ``_load_chunk_checkpoint``
+    refuses to serve a failed record as a result, which is what makes a failed
+    chunk retry instead of hardening into a permanently empty one.
+    """
+    payload: dict = {
+        "index": index,
+        "start": start,
+        "end": end,
+        "decode_start": decode_start,
+        "status": status,
+    }
+    if status == "ok":
+        payload["language"] = language
+        payload["segments"] = [
+            {
+                "start": s.start,
+                "end": s.end,
+                "text": s.text,
+                "words": [w.__dict__ for w in s.words],
+            }
+            for s in segments
+        ]
+    else:
+        payload["language"] = language
+        payload["error"] = error or "unknown error"
+    write_json_atomic(path, payload)
+
+
+def _load_chunk_checkpoint(path: Path) -> tuple[list[Segment], str, bool]:
+    """Load a chunk checkpoint.
+
+    Returns ``(segments, language, usable)``. Only a record with
+    ``status == "ok"`` is usable, so a chunk that failed (or was truncated
+    mid-write, or holds a schema we no longer understand) is re-decoded rather
+    than silently standing in for an empty one. A genuinely silent chunk is an
+    ``ok`` record with an empty ``segments`` list and stays cached — real
+    silence and failed transcription stay distinguishable.
+    """
+    data = read_json(path)
+    if not isinstance(data, dict) or data.get("status") != "ok":
+        return [], "unknown", False
+    try:
+        segments = [
+            Segment(
+                float(s["start"]),
+                float(s["end"]),
+                str(s["text"]),
+                [Word(**w) for w in s.get("words", [])],
+            )
+            for s in data.get("segments", [])
+        ]
+    except (TypeError, KeyError, ValueError):
+        return [], "unknown", False
+    return segments, str(data.get("language") or "unknown"), True
 
 
 def _require(name: str) -> None:
@@ -79,7 +150,7 @@ def transcribe(
     overlap_seconds: float = 15.0,
     cpu_threads: int | None = None,
     beam_size: int = 1,
-) -> tuple[list[Segment], str]:
+) -> tuple[list[Segment], str, dict]:
     """Transcribe long media in bounded, resumable chunks.
 
     Audio is normalized once to 16 kHz mono PCM. Each Whisper invocation is
@@ -129,6 +200,10 @@ def transcribe(
     running_wall = 0.0
     running_duration = 0.0
     slow_count = 0
+    # Chunk numbers that failed to decode. A failed chunk is checkpointed as a
+    # failure, not as an empty result, so it is retried on the next run; if it
+    # fails again the transcript must not be shipped as though it were whole.
+    failed_chunks: list[int] = []
 
     for index in range(count):
         start = index * step
@@ -140,24 +215,15 @@ def transcribe(
         wall = 0.0
 
         if chunk_path.exists():
-            try:
-                data = json.loads(chunk_path.read_text(encoding="utf-8"))
-                chunk_segments = [
-                    Segment(
-                        float(s["start"]),
-                        float(s["end"]),
-                        str(s["text"]),
-                        [Word(**w) for w in s.get("words", [])],
-                    )
-                    for s in data.get("segments", [])
-                ]
-                detected = str(data.get("language") or "unknown")
-                was_cached = True
+            chunk_segments, detected, was_cached = _load_chunk_checkpoint(chunk_path)
+            if was_cached:
                 print(f"[transcribe] chunk {index + 1}/{count}: cached", flush=True)
-            except (OSError, ValueError, TypeError, KeyError):
-                chunk_segments = []
-                detected = "unknown"
-        else:
+            else:
+                # A record that is not a completed decode: a previous failure,
+                # a truncated write, or an unreadable schema. It is re-decoded
+                # rather than standing in for an empty chunk.
+                print(f"[transcribe] chunk {index + 1}/{count}: re-decoding (unusable checkpoint)", flush=True)
+        if not was_cached:
             wav = chunks_dir / f"chunk_{index:04d}.wav"
             tmp = wav.with_suffix(".wav.tmp")
             _require("ffmpeg")
@@ -174,9 +240,15 @@ def transcribe(
             tmp.replace(wav)
             t0 = time.time()
             print(f"[transcribe] chunk {index + 1}/{count}: {start / 60:.1f}-{end / 60:.1f} min", flush=True)
+            failed: str | None = None
             try:
                 chunk_segments, detected = _transcribe_chunk(model, wav, decode_start, language, beam_size)
             except Exception as exc:
+                # Record the failure but never checkpoint it as a result: an
+                # empty segments list written as "ok" would look identical to a
+                # genuinely silent chunk and the failure would harden into the
+                # transcript permanently.
+                failed = f"{type(exc).__name__}: {exc}"
                 print(f"    FAILED after {time.time() - t0:.1f}s: {exc}", flush=True)
                 chunk_segments = []
                 detected = "unknown"
@@ -186,33 +258,24 @@ def transcribe(
             except OSError:
                 pass
 
-            chunk_segments = [
-                s for s in chunk_segments
-                if index == 0 or s.start >= start - 0.05
-            ]
-            chunk_path.write_text(
-                json.dumps(
-                    {
-                        "index": index,
-                        "start": start,
-                        "end": end,
-                        "decode_start": decode_start,
-                        "language": detected,
-                        "segments": [
-                            {
-                                "start": s.start,
-                                "end": s.end,
-                                "text": s.text,
-                                "words": [w.__dict__ for w in s.words],
-                            }
-                            for s in chunk_segments
-                        ],
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                ),
-                encoding="utf-8",
+            if failed is None:
+                chunk_segments = [
+                    s for s in chunk_segments
+                    if index == 0 or s.start >= start - 0.05
+                ]
+            _write_chunk_checkpoint(
+                chunk_path,
+                index=index,
+                start=start,
+                end=end,
+                decode_start=decode_start,
+                language=detected,
+                segments=chunk_segments,
+                status="ok" if failed is None else "failed",
+                error=failed,
             )
+            if failed is not None:
+                failed_chunks.append(index + 1)
 
         all_segments.extend(chunk_segments)
         if detected and detected != "unknown":
@@ -272,5 +335,29 @@ def transcribe(
         merged.append(segment)
 
     detected = language or (max(set(detected_languages), key=detected_languages.count) if detected_languages else "unknown")
+    if failed_chunks:
+        # The checkpoints for the chunks that did decode are all on disk, so a
+        # re-run resumes from them and only re-attempts these.
+        raise RuntimeError(
+            f"{len(failed_chunks)} of {count} transcription chunks failed: "
+            f"{', '.join(str(n) for n in failed_chunks[:20])}"
+            + (" …" if len(failed_chunks) > 20 else "")
+            + ". Successful chunks are checkpointed and will not be repeated; "
+            "re-run to retry the failures."
+        )
+    downgrade_reason = None
+    if model_name != initial_model_name:
+        downgrade_reason = (
+            f"downgraded from {initial_model_name} to {model_name} after "
+            f"{fallback_consecutive} consecutive chunks slower than "
+            f"{fallback_rt:.1f}x realtime"
+        )
     print(f"[transcribe] complete: {len(merged)} segments; language={detected}", flush=True)
-    return merged, detected
+    return merged, detected, {
+        "requested_model": initial_model_name,
+        "model": model_name,
+        "downgrade_reason": downgrade_reason,
+        "chunking": f"{chunk_minutes} min chunks (+{overlap_seconds:.0f}s overlap)",
+        "chunks": count,
+        "num_threads": _threads,
+    }

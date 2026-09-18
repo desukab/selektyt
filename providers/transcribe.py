@@ -40,31 +40,45 @@ def transcribe(
     """
     if _faster_whisper_available():
         from providers.whisper import transcribe as _fw
-        segments, lang = _fw(
+        segments, lang, prov = _fw(
             media, model_name, language, checkpoint_dir,
             chunk_minutes=chunk_minutes, cpu_threads=cpu_threads, beam_size=beam_size,
         )
         return segments, lang, {
             "engine": "faster-whisper",
-            "model": model_name,
+            "requested_model": model_name,
+            "model": prov["model"],
+            # None when the requested model ran all the way through; a reason
+            # when it was downgraded mid-run for being too slow.
+            "downgrade_reason": prov.get("downgrade_reason"),
             "word_timestamps": "per-token",
             "fallback_reason": None,
+            "chunks": prov.get("chunks"),
+            "chunking": prov.get("chunking"),
+            "num_threads": prov.get("num_threads"),
         }
 
     from providers.sherpa import transcribe as _so, is_available
     if is_available(model_name):
-        segments, lang = _so(
+        segments, lang, prov = _so(
             media, model_name, language, checkpoint_dir,
             chunk_minutes=chunk_minutes, cpu_threads=cpu_threads, beam_size=beam_size,
         )
         return segments, lang, {
             "engine": "sherpa-onnx-whisper",
-            "model": model_name,
+            "requested_model": model_name,
+            "model": prov["model"],
+            # "small" is not always installed; sherpa falls back to base, and
+            # the run has to be able to say which model actually produced the
+            # words and why.
+            "downgrade_reason": prov.get("downgrade_reason"),
             # sherpa's whisper export has no cross-attention outputs, so word
             # times are distributed by character proportion within each
             # whisper segment — an approximation, not attention timestamps.
             "word_timestamps": "character-proportional",
             "fallback_reason": "faster-whisper unavailable (no ctranslate2 wheel for this platform)",
+            "chunking": prov.get("chunking"),
+            "num_threads": prov.get("num_threads"),
         }
 
     raise RuntimeError(
