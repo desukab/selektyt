@@ -74,7 +74,13 @@ IDENTICAL  tests/test_nle_export.py
 The only content unique to the branch is a `conftest.py` that rewrites the
 editable-install finder's path map so tests import from the worktree directory.
 That is a worktree-local convenience, not product work: `main`'s suite runs
-green from the repo root without it (785 passed). Not merged.
+green from the repo root without it (803 passed). Not merged.
+
+Since that classification was written, `main` has gone further than the branch
+proposed: `engine/timeline_build.py` now writes a per-cut EDL and FCPXML for
+every shipped cut from the same interval list the render concatenated
+(`c219163` fixed the EDL's rate handling, `431001e` wired it into the pipeline
+and the web shell). There is now even less on the branch worth taking.
 
 This is the case the instruction warned about — a branch that looks like 3239
 lines of new work in `git diff --stat` and is in fact already on `main`. The
