@@ -107,8 +107,15 @@ cached scores live and exports a cutlist plus FCPXML.
 
 **Video → social cuts** — the same pipeline as the CLI, driven from the page.
 Type a path inside the project (an uploaded file's path is filled in for you)
-or paste an `https://` URL, pick a clip count and model, and *Make cuts*. The
-resulting renders, captions and reports are listed as downloads.
+or paste an `https://` URL, pick a clip count, model and caption preset, and
+*Make cuts*. The resulting renders, captions, timelines and reports are listed
+as downloads. *Audio analysis* turns on the same `--audio-analysis` stage the
+CLI has.
+
+If YouTube asks for sign-in, put the path to a cookies file in the field. Unlike
+a media path it is deliberately **not** confined to the project directory: the
+bridge never reads or uploads it, it only hands the path to `yt-dlp`, and a
+cookie file stored inside the repo is one `git add` away from being leaked.
 
 The frontend is designed to be reused unchanged inside the Tauri webview once a
 desktop webkit2gtk host is available (`docs/tauri-termux-blocker.md`).

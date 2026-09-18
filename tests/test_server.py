@@ -4,6 +4,7 @@ Pins the envelope contract (mirrored by the Rust `selekyt-mech` sidecar):
 request `{"op", "params"}`, response `{"ok", "op", "data"|"error"}`.
 """
 import io
+import os
 import wave
 import json
 from pathlib import Path
@@ -199,6 +200,8 @@ def test_run_pipeline_writes_a_project_and_reports_its_artifacts(tmp_path, monke
         (project / "shorts" / "01.mp4").write_bytes(b"mp4")
         (project / "captions").mkdir(parents=True, exist_ok=True)
         (project / "captions" / "01.srt").write_text("cues\n", encoding="utf-8")
+        (project / "timeline").mkdir(parents=True, exist_ok=True)
+        (project / "timeline" / "01.edl").write_text("EDL\n", encoding="ascii")
         (project / "report.json").write_text(
             json.dumps({"selected_count": 1, "candidate_count": 2, "language": "en"}),
             encoding="utf-8",
@@ -214,6 +217,9 @@ def test_run_pipeline_writes_a_project_and_reports_its_artifacts(tmp_path, monke
     assert data["report"]["selected_count"] == 1
     names = [Path(p).name for p in data["artifacts"]]
     assert "01.mp4" in names and "01.srt" in names and "report.json" in names
+    # The editable interchange is as much a shipped artifact as the render; a UI
+    # that cannot link to it cannot offer the edit.
+    assert "01.edl" in names
 
 
 def test_run_pipeline_validates_params_before_any_render(tmp_path):
@@ -228,6 +234,90 @@ def test_run_pipeline_validates_params_before_any_render(tmp_path):
     )))
     assert resp["ok"] is False
     assert "limit must be" in resp["error"]
+
+
+# ── caption style over the wire ──
+
+def _stub_media(tmp_path: Path) -> Path:
+    p = tmp_path / "v.mp4"
+    p.write_bytes(b"0" * 100)
+    return p
+
+
+def _stub_project(out_root) -> Path:
+    project = Path(out_root) / "project"
+    project.mkdir(parents=True, exist_ok=True)
+    (project / "report.json").write_text("{}", encoding="utf-8")
+    return project
+
+
+def test_an_unknown_caption_style_is_refused_before_any_render(tmp_path, monkeypatch):
+    """The CLI falls back to ``minimal`` for an unknown style, which is right
+    for a script; the sidecar serves a dropdown, where a typo would silently
+    render the wrong style and nobody would know why. It must be refused up
+    front, with the names a user can actually use."""
+    import selekyt.pipeline as pipeline_mod
+
+    def must_not_run(*a, **k):
+        raise AssertionError("an invalid style must not reach the pipeline")
+
+    monkeypatch.setattr(pipeline_mod, "run", must_not_run)
+    monkeypatch.delenv("SELEKYT_CAPTION_STYLE", raising=False)
+    resp = json.loads(process_line(json.dumps(
+        {"op": "run_pipeline",
+         "params": {"source": str(_stub_media(tmp_path)), "caption_style": "BOLD"}}
+    )))
+    assert resp["ok"] is False
+    assert "caption_style" in resp["error"]
+    assert "minimal" in resp["error"]
+    # The environment is left untouched: a later run must not inherit a value
+    # this run was refused.
+    assert "SELEKYT_CAPTION_STYLE" not in os.environ
+
+
+def test_a_known_caption_style_reaches_the_render(tmp_path, monkeypatch):
+    """The caption writer reads the style from the environment at write time, so
+    a caller with no argv — the web shell — has no other way to choose one."""
+    import selekyt.pipeline as pipeline_mod
+
+    seen = {}
+
+    def fake_run(source, out_root, **kw):
+        seen["style"] = os.environ.get("SELEKYT_CAPTION_STYLE")
+        return _stub_project(out_root)
+
+    monkeypatch.setattr(pipeline_mod, "run", fake_run)
+    monkeypatch.setenv("SELEKYT_CAPTION_STYLE", "minimal")
+    _handle("run_pipeline", {
+        "source": str(_stub_media(tmp_path)),
+        "out": str(tmp_path / "out"),
+        "caption_style": "noir",
+    })
+    assert seen["style"] == "noir"
+    # Restored after the run: the sidecar is one process serving many requests,
+    # so a style set for one of them must not apply to the next.
+    assert os.environ["SELEKYT_CAPTION_STYLE"] == "minimal"
+
+
+def test_no_caption_style_param_leaves_the_environment_alone(tmp_path, monkeypatch):
+    """A run that does not name a style inherits whatever the operator set in
+    the environment — the CLI's own path — rather than resetting it."""
+    import selekyt.pipeline as pipeline_mod
+
+    seen = {}
+
+    def fake_run(source, out_root, **kw):
+        seen["style"] = os.environ.get("SELEKYT_CAPTION_STYLE")
+        return _stub_project(out_root)
+
+    monkeypatch.setattr(pipeline_mod, "run", fake_run)
+    monkeypatch.setenv("SELEKYT_CAPTION_STYLE", "punch")
+    _handle("run_pipeline", {
+        "source": str(_stub_media(tmp_path)),
+        "out": str(tmp_path / "out"),
+    })
+    assert seen["style"] == "punch"
+    assert os.environ["SELEKYT_CAPTION_STYLE"] == "punch"
 
 
 # ── wire integrity ──

@@ -302,8 +302,14 @@ async function route(req, res, url, method) {
       chunk_minutes: body.chunk_minutes,
       beam_size: body.beam_size,
       cpu_threads: body.cpu_threads,
+      caption_style: body.caption_style || undefined,
       audio_analysis: body.audio_analysis ?? false,
       export_fcpxml: body.export_fcpxml ?? true,
+      // A cookies file is a path the pipeline hands to yt-dlp; it is never read
+      // here, never echoed into a response, and deliberately NOT confined to
+      // the project — a cookie file inside the repo is one `git add` away from
+      // being leaked, so the user's own home is where it belongs.
+      cookies: body.cookies || undefined,
     });
     return sendJson(res, { ok: true, op: "run_pipeline", data });
   }

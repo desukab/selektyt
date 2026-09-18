@@ -53,6 +53,22 @@
           <option value="medium">medium</option>
         </select>
       </label>
+      <label class="slider">captions
+        <select id="cuts-caption-style">
+          <option value="minimal" selected>minimal</option>
+          <option value="punch">punch</option>
+          <option value="spotlight">spotlight</option>
+          <option value="noir">noir</option>
+        </select>
+      </label>
+      <label class="check" title="Also run the VAD-driven jump-cut analysis and write out/audio/">
+        <input type="checkbox" id="cuts-audio-analysis" />
+        audio analysis
+      </label>
+      <label class="slider" title="Only needed when YouTube asks for sign-in. Path to a cookies file outside the repo — it is never uploaded.">
+        cookies file
+        <input id="cuts-cookies" type="text" placeholder="~/.config/cookies.txt" />
+      </label>
       <button id="cuts-run" class="primary">Make cuts</button>
     </div>
     <div id="cuts-links" class="links"></div>

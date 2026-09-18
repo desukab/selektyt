@@ -16,10 +16,12 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, TextIO
 
+from engine.captions import caption_presets
 from engine import cut_algebra
 from engine import timecode
 from engine import fcpxml
@@ -323,6 +325,39 @@ def _pipeline_source(raw: str) -> str:
     return text
 
 
+@contextlib.contextmanager
+def _caption_style(style):
+    """Apply a caption style for the duration of one run, then restore it.
+
+    The caption writer reads ``SELEKYT_CAPTION_STYLE`` at write time, so a caller
+    without argv (the web shell) has no other way to choose one. An unknown name
+    is refused: ``preset_for`` would fall back to ``minimal`` and a typo in a
+    dropdown would silently render the wrong style.
+
+    The sidecar is one long-lived process serving many requests, so the value is
+    restored afterwards — without that, one ``noir`` run would make every later
+    run noir and nothing in the request would say why.
+    """
+    if not style:
+        yield
+        return
+    name = str(style).strip().lower()
+    if name not in caption_presets():
+        raise ValueError(
+            f"unsupported caption_style '{name}'; expected one of "
+            f"{', '.join(caption_presets())}"
+        )
+    previous = os.environ.get("SELEKYT_CAPTION_STYLE")
+    os.environ["SELEKYT_CAPTION_STYLE"] = name
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop("SELEKYT_CAPTION_STYLE", None)
+        else:
+            os.environ["SELEKYT_CAPTION_STYLE"] = previous
+
+
 def op_run_pipeline(params: dict) -> dict:
     """The product's main path: transcribe, select, cut, render.
 
@@ -333,33 +368,34 @@ def op_run_pipeline(params: dict) -> dict:
     """
     from selekyt.pipeline import run as run_pipeline
 
-    source = _pipeline_source(str(params.get("source") or ""))
-    out_root = Path(str(params.get("out") or "out"))
-    project = run_pipeline(
-        source,
-        out_root,
-        model=str(params.get("model", "small")),
-        language=params.get("language") or None,
-        limit=int(params.get("limit", 6)),
-        cookies=params.get("cookies") or None,
-        chunk_minutes=int(params.get("chunk_minutes", 5)),
-        beam_size=int(params.get("beam_size", 1)),
-        cpu_threads=params.get("cpu_threads"),
-        ollama_url=params.get("ollama_url") or None,
-        audio_analysis=bool(params.get("audio_analysis", False)),
-        vad_backend=params.get("vad_backend") or None,
-        silence_threshold=float(params.get("silence_threshold", 0.5)),
-        silence_padding=float(params.get("silence_padding", 0.0)),
-        min_speech_ms=int(params.get("min_speech_ms", 150)),
-        min_silence_ms=int(params.get("min_silence_ms", 100)),
-        keep_pauses=bool(params.get("keep_pauses", True)),
-        remove_filler=bool(params.get("remove_filler", True)),
-        export_fcpxml=bool(params.get("export_fcpxml", False)),
-    )
+    with _caption_style(params.get("caption_style")):
+        source = _pipeline_source(str(params.get("source") or ""))
+        out_root = Path(str(params.get("out") or "out"))
+        project = run_pipeline(
+            source,
+            out_root,
+            model=str(params.get("model", "small")),
+            language=params.get("language") or None,
+            limit=int(params.get("limit", 6)),
+            cookies=params.get("cookies") or None,
+            chunk_minutes=int(params.get("chunk_minutes", 5)),
+            beam_size=int(params.get("beam_size", 1)),
+            cpu_threads=params.get("cpu_threads"),
+            ollama_url=params.get("ollama_url") or None,
+            audio_analysis=bool(params.get("audio_analysis", False)),
+            vad_backend=params.get("vad_backend") or None,
+            silence_threshold=float(params.get("silence_threshold", 0.5)),
+            silence_padding=float(params.get("silence_padding", 0.0)),
+            min_speech_ms=int(params.get("min_speech_ms", 150)),
+            min_silence_ms=int(params.get("min_silence_ms", 100)),
+            keep_pauses=bool(params.get("keep_pauses", True)),
+            remove_filler=bool(params.get("remove_filler", True)),
+            export_fcpxml=bool(params.get("export_fcpxml", False)),
+        )
     report = json.loads((project / "report.json").read_text(encoding="utf-8"))
     # The report names directories; a UI needs the files inside them to link to.
     artifacts: list[str] = []
-    for sub in ("shorts", "facebook", "captions"):
+    for sub in ("shorts", "facebook", "captions", "timeline"):
         d = project / sub
         if d.is_dir():
             artifacts += sorted(str(p) for p in d.iterdir() if p.is_file())

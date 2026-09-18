@@ -224,7 +224,15 @@ async function runCuts() {
     const params = {
       limit: parseInt($("cuts-limit").value, 10) || 6,
       model: $("cuts-model").value,
+      caption_style: $("cuts-caption-style").value,
+      audio_analysis: $("cuts-audio-analysis").checked,
     };
+    // A cookies file only matters for a URL the pipeline has to fetch, and the
+    // field is deliberately a path rather than a file upload: the bytes would
+    // have to be written to disk inside the project, one `git add` away from
+    // being leaked.
+    const cookies = $("cuts-cookies").value.trim();
+    if (cookies) params.cookies = cookies;
     if (/^https?:\/\//i.test(source)) {
       params.source = source;
     } else {
@@ -240,7 +248,11 @@ async function runCuts() {
       const a = document.createElement("a");
       a.href = `/api/file?path=${encodeURIComponent(p)}`;
       a.download = "";
-      a.textContent = p.split(/[/\\]/).pop();
+      // shorts/01.mp4 and facebook/01.mp4 have the same basename; labelling
+      // both "01.mp4" gives two links nobody can tell apart.
+      a.textContent = p.startsWith(data.project)
+        ? p.slice(data.project.length + 1)
+        : p.split(/[/\\]/).pop();
       a.title = p;
       panel.appendChild(a);
     }

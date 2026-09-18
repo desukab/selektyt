@@ -58,6 +58,15 @@ button.primary:disabled { opacity: 0.55; cursor: wait; }
 .slider { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
 .slider output { color: var(--text); min-width: 3ch; }
 
+.check {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: default;
+}
+
 .status { margin: 4px 0 10px; font-size: 13px; }
 
 .canvas-wrap {
@@ -159,16 +168,23 @@ dd { margin: 2px 0 0; font-size: 14px; overflow-wrap: anywhere; }
   flex: 1 1 340px;
   min-width: 240px;
   background: var(--panel);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
   padding: 8px 10px;
   font: inherit;
 }
 
+/* The cookies field is a path hint, not a free-form source field: it should
+   not grow to fill the row alongside the source input. */
+.cuts-controls #cuts-cookies {
+  flex: 0 1 240px;
+  min-width: 180px;
+}
+
 .cuts-controls select {
   background: var(--panel);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
   padding: 6px 8px;

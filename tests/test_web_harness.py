@@ -248,6 +248,38 @@ def test_run_pipeline_rejects_a_non_http_url(base):
     assert isinstance(resp["error"], str)
 
 
+def test_run_pipeline_rejects_an_unknown_caption_style(base):
+    """The shell offers caption styles as a dropdown, so a value the sidecar
+    does not know must come back as a readable error rather than a silent
+    fallback to minimal. This is the end-to-end proof the control is wired:
+    the request crosses HTTP, the bridge and the sidecar before failing.
+
+    The source has to be a file that exists — the bridge answers "no such file"
+    itself, and that answer would never reach the style check."""
+    resp = _post_or_error(base, "run_pipeline", {
+        "path": "README.md",
+        "caption_style": "EXPENSIVE",
+    })
+    assert resp["ok"] is False
+    assert "caption_style" in resp["error"], resp
+
+
+def test_index_exposes_the_controls_the_pipeline_supports(base):
+    """The shell is the usable interface today, and a control the CLI has but
+    the page lacks is an option the user cannot reach. Each id here is one the
+    request in ``runCuts`` reads, so dropping the control breaks the request."""
+    page = _get(base, "/").decode("utf-8")
+    for ident in (
+        "cuts-source", "cuts-limit", "cuts-model",
+        "cuts-caption-style", "cuts-audio-analysis", "cuts-cookies", "cuts-run",
+    ):
+        assert f'id="{ident}"' in page, f"the page lost the {ident} control"
+    # The dropdown must offer exactly the presets the caption writer knows; a
+    # name it does not implement is refused by the sidecar.
+    for style in ("minimal", "punch", "spotlight", "noir"):
+        assert f'value="{style}"' in page, f"the page lost the {style} preset"
+
+
 def test_bad_upload_is_a_clean_error(base):
     resp = _post(base, "vad_analyze", {"wav": "bm90LXdhdg==", "name": "tiny.wav"})
     assert resp["ok"] is False
