@@ -2,7 +2,7 @@
 
 Local-first long-form → social video editorial engine.
 
-**Input:** one YouTube URL.
+**Input:** one YouTube URL **or** one local video file.
 
 **Output:** a small ranked set of publishable Facebook cuts and 9:16 Shorts/Reels, with minimal language-preserving subtitles and subject-aware reframing.
 
@@ -13,6 +13,12 @@ pip install -e '.[transcription]'
 selekyt "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
+Local files work the same way and need no network and no `yt-dlp`:
+
+```bash
+selekyt ./my-talk.mp4 --limit 6
+```
+
 Optional controls:
 
 ```bash
@@ -20,6 +26,17 @@ selekyt "URL" --model small --language te --limit 6
 ```
 
 `--language te` can be used for Telugu; the same option works for other Whisper-supported languages. By default the source language is detected and preserved.
+
+## Check your environment first
+
+```bash
+selekyt --doctor
+```
+
+Reports which tools are present and, if any required one is missing, names it.
+`python3`, `ffmpeg`, `ffprobe` and `faster-whisper` are required. `yt-dlp` and the
+unversioned `python` are optional — `yt-dlp` is only needed for URL sources, and
+a host with only `python3` is fine.
 
 ### Hosts where faster-whisper cannot run
 
@@ -44,6 +61,12 @@ Word timestamps from this backend are distributed by character proportion within
 9. Burns minimal subtitles using a Unicode-capable font profile. Set `SELEKYT_FONT` if the machine uses a different installed font.
 10. Writes selections, transcript and report JSON alongside the MP4s.
 
+With `--audio-analysis`, the same run additionally produces a VAD-driven jump-cut
+edit: speech-region cutlist, pause classification, an audio-truth layer that
+fuses transcript words against detected speech, and an FCPXML 1.11 timeline for
+an NLE. `--export-fcpxml` writes that timeline; the CLI and the Rust core agree
+on it byte-for-byte.
+
 ## Architecture
 
 SelekyT is three layers, each independently usable:
@@ -63,18 +86,54 @@ either implementation. Cross-language agreement is pinned by
 ## Shell harness
 
 `web/` holds a minimal zero-dependency shell: a Node process spawns the Python
-sidecar and serves a UI that renders segmentation, the score curve and the
-provenance record (`backend`, `vad_model`, `fallback_reason`, `hysteresis`).
-The frontend is designed to be reused unchanged inside the Tauri webview once a
-desktop webkit2gtk host is available (`docs/tauri-termux-blocker.md`).
+sidecar and serves a UI over local HTTP. It has two halves:
 
 ```bash
 node web/server.mjs      # → http://127.0.0.1:4242
 ```
 
-Click **Analyze sample WAV** (a deterministic generated clip, no external
-media) or choose your own 16 kHz mono WAV; the threshold slider re-segments the
-cached scores live.
+**Audio analysis** — click *Analyze sample WAV* (a deterministic generated clip,
+no external media) or choose your own WAV; the threshold slider re-segments the
+cached scores live and exports a cutlist plus FCPXML.
+
+**Video → social cuts** — the same pipeline as the CLI, driven from the page.
+Type a path inside the project (an uploaded file's path is filled in for you)
+or paste an `https://` URL, pick a clip count and model, and *Make cuts*. The
+resulting renders, captions and reports are listed as downloads.
+
+The frontend is designed to be reused unchanged inside the Tauri webview once a
+desktop webkit2gtk host is available (`docs/tauri-termux-blocker.md`).
+
+## Troubleshooting
+
+| Symptom | Cause and fix |
+| --- | --- |
+| `no stories passed the gate` | Every candidate was rejected by the editorial or context guard. Read `report.json` → `rejection_reasons`; usually the transcript is too short or mostly music. Try a longer source or `--limit` lower. |
+| `--limit must be >= 1` / `--chunk-minutes must be >= 1` | A bad numeric flag. These are checked before any network or model work, so nothing is wasted. |
+| `YouTube rejected automated traffic` | YouTube asks for sign-in. Pass `--cookies` a Netscape cookies.txt **or** a browser `Cookie:`-header file. Credentials stay local; do not commit them. |
+| `selekyt: command not found` after install | The venv was not activated. `node web/server.mjs` probes `.venv/bin/python` first for exactly this reason; the CLI needs activation. |
+| captions lag behind the rendered cut | They should not. Cue timing accounts for the pauses the edit removes; if you see drift, that is a bug — the cue bounds and the edited duration are pinned in `tests/test_captions.py`. |
+| `python MISSING` from `--doctor` | Not on a modern host. `python3` is the required name; the unversioned `python` is optional. |
+| a render is cut short or black | Re-run. Partial renders and corrupted checkpoints are quarantined, recovered from `.bak`, and only the missing clip is re-rendered. |
+
+## Limitations
+
+- **Transcription fidelity.** faster-whisper on CPU with `--model small` is the
+  default for speed, not accuracy. Use `--model medium` for quality; word
+  timestamps from the sherpa fallback are character-proportional, not from
+  cross-attention, and that is recorded in provenance.
+- **VAD backend.** `silero` and `sherpa-onnx` need wheels + a model file that
+  are not present on every host. When they are unavailable the pipeline falls
+  back to the energy backend and says so in `fallback_reason` — it never reports
+  a backend it did not use.
+- **Vertical reframing.** Face tracking is used when a face is found; otherwise
+  the active region is estimated and the crop moves over time. A scene with no
+  clear subject can still be reframed poorly.
+- **No fabrication.** SelekyT selects and reorders source speech. It does not
+  write new claims, and its editorial reports are auditable rather than opaque.
+- **Desktop shell.** The Tauri build compiles and its sidecar plumbing is
+  tested, but no packaged binary has been produced on any platform. The web
+  shell is the usable local interface today.
 
 ## Development
 
@@ -91,24 +150,31 @@ CI (`.github/workflows/ci.yml`) runs pytest on Python 3.11–3.13 plus
 
 ```text
 out/project/
-├── source/
+├── source/                       (URL sources only)
 ├── transcript.json
 ├── selections.json
-├── report.json
+├── report.json                   (the run summary: see below)
+├── qa.json                       (per-output decode + coverage checks)
 ├── facebook/
 │   ├── 01.mp4
 │   └── 02.mp4
 ├── shorts/
 │   ├── 01.mp4
 │   └── 02.mp4
-└── captions/
-    ├── 01.ass
-    ├── 01.srt
-    ├── 01.json
-    ├── 02.ass
-    ├── 02.srt
-    └── 02.json
+├── captions/
+│   ├── 01.ass                    (word-timed, burned into the render)
+│   ├── 01.srt                    (same cues, no styling)
+│   └── 01.json
+└── audio/                        (with --audio-analysis)
+    ├── cutlist.json
+    ├── cutlist.fcpxml            (with --export-fcpxml)
+    ├── audio_truth.json
+    └── vad_regions.json
 ```
+
+`report.json` records what was selected and what was rejected and why, plus the
+audio provenance above or an explicit `audio: {enabled: false}` so a downstream
+consumer can tell "not run" from "failed silently".
 
 ## Retention philosophy
 
@@ -122,8 +188,11 @@ For vertical delivery, Meta recommends native 9:16 creative with audio and impor
 - Better person/object tracking for vertical reframing.
 - Motion-aware cut points and B-roll-aware visual rhythm.
 - Channel-specific retention learning from exported analytics.
-- Native SRT export and platform-specific caption presets.
 - Automated title/hook variants without fabricating claims.
+
+Already shipped, not roadmap: native SRT alongside ASS with four caption
+presets (`--caption-style`), FCPXML 1.11 and cutlist export
+(`--audio-analysis --export-fcpxml`), and the web shell's video pipeline.
 
 ## Rights
 
