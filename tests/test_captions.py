@@ -10,7 +10,12 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from engine.captions import ass_for_candidate, srt_for_candidate
+from engine.captions import (
+    ass_for_candidate,
+    caption_presets,
+    preset_for,
+    srt_for_candidate,
+)
 from models.core import Candidate, Word
 
 
@@ -186,3 +191,34 @@ def test_ass_and_srt_still_agree_after_retiming(tmp_path):
         assert abs(srt_sec(cue["en"]) - ass_sec(fields[2])) < 0.02, (
             f"ASS and SRT disagree on cue {cue['idx']} end"
         )
+
+
+# ── the presets behind SELEKYT_CAPTION_STYLE ──────────────────────────────
+
+
+def test_every_named_style_renders_a_style_line(tmp_path, monkeypatch):
+    """A style the writer cannot render is a style the UI must not offer. Each
+    one is also exercised through the env var the sidecar sets, so the path the
+    web shell takes is the one covered here."""
+    c = _candidate(_timed_words())
+    for name in caption_presets():
+        monkeypatch.setenv("SELEKYT_CAPTION_STYLE", name)
+        ass = ass_for_candidate(c, tmp_path / f"{name}.ass")
+        assert f"Style: Default," in ass.read_text(encoding="utf-8")
+
+
+def test_an_unknown_style_falls_back_not_to_a_crash(tmp_path, monkeypatch):
+    """The CLI takes arbitrary strings, so a style a newer build removed still
+    renders captions rather than failing the run. The sidecar refuses unknown
+    names before this point; this is why that check belongs there and not here."""
+    # ``preset_for(None)`` reads the ambient style, and a run earlier in the
+    # suite may legitimately have set one.
+    monkeypatch.delenv("SELEKYT_CAPTION_STYLE", raising=False)
+    assert preset_for("a-style-that-does-not-exist") == preset_for("minimal")
+    assert preset_for(None) == preset_for("minimal")
+
+
+def test_a_style_name_is_matched_case_and_whitespace_insentively():
+    """``--caption-style Punch`` and the sidecar's normalised ``punch`` must
+    resolve to the same preset, or the dropdown and the CLI would drift apart."""
+    assert preset_for("  PUNCH  ") == preset_for("punch")

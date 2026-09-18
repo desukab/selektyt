@@ -6,6 +6,7 @@ import os
 import shutil
 from pathlib import Path
 
+from engine.captions import caption_presets
 from selekyt.pipeline import run
 from selekyt.server import serve_stdio as serve_python
 
@@ -99,7 +100,10 @@ def main() -> None:
     )
     p.add_argument(
         "--caption-style",
-        choices=["minimal", "punch", "spotlight", "noir"],
+        # Derived rather than duplicated: a second list here is what lets the
+        # accepted names drift from the presets the caption writer implements,
+        # and argparse would then accept a name that renders as minimal.
+        choices=list(caption_presets()),
         default="minimal",
         help="Caption visual preset",
     )

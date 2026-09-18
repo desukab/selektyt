@@ -9,6 +9,34 @@ from engine.caption_director import build_blocks, style_name, CaptionBlock
 from engine.edit_plan import retention_intervals
 
 
+def caption_presets() -> dict:
+    """The visual presets selectable by ``SELEKYT_CAPTION_STYLE``.
+
+    One source of truth. The CLI's ``--caption-style`` and the sidecar's
+    ``caption_style`` param both need the valid names — the sidecar to refuse a
+    typo that would otherwise silently render as ``minimal`` — and a second list
+    of names would drift from the one actually used to write the ASS file.
+    """
+    return {
+        "minimal": dict(fontsize=54, primary="&H00FFFFFF", outline="&H99000000", back="&H00000000", bold=0, outline_w=2, shadow=1, margin_v=170),
+        "punch": dict(fontsize=58, primary="&H00FFFFFF", outline="&HCC000000", back="&H00000000", bold=1, outline_w=3, shadow=1, margin_v=180),
+        "spotlight": dict(fontsize=56, primary="&H00FFFFFF", outline="&H99000000", back="&H00000000", bold=1, outline_w=2, shadow=2, margin_v=170),
+        "noir": dict(fontsize=52, primary="&H00EAEAEA", outline="&HCC111111", back="&H00000000", bold=0, outline_w=2, shadow=2, margin_v=165),
+    }
+
+
+def preset_for(style: str | None = None) -> dict:
+    """Resolve a style name to its preset, falling back to ``minimal``.
+
+    An unknown name is not an error here: the CLI accepts arbitrary strings and
+    a script that asks for a style a newer build removed still gets captions
+    rather than a failed run. The sidecar rejects unknown names instead, because
+    a typo in a dropdown is otherwise invisible.
+    """
+    presets = caption_presets()
+    return presets.get(str(style or style_name()).strip().lower(), presets["minimal"])
+
+
 def _ts(v: float) -> str:
     v = max(0.0, v)
     h = int(v // 3600)
@@ -184,14 +212,7 @@ def ass_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
     """
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    style = style_name()
-    presets = {
-        "minimal": dict(fontsize=54, primary="&H00FFFFFF", outline="&H99000000", back="&H00000000", bold=0, outline_w=2, shadow=1, margin_v=170),
-        "punch": dict(fontsize=58, primary="&H00FFFFFF", outline="&HCC000000", back="&H00000000", bold=1, outline_w=3, shadow=1, margin_v=180),
-        "spotlight": dict(fontsize=56, primary="&H00FFFFFF", outline="&H99000000", back="&H00000000", bold=1, outline_w=2, shadow=2, margin_v=170),
-        "noir": dict(fontsize=52, primary="&H00EAEAEA", outline="&HCC111111", back="&H00000000", bold=0, outline_w=2, shadow=2, margin_v=165),
-    }
-    p = presets.get(style, presets["minimal"])
+    p = preset_for()
     font = os.getenv("SELEKYT_FONT", "Noto Sans")
 
     lines: list[str] = []

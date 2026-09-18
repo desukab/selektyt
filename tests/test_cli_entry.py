@@ -178,7 +178,10 @@ def test_caption_style_reaches_the_environment(monkeypatch, tmp_path):
     monkeypatch.setattr(sys, "argv", ["selekyt", "URL", "--caption-style", "noir"])
     monkeypatch.setattr("selekyt.cli.run", lambda *a, **k: tmp_path)
     import os
-    monkeypatch.delenv("SELEKYT_CAPTION_STYLE", raising=False)
+    # Set, not deleted: main() writes the key itself, and monkeypatch only
+    # restores keys it owns. Letting production create it left `noir` in the
+    # process environment for every later test in the run.
+    monkeypatch.setenv("SELEKYT_CAPTION_STYLE", "minimal")
     cli_mod.main()
     assert os.environ["SELEKYT_CAPTION_STYLE"] == "noir"
 
