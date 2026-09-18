@@ -666,7 +666,7 @@ def _cross_check_fcpxml(
     return problems
 
 
-def validate_edl(text: str) -> list[str]:
+def validate_edl(text: str, fps: float | None = None) -> list[str]:
     """Structural checks on a CMX 3600 EDL. Returns problems (empty = ok).
 
     Timecodes are parsed with ``engine.timecode.parse_smpte``. Source and
@@ -674,6 +674,14 @@ def validate_edl(text: str) -> list[str]:
     parsed with the rate its own separator implies (``;`` → 29.97 drop,
     ``:`` → 30 non-drop); what is checked is that the two *durations* agree,
     which is the invariant that makes an EDL an honest edit list.
+
+    CMX 3600 carries no frame-rate field, so a ``:`` separator is read as 30
+    fps — and this exporter writes whatever the timeline's rate actually is.
+    For a 24 fps cut the guessed rate is wrong and the frame spans come out a
+    few frames apart even though the list is correct, so a caller that knows
+    the rate should pass ``fps`` and both spans are then measured on that
+    grid. ``render_edl`` and this validator must agree on it; the rate is
+    otherwise unknowable from the text.
     """
     problems: list[str] = []
     lines = text.splitlines()
@@ -724,9 +732,13 @@ def validate_edl(text: str) -> list[str]:
         for field in ("si", "so", "ri", "ro"):
             if not SMPTE_RE.match(m.group(field)):
                 problems.append(f"event {num}: malformed timecode {m.group(field)!r}")
-        rate = _sep_rate(m.group("si"))
+        # When the caller supplies the rate the list was written on, it governs
+        # the parse too, not just the frame conversion: reading a 24 fps cut as
+        # 30 fps produces seconds that no longer land on the 24-frame grid, and
+        # a correct list then reports a spurious retime.
+        rate = fps if fps is not None else _sep_rate(m.group("si"))
         si, so = timecode.parse_smpte(m.group("si"), rate), timecode.parse_smpte(m.group("so"), rate)
-        rrate = _sep_rate(m.group("ri"))
+        rrate = fps if fps is not None else _sep_rate(m.group("ri"))
         ri, ro = timecode.parse_smpte(m.group("ri"), rrate), timecode.parse_smpte(m.group("ro"), rrate)
         parsed.append(
             dict(
@@ -748,8 +760,8 @@ def validate_edl(text: str) -> list[str]:
         # accumulated over the first hour, so second differences would lie. On
         # a common rate the frame counts must agree exactly; across rates the
         # tolerance is one frame at the coarser one.
-        s_rate = _sep_rate(e["s_sep"])
-        r_rate = _sep_rate(e["r_sep"])
+        s_rate = fps if fps is not None else _sep_rate(e["s_sep"])
+        r_rate = fps if fps is not None else _sep_rate(e["r_sep"])
         s_frames = _frame_count(e["s_out"], s_rate) - _frame_count(e["s_in"], s_rate)
         r_frames = _frame_count(e["r_out"], r_rate) - _frame_count(e["r_in"], r_rate)
         if s_rate == r_rate:
