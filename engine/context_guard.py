@@ -36,15 +36,19 @@ _CONNECTIVES: set[str] = {
     "কিন্তু", "কারণ", "তাই", "অতএব", "তারপর",
 }
 
+# Third-person referents need an antecedent the clip does not supply: "It
+# moved forty percent" or "They celebrated" is ungrounded without the sentence
+# the clip cut off. First- and second-person pronouns are deictic — "we" and
+# "you" point at the speaker/viewer, so "We shipped the feature" stands alone.
 _ANAPHORA: set[str] = {
-    "it", "he", "she", "they", "we", "you", "this", "that", "these", "those",
-    "ఇది", "అది", "అతను", "ఆమె", "వారు", "మనం", "నువ్వు", "ఇవి", "ఆవి",
-    "यह", "वह", "वे", "हम", "तुम", "इस", "उस", "ये",
-    "हे", "ते", "ती", "ही", "आम्ही", "तू", "तुम्ही",
-    "அது", "இது", "அவர்", "அவள்", "நாங்கள்", "நீங்கள்", "இவை", "அவை",
-    "ಅದು", "ಇದು", "ಅವರು", "ಅವಳು", "ನಾವು", "ನೀವು", "ಇವು",
-    "അത്", "ഇത്", "അവൻ", "അവൾ", "ഞങ്ങൾ", "നിങ്ങൾ",
-    "এটা", "ও", "সে", "তারা", "আমরা", "আপনারা", "এই", "ঐ",
+    "it", "he", "she", "they", "this", "that", "these", "those", "its", "their",
+    "ఇది", "అది", "అతను", "ఆమె", "వారు", "ఇవి", "ఆవి",
+    "यह", "वह", "वे", "इस", "उस", "ये",
+    "हे", "ते", "ती", "ही",
+    "அது", "இது", "அவர்", "அவள்", "இவை", "அவை",
+    "ಅದು", "ಇದು", "ಅವರು", "ಅವಳು", "ಇವು",
+    "അത്", "ഇത്", "അവൻ", "അവൾ",
+    "এটা", "ও", "সে", "তারা", "এই", "ঐ",
 }
 
 
@@ -100,6 +104,47 @@ def _starts_with_anaphora(text: str) -> bool:
     return _first_token(text) in _ANAPHORA
 
 
+_NP_HEADS = (
+    "modernization", "introduction", "deployment", "implementation",
+    "development", "creation", "establishment", "construction", "expansion",
+    "adoption", "release", "launch", "rollout", "upgrade", "integration",
+    "transition", "migration", "consolidation", "origins",
+    "history", "beginnings", "beginning", "origin",
+)
+_NP_OPEN = re.compile(
+    r"^(?:the\s+)?(?:" + "|".join(_NP_HEADS) + r")\s+of\b",
+    re.IGNORECASE,
+)
+# A finite verb is the difference between a complete sentence and a noun
+# phrase: "The origins of GPS began…" is a sentence, "modernization of the
+# infrastructure…" is a fragment waiting for one.
+_FINITE_VERB = re.compile(
+    r"\b(?:is|are|was|were|has|have|had|began|started|changed|"
+    r"created|introduced|deployed|implemented|developed|launched|released|"
+    r"expanded|adopted|integrated|migrated|consolidated|established|"
+    r"constructed|shipped|completed|improved|replaced|enabled|allowed|"
+    r"required|caused|led|made|took|went|came|became|remained|seems|"
+    r"appears|looks|feels|works|operates|runs|uses|needs|wants|"
+    r"supports|provides|offers|delivers|powers|drives|shapes|forms)\b",
+    re.IGNORECASE,
+)
+
+
+def _opens_with_dangling_subject(text: str) -> bool:
+    """An opening noun phrase with no finite verb continues a prior sentence.
+
+    "modernization of the infrastructure or the introduction of a new
+    protocol." is the tail of "…could be a possible X or Y": the subject and
+    verb live in the sentence the clip cut off. Such an opening cannot stand
+    alone no matter how clean the rest of the clip is. "The origins of GPS
+    began…" has a verb and is a sentence, so it is left alone.
+    """
+    first = text.strip().split(".")[0].strip()
+    if not _NP_OPEN.match(first):
+        return False
+    return not _FINITE_VERB.search(first)
+
+
 def validate(c: Candidate) -> tuple[bool, str]:
     """Validate a candidate for standalone editorial publication.
 
@@ -127,4 +172,13 @@ def validate(c: Candidate) -> tuple[bool, str]:
         return False, f"starts mid-conversation ({connective}) — depends on prior context"
     if _starts_with_anaphora(c.text) and len(c.text.split()) < 25:
         return False, "starts with anaphoric reference — requires prior context"
+    if c.coherence_score < 0.20:
+        return False, f"spans unrelated stories (coherence {c.coherence_score:.2f})"
+    if c.completeness < 0.50:
+        return False, (
+            f"opens or closes inside a sentence (completeness {c.completeness:.2f}) "
+            "— the clip inherits a subject it never introduces"
+        )
+    if _opens_with_dangling_subject(c.text):
+        return False, "opens with a subjectless noun phrase — continuation of a cut-off sentence"
     return True, "ok"

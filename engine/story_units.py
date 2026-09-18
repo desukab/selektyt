@@ -248,23 +248,36 @@ def coherence_score(text: str) -> float:
     sentences = [s for s in split_sentences(text) if s.strip()]
     if len(sentences) < 2:
         return 1.0
-    sims: list[float] = []
+    sims: list[float] = []      # every boundary; a connective counts as 1.0
+    plain: list[float] = []     # lexical boundaries only
     for i in range(1, len(sentences)):
         if _continues_prior(sentences[i], sentences[i - 1]):
             sims.append(1.0)
             continue
-        a = _content_tokens(sentences[i - 1])
-        b = _content_tokens(sentences[i])
-        sims.append(_containment(a, b))
+        overlap = _containment(_content_tokens(sentences[i - 1]),
+                               _content_tokens(sentences[i]))
+        sims.append(overlap)
+        plain.append(overlap)
     if not sims:
         return 0.5
-    mean = sum(sims) / len(sims)
-    worst = min(sims)
-    # A sharp seam: one boundary far below the rest of the span. This is
-    # what stitching two stories together actually looks like.
-    if mean > 0 and worst < 0.4 * mean:
-        return round(0.5 * mean, 3)
-    return round(max(mean, worst) if mean > 0 else worst, 3)
+    if len(sims) == 1:
+        # One boundary carries no pattern, so it cannot distinguish the two
+        # cases this score exists to separate: a splice of two unrelated
+        # stories and a coherent pair that merely shares no wording. High
+        # overlap is real evidence of continuity; zero overlap is the
+        # absence of evidence, not evidence of a seam, so it scores neutral
+        # rather than zero. Two boundaries are the minimum from which a
+        # sharp seam can actually be seen.
+        return round(max(sims[0], 0.5), 3)
+    # A sharp seam is what stitching two stories together looks like. It is
+    # detected among the *lexical* boundaries only: a connective asserts
+    # continuity explicitly, and letting it raise the mean would make an
+    # ordinary quiet boundary look like a seam by comparison.
+    if len(plain) >= 2:
+        pmean = sum(plain) / len(plain)
+        if pmean > 0.15 and min(plain) < 0.4 * pmean:
+            return round(0.5 * pmean, 3)
+    return round(max(sum(sims) / len(sims), min(sims)), 3)
 
 
 # --- unit segmentation ------------------------------------------------------
@@ -323,9 +336,9 @@ _DISCOURSE_OPENERS = {
     "nevertheless", "nonetheless", "hence", "since", "unless", "except",
 }
 _ANAPHORA_OPENERS = re.compile(
-    r"\b(?:it|this|that|these|those|they|he|she|we|you|its|their|our|"
-    r"the\s+\w+\s+(?:of|reason|way|result|effect|problem|system)|"
-    r"the\s+real\s+(?:reason|cause|story|problem))\b"
+    r"^(?:it|this|that|these|those|they|he|she|we|you|its|their|our|"
+    r"the\s+(?:real\s+)?(?:reason|result|effect|problem|system|way|truth|"
+    r"outcome|conclusion|answer|cause|story|figure))\b"
 )
 # "The <noun> ..." opening: the definite article marks the noun as
 # already introduced, which is a continuation when that noun was in the

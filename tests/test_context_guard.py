@@ -117,3 +117,72 @@ def test_rejects_when_context_outside_clip_changes_meaning():
     c = _make("అది తర్వాత మారిపోయింది", "అది తర్వాత మారిపోయింది మరియు దాని వల్ల చాలా మంది ప్రభావితమయ్యారు.", duration=8.0)
     ok, reason = validate(c)
     assert not ok and "context" in reason
+
+def test_rejects_incomplete_opening():
+    from engine.context_guard import validate
+    c = _make("modernization of the infrastructure",
+              "modernization of the infrastructure or the introduction of "
+              "a new protocol. Inland marine operations have historically "
+              "struggled with limited connectivity.",
+              context_score=0.9, duration=12.0)
+    c.completeness = 0.35
+    ok, reason = validate(c)
+    assert not ok and "completeness" in reason
+
+
+def test_rejects_dangling_subject_opening():
+    # "modernization of the infrastructure…" is the tail of a cut-off
+    # "could be a possible X or Y": no subject, no verb, no standalone value.
+    from engine.context_guard import validate
+    c = _make("modernization of the infrastructure",
+              "modernization of the infrastructure or the introduction of "
+              "a new protocol. Inland marine operations have historically "
+              "struggled with limited connectivity.",
+              context_score=0.9, duration=12.0)
+    c.completeness = 0.9
+    ok, reason = validate(c)
+    assert not ok and "subjectless" in reason
+
+
+def test_accepts_opening_with_a_verb():
+    from engine.context_guard import validate
+    c = _make("The origins of GPS began in the early 1970s.",
+              "The origins of GPS began in the early 1970s. The agency then "
+              "extended the operational contract across the continent.",
+              context_score=0.9, duration=12.0)
+    c.completeness = 0.9
+    ok, reason = validate(c)
+    assert ok, reason
+
+
+def test_rejects_story_splice():
+    from engine.context_guard import validate
+    c = _make("The satellite network", "sourdough baking", context_score=0.9)
+    c.coherence_score = 0.15
+    ok, reason = validate(c)
+    assert not ok and "coherence" in reason
+
+
+def test_accepts_first_person_opening():
+    # "we" is deictic, not anaphoric: the speaker grounds it, so the clip
+    # needs no prior sentence. Third-person "it changed everything" does.
+    from engine.context_guard import validate, _starts_with_anaphora
+
+    assert _starts_with_anaphora("It moved forty percent overnight.")
+    assert not _starts_with_anaphora("We shipped the feature on Tuesday morning.")
+    assert not _starts_with_anaphora("You know the moment the metric moved.")
+
+    c = _make("We shipped the feature on Tuesday morning.",
+              "We shipped the feature on Tuesday morning. The metric moved "
+              "forty percent overnight.", context_score=0.9, duration=9.0)
+    c.completeness = 0.9
+    ok, reason = validate(c)
+    assert ok, reason
+
+    c2 = _make("It moved forty percent overnight.",
+               "It moved forty percent overnight. The team celebrated "
+               "the launch.",
+               context_score=0.9, duration=9.0)
+    c2.completeness = 0.9
+    ok2, reason2 = validate(c2)
+    assert not ok2 and "anaphoric" in reason2

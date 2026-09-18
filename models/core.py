@@ -38,6 +38,7 @@ class Candidate:
     visual_potential: float = 0.0
     words: list[Word] | None = None
     coherence_score: float = 1.0
+    completeness: float = 1.0
     llm_metadata: dict | None = None
 
     @property

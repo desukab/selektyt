@@ -2,6 +2,7 @@ from __future__ import annotations
 import re
 from collections import Counter
 from models.core import Segment, Candidate
+from engine.context_guard import validate
 from engine.story_units import (
     boilerplate_fraction,
     coherence_score,
@@ -159,25 +160,38 @@ def _spans_from_unit(unit, segs: list[Segment], min_sec: float, max_sec: float) 
 
 
 def _completeness(unit, thought: Segment) -> float:
-    """1.0 = the clip closes its story; low = it cuts a flowing thought.
+    """1.0 = the clip opens and closes its story; low = it cuts a flowing thought.
 
-    Ending exactly on the unit boundary is a complete arc. Ending early is
-    only penalised when the next sentence continues the same topic — a
-    clip that stops at a natural sub-point keeps most of its value.
+    Both ends matter. A clip that ends mid-sentence cuts the payoff; one that
+    *starts* mid-sentence inherits a subject it never introduced, which is
+    the more visible defect — the viewer is dropped into a clause. Ending
+    early is only penalised when the next sentence continues the same topic;
+    starting late is penalised whenever the first sentence is a continuation
+    fragment of the one before it.
     """
-    if thought.end >= unit.end - 0.05:
-        return 1.0
-    rest = [s for s in unit.sentences if s.start >= thought.end - 0.05]
-    if not rest:
-        return 1.0
-    pieces = split_sentences(thought.text)
-    last = pieces[-1] if pieces else thought.text
-    if _continues_prior(rest[0].text, last):
-        return 0.35
-    continuity = _containment(_content_tokens(last), _content_tokens(rest[0].text))
-    if continuity >= 0.30:
-        return 0.35
-    return 0.75
+    score = 1.0
+    if thought.end < unit.end - 0.05:
+        rest = [s for s in unit.sentences if s.start >= thought.end - 0.05]
+        if rest:
+            pieces = split_sentences(thought.text)
+            last = pieces[-1] if pieces else thought.text
+            if _continues_prior(rest[0].text, last):
+                score = min(score, 0.35)
+            else:
+                continuity = _containment(_content_tokens(last), _content_tokens(rest[0].text))
+                if continuity >= 0.30:
+                    score = min(score, 0.35)
+                else:
+                    score = min(score, 0.75)
+    # A clip that does not open its unit must still open a complete thought:
+    # its first sentence must not be a continuation of the preceding one.
+    if thought.start > unit.start + 0.05:
+        before = [s for s in unit.sentences if s.end <= thought.start + 0.05]
+        pieces = split_sentences(thought.text)
+        first = pieces[0] if pieces else thought.text
+        if before and _continues_prior(first, before[-1].text):
+            score = min(score, 0.35)
+    return score
 
 
 def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float = 55.0) -> list[Segment]:
@@ -225,11 +239,18 @@ def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float 
                 break
             if duration >= min_sec and (_sentence_end(s.text) or duration >= max_sec - 2):
                 text = " ".join(x.text for x in cur).strip()
+                # A clip crossing a unit boundary is judged on both ends by
+                # the units it actually spans: the opening unit decides
+                # whether it starts inside a story, the closing one whether
+                # it finishes one.
                 thoughts.append(Segment(
                     cur[0].start, cur[-1].end, text,
                     _words_in(all_segs, cur[0].start, cur[-1].end),
                     coherence=coherence_score(text),
-                    completeness=_completeness(u, Segment(cur[0].start, cur[-1].end, text, [])),
+                    completeness=min(
+                        _completeness(sentences[i][1], Segment(cur[0].start, cur[-1].end, text, [])),
+                        _completeness(u, Segment(cur[0].start, cur[-1].end, text, [])),
+                    ),
                 ))
     return thoughts[:4000]
 
@@ -258,11 +279,16 @@ def _score(s: Segment) -> tuple[float, float, float, float, str, str, float]:
     # Editorial coherence: one story stays on topic, a splice of two
     # collapses at the seam. This scales the whole score so a clip that
     # wanders cannot rank on density alone.
-    coherence = getattr(s, "coherence", 1.0) or 1.0
+    # `or 1.0` must not absorb a measured zero: a splice scores 0.0
+    # deliberately, and rewriting it as perfect coherence defeats the
+    # whole signal. Missing means unknown, which is 1.0 by default.
+    coherence = getattr(s, "coherence", None)
+    coherence = 1.0 if coherence is None else float(coherence)
     coherence_factor = 0.35 + 0.65 * coherence
     # A clip that cuts a flowing thought short is unfinished, however well
     # its text scores; closing the story is worth keeping.
-    completeness = getattr(s, "completeness", 1.0) or 1.0
+    completeness = getattr(s, "completeness", None)
+    completeness = 1.0 if completeness is None else float(completeness)
     completeness_factor = 0.45 + 0.55 * completeness
     # Boilerplate (byline, issue, dateline) is the article's colophon, not
     # its content; it costs editorial value but cannot simply be deleted,
@@ -285,7 +311,8 @@ def _score(s: Segment) -> tuple[float, float, float, float, str, str, float]:
     # so duration floors the substance estimate that context uses. Editorial
     # density still uses the word-count term above, where sparseness matters.
     substance_ctx = min(1.0, max(substance, duration / 30.0))
-    completeness_ctx = getattr(s, "completeness", 1.0) or 1.0
+    completeness_ctx = getattr(s, "completeness", None)
+    completeness_ctx = 1.0 if completeness_ctx is None else float(completeness_ctx)
     context = min(1.0, .40 + .30*substance_ctx + .20*progression + .10*payoff - .12*(1 - standalone) + .10*completeness_ctx)
     visual = min(1.0, .35 + .20*numbers + .20*contrast + .15*questions + .10*(n >= 35) - .15*visual_dep)
     if contrast >= .5 or progression > .70: story_type = "conflict" if contrast >= 1 else "revelation"
@@ -304,7 +331,7 @@ def _score(s: Segment) -> tuple[float, float, float, float, str, str, float]:
         audio_pace = max(0.0, 1.0 - 0.8 * silence_ratio - 0.4 * long_gap_ratio)
         reason += (f"; audio_pace={audio_pace:.2f}; "
                    f"silence={audio_q['silence_ratio']:.3f}")
-    return editorial, virality, context, visual, story_type, reason, coherence
+    return editorial, virality, context, visual, story_type, reason, coherence, completeness
 
 
 def _clean_hook_payoff(text: str) -> tuple[str, str]:
@@ -328,7 +355,7 @@ def _clean_hook_payoff(text: str) -> tuple[str, str]:
 
 
 def score_candidate(s: Segment) -> Candidate:
-    editorial, virality, context, visual, story_type, detail, coherence = _score(s)
+    editorial, virality, context, visual, story_type, detail, coherence, completeness = _score(s)
     hook, payoff = _clean_hook_payoff(s.text.strip())
     words = s.words or []
     dead_air = _dead_air_fraction(words, s.duration) if words else None
@@ -338,7 +365,7 @@ def score_candidate(s: Segment) -> Candidate:
         s.start, s.end, s.text.strip(), story_type, hook, payoff,
         editorial, virality, context, .90,
         f"Structural editorial score: {detail}.",
-        visual, s.words, coherence,
+        visual, s.words, coherence, getattr(s, "completeness", 1.0),
     )
 
 
@@ -354,14 +381,26 @@ def _hook_similarity(a: str, b: str) -> float:
 
 
 def rank(thoughts: list[Segment], limit: int = 8) -> list[Candidate]:
-    candidates = [score_candidate(s) for s in thoughts if 12 <= s.duration <= 55 and len(re.findall(r"\w+", s.text, re.UNICODE)) >= 20]
+    # 8s is a complete short-form beat; below that a clip cannot establish a
+    # setup and payoff, so the floor sits there rather than at 12s.
+    candidates = [score_candidate(s) for s in thoughts if 8 <= s.duration <= 55 and len(re.findall(r"\w+", s.text, re.UNICODE)) >= 20]
     candidates.sort(key=lambda c: (c.total_score, c.editorial_score, c.context_score, c.end-c.start), reverse=True)
     chosen: list[Candidate] = []; kinds: Counter[str] = Counter(); topic_tokens: Counter[str] = Counter()
     for c in candidates:
+        # A candidate that cannot stand alone must not claim a window: it
+        # would block the valid sub-span next to it and then be discarded
+        # by the caller's filter, leaving the slot empty by construction
+        # rather than by editorial judgement.
+        ok, _why = validate(c)
+        if not ok:
+            continue
         if any(not (c.end <= x.start-4 or c.start >= x.end+4) for x in chosen): continue
         if any(_similarity(c.text, x.text) >= .78 for x in chosen): continue
         if any(_hook_similarity(c.text, x.text) >= .65 for x in chosen): continue
-        c_tokens = Counter(re.findall(r"\w+", c.text.lower(), re.UNICODE))
+        # Content tokens only: raw word counts are dominated by "the" and
+        # "of", which starves a single-topic source — every candidate of a
+        # documentary looks like a duplicate of every other one.
+        c_tokens = Counter(_content_tokens(c.text))
         topic_overlap = sum((topic_tokens & c_tokens).values())
         if topic_overlap > 12 and len(chosen) < limit - 1: continue
         if kinds[c.story_type] >= 2 and len(chosen) < limit-1: continue

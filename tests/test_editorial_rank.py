@@ -112,3 +112,35 @@ def test_make_thoughts_skips_empty_and_zero_duration_segments():
     thoughts = make_thoughts(segs, min_sec=5)
     assert len(thoughts) == 1
     assert thoughts[0].duration >= 5
+
+
+def test_measured_zero_coherence_is_not_rewritten_as_perfect():
+    """`or 1.0` absorbed a measured 0.0 coherence, silently defeating the
+    whole signal: a splice scored worse than nothing."""
+    from engine.editorial import score_candidate
+    splice = Segment(0, 20, "The metric moved forty percent overnight. Inland "
+                            "marine operations have struggled for decades.", [])
+    splice.coherence = 0.0
+    c = score_candidate(splice)
+    assert c.coherence_score == 0.0, "measured 0.0 must not become 1.0"
+
+
+def test_guard_rejected_candidate_does_not_claim_a_window():
+    """A candidate that cannot stand alone must not occupy the overlap budget
+    and block the valid sub-span beside it — the caller would discard it and
+    the slot would stay empty by construction, not by editorial judgement."""
+    from engine.editorial import rank
+    # Opens mid-sentence: rejected by the guard, but scores well on density.
+    dangling = Segment(0, 22, "modernization of the infrastructure or the "
+                             "introduction of a new protocol in the field, "
+                             "according to the engineers who built it.", [])
+    dangling.coherence = 1.0
+    dangling.completeness = 1.0
+    valid = Segment(2, 24, "Inland marine operations have historically struggled "
+                          "with limited connectivity across the entire region, "
+                          "and the crews adapted their routing to match.", [])
+    valid.coherence = 1.0
+    valid.completeness = 1.0
+    ranked = rank([dangling, valid], limit=2)
+    assert any("Inland marine" in c.text for c in ranked), \
+        "a rejected candidate must not block the valid clip beside it"

@@ -240,3 +240,29 @@ def test_no_ghost_cue_for_word_on_a_unit_boundary():
     assert starts, "the fixture produced no cues"
     assert len(starts) == len(set(starts)), "two cues share a start time"
     assert sorted(cues) == sorted(set(cues)), "a cue's text is duplicated"
+
+
+def test_coherence_single_boundary_is_neutral_not_zero():
+    # One boundary cannot show a pattern: a real splice and a coherent but
+    # word-diverse pair are lexically identical at two sentences. Zero
+    # overlap must not be scored as zero coherence.
+    from engine.story_units import coherence_score
+    diverse = ("World Atnet's coverage of the satellite internet race examines "
+               "one example in detail. The origins of GPS began in the early 1970s.")
+    splice = ("The origins of GPS began in the early 1970s. Inland marine "
+              "operations have historically struggled with limited connectivity.")
+    assert coherence_score(diverse) == 0.5
+    assert coherence_score(splice) == 0.5
+    assert coherence_score("The metric moved overnight. The metric surprised everyone.") == 1.0
+
+
+def test_coherence_detects_seam_with_two_boundaries():
+    from engine.story_units import coherence_score
+    # Two boundaries are the minimum from which a sharp seam is visible.
+    one_story = ("The metric moved forty percent overnight. The metric "
+                 "surprised the whole team. The team celebrated the launch.")
+    spliced = ("The metric moved forty percent overnight. The team celebrated "
+               "the launch. Inland marine operations have struggled with "
+               "limited connectivity for decades.")
+    assert coherence_score(one_story) > coherence_score(spliced)
+    assert coherence_score(spliced) < 0.2

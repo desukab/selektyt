@@ -16,6 +16,7 @@ runs on CPU.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -97,20 +98,47 @@ def _is_whisper_repeat(a: str, b: str) -> bool:
     return False
 
 
+def _is_section_marker(text: str) -> bool:
+    """A bare "Part 2." style marker — content-free by itself."""
+    t = text.strip()
+    if len(t.split()) > 4:
+        return False
+    return bool(_SECTION_MARK.search(t) or _SECTION_MARK_INDIC.search(t))
+
+
+_SECTION_MARK = re.compile(
+    r"\b(?:part|chapter|section|episode)\s+(?:\d+|[ivx]+|one|two|three|four|five"
+    r"|six|seven|eight|nine|ten)\b", re.IGNORECASE,
+)
+_SECTION_MARK_INDIC = re.compile(r"భాగం|అధ్యాయం|अध्याय|खंड|பகுதி|ಅಧ್ಯಾಯ|ഭാഗം|অধ্যায়")
+
+
 def _merge_segments(all_segments: list[Segment]) -> list[Segment]:
-    """Drop whisper's back-to-back repetition, keep the longer wording."""
+    """Drop whisper's repetition, keeping the longer wording.
+
+    The decoder re-emits a segment verbatim across a chunk boundary. The two
+    copies are usually adjacent, but a bare section marker can sit between
+    them ("…Administration. Part 1. …Administration."), so the comparison
+    looks past any content-free markers when finding the previous real
+    segment.
+    """
     merged: list[Segment] = []
     for segment in all_segments:
         if merged:
-            prev = merged[-1]
+            # Walk back over bare markers to the last segment with content.
+            prev_idx = len(merged) - 1
+            while prev_idx > 0 and _is_section_marker(merged[prev_idx].text):
+                prev_idx -= 1
+            prev = merged[prev_idx]
             adjacent = segment.start <= prev.end + 0.05
-            if adjacent and _is_whisper_repeat(prev.text, segment.text):
+            near = segment.start <= prev.end + 2.5
+            if (adjacent or near) and _is_whisper_repeat(prev.text, segment.text):
                 # Keep whichever phrasing carries more words; extend the span
                 # so no audio coverage is lost.
                 if len(_norm_tokens(segment.text)) > len(_norm_tokens(prev.text)):
-                    merged[-1] = Segment(prev.start, segment.end, segment.text, prev.words or segment.words)
+                    merged[prev_idx] = Segment(prev.start, segment.end, segment.text, prev.words or segment.words)
                 else:
-                    merged[-1] = Segment(prev.start, segment.end, prev.text, prev.words or segment.words)
+                    merged[prev_idx] = Segment(prev.start, segment.end, prev.text, prev.words or segment.words)
                 continue
         merged.append(segment)
     return merged
@@ -178,6 +206,24 @@ def _decode_chunk(recognizer, samples, sample_rate: int, offset: float, language
     return segments, language
 
 
+def _model_files(model_name: str, models_dir: Path) -> tuple[Path, Path, Path] | None:
+    """Locate a model's three files, in a subdirectory or loose in the dir.
+
+    Tarballs extracted without their wrapper leave the encoder, decoder and
+    tokens loose in the models directory; both layouts are probed so
+    "small" is used when it is actually present rather than silently
+    degrading to base.
+    """
+    size = model_name if model_name in _SIZE_TO_MODEL else "base"
+    for d in (models_dir / _SIZE_TO_MODEL[size], models_dir):
+        enc = d / f"{size}-encoder.int8.onnx"
+        dec = d / f"{size}-decoder.int8.onnx"
+        toks = d / f"{size}-tokens.txt"
+        if enc.is_file() and dec.is_file() and toks.is_file():
+            return enc, dec, toks
+    return None
+
+
 def _recognizer_for(model_name: str, language: str, models_dir: Path | None = None):
     import sherpa_onnx
 
@@ -185,22 +231,20 @@ def _recognizer_for(model_name: str, language: str, models_dir: Path | None = No
     # "small" maps to a sherpa-onnx-whisper-small dir if present; the base
     # model is the one that ships with this toolchain, so a missing small
     # model degrades to base rather than failing the run.
-    size = model_name if model_name in _SIZE_TO_MODEL else "base"
-    for candidate in (size, "base"):
-        d = models_dir / _SIZE_TO_MODEL[candidate]
-        enc = d / f"{candidate}-encoder.int8.onnx"
-        dec = d / f"{candidate}-decoder.int8.onnx"
-        toks = d / f"{candidate}-tokens.txt"
-        if enc.is_file() and dec.is_file() and toks.is_file():
-            return sherpa_onnx.OfflineRecognizer.from_whisper(
-                encoder=str(enc), decoder=str(dec), tokens=str(toks),
-                language=language, num_threads=4,
-                decoding_method="greedy_search",
-                enable_segment_timestamps=True,
-            ), candidate
+    for candidate in (model_name, "base"):
+        files = _model_files(candidate, models_dir)
+        if files is None:
+            continue
+        enc, dec, toks = files
+        return sherpa_onnx.OfflineRecognizer.from_whisper(
+            encoder=str(enc), decoder=str(dec), tokens=str(toks),
+            language=language, num_threads=4,
+            decoding_method="greedy_search",
+            enable_segment_timestamps=True,
+        ), candidate
     raise RuntimeError(
         f"no sherpa-onnx whisper model found under {models_dir}; expected "
-        f"{size} or base with <size>-encoder.int8.onnx, "
+        f"{model_name} or base with <size>-encoder.int8.onnx, "
         f"<size>-decoder.int8.onnx, <size>-tokens.txt"
     )
 
