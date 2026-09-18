@@ -60,12 +60,21 @@ Word timestamps from this backend are distributed by character proportion within
 8. Tracks a face when available; otherwise estimates the visually active region and moves the crop over time. This avoids the common "center crop chopped the speaker" failure.
 9. Burns minimal subtitles using a Unicode-capable font profile. Set `SELEKYT_FONT` if the machine uses a different installed font.
 10. Writes selections, transcript and report JSON alongside the MP4s.
+11. Writes a CMX 3600 EDL and an FCPXML 1.11 timeline per shipped cut, built from
+    the same interval list the render concatenated, so an NLE relinks the cut
+    that was actually shipped. Both are validated at write time.
 
 With `--audio-analysis`, the same run additionally produces a VAD-driven jump-cut
 edit: speech-region cutlist, pause classification, an audio-truth layer that
 fuses transcript words against detected speech, and an FCPXML 1.11 timeline for
 an NLE. `--export-fcpxml` writes that timeline; the CLI and the Rust core agree
 on it byte-for-byte.
+
+The per-cut EDL carries no frame-rate field (CMX 3600 has none), so it is
+validated on the rate the source was actually probed at rather than the 30 fps
+its `:` separators imply. Relinking at the wrong rate shows a spurious few-frame
+retime on an otherwise correct list; the shipped files are clean at their own
+rate.
 
 ## Architecture
 
@@ -165,6 +174,9 @@ out/project/
 │   ├── 01.ass                    (word-timed, burned into the render)
 │   ├── 01.srt                    (same cues, no styling)
 │   └── 01.json
+├── timeline/                     (one EDL + FCPXML per shipped cut)
+│   ├── 01.edl
+│   └── 01.fcpxml
 └── audio/                        (with --audio-analysis)
     ├── cutlist.json
     ├── cutlist.fcpxml            (with --export-fcpxml)

@@ -17,8 +17,11 @@ from engine.context_guard import validate
 from engine.edit_plan import retention_intervals, pacing_report, aggregate_pacing_report
 from engine.qa import write_report
 from engine.render import render_clip
+from engine.timeline_build import timeline_for_candidate
+from engine.nle_export import export as nle_export, validate_edl, validate_fcpxml
 from engine.llm_editorial import attach_metadata
 from engine.pipeline_audio import run_pipeline_audio
+from providers.ffmpeg import probe_fps
 from providers.youtube import download
 from providers.transcribe import transcribe as transcribe_auto
 from models.core import Segment, Word
@@ -362,6 +365,9 @@ def run(
     edit_report = []
     content_packs = []
     sel_digest = _selection_digest(selected)
+    # Probed once and reused: the whole run cuts one source, and the frame
+    # rate is what makes an EDL's timecodes land on whole frames.
+    source_fps = probe_fps(media)
     # Per-clip render cache. The previous single render_fingerprint was only
     # written after the whole loop completed, so a run killed during clip 3 of
     # 6 re-rendered all six even though 1 and 2 were already on disk.
@@ -410,6 +416,26 @@ def run(
             # makes an interrupted run resume from the last finished clip.
             state["renders"] = renders
             _save_state(state_path, state)
+        # The editable interchange for this clip. The timeline is built from
+        # the same retention_intervals the render just concatenated, so its
+        # duration is the rendered file's duration — an NLE relinking these
+        # clips gets the cut that was shipped, not an approximation of it.
+        tl = timeline_for_candidate(media, c, fps=source_fps)
+        exported = nle_export(tl, project / "timeline", stem=f"{idx:02d}")
+        # CMX 3600 declares no frame rate, so the list is validated on the grid
+        # it was written on. Without the real rate a 24 fps cut is read as 30
+        # and correct spans report a spurious few-frame retime.
+        edl_problems = validate_edl(
+            exported["edl"].read_text(encoding="ascii"), fps=source_fps
+        )
+        fcpxml_problems = validate_fcpxml(
+            exported["fcpxml"].read_text(encoding="utf-8"), tl
+        )
+        if edl_problems or fcpxml_problems:
+            raise RuntimeError(
+                f"clip {idx:02d} exported an interchange file that failed its own "
+                f"validation: {edl_problems + fcpxml_problems}"
+            )
         outputs += [fb, sh]
         edited = sum(b - a for a, b in intervals)
         edit_report.append(
@@ -422,6 +448,10 @@ def run(
                 "edited_duration": round(edited, 3),
                 "removed_seconds": round((c.end - c.start) - edited, 3),
                 "story_type": c.story_type,
+                # No file paths here: edit_plan.json is a deterministic artifact
+                # (two runs over the same input agree byte for byte), and a
+                # run-specific output path is exactly what breaks that. Paths
+                # live in report.json, which is not deterministic by design.
             }
         )
     (project / "edit_plan.json").write_text(json.dumps(edit_report, indent=2))
@@ -443,6 +473,7 @@ def run(
         "rejection_reasons": dict(sorted(rejection_reasons.items(), key=lambda kv: -kv[1])),
         "outputs": {"facebook": str(project / "facebook"), "shorts": str(project / "shorts")},
         "captions": str(project / "captions"),
+        "timeline": str(project / "timeline"),
         "content_pack": str(project / "content_pack.json"),
         "editorial_report": str(project / "editorial_report.json"),
         "pacing_report": str(project / "pacing_report.json"),

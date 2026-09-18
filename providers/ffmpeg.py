@@ -5,6 +5,7 @@ reproducible error message showing source/target paths and the command.
 """
 from __future__ import annotations
 
+import math
 import shutil
 import subprocess
 from pathlib import Path
@@ -98,3 +99,31 @@ def probe_duration(media: Path) -> float:
             source=str(media),
         )
     return float(proc.stdout.strip())
+
+
+def probe_fps(media: Path) -> float:
+    """Return the media's frame rate as a plain float.
+
+    ``r_frame_rate`` is a rational ("30000/1001") and is the rate frames are
+    actually delivered at, which is what an EDL or FCPXML sequence is stamped
+    with. Unlike a duration probe, the rate is metadata for the interchange
+    files rather than an input to the render, so any failure to obtain it
+    falls back to 30.0 instead of aborting a run that would otherwise have
+    succeeded. The caller records what it actually used.
+    """
+    try:
+        require_ffprobe()
+        proc = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=r_frame_rate",
+             "-of", "default=noprint_wrappers=1:nokey=1", str(media)],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+        raw = proc.stdout.strip() if proc.returncode == 0 else ""
+        num, _, den = raw.partition("/")
+        fps = float(num) / (float(den) if den else 1.0)
+        if fps > 0.0 and math.isfinite(fps):
+            return fps
+    except (FfmpegError, ValueError, ZeroDivisionError):
+        pass
+    return 30.0
