@@ -1,0 +1,13 @@
+{
+  "name": "selekyt-desktop",
+  "version": "0.3.0",
+  "private": true,
+  "description": "SelekyT desktop packaging (Tauri shell). The webview frontend itself is the zero-dependency shell in ../../web — this package only exists so `npx tauri` resolves the Tauri CLI against a pinned version.",
+  "scripts": {
+    "tauri": "tauri",
+    "icons": "python src-tauri/icons/make_icons.py"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0"
+  }
+}

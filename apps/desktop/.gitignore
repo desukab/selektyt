@@ -1,0 +1,9 @@
+# Build-time staging, produced by scripts/*.py and cargo. Nothing here is
+# committed: the bundles are assembled reproducibly in CI.
+resources/python/
+resources/bin/
+resources/selekyt-mech*
+binaries/
+src-tauri/gen/
+node_modules/
+*.tsbuildinfo

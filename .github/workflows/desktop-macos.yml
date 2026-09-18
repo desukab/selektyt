@@ -1,0 +1,143 @@
+name: desktop-macos
+
+# macOS packaging for SelekyT. Produces a .app bundle and a .dmg from
+# apps/desktop/tauri.conf.json, for Apple Silicon (the macos-latest runner);
+# an Intel build is the same job with --target x86_64-apple-darwin.
+#
+# ffmpeg is built from source here (LGPL) because no trustworthy static LGPL
+# macOS binary distribution exists — see apps/desktop/scripts/build_ffmpeg_macos.sh.
+#
+# Deliberately separate from ci.yml (which it never touches).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/desktop/**'
+      - 'web/**'
+      - 'rust/**'
+      - 'selekyt/**'
+      - 'engine/**'
+      - 'providers/**'
+      - 'models/**'
+      - 'pyproject.toml'
+      - '.github/workflows/desktop-macos.yml'
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+      - 'web/**'
+      - 'rust/**'
+      - 'selekyt/**'
+      - 'engine/**'
+      - 'providers/**'
+      - 'models/**'
+      - 'pyproject.toml'
+      - '.github/workflows/desktop-macos.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify required native tools are present
+        run: |
+          missing=""
+          for t in cargo rustc node npm python3 git curl shasum; do
+            command -v "$t" >/dev/null 2>&1 || missing="$missing $t"
+          done
+          if [ -n "$missing" ]; then
+            echo "FATAL: missing required tools:$missing" >&2
+            exit 1
+          fi
+          echo "tools ok: $(cargo --version), $(node --version), $(python3 --version)"
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Record the target triple
+        id: triple
+        run: |
+          arch="$(uname -m)"
+          if [ "$arch" = "arm64" ]; then triple=aarch64-apple-darwin; else triple=x86_64-apple-darwin; fi
+          echo "triple=$triple" >> "$GITHUB_OUTPUT"
+          echo "building for $triple"
+
+      - name: Build the Rust mechanical sidecar (selekyt-mech)
+        working-directory: rust
+        run: |
+          cargo build --release --locked
+          bin="rust/target/release/selekyt-mech"
+          if [ ! -x "$bin" ]; then
+            echo "FATAL: cargo did not produce $bin" >&2; exit 1
+          fi
+          mkdir -p "apps/desktop/resources"
+          cp "$bin" "apps/desktop/resources/selekyt-mech-${{ steps.triple.outputs.triple }}"
+          chmod +x "apps/desktop/resources/selekyt-mech-${{ steps.triple.outputs.triple }}"
+          echo "staged selekyt-mech-${{ steps.triple.outputs.triple }}"
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Assemble the bundled Python runtime
+        run: python3 scripts/build_python.py --triple ${{ steps.triple.outputs.triple }}
+
+      - name: Build LGPL ffmpeg/ffprobe from the pinned source tarball
+        run: bash scripts/build_ffmpeg_macos.sh
+
+      - name: Regenerate the app icons
+        run: python3 src-tauri/icons/make_icons.py
+
+      - name: Install the Tauri CLI
+        run: npm ci
+
+      - name: Build (app + dmg)
+        run: npx tauri build --bundles app,dmg
+
+      - name: Locate the bundles
+        id: artifacts
+        run: |
+          root="src-tauri/target/release/bundle"
+          found=$(find "$root" \( -name '*.dmg' -o -name '*.app' \) 2>/dev/null | sort)
+          if [ -z "$found" ]; then
+            echo "FATAL: no .app or .dmg was produced under $root" >&2; exit 1
+          fi
+          echo "$found" | sed 's/^/artifact: /'
+          echo "paths=$found" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke-test the packaged app
+        env:
+          SELEKYT_DESKTOP_SMOKE: "1"
+          SELEKYT_DESKTOP_RESOURCES: ${{ github.workspace }}/apps/desktop/resources
+          SELEKYT_MECH: ${{ github.workspace }}/apps/desktop/resources/selekyt-mech-${{ steps.triple.outputs.triple }}
+          SELEKYT_PYTHON: ${{ github.workspace }}/apps/desktop/resources/python/selekyt-python-${{ steps.triple.outputs.triple }}
+        run: |
+          python3 -m pip install pyyaml
+          python3 -m pytest ../../tests/test_desktop_smoke.py ../../tests/test_packaging_config.py -q -rs
+
+      - name: Upload the app and dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: selekyt-macos-bundle
+          path: |
+            apps/desktop/src-tauri/target/release/bundle/dmg/*
+            apps/desktop/src-tauri/target/release/bundle/macos/*.app
+          if-no-files-found: error
+
+      - name: Upload the staged resources manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: selekyt-macos-resources
+          path: |
+            apps/desktop/resources/python/python.sources.txt
+            apps/desktop/resources/bin/ffmpeg.sources.txt
+          if-no-files-found: error

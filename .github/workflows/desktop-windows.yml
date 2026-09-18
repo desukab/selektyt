@@ -1,0 +1,144 @@
+name: desktop-windows
+
+# Windows packaging for SelekyT. Produces an NSIS installer and a WiX MSI from
+# apps/desktop/tauri.conf.json. Every native tool the build needs is checked
+# explicitly and fails loudly if absent — a silent skip here would ship a
+# broken installer.
+#
+# Deliberately separate from ci.yml (which it never touches): the desktop jobs
+# only run when the desktop packaging surface changes.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/desktop/**'
+      - 'web/**'
+      - 'rust/**'
+      - 'selekyt/**'
+      - 'engine/**'
+      - 'providers/**'
+      - 'models/**'
+      - 'pyproject.toml'
+      - '.github/workflows/desktop-windows.yml'
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+      - 'web/**'
+      - 'rust/**'
+      - 'selekyt/**'
+      - 'engine/**'
+      - 'providers/**'
+      - 'models/**'
+      - 'pyproject.toml'
+      - '.github/workflows/desktop-windows.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify required native tools are present
+        # Nothing may proceed if a required toolchain component is missing.
+        shell: pwsh
+        run: |
+          $missing = @()
+          foreach ($t in @('cargo', 'rustc', 'node', 'npm', 'python', 'git')) {
+            if (-not (Get-Command $t -ErrorAction SilentlyContinue)) { $missing += $t }
+          }
+          if ($missing.Count -gt 0) {
+            Write-Error "FATAL: missing required tools: $($missing -join ', ')"
+            exit 1
+          }
+          Write-Host "tools ok: cargo $(cargo --version), node $(node --version), python $(python --version)"
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Build the Rust mechanical sidecar (selekyt-mech)
+        working-directory: rust
+        shell: pwsh
+        run: |
+          cargo build --release --locked
+          $bin = "rust/target/release/selekyt-mech.exe"
+          if (-not (Test-Path $bin)) {
+            Write-Error "FATAL: cargo did not produce $bin"; exit 1
+          }
+          # Stage it as a Tauri sidecar with the required target-triple name.
+          New-Item -ItemType Directory -Force -Path "apps/desktop/resources" | Out-Null
+          Copy-Item $bin "apps/desktop/resources/selekyt-mech-x86_64-pc-windows-msvc.exe" -Force
+          Write-Host "staged selekyt-mech-x86_64-pc-windows-msvc.exe"
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Assemble the bundled Python runtime
+        # Downloads the pinned python-build-standalone interpreter, sha256-verifies
+        # it and pip-installs this repository into it. Fails on any mismatch.
+        run: python scripts/build_python.py --triple x86_64-pc-windows-msvc
+
+      - name: Fetch the pinned LGPL ffmpeg/ffprobe
+        run: python scripts/fetch_ffmpeg.py --target win64
+
+      - name: Regenerate the app icons
+        run: python src-tauri/icons/make_icons.py
+
+      - name: Install the Tauri CLI
+        run: npm ci
+
+      - name: Build (NSIS + WiX)
+        # --bundles nsis,msi produces both Windows installers from one build.
+        run: npx tauri build --bundles nsis,msi
+
+      - name: Locate the installers
+        id: artifacts
+        shell: pwsh
+        run: |
+          $root = "src-tauri/target/release/bundle"
+          $found = @()
+          Get-ChildItem -Path $root -Recurse -Include *.exe,*.msi -ErrorAction SilentlyContinue |
+            ForEach-Object { $found += $_.FullName }
+          if ($found.Count -eq 0) {
+            Write-Error "FATAL: no installer was produced under $root"; exit 1
+          }
+          $found | ForEach-Object { Write-Host "artifact: $_" }
+          "paths=$($found -join '|')" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Smoke-test the packaged app
+        # Runs tests/test_desktop_smoke.py against the staged resources.
+        env:
+          SELEKYT_DESKTOP_SMOKE: "1"
+          SELEKYT_DESKTOP_RESOURCES: ${{ github.workspace }}/apps/desktop/resources
+          SELEKYT_MECH: ${{ github.workspace }}/apps/desktop/resources/selekyt-mech-x86_64-pc-windows-msvc.exe
+          SELEKYT_PYTHON: ${{ github.workspace }}/apps/desktop/resources/python/selekyt-python-x86_64-pc-windows-msvc.exe
+        run: |
+          python -m pip install pyyaml
+          python -m pytest ../../tests/test_desktop_smoke.py ../../tests/test_packaging_config.py -q -rs
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: selekyt-windows-installers
+          path: |
+            apps/desktop/src-tauri/target/release/bundle/nsis/*
+            apps/desktop/src-tauri/target/release/bundle/msi/*
+          if-no-files-found: error
+
+      - name: Upload the staged resources manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: selekyt-windows-resources
+          path: |
+            apps/desktop/resources/python/python.sources.txt
+            apps/desktop/resources/bin/ffmpeg.sources.txt
+          if-no-files-found: error
