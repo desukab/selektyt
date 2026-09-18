@@ -302,12 +302,82 @@ def op_audio_analysis(params: dict) -> dict:
     return summary
 
 
+def _pipeline_source(raw: str) -> str:
+    """Accept a local file or an http(s) URL; refuse everything else.
+
+    A ``file://`` URL or a bare drive letter is not a source the pipeline
+    should fetch, and neither is an operator the shell would have to expand.
+    """
+    text = raw.strip()
+    if not text:
+        raise ValueError("'source' must be a local path or an http(s) URL")
+    if "://" in text:
+        scheme = text.split("://", 1)[0].lower()
+        if scheme not in ("http", "https"):
+            raise ValueError(f"unsupported source scheme '{scheme}'")
+        return text
+    # A local path, not a URL. Must exist — downloading is the caller's job
+    # when they pass a URL, but a nonexistent local file is a user error we
+    # can report before any model is loaded.
+    _regular_file_or_error(text, "source")
+    return text
+
+
+def op_run_pipeline(params: dict) -> dict:
+    """The product's main path: transcribe, select, cut, render.
+
+    ``op_audio_analysis`` is a diagnostic on one file; this runs the whole
+    editorial pipeline and writes a project tree of renders, captions and
+    reports. Returns ``report.json`` plus the artifact directories so a UI can
+    link to them without rescanning the disk.
+    """
+    from selekyt.pipeline import run as run_pipeline
+
+    source = _pipeline_source(str(params.get("source") or ""))
+    out_root = Path(str(params.get("out") or "out"))
+    project = run_pipeline(
+        source,
+        out_root,
+        model=str(params.get("model", "small")),
+        language=params.get("language") or None,
+        limit=int(params.get("limit", 6)),
+        cookies=params.get("cookies") or None,
+        chunk_minutes=int(params.get("chunk_minutes", 5)),
+        beam_size=int(params.get("beam_size", 1)),
+        cpu_threads=params.get("cpu_threads"),
+        ollama_url=params.get("ollama_url") or None,
+        audio_analysis=bool(params.get("audio_analysis", False)),
+        vad_backend=params.get("vad_backend") or None,
+        silence_threshold=float(params.get("silence_threshold", 0.5)),
+        silence_padding=float(params.get("silence_padding", 0.0)),
+        min_speech_ms=int(params.get("min_speech_ms", 150)),
+        min_silence_ms=int(params.get("min_silence_ms", 100)),
+        keep_pauses=bool(params.get("keep_pauses", True)),
+        remove_filler=bool(params.get("remove_filler", True)),
+        export_fcpxml=bool(params.get("export_fcpxml", False)),
+    )
+    report = json.loads((project / "report.json").read_text(encoding="utf-8"))
+    # The report names directories; a UI needs the files inside them to link to.
+    artifacts: list[str] = []
+    for sub in ("shorts", "facebook", "captions"):
+        d = project / sub
+        if d.is_dir():
+            artifacts += sorted(str(p) for p in d.iterdir() if p.is_file())
+    artifacts += [
+        str(project / n)
+        for n in ("report.json", "editorial_report.json", "pacing_report.json", "qa.json")
+        if (project / n).is_file()
+    ]
+    return {"project": str(project), "artifacts": artifacts, "report": report}
+
+
 _HANDLERS = {
     "ping": op_ping,
     "segment": op_segment,
     "cutlist_from_segments": op_cutlist_from_segments,
     "vad_analyze": op_vad_analyze,
     "audio_analysis": op_audio_analysis,
+    "run_pipeline": op_run_pipeline,
     "detect_rate": op_detect_rate,
     "parse_smpte": op_parse_smpte,
     "seconds_to_rational": op_seconds_to_rational,

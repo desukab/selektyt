@@ -6,8 +6,10 @@ request `{"op", "params"}`, response `{"ok", "op", "data"|"error"}`.
 import io
 import wave
 import json
+from pathlib import Path
 
 import numpy as np
+import pytest
 
 from engine import vad as vad_mod
 from engine.cut_algebra import cutlist_from_intervals
@@ -148,6 +150,84 @@ def test_audio_analysis_delegates(tmp_path, monkeypatch):
     assert data == summary
     assert called["media"] == str(media)
     assert called["project"] == str(tmp_path / "project")
+
+
+# ── the product's main path: video → social cuts ──
+
+def test_pipeline_source_rejects_non_http_schemes():
+    """`file://` and friends are not sources to fetch; the shell would have to
+    expand them and a path through them is not something the pipeline should
+    download."""
+    from selekyt.server import _pipeline_source
+
+    for bad in ("file:///etc/passwd", "ftp://x/y", "gopher://x", "s3://bucket/key"):
+        with pytest.raises(ValueError, match="unsupported source scheme"):
+            _pipeline_source(bad)
+
+
+def test_pipeline_source_rejects_a_missing_local_file():
+    from selekyt.server import _pipeline_source
+
+    with pytest.raises(ValueError):
+        _pipeline_source("/definitely/not/a/real/source.mp4")
+
+
+def test_pipeline_source_rejects_an_empty_source():
+    from selekyt.server import _pipeline_source
+
+    with pytest.raises(ValueError, match="must be a local path"):
+        _pipeline_source("   ")
+
+
+def test_pipeline_source_accepts_a_url_and_a_real_file(tmp_path):
+    from selekyt.server import _pipeline_source
+
+    assert _pipeline_source("  https://youtu.be/abc  ") == "https://youtu.be/abc"
+    media = tmp_path / "v.mp4"
+    media.write_bytes(b"0" * 100)
+    assert _pipeline_source(str(media)) == str(media)
+
+
+def test_run_pipeline_writes_a_project_and_reports_its_artifacts(tmp_path, monkeypatch):
+    """The op must return the artifacts it actually wrote, not just the
+    directories they live in — a UI links to files."""
+    import selekyt.pipeline as pipeline_mod
+
+    def fake_run(source, out_root, **kw):
+        project = Path(out_root) / "project"
+        (project / "shorts").mkdir(parents=True, exist_ok=True)
+        (project / "shorts" / "01.mp4").write_bytes(b"mp4")
+        (project / "captions").mkdir(parents=True, exist_ok=True)
+        (project / "captions" / "01.srt").write_text("cues\n", encoding="utf-8")
+        (project / "report.json").write_text(
+            json.dumps({"selected_count": 1, "candidate_count": 2, "language": "en"}),
+            encoding="utf-8",
+        )
+        return project
+
+    monkeypatch.setattr(pipeline_mod, "run", fake_run)
+    media = tmp_path / "v.mp4"
+    media.write_bytes(b"0" * 100)
+
+    data = _handle("run_pipeline", {"source": str(media), "out": str(tmp_path / "out")})
+    assert data["project"].endswith("project")
+    assert data["report"]["selected_count"] == 1
+    names = [Path(p).name for p in data["artifacts"]]
+    assert "01.mp4" in names and "01.srt" in names and "report.json" in names
+
+
+def test_run_pipeline_validates_params_before_any_render(tmp_path):
+    """A bad --limit used to survive to a confusing late failure; the op must
+    refuse it up front, as a clean wire error. ``run`` checks its parameters
+    before it touches the network, so this needs no mocking — the failure is
+    the wanted behaviour."""
+    media = tmp_path / "v.mp4"
+    media.write_bytes(b"0" * 100)
+    resp = json.loads(process_line(json.dumps(
+        {"op": "run_pipeline", "params": {"source": str(media), "limit": 0}}
+    )))
+    assert resp["ok"] is False
+    assert "limit must be" in resp["error"]
 
 
 # ── wire integrity ──

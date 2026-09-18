@@ -279,6 +279,34 @@ async function route(req, res, url, method) {
     });
     return sendJson(res, { ok: true, op: "export", data });
   }
+  if (method === "POST" && url.pathname === "/api/run_pipeline") {
+    const body = await getJson(req);
+    // A local file must stay inside the project (same guard as /api/file).
+    // A URL is fetched by the pipeline itself, which is what the product is
+    // for; only the http(s) schemes survive the sidecar's own check.
+    let source;
+    if (/^https?:\/\//i.test(String(body.source || ""))) {
+      source = String(body.source);
+    } else if (body.path) {
+      source = guardedPath(body.path);
+      if (!existsSync(source)) throw new Error(`no such file: ${source}`);
+    } else {
+      throw new Error("provide 'path' (a file inside the project) or an http(s) 'source' URL");
+    }
+    const data = await rpcData("run_pipeline", {
+      source,
+      out: join(OUT_WEB, "pipeline"),
+      model: body.model,
+      language: body.language,
+      limit: body.limit,
+      chunk_minutes: body.chunk_minutes,
+      beam_size: body.beam_size,
+      cpu_threads: body.cpu_threads,
+      audio_analysis: body.audio_analysis ?? false,
+      export_fcpxml: body.export_fcpxml ?? true,
+    });
+    return sendJson(res, { ok: true, op: "run_pipeline", data });
+  }
   if (method === "GET" && url.pathname === "/api/file") {
     const file = guardedPath(url.searchParams.get("path") || "");
     if (!existsSync(file)) throw new Error(`no such file: ${file}`);

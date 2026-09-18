@@ -145,6 +145,36 @@ dd { margin: 2px 0 0; font-size: 14px; overflow-wrap: anywhere; }
 
 .export { margin-top: 18px; }
 
+.cuts { margin-top: 18px; }
+
+.cuts-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.cuts-controls input[type="text"] {
+  flex: 1 1 340px;
+  min-width: 240px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.cuts-controls select {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 6px 8px;
+  font: inherit;
+}
+
 .links { display: flex; gap: 16px; flex-wrap: wrap; }
 
 .links a {

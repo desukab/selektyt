@@ -2,6 +2,13 @@ const $ = (id) => document.getElementById(id);
 const canvas = $("scores");
 const ctx = canvas.getContext("2d");
 
+// Mirrors the server's own sanitizeName so the path we suggest is the path
+// the file was actually written under.
+const sanitizeName = (name) => {
+  const base = String(name || "upload.wav").replace(/[^\w.\-]/g, "_");
+  return base.length > 0 && !base.startsWith(".") ? base : "upload.wav";
+};
+
 const state = {
   scores: [],
   segments: [],
@@ -148,6 +155,14 @@ async function resegment() {
 async function analyze(params) {
   setStatus("analyzing…");
   state.media = params;
+  // An uploaded file lands at out/web/uploads/<name>. Surfacing that path here
+  // is what connects "analyze this" to "now make cuts from it" — otherwise the
+  // two halves of the shell cannot see each other's files.
+  if (params.wav && params.name) {
+    $("cuts-source").value = `out/web/uploads/${sanitizeName(params.name)}`;
+  } else if (params.sample) {
+    $("cuts-source").value = "out/web/sample.wav";
+  }
   try {
     renderAudio(await post("vad_analyze", params));
   } catch (err) {
@@ -189,6 +204,54 @@ async function exportCut() {
   }
 }
 
+async function runCuts() {
+  // The full product path: transcribe → select → cut → render. Until this
+  // existed the shell could analyse audio and export a cutlist but could not
+  // produce a single edited video, which is what the tool is for.
+  const panel = $("cuts-links");
+  panel.innerHTML = "";
+  const source = $("cuts-source").value.trim();
+  const summary = $("cuts-summary");
+  if (!source) {
+    summary.textContent = "enter a path inside the project, or an http(s) URL";
+    summary.classList.add("error");
+    return;
+  }
+  summary.classList.remove("error");
+  summary.textContent = "running… this transcribes and renders, so it takes a while";
+  $("cuts-run").disabled = true;
+  try {
+    const params = {
+      limit: parseInt($("cuts-limit").value, 10) || 6,
+      model: $("cuts-model").value,
+    };
+    if (/^https?:\/\//i.test(source)) {
+      params.source = source;
+    } else {
+      params.path = source;
+    }
+    const data = await post("run_pipeline", params);
+    const r = data.report;
+    summary.textContent =
+      `${r.selected_count} clip${r.selected_count === 1 ? "" : "s"} from ` +
+      `${r.candidate_count} candidates · ${r.language ?? "?"} · ` +
+      `${data.artifacts.filter((p) => p.endsWith(".mp4")).length} renders`;
+    for (const p of data.artifacts) {
+      const a = document.createElement("a");
+      a.href = `/api/file?path=${encodeURIComponent(p)}`;
+      a.download = "";
+      a.textContent = p.split(/[/\\]/).pop();
+      a.title = p;
+      panel.appendChild(a);
+    }
+  } catch (err) {
+    summary.textContent = `cuts failed: ${err.message}`;
+    summary.classList.add("error");
+  } finally {
+    $("cuts-run").disabled = false;
+  }
+}
+
 async function init() {
   try {
     const ping = await post("ping", {});
@@ -209,6 +272,7 @@ async function init() {
   });
   $("threshold").addEventListener("input", resegment);
   $("pad").addEventListener("change", renderCutlist);
+  $("cuts-run").addEventListener("click", runCuts);
   draw();
 }
 

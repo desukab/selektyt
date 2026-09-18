@@ -35,6 +35,29 @@
     </div>
     <div id="cutlist-blocks" class="blocks"></div>
   </section>
+  <section class="cuts">
+    <div class="cutlist-head">
+      <span>video → social cuts</span>
+      <span id="cuts-summary" class="muted">transcribe · select · cut · render</span>
+    </div>
+    <div class="cuts-controls">
+      <input id="cuts-source" type="text" placeholder="out/web/uploads/name.mp4 — or https://youtu.be/…" />
+      <label class="slider">clips
+        <input type="number" id="cuts-limit" min="1" max="20" step="1" value="6" style="width:5ch" />
+      </label>
+      <label class="slider">model
+        <select id="cuts-model">
+          <option value="tiny">tiny</option>
+          <option value="base">base</option>
+          <option value="small" selected>small</option>
+          <option value="medium">medium</option>
+        </select>
+      </label>
+      <button id="cuts-run" class="primary">Make cuts</button>
+    </div>
+    <div id="cuts-links" class="links"></div>
+  </section>
+
   <section class="meta">
     <dl id="audit">
       <div><dt>backend</dt><dd id="m-backend">—</dd></div>

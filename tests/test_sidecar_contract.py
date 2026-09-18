@@ -27,7 +27,7 @@ from selekyt.server import _HANDLERS, PROTOCOL, process_line, serve
 # Ops the contract document promises; any removal is a wire break.
 DOCUMENTED_OPS = frozenset({
     "ping", "segment", "cutlist_from_segments", "vad_analyze", "audio_analysis",
-    "detect_rate", "parse_smpte", "seconds_to_rational",
+    "run_pipeline", "detect_rate", "parse_smpte", "seconds_to_rational",
     "track_offset_from_timecode", "render_fcpxml", "normalize_keeps",
     "omitted_intervals", "clamp_keep_edge", "skip_target_for",
     "previous_keep_target", "next_keep_target",
@@ -55,21 +55,32 @@ def tone_wav(tmp_path_factory) -> str:
 
 @pytest.fixture(scope="module")
 def audio_stage_stub():
-    """The audio_analysis op delegates to the real ffmpeg-backed audio stage;
-    stub it so the envelope test is hermetic, and restore it on teardown so a
-    failure cannot leak a stub into the rest of the session."""
-    import selekyt.server as server_mod
+    """The audio_analysis and run_pipeline ops delegate to real ffmpeg- and
+    ASR-backed stages; stub both so the envelope test is hermetic, and restore
+    them on teardown so a failure cannot leak a stub into the rest of the
+    session."""
+    import selekyt.pipeline as pipeline_mod
 
-    original = server_mod.run_pipeline_audio
-    server_mod.run_pipeline_audio = lambda media, project, **kw: {
-        "vad_backend": "stub",
-        "vad_model": "stub-rms",
-        "frame_ms": 32,
-    }
+    originals = {}
+
+    def fake_pipeline_run(source, out_root, **kw):
+        from pathlib import Path
+        import json as _json
+        project = Path(out_root) / "project"
+        (project / "shorts").mkdir(parents=True, exist_ok=True)
+        (project / "shorts" / "01.mp4").write_bytes(b"stub")
+        (project / "report.json").write_text(_json.dumps({
+            "selected_count": 1, "candidate_count": 1, "language": "en",
+        }), encoding="utf-8")
+        return project
+
+    originals["run"] = pipeline_mod.run
+    pipeline_mod.run = fake_pipeline_run
     try:
-        yield server_mod
+        yield pipeline_mod
     finally:
-        server_mod.run_pipeline_audio = original
+        for name, fn in originals.items():
+            setattr(pipeline_mod, name, fn)
 
 
 # ── param tables ────────────────────────────────────────────────────────────
@@ -101,6 +112,9 @@ def _valid_params(op: str, tone_wav: str, project_dir: str) -> dict:
         },
         "vad_analyze": {"path": tone_wav, "force": "energy"},
         "audio_analysis": {"media": tone_wav, "project": project_dir},
+        # run_pipeline takes any readable file: the pipeline itself is stubbed
+        # in these tests, so the tone is only the source it is handed.
+        "run_pipeline": {"source": tone_wav, "out": project_dir, "limit": 1},
         "detect_rate": {"fps": 30},
         "parse_smpte": {"tc": "01:00:00:00", "fps": 30},
         "seconds_to_rational": {"seconds": 1.5, "fps": 30},
@@ -134,6 +148,12 @@ BAD_PARAMS: dict[str, list[dict]] = {
     # param-shape failures are exercised here (a missing file is not a
     # malformed param).
     "audio_analysis": [{}, {"media": ""}],
+    # A source the op must refuse rather than hand to a fetcher: an unsupported
+    # scheme, a missing file, and no source at all.
+    "run_pipeline": [
+        {}, {"source": ""}, {"source": "file:///etc/passwd"},
+        {"source": "/definitely/not/here.mp4"},
+    ],
     "detect_rate": [{}, {"fps": "fast"}],
     "parse_smpte": [{"fps": "x"}],
     "seconds_to_rational": [{}, {"fps": "x"}],
