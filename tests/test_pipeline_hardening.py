@@ -16,6 +16,7 @@ F13 — a cached render is only reused when ffprobe confirms it is a real,
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import shutil
 import subprocess
@@ -75,6 +76,30 @@ def _pipeline_patches(tmp_path, candidates, gate_results=None):
     }
 
 
+@contextlib.contextmanager
+def _entered(patches: dict):
+    """Enter a dict of patchers and always exit the patchers themselves.
+
+    ``patcher.__enter__()`` returns the mock, and a mock's ``__exit__`` is
+    itself a mock that restores nothing -- so collecting the return values and
+    exiting those leaks every patch into the next test module. Callers that
+    need a mock use the yielded dict; cleanup is on the patchers.
+    """
+    mocks: dict = {}
+    try:
+        for key, patcher in patches.items():
+            mocks[key] = patcher.__enter__()
+        yield mocks
+    finally:
+        for patcher in patches.values():
+            try:
+                patcher.__exit__(None, None, None)
+            except RuntimeError:
+                # Never entered (a failure partway through the loop above):
+                # nothing of this patch is left to leak.
+                pass
+
+
 def _run_pipeline(tmp_path, candidates, *, limit=6, gate_results=None,
                   real_pacing=False, **kw):
     media = tmp_path / "video.mp4"
@@ -98,14 +123,9 @@ def _run_pipeline(tmp_path, candidates, *, limit=6, gate_results=None,
         # The pacing report carries the truncation distinction too, so some
         # tests need the real aggregate_pacing_report rather than the stub.
         patches.pop("aggregate_pacing_report")
-    entered = {k: v.__enter__() for k, v in patches.items()}
-    try:
-        with patch("selekyt.pipeline._fingerprint", return_value=fp):
-            return pipeline_run("https://example.com/v", tmp_path, model="small",
-                                limit=limit, **kw)
-    finally:
-        for v in entered.values():
-            v.__exit__(None, None, None)
+    with _entered(patches), patch("selekyt.pipeline._fingerprint", return_value=fp):
+        return pipeline_run("https://example.com/v", tmp_path, model="small",
+                            limit=limit, **kw)
 
 
 # ── F9: rejection accounting separates gate rejections from --limit ──
@@ -180,15 +200,11 @@ def test_valid_cached_render_is_reused(tmp_path):
                                         "words": []}]}), encoding="utf-8")
 
     patches = _pipeline_patches(tmp_path, cands)
-    entered = {k: v.__enter__() for k, v in patches.items()}
-    try:
-        with patch("selekyt.pipeline._fingerprint", return_value=fp):
-            pipeline_run("https://example.com/v", tmp_path, model="small")
-        assert entered["render_clip"].call_count == 0, \
+    with _entered(patches) as mocks, \
+         patch("selekyt.pipeline._fingerprint", return_value=fp):
+        pipeline_run("https://example.com/v", tmp_path, model="small")
+        assert mocks["render_clip"].call_count == 0, \
             "a valid cached render must not be re-encoded"
-    finally:
-        for v in entered.values():
-            v.__exit__(None, None, None)
 
 
 def test_stub_cached_render_is_re_rendered(tmp_path):
@@ -220,15 +236,11 @@ def test_stub_cached_render_is_re_rendered(tmp_path):
                                         "words": []}]}), encoding="utf-8")
 
     patches = _pipeline_patches(tmp_path, cands)
-    entered = {k: v.__enter__() for k, v in patches.items()}
-    try:
-        with patch("selekyt.pipeline._fingerprint", return_value=fp):
-            pipeline_run("https://example.com/v", tmp_path, model="small")
-        assert entered["render_clip"].call_count == 2, \
+    with _entered(patches) as mocks, \
+         patch("selekyt.pipeline._fingerprint", return_value=fp):
+        pipeline_run("https://example.com/v", tmp_path, model="small")
+        assert mocks["render_clip"].call_count == 2, \
             "both slots must be re-rendered when the cached files are not real videos"
-    finally:
-        for v in entered.values():
-            v.__exit__(None, None, None)
 
 
 def test_render_state_is_checkpointed_per_clip(tmp_path):
