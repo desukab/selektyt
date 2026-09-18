@@ -42,6 +42,53 @@ def test_doctor_exits_nonzero_when_a_required_tool_is_missing(monkeypatch):
     assert cli_mod._doctor() == 1
 
 
+def test_doctor_reports_ready_on_a_python3_only_host(monkeypatch, capsys):
+    """A plain Debian/Ubuntu install ships `python3` and not `python`.
+
+    Requiring the unversioned name reported a hard MISSING while SelekyT ran
+    under a perfectly good interpreter, sending users to install a package
+    they did not need before a single frame was processed.
+    """
+    import shutil
+    import types
+
+    present = {"python3", "ffmpeg", "ffprobe"}
+
+    def fake_which(name):
+        return f"/usr/bin/{name}" if name in present else None
+
+    monkeypatch.setattr(shutil, "which", fake_which)
+    # A host can have the wheel installed without the unversioned `python`.
+    monkeypatch.setitem(sys.modules, "faster_whisper", types.ModuleType("faster_whisper"))
+
+    assert cli_mod._doctor() == 0
+    out = capsys.readouterr().out
+    assert "Ready." in out
+    assert "python3" in out and "OK" in out
+    # The unversioned name is advisory, not a blocker.
+    assert "python " in out or "python  " in out
+    assert "MISSING" not in out
+
+
+def test_doctor_names_the_missing_required_tools(monkeypatch, capsys):
+    """`ffmpeg` missing must say so, not just report a nonzero exit."""
+    import shutil
+
+    present = {"python3", "ffprobe"}
+
+    def fake_which(name):
+        return f"/usr/bin/{name}" if name in present else None
+
+    monkeypatch.setattr(shutil, "which", fake_which)
+    monkeypatch.setitem(sys.modules, "faster_whisper", None)
+    assert cli_mod._doctor() == 1
+    out = capsys.readouterr().out
+    assert "ffmpeg" in out
+    assert "MISSING" in out
+    # A local-file user with no yt-dlp is not blocked by the message.
+    assert "yt-dlp" in out
+
+
 def test_main_without_source_runs_doctor(monkeypatch, capsys):
     monkeypatch.setattr(sys, "argv", ["selekyt"])
     with pytest.raises(SystemExit) as exc:

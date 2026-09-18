@@ -12,11 +12,17 @@ from selekyt.server import serve_stdio as serve_python
 
 def _doctor() -> int:
     print("SelekyT doctor")
+    # `python` is what the docs tell people to type, but a plain Debian/Ubuntu
+    # install ships only `python3`, and every distro that has `python` also has
+    # `python3`. Requiring the unversioned name reported a hard MISSING while
+    # SelekyT was running under a perfectly good interpreter, sending users to
+    # install a package they did not need.
     checks = [
-        ("python", True, shutil.which("python") is not None),
+        ("python3", True, shutil.which("python3") is not None),
+        ("python", False, shutil.which("python") is not None),
         ("ffmpeg", True, shutil.which("ffmpeg") is not None),
         ("ffprobe", True, shutil.which("ffprobe") is not None),
-        ("yt-dlp", True, shutil.which("yt-dlp") is not None),
+        ("yt-dlp", False, shutil.which("yt-dlp") is not None),
     ]
     try:
         import faster_whisper  # noqa: F401
@@ -24,13 +30,19 @@ def _doctor() -> int:
     except ImportError:
         whisper_ok = False
     checks.append(("faster-whisper", True, whisper_ok))
-    ok = True
+    missing = [name for name, required, present in checks if required and not present]
     for name, required, present in checks:
         status = "OK" if present else ("MISSING" if required else "OPTIONAL")
         print(f"  {name:18} {status}")
-        ok = ok and present
-    print("Ready." if ok else "Install the missing REQUIRED tools before running.")
-    return 0 if ok else 1
+    if not missing:
+        print("Ready.")
+        return 0
+    print(
+        "Install the missing REQUIRED tools before running: "
+        + ", ".join(missing)
+        + ". (OPTIONAL tools are only needed for some sources.)"
+    )
+    return 1
 
 
 def _validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
