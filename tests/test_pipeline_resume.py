@@ -72,8 +72,29 @@ def test_pipeline_reuses_downloaded_media(tmp_path):
     mock_download.assert_not_called()
 
 
+def _real_render_pair(project: Path, vertical_size: str = "360x640") -> None:
+    """Write a genuine, ffprobe-valid pair of renders into a project.
+
+    F13: the render cache now validates a cached clip with ffprobe before
+    reusing it, so a 5-byte stub is no longer accepted as a finished render.
+    Tests of the cache path must hand it a real video.
+    """
+    import subprocess
+
+    for kind, size in (("facebook", "640x360"), ("shorts", vertical_size)):
+        out = project / kind / "01.mp4"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(
+            ["ffmpeg", "-y", "-f", "lavfi", "-i", f"color=c=blue:s={size}:d=3.0",
+             "-f", "lavfi", "-i", "sine=frequency=440:duration=3.0",
+             "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28",
+             "-c:a", "aac", "-b:a", "64k", "-shortest", str(out)],
+            check=True, capture_output=True,
+        )
+
+
 def test_pipeline_skips_render_when_clips_exist(tmp_path):
-    """Rendering is skipped when fb/sh clips already exist for this fingerprint."""
+    """Rendering is skipped when valid fb/sh clips exist for this selection."""
     media = tmp_path / "video.mp4"
     media.write_bytes(b"x" * 100)
     project = tmp_path / "project"
@@ -85,18 +106,21 @@ def test_pipeline_skips_render_when_clips_exist(tmp_path):
 
     fp = "test-fingerprint"
     cand = _fake_candidate()
+    digest = _selection_digest([cand])
     state = {"source": "https://example.com/v", "media_path": str(media),
              "media_info": {"title": "t"}, "fingerprint": fp,
              "render_fingerprint": fp,
-             "render_selection_digest": _selection_digest([cand])}
+             "render_selection_digest": digest,
+             "renders": {"01": {"fingerprint": fp, "selection_digest": digest,
+                                "facebook": str(project / "facebook" / "01.mp4"),
+                                "shorts": str(project / "shorts" / "01.mp4")}}}
     (project / "pipeline_state.json").write_text(json.dumps(state), encoding="utf-8")
     (project / "transcript.json").write_text(json.dumps({
         "language": "en",
         "segments": [{"start": 10.0, "end": 20.0, "text": "hello world",
                        "words": [{"text": "hello", "start": 0.0, "end": 0.5, "confidence": 1.0}]}],
     }), encoding="utf-8")
-    (project / "facebook" / "01.mp4").write_bytes(b"clip")
-    (project / "shorts" / "01.mp4").write_bytes(b"clip")
+    _real_render_pair(project)
 
     with patch("selekyt.pipeline.download") as mock_download, \
          patch("selekyt.pipeline.render_clip") as mock_render, \

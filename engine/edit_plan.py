@@ -152,12 +152,20 @@ def aggregate_pacing_report(
     selected: list[Candidate],
     rejected: list[Candidate],
     context_guard_rejections: int,
+    truncated_by_limit: int = 0,
 ) -> dict:
     """Project-level pacing and candidate quality report.
 
     Includes: duration stats, distribution buckets, silence%, filler%,
     avg_words_per_second, context_failures, duplicate_overlap_rate,
     hook_latency stats, payoff_presence_rate.
+
+    ``context_guard_rejections`` and ``truncated_by_limit`` are reported
+    separately because they mean different things to an editor: the first is
+    an editorial judgment the editor can challenge, the second is only the
+    ``--limit`` budget — a clip truncated by budget is not a clip the engine
+    judged unusable. Callers that still pass a single combined count (legacy
+    signature) get ``truncated_by_limit`` defaulting to 0, so nothing breaks.
     """
     all_candidates = selected + rejected
     if not all_candidates:
@@ -204,6 +212,9 @@ def aggregate_pacing_report(
         "selected_count": len(selected),
         "rejected_count": len(rejected),
         "context_guard_rejections": context_guard_rejections,
+        # Candidates that passed the gate but lost to --limit. Not a rejection:
+        # these are the editor's bench, available in the ranked set.
+        "truncated_by_limit": truncated_by_limit,
         "avg_duration": avg_duration,
         "duration_distribution": buckets,
         "silence_pct": silence_pct,

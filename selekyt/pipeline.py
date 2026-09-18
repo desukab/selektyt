@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import shutil
 from dataclasses import asdict
 from pathlib import Path
+
+from providers.atomic import read_json, write_json_atomic
 
 from engine.editorial import make_thoughts, rank
 from engine.captions import ass_for_candidate, srt_for_candidate
@@ -18,6 +22,73 @@ from engine.pipeline_audio import run_pipeline_audio
 from providers.youtube import download
 from providers.transcribe import transcribe as transcribe_auto
 from models.core import Segment, Word
+
+
+STATE_NAME = "pipeline_state.json"
+
+
+def _load_state(state_path: Path) -> dict:
+    """Load pipeline state, recovering from corruption.
+
+    ``pipeline_state.json`` is the file that makes a long run resumable: it
+    holds the download cache, the transcript fingerprint and the render cache.
+    Losing it to a truncated write means re-downloading and re-transcribing
+    hours of audio, so it is worth recovering.
+
+    A file that cannot be parsed is quarantined beside the state directory
+    (never deleted — an operator may want it) and the last *known-good*
+    backup is used. Only when neither reads does the run start fresh; the
+    downloaded source media is still on disk, so a fresh state re-downloads
+    rather than silently claiming a partial state is complete.
+    """
+    backup = state_path.with_name(state_path.name + ".bak")
+    data = read_json(state_path)
+    if isinstance(data, dict):
+        return data
+    if state_path.is_file():
+        # Quarantine under a name that cannot collide with a later good state
+        # and never silently overwrite an earlier quarantine.
+        quarantine = state_path.with_name(state_path.name + ".corrupt.json")
+        idx = 1
+        while quarantine.exists():
+            quarantine = state_path.with_name(f"{state_path.name}.corrupt.{idx}.json")
+            idx += 1
+        try:
+            shutil.move(str(state_path), str(quarantine))
+            print(
+                f"[state] pipeline state was unreadable; quarantined as {quarantine.name}",
+                flush=True,
+            )
+        except OSError as exc:
+            print(f"[state] pipeline state unreadable and could not be quarantined: {exc}", flush=True)
+    data = read_json(backup)
+    if isinstance(data, dict):
+        print("[state] recovered state from the last good backup", flush=True)
+        # Restore it to the primary path so a subsequent corruption does not
+        # cost the same recovery twice.
+        try:
+            shutil.copy2(str(backup), str(state_path))
+        except OSError:
+            pass
+        return data
+    return {}
+
+
+def _save_state(state_path: Path, state: dict) -> None:
+    """Write state atomically, keeping a backup of the previous good version.
+
+    ``os.replace`` makes the visible file either the old contents or the new
+    ones, so a kill mid-write can never leave a truncated state. The backup
+    is only rotated from a version that parses, so the backup is always one
+    the recovery path can trust.
+    """
+    if state_path.is_file():
+        if isinstance(read_json(state_path), dict):
+            try:
+                shutil.copy2(str(state_path), state_path.with_name(state_path.name + ".bak"))
+            except OSError:
+                pass
+    write_json_atomic(state_path, state)
 
 
 def _load_transcript(path: Path) -> tuple[list[Segment], str] | None:
@@ -44,6 +115,25 @@ def _fingerprint(media: Path, source: str, model: str, language: str | None) -> 
     st = media.stat()
     raw = f"{source}|{media.resolve()}|{st.st_size}|{st.st_mtime_ns}|{model}|{language or 'auto'}"
     return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _render_is_valid(path: Path, *, vertical: bool) -> bool:
+    """Confirm a cached render is a complete, correctly-oriented video.
+
+    A non-empty file is not evidence of a finished render: a run killed
+    mid-encode leaves a truncated MP4 that is non-empty and unplayable, and
+    ffprobe is the cheapest reliable check. Returns False for anything that
+    cannot be probed, so the caller re-renders rather than shipping it.
+    """
+    from engine.qa import validate_output
+
+    if not path.is_file() or path.stat().st_size < 1000:
+        return False
+    try:
+        ok, _errors = validate_output(path, vertical)
+    except Exception:
+        return False
+    return ok
 
 
 def _selection_digest(selected: list) -> str:
@@ -79,10 +169,26 @@ def run(
     remove_filler: bool = True,
     export_fcpxml: bool = False,
 ) -> Path:
+    # Reject unusable parameters before touching the network or the disk: a
+    # bad --limit used to survive download + transcription and then surface as
+    # a misleading "no stories passed the gate" error, and a bad
+    # --chunk-minutes died mid-transcription after the audio extraction.
+    if limit is None or limit < 1:
+        raise ValueError(f"limit must be >= 1 (got {limit})")
+    if chunk_minutes < 1:
+        raise ValueError(f"chunk_minutes must be >= 1 (got {chunk_minutes})")
+    if beam_size < 1:
+        raise ValueError(f"beam_size must be >= 1 (got {beam_size})")
+    if cpu_threads is not None and cpu_threads < 1:
+        raise ValueError(f"cpu_threads must be >= 1 (got {cpu_threads})")
+    if silence_threshold < 0 or silence_padding < 0:
+        raise ValueError("silence_threshold and silence_padding must be >= 0")
+    if min_speech_ms < 0 or min_silence_ms < 0:
+        raise ValueError("min_speech_ms and min_silence_ms must be >= 0")
     project = out_root / "project"
     project.mkdir(parents=True, exist_ok=True)
-    state_path = project / "pipeline_state.json"
-    state = json.loads(state_path.read_text()) if state_path.exists() else {}
+    state_path = project / STATE_NAME
+    state = _load_state(state_path)
     if source.startswith(("http://", "https://")):
         media_path = state.get("media_path")
         if (
@@ -95,7 +201,7 @@ def run(
         else:
             media, info = download(source, project / "source", cookies=cookies)
             state.update({"source": source, "media_path": str(media), "media_info": info})
-            state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+            _save_state(state_path, state)
     else:
         media, info = Path(source).expanduser(), {}
         if not media.is_file():
@@ -128,35 +234,69 @@ def run(
             + (f" ({asr_provenance['fallback_reason']})" if asr_provenance["fallback_reason"] else ""),
             flush=True,
         )
-        transcript_path.write_text(
-            json.dumps(
-                {
-                    "language": detected,
-                    "asr": asr_provenance,
-                    "segments": [
-                        {
-                            "start": s.start,
-                            "end": s.end,
-                            "text": s.text,
-                            "words": [asdict(w) for w in s.words],
-                        }
-                        for s in transcript
-                    ],
-                },
-                ensure_ascii=False,
-                indent=2,
-            ),
-            encoding="utf-8",
+        # Provenance must name the model that actually ran, not the one that
+        # was asked for. A silent small→base downgrade is invisible without
+        # this line, and an editor challenging the transcript cannot tell why
+        # the word timing fidelity changed.
+        used = asr_provenance.get("model")
+        downgrade = asr_provenance.get("downgrade_reason")
+        if downgrade:
+            print(
+                f"[transcribe] MODEL DOWNGRADE: requested "
+                f"{asr_provenance.get('requested_model')}, used {used}: {downgrade}",
+                flush=True,
+            )
+        write_json_atomic(
+            transcript_path,
+            {
+                "language": detected,
+                "asr": asr_provenance,
+                "segments": [
+                    {
+                        "start": s.start,
+                        "end": s.end,
+                        "text": s.text,
+                        "words": [asdict(w) for w in s.words],
+                    }
+                    for s in transcript
+                ],
+            },
         )
         # merge, not replace: the download cache (source/media_path/media_info)
         # must survive transcription so a resumed run reuses the local file
         state.update({"fingerprint": fingerprint, "model": model, "language": detected})
-        state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        _save_state(state_path, state)
 
     thoughts = make_thoughts(transcript)
     ranked = rank(thoughts, limit=max(limit * 3, limit))
-    selected = [c for c in ranked if validate(c)[0]][:limit]
-    context_guard_rejections = len(ranked) - len(selected)
+    # Validate once, not twice: the previous form called validate() again when
+    # building the rejected list, so a candidate's gate reason was computed two
+    # expensive times and the two lists could disagree on a non-deterministic
+    # gate. Every reason below comes from this single pass.
+    #
+    # ``validate`` historically returned a 2-tuple; some callers/tests still
+    # patch it that way, so both shapes are accepted rather than forcing a
+    # breaking change on the contract.
+    gate_results: list[tuple] = []
+    for c in ranked:
+        outcome = validate(c)
+        ok = bool(outcome[0])
+        reason = str(outcome[1]) if len(outcome) > 1 else "rejected"
+        gate_results.append((c, ok, reason))
+    passed = [c for c, ok, _r in gate_results if ok]
+    rejected = [c for c, ok, _r in gate_results if not ok]
+    # The two ways a candidate disappears are editorially different and the
+    # report must not conflate them:
+    #   * the gate rejected it — an editorial judgment an editor can challenge;
+    #   * it passed but ranked below --limit — a budget constraint, not a
+    #     judgment, and the clip is still available in the ranked set.
+    context_guard_rejections = len(rejected)
+    truncated_by_limit = max(0, len(passed) - limit)
+    rejection_reasons: dict[str, int] = {}
+    for _c, ok, reason in gate_results:
+        if not ok:
+            rejection_reasons[reason] = rejection_reasons.get(reason, 0) + 1
+    selected = passed[:limit]
     if not selected:
         raise RuntimeError("No complete standalone stories passed the editorial/context gate.")
     if ollama_url:
@@ -187,8 +327,10 @@ def run(
         json.dumps(editorial_report, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
-    rejected = [c for c in ranked if not validate(c)[0]]
-    pacing = aggregate_pacing_report(selected, rejected, context_guard_rejections)
+    pacing = aggregate_pacing_report(
+        selected, rejected, context_guard_rejections,
+        truncated_by_limit=truncated_by_limit,
+    )
 
     audio_summary: dict = {}
     if audio_analysis:
@@ -220,6 +362,10 @@ def run(
     edit_report = []
     content_packs = []
     sel_digest = _selection_digest(selected)
+    # Per-clip render cache. The previous single render_fingerprint was only
+    # written after the whole loop completed, so a run killed during clip 3 of
+    # 6 re-rendered all six even though 1 and 2 were already on disk.
+    renders = state.get("renders", {})
     for idx, c in enumerate(selected, 1):
         intervals = retention_intervals(c)
         caption = ass_for_candidate(c, project / "captions" / f"{idx:02d}.ass")
@@ -238,18 +384,32 @@ def run(
 
         fb = project / "facebook" / f"{idx:02d}.mp4"
         sh = project / "shorts" / f"{idx:02d}.mp4"
+        # A cached render is only reusable when it really is the render for
+        # this selection of this source AND ffprobe can confirm it is a
+        # complete, correctly-oriented video. A truncated file from a killed
+        # run, or a 5-byte stub, would otherwise be shipped as a finished clip.
+        cached = renders.get(f"{idx:02d}")
         if (
-            state.get("render_fingerprint") == fingerprint
-            and state.get("render_selection_digest") == sel_digest
-            and fb.is_file()
-            and sh.is_file()
-            and fb.stat().st_size > 0
-            and sh.stat().st_size > 0
+            cached
+            and cached.get("fingerprint") == fingerprint
+            and cached.get("selection_digest") == sel_digest
+            and _render_is_valid(fb, vertical=False)
+            and _render_is_valid(sh, vertical=True)
         ):
             print(f"[cache] reusing rendered clip {idx:02d}", flush=True)
         else:
             render_clip(media, c, fb, caption, vertical=False)
             render_clip(media, c, sh, caption, vertical=True)
+            renders[f"{idx:02d}"] = {
+                "fingerprint": fingerprint,
+                "selection_digest": sel_digest,
+                "facebook": str(fb),
+                "shorts": str(sh),
+            }
+            # Checkpoint after each clip, not once at the end: this is what
+            # makes an interrupted run resume from the last finished clip.
+            state["renders"] = renders
+            _save_state(state_path, state)
         outputs += [fb, sh]
         edited = sum(b - a for a, b in intervals)
         edit_report.append(
@@ -276,6 +436,11 @@ def run(
         "candidate_count": len(thoughts),
         "selected_count": len(selected),
         "rejected_by_context_guard": context_guard_rejections,
+        # Separate from the above: these passed every editorial gate and were
+        # dropped only because --limit capped the output. An editor reading
+        # this report can challenge the rejections and pull from this bench.
+        "truncated_by_limit": truncated_by_limit,
+        "rejection_reasons": dict(sorted(rejection_reasons.items(), key=lambda kv: -kv[1])),
         "outputs": {"facebook": str(project / "facebook"), "shorts": str(project / "shorts")},
         "captions": str(project / "captions"),
         "content_pack": str(project / "content_pack.json"),
@@ -290,5 +455,5 @@ def run(
     report["audio"] = audio_summary if audio_summary else {"enabled": False}
     (project / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
     state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "render_selection_digest": sel_digest, "selected_count": len(selected), "qa": str(qa_path), "complete": True})
-    state_path.write_text(json.dumps(state, indent=2))
+    _save_state(state_path, state)
     return project

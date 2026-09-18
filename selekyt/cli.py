@@ -33,6 +33,36 @@ def _doctor() -> int:
     return 0 if ok else 1
 
 
+def _validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
+    """Fail fast on unusable numeric flags, before any network or ASR work.
+
+    A bad --limit used to survive all the way through download and
+    transcription and then die as a confusing "no stories passed" error; a
+    bad --chunk-minutes died mid-transcription after extracting audio.
+    argparse's own ``type=int`` already rejects non-integers, so what is left
+    to check here is the value range.
+    """
+    problems: list[str] = []
+    if args.limit is not None and args.limit < 1:
+        problems.append(f"--limit must be >= 1 (got {args.limit})")
+    if args.chunk_minutes is not None and args.chunk_minutes < 1:
+        problems.append(f"--chunk-minutes must be >= 1 (got {args.chunk_minutes})")
+    if args.beam_size is not None and args.beam_size < 1:
+        problems.append(f"--beam-size must be >= 1 (got {args.beam_size})")
+    if args.cpu_threads is not None and args.cpu_threads < 1:
+        problems.append(f"--cpu-threads must be >= 1 (got {args.cpu_threads})")
+    if args.silence_threshold is not None and args.silence_threshold < 0:
+        problems.append(f"--silence-threshold must be >= 0 (got {args.silence_threshold})")
+    if args.silence_padding is not None and args.silence_padding < 0:
+        problems.append(f"--silence-padding must be >= 0 (got {args.silence_padding})")
+    if args.min_speech_ms is not None and args.min_speech_ms < 0:
+        problems.append(f"--min-speech-ms must be >= 0 (got {args.min_speech_ms})")
+    if args.min_silence_ms is not None and args.min_silence_ms < 0:
+        problems.append(f"--min-silence-ms must be >= 0 (got {args.min_silence_ms})")
+    if problems:
+        parser.error("; ".join(problems))
+
+
 def main() -> None:
     p = argparse.ArgumentParser(
         prog="selekyt",
@@ -98,12 +128,16 @@ def main() -> None:
         help="Minimum silence duration in ms to merge into speech (default: 100)",
     )
     p.add_argument(
-        "--keep-pauses", action="store_true", default=True,
-        help="Preserve intentional and breathing pauses (default: True)",
+        "--keep-pauses",
+        action=argparse.BooleanOptionalAction, default=True,
+        help="Preserve intentional and breathing pauses (default: True; "
+             "use --no-keep-pauses to remove them as dead air)",
     )
     p.add_argument(
-        "--remove-filler", action="store_true", default=True,
-        help="Remove hesitation/filler pauses in audio analysis (default: True)",
+        "--remove-filler",
+        action=argparse.BooleanOptionalAction, default=True,
+        help="Remove hesitation/filler pauses in audio analysis (default: True; "
+             "use --no-remove-filler to keep them)",
     )
     p.add_argument(
         "--export-fcpxml", action="store_true",
@@ -120,6 +154,8 @@ def main() -> None:
     args = p.parse_args()
     if args.server:
         raise SystemExit(serve_python())
+    if args.source:
+        _validate_args(p, args)
     if args.doctor or not args.source:
         raise SystemExit(_doctor())
     os.environ["SELEKYT_CAPTION_STYLE"] = args.caption_style

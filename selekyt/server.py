@@ -88,10 +88,28 @@ def op_cutlist_from_segments(params: dict) -> dict:
     }
 
 
+def _regular_file_or_error(path: str, name: str) -> Path:
+    """Resolve a caller-supplied path to a regular file.
+
+    The sidecar is a local stdio process driven by trusted local tooling, so
+    this is not an authorization boundary. It is still worth refusing a
+    directory or a device file up front: passing one to ffmpeg yields a
+    confusing deep-stack error, and a path that does not exist tells the
+    operator nothing about which parameter was wrong.
+    """
+    if not path or not isinstance(path, str):
+        raise ValueError(f"'{name}' must be a string")
+    resolved = Path(path).expanduser()
+    if not resolved.is_file():
+        raise ValueError(f"'{name}' is not a readable file: {path}")
+    return resolved
+
+
 def op_vad_analyze(params: dict) -> dict:
     path = params.get("path")
     if not path:
         raise ValueError("'path' must be a string")
+    _regular_file_or_error(path, "path")
     force = params.get("force")
     backend = vad_mod.get_vad_backend(force=force)
     result = backend.analyze(Path(path))
@@ -264,6 +282,7 @@ def op_audio_analysis(params: dict) -> dict:
     project = params.get("project", "out/project")
     if not media:
         raise ValueError("'media' must be a string")
+    _regular_file_or_error(media, "media")
     summary = run_pipeline_audio(
         Path(media),
         Path(project),
@@ -348,12 +367,28 @@ def process_line(line: str) -> str:
 
 
 def serve(stream: TextIO, out: TextIO) -> int:
+    """Run the sidecar loop. Returns the number of requests that failed.
+
+    Every request is answered on the wire, so a failure is an ``ok: false``
+    response rather than a dropped one; the count is what makes a caller that
+    pipes a batch through the sidecar able to tell a clean run from a run that
+    half-failed. An unwritable response stream is the one thing that cannot be
+    reported on the wire and aborts immediately.
+    """
     errors = 0
     for line in stream:
         if not line.strip():
             continue
-        out.write(process_line(line.strip()) + "\n")
+        response = process_line(line.strip())
+        out.write(response + "\n")
         out.flush()
+        try:
+            if not json.loads(response).get("ok", False):
+                errors += 1
+        except ValueError:
+            # process_line always emits one JSON object; if it somehow did
+            # not, the stream itself is broken and must not be ignored.
+            return 1
     return errors
 
 

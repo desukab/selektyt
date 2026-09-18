@@ -117,11 +117,15 @@ def run_audio_analysis(
         vad_score_file=str(score_path),
     )
 
-    # 6. Jump-cut decisions
+    # 6. Jump-cut decisions. keep_pauses and remove_filler are two independent
+    #    editorial switches: the first preserves intentional/breathing pauses,
+    #    the second is the hesitation/filler pass. Both must actually reach the
+    #    engine or the CLI flags are decorative.
     engine = JumpCutEngine(
         silence_threshold=silence_threshold,
         keep_intentional=keep_pauses,
         keep_breathing=keep_pauses,
+        remove_filler=remove_filler,
         remove_hallucinations=True,
     )
     cut = engine.generate_cutlist(truth)
