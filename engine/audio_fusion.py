@@ -120,7 +120,7 @@ def _fuse_words(
     pause_map = _build_pause_map(pauses)
     result: list[FusedWord] = []
     for w in words:
-        in_speech = _in_region(w.start, speech)
+        in_speech = _word_in_speech(w, speech)
         leading = _silence_before(w.start, speech, pause_map)
         trailing = _silence_after(w.end, speech, pause_map)
         result.append(FusedWord(
@@ -160,6 +160,31 @@ def _build_fused_regions(
 
 def _in_region(t: float, regions: list[SpeechRegion]) -> bool:
     return any(s.start - 0.05 <= t <= s.end + 0.05 for s in regions)
+
+
+def _word_in_speech(word: Word, speech: list[SpeechRegion]) -> bool:
+    """Is this transcribed word corroborated by detected speech?
+
+    The instinct here is to test the word's start point, and the old code did
+    exactly that against a ±0.05s window. That is too strict by an order of
+    magnitude: the energy VAD fragments continuous speech into short bursts
+    (median 0.32s on the real 8.9-minute source) with small gaps between them,
+    so a word whose timestamp starts inside one of those gaps is reported as a
+    hallucination even though it is plainly spoken. On that source 502 of 1156
+    words — 43% — were flagged, and ``remove_hallucinations`` then cut them out
+    of the timeline, removing 190s of real speech as if the transcript were
+    fabricating it.
+
+    Overlap is the right test. A whisper hallucination lands its invented words
+    in genuine silence, where no speech region touches them at all; a real word
+    overlaps the burst that contains it.
+    """
+    for s in speech:
+        # Expand each region slightly: word timestamps and VAD edges come from
+        # different clocks and drift apart by tens of milliseconds.
+        if word.start <= s.end + 0.05 and word.end >= s.start - 0.05:
+            return True
+    return False
 
 
 def _silence_before(t: float, speech: list[SpeechRegion], pause_map: dict) -> float:

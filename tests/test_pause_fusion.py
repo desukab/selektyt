@@ -141,6 +141,38 @@ def test_fusion_detects_hallucination():
     assert truth.speech_ratio < 0.3
 
 
+def test_fusion_does_not_flag_speech_that_straddles_a_vad_gap():
+    """The energy VAD fragments continuous speech into short bursts separated
+    by small gaps. A word whose timestamp starts inside one of those gaps is
+    real speech, not a hallucination.
+
+    On the real 8.9-minute source the start-point test flagged 502 of 1156
+    words (43%), and ``remove_hallucinations`` then cut 190s of genuine speech
+    out of the timeline as if the transcript were inventing it.
+    """
+    # "around the" is spoken continuously, but VAD heard two bursts.
+    words = [_word(0.10, 0.44, "around"), _word(0.40, 0.72, "the")]
+    speech = [_speech(0.00, 0.38), _speech(0.46, 0.90)]
+    silences = [_silence(0.38, 0.46)]
+    pauses = []
+    truth = fuse_audio_truth(words, speech, silences, pauses, 1.0)
+    assert truth.hallucinated_count == 0, "a word straddling a VAD gap is speech"
+    assert all(fw.vad_speech for fw in truth.fused_words)
+
+
+def test_fusion_still_flags_words_in_genuine_silence():
+    """The leniency above must not swallow real hallucinations: a word that
+    touches no speech region at all is still uncorroborated."""
+    words = [_word(0.10, 0.40, "real"), _word(5.00, 5.30, "invented")]
+    speech = [_speech(0.00, 0.50)]
+    silences = [_silence(0.50, 6.0)]
+    pauses = [ClassifiedPause(0.50, 6.0, 5.5, PauseType.DEAD_AIR)]
+    truth = fuse_audio_truth(words, speech, silences, pauses, 6.0)
+    assert truth.hallucinated_count == 1
+    assert truth.fused_words[0].vad_speech is True
+    assert truth.fused_words[1].vad_speech is False
+
+
 def test_fusion_speech_silence_ratios():
     words = [_word(0.0, 0.5)]
     speech = [_speech(0.0, 3.0)]
