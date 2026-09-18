@@ -86,6 +86,9 @@ class JumpCutEngine:
         filler_threshold: pauses below this are trimmed if not intentional
         keep_intentional: preserve intentional pauses
         keep_breathing: preserve breathing pauses
+        remove_filler: remove hesitation and filler pauses (the editorial
+            "ums, ahs and stalls" pass; set False to keep the speaker's
+            hesitations verbatim)
         word_safe_margin: extra padding (s) added around word boundaries
         remove_hallucinations: remove words outside VAD speech regions
     """
@@ -97,6 +100,7 @@ class JumpCutEngine:
         filler_threshold: float = 0.6,
         keep_intentional: bool = True,
         keep_breathing: bool = True,
+        remove_filler: bool = True,
         word_safe_margin: float = 0.02,
         remove_hallucinations: bool = True,
     ):
@@ -105,6 +109,7 @@ class JumpCutEngine:
         self.filler_threshold = filler_threshold
         self.keep_intentional = keep_intentional
         self.keep_breathing = keep_breathing
+        self.remove_filler = remove_filler
         self.word_safe_margin = word_safe_margin
         self.remove_hallucinations = remove_hallucinations
 
@@ -127,15 +132,21 @@ class JumpCutEngine:
 
         snapped = self._word_safe_snap(keep_intervals, truth.fused_words)
         kept_pauses: list[tuple[float, float]] = []
+        # Gaps are re-derived from the keep tiling after the fact, so the reason
+        # a pause was dropped would be lost. Carry it alongside the interval and
+        # let _derive_segments attribute a gap to the decision that made it.
+        removed_reasons: list[tuple[float, float, str]] = []
 
         for pause in truth.pauses:
             keep, reason = self._should_keep_pause(pause)
             if keep:
                 kept_pauses.append((pause.start, pause.end))
-            elif snapped:
-                snapped = cut_algebra.subtract_intervals(
-                    snapped, [(pause.start, pause.end)]
-                )
+            else:
+                removed_reasons.append((pause.start, pause.end, reason))
+                if snapped:
+                    snapped = cut_algebra.subtract_intervals(
+                        snapped, [(pause.start, pause.end)]
+                    )
 
         snapped = cut_algebra.merge_intervals(snapped + kept_pauses)
 
@@ -148,10 +159,17 @@ class JumpCutEngine:
                 snapped = cut_algebra.subtract_intervals(
                     snapped, hallucination_intervals
                 )
+            for fw in truth.fused_words:
+                if not fw.vad_speech:
+                    removed_reasons.append(
+                        (fw.word.start, fw.word.end, "hallucination")
+                    )
 
         keep_intervals = cut_algebra.merge_intervals(snapped)
 
-        segments = self._derive_segments(keep_intervals, truth.duration)
+        segments = self._derive_segments(
+            keep_intervals, truth.duration, removed_reasons
+        )
 
         return CutList(
             segments=segments,
@@ -160,7 +178,10 @@ class JumpCutEngine:
         )
 
     def _derive_segments(
-        self, keep_intervals: list[tuple[float, float]], duration: float
+        self,
+        keep_intervals: list[tuple[float, float]],
+        duration: float,
+        removed_reasons: list[tuple[float, float, str]] | None = None,
     ) -> list[CutSegment]:
         """Convert KEEP intervals into annotated CUT segments with gaps.
 
@@ -171,21 +192,48 @@ class JumpCutEngine:
         segments: list[CutSegment] = []
         prev_end = 0.0
 
+        def emit_gap(g0: float, g1: float) -> None:
+            gap_type, reason = self._classify_gap(g0, g1, removed_reasons or [])
+            segments.append(CutSegment(g0, g1, gap_type, reason))
+
         for start, end in keep_intervals:
             if start > prev_end:
-                gap_type = self._classify_gap(prev_end, start)
-                segments.append(CutSegment(prev_end, start, gap_type, gap_type.value))
+                emit_gap(prev_end, start)
             segments.append(CutSegment(start, end, SegmentType.KEEP, "speech"))
             prev_end = end
 
         if prev_end < duration:
-            gap_type = self._classify_gap(prev_end, duration)
-            segments.append(CutSegment(prev_end, duration, gap_type, gap_type.value))
+            emit_gap(prev_end, duration)
 
         return segments
 
-    def _classify_gap(self, start: float, end: float) -> SegmentType:
-        gap_dur = end - start
+    def _classify_gap(
+        self,
+        start: float,
+        end: float,
+        removed_reasons: list[tuple[float, float, str]],
+    ) -> tuple[SegmentType, str]:
+        """Name a gap for the decision that actually created it.
+
+        Gaps are derived from the final keep tiling, which loses the reason a
+        pause was dropped. Without this lookup a removed hesitation is reported
+        as dead air — the cut is right, but the editor's traceability is wrong,
+        and REMOVE_FILLER becomes unreachable: any pause long enough to count as
+        filler already exceeds silence_threshold, so duration alone never
+        selects it.
+        """
+        mid = (start + end) / 2.0
+        for r0, r1, reason in removed_reasons:
+            if r0 <= mid <= r1:
+                if reason == "hallucination":
+                    return SegmentType.REMOVE_HALLUCINATION, reason
+                if reason in ("hesitation", "filler"):
+                    return SegmentType.REMOVE_FILLER, reason
+                return SegmentType.REMOVE_SILENCE, reason
+        gap_type = self._gap_type_by_duration(end - start)
+        return gap_type, gap_type.value
+
+    def _gap_type_by_duration(self, gap_dur: float) -> SegmentType:
         if gap_dur >= self.silence_threshold:
             return SegmentType.REMOVE_SILENCE
         return SegmentType.REMOVE_FILLER
@@ -197,12 +245,16 @@ class JumpCutEngine:
             return True, "intentional_kept"
         if pause.pause_type == PauseType.BREATHING and self.keep_breathing:
             return True, "breathing_kept"
-        if pause.pause_type == PauseType.HESITATION and pause.duration >= self.hesitation_threshold:
-            return False, "hesitation"
-        if pause.duration >= self.filler_threshold and pause.pause_type in (
-            PauseType.HESITATION, PauseType.UNCERTAIN
-        ):
-            return False, "filler"
+        # Hesitation and filler removal is one editorial switch: without it the
+        # speaker's stalls stay verbatim, which is what --no-remove-filler asks
+        # for. Dead air and breath handling are independent switches above.
+        if self.remove_filler:
+            if pause.pause_type == PauseType.HESITATION and pause.duration >= self.hesitation_threshold:
+                return False, "hesitation"
+            if pause.duration >= self.filler_threshold and pause.pause_type in (
+                PauseType.HESITATION, PauseType.UNCERTAIN
+            ):
+                return False, "filler"
         return True, "short_kept"
 
     def _word_safe_snap(
