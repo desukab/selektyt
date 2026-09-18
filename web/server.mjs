@@ -38,9 +38,40 @@ const MIME = {
   ".js": "text/javascript; charset=utf-8",
 };
 
+// What `python -m selekyt --server` actually has to import. Probing this
+// rather than merely `--version` is what catches an interpreter that is on
+// PATH but cannot run the sidecar — the classic case is a project venv that
+// was never activated: `node web/server.mjs` then picked a bare `python3`
+// that had no cv2/yt-dlp, and the only diagnostic was a traceback on the
+// server's own stderr and an HTTP "sidecar exited before answering".
+const SIDECAR_IMPORT = "from selekyt.cli import main";
+
+function probePython(cand) {
+  try {
+    const r = spawnSync(cand, ["-c", SIDECAR_IMPORT], {
+      stdio: ["ignore", "pipe", "pipe"],
+      encoding: "utf8",
+    });
+    return r.status === 0;
+  } catch {
+    return false;
+  }
+}
+
 function pickPython() {
   if (process.env.SELEKYT_PYTHON) return process.env.SELEKYT_PYTHON;
-  for (const cand of ["python3", "python"]) {
+  const candidates = [];
+  // A project-local virtualenv is the usual install target and is not
+  // necessarily on PATH (created without activation), so it is tried first.
+  for (const rel of [".venv/bin/python", "venv/bin/python"]) {
+    const p = join(ROOT, rel);
+    if (existsSync(p)) candidates.push(p);
+  }
+  candidates.push("python3", "python");
+  for (const cand of candidates) if (probePython(cand)) return cand;
+  // Nothing could import the sidecar. Return the first existing interpreter
+  // so the caller still gets a real error from the child instead of ENOENT.
+  for (const cand of candidates) {
     try {
       spawnSync(cand, ["--version"], { stdio: "ignore" });
       return cand;
@@ -60,8 +91,13 @@ const pending = [];
 let outBuf = "";
 
 function spawnChild() {
+  // stderr is captured, not inherited: a sidecar that cannot start (missing
+  // dependency, wrong interpreter, broken install) dies before it can answer,
+  // and "sidecar exited before answering" alone tells nobody why. The tail is
+  // attached to the error the HTTP caller receives.
+  const errBuf = [];
   const c = spawn(PYTHON, ["-m", "selekyt", "--server"], {
-    stdio: ["pipe", "pipe", "inherit"],
+    stdio: ["pipe", "pipe", "pipe"],
   });
   c.stdout.setEncoding("utf8");
   c.stdout.on("data", (chunk) => {
@@ -80,15 +116,24 @@ function spawnChild() {
       }
     }
   });
+  c.stderr.setEncoding("utf8");
+  c.stderr.on("data", (chunk) => {
+    errBuf.push(chunk);
+    if (errBuf.length > 16) errBuf.shift();
+  });
   c.on("error", (err) => {
     const entry = pending.shift();
     if (entry) entry.resolve({ ok: false, error: `sidecar failed to start: ${err.message}` });
   });
-  c.on("exit", () => {
+  c.on("exit", (code, signal) => {
     child = null;
+    const detail = errBuf.join("").trim();
+    const error = detail
+      ? `sidecar exited before answering (code ${code ?? signal})\n${detail.slice(-2000)}`
+      : `sidecar exited before answering (code ${code ?? signal})`;
     let entry;
     while ((entry = pending.shift())) {
-      entry.resolve({ ok: false, error: "sidecar exited before answering" });
+      entry.resolve({ ok: false, error });
     }
   });
   return c;

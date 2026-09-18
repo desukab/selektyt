@@ -10,10 +10,12 @@ import re
 import select
 import shutil
 import subprocess
+import os
 import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
+from os.path import dirname
 
 import pytest
 
@@ -200,3 +202,68 @@ def test_out_of_project_paths_are_rejected(base):
 def test_bad_upload_is_a_clean_error(base):
     resp = _post(base, "vad_analyze", {"wav": "bm90LXdhdg==", "name": "tiny.wav"})
     assert resp["ok"] is False
+
+def _broken_python3_shim(tmpdir: Path) -> Path:
+    """A `python3` that passes `--version` but cannot run the sidecar.
+
+    This is exactly the shape of an unactivated project venv plus a bare
+    system python3: the interpreter answers --version (so the old
+    resolution accepted it) and then dies on the sidecar's imports.
+    """
+    shim = tmpdir / "python3"
+    shim.write_text(
+        "#!/bin/sh\n"
+        'if [ "$1" = "--version" ]; then echo "Python 0.0.0 (shim)"; exit 0; fi\n'
+        'if [ "$1" = "-c" ]; then echo "ModuleNotFoundError: No module named \'selekyt\'" >&2; exit 1; fi\n'
+        "exit 1\n",
+        encoding="utf-8",
+    )
+    shim.chmod(0o755)
+    return shim
+
+
+def test_sidecar_resolution_skips_an_interpreter_that_cannot_run_it(tmp_path):
+    """Regression: the bridge must not pick a python that cannot start the
+    sidecar. It used to take the first PATH entry that answered --version and
+    every request then failed with an unhelpful "sidecar exited before
+    answering"."""
+    broken = _broken_python3_shim(tmp_path)
+    # A directory later on PATH must hold a genuinely working interpreter,
+    # otherwise there is nothing to fall forward to and the test cannot mean
+    # anything.
+    real = shutil.which("python3")
+    if real is None or real == str(broken):
+        pytest.skip("no second interpreter available to resolve to")
+    env = dict(os.environ)
+    env["PATH"] = f"{tmp_path}{os.pathsep}{dirname(real)}{os.pathsep}{env.get('PATH', '')}"
+    # Force the probe path: never honour an inherited override here.
+    env.pop("SELEKYT_PYTHON", None)
+    proc = subprocess.Popen(
+        [NODE, str(ROOT / "web" / "server.mjs"), "--port", "0"],
+        cwd=str(ROOT),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env,
+    )
+    try:
+        base = None
+        deadline = time.time() + 20
+        while time.time() < deadline:
+            r, _, _ = select.select([proc.stdout], [], [], 1)
+            if not r:
+                assert proc.poll() is None, proc.stderr.read().decode()[-800:]
+                continue
+            m = re.search(rb"LISTEN (\S+):(\d+)", proc.stdout.readline())
+            if m:
+                base = f"http://{m.group(1).decode()}:{int(m.group(2))}"
+                break
+        assert base, f"server never reported a port: {proc.stderr.read().decode()[-800:]}"
+        data = _expect_ok(base, "ping", {})
+        assert data["engine"] == "python"
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
