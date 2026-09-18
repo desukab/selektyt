@@ -3,9 +3,14 @@
 The repetition merge and the model-file lookup are the two parts of this
 backend that fail silently — a missed merge puts a duplicated sentence in
 the transcript, and a mis-resolved model quietly downgrades "small" to
-"base" without telling anyone. Both are pinned here.
+"base" without telling anyone. Both are pinned here, along with the error
+surface a host sees when the optional sherpa-onnx wheel or its model is
+absent: that must name what to install rather than leaking a bare
+ModuleNotFoundError out of a transcription run.
 """
-from pathlib import Path
+import sys
+
+import pytest
 
 from models.core import Segment
 
@@ -142,3 +147,18 @@ def test_recognizer_errors_when_nothing_exists(tmp_path):
         assert "sherpa-onnx" in str(exc)
     else:
         raise AssertionError("a missing model must raise, not silently downgrade")
+
+
+def test_recognizer_errors_when_library_missing(tmp_path, monkeypatch):
+    # sherpa-onnx is an optional extra, so a host can legitimately lack the
+    # wheel. That must surface as an actionable error naming the extra to
+    # install, not a bare ModuleNotFoundError from inside a transcription run.
+    monkeypatch.setitem(sys.modules, "sherpa_onnx", None)
+    models = tmp_path / "models"
+    models.mkdir()
+    with pytest.raises(RuntimeError, match="sherpa-onnx") as excinfo:
+        _recognizer_for("small", "en", models)
+    # The ImportError is chained, not swallowed: the traceback still shows
+    # what the interpreter failed to import.
+    assert isinstance(excinfo.value.__cause__, ImportError)
+    assert "sherpa_onnx" in str(excinfo.value.__cause__)

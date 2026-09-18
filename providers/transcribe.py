@@ -69,6 +69,7 @@ def transcribe(
 
     raise RuntimeError(
         "no transcription engine available: install faster-whisper "
-        "(pip install -e '.[transcription]') or place a sherpa-onnx whisper "
-        "model under ~/.cache/telugify/models/sherpa-onnx-whisper-base"
+        "(pip install -e '.[transcription]'), or install sherpa-onnx "
+        "(pip install -e '.[sherpa]') and place a sherpa-onnx whisper model "
+        "under ~/.cache/telugify/models/sherpa-onnx-whisper-base"
     )

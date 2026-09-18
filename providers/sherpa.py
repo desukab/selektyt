@@ -224,8 +224,29 @@ def _model_files(model_name: str, models_dir: Path) -> tuple[Path, Path, Path] |
     return None
 
 
+def _sherpa_onnx():
+    """Import sherpa_onnx, or fail with an error an operator can act on.
+
+    sherpa-onnx is an optional extra, not a base dependency: it is only needed
+    on hosts where faster-whisper has no wheel. A bare ImportError escaping
+    here would surface as "No module named 'sherpa_onnx'" from deep inside a
+    transcription run, with no hint that it is a packaging choice. The
+    original error is chained rather than discarded, so the traceback still
+    shows exactly what the interpreter could not find.
+    """
+    try:
+        import sherpa_onnx
+    except ImportError as exc:
+        raise RuntimeError(
+            "sherpa-onnx is not installed. It is the transcription fallback "
+            "for hosts where faster-whisper has no wheel (for example Termux "
+            "ARM64); install it with pip install -e '.[sherpa]'"
+        ) from exc
+    return sherpa_onnx
+
+
 def _recognizer_for(model_name: str, language: str, models_dir: Path | None = None):
-    import sherpa_onnx
+    sherpa_onnx = _sherpa_onnx()
 
     models_dir = models_dir or DEFAULT_MODELS_DIR
     # "small" maps to a sherpa-onnx-whisper-small dir if present; the base
@@ -347,13 +368,16 @@ def transcribe(
 
 
 def is_available(model_name: str = "base", models_dir: Path | None = None) -> bool:
-    """True when a sherpa-onnx whisper model is present on this host."""
-    try:
-        import sherpa_onnx  # noqa: F401
-    except ImportError:
-        return False
+    """True when sherpa-onnx and a whisper model are usable on this host.
+
+    Probing by actually building the recognizer is deliberate: it confirms
+    the model files load, not merely that they exist on disk. Every failure
+    mode — missing wheel, missing model, unreadable weights — collapses to
+    "unavailable", which is what the caller needs to decide whether to fall
+    back.
+    """
     try:
         _recognizer_for(model_name, "en", models_dir)
-        return True
     except Exception:
         return False
+    return True

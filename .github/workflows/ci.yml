@@ -62,7 +62,11 @@ jobs:
         run: chmod +x rust/target/release/selekyt-mech
       - name: Install package (test + LLM deps)
         # requests is imported at collection time via engine.llm_editorial;
-        # faster-whisper is imported lazily and mocked in tests.
+        # faster-whisper and sherpa-onnx are transcription backends that are
+        # imported lazily and are deliberately optional extras here. The
+        # sherpa backend's missing-library and missing-model error paths are
+        # pinned by tests/test_sherpa.py without needing the wheel, so CI
+        # stays green on hosts where neither engine is installed.
         run: pip install -e ".[dev,llm]"
       - name: Node (for the web shell harness tests)
         run: node --version

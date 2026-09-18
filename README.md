@@ -21,6 +21,16 @@ selekyt "URL" --model small --language te --limit 6
 
 `--language te` can be used for Telugu; the same option works for other Whisper-supported languages. By default the source language is detected and preserved.
 
+### Hosts where faster-whisper cannot run
+
+faster-whisper needs a ctranslate2 wheel for your platform and Python; some pairs have none (e.g. Termux ARM64 on Python 3.14). There the pipeline falls back to sherpa-onnx's Whisper export, which ships as a plain wheel and runs on CPU, with a whisper model placed under `~/.cache/telugify/models/sherpa-onnx-whisper-base`:
+
+```bash
+pip install -e '.[sherpa]'
+```
+
+Word timestamps from this backend are distributed by character proportion within each whisper segment rather than read from cross-attention, and that is recorded in the run's provenance so it is never mistaken for per-token timing.
+
 ## What SelekyT actually does
 
 1. Downloads a single supplied YouTube video with `yt-dlp`.
