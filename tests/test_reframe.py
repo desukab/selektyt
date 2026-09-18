@@ -87,3 +87,88 @@ def test_crop_expression_is_bounded_and_time_keyed(tmp_path):
          f"crop=ih*9/16:ih:x='{expr}':y=0", "-f", "null", "-"],
         check=True, capture_output=True,
     )
+
+
+# ── F16: the source is decoded once, not once per question asked of it ──
+
+
+def test_probe_opens_the_source_exactly_once(tmp_path, monkeypatch):
+    """F16: dimensions and subject tracking used to be two separate
+    ``VideoCapture`` opens, so the seek-heavy metadata pass ran twice per
+    vertical clip. Now one open answers both."""
+    import engine.reframe as reframe_mod
+
+    video = _moving_square_video(tmp_path / "square.mp4")
+    real_open = reframe_mod.cv2.VideoCapture
+
+    opened = []
+
+    def counting_open(path):
+        opened.append(str(path))
+        return real_open(path)
+
+    monkeypatch.setattr(reframe_mod.cv2, "VideoCapture", counting_open)
+    expr = crop_x_expression(video, start=0.0, end=1.8)
+    assert expr, "the crop expression must still be produced"
+    assert len(opened) == 1, (
+        f"the source must be opened once, opened {len(opened)} times: {opened}"
+    )
+    assert opened[0] == str(video)
+
+
+def test_face_cascade_is_loaded_once_per_process(tmp_path, monkeypatch):
+    """F16 (IO half): the Haar XML is the same for every clip and every 9:16
+    render, so re-reading it per call is duplicated work on a constrained host.
+    """
+    import engine.reframe as reframe_mod
+
+    # Some opencv builds (this host's, among others) ship without the Haar
+    # class at all, in which case the code takes the edge-density fallback and
+    # never loads anything. Inject a stub so the memo is testable everywhere.
+    constructed = []
+
+    class _StubCascade:
+        def __init__(self, path):
+            constructed.append(str(path))
+
+        def empty(self):
+            return False
+
+        def detectMultiScale(self, *a, **kw):
+            return []
+
+    monkeypatch.setattr(reframe_mod.cv2, "CascadeClassifier", _StubCascade,
+                         raising=False)  # not every build ships the class
+    # Drop the process-level memo so the count is this test's alone.
+    monkeypatch.setattr(reframe_mod, "_CACHED_CASCADE", False)
+
+    video = _moving_square_video(tmp_path / "square2.mp4")
+    for _ in range(3):
+        crop_x_expression(video, start=0.0, end=1.8)
+    assert len(constructed) == 1, (
+        f"the cascade must be loaded once and reused, loaded {len(constructed)}"
+    )
+    # the memo survives later calls in the same process
+    crop_x_expression(video, start=0.0, end=1.8)
+    assert len(constructed) == 1
+
+
+def test_absent_cascade_data_falls_back_without_crashing(tmp_path, monkeypatch):
+    """A headless build without cv2.data must still produce a crop expression
+    rather than raising — the edge-density tracker takes over."""
+    import engine.reframe as reframe_mod
+
+    class _Boom:
+        def __init__(self, *a, **kw):
+            raise AttributeError("cv2.data is not available on this build")
+
+    monkeypatch.setattr(reframe_mod, "_CACHED_CASCADE", False)
+    monkeypatch.setattr(reframe_mod.cv2, "CascadeClassifier", _Boom,
+                         raising=False)
+
+    video = _moving_square_video(tmp_path / "square3.mp4")
+    expr = crop_x_expression(video, start=0.0, end=1.8)
+    assert expr, "an unusable cascade must not prevent reframing"
+    assert reframe_mod._load_face_cascade() is None
+
+
