@@ -192,6 +192,15 @@ def _edl_events(timeline: Timeline) -> list[_EdlEvent]:
     ordered = sorted(
         timeline.clips, key=lambda c: (c.timeline_in, _channel_priority(c, timeline))
     )
+    # Record positions must advance monotonically within a channel. Rounding
+    # each event's timeline_in to the record grid independently lets the
+    # accumulated sum drift by a frame in either direction, and an event can
+    # then start one frame *before* its predecessor ends — an overlap the
+    # validator rejects and an NLE would render as a spurious crossfade. So
+    # each event's in-point is the greater of its own snapped timeline_in and
+    # the previous event's out-point on that channel, which keeps the list
+    # gap-free without re-timing anything: only the boundary frame moves.
+    rec_end: dict[str, int] = {}
     for n, clip in enumerate(ordered, 1):
         reel = reels.setdefault(clip.source.key, _reel_name(clip.source.path, taken))
         # Snap source and record onto their own frame grids *once*, then build
@@ -201,15 +210,20 @@ def _edl_events(timeline: Timeline) -> list[_EdlEvent]:
         # clip's own timecode pair uses the same snapping.
         rate = clip.rate
         _, span_frames = clip._source_frames()
-        rec_in_frames = int(round(clip.timeline_in / rec_rate.frame_seconds()))
         span_seconds = span_frames * rate.frame_seconds()
         rec_span_frames = int(round(span_seconds / rec_rate.frame_seconds()))
+        channels = _channel_codes(clip, timeline)
+        # Video and audio of the same cut share one record in-point.
+        own_in = int(round(clip.timeline_in / rec_rate.frame_seconds()))
+        rec_in_frames = max(own_in, max((rec_end.get(ch, 0) for ch in channels), default=0))
         src_in = clip.source_timecode_in()
         src_out = clip.source_timecode_out()
         rec_in = format_smpte(rec_in_frames * rec_rate.frame_seconds(), rec_rate)
         rec_out = format_smpte((rec_in_frames + rec_span_frames) * rec_rate.frame_seconds(), rec_rate)
+        for ch in channels:
+            rec_end[ch] = rec_in_frames + rec_span_frames
         name, substituted = _ascii_name(clip.name, reel)
-        for ch in _channel_codes(clip, timeline):
+        for ch in channels:
             events.append(
                 _EdlEvent(
                     number=n,
