@@ -111,7 +111,7 @@ experiment has been run.** That is the single most important thing on this page.
 | 30-day retained users | Users with ≥1 pipeline in the 30 days after their first ÷ users who activated | `pipeline.started` cohorts | **0** | Only meaningful once Section C's blind A/B has been won |
 | Paying customers | Distinct accounts with a completed payment | `payment.succeeded` — no billing code exists (VERIFIED — `docs/RED_TEAM.md` appendix) | **0** | First 5 paying design partners is the round's stated milestone (`docs/FUNDRAISING.md` §12) |
 | MRR | Sum of active subscriptions | billing system | **$0** | $0 today and honestly so. `docs/BUSINESS_MODEL.md` designs tiers ($29/$79/$249/$999) but no price has been charged to anyone |
-| Gross margin | (Revenue − variable COGS) ÷ revenue | Billing + cost ledger | **N/A** | Supply side is not the risk: measured all-in compute is $0.00098–$0.00471 per source-minute (VERIFIED — `docs/BUSINESS_MODEL.md` §4), so at the $29/300-minute plan COGS is ~$1.20 against $29. The model is demand-constrained, not cost-constrained (VERIFIED — `docs/BUSINESS_MODEL.md` §7) |
+| Gross margin | (Revenue − variable COGS) ÷ revenue | Billing + cost ledger | **N/A** | Supply side is not the risk: measured all-in compute is $0.00104–$0.00476 per source-minute (VERIFIED — `docs/BUSINESS_MODEL.md` §4), so at the $29/300-minute plan COGS is ~$1.43 against $29. The model is demand-constrained, not cost-constrained (VERIFIED — `docs/BUSINESS_MODEL.md` §7) |
 | Churn | Cancelled ÷ active, monthly | billing system | **N/A** | The model's sensitivity analysis shows churn is the assumption the whole business turns on (VERIFIED — `docs/BUSINESS_MODEL.md` §7). It has no data behind it |
 
 ---

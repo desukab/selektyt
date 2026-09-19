@@ -152,7 +152,7 @@ unit-economics *modelling*, which is a different thing:
 - Measured compute rates (VERIFIED — `docs/BUSINESS_MODEL.md` §1, benchmarked on
   the real artifacts of the reference run on this 4-core host): transcription
   0.165 RTF CPU with `small`/int8; render 0.1232 RTF; all-in planning cost
-  $0.00098–$0.00471 per source-minute depending on delivery mode.
+  $0.00104–$0.00476 per source-minute depending on delivery mode.
 
 A diligence team asking for "the financials" today would receive a cost model
 with zero dollars of history behind it. That is the correct thing to give them,

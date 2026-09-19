@@ -23,13 +23,22 @@ I benchmarked the two stages that dominate compute, on real artifacts of the ref
 | Render RTF, 16:9 (720×486 → cap 1080 wide, lanczos + ASS burn) | **0.1232** | MEASURED | 7.392 s wall for 60 s of the real source |
 | Render RTF, 9:16 **if square pixels were emitted** (crop 272:486 → upscale to 1232×2184) | **0.6829** | MEASURED | 40.972 s for 60 s — but see below, SelekyT does **not** do this |
 | Reference source duration | 1469.77 s (24.496 min) | MEASURED | `ffprobe` on `out/url-e2e/project/source/NASA_360_program5_HD.mov` |
-| Delivered output | 116.95 s total, 58.48 s per preset × 2 | MEASURED | `ffprobe` on `facebook/0{1,2,3}.mp4`, `shorts/0{1,2,3}.mp4` |
-| Clip yield | **7.96%** of source duration (3.98% per preset) | COMPUTED | 116.95 / 1469.77 |
-| Delivered bytes | **9.9 MB** (6.5 MB 16:9 + 3.4 MB 9:16 + 40 KB captions) | MEASURED | `du` on the reference project |
-| Project disk total | ~900 MB, of which 843 MB is the source copy and 46 MB is transcription intermediates | MEASURED | `du` |
-| 9:16 coded geometry | 272×486, SAR 8:9, DAR 1088:2187 | MEASURED | `ffprobe` on `shorts/01.mp4` |
+| Delivered output | 198.51 s total, 99.254 s per preset × 2, 6 clips per preset | MEASURED | `ffprobe` over all 12 of `facebook/01..06.mp4`, `shorts/01..06.mp4` |
+| Clip yield | **13.506%** of source duration (6.753% per preset) | COMPUTED | 198.51 / 1469.77 |
+| Delivered bytes | **19.1 MB** (11.90 MB 16:9 + 7.20 MB 9:16 + 0.04 MB captions/timelines) | MEASURED | `du` on the reference project |
+| Project disk total | ~952 MB, of which 884 MB is the source copy and the rest is transcription intermediates | MEASURED | `du` |
+| 9:16 coded geometry | 308×486, SAR 8:9, DAR 1232:2187 | MEASURED | `ffprobe` on `shorts/01.mp4` |
 
-**Correction that materially changed the model.** I first benchmarked the 9:16 render as a pixel-upscale (0.683 RTF, 39 MB for 60 s). The real output is **not** upscaled: it is coded at 272×486 with SAR 8:9 so the display ratio is 9:16 with zero resampling (`docs/product-gap-map.md` RENDER row). The real 9:16 short is **465 kbps**, not the ~5 Mbps my upscale benchmark produced. So for cost purposes **both presets encode ≈0.35 M pixels** and I charge both at the measured 0.1232 RTF. The 0.683 figure is retained only as the cost of a hypothetical square-pixel mode — and it is a warning: a "make the pixels square" change would ~5.5× the 9:16 render cost and ~4× the output bitrate.
+**These figures supersede an earlier reading of this table.** The reference
+artifacts were regenerated at 07:36 on 2026-09-19, after this document was
+written, and shipped 6 clips per preset rather than 3. The earlier rows
+(116.95 s total, 7.96% yield, 9.9 MB, 272×486 / DAR 1088:2187) describe a run
+that no longer exists and **must not be quoted again**. The RTF measurements
+above are unaffected — they were taken on the source audio and a 60 s render
+window, not on clip counts. Re-verified independently in `docs/EVALUATION.md` §6
+and by the integrating operator today.
+
+**Correction that materially changed the model.** I first benchmarked the 9:16 render as a pixel-upscale (0.683 RTF, 39 MB for 60 s). The real output is **not** upscaled: it is coded at 308×486 with SAR 8:9 so the display ratio is 1232:2187 ≈ 9:16 with zero resampling (`docs/product-gap-map.md` RENDER row, re-verified by `ffprobe` today). The real 9:16 short is **161–167 kbps video**, not the ~5 Mbps my upscale benchmark produced. So for cost purposes **both presets encode ≈0.35 M pixels** and I charge both at the measured 0.1232 RTF. The 0.683 figure is retained only as the cost of a hypothetical square-pixel mode — and it is a warning: a "make the pixels square" change would ~5.5× the 9:16 render cost and ~4× the output bitrate.
 
 **Corroboration of the CPU number.** The faster-whisper README benchmark (CITED, https://github.com/SYSTRAN/faster-whisper, retrieved 2026-09-19) reports `small`, int8, beam 5 on an i7-12700K (8 threads) taking 1m42s for 13 min of audio → RTF 0.131. My 0.165 on 4 cores with beam 1 is consistent with fewer cores. That README also reports large-v2 on an RTX 3070 Ti at int8 taking 16 s for 13 min (RTF 0.021) — the anchor I use for the GPU assumption in §4.
 
@@ -100,15 +109,15 @@ All figures are **minutes of compute per minute of source video**.
 | Audio extraction / decode to 16 kHz mono | 0.10 | ASSUMPTION |
 | Transcription, `small`, int8, 4 threads | 0.1651 | MEASURED |
 | Editorial pipeline (story units, scoring, pause fusion, export) | 0.01 | ASSUMPTION |
-| Render 16:9 (0.1232) × yield/preset (0.0398) | 0.0049 | COMPUTED from MEASURED |
-| Render 9:16, anamorphic (0.1232) × yield/preset (0.0398) | 0.0049 | COMPUTED from MEASURED |
-| **Total, current configuration** | **0.2849** | COMPUTED |
+| Render 16:9 (0.1232) × yield/preset (0.06753) | 0.00832 | COMPUTED from MEASURED |
+| Render 9:16, anamorphic (0.1232) × yield/preset (0.06753) | 0.00832 | COMPUTED from MEASURED |
+| **Total, current configuration** | **0.2917** | COMPUTED |
 
 Model-size scaling **[ASSUMPTION]**, anchored on the relative compute cost of Whisper sizes (the README table above lists `small` and `large-v2`; I use the conventional ≈3× step to `medium` and ≈10× to `large-v3` and mark the resulting figures as assumptions throughout):
 
 | Transcription model | CPU RTF | Total RTF |
 | --- | --- | --- |
-| `small` (today's) | 0.1651 | 0.2849 |
+| `small` (today's) | 0.1651 | 0.2917 |
 | `medium` | 0.4953 | 0.6151 |
 | `large-v3` | 1.651 | 1.7708 |
 
@@ -122,7 +131,7 @@ Reference instance: **AWS `c7i.xlarge`, $0.1785/hr on-demand** (4 vCPU — match
 
 | Configuration | $/source-min | $ per 24.5-min reference job |
 | --- | --- | --- |
-| `small`, `c7i.xlarge` on-demand | **$0.000847** | $0.021 |
+| `small`, `c7i.xlarge` on-demand | **$0.000868** | $0.021 |
 | `small`, Azure `D8s v5` on-demand | $0.00182 | $0.045 |
 | `small`, Azure `D8s v5` **spot** | **$0.000385** | $0.009 |
 | `medium`, `c7i.xlarge` on-demand | $0.00183 | $0.045 |
@@ -140,22 +149,22 @@ GPU transcription RTF **[ASSUMPTION]**: 0.02 (`small`), 0.03 (`medium`), 0.08 (`
 | `large-v3` on `g6.2xlarge` | $0.00326 |
 | `large-v3` on Azure T4 spot | **$0.00050** |
 
-**GPU is not justified at the `small` model.** The L4 instance costs 5.47× the 4-vCPU CPU instance, so GPU only wins if it cuts total RTF below 0.2849 × (0.1785/0.9776) = **0.0521**. The non-transcription work alone is 0.1198. That is unreachable while transcription is `small` and renders stay on CPU ffmpeg. **GPU becomes the right answer only if accuracy forces `large-v3`**: at that point T4/GPU spot is ~10.6× cheaper than CPU on-demand ($0.00050 vs $0.00527), and it is the difference between a sane batch service and an uneconomical one. The decision is gated on an accuracy measurement that does not exist yet (§9), not on price.
+**GPU is not justified at the `small` model.** The L4 instance costs 5.47× the 4-vCPU CPU instance, so GPU only wins if it cuts total RTF below 0.2917 × (0.1785/0.9776) = **0.0533**. The non-transcription work alone is 0.1266. That is unreachable while transcription is `small` and renders stay on CPU ffmpeg. **GPU becomes the right answer only if accuracy forces `large-v3`**: at that point T4/GPU spot is ~10.6× cheaper than CPU on-demand ($0.00050 vs $0.00527), and it is the difference between a sane batch service and an uneconomical one. The decision is gated on an accuracy measurement that does not exist yet (§9), not on price.
 
 ### (c) External transcription API
 
-Transcription is bought per audio-minute; chunk overlap adds 4.1% billed audio (5 chunks × 15 s overlap over 1469.77 s). Renders still need CPU compute, charged at the measured non-transcription RTF 0.1198 on `c7i.xlarge` = $0.000356/source-min.
+Transcription is bought per audio-minute; chunk overlap adds 4.1% billed audio (5 chunks × 15 s overlap over 1469.77 s). Renders still need CPU compute, charged at the measured non-transcription RTF 0.1266 on `c7i.xlarge` = $0.000377/source-min.
 
 | Provider | API cost | + render | $/source-min | $/reference job |
 | --- | --- | --- | --- | --- |
-| AssemblyAI Universal-2 | $0.00260 | +$0.00036 | $0.00303 | $0.074 |
-| Google STT standard | $0.00312 | +$0.00036 | $0.00355 | $0.087 |
-| **AssemblyAI U3.5 Pro** | $0.00364 | +$0.00036 | **$0.00400** | $0.098 |
-| Deepgram Nova-3 (Growth) | $0.00375 | +$0.00036 | $0.00417 | $0.102 |
-| Deepgram Nova-3 (PAYG) | $0.00448 | +$0.00036 | $0.00490 | $0.120 |
-| OpenAI `whisper-1` | $0.00625 | +$0.00036 | $0.00667 | $0.163 |
+| AssemblyAI Universal-2 | $0.00260 | +$0.00038 | $0.00298 | $0.073 |
+| Google STT standard | $0.00312 | +$0.00038 | $0.00350 | $0.086 |
+| **AssemblyAI U3.5 Pro** | $0.00364 | +$0.00038 | **$0.00402** | $0.098 |
+| Deepgram Nova-3 (Growth) | $0.00375 | +$0.00038 | $0.00413 | $0.101 |
+| Deepgram Nova-3 (PAYG) | $0.00448 | +$0.00038 | $0.00486 | $0.119 |
+| OpenAI `whisper-1` | $0.00625 | +$0.00038 | $0.00663 | $0.162 |
 
-**Reading:** the cheapest credible API is ~3.6× self-hosted CPU on-demand ($0.00303 vs $0.000847), and the realistic mid-choice (AssemblyAI U3.5 Pro or Deepgram Nova-3) is ~4.7×. In absolute terms the premium is only ~$0.003/source-min. The API is not "too expensive" — it is a decision to buy ~$0.10 of transcription per 25-minute tape in order to own zero transcription infrastructure, zero model ops and zero accuracy risk on the STT layer. It is the correct answer for a self-serve v1 with no DevOps capacity, and the wrong answer once volume passes the point where an engineer's attention is cheaper than the markup.
+**Reading:** the cheapest credible API is ~3.4× self-hosted CPU on-demand ($0.00298 vs $0.000868), and the realistic mid-choice (AssemblyAI U3.5 Pro or Deepgram Nova-3) is ~4.6×. In absolute terms the premium is only ~$0.003/source-min. The API is not "too expensive" — it is a decision to buy ~$0.10 of transcription per 25-minute tape in order to own zero transcription infrastructure, zero model ops and zero accuracy risk on the STT layer. It is the correct answer for a self-serve v1 with no DevOps capacity, and the wrong answer once volume passes the point where an engineer's attention is cheaper than the markup.
 
 ### Storage and network
 
@@ -164,21 +173,21 @@ Transcription is bought per audio-minute; chunk overlap adds 4.1% billed audio (
 | Staging (0.889 GB: source + intermediates) held 7 days, gp3 | $0.000677 | COMPUTED from MEASURED bytes + CITED price |
 | Staging held 30 days | $0.002903 | same |
 | Staging deleted immediately after job | $0.000097 | same |
-| Egress of delivered outputs (9.9 MB → 0.40 MB/srcmin, $0.09/GB) | $0.000036 | COMPUTED from MEASURED bytes |
+| Egress of delivered outputs (19.1 MB → 0.78 MB/srcmin, $0.09/GB) | $0.000070 | COMPUTED from MEASURED bytes |
 
-**The I/O surprise, and why it does not bite.** At first glance "a 900 MB project per 25-minute tape" looks like a storage and egress disaster. It is not: 843 MB of that is the *source copy* and 46 MB is a transient 16 kHz WAV intermediate. Delivered video is **9.9 MB, or 0.40 MB per source-minute**. So output storage and output egress are ~$0.00004/source-min — negligible. What *would* be expensive is returning the processed source to the user ($0.0031/source-min at $0.09/GB), which the product has no reason to do, and holding sources 30 days ($0.0029/source-min, 3.4× the entire compute cost). **Retention policy on source media is a bigger cost lever than the transcription model.** Delete sources on job completion; keep only the ~10 MB deliverable.
+**The I/O surprise, and why it does not bite.** At first glance "a 952 MB project per 25-minute tape" looks like a storage and egress disaster. It is not: 884 MB of that is the *source copy* and the rest is a transient 16 kHz WAV intermediate. Delivered video is **19.1 MB, or 0.78 MB per source-minute**. So output storage and output egress are ~$0.00007/source-min — negligible. What *would* be expensive is returning the processed source to the user ($0.0031/source-min at $0.09/GB), which the product has no reason to do, and holding sources 30 days ($0.0029/source-min, 3.4× the entire compute cost). **Retention policy on source media is a bigger cost lever than the transcription model.** Delete sources on job completion; keep only the ~19 MB deliverable.
 
 ### All-in planning cost
 
 | Mode | Compute | Storage 7 d | Egress | **$/source-min** | **$/24.5-min job** |
 | --- | --- | --- | --- | --- | --- |
-| CPU `small`, on-demand, delete after run | $0.000847 | $0.000097 | $0.000036 | **$0.000980** | $0.024 |
-| CPU `small`, on-demand, 7-day staging | $0.000847 | $0.000677 | $0.000036 | **$0.001560** | $0.038 |
-| CPU `small`, Azure spot, 7-day staging | $0.000385 | $0.000677 | $0.000036 | **$0.001098** | $0.027 |
-| CPU `medium`, on-demand, 7-day staging | $0.00183 | $0.000677 | $0.000036 | **$0.002540** | $0.062 |
-| CPU `medium`, spot, 7-day staging | $0.00083 | $0.000677 | $0.000036 | **$0.001540** | $0.038 |
-| GPU `large-v3`, T4 spot, 7-day staging | $0.00050 | $0.000677 | $0.000036 | **$0.001210** | $0.030 |
-| **API (AssemblyAI U3.5 Pro) + CPU render** | $0.00400 | $0.000677 | $0.000036 | **$0.004710** | $0.115 |
+| CPU `small`, on-demand, delete after run | $0.000868 | $0.000097 | $0.000070 | **$0.001035** | $0.025 |
+| CPU `small`, on-demand, 7-day staging | $0.000868 | $0.000677 | $0.000070 | **$0.001615** | $0.040 |
+| CPU `small`, Azure spot, 7-day staging | $0.000393 | $0.000677 | $0.000070 | **$0.001140** | $0.028 |
+| CPU `medium`, on-demand, 7-day staging | $0.001850 | $0.000677 | $0.000070 | **$0.002597** | $0.064 |
+| CPU `medium`, spot, 7-day staging | $0.000837 | $0.000677 | $0.000070 | **$0.001584** | $0.039 |
+| GPU `large-v3`, T4 spot, 7-day staging | $0.00050 | $0.000677 | $0.000070 | **$0.001247** | $0.031 |
+| **API (AssemblyAI U3.5 Pro) + CPU render** | $0.004017 | $0.000677 | $0.000070 | **$0.004764** | $0.117 |
 
 **Planning figure used for pricing: $0.004 per source-minute.** I take the API mode (the most expensive credible option, and the one with the least operational risk for a v1 with no customers) and round up. Every price in §6 is therefore stress-tested against a COGS that is **2.4–4.7× the self-hosted figure**. If the business is not profitable at $0.004, it is not a pricing problem, it is a demand problem.
 
@@ -282,7 +291,7 @@ The $29 and $79 tiers are robust to a 5× cost error. **The Newsroom tier is not
 | --- | --- | --- | --- |
 | A1 | Variable COGS per source-minute (planning figure) | $0.004 | **COMPUTED** from §4; derived from 2 MEASURED + 2 CITED + 3 ASSUMED inputs |
 | A2 | Transcription model required for sale-grade accuracy | `small` today; `medium` assumed sufficient | **ASSUMPTION — unmeasured; the largest single risk (§9)** |
-| A3 | Clip yield from source | 7.96% | MEASURED on one source only |
+| A3 | Clip yield from source | 6.75% per preset (13.51% both) | MEASURED on one source only |
 | A4 | Creator CAC | $100–300 | **ASSUMPTION** (industry-typical for self-serve creator tools; SelekyT has no acquisition data) |
 | A5 | Professional-editor CAC | $200–400 | **ASSUMPTION** (longer sales cycle, higher intent) |
 | A6 | Monthly churn, creator tier | 3–15% | **ASSUMPTION** — no retention data exists because no users exist |
@@ -351,7 +360,7 @@ Ordered by how much of the model each one can invalidate.
 4. **The reference source is SD, 720×486, 29.97 fps, PCM audio.** Real customers bring 1080p/4K H.265 at 50+ Mbps. Decode, I/O and storage for those are **3–10× unmeasured**, and the render RTF scales with output pixel count (a 1080p 16:9 preset is ~5.9× the pixels of the 720×486 one I benchmarked — +0.024 RTF, still small, but unverified). Measurement: run one 1080p H.265 source end-to-end and re-derive the RTF table.
 5. **GPU RTF (A11) is an extrapolation.** This host has no GPU, so every GPU number in §4(b) is an assumption anchored on a *different* GPU in a README. Measurement: one hour on a `g6.2xlarge` or an Azure T4 spot VM (~$1–2) running the same 240-second benchmark. This directly decides the §8 GPU switch trigger.
 6. **CAC and churn (A4–A7) are pure industry-shape guesses, and §7 shows the whole model hinges on them.** I have deliberately not produced a point estimate for LTV/CAC as if it were a result. Measurement: any 50–100 real free users with instrumented retention produce a churn curve that replaces A6/A7 with data. Until then, §7 is a sensitivity map, not a forecast.
-7. **One source, one clip yield (A3).** Render cost and delivered bytes both scale with the clip yield, which was measured at 7.96% on exactly one tape. A talk-to-camera source may yield 2–3× that; a multi-camera event less. More sources fix this, and they are needed for item 2 anyway.
+7. **One source, one clip yield (A3).** Render cost and delivered bytes both scale with the clip yield, which was measured at 6.75% per preset on exactly one tape. A talk-to-camera source may yield 2–3× that; a multi-camera event less. More sources fix this, and they are needed for item 2 anyway.
 8. **No NLE import (G2) underpins the Pro tier's value proposition.** Resolve is free and reads CMX 3600 — one afternoon's work converts "structurally valid" into "compatible", and until it is done, the $79 tier should be described as captions-plus-renders with timeline export as an unsupported bonus.
 9. **The license blocks the obvious community path.** `LICENSE` is proprietary and forbids hosting as a competing service or commercial exploitation without written permission. That is a legitimate choice and it is what makes §6.5 possible, but it also means there is no free tier of the software itself to drive bottom-up adoption — so A4 (CAC) cannot be bought down with an open-source funnel. Worth stating plainly rather than discovering later.
 

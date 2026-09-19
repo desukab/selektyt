@@ -514,20 +514,20 @@ word-timed tokens.
 boundary artefacts in any downstream cut (`docs/product-gap-map.md`). Word-level
 timing is the foundation of every caption and every timecode in this document.
 
-### A5.4 Disk cost per project — ~900 MB, 92% intermediates
+### A5.4 Disk cost per project — ~952 MB, 93% source
 
 **Definition:** disk consumed per source, split into retained intermediates and
 deliverables.
 
-**Current value (VERIFIED on this host):** ~900 MB per project — source 843 MB,
-transcription ~46 MB, deliverables `facebook/` 6.5 MB + `shorts/` 3.4 MB +
-`timeline/` 28 KB. **The deliverables are ~10 MB; 92% of the cost is
-intermediates that nothing ever deletes** (no cleanup, GC or retention policy
+**Current value (VERIFIED on this host):** ~952 MB per project — source 884 MB,
+transcription ~49 MB, deliverables `facebook/` 11.90 MB + `shorts/` 7.20 MB +
+captions/timelines 0.04 MB. **The deliverables are ~19 MB; 93% of the cost is
+the source copy and intermediates that nothing ever deletes** (no cleanup, GC or retention policy
 exists anywhere in the codebase — `TECHNICAL_AUDIT.md`). Free disk on this host
 is 4.6 GB of 29 GB.
 
 **Target:** delete `source/` and `transcription/` once renders validate, taking
-per-project cost to ~10 MB. Until then this metric caps pilot capacity — see
+per-project cost to ~19 MB. Until then this metric caps pilot capacity — see
 `docs/PILOT_PROGRAM.md` §6.
 
 ---

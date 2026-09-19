@@ -105,15 +105,15 @@ All rates below are measured or computed in `docs/BUSINESS_MODEL.md` (retrieved
 | Render, both presets | 0.1232 RTF | measured on the real source |
 | Reference cloud instance | AWS `c7i.xlarge`, 4 vCPU, $0.1785/hr on-demand | CITED in `docs/BUSINESS_MODEL.md` §2 |
 | Always-on cost | $180/mo ($130 compute + $50 control plane, the latter ASSUMED) | `docs/BUSINESS_MODEL.md` A9 |
-| All-in, CPU self-hosted, delete source after run | **$0.000980 / source-min** | computed |
-| All-in, transcription API + CPU render, 7-day staging | **$0.00471 / source-min** | computed |
+| All-in, CPU self-hosted, delete source after run | **$0.001035 / source-min** | computed |
+| All-in, transcription API + CPU render, 7-day staging | **$0.004764 / source-min** | computed |
 
 Now the arithmetic on what this round's evidence programme actually consumes:
 
 - **Editorial corpus (line 5):** 40 sources × 45 min = 1,800 source-minutes.
-  $1.76 self-hosted; **$8.48** if transcription is fully outsourced to an API.
+  $1.86 self-hosted; **$8.58** if transcription is fully outsourced to an API.
 - **Design partners (line 8):** 5 partners × 8 episodes × 60 min = 2,400
-  source-minutes. $2.35 self-hosted; **$11.30** API mode.
+  source-minutes. $2.48 self-hosted; **$11.43** API mode.
 - **Always-on control plane (line 7):** $180/mo × 18 = **$3,240**.
 
 **Total variable compute for the entire evidence programme is on the order of

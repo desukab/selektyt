@@ -27,8 +27,8 @@ step below proves a specific, checkable property of that artifact, using tools
 that were written to *falsify* the pipeline's output rather than to praise it.
 
 **It is not** a live pipeline run. Re-running the pipeline end-to-end
-(download 843 MB, transcribe 24:29 of speech on CPU, render twelve MP4s) costs
-real wall-clock and ~900 MB of disk. This host has **4.6 GB free of 29 GB**
+(download 884 MB, transcribe 24:29 of speech on CPU, render twelve MP4s) costs
+real wall-clock and ~952 MB of disk. This host has **4.6 GB free of 29 GB**
 (`df -h /`, VERIFIED 2026-09-19) and **no GPU**, so one fresh run is possible but
 two are not, and the transcription wall-time is **NOT MEASURED** — the author did
 not re-run the pipeline to time it. Do not improvise a number on the call. If a
