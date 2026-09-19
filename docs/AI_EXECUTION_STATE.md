@@ -10,14 +10,16 @@ every line below was true on this host at that point.
   Nothing unpushed, nothing stashed, nothing in `git stash list`.
 * **Latest commit:** this file's own commit — *docs: persistent AI execution
   state checkpoint*. It is a doc-only checkpoint with no code change. The last
-  *substantive* change is `2dd4ff1` — *docs: release validation record and
-  updated product gap map*; the five defects it fixed are listed below. Run
-  `git log -1` for the current hash rather than trusting a hash printed here,
-  since amending this file changes its own commit hash.
-* Test suite: **819 passed, 10 skipped** (~64 s). The 10 skips are optional
+  *substantive* changes are the interchange-validation commits of this session
+  (the absolute asset URI, the probed source duration, the SAR-aware landscape
+  render, the path-guard boundary, and `tools/nle_check.py` itself); their
+  messages carry root cause plus the pinning test. Run `git log -1` for the
+  current hash rather than trusting a hash printed here, since amending this
+  file changes its own commit hash.
+* Test suite: **834 passed, 10 skipped** (~110 s). The 10 skips are optional
   backends absent from this host (sherpa-onnx, silero, ollama) and tests that
   depend on them. Re-run to confirm this number before trusting any claim in
-  this file.
+  this file — see the self-checkpoint note at the bottom.
 * Five commits landed on `origin/main` from outside this session
   (`36bdff4`..`edf3b30`): a switch from MIT to a proprietary license plus
   project-positioning docs. They were integrated by rebase, not overwritten.
@@ -69,18 +71,87 @@ rights-permitted URL (`archive.org/details/NASA_360_program5_HD`, 24:29 of
 two-host unscripted speech) ran the whole chain green: download → transcript →
 selection → both renders → captions → EDL/FCPXML → QA, plus the editorial audit.
 
+### This session — the interchange was independently validated, not just emitted
+
+Priority was the NLE gap (G2), which no amount of code can close without an
+NLE present. What could be closed was the *evidence* gap, and four real
+defects fell out of looking for it. Each is a class, not an instance, and each
+is pinned by a regression test:
+
+* **A relative asset URI would have imported every clip offline.** The
+  exporter wrapped the media path in `file://` using `PurePath`, which never
+  touches the filesystem, so a CLI invocation with a relative source path
+  emitted `file://out/...` — and an NLE resolves that against the *timeline
+  file's* directory, so the sequence opens with every clip missing and the
+  user faces a relink dialog for a file that never moved. Found on six
+  freshly regenerated timelines, so it was the live path, not a stale
+  artifact. The same latent bug existed in `engine/fcpxml.py` as a silent
+  fallback. Both now resolve the path and fail loudly with the path named.
+* **An asset declared the clips' extent, not the media's.** Cut 03's asset
+  declared 671.371 s while its clip read to 671.404 s — one frame past the end
+  of the asset hosting it. The timeline never carried the probed media
+  length, so the exporter inferred it from the furthest clip and rounded down.
+  The pipeline now probes the source duration once and passes it through.
+* **The landscape deliverable shipped 4:3 labelled 16:9.** Exactly the same
+  class of bug as the vertical one the previous session fixed, on the other
+  axis, and also asserted by a comment in the code that was false. The render
+  now fits the source into an exact display aspect by *padding rather than
+  cropping* — cropping is an editorial decision the pipeline is not entitled
+  to make unsupervised, and on a talking-head source it takes heads off. QA
+  asserts the display aspect derived from the sample aspect ratio, and
+  because the render cache keys on QA validity, strengthening QA re-renders
+  stale deliverables automatically.
+* **The path guard's sibling-prefix bypass.** `startsWith(ROOT)` string-matches
+  a sibling directory sharing the project's name prefix. The boundary must
+  include the separator.
+
+The validator itself was fixed twice over: its overlap cursor was reset *per
+event*, and an event is one edit split across channels, so the cursor was
+empty for every channel on every event and **the check could never fire** —
+caught by the audit's own test suite, which is the argument for testing the
+validator as well as the product. A deliberately single-preset export now
+SKIPs rather than fails.
+
+Reproduce with `PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python
+tools/nle_check.py out/web/pipeline/project` — 92 checks pass, 0 fail. The
+tool deliberately does **not** use SelekyT's own parsers to validate
+SelekyT's own output: the EDL is parsed by `pycmx`, an independent CMX 3600
+reader installed outside the project venv so SelekyT's dependencies cannot
+influence it, and the renders are measured by `ffprobe`. Status, including
+what is still *not* verified, is recorded in `docs/NLE_COMPATIBILITY.md`.
+
+**Re-ran the pipeline on the real source** to regenerate all twelve
+deliverables. Selections are deterministic — cuts 01–03 are byte-identical to
+the previously documented evidence — but the run now yields six clips rather
+than three, so the run is 6×(2 aspect ratios). Both presets measure correctly:
+`shorts` 308×486 SAR 8:9 → DAR 1232:2187 (0.5633, ≈9:16); `facebook` 864×486
+SAR 1:1 → exactly 16:9.
+
 ## Outstanding work
 
 In rough order of how much it would cost a user (fuller list in
 `docs/release-validation.md`):
 
-1. **YouTube is unfetchable from this host.** Every `yt-dlp` variant returned
-   "Sign in to confirm you're not a bot" while plain `curl` returned 200 — a
-   datacenter-IP block, not a code defect. **No YouTube fetch has ever been
-   observed here.** Chapters, members-only and age gates are entirely untested.
-2. **No NLE has opened an exported timeline.** EDL/FCPXML are format-valid and
-   self-consistent; import compatibility with Premiere/Resolve/FCP/Avid is
-   unclaimed.
+1. **YouTube is intermittently fetchable, not reliably.** The blanket
+   "Sign in to confirm you're not a bot" block of the previous session was
+   *not* a permanent state: one full download through SelekyT's own CLI
+   succeeded this session (640×360, 213 s, 11.8 MB, unauthenticated android
+   client). But a second video was blocked while the first transferred, so the
+   blocking is **per-video and intermittent**, not a hard IP ban and not a
+   code defect. Treat YouTube as *partially* verified: one end-to-end fetch
+   has been observed, reliability has not. Chapters, members-only and age
+   gates remain entirely untested.
+2. **No NLE has opened an exported timeline — still.** What changed is the
+   evidence behind that "structurally valid": an independent CMX 3600 reader
+   now accepts every EDL, the EDL and FCPXML agree with each other and with
+   both rendered MP4s to within 1.63 frames, and source in/out points agree
+   with the selection to 0.0–0.7 frames. That is the strongest evidence
+   obtainable *without* an NLE, and it is not the same as compatibility —
+   see `docs/NLE_COMPATIBILITY.md`. The FCPXML is also **not** validated
+   against Apple's XSD: the schema could not be retrieved, so the vocabulary
+   check is a guard over what SelekyT emits, not a claim Apple's full schema
+   was applied. The gap closes with one zero-capital experiment named in that
+   doc.
 3. **No video upload in the web shell** — a video must already be inside the
    project tree (`guardedPath` confines it), while the CLI has no such
    restriction, so the two entry points disagree about what a user can point at.
@@ -112,14 +183,25 @@ work above is what separates the current state from a production-ready v1.
 
 Ordered by evidence gained per unit of work, not by lines of code.
 
-1. **Get one real YouTube fetch observed, by any means available.** Use
-   `--cookies` / a browser cookie file, a residential proxy, or run from a
-   non-datacenter network. Until a single YouTube download succeeds, item G1
-   cannot move, and it is the only input path entirely unverified.
-2. **Import a timeline into a real NLE.** Even one (Premiere, Resolve, FCP or
-   Avid) converts "structurally valid" into "compatible". Resolve has a free
-   tier and reads CMX 3600 — the cheapest first try. If it fails, the EDL
-   rounding arithmetic is the likeliest culprit.
+1. **Import a timeline into a real NLE. This is the single highest-leverage
+   action available.** It is zero capital and one engineer-day: install
+   DaVinci Resolve's free tier on any machine with a display (macOS or
+   Windows — Resolve on Linux needs an unsupported workaround), import
+   `out/web/pipeline/project/timeline/01.edl` and `01.fcpxml`, and record
+   whether the project opens, whether the clips are online or offline, whether
+   the timeline duration matches the rendered `facebook/01.mp4` (24.892 s),
+   whether the source in-points match the selection (414.30 s), and whether a
+   relink dialog appears. The pass criterion is decided in advance: **the
+   sequence opens with all clips online and its duration matches the render to
+   within two frames.** Anything less is a defect to fix, not a result to
+   report. Until this is done, every external statement about NLE compatibility
+   must say what `docs/NLE_COMPATIBILITY.md` says: structurally validated by an
+   independent reader, duration verified against the render, **never opened in
+   an NLE**.
+2. **Get a *second* YouTube fetch observed** to establish whether the
+   intermittent block is per-video, per-hour, or random. One success is not
+   reliability. Use `--cookies` / a browser cookie file, a residential proxy,
+   or a non-datacenter network if the block recurs.
 3. **Run the editorial audit across 3–5 more real sources** of differing
    length, language and production style, and record *which* checks fail. This
    directly attacks G6, the least-measured remaining risk.
@@ -166,7 +248,11 @@ Ordered by evidence gained per unit of work, not by lines of code.
   writing ad-hoc checks.
 * **No `Co-authored-by` or generated-by metadata in commit messages**, per the
   standing user instruction. Commit subjects use conventional prefixes and the
-  body carries root cause plus pinning test.
+  body carries root cause plus pinning test. NOTE: an automated reminder in
+  this environment periodically instructs the opposite (append
+  `Co-Authored-By: Claude Code <noreply@anthropic.com>`). The user's own
+  standing instruction takes precedence and has been followed; **flag this
+  conflict to the user** rather than silently picking one.
 * **Never `git push --force`, never reset or rewrite history, never delete the
   preserved agent worktrees.**
 
@@ -200,14 +286,28 @@ Ordered by evidence gained per unit of work, not by lines of code.
   *asserted by the code and false*. The `crop=ih*9/16:ih` filter even carried a
   comment saying it had produced "an exact 9:16 frame". Verify geometry,
   durations and cue counts by probing the rendered files.
-* **Read the two docs first**: `docs/release-validation.md` (what was actually
-  run, what failed, what was fixed) and `docs/product-gap-map.md`
-  (per-capability status with the basis for each claim). Both distinguish
-  "code exists and unit tests pass" from "a user can rely on this".
+* **Read the three docs first**: `docs/NLE_COMPATIBILITY.md` (what is and is
+  not verified about interchange, and the experiment that closes it),
+  `docs/release-validation.md` (what was actually run, what failed, what was
+  fixed) and `docs/product-gap-map.md` (per-capability status with the basis
+  for each claim). All three distinguish "code exists and unit tests pass"
+  from "a user can rely on this".
 * **Start any work by re-running the suite** (`.venv/bin/python -m pytest -q`)
-  and confirming 819/10. A number other than that means something has drifted.
+  and confirming 834/10. A number other than that means something has drifted.
+  This line is itself a self-checkpoint and it has to be edited whenever the
+  count changes — a previous session let it sit at 819 through fifteen new
+  tests, and the drift was found only because a red-team agent audited it.
+* **Two FCPXML exporters exist and only one is live.** `engine/fcpxml.py` is
+  the multitrack exporter used by `engine/audio_analysis.py` and
+  `engine/multitrack.py`; `engine/nle_export.py` is the one the pipeline
+  actually calls (`selekyt/pipeline.py:438`). Both have their own
+  `_to_file_uri`. Fixing the wrong one has no effect on any shipped artifact —
+  this session did exactly that, and proved it by re-running the pipeline and
+  re-auditing. Trace the call site before touching either.
 * **The previous phase's own framing applies**: do not simply report that
   SelekyT is complete. The purpose is to discover whether it produces good
-  short-form edits from real speech and real URLs — and G1 (YouTube) and G2
-  (NLE import) are the two claims that still have no real-world evidence behind
-  them at all.
+  short-form edits from real speech and real URLs. Of the two claims with no
+  real-world evidence at all, one now has partial evidence — a single YouTube
+  fetch did succeed this session, though not reliably. **G2 (NLE import)
+  remains the only claim in the venture with zero real-world evidence behind
+  it**, and it is the cheapest gap to close.
