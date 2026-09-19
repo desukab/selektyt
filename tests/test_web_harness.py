@@ -220,6 +220,37 @@ def test_out_of_project_paths_are_rejected(base):
     assert isinstance(resp["error"], str)
 
 
+def _get_envelope(base, path) -> dict:
+    """A rejected path is still HTTP 200 — the bridge answers bad requests with
+    an ``{"ok": false}`` envelope rather than a non-2xx — so a plain ``_get``
+    returns the error body and the caller has to read the flag, not the code."""
+    return json.loads(_get(base, path))
+
+
+def test_api_file_rejects_a_repo_file(base):
+    """The download route is unauthenticated and bound to localhost, so its
+    jail must be ``out/web``, not the repo: ``.env``, ``.git/`` and
+    ``pipeline_state.json`` (which carries the yt-dlp media blob) are all inside
+    the repo root and none of them is a download."""
+    for rel in ["web/server.mjs", "docs/TECHNICAL_AUDIT.md", ".git/HEAD"]:
+        body = _get_envelope(base, f"/api/file?path={urllib.parse.quote(rel)}")
+        assert body["ok"] is False, f"{rel} was served"
+        assert "out/web" in body["error"], body
+
+
+def test_api_file_rejects_a_sibling_directory(base):
+    """``startsWith(ROOT)`` alone is bypassable: a sibling whose name extends
+    the project's (``selektyt-backup``, ``selektyt.old``) string-matches and
+    reads as inside. The boundary has to include the separator — and so does
+    this test, which passed vacuously before the sibling case was in it."""
+    sibling = ROOT.with_name(ROOT.name + "-backup")
+    body = _get_envelope(
+        base, f"/api/file?path={urllib.parse.quote(str(sibling / 'secret.txt'))}"
+    )
+    assert body["ok"] is False, "a sibling directory was served"
+    assert "out/web" in body["error"], body
+
+
 def test_run_pipeline_rejects_an_out_of_project_path(base):
     """The new route hands a path to the pipeline, which downloads and renders.
     The traversal guard must apply to it too, not just to /api/file."""

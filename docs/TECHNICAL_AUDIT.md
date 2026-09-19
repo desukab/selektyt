@@ -173,15 +173,28 @@ asserts that `/etc/hostname` is rejected, and it passes — while the bypass
 stands. The test proves the guard blocks the obvious case and nothing else.
 The correct check is `candidate === ROOT || candidate.startsWith(ROOT + sep)`.
 
-### `/api/file` serves the whole repo, not the output directory — VERIFIED
+**Fixed** (the correction above is what the code now does), and the sibling
+case is now a regression test in `tests/test_web_harness.py` alongside the
+obvious one — the audit's point about the test was the real finding, and it
+applied to the test as much as to the guard.
 
-`web/server.mjs:317` passes `guardedPath(url.searchParams.get("path"))`, and
+### `/api/file` serves the whole repo, not the output directory — VERIFIED, then FIXED
+
+`web/server.mjs:317` passed `guardedPath(url.searchParams.get("path"))`, and
 `guardedPath` confines to `ROOT`, the repository, not `OUT_WEB`. So `.git/`,
-`selekyt/`, `.env`, and every other user's `out/web/uploads/` file are
+`selekyt/`, `.env`, and every other user's `out/web/uploads/` file were
 readable by any unauthenticated caller. Only the static-file route at `:334`
-bothers to confine itself to `WEB`.
+bothered to confine itself to `WEB`.
 
-### Cookie credentials are persisted and then served — VERIFIED (composition), INSPECTED (mechanism)
+**Fixed.** The download route now goes through a separate `guardedArtifact`,
+whose boundary is `OUT_WEB + sep`. `guardedPath` still governs the *source*
+path a user points the pipeline at, where the repo root is the right scope —
+the two boundaries are now different because the two operations are different.
+`tests/test_web_harness.py` asserts `web/server.mjs`,
+`docs/TECHNICAL_AUDIT.md` and `.git/HEAD` are all refused; both of those tests
+fail against the old guard.
+
+### Cookie credentials are persisted and then served — VERIFIED (composition), INSPECTED (mechanism), then FIXED at the persistence boundary
 
 `selekyt/pipeline.py:206` writes `media_info` into `pipeline_state.json`.
 `media_info` is the full yt-dlp `--dump-single-json` blob (INSPECTED at the
@@ -189,8 +202,21 @@ call site), which embeds the `Cookie` header used for the download. The
 cookies module itself is careful — `selekyt/cookies.py:36-52` sanitizes tab/newline
 in values, `:55-74` `chmod(0o600)` and emit only a count plus a path, never a
 value; `providers/youtube.py:30-46` resolves and validates the file without
-printing it. That care is discarded the moment the blob is persisted, and
-`/api/file` will serve it to anyone who asks for `out/web/pipeline/pipeline_state.json`.
+printing it. That care was discarded the moment the blob was persisted, and
+`/api/file` would have served it to anyone who asked for `out/web/pipeline/pipeline_state.json`.
+
+**Fixed at the write, not the read.** `media_info` now passes through
+`_scrub_credentials` before `state.update`, which drops `http_headers`,
+`cookies`, `_cookies`, `cookie_manager`, `cookiejar` and `cookies_str` at every
+depth (the per-format entries carry request headers too). Nothing downstream
+reads those keys — the pipeline consumes duration, title and format ids — so
+the denylist is explicit rather than fuzzy, which is what keeps it from also
+dropping format metadata the QA reports read. No credentials have ever been
+captured on this host: the only URL source ever run is the unauthenticated
+archive.org one, and a grep for `Cookie` across `out/` and every corpus project
+returned zero hits. This was a latent defect, not a demonstrated leak, and it
+is now closed on both sides — the blob is never written, and the route that
+would have served it no longer can.
 
 ### SSRF is reachable — INSPECTED
 

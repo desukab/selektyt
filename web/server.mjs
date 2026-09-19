@@ -212,6 +212,20 @@ function guardedPath(raw) {
   throw new Error("path must be inside the project");
 }
 
+// ``guardedPath`` is for a source file the user points the pipeline at, so it
+// is the repo root. ``guardedArtifact`` is for a file the shell hands out over
+// HTTP, and the two must not be the same boundary: anything inside the repo
+// root is then readable by any unauthenticated localhost caller, which
+// includes ``.env``, ``.git/`` and ``pipeline_state.json`` with its yt-dlp
+// blob. Only artifacts the pipeline wrote under ``out/web`` are downloads.
+function guardedArtifact(raw) {
+  const candidate = resolve(String(raw || ""));
+  if (candidate.startsWith(OUT_WEB + sep)) {
+    return candidate;
+  }
+  throw new Error("path must be an artifact under out/web");
+}
+
 function ensureSample() {
   if (!existsSync(SAMPLE_PATH)) {
     mkdirSync(OUT_WEB, { recursive: true });
@@ -318,7 +332,7 @@ async function route(req, res, url, method) {
     return sendJson(res, { ok: true, op: "run_pipeline", data });
   }
   if (method === "GET" && url.pathname === "/api/file") {
-    const file = guardedPath(url.searchParams.get("path") || "");
+    const file = guardedArtifact(url.searchParams.get("path") || "");
     if (!existsSync(file)) throw new Error(`no such file: ${file}`);
     return send(res, 200, readFileSync(file), {
       "Content-Type": MIME[extname(file)] || "application/octet-stream",

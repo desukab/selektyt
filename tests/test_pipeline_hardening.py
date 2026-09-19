@@ -297,6 +297,97 @@ def test_pipeline_rejects_bad_cpu_threads_before_download(tmp_path):
 _HAVE_FFMPEG = shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None
 
 
+# ── credential hygiene in the persisted download state ──
+
+def test_scrub_credentials_removes_every_credential_field():
+    """A yt-dlp info dict can carry the request headers it used, and when a
+    cookies file was supplied that includes a ``Cookie`` line. The dict is
+    persisted into ``pipeline_state.json``, which the web shell serves to any
+    unauthenticated localhost caller, so the credential material has to be
+    gone before the write, not after the fact."""
+    from selekyt.pipeline import _scrub_credentials
+
+    info = {
+        "title": "a video",
+        "duration": 213.0,
+        "http_headers": {"Cookie": "SESSDATA=secret; VISITOR_INFO=also-secret",
+                          "User-Agent": "test"},
+        "cookies": [{"name": "SESSDATA", "value": "secret"}],
+        "_cookies": {"youtube.com": {"SESSDATA": {"value": "secret"}}},
+        "formats": [
+            {"format_id": "18", "http_headers": {"Cookie": "secret"}},
+            {"format_id": "22"},
+        ],
+        "thumbnails": [{"url": "https://t/1.jpg"}],
+    }
+    scrubbed = _scrub_credentials(info)
+
+    assert scrubbed["title"] == "a video"
+    assert scrubbed["duration"] == 213.0
+    assert scrubbed["thumbnails"] == info["thumbnails"]
+    for key in ("http_headers", "cookies", "_cookies"):
+        assert key not in scrubbed, key
+        # Nested occurrences go too: the formats list carries per-request headers.
+        assert key not in scrubbed["formats"][0], key
+    assert scrubbed["formats"][0]["format_id"] == "18"
+    assert scrubbed["formats"][1] == {"format_id": "22"}
+    # The caller's dict is not mutated: nothing downstream should see the
+    # headers either, and a function that edits in place would be dropping
+    # them from the very object yt-dlp handed the pipeline.
+    assert "http_headers" in info
+
+
+def test_scrub_credentials_passes_scalars_and_empty_containers():
+    from selekyt.pipeline import _scrub_credentials
+
+    assert _scrub_credentials(None) is None
+    assert _scrub_credentials(3) == 3
+    assert _scrub_credentials("s") == "s"
+    assert _scrub_credentials({}) == {}
+    assert _scrub_credentials([]) == []
+
+
+def test_pipeline_persists_no_credential_fields_from_a_download(tmp_path):
+    """End to end: what the download returns is what gets written to disk, so a
+    run whose source needed a cookies file must not leave the cookies on disk
+    where ``/api/file`` can hand them to any local caller."""
+    info = {
+        "title": "a video",
+        "duration": 213.0,
+        "http_headers": {"Cookie": "SESSDATA=secret"},
+        "cookies": [{"name": "SESSDATA", "value": "secret"}],
+    }
+    media = tmp_path / "video.mp4"
+    media.write_bytes(b"0" * 100)
+    project = tmp_path / "project"
+    fp = "test-fingerprint"
+    # No media_path here: a cached download would short-circuit ``download()``
+    # and the test would exercise nothing. The transcript cache stays, so the
+    # run does not also need ASR.
+    for sub in ("facebook", "shorts", "captions", "content_pack"):
+        (project / sub).mkdir(parents=True, exist_ok=True)
+    (project / "pipeline_state.json").write_text(
+        json.dumps({"source": "https://example.com/v", "fingerprint": fp}),
+        encoding="utf-8")
+    (project / "transcript.json").write_text(json.dumps({
+        "language": "en",
+        "segments": [{"start": 10.0, "end": 20.0, "text": "hello world",
+                      "words": [{"text": "hello", "start": 0.0,
+                                 "end": 0.5, "confidence": 1.0}]}],
+    }), encoding="utf-8")
+    with _entered(_pipeline_patches(tmp_path, [_candidate(10.0, 20.0)])) as mocks, \
+         patch("selekyt.pipeline._fingerprint", return_value=fp):
+        mocks["download"].return_value = (media, info)
+        pipeline_run("https://example.com/v", tmp_path, model="small", limit=1)
+    mocks["download"].assert_called_once()
+
+    state = json.loads(
+        (tmp_path / "project" / "pipeline_state.json").read_text(encoding="utf-8"))
+    assert state["media_info"]["title"] == "a video"
+    for key in ("http_headers", "cookies"):
+        assert key not in state["media_info"], f"{key} persisted to disk"
+
+
 @pytest.mark.skipif(not _HAVE_FFMPEG, reason="ffmpeg/ffprobe not available")
 def test_cli_rejects_bad_flags_before_work(monkeypatch, tmp_path):
     """--limit 0 must exit 2 from argparse, before the pipeline is entered."""

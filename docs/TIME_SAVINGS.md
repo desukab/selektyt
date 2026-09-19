@@ -63,6 +63,12 @@ Machine-time budget for that job, measured component by component on the real ar
 | Render 9:16, anamorphic (99.254 s of output) | **9.18 s** | 0.00625 | **VERIFIED** — same harness, 5.552 s wall → RTF 0.0925 |
 | **TOTAL** | **393.6 s ≈ 6.6 min** | **0.2678** | **COMPUTED** — 4 measured stages + 1 assumed |
 
+> **This table is now reproducible.** `tools/microbench.py` re-derives its VERIFIED rows
+> from committed artifacts; §2b re-runs it against this job's own source and transcript,
+> and transcription, both renders and the export stages all come back within 4%. The
+> editorial row reproduces to 19% and §2b names the workload difference that explains
+> part of it.
+
 **Two things this number is not.**
 
 1. **It is not a measured pipeline run.** No end-to-end wall clock for the pipeline has ever been
@@ -73,6 +79,111 @@ Machine-time budget for that job, measured component by component on the real ar
    (VERIFIED still available: `https://archive.org/download/NASA_360_program5_HD/NASA_360_program5_HD.mov`
    returns 206, byte-exact match to the local file). Download time is unmeasured and would be
    additive on a real job.
+
+### 2a. The instrument that re-derives the table above
+
+The four **VERIFIED** rows of §2's table came from a terminal session whose output
+was never saved. §10.7 says so and points at the missing artifact. `tools/microbench.py`
+is that artifact: it runs each stage against committed files and prints a table of the
+same shape, so the numbers above can be reproduced rather than trusted.
+
+**It was run, and it found one of §2's numbers was wrong in a way the doc could not
+have caught.** The transcription row is the only stage the instrument can compare
+directly — same model, same 240 s window, same int8 / beam 1 / 4-thread configuration —
+and the first version of the instrument reported **796.5 ms** for it, against §2's
+36.12 s. That was a bug in the instrument, not in §2: the whisper backend caches chunk
+checkpoints in the audio file's own parent directory, so the warm-up call transcribed
+for real and every *measured* call read a JSON off disk and was timed doing file I/O.
+`_bench` now hands each run a fresh `checkpoint_dir`, and the stage reports
+**39.0 s** — 49× the cached figure, and within 8% of §2's 36.12 s on different source
+audio. The correction ran *against* the document's favour and is recorded here for the
+same reason §10.4's corrections are: an instrument that reports a sub-second
+transcription is not a corroboration, and a reader who believed it would have
+understood the machine cost of this pipeline to be ~50× lower than it is.
+
+**Reproduced on 2026-09-19**, `--repeat 3`. The first pass ran against
+`corpus/media/royal-society-cloke.webm` (626.0 s, 25 fps, 1080p) rather than §2's own
+source, on an assumption that §2's 883 MB `.mov` had been deleted to free disk. **The
+assumption was mine, not the record's — §10.7 says the deleted media was
+`ooi-vertical`'s, and that is true.** The nasa360 source is intact at
+`out/web/pipeline/project/source/NASA_360_program5_HD.mov`, 883,894,825 bytes, matching
+§2's VERIFIED `ffprobe` line byte-for-byte, so §2's exact job *can* be re-run and §2b
+does so. The table below is kept because it is the 1080p data point — the only one this
+host has — and §2b needs it to separate "corroborated" from "corroborated on the same
+source".
+
+| Stage | Wall (best of 3) | CPU (best run) | Work | RTF |
+| --- | --- | --- | --- | --- |
+| Transcription, model warm, fresh checkpoint per run | **39,039 ms** | 123,332 ms | 240.0 s of 16 kHz mono | **0.163** |
+| Editorial (`make_thoughts` → `rank` → context gate) | 1,322 ms | 1,321 ms | 156 segments / 1,980 words → 1,809 thoughts → 8 gate-passed | — |
+| Captions (SRT + ASS) | 31 ms | 31 ms | 4 clips, style `minimal` | — |
+| Timeline build + EDL + FCPXML | 3.0 ms | 3.0 ms | 4 clips at 25.000 fps | — |
+| Render 16:9 | 16,736 ms | 1,052 ms | 60 s of output | **0.279** |
+| Render 9:16, anamorphic | 11,646 ms | 9,512 ms | 60 s of output | **0.194** |
+
+**What this corroborates, and what it does not.**
+
+- **Transcription RTF: corroborated.** 0.163 here against §2's 0.1505, on a different
+  source with a different speaker and accent. §3's corroboration of `BUSINESS_MODEL.md`
+  stands from the other direction as well.
+- **Render RTF: corroborated in direction, not in value.** §2 has 16:9 at 0.1276 and
+  9:16 at 0.0925 on a 720×486 SD source; here they are 0.279 and 0.194 on 1080p. The
+  ratio between the two geometries is the interesting part and it is stable — 9:16 is
+  **30% cheaper** than 16:9 here (0.194 / 0.279), against 28% in §2 (0.0925 / 0.1276).
+  The crop narrows the coded frame to 608×1080, so x264 has fewer pixels to encode; the
+  CPU column shows where the saving is *not* — 9:16 spends 9.5 s of CPU against 16:9's
+  1.05 s, i.e. the crop-and-scale filter graph is the expensive part and the encoder is
+  the cheap part. A host that is CPU-bound rather than wall-bound would see a much
+  smaller gap.
+- **Editorial and captions: not a corroboration.** They are measured on
+  royal-society-cloke's `transcript.json` (156 segments / 1,980 words), not nasa360's
+  (425 segments / 4,236 words). §2b re-runs them on the right transcript.
+- **No total is printed, deliberately.** Each stage is measured on a different window —
+  240 s of audio for transcription, 60 s of source for render, the whole shipped clip
+  set for captions and timeline. Summing them would be the exact double-count §10.7 was
+  corrected for.
+
+### 2b. Re-running §2's own job — the table reproduces
+
+§2a established the instrument. This section points it at §2's *exact* inputs — the
+surviving `NASA_360_program5_HD.mov` and `corpus/nasa360-ep5_run/project`'s committed
+`transcript.json` and `selections.json` — so the four VERIFIED rows of §2 are no longer
+quotable only from an unsaved terminal session.
+
+| Stage | §2, published | Reproduced | Agreement |
+| --- | --- | --- | --- |
+| Transcription (240.0 s of 16 kHz mono, warm) | 36.12 s, RTF **0.1505** | 35.44 s, RTF **0.1476** | **−1.9%** |
+| Editorial (425 seg / 4,236 words → 4,000 thoughts) | 3,546 ms | 2,869 ms | **−19.1%** — see below |
+| Captions (SRT + ASS, 6 clips) | 17.6 ms | 19.8 ms | +12.5% |
+| Timeline + EDL + FCPXML (6 clips) | 3.3 ms | 3.5 ms | +6.1% |
+| Render 16:9 (60 s window) | 7.654 s, RTF 0.1276 | 7.700 s, RTF **0.1283** | **+0.5%** |
+| Render 9:16 (60 s window) | 5.552 s, RTF 0.0925 | 5.334 s, RTF **0.0889** | **−3.9%** |
+
+Three of the four VERIFIED rows reproduce within 4%, and the render geometries within
+0.5% and 3.9%. **§2's machine-time budget is sound, and this is now checkable rather
+than asserted** — which is what R13 said it was not.
+
+The editorial row does not reproduce, and the reason is a workload difference the
+instrument introduced, not a defect in §2: §2's run produced **11 gate-passed
+candidates, 6 shipped**, while the instrument passes `rank(..., limit=8)` and stops at
+**8**. The expensive part — `make_thoughts` over all 425 segments — is identical, and
+the eleven-versus-eight `validate()` calls are microseconds of the 2.9 s, so the
+−19% is almost certainly host variance rather than the workload gap (§10.7 measures
+~1.7× run-to-run spread on this box from load alone). But *almost certainly* is not
+*measured*: the honest statement is that the editorial stage reproduces to within 19%
+and that the instrument's candidate cap is the one known difference between the two
+runs. Removing the cap is a one-line change; it was not made because re-running it
+costs another transcription pass and the row is 0.7% of the job's machine time either
+way.
+
+**One finding the reproduction produced that §2 could not have.** All three sources now
+measured show the 9:16 render consistently **27–31% cheaper** than 16:9 — 0.725 in §2,
+0.693 here, 0.696 on the 1080p source in §2a. That is a stable property of the pipeline
+across resolutions and frame rates, and it is not obvious: the vertical crop writes a
+narrower coded frame (608×1080 from 1080p, 308×486 from SD), so the encoder does less
+work. §2a's CPU column shows the counter-case — on 1080p the 9:16 pass spends 9.5 s of
+CPU against 16:9's 1.05 s, so a CPU-bound host pays for the crop-and-scale filter graph
+what a wall-bound host saves on encoding.
 
 ---
 
@@ -157,7 +268,7 @@ Two caveats that cut **against** the claim, stated because they matter more than
 | Human-editor time for the equivalent work | **2–8 h** | **ASSUMPTION — no editor was ever timed** |
 | **Ratio** | **18× to 73×** | **COMPUTED from one measurement and one assumption** |
 | Human labour at $36.26/h | **$72.52 – $290.08 per tape** | COMPUTED from RESEARCHED rate × ASSUMED time |
-| Cloud compute for the same job, `small` model | **$0.021 – $0.024** | COMPUTED from `docs/BUSINESS_MODEL.md` §4 (AWS `c7i.xlarge` $0.1785/h, 0.2678 RTF) |
+| Cloud compute for the same job, `small` model | **$0.0195 at the stated RTF of 0.2678** | COMPUTED from `docs/BUSINESS_MODEL.md` §4 (AWS `c7i.xlarge` $0.1785/h), but **the arithmetic printed here did not check out and has been corrected**: $0.1785/h × 0.2678 × 1469.77 s / 3600 = **$0.0195**, not the $0.021–$0.024 quoted before. $0.021 is `BUSINESS_MODEL.md` §4(a)'s figure, which is derived from that doc's *own* RTF of **0.2917** (0.1785 × 0.2917 × 1469.77 / 3600 = $0.0213); $0.024 corresponded to nothing in either document and may have been the corpus-wide 0.330 RTF (→ $0.024) applied to the reference source's duration. The spread is now reported as the two defensible values, **$0.0195–$0.0213, depending on which RTF is used**, and the choice between them must be stated wherever the number is quoted |
 
 The arithmetic spread is absurd on purpose: **$70–290 of assumed human labour against ~$0.02 of
 measured compute is a 3,000–14,000× value-to-COGS ratio.** When a ratio is that favourable, the
@@ -404,8 +515,14 @@ Aggregate over the 7 completed sources, COMPUTED:
 | Source-minutes consumed per delivered minute | **6.44** |
 
 **Per-source variation is the finding, not a nuisance.** RTF spans **0.180 to 1.746 — a 9.7×
-spread** — and three of seven sources ran **slower than real time**. An average is meaningless
-without that spread, which is why it is reported per source above and decomposed below.
+spread** — and **two of the seven sources ran slower than real time**: `hadhazy-protest`
+(1.140) and `telugu-tutorial` (1.746). (An earlier draft said three; that reached the count
+by substituting §10.7's fetch-free re-run RTF of 1.589 for `ooi-vertical` in place of this
+table's own 0.922 — a different measurement imported into the table being summarised.
+`ooi-vertical` at 152 s of source in 140.1 s of wall time is *faster* than real time, and it
+is one of only two sources below the crossover below, so the distinction is not a rounding
+matter.) An average is meaningless without that spread, which is why it is reported per
+source above and decomposed below.
 
 **Fixed overhead, measured.** A least-squares fit of `elapsed = a + b × duration` over the seven
 completed sources gives:
@@ -416,9 +533,19 @@ elapsed_s = 225.2 + 0.1067 × duration_s      (R^2 = 0.390)
 
 The intercept is the part of the job that does not shrink with the tape: model load, decode
 startup, fetch, teardown. **≈225 s of fixed overhead per run, measured from the corpus.** The
-marginal rate once warm is **0.1067 RTF**. The crossover — the source length below which the
-pipeline is slower than real time — is **252 s ≈ 4.2 minutes**. Sources shorter than that, which is
-most short-form-adjacent material, cost more machine time than they contain content.
+marginal rate once warm is **0.1067 RTF**, and the **fit's** crossover — the source length at
+which that extrapolated line crosses real time — is **252 s ≈ 4.2 minutes**.
+
+That crossover is a property of the fitted line, not a measurement, and the corpus does not
+support reading it as one. Only **two** of the seven sources are shorter than 252 s at all,
+and **one of those two was faster than real time**: `hadhazy-protest` (126.0 s source, RTF
+1.140, slower) and `ooi-vertical` (152.0 s source, RTF 0.922, faster). The fit predicts 241.4 s
+of elapsed for `ooi-vertical` against the 140.1 s it actually took, a 42% miss on the one point
+that would test the claim. **n = 7, R² = 0.390** is not enough to locate a threshold from an
+extrapolation — half the sub-crossover evidence contradicts the conclusion the line draws. The
+honest statement is that short sources are *at risk* of real-time because the ≈225 s fixed
+overhead does not scale down with the tape, and that the corpus contains one short source which
+was slower than real time and one which was not.
 
 **Honest yield — usable output.** `docs/CORPUS_RESULTS.md` reports that two of the seven "OK"
 sources are not actually usable because the transcript is phonetic noise
@@ -430,9 +557,15 @@ sources are not actually usable because the transcript is phonetic noise
 | Minus the 2 transcript-noise sources | 5 | **0.241** | 16.46 min | 14.96% | **37.2** |
 
 The yield barely moves (15.5% → 15.0%) but the *efficiency* moves a lot (28.3 → 37.2 delivered
-seconds per machine minute): **the two unusable sources consumed 32% more machine time per delivered
-second than the usable ones** — 592.9 s of machine time for a single 23.6 s clip in the Telugu case.
-Bad transcripts are not free on the machine side either.
+seconds per machine minute): **the two unusable sources ran at 6.70 s of machine time per
+delivered second — 4.15× the usable rate, +315% — against 1.61 s/s for the five usable ones.**
+That is 736.5 s of machine time for 109.9 s of delivered video across the two, and 592.9 s of
+it for a single 23.6 s of Telugu content. (An earlier draft quoted "32% more machine time per
+delivered second" here. That number is real but it is a different comparison: it is the gap
+between the *all-7* average rate, 2.123 s/s, and the *usable-5* average, 1.614 s/s — i.e. how
+much the two drag the pooled average up, not how the two themselves run. Labelling it as a
+property of the two sources understated them by roughly 10×.) Bad transcripts are not free on
+the machine side either.
 
 ---
 
@@ -624,6 +757,28 @@ here rather than as a peer row: **28.30 s / 0.186 RTF** on the cached 16 kHz mon
 of the same wall clock. An earlier version of this table listed the warm pass as a fourth row
 alongside the in-run figure, which made the shares total 112.4% — two of those rows described
 overlapping work, and the sum was not a meaningful number.
+
+**Provenance of these figures, because three of them cannot be checked.** The
+totals — 241.55 s wall, 447.13 s CPU, 185% — are pasted from the re-run's own
+`time` output above, and the byte-identical selection line is checkable against
+`corpus/ooi-vertical_run/project/selections.json`. **The decomposition is
+not checkable from anything committed**: the 1.60 s cold load, the 40.9 s
+in-run transcription and the 28.30 s warm pass came from a terminal session
+whose output was not saved, and `corpus/results.jsonl` records only the total
+`elapsed_s`. The 200.7 s remainder is the wall clock minus those, so it
+inherits their error. Likewise the "92 MB download" included in the 140.1 s
+comparison run: the `ooi-vertical` media was deleted to free disk, so that
+figure can only be re-derived by re-downloading from the manifest URL. Treat
+the *shape* of this table — transcription is a minority of the wall clock on a
+portrait source — as the finding, and the individual components as un-recorded
+precision. `tools/microbench.py` exists to stop this class of gap: it runs each
+stage against committed artifacts and prints the same table, so future numbers
+are re-derived rather than quoted from a session. **It has since been run, and it
+closed the gap it was written for** — §2b re-derives §2's own table from the
+surviving source and transcript, with transcription and both renders reproducing
+within 4%. This paragraph's own figures remain un-recorded precision, because the
+source they were measured on (`ooi-vertical`, 152.008 s) is the one whose media
+really is gone; §2's figures did not have that excuse.
 
 Two corrections to the published model, both material:
 
@@ -847,8 +1002,10 @@ zero-cost tier is never skipped, because it is the only one that has already pro
 - **Measured now (and it was not before):** an end-to-end wall clock per source, all 11 recorded
   including the 4 failures; 0.330 RTF across the 7 that delivered (0.321 if the failed runs are
   left in, which is the fairer number for a capacity-planning claim and the worse one for a
-  marketing claim); ≈225 s fixed overhead per run; a 9.7× RTF spread; the 252 s real-time
-  crossover; a 5.93× SD-to-portrait-HD cost gap; a 1.72× run-to-run timing spread on identical work.
+  marketing claim); ≈225 s fixed overhead per run; a 9.7× RTF spread, with **2 of the 7 sources
+  slower than real time**; the fit's 252 s real-time crossover, stated as an extrapolation with
+  R² = 0.390 over n = 7 and with one of the only two sources below it faster than real time; a
+  5.93× SD-to-portrait-HD cost gap; a 1.72× run-to-run timing spread on identical work.
 - **Recomputed:** the reference source's machine time moves 6.60 → 5.62 min measured, and the
   corpus-average rate for the same length is 8.08 min. The ratio moves with it, in both directions,
   which is itself the finding. **MODEL, NOT MEASURED** either way.
@@ -868,3 +1025,10 @@ zero-cost tier is never skipped, because it is the only one that has already pro
   approval that has not been given, and participants who have not been contacted — the claim remains
   **an untested hypothesis**, and the only defensible speedup statement is the ceiling, not a
   measurement.
+- **Reproducible now, where it was quotable-only before:** `tools/microbench.py` re-derives
+  §2's per-stage table from committed artifacts, and §2b runs it against §2's own source
+  and transcript. Transcription (−1.9%), both renders (+0.5% / −3.9%) and the export
+  stages reproduce within 4%; the editorial row reproduces to 19% with a named workload
+  difference. The instrument also caught its own first error — a cached chunk checkpoint
+  reported 796 ms for a 39 s transcription, a 49× understatement (§2a) — which is the
+  case where a checked-in instrument is worth more than a correct-looking number.

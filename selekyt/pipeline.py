@@ -87,6 +87,40 @@ def _load_state(state_path: Path) -> dict:
     return {}
 
 
+# Keys a yt-dlp info dict can carry that hold the user's own credentials.
+# ``http_headers`` is the live one: yt-dlp puts the request headers it used,
+# including a ``Cookie`` line, there when a cookies file was supplied, and the
+# info dict is persisted verbatim into ``pipeline_state.json`` — a file the web
+# shell serves to any unauthenticated localhost caller. The rest are the other
+# places yt-dlp has kept cookie material across versions; the denylist is
+# deliberately explicit rather than "drop anything that looks like a header",
+# because a fuzzy rule would also drop the format metadata the QA reports read.
+_CREDENTIAL_KEYS = frozenset(
+    {"http_headers", "cookies", "cookie_manager", "cookiejar", "_cookies", "cookies_str"}
+)
+
+
+def _scrub_credentials(info, depth: int = 8):
+    """Return a copy of a yt-dlp info dict without credential-bearing fields.
+
+    Nothing downstream reads these keys: the pipeline reads duration, title
+    and format ids, and the captions/QA stages read none of it. Dropping them
+    costs no functionality and is what stops a cookies file from becoming a
+    file the product itself serves to anyone who can reach the port.
+    """
+    if depth <= 0:
+        return info
+    if isinstance(info, dict):
+        return {
+            k: _scrub_credentials(v, depth - 1)
+            for k, v in info.items()
+            if k not in _CREDENTIAL_KEYS
+        }
+    if isinstance(info, list):
+        return [_scrub_credentials(v, depth - 1) for v in info]
+    return info
+
+
 def _save_state(state_path: Path, state: dict) -> None:
     """Write state atomically, keeping a backup of the previous good version.
 
@@ -293,7 +327,13 @@ def run(
             print(f"[cache] reusing downloaded source: {media}", flush=True)
         else:
             media, info = download(source, project / "source", cookies=cookies)
-            state.update({"source": source, "media_path": str(media), "media_info": info})
+            state.update(
+                {
+                    "source": source,
+                    "media_path": str(media),
+                    "media_info": _scrub_credentials(info),
+                }
+            )
             _save_state(state_path, state)
     else:
         media, info = Path(source).expanduser(), {}

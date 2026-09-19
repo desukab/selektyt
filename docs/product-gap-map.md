@@ -1,6 +1,6 @@
 # Product gap map
 
-Where SelekyT is a finished product and where it is not, as of `b1dcfa7`.
+Where SelekyT is a finished product and where it is not, as of `3fc11e1`.
 
 The distinction this map exists to keep clear: **a stage whose code exists and
 whose unit tests pass is not the same as a stage a user can rely on.** Each row
@@ -20,7 +20,7 @@ at once.
 | --- | --- | --- |
 | Local video file | complete and verified | a real 535.5s local source ran the whole pipeline |
 | URL source | complete and verified, except YouTube | a real rights-permitted URL (`archive.org/details/NASA_360_program5_HD`, US-government public domain) ran the whole pipeline through the web shell: download → transcript → selection → render → captions → EDL/FCPXML → QA, all green. YouTube specifically is **IP-bot-blocked from this host**: every `yt-dlp` variant (`--js-runtimes`, `--extractor-args player_client=android\|ios\|tv`, a Deno runtime) still returned "Sign in to confirm you're not a bot", while a plain `curl` to youtube.com returned 200. That is a block on the datacenter IP range, not a code defect — and the failure is surfaced as actionable text naming cookies |
-| YouTube URL | usable but unverified here | the URL path above is the same code YouTube uses; no YouTube fetch was ever observed on this host, so YouTube-specific behaviour (chapters, members-only, age gates) is untested |
+| YouTube URL | usable but observed once, with no artifact kept | the URL path above is the same code YouTube uses. One full download through SelekyT's own CLI was observed in a past session (640×360, 213 s, 11.8 MB, unauthenticated android client), but **no artifact from that fetch exists in this repo**: the only URL-sourced project is `out/web/pipeline/project`, whose `pipeline_state.json` `source` is the archive.org URL below, and no `youtube`/`youtu.be` reference appears in any project's `report.json` or `pipeline_state.json`. The observation is therefore unverifiable from anything committed — it is recorded here as an un-artifacted session note, not as evidence, and YouTube-specific behaviour (chapters, members-only, age gates) remains untested |
 | Cookies for sign-in walls | code-reviewed only | `providers/youtube._cookie_args` passes the path as a subprocess list (no shell) and never echoes it; not exercised against a real sign-in wall, so the conversion of a browser header file is untested against live YouTube |
 
 ## TRANSCRIPTION

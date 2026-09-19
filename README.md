@@ -11,10 +11,10 @@ The goal is not another black-box “AI clip generator”. SelekyT is an **audit
 - publishable 16:9 and 9:16 cuts
 - word-timed captions
 - ranked story selections and editorial reports
-- **FCPXML + CMX 3600 EDL timelines that an editor can open and continue working on**
+- **FCPXML 1.11 + CMX 3600 EDL timelines, emitted and structurally validated — but not yet opened in a real NLE.** The interchange files are real and every timeline is checked against an independent parser, and no editor has ever imported one: `docs/NLE_VALIDATION.md` records the routes that were tested and closed (`melt`, Blender, OpenTimelineIO) and names the cheapest way to get real NLE evidence. "That an editor can open and continue working on" is the *intended* affordance, and it is a claim about software that has not been tried.
 - machine-readable cutlists and provenance
 
-**Input:** one YouTube URL **or** one local video file.
+**Input:** one YouTube URL **or** one local video file. The URL path is the same code for both; it is verified end to end against a rights-permitted archive.org source, and against YouTube only **one fetch has ever been observed, with no artifact kept** — the host is IP-bot-blocked on most videos, so treat YouTube as partially supported and unreliable, not as a verified input. `docs/product-gap-map.md` carries the per-capability status.
 
 **Output:** editorial decisions, editable timelines, captions, and rendered social-video cuts.
 
@@ -160,8 +160,13 @@ desktop webkit2gtk host is available (`docs/tauri-termux-blocker.md`).
 - **Vertical reframing.** Face tracking is used when a face is found; otherwise
   the active region is estimated and the crop moves over time. A scene with no
   clear subject can still be reframed poorly.
-- **No fabrication.** SelekyT selects and reorders source speech. It does not
-  write new claims, and its editorial reports are auditable rather than opaque.
+- **No fabrication.** SelekyT selects and reorders source speech — six of the
+  seven corpus sources place at least one clip out of source order, so this is
+  a real re-order and not a trim. It does not write new claims, and its
+  editorial reports are auditable rather than opaque. The claim holds at the
+  editorial layer; at the transcription layer it does not yet, because two of
+  the seven corpus sources produced transcripts that are fluent-looking
+  phonetic noise (`docs/CORPUS_RESULTS.md`).
 - **Desktop shell.** The Tauri build compiles and its sidecar plumbing is
   tested, but no packaged binary has been produced on any platform. The web
   shell is the usable local interface today.
