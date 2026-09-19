@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import shutil
 from dataclasses import asdict
 from pathlib import Path
 
 from providers.atomic import read_json, write_json_atomic
+from providers.audio import peak_dbfs
 
 from engine.editorial import make_thoughts, rank
 from engine.captions import ass_for_candidate, srt_for_candidate
@@ -29,6 +31,13 @@ from models.core import Segment, Word
 
 
 STATE_NAME = "pipeline_state.json"
+
+# Below this peak the extracted audio is digital silence, which no container
+# repair can help: a remux of a silent file is a silent file. The two corpus
+# sources that are correctly rejected as speechless measure -inf and -30.5 dBFS
+# against 16-bit full scale, so this floor separates "nothing was decoded" from
+# "something loud was decoded into nothing".
+SILENT_PEAK_DBFS = -50.0
 
 
 def _load_state(state_path: Path) -> dict:
@@ -155,6 +164,80 @@ def _selection_digest(selected: list) -> str:
     """
     raw = "|".join(f"{c.start:.3f},{c.end:.3f},{c.text}" for c in selected)
     return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _no_speech_diagnosis(peak: float | None) -> str:
+    """The message for an empty transcript, chosen by what the audio showed.
+
+    Every empty transcript used to get the same answer — the source has no
+    audible speech — which was true for a silent film and false for a source
+    whose container had lost its audio. The peak level of the extraction is
+    what separates them, and it is reported back to the user because a number
+    is what makes the diagnosis checkable rather than merely confident.
+    """
+    if peak is not None and math.isfinite(peak) and peak > SILENT_PEAK_DBFS:
+        return (
+            f"the extracted audio is not silent (peak {peak:.1f} dBFS) but no "
+            "transcript could be decoded, and a stream-copy remux did not "
+            "help — the container or codec is likely damaged. Try re-muxing "
+            "or re-encoding the source by hand."
+        )
+    return (
+        "the extracted audio track is digital silence, so a silent or "
+        "music-only source has nothing to select; check that the file has an "
+        "audio track at all."
+    )
+
+
+def _recover_from_a_damaged_container(
+    media: Path, dest_dir: Path, transcribe,
+) -> tuple[Path, list, str, dict, str] | None:
+    """Re-transcribe from a clean remux, if a remux produces anything.
+
+    ``transcribe`` is the pipeline's own transcription call, so the recovered
+    transcript comes from the same decode path the original would have — not
+    from a probe, and not from a second model.
+
+    Returns ``None`` when the recovery is not applicable, which is the common
+    case and must stay quiet: a speechless source should hear the honest
+    no-speech diagnosis, not a paragraph about a container that was fine.
+
+    One strategy, one attempt. The evidence for this fix is a single corpus
+    source whose `.ogv` was structurally damaged and which transcribed to 11
+    segments from a clean copy; that is what a remux repairs, and a second
+    invented strategy would be speculation presented as a fallback. A retry
+    loop here is also how a genuinely speechless source burns minutes on
+    copies that cannot help it.
+
+    The remux is a *stream copy*, never a re-encode. Repairing a container
+    must not become an excuse to alter the content, and a copy that changes
+    nothing is the only recovery whose transcript can be compared to the
+    original's at all. The recovered file is kept, because downstream renders
+    and timelines seek it; deleting it would fix the transcript and break the
+    cut.
+    """
+    from providers.ffmpeg import FfmpegError, remux
+
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    candidate = dest_dir / f"{media.stem}.remux.mkv"
+    try:
+        remux(media, candidate)
+    except FfmpegError as exc:
+        tail = exc.stderr_tail.strip().splitlines()
+        print(f"[transcribe] remux of {media.name} rejected by ffmpeg: "
+              f"{tail[-1] if tail else exc}", flush=True)
+        return None
+    if not candidate.is_file() or candidate.stat().st_size < 10000:
+        return None
+    try:
+        transcript, detected, provenance = transcribe(candidate)
+    except Exception as exc:  # a recovery that raises must not kill the run
+        print(f"[transcribe] the remux of {media.name} would not transcribe: "
+              f"{type(exc).__name__}: {exc}", flush=True)
+        return None
+    if not transcript:
+        return None
+    return candidate, transcript, detected, provenance, "a stream-copy remux"
 
 
 def run(
@@ -286,6 +369,56 @@ def run(
         _save_state(state_path, state)
 
     if not transcript:
+        # An empty transcript means one of two unrelated things, and only one
+        # of them is the user's problem: the source genuinely has no speech,
+        # or its audio is there and the decode lost it. For a long time the
+        # error below blamed the user's content for both — a corpus source at
+        # 95.5% speech energy was rejected as "no audible spoken content"
+        # purely because its container was broken, and a clean remux of the
+        # same file transcribed to 11 segments.
+        #
+        # The extraction is the thing to ask first, because it is cheap and it
+        # settles it: digital silence cannot be repaired by any container fix,
+        # while real level with no transcript points at the decode.
+        peak = peak_dbfs(project / "transcription" / "audio.wav")
+        if peak is not None and math.isfinite(peak) and peak > SILENT_PEAK_DBFS:
+            recovered = _recover_from_a_damaged_container(
+                media, project / "source",
+                transcribe=lambda m: transcribe_auto(
+                    m, model_name=model, language=language,
+                    checkpoint_dir=project / "transcription",
+                    chunk_minutes=chunk_minutes, beam_size=beam_size,
+                    cpu_threads=cpu_threads,
+                ),
+            )
+            if recovered is not None:
+                remuxed, transcript, detected, asr_provenance, note = recovered
+                # Downstream renders and timelines seek this media; leaving
+                # them on the damaged original would reintroduce the decode
+                # loss the recovery just fixed, one stage later and silently.
+                media = remuxed
+                state.update({"media_path": str(media)})
+                _save_state(state_path, state)
+                write_json_atomic(
+                    transcript_path,
+                    {
+                        "language": detected,
+                        "asr": asr_provenance,
+                        "segments": [
+                            {"start": s.start, "end": s.end, "text": s.text,
+                             "words": [asdict(w) for w in s.words]}
+                            for s in transcript
+                        ],
+                        # Named so a reader can tell this transcript came from
+                        # a repaired container, not the file they handed in.
+                        "container_recovery": note,
+                    },
+                    encoding="utf-8",
+                )
+                print(f"[transcribe] recovered {len(transcript)} segment(s) via {note}",
+                      flush=True)
+
+    if not transcript:
         # A source with no detectable speech has no stories to select, and
         # every candidate would be rejected for having too few words. Failing
         # here names the actual cause instead of letting it surface forty
@@ -294,9 +427,7 @@ def run(
         # audio track was digital silence.
         raise RuntimeError(
             "Transcription produced no speech: the source has no audible "
-            "spoken content. Check that the file has an audio track and that "
-            "it contains speech (a silent or music-only source has nothing "
-            "to select)."
+            f"spoken content. {_no_speech_diagnosis(peak_dbfs(project / 'transcription' / 'audio.wav'))}"
         )
 
     # The near-empty case: a transcript that is well-formed, non-empty and in

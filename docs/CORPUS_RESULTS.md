@@ -186,13 +186,37 @@ document.
 
 ## The four failures, each diagnosed
 
-**`telugu-launch` — NO_SPEECH_DETECTED, and the diagnosis is wrong.** The
+**`telugu-launch` — NO_SPEECH_DETECTED, and the diagnosis was wrong.** The
 source has speech. The `.ogv` container is structurally damaged (non-monotonic
 DTS, mis-marked keyframes); a clean remux of the same file transcribes to 11
-segments. The pipeline's "no audible spoken content" error therefore conflates
+segments. The pipeline's "no audible spoken content" error therefore conflated
 two unrelated causes — genuinely speechless media and an unreadable container —
-and tells a user their source has no speech when it has plenty. This is the
-most misleading failure mode in the product and it is still open.
+and told a user their source had no speech when it had plenty. This was the
+most misleading failure mode in the product.
+
+**Fixed, and the fix is narrower than the error was.** The diagnosis now
+measures the peak of the extracted audio first, because that level is what
+separates the two cases, and it reports the number rather than only a verdict:
+
+* **silent extraction** (peak below −50 dBFS, or absent) — no container
+  repair can help, so no remux is attempted, and the message says the track is
+  digital silence. `alice-1903` and `roman-portrait-trailer` land here, which
+  is where they belong.
+* **real level with no transcript** — the pipeline stream-copies the source
+  into a fresh container with regenerated timestamps and re-transcribes from
+  that. The copy is never a re-encode, so the recovery cannot alter the
+  content, and the recovered file becomes the media the renders and timelines
+  seek — otherwise the fix would repair the transcript and break the cut.
+
+One attempt, one strategy. The evidence for the remux is this single source;
+a second invented fallback would be speculation dressed as a retry loop, and a
+loop here is also how a genuinely speechless source pays for minutes of
+copying that cannot help it.
+
+**Still unconfirmed on the real source.** Its media is gone, so the recovery
+path has been verified only against synthetic containers and the unit tests.
+Confirming it needs `telugu-launch` re-downloaded — a remux and a re-transcode,
+not a full pipeline run.
 
 **`roman-portrait-trailer` — NO_SPEECH_DETECTED, and this one is correct.**
 The file is a music-and-motion reel with no spoken content. The pipeline
@@ -306,7 +330,9 @@ Criterion P13 holds on a real re-run, not only in the unit test.
 2. Fix the no-speech error to distinguish an unreadable container from a
    speechless source — remux to a clean container and retry before reporting
    "no audible spoken content". `telugu-launch` is the case: 95.5%
-   speech-energy audio, and the run reported no speech at all.
+   speech-energy audio, and the run reported no speech at all. **Implemented
+   in code; unconfirmed on the real source**, whose media is gone. Re-downloading
+   it is a remux plus a re-transcribe, not a full run.
 3. Re-download the six sources whose media is gone and re-emit their EDLs with
    `tools/regenerate_timelines.py`, so the shipped artifacts match the fixed
    emitter. No re-transcode needed; the media is the only thing missing, and

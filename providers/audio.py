@@ -70,3 +70,33 @@ def audio_fingerprint(wav: Path) -> str:
     st = wav.stat()
     raw = f"{wav.resolve()}|{st.st_size}|{st.st_mtime_ns}"
     return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def peak_dbfs(wav: Path) -> float | None:
+    """Loudest sample of the mono PCM extraction, in dBFS; ``None`` if absent.
+
+    The distinction the no-speech diagnosis has to make and previously did
+    not: a source whose audio track is digital silence has nothing to
+    recover, while a source with real level and no transcript is a decode or
+    container problem. A corpus source at 95.5% speech energy was reported to
+    a user as "no audible spoken content" because that test did not exist.
+    """
+    import math
+    import wave
+
+    if not wav.is_file():
+        return None
+    with wave.open(str(wav), "rb") as fh:
+        channels = fh.getnchannels()
+        raw = fh.readframes(fh.getnframes())
+    if not raw:
+        return None
+    import numpy as np
+
+    data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+    if channels > 1:
+        data = data.reshape(-1, channels).mean(axis=1)
+    peak = float(np.max(np.abs(data))) if data.size else 0.0
+    if peak <= 0.0:
+        return -math.inf
+    return 20.0 * math.log10(peak)

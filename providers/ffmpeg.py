@@ -160,3 +160,30 @@ def probe_sample_aspect(media: Path) -> tuple[int, int]:
     except (FfmpegError, ValueError):
         pass
     return 1, 1
+
+
+def remux(src: Path, dest: Path, timeout: float | None = None) -> Path:
+    """Stream-copy a source into a fresh container.
+
+    This exists for sources whose container is structurally damaged —
+    non-monotonic DTS, mis-marked keyframes — in a way that makes a decoder
+    produce little or no audio even though the packets are there. Copying the
+    streams into a clean container repairs that without touching a pixel or a
+    sample, which is what makes it a safe first response: it cannot change the
+    content, only the box it arrives in.
+
+    Raises ``FfmpegError`` if ffmpeg itself rejects the copy, so the caller can
+    fall through to the honest no-speech diagnosis rather than reporting a
+    recovery that did not happen.
+    """
+    if dest.exists():
+        dest.unlink()
+    run_capture(
+        ["ffmpeg", "-y", "-loglevel", "error",
+         "-fflags", "+genpts",   # regenerate timestamps; the source's are the
+                                 # thing being repaired, so trusting them
+                                 # would carry the damage into the copy
+         "-i", str(src), "-c", "copy", "-map", "0", str(dest)],
+        stage="remux", source=str(src), target=str(dest), timeout=timeout,
+    )
+    return dest
