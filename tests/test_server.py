@@ -5,6 +5,8 @@ request `{"op", "params"}`, response `{"ok", "op", "data"|"error"}`.
 """
 import io
 import os
+import sys
+import subprocess
 import wave
 import json
 from pathlib import Path
@@ -349,3 +351,42 @@ def test_progress_prints_never_corrupt_the_json_stream(tmp_path):
     resp = json.loads(lines[0])
     assert resp["ok"] is True
     assert resp["data"]["vad_model"] == "energy-rms"
+
+
+def test_subprocess_progress_never_corrupts_the_json_stream(tmp_path):
+    """A child process writing to fd 1 is the wire-integrity case that
+    ``print()`` redirection cannot catch.
+
+    The sidecar swaps ``sys.stdout`` for ``sys.stderr`` to keep its own progress
+    off the wire, but an inherited child writes to the *real* fd 1 and bypasses
+    that swap entirely. ``providers.youtube.download`` runs yt-dlp as a child, so
+    its progress used to land on the wire and the caller saw
+    ``sidecar sent a non-JSON line``. This reproduces that failure with any
+    child and pins the fix.
+    """
+    path = _write_tone_wav(tmp_path)
+    fake_stdout = io.StringIO()
+    import selekyt.server as server_mod
+
+    def loud_child(media_path, project, **kw):
+        # A child emitting progress to fd 1 the way yt-dlp does.
+        subprocess.run(
+            [sys.executable, "-c",
+             "import sys; sys.stdout.write('[archive.org] progress 50%\\n'); sys.stdout.flush()"],
+        )
+        return {"vad_backend": "energy", "vad_model": "energy-rms"}
+
+    orig = server_mod.run_pipeline_audio
+    server_mod.run_pipeline_audio = loud_child
+    try:
+        serve(io.StringIO(json.dumps({
+            "op": "audio_analysis",
+            "params": {"media": str(path), "project": str(tmp_path / "p")},
+        }) + "\n"), fake_stdout)
+    finally:
+        server_mod.run_pipeline_audio = orig
+
+    lines = fake_stdout.getvalue().splitlines()
+    assert len(lines) == 1, f"a child must not put non-JSON on the wire: {lines}"
+    resp = json.loads(lines[0])
+    assert resp["ok"] is True

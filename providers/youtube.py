@@ -58,11 +58,23 @@ def download(url: str, out_dir: Path, cookies: str | None = None) -> tuple[Path,
     target = out_dir / f"{vid}.%(ext)s"
     cmd = ["yt-dlp", *auth, "-f", "bv*+ba/b", "--merge-output-format", "mp4", "-o", str(target), "--no-playlist", url]
     try:
-        subprocess.run(cmd, check=True)
+        # yt-dlp's progress must not reach this process's stdout. The Python
+        # sidecar serves a one-JSON-object-per-line protocol on fd 1, and
+        # inherited child output arrives on the real stdout, bypassing the
+        # sidecar's own sys.stdout swap (see server._progress_to_stderr).
+        # Pointing the child at fd 2 keeps progress visible in the CLI and off
+        # the wire, whatever Python-level swaps are in force.
+        subprocess.run(cmd, check=True, stdout=2, stderr=2)
     except subprocess.CalledProcessError as exc:
         raise RuntimeError("yt-dlp failed while downloading the YouTube video. Try a fresh cookie/header file or local download.") from exc
     files = sorted(out_dir.glob(f"{vid}.*"))
-    media = next((p for p in files if p.suffix.lower() in {".mp4", ".mkv", ".webm", ".mov"}), None)
+    # ``--merge-output-format mp4`` only applies when yt-dlp actually merges
+    # streams. A source whose best muxed format is already MPEG-PS (.mpg) or a
+    # transport stream (.ts) is written as-is with its own extension, so a
+    # fixed allowlist here would reject a download that succeeded. Any file
+    # ffprobe can read as a container is usable; the pipeline decodes through
+    # ffmpeg regardless of the wrapper.
+    media = next((p for p in files if p.is_file() and p.suffix.lower() not in {".json", ".part", ".temp"}), None)
     if not media:
         raise RuntimeError("yt-dlp completed but no video file was found")
     return media, info
