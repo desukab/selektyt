@@ -1,45 +1,51 @@
-# SelekyT Proprietary License
+SELEKYT PROPRIETARY LICENSE
 
-Copyright © 2026 Bharath Bheemreddy. All rights reserved.
+Copyright (c) 2026 Bharath Bheemreddy
 
-## 1. Ownership
+All rights reserved.
 
-SelekyT, including its source code, architecture, algorithms, editorial logic, documentation, configuration, and original assets, is proprietary software owned by the copyright holder, except for third-party components that are separately licensed.
+1. Ownership
+The SelekyT software, source code, documentation, architecture, editorial
+logic, and associated materials are proprietary intellectual property of the
+copyright holder, except for third-party components that are separately
+licensed.
 
-## 2. No General Permission
+2. Limited permission
+Access to this repository is provided for authorized evaluation, development,
+and collaboration purposes only. Such access does not transfer ownership or
+grant a general license to use the software.
 
-No license or other permission is granted to any person to copy, modify, publish, distribute, sublicense, sell, lease, host, or create derivative works from SelekyT, except as expressly permitted in a separate written agreement with the copyright holder.
+3. Restrictions
+Without prior written permission from the copyright holder, you may not:
+- copy, reproduce, or redistribute the software or substantial portions of it;
+- publish or make the source code available to third parties;
+- sell, license, sublicense, lease, or commercially exploit the software;
+- create or distribute a competing product or service based substantially on
+  the software;
+- remove copyright or proprietary notices; or
+- use the software as part of a commercial product or hosted service.
 
-Viewing or receiving access to the source code does not transfer ownership or grant commercial rights.
+4. Authorized collaborators
+A person or organization explicitly authorized by the copyright holder may
+access and modify the software only within the scope of that authorization.
+Additional rights must be granted in a separate written agreement.
 
-## 3. Authorized Collaboration
+5. Third-party software
+This license does not replace or override licenses applicable to third-party
+software, libraries, models, assets, or other materials included with or used
+by SelekyT. Those components remain subject to their respective licenses.
 
-The copyright holder may provide selected individuals or organizations with access to the repository for evaluation, development, testing, or collaboration.
+6. No warranty
+The software is provided "AS IS", without warranty of any kind, express or
+implied, to the maximum extent permitted by applicable law.
 
-Unless a separate written agreement says otherwise, such access:
+7. Termination
+Any permission granted under this license terminates automatically if these
+terms are materially violated. Upon termination, the recipient must stop the
+unauthorized use and distribution of the software.
 
-- does not transfer ownership;
-- does not grant permission to redistribute the source code;
-- does not grant permission to create or sell a competing product;
-- does not grant permission to publish the source code or substantial portions of it; and
-- is limited to the purpose for which access was provided.
+For commercial licensing, partnership, or other permissions, contact the
+copyright holder.
 
-## 4. Commercial Use
-
-Commercial use, redistribution, public hosting, sublicensing, incorporation into another product, or creation of a competing product requires a separate written license or agreement from the copyright holder.
-
-## 5. Third-Party Components
-
-SelekyT may include or depend on third-party software distributed under their own licenses. Those licenses remain applicable to the relevant third-party components and are not changed by this license.
-
-## 6. No Warranty
-
-To the maximum extent permitted by applicable law, SelekyT is provided without warranty of any kind. The copyright holder is not liable for claims, damages, or other liability arising from use of the software.
-
-## 7. Contact
-
-For permission to use, redistribute, commercialize, or collaborate on SelekyT beyond an authorized evaluation or development purpose, contact the copyright holder.
-
----
-
-This license is intended to describe the default permissions for the SelekyT repository. Specific written agreements may grant additional rights or impose additional obligations.
+This license is intended as a proprietary source-available license and is not
+an open-source license.
