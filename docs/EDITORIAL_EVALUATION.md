@@ -476,9 +476,15 @@ word immediately after the out-point.**
 
 **(b) Checks whose thresholds are too loose to fire on real failure.**
 
-- `check_silence_share` returns `share <= 0.55` — a clip that is 55% pause
+- `check_silence_share` returns `share <= 0.55` — a clip that is 55% word-free
   passes. Measured values here are 3.6%, 10.3%, 14.7%, so the check adds no
   information at all; it would only fire on a clip that is mostly nothing.
+  **The metric does not measure pauses at all** — it measures transcript-word
+  coverage of the kept intervals and never decodes audio. On the six-clip web
+  run it reports clip 05 at 40.8% over a window that is in fact a loud music bed
+  (mean −31.4 dB, 0.00 s of true silence). See `docs/METRICS.md` A2.4. Both the
+  threshold and the name need work; the threshold is loose *and* the quantity
+  is not the one the name advertises.
 - `check_cues_fit_the_render` tests only overrun (`cue end > render + 0.05s`).
   A caption track ending ten seconds before the render passes.
 - `check_caption_text_is_transcript_text` catches *extra* words, never *wrong*

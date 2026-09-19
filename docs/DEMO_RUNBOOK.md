@@ -171,15 +171,27 @@ ALL CHECKS PASS
 What this proves:
 
 - **The selections are watchable.** Read the `silence share` column carefully:
-  it describes the *source window the candidate was found in*, not the
-  delivered clip. Clip 05's 40.8% looks alarming until you probe the render —
-  measured on this host with `ffmpeg -i shorts/05.mp4 -af
-  silencedetect=noise=-40dB:d=0.25 -f null -`, every one of the six rendered
-  clips contains **0.00 s** of silence at that threshold, because the dead-air
-  and pause removal has already run. The column is a pacing signal about where
-  the story unit came from; the deliverable itself is dense speech. That is
-  the editorial point — the tool measures pacing rather than enforcing a fixed
-  cut rate, and it does not ship the dead air it measured.
+  it is **not a measure of audio at all**, and clip 05's 40.8% is not dead air.
+  The metric is computed from transcript word timings over the edit plan's
+  intervals and never decodes audio (VERIFIED — `tools/editorial_audit.py:check_silence_share`,
+  lines 205–219). I probed the contested window directly: the 6.26 s word-free
+  span in clip 05 is a **music bed**, mean −31.4 dB, max −14.1 dB, spectral
+  flatness 0.007–0.012, and 0.00 s of true silence. Re-transcribing that window
+  standalone with the same `small`/int8/beam-1 model returns only the single
+  word "Ever." — so the transcript is right and the pipeline dropped nothing;
+  the metric's *name* is the defect. Full measurement in `docs/METRICS.md` A2.4.
+  **Do not quote this column as a silence measurement in a demo.**
+- **The actual acoustic floor, measured on the renders themselves**
+  (`ffmpeg -af silencedetect=noise=-40dB:d=0.25` over all six `shorts/NN.mp4`,
+  VERIFIED): five clips contain 0.00 s of silence; **clip 04 contains 0.66 s**
+  (0.28 s at 3.25–3.54 s, 0.37 s at 6.75–7.13 s) of a 14.01 s render, i.e. 4.7%.
+  So the honest one-line claim is "≤4.7% measured silence across the six
+  delivered clips", not "zero". The earlier blanket figure of 0.00 s for all
+  six was wrong — one probe in the earlier pass was run at `-v error`, which
+  suppresses `silencedetect`'s output and returns an empty result that looks
+  like "no silence found". That is exactly the kind of tool artifact that
+  becomes a false measurement, and it is why every number here names its
+  command.
 - **No clip repeats another clip's sentence.** The cross-clip check is the one
   that catches the classic AI-clipper failure — five "clips" that are the same
   sentence re-cut. Six clips here are six distinct story units.
@@ -378,7 +390,7 @@ an expert asking "why this clip?"
 | `--doctor` reports `faster-whisper` missing | Transcription extra not installed (`pip install -e '.[transcription]'`) | The artifact walk needs no model. Run it and say the live-transcription path is unavailable today. |
 | `nle_check.py` prints `SKIP` for the EDL parse | `pycmx` not on `PYTHONPATH` — it lives in `/tmp/nlelibs`, outside the venv, on purpose | Re-run with exactly `PYTHONPATH=/tmp/nlelibs:tools`. Without it the audit still runs; it just loses its most valuable check, which is the entire point of the tool. Do not present a `SKIP` as a pass. |
 | `nle_check.py` fails a duration check by > 2 frames | A render was deleted or re-encoded after the timelines were written | The timelines are derived from the same interval list the render concatenated; re-rendering regenerates both. Delete the affected `facebook/NN.mp4` and re-run the pipeline, which checkpoints per clip and will only redo the missing one. |
-| `editorial_audit.py` fails a silence-share check | Source with long intentional pauses | That is an editorial judgement, not a crash. Show the failing line and say the gate is tunable — but note the tuning was **not** adjusted to make this run pass. |
+| `editorial_audit.py` fails a silence-share check | Source with a music bed, cutaway, or any word-free-but-loud audio | **Do not call it silence.** The metric is computed from transcript word timings and never decodes audio — it measures word *coverage*, not acoustic silence. If challenged on clip 05's 40.8%, the measured answer is: that window is a music bed at mean −31.4 dB with 0.00 s of true silence (`docs/METRICS.md` A2.4). Say the metric's name overstates what it measures and that renaming it is on the list — do not offer it as a measure of dead air |
 | `ffprobe` reports the shorts render as 308x486, someone calls it "not 9:16" | Anamorphic storage, SAR 8:9, DAR 1232:2187 | Show the `display_aspect_ratio` line. 0.5633 against a 0.5625 target. This is correct behaviour, documented in `product-gap-map.md`. |
 | A question about YouTube | `yt-dlp` bot-blocks this datacenter IP range; **no YouTube fetch has ever been observed on this host** | Say exactly that. The URL path is the same code YouTube uses and it is verified end-to-end against archive.org, but YouTube itself is unverified here. Do not claim it works. |
 | A question about the web shell | `web/server.mjs` has **no authentication, no origin check, and a prefix-based path jail that is bypassable** (`docs/TECHNICAL_AUDIT.md`, defects #1–#3) | Do not demo the web shell on a shared network. Say plainly that the web layer is a local single-user tool today and would fail an enterprise security review. This run's `pipeline_state.json` contains no cookies (VERIFIED), but the code path persists them in general. |

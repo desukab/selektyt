@@ -8,7 +8,7 @@ intention. Nothing is graded on what the code is "capable of"; that distinction
 is the whole point of [product-gap-map.md](product-gap-map.md) and it is applied
 here too.
 
-Verified on this host today: **822 tests passing, 10 skipped (65s)**; the 10
+Verified on this host today: **834 tests passing, 10 skipped (71s), re-run 2026-09-19**; the 10
 skips are optional backends absent from this host (sherpa-onnx, silero,
 ollama). One real rights-permitted 24:29 source (NASA 360 Episode 5, US
 Government public domain) ran the full chain green through the web shell;
@@ -63,9 +63,9 @@ evidence, not the largest round the narrative can support.
 | Question | Evidence |
 | --- | --- |
 | Who is building it? | One person: Bharath Bheemreddy, copyright holder in `LICENSE`. No employees, no co-founders, no advisors of record. |
-| Is there a second engineer? | No. 140 commits across three committer identities, all traceable to the same individual plus this build host. |
+| Is there a second engineer? | No. 154 commits across three committer identities, all traceable to the same individual plus this build host. |
 | How was it built? | Largely by AI coding agents in a multi-agent loop — five preserved agent worktrees are catalogued in [agent-worktrees.md](agent-worktrees.md). ~23,000 lines Python, ~3,900 lines Rust. |
-| Is that a capability or a risk? | Both. It is a real, unusual leverage: a full cross-language pipeline with 822 tests for one person's time. It also means no human has audited the machine-written core and no second person understands the system. |
+| Is that a capability or a risk? | Both. It is a real, unusual leverage: a full cross-language pipeline with 834 tests for one person's time. It also means no human has audited the machine-written core and no second person understands the system. |
 
 **Why this is the binding constraint:** every other gap in this document is
 mechanical and cheap. Only the team gap compounds. Specifically it blocks (a)
@@ -93,7 +93,7 @@ What is verified, not merely coded:
 | Captions (ASS/SRT/JSON, word-timed, 4 presets) | **Verified.** Cue-for-cue ASS/SRT parity pinned by tests. |
 | EDL (CMX 3600) and FCPXML 1.11, per cut | **Structurally verified.** 6/6 timelines re-validated by hand; record spans monotonic. One real one-frame overlap bug found and fixed (`tests/test_edl_record_advance.py`, verified to fail pre-fix). **Never imported into a real NLE.** |
 | Determinism | **Verified** — the web-shell run reproduced the CLI run's selection, durations and cue counts exactly. |
-| Editorial audit | **Verified** — `tools/editorial_audit.py` on the real project: ALL CHECKS PASS (cuts between words, no split sentences, no shaved tail words, cue text matches transcript, cues fit render, silence 3.6–14.7%). |
+| Editorial audit | **Verified** — `tools/editorial_audit.py` on the real project: ALL CHECKS PASS (cuts between words, no split sentences, no shaved tail words, cue text matches transcript, cues fit render, silence share 3.6–40.8%). **Caveat a diligent reviewer will find:** the "silence share" figure is computed from transcript word timings, not audio — clip 05's 40.8% is a music bed the transcript correctly has no words for, not dead air. See `docs/METRICS.md` A2.4. The check's name overstates what it measures; the underlying transcript and word timings are sound |
 | CLI, `--doctor`, web shell | **Verified**, both pass and fail paths. |
 | CI | pytest on Python 3.11–3.13 + `cargo test` + `cargo clippy -D warnings` on every push. |
 
