@@ -235,3 +235,14 @@ cutlists/provenance, audio analysis, and the web shell's video pipeline.
 ## Rights
 
 Use SelekyT only with videos you own, have permission to edit, or are otherwise legally entitled to process and republish. A public YouTube URL does not itself grant republication rights.
+
+
+## License
+
+**SelekyT is proprietary and source-available, not open source.**
+
+The source code is provided for authorized evaluation, development, and collaboration only. Copying, redistribution, commercial use, public hosting, sublicensing, or creation of competing products requires prior written permission.
+
+See [LICENSE](./LICENSE) for the full terms.
+
+Third-party dependencies remain subject to their own licenses.
