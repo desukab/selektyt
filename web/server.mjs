@@ -16,7 +16,7 @@ import {
   readFileSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, extname, join, normalize, resolve } from "node:path";
+import { basename, dirname, extname, join, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   encodeWav,
@@ -201,8 +201,12 @@ function sanitizeName(name) {
 }
 
 function guardedPath(raw) {
+  // ``startsWith(ROOT)`` alone is bypassable: a sibling directory that shares
+  // the project's name prefix (``/project-secret`` next to ``/project``)
+  // string-matches and reads as inside. The boundary must include the
+  // separator, and the project root itself must still pass.
   const candidate = resolve(String(raw || ""));
-  if (candidate.startsWith(ROOT)) {
+  if (candidate === ROOT || candidate.startsWith(ROOT + sep)) {
     return candidate;
   }
   throw new Error("path must be inside the project");
