@@ -85,12 +85,27 @@ def _xml_escape(s: str) -> str:
 
 
 def _to_file_uri(path: str) -> str:
+    """An absolute ``file:///`` URI, or a failure naming the path.
+
+    An NLE relinks a clip by this URI, and a *relative* one resolves against
+    the timeline file's own directory — which is almost never where the media
+    is — so the sequence imports with every clip offline and the user is left
+    facing a relink dialog for a file that never moved. A CLI invocation with
+    a relative source path produced exactly this on a real run, because
+    ``PurePath`` does not touch the filesystem and a relative path stayed
+    relative. Resolving against the working directory is the fix, and a path
+    that cannot be resolved must fail the export rather than ship offline
+    media under a URI that looks complete.
+    """
     if path.startswith(("file://", "http://", "https://")):
         return path
     try:
-        abs_path = str(PurePath(path))
-    except ValueError:  # pragma: no cover
-        abs_path = path
+        abs_path = str(Path(path).resolve())
+    except (OSError, ValueError) as exc:
+        raise RuntimeError(
+            "cannot turn the source path into an absolute file URI, so the "
+            f"export would reference media an NLE cannot relink: {path!r}"
+        ) from exc
     encoded = ["file://"]
     for byte in abs_path.encode("utf-8", errors="surrogateescape"):
         if byte in b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~/:":

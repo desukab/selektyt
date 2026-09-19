@@ -10,7 +10,9 @@ That is the evidence the formats are validated rather than trusted.
 from __future__ import annotations
 
 import re
+import urllib.parse
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 import pytest
 
@@ -374,6 +376,39 @@ def test_export_is_deterministic(tmp_path):
     b = render_edl(tl)
     assert a == b
     assert render_fcpxml(tl) == render_fcpxml(tl)
+
+
+def test_a_relative_source_path_still_emits_an_absolute_uri(tmp_path, monkeypatch):
+    """The defect this pins, found by auditing a real run: the timeline's media
+    path was relative, the exporter wrapped it in ``file://`` without ever
+    touching the filesystem, and every clip came up offline in the NLE because
+    a relative URI resolves against the timeline file's own directory. A CLI
+    invocation with a relative source path reaches exactly this state."""
+    from engine.nle_export import _to_file_uri
+
+    media = tmp_path / "source" / "a movie.mov"
+    media.parent.mkdir()
+    media.write_bytes(b"0")
+    monkeypatch.chdir(tmp_path)
+
+    uri = _to_file_uri("source/a movie.mov")
+    assert uri.startswith("file:///"), f"the URI must be absolute, got {uri!r}"
+    # The media is found at that URI, not re-read relative to the timeline.
+    resolved = Path(urllib.parse.unquote(uri[len("file://"):]))
+    assert resolved == media.resolve()
+
+
+def test_an_unresolvable_source_path_fails_the_export(tmp_path, monkeypatch):
+    """A path that cannot be made absolute must fail loudly rather than ship an
+    offline timeline under a URI that looks complete."""
+    from engine.nle_export import _to_file_uri
+
+    def unresolvable(self, strict=False):
+        raise OSError("working directory has been removed")
+
+    monkeypatch.setattr(Path, "resolve", unresolvable)
+    with pytest.raises(RuntimeError, match="absolute file URI"):
+        _to_file_uri("a/b.mov")
 
 
 def test_export_carries_source_traceability_for_every_event():
