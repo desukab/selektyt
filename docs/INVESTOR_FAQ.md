@@ -187,10 +187,13 @@ result I did not observe. Here is exactly what is and is not true:
 - **True:** the EDL and FCPXML files are format-valid and self-consistent, they
   are derived from the exact interval list that was rendered (so the timeline
   describes the media that actually shipped), and they are validated at write
-  time on the source's real frame rate. All 6 timelines from the real run were
-  re-validated by hand: `01..03.edl` VALID, `01..03.fcpxml` VALID. Record spans
-  advance monotonically (`02.edl`: frames `0→457`, then `457→512` — no overlap,
-  no gap).
+  time on the source's real frame rate. All six timelines from the real run
+  (`01`–`06`, each an `.edl` and a `.fcpxml`) are re-validated by a repeatable
+  audit — `PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py
+  out/web/pipeline/project`, which parses the EDL with **pycmx**, an
+  independent CMX 3600 reader, rather than SelekyT's own parser: 92 checks
+  pass, 0 fail. Record spans advance monotonically (`02.edl`: frames `0→457`,
+  then `457→512` — no overlap, no gap).
 - **True:** one real bug was found and fixed here — independent per-event
   rounding let event 3 start one frame *before* event 2 ended, and the
   validator caught it after renders and captions were already written
