@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="f1" name="FFVideoFormat" frameDuration="1001/30000s" />
+    <asset id="r1" name="emwcon-panel-2018.webm" start="0s" duration="100168068/30000s" hasVideo="1" videoSources="1" hasAudio="1" audioSources="1" audioChannels="2">
+      <media-rep kind="original-media" src="file:///home/azureuser/selektyt/corpus/media/emwcon-panel-2018.webm"/>
+    </asset>
+  </resources>
+  <library>
+    <event name="Just one thing too is to talk to the users about fault tolerance and just say mess up, do whatever, and watch how quickly it gets cleaned up, right?">
+      <project name="Just one thing too is to talk to the users about fault tolerance and just say mess up, do whatever, and watch how quickly it gets cleaned up, right?">
+        <sequence format="f1" tcFormat="NDF">
+          <spine>
+          <asset-clip ref="r1" offset="0s" start="23810787/30000s" duration="597597/30000s" tcFormat="NDF" />
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>

@@ -1,0 +1,51 @@
+1
+0:00:00,000 --> 0:00:01,027
+Just one thing too is to
+
+2
+0:00:01,060 --> 0:00:02,947
+talk to the users about fault
+
+3
+0:00:02,980 --> 0:00:05,160
+tolerance and just say mess up,
+
+4
+0:00:05,320 --> 0:00:06,667
+do whatever, and watch how quickly
+
+5
+0:00:06,700 --> 0:00:07,920
+it gets cleaned up, right?
+
+6
+0:00:08,140 --> 0:00:09,387
+So a lot of people are
+
+7
+0:00:09,420 --> 0:00:10,667
+afraid to kind of edit this
+
+8
+0:00:10,700 --> 0:00:11,727
+space where everybody else is
+
+9
+0:00:11,760 --> 0:00:13,847
+looking, but if you show them
+
+10
+0:00:13,880 --> 0:00:15,147
+how easy it is to revert
+
+11
+0:00:15,180 --> 0:00:18,087
+and edit or that other people
+
+12
+0:00:18,120 --> 0:00:19,507
+are watching, it becomes really
+
+13
+0:00:19,540 --> 0:00:19,920
+powerful.

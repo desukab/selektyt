@@ -1,0 +1,43 @@
+1
+0:00:00,000 --> 0:00:01,207
+Well, it's the interface and
+
+2
+0:00:01,240 --> 0:00:02,587
+buffer region of the Earth's
+
+3
+0:00:02,620 --> 0:00:03,180
+atmosphere.
+
+4
+0:00:03,460 --> 0:00:04,827
+It's where the Sun's energy is
+
+5
+0:00:04,860 --> 0:00:06,107
+first deposited into the
+
+6
+0:00:06,140 --> 0:00:08,247
+atmosphere, and it's where the the
+
+7
+0:00:08,280 --> 0:00:09,607
+atmosphere interacts with the near
+
+8
+0:00:09,640 --> 0:00:10,660
+space environment.
+
+9
+0:00:10,880 --> 0:00:12,107
+So scientists have known for years
+
+10
+0:00:12,140 --> 0:00:13,827
+that the sun impacts the earth,
+
+11
+0:00:13,860 --> 0:00:14,000
+right?

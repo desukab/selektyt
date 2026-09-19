@@ -15,3 +15,15 @@ rust/target/
 .claude/worktrees/
 .coverage*
 htmlcov/
+
+# Corpus: the evidence is the text artifacts (transcript, selections, edit
+# plan, captions, timelines, QA). The rendered MP4s, extracted WAVs and the
+# downloaded source media are regenerable from corpus/manifest.json by
+# tools/corpus_run.py, and committing ~400 MB of binary per run makes the
+# repo unclonable for no evidentiary gain.
+corpus/media/
+corpus/*_run/project/facebook/
+corpus/*_run/project/shorts/
+corpus/*_run/project/source/
+corpus/*_run/project/transcription/audio.wav
+corpus/*_run/project/transcription/chunks/*.wav

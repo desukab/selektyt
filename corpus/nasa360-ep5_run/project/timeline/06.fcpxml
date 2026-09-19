@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="f1" name="FFVideoFormat" frameDuration="1001/30000s" />
+    <asset id="r1" name="nasa360-ep5.mov" start="0s" duration="44093049/30000s" hasVideo="1" videoSources="1" hasAudio="1" audioSources="1" audioChannels="2">
+      <media-rep kind="original-media" src="file:///home/azureuser/selektyt/corpus/media/nasa360-ep5.mov"/>
+    </asset>
+  </resources>
+  <library>
+    <event name="See the pure science of how these three things interact, it&apos;s huge.">
+      <project name="See the pure science of how these three things interact, it&apos;s huge.">
+        <sequence format="f1" tcFormat="NDF">
+          <spine>
+          <asset-clip ref="r1" offset="0s" start="15213198/30000s" duration="272272/30000s" tcFormat="NDF" />
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>

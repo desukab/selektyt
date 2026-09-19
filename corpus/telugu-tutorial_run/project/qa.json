@@ -1,0 +1,50 @@
+{
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "per_file": {
+    "corpus/telugu-tutorial_run/project/facebook/01.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 939989,
+      "warnings": []
+    },
+    "corpus/telugu-tutorial_run/project/shorts/01.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 575780,
+      "warnings": []
+    }
+  },
+  "diversity": 1.0,
+  "source_coverage": {
+    "coverage_pct": 3.5,
+    "total_covered_sec": 11.8,
+    "overlaps": [],
+    "overlap_count": 0
+  },
+  "pacing": {
+    "total_candidates": 1,
+    "selected_count": 1,
+    "rejected_count": 0,
+    "context_guard_rejections": 0,
+    "truncated_by_limit": 0,
+    "avg_duration": 11.8,
+    "duration_distribution": {
+      "<15s": 1,
+      "15-30s": 0,
+      "30-45s": 0,
+      "45-55s": 0
+    },
+    "silence_pct": 46.3,
+    "filler_pct": 0.0,
+    "avg_words_per_second": 2.03,
+    "avg_hook_latency": null,
+    "payoff_presence_rate": 1.0,
+    "duplicate_overlap_rate": 0.0
+  }
+}

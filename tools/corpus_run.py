@@ -134,8 +134,13 @@ def _transcript_summary(project: Path) -> dict:
     if sp.is_file():
         try:
             s = json.loads(sp.read_text(encoding="utf-8"))
-            sel = s.get("selected") or []
-            rej = s.get("rejected") or []
+            # The pipeline writes a bare list of selected candidates; a dict
+            # shape would be the other reasonable thing for a caller to hand
+            # over, so both are accepted rather than assumed.
+            if isinstance(s, list):
+                sel, rej = s, []
+            else:
+                sel, rej = s.get("selected") or [], s.get("rejected") or []
             out.update({
                 "clips": len(sel),
                 "rejections": len(rej),
@@ -190,12 +195,17 @@ def run_one(entry: dict, workdir: Path, keep_media: bool) -> dict:
             rec["status"] = "OK"
         else:
             rec["status"] = "PIPELINE_FAILED"
-            # The pipeline raises a named RuntimeError for the no-speech case;
-            # surface that specifically because it is an editorial outcome,
-            # not a crash.
+            # The pipeline raises named RuntimeErrors for outcomes that are
+            # editorial rather than crashes — a speechless source and a
+            # selection the gate rejected entirely. Distinguishing them from
+            # a stack trace is what makes the corpus results readable: all
+            # three look like "exit 1" otherwise.
             for line in (r.stderr or "").splitlines():
-                if "no audible spoken content" in line or "no renderable" in line:
+                if "no audible spoken content" in line:
                     rec["status"] = "NO_SPEECH_DETECTED"
+                    break
+                if "passed the editorial/context gate" in line:
+                    rec["status"] = "NO_STORIES_PASSED"
                     break
         if not keep_media:
             shutil.rmtree(media_dir / media.name, ignore_errors=True)

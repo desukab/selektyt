@@ -1,0 +1,29 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.17,Default,,0,0,0,,{\k20}Yeah, {\k6}I {\k10}{\c&H00D7FF&\b1}think{\c&HFFFFFF&\b0} {\k16}I {\k30}{\c&H00D7FF&\b1}agree{\c&HFFFFFF&\b0} {\k18}with
+Dialogue: 0,0:00:01.20,0:00:02.33,Default,,0,0,0,,{\k40}{\c&H00D7FF&\b1}everything{\c&HFFFFFF&\b0} {\k38}already {\k28}said.
+Dialogue: 0,0:00:02.36,0:00:04.23,Default,,0,0,0,,{\k4}And {\k10}then {\k14}{\c&H00D7FF&\b1}just{\c&HFFFFFF&\b0} {\k26}add {\k66}{\c&H00D7FF&\b1}maybe{\c&HFFFFFF&\b0} {\k70}try
+Dialogue: 0,0:00:04.26,0:00:06.19,Default,,0,0,0,,{\k10}to {\k22}set {\k28}up {\k44}an {\k92}{\c&H00D7FF&\b1}organizational{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:06.22,0:00:07.81,Default,,0,0,0,,{\k54}{\c&H00D7FF&\b1}structure,{\c&HFFFFFF&\b0} {\k20}some {\k34}people {\k18}that {\k8}you
+Dialogue: 0,0:00:07.84,0:00:09.57,Default,,0,0,0,,{\k16}think {\k20}{\c&H00D7FF&\b1}might{\c&HFFFFFF&\b0} {\k18}be {\k44}{\c&H00D7FF&\b1}champions{\c&HFFFFFF&\b0} {\k46}and {\k32}will
+Dialogue: 0,0:00:09.60,0:00:11.89,Default,,0,0,0,,{\k34}be {\k94}really {\k40}{\c&H00D7FF&\b1}interested{\c&HFFFFFF&\b0} {\k30}in {\k34}training
+Dialogue: 0,0:00:11.92,0:00:13.71,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}others{\c&HFFFFFF&\b0} {\k50}and {\k28}get {\k20}them {\k28}{\c&H00D7FF&\b1}started{\c&HFFFFFF&\b0} {\k20}as
+Dialogue: 0,0:00:13.74,0:00:15.83,Default,,0,0,0,,{\k20}{\c&H00D7FF&\b1}early{\c&HFFFFFF&\b0} {\k20}as {\k40}{\c&H00D7FF&\b1}possible{\c&HFFFFFF&\b0} {\k82}and {\k16}then {\k34}have
+Dialogue: 0,0:00:15.86,0:00:18.11,Default,,0,0,0,,{\k44}{\c&H00D7FF&\b1}content{\c&HFFFFFF&\b0} {\k34}ready {\k38}for {\k48}the {\k30}{\c&H00D7FF&\b1}masses{\c&HFFFFFF&\b0} {\k34}once
+Dialogue: 0,0:00:18.14,0:00:19.69,Default,,0,0,0,,{\k64}{\c&H00D7FF&\b1}everybody{\c&HFFFFFF&\b0} {\k34}comes {\k36}I
+Dialogue: 0,0:00:19.72,0:00:21.43,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}wanted{\c&HFFFFFF&\b0} {\k18}to {\k14}add {\k16}that {\k56}{\c&H00D7FF&\b1}there{\c&HFFFFFF&\b0} {\k34}are
+Dialogue: 0,0:00:21.46,0:00:23.11,Default,,0,0,0,,{\k16}an {\k24}{\c&H00D7FF&\b1}opportunity{\c&HFFFFFF&\b0} {\k32}to {\k22}ask {\k32}{\c&H00D7FF&\b1}questions{\c&HFFFFFF&\b0} {\k42}in
+Dialogue: 0,0:00:23.14,0:00:24.31,Default,,0,0,0,,{\k10}the {\k72}{\c&H00D7FF&\b1}audience{\c&HFFFFFF&\b0} {\k20}as {\k12}well.
+Dialogue: 0,0:00:24.34,0:00:24.81,Default,,0,0,0,,{\k6}That {\k10}was {\k12}{\c&H00D7FF&\b1}just{\c&HFFFFFF&\b0} {\k10}{\c&H00D7FF&\b1}kind{\c&HFFFFFF&\b0} {\k4}of {\k8}a
+Dialogue: 0,0:00:24.84,0:00:25.50,Default,,0,0,0,,{\k14}starter {\k40}{\c&H00D7FF&\b1}question.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:25.64,0:00:27.24,Default,,0,0,0,,{\k36}We {\k58}have {\k10}a {\k22}{\c&H00D7FF&\b1}lull{\c&HFFFFFF&\b0} {\k14}in {\k20}{\c&H00D7FF&\b1}questions.{\c&HFFFFFF&\b0}

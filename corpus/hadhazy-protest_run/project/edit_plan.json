@@ -1,0 +1,47 @@
+[
+  {
+    "index": 1,
+    "source_start": 52.57,
+    "source_end": 63.69,
+    "source_duration": 11.12,
+    "intervals": [
+      [
+        52.57,
+        63.69
+      ]
+    ],
+    "edited_duration": 11.12,
+    "removed_seconds": 0.0,
+    "story_type": "insight"
+  },
+  {
+    "index": 2,
+    "source_start": 70.87,
+    "source_end": 91.39,
+    "source_duration": 20.52,
+    "intervals": [
+      [
+        70.87,
+        91.39
+      ]
+    ],
+    "edited_duration": 20.52,
+    "removed_seconds": 0.0,
+    "story_type": "story"
+  },
+  {
+    "index": 3,
+    "source_start": 32.81,
+    "source_end": 44.31,
+    "source_duration": 11.5,
+    "intervals": [
+      [
+        32.81,
+        44.31
+      ]
+    ],
+    "edited_duration": 11.5,
+    "removed_seconds": 0.0,
+    "story_type": "story"
+  }
+]

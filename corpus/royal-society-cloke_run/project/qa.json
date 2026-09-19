@@ -1,0 +1,98 @@
+{
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "per_file": {
+    "corpus/royal-society-cloke_run/project/facebook/01.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 14315258,
+      "warnings": []
+    },
+    "corpus/royal-society-cloke_run/project/shorts/01.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 5339532,
+      "warnings": []
+    },
+    "corpus/royal-society-cloke_run/project/facebook/02.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 6388867,
+      "warnings": []
+    },
+    "corpus/royal-society-cloke_run/project/shorts/02.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 2366454,
+      "warnings": []
+    },
+    "corpus/royal-society-cloke_run/project/facebook/03.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 6240186,
+      "warnings": []
+    },
+    "corpus/royal-society-cloke_run/project/shorts/03.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 3672230,
+      "warnings": []
+    },
+    "corpus/royal-society-cloke_run/project/facebook/04.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 5666447,
+      "warnings": []
+    },
+    "corpus/royal-society-cloke_run/project/shorts/04.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 2960544,
+      "warnings": []
+    }
+  },
+  "diversity": 0.289,
+  "source_coverage": {
+    "coverage_pct": 21.1,
+    "total_covered_sec": 131.9,
+    "overlaps": [],
+    "overlap_count": 0
+  },
+  "pacing": {
+    "total_candidates": 4,
+    "selected_count": 4,
+    "rejected_count": 0,
+    "context_guard_rejections": 0,
+    "truncated_by_limit": 3,
+    "avg_duration": 32.98,
+    "duration_distribution": {
+      "<15s": 0,
+      "15-30s": 3,
+      "30-45s": 0,
+      "45-55s": 1
+    },
+    "silence_pct": 4.8,
+    "filler_pct": 0.0,
+    "avg_words_per_second": 3.21,
+    "avg_hook_latency": 5.59,
+    "payoff_presence_rate": 1.0,
+    "duplicate_overlap_rate": 0.0
+  }
+}

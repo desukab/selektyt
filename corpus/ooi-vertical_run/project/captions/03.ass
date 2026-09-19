@@ -1,0 +1,18 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.06,0:00:02.39,Default,,0,0,0,,{\k18}An {\k38}{\c&H00D7FF&\b1}additional{\c&HFFFFFF&\b0} {\k46}cable {\k36}array {\k80}{\c&H00D7FF&\b1}wires{\c&HFFFFFF&\b0} {\k18}a
+Dialogue: 0,0:00:02.42,0:00:03.61,Default,,0,0,0,,{\k26}region {\k16}of {\k16}the {\k24}{\c&H00D7FF&\b1}northeast{\c&HFFFFFF&\b0} {\k40}Pacific
+Dialogue: 0,0:00:03.64,0:00:06.07,Default,,0,0,0,,{\k48}{\c&H00D7FF&\b1}Ocean{\c&HFFFFFF&\b0} {\k36}with {\k14}a {\k24}high {\k32}{\c&H00D7FF&\b1}-power{\c&HFFFFFF&\b0} {\k54}high
+Dialogue: 0,0:00:06.10,0:00:08.01,Default,,0,0,0,,{\k30}-speed {\k34}fiber {\k30}{\c&H00D7FF&\b1}optic{\c&HFFFFFF&\b0} {\k38}grid {\k62}that
+Dialogue: 0,0:00:08.04,0:00:09.31,Default,,0,0,0,,{\k34}enables {\k50}{\c&H00D7FF&\b1}observation{\c&HFFFFFF&\b0} {\k34}of {\k12}the
+Dialogue: 0,0:00:09.34,0:00:11.12,Default,,0,0,0,,{\k56}{\c&H00D7FF&\b1}seafloor{\c&HFFFFFF&\b0} {\k56}and {\k24}water {\k36}column.

@@ -1,0 +1,32 @@
+{
+  "source": "corpus/media/hadhazy-protest.webm",
+  "media_info": {},
+  "fingerprint": "ab7bc57c479993e529cf2ac2e2447ffa297a062dddff4db2c3c67e9a7848c09a",
+  "model": "small",
+  "language": "hu",
+  "renders": {
+    "01": {
+      "fingerprint": "ab7bc57c479993e529cf2ac2e2447ffa297a062dddff4db2c3c67e9a7848c09a",
+      "selection_digest": "65d94255964137cdd7858bc1b938b45833405df43d61d72731177f827ff4030d",
+      "facebook": "corpus/hadhazy-protest_run/project/facebook/01.mp4",
+      "shorts": "corpus/hadhazy-protest_run/project/shorts/01.mp4"
+    },
+    "02": {
+      "fingerprint": "ab7bc57c479993e529cf2ac2e2447ffa297a062dddff4db2c3c67e9a7848c09a",
+      "selection_digest": "65d94255964137cdd7858bc1b938b45833405df43d61d72731177f827ff4030d",
+      "facebook": "corpus/hadhazy-protest_run/project/facebook/02.mp4",
+      "shorts": "corpus/hadhazy-protest_run/project/shorts/02.mp4"
+    },
+    "03": {
+      "fingerprint": "ab7bc57c479993e529cf2ac2e2447ffa297a062dddff4db2c3c67e9a7848c09a",
+      "selection_digest": "65d94255964137cdd7858bc1b938b45833405df43d61d72731177f827ff4030d",
+      "facebook": "corpus/hadhazy-protest_run/project/facebook/03.mp4",
+      "shorts": "corpus/hadhazy-protest_run/project/shorts/03.mp4"
+    }
+  },
+  "render_fingerprint": "ab7bc57c479993e529cf2ac2e2447ffa297a062dddff4db2c3c67e9a7848c09a",
+  "render_selection_digest": "65d94255964137cdd7858bc1b938b45833405df43d61d72731177f827ff4030d",
+  "selected_count": 3,
+  "qa": "corpus/hadhazy-protest_run/project/qa.json",
+  "complete": true
+}

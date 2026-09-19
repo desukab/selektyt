@@ -1,0 +1,39 @@
+{
+  "source": "corpus/media/emwcon-panel-2018.webm",
+  "media_info": {},
+  "fingerprint": "316fc1adb69c7aefd526be0ea7fe1dc6f5f66c02754f7dcb0a871d6dace49f92",
+  "model": "small",
+  "language": "en",
+  "renders": {
+    "01": {
+      "fingerprint": "316fc1adb69c7aefd526be0ea7fe1dc6f5f66c02754f7dcb0a871d6dace49f92",
+      "selection_digest": "dab28b10c2f54903f2ceab21eca99aa2d13d4356f44393151e4e2bc45c042b6c",
+      "facebook": "corpus/emwcon-panel-2018_run/project/facebook/01.mp4",
+      "shorts": "corpus/emwcon-panel-2018_run/project/shorts/01.mp4"
+    },
+    "02": {
+      "fingerprint": "316fc1adb69c7aefd526be0ea7fe1dc6f5f66c02754f7dcb0a871d6dace49f92",
+      "selection_digest": "dab28b10c2f54903f2ceab21eca99aa2d13d4356f44393151e4e2bc45c042b6c",
+      "facebook": "corpus/emwcon-panel-2018_run/project/facebook/02.mp4",
+      "shorts": "corpus/emwcon-panel-2018_run/project/shorts/02.mp4"
+    },
+    "03": {
+      "fingerprint": "316fc1adb69c7aefd526be0ea7fe1dc6f5f66c02754f7dcb0a871d6dace49f92",
+      "selection_digest": "dab28b10c2f54903f2ceab21eca99aa2d13d4356f44393151e4e2bc45c042b6c",
+      "facebook": "corpus/emwcon-panel-2018_run/project/facebook/03.mp4",
+      "shorts": "corpus/emwcon-panel-2018_run/project/shorts/03.mp4"
+    },
+    "04": {
+      "fingerprint": "316fc1adb69c7aefd526be0ea7fe1dc6f5f66c02754f7dcb0a871d6dace49f92",
+      "selection_digest": "dab28b10c2f54903f2ceab21eca99aa2d13d4356f44393151e4e2bc45c042b6c",
+      "facebook": "corpus/emwcon-panel-2018_run/project/facebook/04.mp4",
+      "shorts": "corpus/emwcon-panel-2018_run/project/shorts/04.mp4"
+    },
+    "05": {
+      "fingerprint": "316fc1adb69c7aefd526be0ea7fe1dc6f5f66c02754f7dcb0a871d6dace49f92",
+      "selection_digest": "dab28b10c2f54903f2ceab21eca99aa2d13d4356f44393151e4e2bc45c042b6c",
+      "facebook": "corpus/emwcon-panel-2018_run/project/facebook/05.mp4",
+      "shorts": "corpus/emwcon-panel-2018_run/project/shorts/05.mp4"
+    }
+  }
+}

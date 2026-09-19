@@ -1,0 +1,96 @@
+[
+  {
+    "index": 1,
+    "source_start": 414.3,
+    "source_end": 439.15999999999997,
+    "source_duration": 24.86,
+    "intervals": [
+      [
+        414.3,
+        439.16
+      ]
+    ],
+    "edited_duration": 24.86,
+    "removed_seconds": 0.0,
+    "story_type": "conflict"
+  },
+  {
+    "index": 2,
+    "source_start": 327.86,
+    "source_end": 346.28,
+    "source_duration": 18.42,
+    "intervals": [
+      [
+        327.86,
+        343.12
+      ],
+      [
+        344.46,
+        346.28
+      ]
+    ],
+    "edited_duration": 17.08,
+    "removed_seconds": 1.34,
+    "story_type": "conflict"
+  },
+  {
+    "index": 3,
+    "source_start": 654.94,
+    "source_end": 671.38,
+    "source_duration": 16.44,
+    "intervals": [
+      [
+        654.94,
+        671.38
+      ]
+    ],
+    "edited_duration": 16.44,
+    "removed_seconds": 0.0,
+    "story_type": "revelation"
+  },
+  {
+    "index": 4,
+    "source_start": 606.02,
+    "source_end": 620.02,
+    "source_duration": 14.0,
+    "intervals": [
+      [
+        606.02,
+        620.02
+      ]
+    ],
+    "edited_duration": 14.0,
+    "removed_seconds": 0.0,
+    "story_type": "revelation"
+  },
+  {
+    "index": 5,
+    "source_start": 94.98,
+    "source_end": 112.64,
+    "source_duration": 17.66,
+    "intervals": [
+      [
+        94.98,
+        112.64
+      ]
+    ],
+    "edited_duration": 17.66,
+    "removed_seconds": 0.0,
+    "story_type": "fact"
+  },
+  {
+    "index": 6,
+    "source_start": 507.11,
+    "source_end": 516.17,
+    "source_duration": 9.06,
+    "intervals": [
+      [
+        507.11,
+        516.17
+      ]
+    ],
+    "edited_duration": 9.06,
+    "removed_seconds": 0.0,
+    "story_type": "story"
+  }
+]

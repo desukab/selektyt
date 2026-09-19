@@ -48,12 +48,12 @@
       "id": "alice-1903",
       "axis": "difficult-audio",
       "genre": "silent film",
-      "language": "none",
       "url": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Alice_in_Wonderland_%281903%29.ogv",
       "rights": "public domain (1903 film)",
       "role": "the deliberate negative: a source with no speech at all must be rejected cleanly by the pipeline rather than crash, per criterion P12",
       "limit": 2,
-      "expected": "NO_SPEECH_DETECTED"
+      "expected": "NO_SPEECH_DETECTED",
+      "note": "language is deliberately ABSENT, not \"none\": the CLI passes --language through verbatim, so the string \"none\" became a forced language code and the whole transcription aborted with 'none is not a valid language code'. An unset key means auto-detect, which is what a silent source needs."
     },
     {
       "id": "telugu-tutorial",

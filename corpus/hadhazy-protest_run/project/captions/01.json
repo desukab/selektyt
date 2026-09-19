@@ -1,0 +1,73 @@
+{
+  "style": "minimal",
+  "blocks": [
+    {
+      "start": 52.57,
+      "end": 54.23,
+      "text": "És ugye a jövő érgő, hogy",
+      "emphasis": [
+        " érgő,",
+        " hogy"
+      ]
+    },
+    {
+      "start": 54.23,
+      "end": 55.81,
+      "text": "annak diák én, amíg csak akkor",
+      "emphasis": [
+        " annak",
+        " akkor"
+      ]
+    },
+    {
+      "start": 55.81,
+      "end": 56.67,
+      "text": "a folyamatos félgetnek",
+      "emphasis": [
+        " folyamatos"
+      ]
+    },
+    {
+      "start": 56.67,
+      "end": 58.03,
+      "text": "történetkező, de annak diák aki",
+      "emphasis": [
+        " történetkező,"
+      ]
+    },
+    {
+      "start": 58.03,
+      "end": 59.83,
+      "text": "azt mondja, hogy a folyamatosan",
+      "emphasis": [
+        " folyamatosan"
+      ]
+    },
+    {
+      "start": 59.83,
+      "end": 61.01,
+      "text": "fontos, és ez az eddig minden",
+      "emphasis": [
+        " fontos,",
+        " minden"
+      ]
+    },
+    {
+      "start": 61.01,
+      "end": 62.43,
+      "text": "nap négy nem tudom, hogy minden",
+      "emphasis": [
+        " tudom,",
+        " minden"
+      ]
+    },
+    {
+      "start": 62.43,
+      "end": 63.69,
+      "text": "gyűjtényet egyébként nem tudom.",
+      "emphasis": [
+        " gyűjtényet"
+      ]
+    }
+  ]
+}

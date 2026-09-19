@@ -1,0 +1,734 @@
+[
+  {
+    "start": 112.471,
+    "end": 139.13,
+    "text": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface. The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
+    "story_type": "story",
+    "hook": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.",
+    "payoff": "The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
+    "editorial_score": 0.6126682914552221,
+    "virality_score": 0.16485714285714287,
+    "context_score": 0.9602566666666665,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.30; progression=0.53; payoff=0.87; density=0.59; fillers=0; standalone=1.00; repetition=0.00; coherence=1.00; completeness=1.00; audio_pace=0.87; silence=0.138; dead_air=0.14.",
+    "visual_potential": 0.44999999999999996,
+    "words": [
+      {
+        "text": " Gliders",
+        "start": 113.42,
+        "end": 113.94,
+        "confidence": 0.9762953817844391
+      },
+      {
+        "text": " fill",
+        "start": 113.94,
+        "end": 114.26,
+        "confidence": 0.8956911563873291
+      },
+      {
+        "text": " in",
+        "start": 114.26,
+        "end": 114.4,
+        "confidence": 0.9861215949058533
+      },
+      {
+        "text": " gaps",
+        "start": 114.4,
+        "end": 114.64,
+        "confidence": 0.9977607727050781
+      },
+      {
+        "text": " between",
+        "start": 114.64,
+        "end": 115.1,
+        "confidence": 0.9981279969215393
+      },
+      {
+        "text": " the",
+        "start": 115.1,
+        "end": 115.36,
+        "confidence": 0.9958595633506775
+      },
+      {
+        "text": " arrays,",
+        "start": 115.36,
+        "end": 115.68,
+        "confidence": 0.979336678981781
+      },
+      {
+        "text": " traveling",
+        "start": 116.46,
+        "end": 117.04,
+        "confidence": 0.8797564506530762
+      },
+      {
+        "text": " on",
+        "start": 117.04,
+        "end": 120.42,
+        "confidence": 0.994628369808197
+      },
+      {
+        "text": " a",
+        "start": 120.42,
+        "end": 120.42,
+        "confidence": 0.9919915795326233
+      },
+      {
+        "text": " data",
+        "start": 120.42,
+        "end": 120.8,
+        "confidence": 0.5933148264884949
+      },
+      {
+        "text": " mules",
+        "start": 120.8,
+        "end": 121.22,
+        "confidence": 0.838985949754715
+      },
+      {
+        "text": " send",
+        "start": 121.22,
+        "end": 121.78,
+        "confidence": 0.8686972260475159
+      },
+      {
+        "text": " oceanographic",
+        "start": 121.78,
+        "end": 122.34,
+        "confidence": 0.987599790096283
+      },
+      {
+        "text": " measurements",
+        "start": 122.34,
+        "end": 122.96,
+        "confidence": 0.9967867136001587
+      },
+      {
+        "text": " back",
+        "start": 122.96,
+        "end": 123.38,
+        "confidence": 0.9977731108665466
+      },
+      {
+        "text": " to",
+        "start": 123.38,
+        "end": 123.58,
+        "confidence": 0.9993001222610474
+      },
+      {
+        "text": " OOI",
+        "start": 123.58,
+        "end": 124.08,
+        "confidence": 0.6812308629353842
+      },
+      {
+        "text": " servers",
+        "start": 124.08,
+        "end": 124.52,
+        "confidence": 0.9710121750831604
+      },
+      {
+        "text": " when",
+        "start": 124.52,
+        "end": 125.04,
+        "confidence": 0.9880752563476562
+      },
+      {
+        "text": " they",
+        "start": 125.04,
+        "end": 125.2,
+        "confidence": 0.9985734224319458
+      },
+      {
+        "text": " surface.",
+        "start": 125.2,
+        "end": 125.48,
+        "confidence": 0.993164598941803
+      },
+      {
+        "text": " The",
+        "start": 128.37,
+        "end": 128.47,
+        "confidence": 0.9883862137794495
+      },
+      {
+        "text": " Ocean",
+        "start": 128.47,
+        "end": 128.81,
+        "confidence": 0.8650994300842285
+      },
+      {
+        "text": " Observatories",
+        "start": 128.81,
+        "end": 129.55,
+        "confidence": 0.8029498159885406
+      },
+      {
+        "text": " Initiative",
+        "start": 129.55,
+        "end": 130.07,
+        "confidence": 0.6764179468154907
+      },
+      {
+        "text": " has",
+        "start": 130.07,
+        "end": 130.59,
+        "confidence": 0.9945124387741089
+      },
+      {
+        "text": " revolutionized",
+        "start": 130.59,
+        "end": 131.69,
+        "confidence": 0.9830315709114075
+      },
+      {
+        "text": " marine",
+        "start": 131.69,
+        "end": 131.97,
+        "confidence": 0.9705526828765869
+      },
+      {
+        "text": " research",
+        "start": 131.97,
+        "end": 132.51,
+        "confidence": 0.9991156458854675
+      },
+      {
+        "text": " with",
+        "start": 132.51,
+        "end": 133.29,
+        "confidence": 0.7156620025634766
+      },
+      {
+        "text": " free",
+        "start": 133.29,
+        "end": 133.65,
+        "confidence": 0.9978054165840149
+      },
+      {
+        "text": " access",
+        "start": 133.65,
+        "end": 134.03,
+        "confidence": 0.999275267124176
+      },
+      {
+        "text": " to",
+        "start": 134.03,
+        "end": 134.29,
+        "confidence": 0.9995669722557068
+      },
+      {
+        "text": " high",
+        "start": 134.29,
+        "end": 134.61,
+        "confidence": 0.9978724718093872
+      },
+      {
+        "text": " quality",
+        "start": 134.61,
+        "end": 134.93,
+        "confidence": 0.3181547522544861
+      },
+      {
+        "text": " data",
+        "start": 134.93,
+        "end": 135.37,
+        "confidence": 0.9993588328361511
+      },
+      {
+        "text": " from",
+        "start": 135.37,
+        "end": 135.85,
+        "confidence": 0.990196943283081
+      },
+      {
+        "text": " remote",
+        "start": 135.85,
+        "end": 136.19,
+        "confidence": 0.999519944190979
+      },
+      {
+        "text": " locations",
+        "start": 136.19,
+        "end": 136.69,
+        "confidence": 0.9984408020973206
+      },
+      {
+        "text": " and",
+        "start": 136.69,
+        "end": 137.35,
+        "confidence": 0.9789243340492249
+      },
+      {
+        "text": " at",
+        "start": 137.35,
+        "end": 137.49,
+        "confidence": 0.8422280550003052
+      },
+      {
+        "text": " unprecedented",
+        "start": 137.49,
+        "end": 138.21,
+        "confidence": 0.9981178045272827
+      },
+      {
+        "text": " timescales.",
+        "start": 138.21,
+        "end": 139.13,
+        "confidence": 0.8980148235956827
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.6444
+  },
+  {
+    "start": 41.42,
+    "end": 56.58,
+    "text": "Now in its eighth year, OOI makes it possible to investigate short-lived events as well as multi-year trends. That provides researchers around the globe with critical insights into climate change and its effect on marine ecosystems.",
+    "story_type": "story",
+    "hook": "Now in its eighth year, OOI makes it possible to investigate short-lived events as well as multi-year trends.",
+    "payoff": "That provides researchers around the globe with critical insights into climate change and its effect on marine ecosystems.",
+    "editorial_score": 0.6647130167106421,
+    "virality_score": 0.1562857142857143,
+    "context_score": 0.8535238095238095,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.30; progression=0.53; payoff=0.84; density=0.90; fillers=0; standalone=1.00; repetition=0.00; coherence=1.00; completeness=1.00; audio_pace=0.87; silence=0.145; dead_air=0.09.",
+    "visual_potential": 0.44999999999999996,
+    "words": [
+      {
+        "text": " Now",
+        "start": 41.42,
+        "end": 41.66,
+        "confidence": 0.9975691437721252
+      },
+      {
+        "text": " in",
+        "start": 41.66,
+        "end": 41.8,
+        "confidence": 0.7534351348876953
+      },
+      {
+        "text": " its",
+        "start": 41.8,
+        "end": 41.96,
+        "confidence": 0.9399998188018799
+      },
+      {
+        "text": " eighth",
+        "start": 41.96,
+        "end": 42.24,
+        "confidence": 0.843030571937561
+      },
+      {
+        "text": " year,",
+        "start": 42.24,
+        "end": 42.56,
+        "confidence": 0.9921897053718567
+      },
+      {
+        "text": " OOI",
+        "start": 43.04,
+        "end": 43.64,
+        "confidence": 0.994719664255778
+      },
+      {
+        "text": " makes",
+        "start": 43.64,
+        "end": 43.88,
+        "confidence": 0.9958028197288513
+      },
+      {
+        "text": " it",
+        "start": 43.88,
+        "end": 44.02,
+        "confidence": 0.9990923404693604
+      },
+      {
+        "text": " possible",
+        "start": 44.02,
+        "end": 44.48,
+        "confidence": 0.9993225336074829
+      },
+      {
+        "text": " to",
+        "start": 44.48,
+        "end": 44.88,
+        "confidence": 0.9990414977073669
+      },
+      {
+        "text": " investigate",
+        "start": 44.88,
+        "end": 45.38,
+        "confidence": 0.996148943901062
+      },
+      {
+        "text": " short",
+        "start": 45.38,
+        "end": 45.74,
+        "confidence": 0.9969642758369446
+      },
+      {
+        "text": "-lived",
+        "start": 45.74,
+        "end": 45.9,
+        "confidence": 0.9488546848297119
+      },
+      {
+        "text": " events",
+        "start": 45.9,
+        "end": 46.36,
+        "confidence": 0.9990643858909607
+      },
+      {
+        "text": " as",
+        "start": 46.36,
+        "end": 46.92,
+        "confidence": 0.7848976850509644
+      },
+      {
+        "text": " well",
+        "start": 46.92,
+        "end": 47.1,
+        "confidence": 0.9993287324905396
+      },
+      {
+        "text": " as",
+        "start": 47.1,
+        "end": 47.28,
+        "confidence": 0.9979851245880127
+      },
+      {
+        "text": " multi",
+        "start": 47.28,
+        "end": 47.54,
+        "confidence": 0.9868832230567932
+      },
+      {
+        "text": "-year",
+        "start": 47.54,
+        "end": 47.78,
+        "confidence": 0.9700138866901398
+      },
+      {
+        "text": " trends.",
+        "start": 47.78,
+        "end": 48.2,
+        "confidence": 0.9990646243095398
+      },
+      {
+        "text": " That",
+        "start": 49.62,
+        "end": 50.0,
+        "confidence": 0.9881343245506287
+      },
+      {
+        "text": " provides",
+        "start": 50.0,
+        "end": 50.38,
+        "confidence": 0.9985840320587158
+      },
+      {
+        "text": " researchers",
+        "start": 50.38,
+        "end": 50.86,
+        "confidence": 0.9954636693000793
+      },
+      {
+        "text": " around",
+        "start": 50.86,
+        "end": 51.38,
+        "confidence": 0.9969112277030945
+      },
+      {
+        "text": " the",
+        "start": 51.38,
+        "end": 51.66,
+        "confidence": 0.9981557726860046
+      },
+      {
+        "text": " globe",
+        "start": 51.66,
+        "end": 51.96,
+        "confidence": 0.999574601650238
+      },
+      {
+        "text": " with",
+        "start": 51.96,
+        "end": 52.1,
+        "confidence": 0.9960721731185913
+      },
+      {
+        "text": " critical",
+        "start": 52.1,
+        "end": 52.6,
+        "confidence": 0.9985054731369019
+      },
+      {
+        "text": " insights",
+        "start": 52.6,
+        "end": 53.08,
+        "confidence": 0.9902689456939697
+      },
+      {
+        "text": " into",
+        "start": 53.08,
+        "end": 53.36,
+        "confidence": 0.9955436587333679
+      },
+      {
+        "text": " climate",
+        "start": 53.36,
+        "end": 53.76,
+        "confidence": 0.9968467354774475
+      },
+      {
+        "text": " change",
+        "start": 53.76,
+        "end": 54.12,
+        "confidence": 0.9995668530464172
+      },
+      {
+        "text": " and",
+        "start": 54.42,
+        "end": 54.8,
+        "confidence": 0.9779742956161499
+      },
+      {
+        "text": " its",
+        "start": 54.8,
+        "end": 54.98,
+        "confidence": 0.984399676322937
+      },
+      {
+        "text": " effect",
+        "start": 54.98,
+        "end": 55.32,
+        "confidence": 0.9312137365341187
+      },
+      {
+        "text": " on",
+        "start": 55.32,
+        "end": 55.62,
+        "confidence": 0.9952237010002136
+      },
+      {
+        "text": " marine",
+        "start": 55.62,
+        "end": 55.88,
+        "confidence": 0.990177571773529
+      },
+      {
+        "text": " ecosystems.",
+        "start": 55.88,
+        "end": 56.58,
+        "confidence": 0.9965099692344666
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.6412
+  },
+  {
+    "start": 89.697,
+    "end": 101.843,
+    "text": "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
+    "story_type": "insight",
+    "hook": "An additional cable array wires a region of the northeast ",
+    "payoff": "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
+    "editorial_score": 0.5777722913285189,
+    "virality_score": 0.14485714285714285,
+    "context_score": 0.767154761904762,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.30; progression=0.42; payoff=0.55; density=0.88; fillers=0; standalone=1.00; repetition=0.07; coherence=1.00; completeness=1.00; audio_pace=0.98; silence=0.031; dead_air=0.00.",
+    "visual_potential": 0.35,
+    "words": [
+      {
+        "text": " An",
+        "start": 90.73,
+        "end": 90.91,
+        "confidence": 0.9883750677108765
+      },
+      {
+        "text": " additional",
+        "start": 90.91,
+        "end": 91.29,
+        "confidence": 0.9900076389312744
+      },
+      {
+        "text": " cable",
+        "start": 91.29,
+        "end": 91.75,
+        "confidence": 0.2667185962200165
+      },
+      {
+        "text": " array",
+        "start": 91.75,
+        "end": 92.11,
+        "confidence": 0.9807778596878052
+      },
+      {
+        "text": " wires",
+        "start": 92.11,
+        "end": 92.91,
+        "confidence": 0.8752385377883911
+      },
+      {
+        "text": " a",
+        "start": 92.91,
+        "end": 93.09,
+        "confidence": 0.9568111300468445
+      },
+      {
+        "text": " region",
+        "start": 93.09,
+        "end": 93.35,
+        "confidence": 0.995415210723877
+      },
+      {
+        "text": " of",
+        "start": 93.35,
+        "end": 93.51,
+        "confidence": 0.9873197078704834
+      },
+      {
+        "text": " the",
+        "start": 93.51,
+        "end": 93.67,
+        "confidence": 0.9940487146377563
+      },
+      {
+        "text": " northeast",
+        "start": 93.67,
+        "end": 93.91,
+        "confidence": 0.4664727747440338
+      },
+      {
+        "text": " Pacific",
+        "start": 93.91,
+        "end": 94.31,
+        "confidence": 0.9697797298431396
+      },
+      {
+        "text": " Ocean",
+        "start": 94.31,
+        "end": 94.79,
+        "confidence": 0.8119404911994934
+      },
+      {
+        "text": " with",
+        "start": 95.17,
+        "end": 95.53,
+        "confidence": 0.9465870261192322
+      },
+      {
+        "text": " a",
+        "start": 95.53,
+        "end": 95.67,
+        "confidence": 0.9595298171043396
+      },
+      {
+        "text": " high",
+        "start": 95.67,
+        "end": 95.91,
+        "confidence": 0.9879562258720398
+      },
+      {
+        "text": "-power",
+        "start": 95.91,
+        "end": 96.23,
+        "confidence": 0.76274773478508
+      },
+      {
+        "text": " high",
+        "start": 96.23,
+        "end": 96.77,
+        "confidence": 0.37787774205207825
+      },
+      {
+        "text": "-speed",
+        "start": 96.77,
+        "end": 97.07,
+        "confidence": 0.9414924383163452
+      },
+      {
+        "text": " fiber",
+        "start": 97.07,
+        "end": 97.41,
+        "confidence": 0.8332370519638062
+      },
+      {
+        "text": " optic",
+        "start": 97.41,
+        "end": 97.71,
+        "confidence": 0.7855957746505737
+      },
+      {
+        "text": " grid",
+        "start": 97.71,
+        "end": 98.09,
+        "confidence": 0.9941482543945312
+      },
+      {
+        "text": " that",
+        "start": 98.09,
+        "end": 98.71,
+        "confidence": 0.9813168048858643
+      },
+      {
+        "text": " enables",
+        "start": 98.71,
+        "end": 99.05,
+        "confidence": 0.9965156316757202
+      },
+      {
+        "text": " observation",
+        "start": 99.05,
+        "end": 99.55,
+        "confidence": 0.9746302962303162
+      },
+      {
+        "text": " of",
+        "start": 99.55,
+        "end": 99.89,
+        "confidence": 0.9948146939277649
+      },
+      {
+        "text": " the",
+        "start": 99.89,
+        "end": 100.01,
+        "confidence": 0.9582903385162354
+      },
+      {
+        "text": " seafloor",
+        "start": 100.01,
+        "end": 100.57,
+        "confidence": 0.9035576581954956
+      },
+      {
+        "text": " and",
+        "start": 100.57,
+        "end": 101.13,
+        "confidence": 0.968045175075531
+      },
+      {
+        "text": " water",
+        "start": 101.13,
+        "end": 101.37,
+        "confidence": 0.9665219187736511
+      },
+      {
+        "text": " column.",
+        "start": 101.37,
+        "end": 101.73,
+        "confidence": 0.9938127994537354
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.587
+  }
+]

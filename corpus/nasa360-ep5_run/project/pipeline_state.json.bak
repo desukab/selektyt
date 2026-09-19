@@ -1,0 +1,45 @@
+{
+  "source": "corpus/media/nasa360-ep5.mov",
+  "media_info": {},
+  "fingerprint": "cee58d0e74d781fad7a9d9d23f75a092e849f09aa3727dbcd5637d8802a5b6f2",
+  "model": "small",
+  "language": "en",
+  "renders": {
+    "01": {
+      "fingerprint": "cee58d0e74d781fad7a9d9d23f75a092e849f09aa3727dbcd5637d8802a5b6f2",
+      "selection_digest": "18fcc5e1b496a82420967cf3fef8cdedc88761346c64ddcaa5bc574010709131",
+      "facebook": "corpus/nasa360-ep5_run/project/facebook/01.mp4",
+      "shorts": "corpus/nasa360-ep5_run/project/shorts/01.mp4"
+    },
+    "02": {
+      "fingerprint": "cee58d0e74d781fad7a9d9d23f75a092e849f09aa3727dbcd5637d8802a5b6f2",
+      "selection_digest": "18fcc5e1b496a82420967cf3fef8cdedc88761346c64ddcaa5bc574010709131",
+      "facebook": "corpus/nasa360-ep5_run/project/facebook/02.mp4",
+      "shorts": "corpus/nasa360-ep5_run/project/shorts/02.mp4"
+    },
+    "03": {
+      "fingerprint": "cee58d0e74d781fad7a9d9d23f75a092e849f09aa3727dbcd5637d8802a5b6f2",
+      "selection_digest": "18fcc5e1b496a82420967cf3fef8cdedc88761346c64ddcaa5bc574010709131",
+      "facebook": "corpus/nasa360-ep5_run/project/facebook/03.mp4",
+      "shorts": "corpus/nasa360-ep5_run/project/shorts/03.mp4"
+    },
+    "04": {
+      "fingerprint": "cee58d0e74d781fad7a9d9d23f75a092e849f09aa3727dbcd5637d8802a5b6f2",
+      "selection_digest": "18fcc5e1b496a82420967cf3fef8cdedc88761346c64ddcaa5bc574010709131",
+      "facebook": "corpus/nasa360-ep5_run/project/facebook/04.mp4",
+      "shorts": "corpus/nasa360-ep5_run/project/shorts/04.mp4"
+    },
+    "05": {
+      "fingerprint": "cee58d0e74d781fad7a9d9d23f75a092e849f09aa3727dbcd5637d8802a5b6f2",
+      "selection_digest": "18fcc5e1b496a82420967cf3fef8cdedc88761346c64ddcaa5bc574010709131",
+      "facebook": "corpus/nasa360-ep5_run/project/facebook/05.mp4",
+      "shorts": "corpus/nasa360-ep5_run/project/shorts/05.mp4"
+    },
+    "06": {
+      "fingerprint": "cee58d0e74d781fad7a9d9d23f75a092e849f09aa3727dbcd5637d8802a5b6f2",
+      "selection_digest": "18fcc5e1b496a82420967cf3fef8cdedc88761346c64ddcaa5bc574010709131",
+      "facebook": "corpus/nasa360-ep5_run/project/facebook/06.mp4",
+      "shorts": "corpus/nasa360-ep5_run/project/shorts/06.mp4"
+    }
+  }
+}

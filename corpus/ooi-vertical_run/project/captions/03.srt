@@ -1,0 +1,23 @@
+1
+0:00:00,060 --> 0:00:02,387
+An additional cable array wires a
+
+2
+0:00:02,420 --> 0:00:03,607
+region of the northeast Pacific
+
+3
+0:00:03,640 --> 0:00:06,067
+Ocean with a high -power high
+
+4
+0:00:06,100 --> 0:00:08,007
+-speed fiber optic grid that
+
+5
+0:00:08,040 --> 0:00:09,307
+enables observation of the
+
+6
+0:00:09,340 --> 0:00:11,120
+seafloor and water column.

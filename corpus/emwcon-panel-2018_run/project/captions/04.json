@@ -1,0 +1,66 @@
+{
+  "style": "minimal",
+  "blocks": [
+    {
+      "start": 1168.5,
+      "end": 1169.72,
+      "text": "I'm kind of curious actually, I'd",
+      "emphasis": [
+        " curious",
+        " actually,"
+      ]
+    },
+    {
+      "start": 1169.72,
+      "end": 1171.08,
+      "text": "like to pull the whole room",
+      "emphasis": [
+        " whole",
+        " room"
+      ]
+    },
+    {
+      "start": 1171.08,
+      "end": 1173.8,
+      "text": "like, do your organizations",
+      "emphasis": [
+        " organizations"
+      ]
+    },
+    {
+      "start": 1173.8,
+      "end": 1176.86,
+      "text": "care if all of your employees",
+      "emphasis": [
+        " your",
+        " employees"
+      ]
+    },
+    {
+      "start": 1176.86,
+      "end": 1179.16,
+      "text": "are contributing or are they okay",
+      "emphasis": [
+        " contributing",
+        " okay"
+      ]
+    },
+    {
+      "start": 1179.16,
+      "end": 1180.48,
+      "text": "if only 10 % of your",
+      "emphasis": [
+        " only",
+        " your"
+      ]
+    },
+    {
+      "start": 1180.48,
+      "end": 1181.58,
+      "text": "employees are contributing?",
+      "emphasis": [
+        " contributing?"
+      ]
+    }
+  ]
+}

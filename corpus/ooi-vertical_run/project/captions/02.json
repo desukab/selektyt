@@ -1,0 +1,72 @@
+{
+  "style": "minimal",
+  "blocks": [
+    {
+      "start": 41.42,
+      "end": 43.64,
+      "text": "Now in its eighth year, OOI",
+      "emphasis": [
+        " eighth",
+        " OOI"
+      ]
+    },
+    {
+      "start": 43.64,
+      "end": 45.38,
+      "text": "makes it possible to investigate",
+      "emphasis": [
+        " investigate"
+      ]
+    },
+    {
+      "start": 45.38,
+      "end": 47.28,
+      "text": "short -lived events as well as",
+      "emphasis": [
+        "-lived",
+        " events"
+      ]
+    },
+    {
+      "start": 47.28,
+      "end": 48.2,
+      "text": "multi -year trends.",
+      "emphasis": [
+        " trends."
+      ]
+    },
+    {
+      "start": 49.62,
+      "end": 51.38,
+      "text": "That provides researchers around",
+      "emphasis": [
+        " researchers"
+      ]
+    },
+    {
+      "start": 51.38,
+      "end": 53.08,
+      "text": "the globe with critical insights",
+      "emphasis": [
+        " insights"
+      ]
+    },
+    {
+      "start": 53.08,
+      "end": 55.32,
+      "text": "into climate change and its effect",
+      "emphasis": [
+        " climate",
+        " effect"
+      ]
+    },
+    {
+      "start": 55.32,
+      "end": 56.58,
+      "text": "on marine ecosystems.",
+      "emphasis": [
+        " ecosystems."
+      ]
+    }
+  ]
+}

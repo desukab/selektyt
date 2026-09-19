@@ -1,0 +1,18 @@
+TITLE:   The risk changes that factor if it's going to happen more often, it's going to be worse.
+
+FCM: NON-DROP FRAME
+
+001  ROYAL_SO V     C        00:03:01:18 00:03:41:16 00:00:00:00 00:00:39:23
+     M2   royal-society-cloke.webm
+* FROM CLIP: corpus/media/royal-society-cloke.webm
+001  ROYAL_SO A     C        00:03:01:18 00:03:41:16 00:00:00:00 00:00:39:23
+
+002  ROYAL_SO V     C        00:03:42:06 00:03:51:16 00:00:39:23 00:00:49:08
+     M2   royal-society-cloke.webm
+* FROM CLIP: corpus/media/royal-society-cloke.webm
+002  ROYAL_SO A     C        00:03:42:06 00:03:51:16 00:00:39:23 00:00:49:08
+
+003  ROYAL_SO V     C        00:03:52:03 00:03:55:06 00:00:49:08 00:00:52:11
+     M2   royal-society-cloke.webm
+* FROM CLIP: corpus/media/royal-society-cloke.webm
+003  ROYAL_SO A     C        00:03:52:03 00:03:55:06 00:00:49:08 00:00:52:11

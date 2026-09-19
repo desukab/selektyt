@@ -1,0 +1,5956 @@
+{
+  "index": 0,
+  "start": 0.0,
+  "end": 300.0,
+  "decode_start": 0.0,
+  "status": "ok",
+  "language": "en",
+  "segments": [
+    {
+      "start": 0.3,
+      "end": 7.44,
+      "text": "Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently",
+      "words": [
+        {
+          "text": " Now",
+          "start": 0.3,
+          "end": 0.8,
+          "confidence": 0.5857250094413757
+        },
+        {
+          "text": " last",
+          "start": 0.8,
+          "end": 1.12,
+          "confidence": 0.5472533702850342
+        },
+        {
+          "text": " year",
+          "start": 1.12,
+          "end": 1.4,
+          "confidence": 0.998450756072998
+        },
+        {
+          "text": " the",
+          "start": 1.4,
+          "end": 1.58,
+          "confidence": 0.711414635181427
+        },
+        {
+          "text": " UK",
+          "start": 1.58,
+          "end": 1.84,
+          "confidence": 0.962368369102478
+        },
+        {
+          "text": " recorded",
+          "start": 1.84,
+          "end": 2.34,
+          "confidence": 0.9841064214706421
+        },
+        {
+          "text": " its",
+          "start": 2.34,
+          "end": 2.58,
+          "confidence": 0.9202235341072083
+        },
+        {
+          "text": " highest",
+          "start": 2.58,
+          "end": 3.14,
+          "confidence": 0.9975824356079102
+        },
+        {
+          "text": " ever",
+          "start": 3.14,
+          "end": 3.42,
+          "confidence": 0.7917441725730896
+        },
+        {
+          "text": " temperature",
+          "start": 3.42,
+          "end": 3.86,
+          "confidence": 0.9932218790054321
+        },
+        {
+          "text": " of",
+          "start": 3.86,
+          "end": 4.18,
+          "confidence": 0.9946309328079224
+        },
+        {
+          "text": " 40",
+          "start": 4.18,
+          "end": 4.5,
+          "confidence": 0.8379538059234619
+        },
+        {
+          "text": ".3",
+          "start": 4.5,
+          "end": 5.02,
+          "confidence": 0.9928107857704163
+        },
+        {
+          "text": " degrees",
+          "start": 5.02,
+          "end": 5.28,
+          "confidence": 0.9014861583709717
+        },
+        {
+          "text": " Celsius",
+          "start": 5.28,
+          "end": 5.7,
+          "confidence": 0.8469619154930115
+        },
+        {
+          "text": " and",
+          "start": 5.7,
+          "end": 6.64,
+          "confidence": 0.5744724273681641
+        },
+        {
+          "text": " on",
+          "start": 6.64,
+          "end": 6.74,
+          "confidence": 0.9814352989196777
+        },
+        {
+          "text": " the",
+          "start": 6.74,
+          "end": 6.82,
+          "confidence": 0.9977186918258667
+        },
+        {
+          "text": " news",
+          "start": 6.82,
+          "end": 6.98,
+          "confidence": 0.998690664768219
+        },
+        {
+          "text": " recently",
+          "start": 6.98,
+          "end": 7.44,
+          "confidence": 0.9363917112350464
+        }
+      ]
+    },
+    {
+      "start": 7.44,
+      "end": 11.74,
+      "text": "We've seen devastating floods droughts and wildfires worldwide",
+      "words": [
+        {
+          "text": " We've",
+          "start": 7.44,
+          "end": 7.82,
+          "confidence": 0.643122062087059
+        },
+        {
+          "text": " seen",
+          "start": 7.82,
+          "end": 7.98,
+          "confidence": 0.9990179538726807
+        },
+        {
+          "text": " devastating",
+          "start": 7.98,
+          "end": 8.48,
+          "confidence": 0.9878800511360168
+        },
+        {
+          "text": " floods",
+          "start": 8.48,
+          "end": 9.22,
+          "confidence": 0.9962849617004395
+        },
+        {
+          "text": " droughts",
+          "start": 9.22,
+          "end": 10.1,
+          "confidence": 0.8516643047332764
+        },
+        {
+          "text": " and",
+          "start": 10.1,
+          "end": 10.3,
+          "confidence": 0.9933927655220032
+        },
+        {
+          "text": " wildfires",
+          "start": 10.3,
+          "end": 10.92,
+          "confidence": 0.9936453998088837
+        },
+        {
+          "text": " worldwide",
+          "start": 10.92,
+          "end": 11.74,
+          "confidence": 0.8846346139907837
+        }
+      ]
+    },
+    {
+      "start": 12.3,
+      "end": 20.1,
+      "text": "My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading",
+      "words": [
+        {
+          "text": " My",
+          "start": 12.3,
+          "end": 12.8,
+          "confidence": 0.6896790266036987
+        },
+        {
+          "text": " next",
+          "start": 12.8,
+          "end": 13.0,
+          "confidence": 0.9992386102676392
+        },
+        {
+          "text": " guest",
+          "start": 13.0,
+          "end": 13.28,
+          "confidence": 0.9938470721244812
+        },
+        {
+          "text": " is",
+          "start": 13.28,
+          "end": 13.66,
+          "confidence": 0.9976654052734375
+        },
+        {
+          "text": " Hannah",
+          "start": 13.66,
+          "end": 13.94,
+          "confidence": 0.8275463581085205
+        },
+        {
+          "text": " cloak",
+          "start": 13.94,
+          "end": 14.24,
+          "confidence": 0.5249882340431213
+        },
+        {
+          "text": " a",
+          "start": 14.24,
+          "end": 14.64,
+          "confidence": 0.893621563911438
+        },
+        {
+          "text": " specialist",
+          "start": 14.64,
+          "end": 15.22,
+          "confidence": 0.9849851131439209
+        },
+        {
+          "text": " in",
+          "start": 15.22,
+          "end": 15.52,
+          "confidence": 0.9944376945495605
+        },
+        {
+          "text": " extreme",
+          "start": 15.52,
+          "end": 16.0,
+          "confidence": 0.9868435263633728
+        },
+        {
+          "text": " weather",
+          "start": 16.0,
+          "end": 16.46,
+          "confidence": 0.9921139478683472
+        },
+        {
+          "text": " and",
+          "start": 16.46,
+          "end": 16.8,
+          "confidence": 0.9929760694503784
+        },
+        {
+          "text": " professor",
+          "start": 16.8,
+          "end": 17.24,
+          "confidence": 0.8441988229751587
+        },
+        {
+          "text": " of",
+          "start": 17.24,
+          "end": 17.7,
+          "confidence": 0.997837245464325
+        },
+        {
+          "text": " hydrology",
+          "start": 17.7,
+          "end": 18.5,
+          "confidence": 0.9420665701230367
+        },
+        {
+          "text": " at",
+          "start": 18.5,
+          "end": 18.96,
+          "confidence": 0.9412257075309753
+        },
+        {
+          "text": " the",
+          "start": 18.96,
+          "end": 19.04,
+          "confidence": 0.9951849579811096
+        },
+        {
+          "text": " University",
+          "start": 19.04,
+          "end": 19.4,
+          "confidence": 0.935134768486023
+        },
+        {
+          "text": " of",
+          "start": 19.4,
+          "end": 19.9,
+          "confidence": 0.9992746710777283
+        },
+        {
+          "text": " Reading",
+          "start": 19.9,
+          "end": 20.1,
+          "confidence": 0.9206011891365051
+        }
+      ]
+    },
+    {
+      "start": 20.68,
+      "end": 26.44,
+      "text": "She has appeared on TV including in the panorama episode wild weather our world under threat",
+      "words": [
+        {
+          "text": " She",
+          "start": 20.68,
+          "end": 21.12,
+          "confidence": 0.8421156406402588
+        },
+        {
+          "text": " has",
+          "start": 21.12,
+          "end": 21.26,
+          "confidence": 0.893627941608429
+        },
+        {
+          "text": " appeared",
+          "start": 21.26,
+          "end": 21.46,
+          "confidence": 0.9977449178695679
+        },
+        {
+          "text": " on",
+          "start": 21.46,
+          "end": 21.72,
+          "confidence": 0.9998419284820557
+        },
+        {
+          "text": " TV",
+          "start": 21.72,
+          "end": 22.0,
+          "confidence": 0.9909275770187378
+        },
+        {
+          "text": " including",
+          "start": 22.0,
+          "end": 22.58,
+          "confidence": 0.8954110145568848
+        },
+        {
+          "text": " in",
+          "start": 22.58,
+          "end": 22.98,
+          "confidence": 0.9987810254096985
+        },
+        {
+          "text": " the",
+          "start": 22.98,
+          "end": 23.08,
+          "confidence": 0.9928523898124695
+        },
+        {
+          "text": " panorama",
+          "start": 23.08,
+          "end": 23.6,
+          "confidence": 0.9441157281398773
+        },
+        {
+          "text": " episode",
+          "start": 23.6,
+          "end": 24.14,
+          "confidence": 0.9417099356651306
+        },
+        {
+          "text": " wild",
+          "start": 24.14,
+          "end": 24.76,
+          "confidence": 0.780051589012146
+        },
+        {
+          "text": " weather",
+          "start": 24.76,
+          "end": 25.12,
+          "confidence": 0.9858270287513733
+        },
+        {
+          "text": " our",
+          "start": 25.12,
+          "end": 25.48,
+          "confidence": 0.8926794528961182
+        },
+        {
+          "text": " world",
+          "start": 25.48,
+          "end": 25.84,
+          "confidence": 0.9864567518234253
+        },
+        {
+          "text": " under",
+          "start": 25.84,
+          "end": 26.14,
+          "confidence": 0.9601861834526062
+        },
+        {
+          "text": " threat",
+          "start": 26.14,
+          "end": 26.44,
+          "confidence": 0.9959498643875122
+        }
+      ]
+    },
+    {
+      "start": 26.44,
+      "end": 32.46,
+      "text": "And she was a subject of the Life Scientific on Radio 4 in 2021. Welcome Hannah.",
+      "words": [
+        {
+          "text": " And",
+          "start": 26.44,
+          "end": 27.28,
+          "confidence": 0.37665969133377075
+        },
+        {
+          "text": " she",
+          "start": 27.28,
+          "end": 27.6,
+          "confidence": 0.971060574054718
+        },
+        {
+          "text": " was",
+          "start": 27.6,
+          "end": 27.72,
+          "confidence": 0.9983831644058228
+        },
+        {
+          "text": " a",
+          "start": 27.72,
+          "end": 27.86,
+          "confidence": 0.7143498659133911
+        },
+        {
+          "text": " subject",
+          "start": 27.86,
+          "end": 28.14,
+          "confidence": 0.9965178966522217
+        },
+        {
+          "text": " of",
+          "start": 28.14,
+          "end": 28.46,
+          "confidence": 0.9985668063163757
+        },
+        {
+          "text": " the",
+          "start": 28.46,
+          "end": 28.58,
+          "confidence": 0.8626379370689392
+        },
+        {
+          "text": " Life",
+          "start": 28.58,
+          "end": 28.84,
+          "confidence": 0.7842113971710205
+        },
+        {
+          "text": " Scientific",
+          "start": 28.84,
+          "end": 29.32,
+          "confidence": 0.9536855816841125
+        },
+        {
+          "text": " on",
+          "start": 29.32,
+          "end": 29.76,
+          "confidence": 0.985111653804779
+        },
+        {
+          "text": " Radio",
+          "start": 29.76,
+          "end": 30.0,
+          "confidence": 0.9594199657440186
+        },
+        {
+          "text": " 4",
+          "start": 30.0,
+          "end": 30.26,
+          "confidence": 0.9083455801010132
+        },
+        {
+          "text": " in",
+          "start": 30.26,
+          "end": 30.48,
+          "confidence": 0.981842041015625
+        },
+        {
+          "text": " 2021.",
+          "start": 30.48,
+          "end": 30.94,
+          "confidence": 0.997613787651062
+        },
+        {
+          "text": " Welcome",
+          "start": 31.6,
+          "end": 32.1,
+          "confidence": 0.9625751972198486
+        },
+        {
+          "text": " Hannah.",
+          "start": 32.1,
+          "end": 32.46,
+          "confidence": 0.6970072388648987
+        }
+      ]
+    },
+    {
+      "start": 33.22,
+      "end": 39.08,
+      "text": "It's lovely to be here. When did you first discover your fascination with water and geography?",
+      "words": [
+        {
+          "text": " It's",
+          "start": 33.22,
+          "end": 33.38,
+          "confidence": 0.8602423071861267
+        },
+        {
+          "text": " lovely",
+          "start": 33.38,
+          "end": 33.54,
+          "confidence": 0.9970360994338989
+        },
+        {
+          "text": " to",
+          "start": 33.54,
+          "end": 33.72,
+          "confidence": 0.9993060827255249
+        },
+        {
+          "text": " be",
+          "start": 33.72,
+          "end": 33.84,
+          "confidence": 0.9995465874671936
+        },
+        {
+          "text": " here.",
+          "start": 33.84,
+          "end": 34.04,
+          "confidence": 0.9978963136672974
+        },
+        {
+          "text": " When",
+          "start": 34.6,
+          "end": 35.1,
+          "confidence": 0.993560791015625
+        },
+        {
+          "text": " did",
+          "start": 35.1,
+          "end": 35.28,
+          "confidence": 0.9977710247039795
+        },
+        {
+          "text": " you",
+          "start": 35.28,
+          "end": 35.4,
+          "confidence": 0.9927130341529846
+        },
+        {
+          "text": " first",
+          "start": 35.4,
+          "end": 35.84,
+          "confidence": 0.998364269733429
+        },
+        {
+          "text": " discover",
+          "start": 35.84,
+          "end": 36.48,
+          "confidence": 0.9982913136482239
+        },
+        {
+          "text": " your",
+          "start": 36.48,
+          "end": 36.84,
+          "confidence": 0.9956887364387512
+        },
+        {
+          "text": " fascination",
+          "start": 36.84,
+          "end": 37.68,
+          "confidence": 0.997489869594574
+        },
+        {
+          "text": " with",
+          "start": 37.68,
+          "end": 38.18,
+          "confidence": 0.9991108775138855
+        },
+        {
+          "text": " water",
+          "start": 38.18,
+          "end": 38.54,
+          "confidence": 0.9854017496109009
+        },
+        {
+          "text": " and",
+          "start": 38.54,
+          "end": 38.78,
+          "confidence": 0.9811503887176514
+        },
+        {
+          "text": " geography?",
+          "start": 38.78,
+          "end": 39.08,
+          "confidence": 0.9975927472114563
+        }
+      ]
+    },
+    {
+      "start": 40.14,
+      "end": 45.22,
+      "text": "I wonder if I was actually just born into water because you know when I was a little girl I was",
+      "words": [
+        {
+          "text": " I",
+          "start": 40.14,
+          "end": 40.42,
+          "confidence": 0.9974793791770935
+        },
+        {
+          "text": " wonder",
+          "start": 40.42,
+          "end": 40.66,
+          "confidence": 0.9378278851509094
+        },
+        {
+          "text": " if",
+          "start": 40.66,
+          "end": 40.86,
+          "confidence": 0.994134247303009
+        },
+        {
+          "text": " I",
+          "start": 40.86,
+          "end": 40.96,
+          "confidence": 0.9959993362426758
+        },
+        {
+          "text": " was",
+          "start": 40.96,
+          "end": 41.08,
+          "confidence": 0.9993496537208557
+        },
+        {
+          "text": " actually",
+          "start": 41.08,
+          "end": 41.38,
+          "confidence": 0.9812487363815308
+        },
+        {
+          "text": " just",
+          "start": 41.38,
+          "end": 41.6,
+          "confidence": 0.9937354922294617
+        },
+        {
+          "text": " born",
+          "start": 41.6,
+          "end": 42.0,
+          "confidence": 0.9967241883277893
+        },
+        {
+          "text": " into",
+          "start": 42.0,
+          "end": 42.48,
+          "confidence": 0.9882414937019348
+        },
+        {
+          "text": " water",
+          "start": 42.48,
+          "end": 42.9,
+          "confidence": 0.9715427160263062
+        },
+        {
+          "text": " because",
+          "start": 42.9,
+          "end": 43.3,
+          "confidence": 0.6798481345176697
+        },
+        {
+          "text": " you",
+          "start": 43.3,
+          "end": 43.86,
+          "confidence": 0.3703668713569641
+        },
+        {
+          "text": " know",
+          "start": 43.86,
+          "end": 43.9,
+          "confidence": 0.9986068606376648
+        },
+        {
+          "text": " when",
+          "start": 43.9,
+          "end": 44.02,
+          "confidence": 0.7703891396522522
+        },
+        {
+          "text": " I",
+          "start": 44.02,
+          "end": 44.08,
+          "confidence": 0.9936643838882446
+        },
+        {
+          "text": " was",
+          "start": 44.08,
+          "end": 44.18,
+          "confidence": 0.9993495345115662
+        },
+        {
+          "text": " a",
+          "start": 44.18,
+          "end": 44.28,
+          "confidence": 0.9946348667144775
+        },
+        {
+          "text": " little",
+          "start": 44.28,
+          "end": 44.44,
+          "confidence": 0.9988275170326233
+        },
+        {
+          "text": " girl",
+          "start": 44.44,
+          "end": 44.74,
+          "confidence": 0.9992198944091797
+        },
+        {
+          "text": " I",
+          "start": 44.74,
+          "end": 45.1,
+          "confidence": 0.8125576376914978
+        },
+        {
+          "text": " was",
+          "start": 45.1,
+          "end": 45.22,
+          "confidence": 0.9993282556533813
+        }
+      ]
+    },
+    {
+      "start": 45.22,
+      "end": 51.06,
+      "text": "just fascinated by it and we used to go on holiday to Devon to see my grandparents every",
+      "words": [
+        {
+          "text": " just",
+          "start": 45.22,
+          "end": 45.4,
+          "confidence": 0.9989078044891357
+        },
+        {
+          "text": " fascinated",
+          "start": 45.4,
+          "end": 45.84,
+          "confidence": 0.9991759657859802
+        },
+        {
+          "text": " by",
+          "start": 45.84,
+          "end": 46.24,
+          "confidence": 0.9995951056480408
+        },
+        {
+          "text": " it",
+          "start": 46.24,
+          "end": 46.5,
+          "confidence": 0.9995900988578796
+        },
+        {
+          "text": " and",
+          "start": 46.5,
+          "end": 47.24,
+          "confidence": 0.5818068385124207
+        },
+        {
+          "text": " we",
+          "start": 47.24,
+          "end": 47.58,
+          "confidence": 0.9975661039352417
+        },
+        {
+          "text": " used",
+          "start": 47.58,
+          "end": 47.78,
+          "confidence": 0.9970145225524902
+        },
+        {
+          "text": " to",
+          "start": 47.78,
+          "end": 47.92,
+          "confidence": 0.9997993111610413
+        },
+        {
+          "text": " go",
+          "start": 47.92,
+          "end": 48.1,
+          "confidence": 0.9995941519737244
+        },
+        {
+          "text": " on",
+          "start": 48.1,
+          "end": 48.48,
+          "confidence": 0.9976575374603271
+        },
+        {
+          "text": " holiday",
+          "start": 48.48,
+          "end": 48.78,
+          "confidence": 0.9946742057800293
+        },
+        {
+          "text": " to",
+          "start": 48.78,
+          "end": 49.28,
+          "confidence": 0.9975124597549438
+        },
+        {
+          "text": " Devon",
+          "start": 49.28,
+          "end": 49.72,
+          "confidence": 0.8927256166934967
+        },
+        {
+          "text": " to",
+          "start": 49.72,
+          "end": 49.86,
+          "confidence": 0.9598076939582825
+        },
+        {
+          "text": " see",
+          "start": 49.86,
+          "end": 50.0,
+          "confidence": 0.9995997548103333
+        },
+        {
+          "text": " my",
+          "start": 50.0,
+          "end": 50.2,
+          "confidence": 0.9996305704116821
+        },
+        {
+          "text": " grandparents",
+          "start": 50.2,
+          "end": 50.54,
+          "confidence": 0.9949210286140442
+        },
+        {
+          "text": " every",
+          "start": 50.54,
+          "end": 51.06,
+          "confidence": 0.9977662563323975
+        }
+      ]
+    },
+    {
+      "start": 51.06,
+      "end": 55.56,
+      "text": "summer and I just used to throw myself into the sea and you know go paddling in",
+      "words": [
+        {
+          "text": " summer",
+          "start": 51.06,
+          "end": 51.34,
+          "confidence": 0.5776548385620117
+        },
+        {
+          "text": " and",
+          "start": 51.34,
+          "end": 52.1,
+          "confidence": 0.5599787831306458
+        },
+        {
+          "text": " I",
+          "start": 52.1,
+          "end": 52.28,
+          "confidence": 0.9611429572105408
+        },
+        {
+          "text": " just",
+          "start": 52.28,
+          "end": 52.48,
+          "confidence": 0.9434563517570496
+        },
+        {
+          "text": " used",
+          "start": 52.48,
+          "end": 52.64,
+          "confidence": 0.9906578063964844
+        },
+        {
+          "text": " to",
+          "start": 52.64,
+          "end": 52.8,
+          "confidence": 0.99941086769104
+        },
+        {
+          "text": " throw",
+          "start": 52.8,
+          "end": 52.94,
+          "confidence": 0.9980475902557373
+        },
+        {
+          "text": " myself",
+          "start": 52.94,
+          "end": 53.22,
+          "confidence": 0.9983834028244019
+        },
+        {
+          "text": " into",
+          "start": 53.22,
+          "end": 53.4,
+          "confidence": 0.99437415599823
+        },
+        {
+          "text": " the",
+          "start": 53.4,
+          "end": 53.56,
+          "confidence": 0.9988147020339966
+        },
+        {
+          "text": " sea",
+          "start": 53.56,
+          "end": 53.94,
+          "confidence": 0.995741605758667
+        },
+        {
+          "text": " and",
+          "start": 53.94,
+          "end": 54.52,
+          "confidence": 0.6135855317115784
+        },
+        {
+          "text": " you",
+          "start": 54.52,
+          "end": 54.58,
+          "confidence": 0.4109502136707306
+        },
+        {
+          "text": " know",
+          "start": 54.58,
+          "end": 54.66,
+          "confidence": 0.9860471487045288
+        },
+        {
+          "text": " go",
+          "start": 54.66,
+          "end": 54.8,
+          "confidence": 0.8638365864753723
+        },
+        {
+          "text": " paddling",
+          "start": 54.8,
+          "end": 55.3,
+          "confidence": 0.9977541267871857
+        },
+        {
+          "text": " in",
+          "start": 55.3,
+          "end": 55.56,
+          "confidence": 0.9812511205673218
+        }
+      ]
+    },
+    {
+      "start": 55.56,
+      "end": 60.48,
+      "text": "Dartmoor rivers and just spent hours and hours in the water so I think it was",
+      "words": [
+        {
+          "text": " Dartmoor",
+          "start": 55.56,
+          "end": 56.0,
+          "confidence": 0.9328786333401998
+        },
+        {
+          "text": " rivers",
+          "start": 56.0,
+          "end": 56.24,
+          "confidence": 0.806358277797699
+        },
+        {
+          "text": " and",
+          "start": 56.24,
+          "end": 56.82,
+          "confidence": 0.6591493487358093
+        },
+        {
+          "text": " just",
+          "start": 56.82,
+          "end": 57.1,
+          "confidence": 0.5585147738456726
+        },
+        {
+          "text": " spent",
+          "start": 57.1,
+          "end": 57.68,
+          "confidence": 0.9376435279846191
+        },
+        {
+          "text": " hours",
+          "start": 57.68,
+          "end": 58.1,
+          "confidence": 0.99909508228302
+        },
+        {
+          "text": " and",
+          "start": 58.1,
+          "end": 58.3,
+          "confidence": 0.9966543912887573
+        },
+        {
+          "text": " hours",
+          "start": 58.3,
+          "end": 58.6,
+          "confidence": 0.9994901418685913
+        },
+        {
+          "text": " in",
+          "start": 58.6,
+          "end": 58.9,
+          "confidence": 0.9993315935134888
+        },
+        {
+          "text": " the",
+          "start": 58.9,
+          "end": 59.02,
+          "confidence": 0.9990474581718445
+        },
+        {
+          "text": " water",
+          "start": 59.02,
+          "end": 59.32,
+          "confidence": 0.9988910555839539
+        },
+        {
+          "text": " so",
+          "start": 59.32,
+          "end": 59.96,
+          "confidence": 0.2634846270084381
+        },
+        {
+          "text": " I",
+          "start": 59.96,
+          "end": 60.08,
+          "confidence": 0.96790611743927
+        },
+        {
+          "text": " think",
+          "start": 60.08,
+          "end": 60.2,
+          "confidence": 0.9996211528778076
+        },
+        {
+          "text": " it",
+          "start": 60.2,
+          "end": 60.34,
+          "confidence": 0.9984629154205322
+        },
+        {
+          "text": " was",
+          "start": 60.34,
+          "end": 60.48,
+          "confidence": 0.999821126461029
+        }
+      ]
+    },
+    {
+      "start": 60.48,
+      "end": 64.38,
+      "text": "there from when I was very very small I'm sure that my my mom and dad influenced",
+      "words": [
+        {
+          "text": " there",
+          "start": 60.48,
+          "end": 60.78,
+          "confidence": 0.997878909111023
+        },
+        {
+          "text": " from",
+          "start": 60.78,
+          "end": 61.08,
+          "confidence": 0.9906297326087952
+        },
+        {
+          "text": " when",
+          "start": 61.08,
+          "end": 61.22,
+          "confidence": 0.9924612641334534
+        },
+        {
+          "text": " I",
+          "start": 61.22,
+          "end": 61.32,
+          "confidence": 0.991887629032135
+        },
+        {
+          "text": " was",
+          "start": 61.32,
+          "end": 61.44,
+          "confidence": 0.9994465708732605
+        },
+        {
+          "text": " very",
+          "start": 61.44,
+          "end": 61.68,
+          "confidence": 0.9986203908920288
+        },
+        {
+          "text": " very",
+          "start": 61.68,
+          "end": 61.9,
+          "confidence": 0.8134613633155823
+        },
+        {
+          "text": " small",
+          "start": 61.9,
+          "end": 62.18,
+          "confidence": 0.9988420605659485
+        },
+        {
+          "text": " I'm",
+          "start": 62.18,
+          "end": 62.44,
+          "confidence": 0.7800375819206238
+        },
+        {
+          "text": " sure",
+          "start": 62.44,
+          "end": 62.66,
+          "confidence": 0.9997509121894836
+        },
+        {
+          "text": " that",
+          "start": 62.66,
+          "end": 62.86,
+          "confidence": 0.9962561130523682
+        },
+        {
+          "text": " my",
+          "start": 62.86,
+          "end": 63.08,
+          "confidence": 0.9942628741264343
+        },
+        {
+          "text": " my",
+          "start": 63.08,
+          "end": 63.48,
+          "confidence": 0.545643150806427
+        },
+        {
+          "text": " mom",
+          "start": 63.48,
+          "end": 63.72,
+          "confidence": 0.37100133299827576
+        },
+        {
+          "text": " and",
+          "start": 63.72,
+          "end": 63.82,
+          "confidence": 0.9957231283187866
+        },
+        {
+          "text": " dad",
+          "start": 63.82,
+          "end": 63.98,
+          "confidence": 0.9911375045776367
+        },
+        {
+          "text": " influenced",
+          "start": 63.98,
+          "end": 64.38,
+          "confidence": 0.9643063545227051
+        }
+      ]
+    },
+    {
+      "start": 64.38,
+      "end": 70.28,
+      "text": "me as well. That's amazing I love that but then water can also be quite a",
+      "words": [
+        {
+          "text": " me",
+          "start": 64.38,
+          "end": 64.74,
+          "confidence": 0.9994115829467773
+        },
+        {
+          "text": " as",
+          "start": 64.74,
+          "end": 64.98,
+          "confidence": 0.9957684278488159
+        },
+        {
+          "text": " well.",
+          "start": 64.98,
+          "end": 65.2,
+          "confidence": 0.9990921020507812
+        },
+        {
+          "text": " That's",
+          "start": 65.4,
+          "end": 65.7,
+          "confidence": 0.9798902571201324
+        },
+        {
+          "text": " amazing",
+          "start": 65.7,
+          "end": 66.08,
+          "confidence": 0.9989473223686218
+        },
+        {
+          "text": " I",
+          "start": 66.08,
+          "end": 66.32,
+          "confidence": 0.5214255452156067
+        },
+        {
+          "text": " love",
+          "start": 66.32,
+          "end": 66.7,
+          "confidence": 0.974787712097168
+        },
+        {
+          "text": " that",
+          "start": 66.7,
+          "end": 67.06,
+          "confidence": 0.9954741597175598
+        },
+        {
+          "text": " but",
+          "start": 67.06,
+          "end": 68.84,
+          "confidence": 0.44067826867103577
+        },
+        {
+          "text": " then",
+          "start": 68.84,
+          "end": 69.08,
+          "confidence": 0.9954478144645691
+        },
+        {
+          "text": " water",
+          "start": 69.08,
+          "end": 69.28,
+          "confidence": 0.9378068447113037
+        },
+        {
+          "text": " can",
+          "start": 69.28,
+          "end": 69.46,
+          "confidence": 0.9983810186386108
+        },
+        {
+          "text": " also",
+          "start": 69.46,
+          "end": 69.64,
+          "confidence": 0.9989935755729675
+        },
+        {
+          "text": " be",
+          "start": 69.64,
+          "end": 69.8,
+          "confidence": 0.9997370839118958
+        },
+        {
+          "text": " quite",
+          "start": 69.8,
+          "end": 70.04,
+          "confidence": 0.9973672032356262
+        },
+        {
+          "text": " a",
+          "start": 70.04,
+          "end": 70.28,
+          "confidence": 0.9951914548873901
+        }
+      ]
+    },
+    {
+      "start": 70.28,
+      "end": 73.1,
+      "text": "devastating force on the world so could you talk a little bit about that",
+      "words": [
+        {
+          "text": " devastating",
+          "start": 70.28,
+          "end": 70.62,
+          "confidence": 0.9995917677879333
+        },
+        {
+          "text": " force",
+          "start": 70.62,
+          "end": 71.28,
+          "confidence": 0.9977757334709167
+        },
+        {
+          "text": " on",
+          "start": 71.28,
+          "end": 71.46,
+          "confidence": 0.9986431002616882
+        },
+        {
+          "text": " the",
+          "start": 71.46,
+          "end": 71.58,
+          "confidence": 0.9992066025733948
+        },
+        {
+          "text": " world",
+          "start": 71.58,
+          "end": 71.74,
+          "confidence": 0.9039354920387268
+        },
+        {
+          "text": " so",
+          "start": 71.74,
+          "end": 71.9,
+          "confidence": 0.8970930576324463
+        },
+        {
+          "text": " could",
+          "start": 71.9,
+          "end": 71.98,
+          "confidence": 0.971515417098999
+        },
+        {
+          "text": " you",
+          "start": 71.98,
+          "end": 72.08,
+          "confidence": 0.9987722039222717
+        },
+        {
+          "text": " talk",
+          "start": 72.08,
+          "end": 72.22,
+          "confidence": 0.9988898634910583
+        },
+        {
+          "text": " a",
+          "start": 72.22,
+          "end": 72.36,
+          "confidence": 0.9997619986534119
+        },
+        {
+          "text": " little",
+          "start": 72.36,
+          "end": 72.5,
+          "confidence": 0.9995310306549072
+        },
+        {
+          "text": " bit",
+          "start": 72.5,
+          "end": 72.64,
+          "confidence": 0.9988903403282166
+        },
+        {
+          "text": " about",
+          "start": 72.64,
+          "end": 72.82,
+          "confidence": 0.999845027923584
+        },
+        {
+          "text": " that",
+          "start": 72.82,
+          "end": 73.1,
+          "confidence": 0.9993576407432556
+        }
+      ]
+    },
+    {
+      "start": 73.1,
+      "end": 77.58,
+      "text": "and you know the research that you do now? So I do love water I love the",
+      "words": [
+        {
+          "text": " and",
+          "start": 73.1,
+          "end": 73.4,
+          "confidence": 0.9769426584243774
+        },
+        {
+          "text": " you",
+          "start": 73.4,
+          "end": 73.7,
+          "confidence": 0.9745182394981384
+        },
+        {
+          "text": " know",
+          "start": 73.7,
+          "end": 73.8,
+          "confidence": 0.9994895458221436
+        },
+        {
+          "text": " the",
+          "start": 73.8,
+          "end": 73.98,
+          "confidence": 0.9052091836929321
+        },
+        {
+          "text": " research",
+          "start": 73.98,
+          "end": 74.26,
+          "confidence": 0.99885094165802
+        },
+        {
+          "text": " that",
+          "start": 74.26,
+          "end": 74.5,
+          "confidence": 0.9985535740852356
+        },
+        {
+          "text": " you",
+          "start": 74.5,
+          "end": 74.62,
+          "confidence": 0.999721109867096
+        },
+        {
+          "text": " do",
+          "start": 74.62,
+          "end": 74.74,
+          "confidence": 0.970282793045044
+        },
+        {
+          "text": " now?",
+          "start": 74.74,
+          "end": 74.94,
+          "confidence": 0.9711928367614746
+        },
+        {
+          "text": " So",
+          "start": 75.58,
+          "end": 76.02,
+          "confidence": 0.9537398219108582
+        },
+        {
+          "text": " I",
+          "start": 76.02,
+          "end": 76.14,
+          "confidence": 0.962806224822998
+        },
+        {
+          "text": " do",
+          "start": 76.14,
+          "end": 76.28,
+          "confidence": 0.9997262358665466
+        },
+        {
+          "text": " love",
+          "start": 76.28,
+          "end": 76.54,
+          "confidence": 0.9990953207015991
+        },
+        {
+          "text": " water",
+          "start": 76.54,
+          "end": 76.92,
+          "confidence": 0.9955428242683411
+        },
+        {
+          "text": " I",
+          "start": 76.92,
+          "end": 77.14,
+          "confidence": 0.5783854126930237
+        },
+        {
+          "text": " love",
+          "start": 77.14,
+          "end": 77.36,
+          "confidence": 0.9984256029129028
+        },
+        {
+          "text": " the",
+          "start": 77.36,
+          "end": 77.58,
+          "confidence": 0.9992086291313171
+        }
+      ]
+    },
+    {
+      "start": 77.58,
+      "end": 82.92,
+      "text": "sound of rain, I love flinging myself into rivers, but I'm very aware that these things",
+      "words": [
+        {
+          "text": " sound",
+          "start": 77.58,
+          "end": 77.78,
+          "confidence": 0.13070426881313324
+        },
+        {
+          "text": " of",
+          "start": 77.78,
+          "end": 77.98,
+          "confidence": 0.9756048917770386
+        },
+        {
+          "text": " rain,",
+          "start": 77.98,
+          "end": 78.26,
+          "confidence": 0.9962452054023743
+        },
+        {
+          "text": " I",
+          "start": 78.6,
+          "end": 78.7,
+          "confidence": 0.9609082341194153
+        },
+        {
+          "text": " love",
+          "start": 78.7,
+          "end": 78.88,
+          "confidence": 0.9358424544334412
+        },
+        {
+          "text": " flinging",
+          "start": 78.88,
+          "end": 79.22,
+          "confidence": 0.9939005374908447
+        },
+        {
+          "text": " myself",
+          "start": 79.22,
+          "end": 79.64,
+          "confidence": 0.9962479472160339
+        },
+        {
+          "text": " into",
+          "start": 79.64,
+          "end": 80.0,
+          "confidence": 0.9893024563789368
+        },
+        {
+          "text": " rivers,",
+          "start": 80.0,
+          "end": 80.24,
+          "confidence": 0.9872214198112488
+        },
+        {
+          "text": " but",
+          "start": 80.64,
+          "end": 80.76,
+          "confidence": 0.9925927519798279
+        },
+        {
+          "text": " I'm",
+          "start": 80.76,
+          "end": 80.92,
+          "confidence": 0.9832783639431
+        },
+        {
+          "text": " very",
+          "start": 80.92,
+          "end": 81.16,
+          "confidence": 0.9966403245925903
+        },
+        {
+          "text": " aware",
+          "start": 81.16,
+          "end": 81.58,
+          "confidence": 0.9986043572425842
+        },
+        {
+          "text": " that",
+          "start": 81.58,
+          "end": 81.8,
+          "confidence": 0.9853371977806091
+        },
+        {
+          "text": " these",
+          "start": 81.8,
+          "end": 82.58,
+          "confidence": 0.6453912258148193
+        },
+        {
+          "text": " things",
+          "start": 82.58,
+          "end": 82.92,
+          "confidence": 0.997019350528717
+        }
+      ]
+    },
+    {
+      "start": 82.92,
+      "end": 89.68,
+      "text": "can turn into monsters. Heavy rainfall, rivers can turn fluddy, and they will absolutely",
+      "words": [
+        {
+          "text": " can",
+          "start": 82.92,
+          "end": 83.12,
+          "confidence": 0.9793074727058411
+        },
+        {
+          "text": " turn",
+          "start": 83.12,
+          "end": 83.3,
+          "confidence": 0.994828999042511
+        },
+        {
+          "text": " into",
+          "start": 83.3,
+          "end": 83.48,
+          "confidence": 0.9959088563919067
+        },
+        {
+          "text": " monsters.",
+          "start": 83.48,
+          "end": 83.94,
+          "confidence": 0.9951786994934082
+        },
+        {
+          "text": " Heavy",
+          "start": 84.5,
+          "end": 84.92,
+          "confidence": 0.8358029127120972
+        },
+        {
+          "text": " rainfall,",
+          "start": 84.92,
+          "end": 85.4,
+          "confidence": 0.9279857873916626
+        },
+        {
+          "text": " rivers",
+          "start": 86.1,
+          "end": 86.54,
+          "confidence": 0.9975156784057617
+        },
+        {
+          "text": " can",
+          "start": 86.54,
+          "end": 86.74,
+          "confidence": 0.9686498045921326
+        },
+        {
+          "text": " turn",
+          "start": 86.74,
+          "end": 86.96,
+          "confidence": 0.9936535358428955
+        },
+        {
+          "text": " fluddy,",
+          "start": 86.96,
+          "end": 87.88,
+          "confidence": 0.5490578860044479
+        },
+        {
+          "text": " and",
+          "start": 88.18,
+          "end": 88.34,
+          "confidence": 0.8731397390365601
+        },
+        {
+          "text": " they",
+          "start": 88.34,
+          "end": 88.62,
+          "confidence": 0.9824798107147217
+        },
+        {
+          "text": " will",
+          "start": 88.62,
+          "end": 88.8,
+          "confidence": 0.9548811316490173
+        },
+        {
+          "text": " absolutely",
+          "start": 88.8,
+          "end": 89.68,
+          "confidence": 0.995170533657074
+        }
+      ]
+    },
+    {
+      "start": 89.68,
+      "end": 96.46,
+      "text": "devastate communities. So it's really interesting being very fascinated by water and how it",
+      "words": [
+        {
+          "text": " devastate",
+          "start": 89.68,
+          "end": 90.4,
+          "confidence": 0.9940338134765625
+        },
+        {
+          "text": " communities.",
+          "start": 90.4,
+          "end": 90.92,
+          "confidence": 0.9984765648841858
+        },
+        {
+          "text": " So",
+          "start": 91.7,
+          "end": 91.88,
+          "confidence": 0.8537207245826721
+        },
+        {
+          "text": " it's",
+          "start": 91.88,
+          "end": 92.8,
+          "confidence": 0.8862514793872833
+        },
+        {
+          "text": " really",
+          "start": 92.8,
+          "end": 92.98,
+          "confidence": 0.9378505349159241
+        },
+        {
+          "text": " interesting",
+          "start": 92.98,
+          "end": 93.42,
+          "confidence": 0.9978610873222351
+        },
+        {
+          "text": " being",
+          "start": 93.42,
+          "end": 93.66,
+          "confidence": 0.6981488466262817
+        },
+        {
+          "text": " very",
+          "start": 93.66,
+          "end": 93.98,
+          "confidence": 0.9749920964241028
+        },
+        {
+          "text": " fascinated",
+          "start": 93.98,
+          "end": 95.18,
+          "confidence": 0.9935716390609741
+        },
+        {
+          "text": " by",
+          "start": 95.18,
+          "end": 95.66,
+          "confidence": 0.9990329742431641
+        },
+        {
+          "text": " water",
+          "start": 95.66,
+          "end": 96.0,
+          "confidence": 0.9957401752471924
+        },
+        {
+          "text": " and",
+          "start": 96.0,
+          "end": 96.2,
+          "confidence": 0.9049956202507019
+        },
+        {
+          "text": " how",
+          "start": 96.2,
+          "end": 96.36,
+          "confidence": 0.9990957975387573
+        },
+        {
+          "text": " it",
+          "start": 96.36,
+          "end": 96.46,
+          "confidence": 0.9994822144508362
+        }
+      ]
+    },
+    {
+      "start": 96.46,
+      "end": 101.18,
+      "text": "moves around the planet, but yet being very aware of how dangerous it can be. And that's",
+      "words": [
+        {
+          "text": " moves",
+          "start": 96.46,
+          "end": 96.7,
+          "confidence": 0.9984470009803772
+        },
+        {
+          "text": " around",
+          "start": 96.7,
+          "end": 96.98,
+          "confidence": 0.9990825653076172
+        },
+        {
+          "text": " the",
+          "start": 96.98,
+          "end": 97.14,
+          "confidence": 0.9982879757881165
+        },
+        {
+          "text": " planet,",
+          "start": 97.14,
+          "end": 97.48,
+          "confidence": 0.9965574741363525
+        },
+        {
+          "text": " but",
+          "start": 97.88,
+          "end": 98.0,
+          "confidence": 0.9909391403198242
+        },
+        {
+          "text": " yet",
+          "start": 98.0,
+          "end": 98.1,
+          "confidence": 0.5548867583274841
+        },
+        {
+          "text": " being",
+          "start": 98.1,
+          "end": 98.26,
+          "confidence": 0.9598883390426636
+        },
+        {
+          "text": " very",
+          "start": 98.26,
+          "end": 98.48,
+          "confidence": 0.996366024017334
+        },
+        {
+          "text": " aware",
+          "start": 98.48,
+          "end": 98.92,
+          "confidence": 0.9992591738700867
+        },
+        {
+          "text": " of",
+          "start": 98.92,
+          "end": 99.08,
+          "confidence": 0.9970537424087524
+        },
+        {
+          "text": " how",
+          "start": 99.08,
+          "end": 99.22,
+          "confidence": 0.99932861328125
+        },
+        {
+          "text": " dangerous",
+          "start": 99.22,
+          "end": 99.64,
+          "confidence": 0.9995784163475037
+        },
+        {
+          "text": " it",
+          "start": 99.64,
+          "end": 99.9,
+          "confidence": 0.9987848401069641
+        },
+        {
+          "text": " can",
+          "start": 99.9,
+          "end": 100.06,
+          "confidence": 0.9986061453819275
+        },
+        {
+          "text": " be.",
+          "start": 100.06,
+          "end": 100.32,
+          "confidence": 0.9997898936271667
+        },
+        {
+          "text": " And",
+          "start": 100.7,
+          "end": 100.9,
+          "confidence": 0.9673995971679688
+        },
+        {
+          "text": " that's",
+          "start": 100.9,
+          "end": 101.18,
+          "confidence": 0.9994003176689148
+        }
+      ]
+    },
+    {
+      "start": 101.18,
+      "end": 102.68,
+      "text": "really why I do what I do.",
+      "words": [
+        {
+          "text": " really",
+          "start": 101.18,
+          "end": 101.46,
+          "confidence": 0.11956621706485748
+        },
+        {
+          "text": " why",
+          "start": 101.46,
+          "end": 101.76,
+          "confidence": 0.9268935322761536
+        },
+        {
+          "text": " I",
+          "start": 101.76,
+          "end": 102.0,
+          "confidence": 0.9868653416633606
+        },
+        {
+          "text": " do",
+          "start": 102.0,
+          "end": 102.16,
+          "confidence": 0.9944926500320435
+        },
+        {
+          "text": " what",
+          "start": 102.16,
+          "end": 102.3,
+          "confidence": 0.992874264717102
+        },
+        {
+          "text": " I",
+          "start": 102.3,
+          "end": 102.44,
+          "confidence": 0.9967310428619385
+        },
+        {
+          "text": " do.",
+          "start": 102.44,
+          "end": 102.68,
+          "confidence": 0.9974218606948853
+        }
+      ]
+    },
+    {
+      "start": 102.94,
+      "end": 105.12,
+      "text": "So I'm interested in flood forecasting,",
+      "words": [
+        {
+          "text": " So",
+          "start": 102.94,
+          "end": 103.0,
+          "confidence": 0.937061071395874
+        },
+        {
+          "text": " I'm",
+          "start": 103.0,
+          "end": 103.32,
+          "confidence": 0.9555585384368896
+        },
+        {
+          "text": " interested",
+          "start": 103.32,
+          "end": 103.68,
+          "confidence": 0.9972755312919617
+        },
+        {
+          "text": " in",
+          "start": 103.68,
+          "end": 104.04,
+          "confidence": 0.9985878467559814
+        },
+        {
+          "text": " flood",
+          "start": 104.04,
+          "end": 104.52,
+          "confidence": 0.9774011373519897
+        },
+        {
+          "text": " forecasting,",
+          "start": 104.52,
+          "end": 105.12,
+          "confidence": 0.993728518486023
+        }
+      ]
+    },
+    {
+      "start": 105.76,
+      "end": 108.72,
+      "text": "warning people, making sure people can get out",
+      "words": [
+        {
+          "text": " warning",
+          "start": 105.76,
+          "end": 106.36,
+          "confidence": 0.4805537164211273
+        },
+        {
+          "text": " people,",
+          "start": 106.36,
+          "end": 106.88,
+          "confidence": 0.9992659687995911
+        },
+        {
+          "text": " making",
+          "start": 107.3,
+          "end": 107.54,
+          "confidence": 0.9942519664764404
+        },
+        {
+          "text": " sure",
+          "start": 107.54,
+          "end": 107.82,
+          "confidence": 0.9990831613540649
+        },
+        {
+          "text": " people",
+          "start": 107.82,
+          "end": 108.06,
+          "confidence": 0.9936890602111816
+        },
+        {
+          "text": " can",
+          "start": 108.06,
+          "end": 108.28,
+          "confidence": 0.9977355003356934
+        },
+        {
+          "text": " get",
+          "start": 108.28,
+          "end": 108.46,
+          "confidence": 0.9992522597312927
+        },
+        {
+          "text": " out",
+          "start": 108.46,
+          "end": 108.72,
+          "confidence": 0.998771607875824
+        }
+      ]
+    },
+    {
+      "start": 108.72,
+      "end": 109.92,
+      "text": "of the way of dangerous floods.",
+      "words": [
+        {
+          "text": " of",
+          "start": 108.72,
+          "end": 108.86,
+          "confidence": 0.9984173774719238
+        },
+        {
+          "text": " the",
+          "start": 108.86,
+          "end": 108.94,
+          "confidence": 0.9968476891517639
+        },
+        {
+          "text": " way",
+          "start": 108.94,
+          "end": 109.1,
+          "confidence": 0.9984607696533203
+        },
+        {
+          "text": " of",
+          "start": 109.1,
+          "end": 109.2,
+          "confidence": 0.9971823692321777
+        },
+        {
+          "text": " dangerous",
+          "start": 109.2,
+          "end": 109.52,
+          "confidence": 0.9910160303115845
+        },
+        {
+          "text": " floods.",
+          "start": 109.52,
+          "end": 109.92,
+          "confidence": 0.9972686767578125
+        }
+      ]
+    },
+    {
+      "start": 111.28,
+      "end": 113.32,
+      "text": "Now, it seems like some scientists perhaps",
+      "words": [
+        {
+          "text": " Now,",
+          "start": 111.28,
+          "end": 111.52,
+          "confidence": 0.4741393029689789
+        },
+        {
+          "text": " it",
+          "start": 111.56,
+          "end": 111.66,
+          "confidence": 0.9970628619194031
+        },
+        {
+          "text": " seems",
+          "start": 111.66,
+          "end": 111.88,
+          "confidence": 0.9983195662498474
+        },
+        {
+          "text": " like",
+          "start": 111.88,
+          "end": 112.12,
+          "confidence": 0.9897924661636353
+        },
+        {
+          "text": " some",
+          "start": 112.12,
+          "end": 112.56,
+          "confidence": 0.9965769648551941
+        },
+        {
+          "text": " scientists",
+          "start": 112.56,
+          "end": 112.98,
+          "confidence": 0.9955096244812012
+        },
+        {
+          "text": " perhaps",
+          "start": 112.98,
+          "end": 113.32,
+          "confidence": 0.7151375412940979
+        }
+      ]
+    },
+    {
+      "start": 113.32,
+      "end": 115.88,
+      "text": "are a bit reluctant to kind of pinpoint",
+      "words": [
+        {
+          "text": " are",
+          "start": 113.32,
+          "end": 113.56,
+          "confidence": 0.9787065982818604
+        },
+        {
+          "text": " a",
+          "start": 113.56,
+          "end": 113.64,
+          "confidence": 0.9985107779502869
+        },
+        {
+          "text": " bit",
+          "start": 113.64,
+          "end": 113.74,
+          "confidence": 0.9947138428688049
+        },
+        {
+          "text": " reluctant",
+          "start": 113.74,
+          "end": 114.1,
+          "confidence": 0.8941633701324463
+        },
+        {
+          "text": " to",
+          "start": 114.1,
+          "end": 114.72,
+          "confidence": 0.9970338344573975
+        },
+        {
+          "text": " kind",
+          "start": 114.72,
+          "end": 115.4,
+          "confidence": 0.8177091479301453
+        },
+        {
+          "text": " of",
+          "start": 115.4,
+          "end": 115.5,
+          "confidence": 0.9992296695709229
+        },
+        {
+          "text": " pinpoint",
+          "start": 115.5,
+          "end": 115.88,
+          "confidence": 0.9402632117271423
+        }
+      ]
+    },
+    {
+      "start": 115.88,
+      "end": 118.92,
+      "text": "the cause of some of these extreme weather events",
+      "words": [
+        {
+          "text": " the",
+          "start": 115.88,
+          "end": 116.3,
+          "confidence": 0.9981246590614319
+        },
+        {
+          "text": " cause",
+          "start": 116.3,
+          "end": 116.84,
+          "confidence": 0.9945002794265747
+        },
+        {
+          "text": " of",
+          "start": 116.84,
+          "end": 117.36,
+          "confidence": 0.9983637928962708
+        },
+        {
+          "text": " some",
+          "start": 117.36,
+          "end": 117.74,
+          "confidence": 0.9983546137809753
+        },
+        {
+          "text": " of",
+          "start": 117.74,
+          "end": 117.86,
+          "confidence": 0.9998028874397278
+        },
+        {
+          "text": " these",
+          "start": 117.86,
+          "end": 117.98,
+          "confidence": 0.9992258548736572
+        },
+        {
+          "text": " extreme",
+          "start": 117.98,
+          "end": 118.42,
+          "confidence": 0.9929471015930176
+        },
+        {
+          "text": " weather",
+          "start": 118.42,
+          "end": 118.6,
+          "confidence": 0.9972772002220154
+        },
+        {
+          "text": " events",
+          "start": 118.6,
+          "end": 118.92,
+          "confidence": 0.9986433386802673
+        }
+      ]
+    },
+    {
+      "start": 118.92,
+      "end": 120.72,
+      "text": "as being because of the climate crisis.",
+      "words": [
+        {
+          "text": " as",
+          "start": 118.92,
+          "end": 119.18,
+          "confidence": 0.9697890281677246
+        },
+        {
+          "text": " being",
+          "start": 119.18,
+          "end": 119.42,
+          "confidence": 0.9993270635604858
+        },
+        {
+          "text": " because",
+          "start": 119.42,
+          "end": 119.7,
+          "confidence": 0.9836316108703613
+        },
+        {
+          "text": " of",
+          "start": 119.7,
+          "end": 119.86,
+          "confidence": 0.9997509121894836
+        },
+        {
+          "text": " the",
+          "start": 119.86,
+          "end": 119.94,
+          "confidence": 0.9957231283187866
+        },
+        {
+          "text": " climate",
+          "start": 119.94,
+          "end": 120.2,
+          "confidence": 0.9984999895095825
+        },
+        {
+          "text": " crisis.",
+          "start": 120.2,
+          "end": 120.72,
+          "confidence": 0.997253954410553
+        }
+      ]
+    },
+    {
+      "start": 121.06,
+      "end": 122.3,
+      "text": "What's your response to that?",
+      "words": [
+        {
+          "text": " What's",
+          "start": 121.06,
+          "end": 121.42,
+          "confidence": 0.9610720872879028
+        },
+        {
+          "text": " your",
+          "start": 121.42,
+          "end": 121.5,
+          "confidence": 0.9970677495002747
+        },
+        {
+          "text": " response",
+          "start": 121.5,
+          "end": 121.8,
+          "confidence": 0.9987105131149292
+        },
+        {
+          "text": " to",
+          "start": 121.8,
+          "end": 122.1,
+          "confidence": 0.9991692304611206
+        },
+        {
+          "text": " that?",
+          "start": 122.1,
+          "end": 122.3,
+          "confidence": 0.9985398054122925
+        }
+      ]
+    },
+    {
+      "start": 123.12,
+      "end": 124.98,
+      "text": "Yeah, it's an interesting question",
+      "words": [
+        {
+          "text": " Yeah,",
+          "start": 123.12,
+          "end": 123.3,
+          "confidence": 0.7749855518341064
+        },
+        {
+          "text": " it's",
+          "start": 123.32,
+          "end": 123.78,
+          "confidence": 0.8818934261798859
+        },
+        {
+          "text": " an",
+          "start": 123.78,
+          "end": 123.92,
+          "confidence": 0.977840006351471
+        },
+        {
+          "text": " interesting",
+          "start": 123.92,
+          "end": 124.36,
+          "confidence": 0.998354434967041
+        },
+        {
+          "text": " question",
+          "start": 124.36,
+          "end": 124.98,
+          "confidence": 0.9993190765380859
+        }
+      ]
+    },
+    {
+      "start": 124.98,
+      "end": 126.96,
+      "text": "because it's always flooded.",
+      "words": [
+        {
+          "text": " because",
+          "start": 124.98,
+          "end": 125.46,
+          "confidence": 0.7613670825958252
+        },
+        {
+          "text": " it's",
+          "start": 125.46,
+          "end": 126.28,
+          "confidence": 0.9963296949863434
+        },
+        {
+          "text": " always",
+          "start": 126.28,
+          "end": 126.54,
+          "confidence": 0.9990179538726807
+        },
+        {
+          "text": " flooded.",
+          "start": 126.54,
+          "end": 126.96,
+          "confidence": 0.9985106587409973
+        }
+      ]
+    },
+    {
+      "start": 127.44,
+      "end": 129.88,
+      "text": "So it's flooded since before humans existed.",
+      "words": [
+        {
+          "text": " So",
+          "start": 127.44,
+          "end": 127.62,
+          "confidence": 0.7692004442214966
+        },
+        {
+          "text": " it's",
+          "start": 127.62,
+          "end": 128.08,
+          "confidence": 0.9760503172874451
+        },
+        {
+          "text": " flooded",
+          "start": 128.08,
+          "end": 128.3,
+          "confidence": 0.8134415149688721
+        },
+        {
+          "text": " since",
+          "start": 128.3,
+          "end": 128.7,
+          "confidence": 0.9829103350639343
+        },
+        {
+          "text": " before",
+          "start": 128.7,
+          "end": 129.12,
+          "confidence": 0.9957243204116821
+        },
+        {
+          "text": " humans",
+          "start": 129.12,
+          "end": 129.44,
+          "confidence": 0.9970850348472595
+        },
+        {
+          "text": " existed.",
+          "start": 129.44,
+          "end": 129.88,
+          "confidence": 0.997848629951477
+        }
+      ]
+    },
+    {
+      "start": 129.88,
+      "end": 134.16,
+      "text": "And we've always had heat waves and there's always been forest fires.",
+      "words": [
+        {
+          "text": " And",
+          "start": 129.88,
+          "end": 130.76,
+          "confidence": 0.15764382481575012
+        },
+        {
+          "text": " we've",
+          "start": 130.76,
+          "end": 131.2,
+          "confidence": 0.8706267774105072
+        },
+        {
+          "text": " always",
+          "start": 131.2,
+          "end": 131.56,
+          "confidence": 0.9922099113464355
+        },
+        {
+          "text": " had",
+          "start": 131.56,
+          "end": 131.8,
+          "confidence": 0.9936323761940002
+        },
+        {
+          "text": " heat",
+          "start": 131.8,
+          "end": 132.02,
+          "confidence": 0.9901463389396667
+        },
+        {
+          "text": " waves",
+          "start": 132.02,
+          "end": 132.38,
+          "confidence": 0.5250165462493896
+        },
+        {
+          "text": " and",
+          "start": 132.38,
+          "end": 132.9,
+          "confidence": 0.6470662355422974
+        },
+        {
+          "text": " there's",
+          "start": 132.9,
+          "end": 133.06,
+          "confidence": 0.9760339856147766
+        },
+        {
+          "text": " always",
+          "start": 133.06,
+          "end": 133.28,
+          "confidence": 0.99720698595047
+        },
+        {
+          "text": " been",
+          "start": 133.28,
+          "end": 133.48,
+          "confidence": 0.9979737401008606
+        },
+        {
+          "text": " forest",
+          "start": 133.48,
+          "end": 133.76,
+          "confidence": 0.9939748644828796
+        },
+        {
+          "text": " fires.",
+          "start": 133.76,
+          "end": 134.16,
+          "confidence": 0.9961608648300171
+        }
+      ]
+    },
+    {
+      "start": 134.68,
+      "end": 140.02,
+      "text": "So it would be wrong to say that every forest fire is caused by climate change.",
+      "words": [
+        {
+          "text": " So",
+          "start": 134.68,
+          "end": 134.9,
+          "confidence": 0.9793845415115356
+        },
+        {
+          "text": " it",
+          "start": 134.9,
+          "end": 135.06,
+          "confidence": 0.8043374419212341
+        },
+        {
+          "text": " would",
+          "start": 135.06,
+          "end": 135.18,
+          "confidence": 0.9958208799362183
+        },
+        {
+          "text": " be",
+          "start": 135.18,
+          "end": 135.34,
+          "confidence": 0.9991304278373718
+        },
+        {
+          "text": " wrong",
+          "start": 135.34,
+          "end": 135.6,
+          "confidence": 0.9991751313209534
+        },
+        {
+          "text": " to",
+          "start": 135.6,
+          "end": 135.86,
+          "confidence": 0.9993835687637329
+        },
+        {
+          "text": " say",
+          "start": 135.86,
+          "end": 136.16,
+          "confidence": 0.9986889958381653
+        },
+        {
+          "text": " that",
+          "start": 136.16,
+          "end": 136.58,
+          "confidence": 0.9949616193771362
+        },
+        {
+          "text": " every",
+          "start": 136.58,
+          "end": 137.26,
+          "confidence": 0.9858251214027405
+        },
+        {
+          "text": " forest",
+          "start": 137.26,
+          "end": 137.62,
+          "confidence": 0.9963891506195068
+        },
+        {
+          "text": " fire",
+          "start": 137.62,
+          "end": 137.92,
+          "confidence": 0.9590899348258972
+        },
+        {
+          "text": " is",
+          "start": 137.92,
+          "end": 138.22,
+          "confidence": 0.986513078212738
+        },
+        {
+          "text": " caused",
+          "start": 138.22,
+          "end": 139.14,
+          "confidence": 0.9923861026763916
+        },
+        {
+          "text": " by",
+          "start": 139.14,
+          "end": 139.4,
+          "confidence": 0.999451220035553
+        },
+        {
+          "text": " climate",
+          "start": 139.4,
+          "end": 139.72,
+          "confidence": 0.9975696206092834
+        },
+        {
+          "text": " change.",
+          "start": 139.72,
+          "end": 140.02,
+          "confidence": 0.9993999004364014
+        }
+      ]
+    },
+    {
+      "start": 140.44,
+      "end": 142.12,
+      "text": "What it does is it makes it more likely.",
+      "words": [
+        {
+          "text": " What",
+          "start": 140.44,
+          "end": 140.66,
+          "confidence": 0.9901139736175537
+        },
+        {
+          "text": " it",
+          "start": 140.66,
+          "end": 140.76,
+          "confidence": 0.9963325262069702
+        },
+        {
+          "text": " does",
+          "start": 140.76,
+          "end": 140.92,
+          "confidence": 0.997916042804718
+        },
+        {
+          "text": " is",
+          "start": 140.92,
+          "end": 141.06,
+          "confidence": 0.9556050896644592
+        },
+        {
+          "text": " it",
+          "start": 141.06,
+          "end": 141.16,
+          "confidence": 0.9385643005371094
+        },
+        {
+          "text": " makes",
+          "start": 141.16,
+          "end": 141.36,
+          "confidence": 0.9964523315429688
+        },
+        {
+          "text": " it",
+          "start": 141.36,
+          "end": 141.5,
+          "confidence": 0.984865665435791
+        },
+        {
+          "text": " more",
+          "start": 141.5,
+          "end": 141.62,
+          "confidence": 0.9980199337005615
+        },
+        {
+          "text": " likely.",
+          "start": 141.62,
+          "end": 142.12,
+          "confidence": 0.9949354529380798
+        }
+      ]
+    },
+    {
+      "start": 142.94,
+      "end": 147.08,
+      "text": "So we see more of them, sometimes they're more frequent, sometimes they're more intense.",
+      "words": [
+        {
+          "text": " So",
+          "start": 142.94,
+          "end": 143.22,
+          "confidence": 0.9377319812774658
+        },
+        {
+          "text": " we",
+          "start": 143.22,
+          "end": 143.4,
+          "confidence": 0.9823471307754517
+        },
+        {
+          "text": " see",
+          "start": 143.4,
+          "end": 143.6,
+          "confidence": 0.9935315251350403
+        },
+        {
+          "text": " more",
+          "start": 143.6,
+          "end": 143.96,
+          "confidence": 0.9951587319374084
+        },
+        {
+          "text": " of",
+          "start": 143.96,
+          "end": 144.14,
+          "confidence": 0.9971367120742798
+        },
+        {
+          "text": " them,",
+          "start": 144.14,
+          "end": 144.3,
+          "confidence": 0.9949023723602295
+        },
+        {
+          "text": " sometimes",
+          "start": 144.52,
+          "end": 144.76,
+          "confidence": 0.9423954486846924
+        },
+        {
+          "text": " they're",
+          "start": 144.76,
+          "end": 144.96,
+          "confidence": 0.9403751790523529
+        },
+        {
+          "text": " more",
+          "start": 144.96,
+          "end": 145.06,
+          "confidence": 0.9981991648674011
+        },
+        {
+          "text": " frequent,",
+          "start": 145.06,
+          "end": 145.54,
+          "confidence": 0.9989489912986755
+        },
+        {
+          "text": " sometimes",
+          "start": 145.84,
+          "end": 146.22,
+          "confidence": 0.9954569339752197
+        },
+        {
+          "text": " they're",
+          "start": 146.22,
+          "end": 146.5,
+          "confidence": 0.9938866794109344
+        },
+        {
+          "text": " more",
+          "start": 146.5,
+          "end": 146.6,
+          "confidence": 0.9970833659172058
+        },
+        {
+          "text": " intense.",
+          "start": 146.6,
+          "end": 147.08,
+          "confidence": 0.9986494183540344
+        }
+      ]
+    },
+    {
+      "start": 147.72,
+      "end": 150.26,
+      "text": "So our floods can cover more land.",
+      "words": [
+        {
+          "text": " So",
+          "start": 147.72,
+          "end": 147.84,
+          "confidence": 0.9939847588539124
+        },
+        {
+          "text": " our",
+          "start": 147.84,
+          "end": 148.34,
+          "confidence": 0.8593843579292297
+        },
+        {
+          "text": " floods",
+          "start": 148.34,
+          "end": 148.66,
+          "confidence": 0.9949893355369568
+        },
+        {
+          "text": " can",
+          "start": 148.66,
+          "end": 149.16,
+          "confidence": 0.9928391575813293
+        },
+        {
+          "text": " cover",
+          "start": 149.16,
+          "end": 149.58,
+          "confidence": 0.9992197751998901
+        },
+        {
+          "text": " more",
+          "start": 149.58,
+          "end": 149.8,
+          "confidence": 0.9995235204696655
+        },
+        {
+          "text": " land.",
+          "start": 149.8,
+          "end": 150.26,
+          "confidence": 0.998915433883667
+        }
+      ]
+    },
+    {
+      "start": 150.46,
+      "end": 154.98,
+      "text": "They can be more violent because of the fingerprints of climate change.",
+      "words": [
+        {
+          "text": " They",
+          "start": 150.46,
+          "end": 150.72,
+          "confidence": 0.9941291809082031
+        },
+        {
+          "text": " can",
+          "start": 150.72,
+          "end": 150.88,
+          "confidence": 0.9976221919059753
+        },
+        {
+          "text": " be",
+          "start": 150.88,
+          "end": 151.02,
+          "confidence": 0.9998088479042053
+        },
+        {
+          "text": " more",
+          "start": 151.02,
+          "end": 151.2,
+          "confidence": 0.9987558126449585
+        },
+        {
+          "text": " violent",
+          "start": 151.2,
+          "end": 151.74,
+          "confidence": 0.9994224309921265
+        },
+        {
+          "text": " because",
+          "start": 151.74,
+          "end": 152.98,
+          "confidence": 0.9136242270469666
+        },
+        {
+          "text": " of",
+          "start": 152.98,
+          "end": 153.4,
+          "confidence": 0.9983104467391968
+        },
+        {
+          "text": " the",
+          "start": 153.4,
+          "end": 153.5,
+          "confidence": 0.9996622800827026
+        },
+        {
+          "text": " fingerprints",
+          "start": 153.5,
+          "end": 153.96,
+          "confidence": 0.9961146116256714
+        },
+        {
+          "text": " of",
+          "start": 153.96,
+          "end": 154.28,
+          "confidence": 0.9990233182907104
+        },
+        {
+          "text": " climate",
+          "start": 154.28,
+          "end": 154.64,
+          "confidence": 0.9980095028877258
+        },
+        {
+          "text": " change.",
+          "start": 154.64,
+          "end": 154.98,
+          "confidence": 0.9996125102043152
+        }
+      ]
+    },
+    {
+      "start": 155.36,
+      "end": 159.08,
+      "text": "So it's really important to distinguish that because we can't just go around saying,",
+      "words": [
+        {
+          "text": " So",
+          "start": 155.36,
+          "end": 155.62,
+          "confidence": 0.9960857629776001
+        },
+        {
+          "text": " it's",
+          "start": 155.62,
+          "end": 155.74,
+          "confidence": 0.9924982190132141
+        },
+        {
+          "text": " really",
+          "start": 155.74,
+          "end": 155.9,
+          "confidence": 0.9969504475593567
+        },
+        {
+          "text": " important",
+          "start": 155.9,
+          "end": 156.26,
+          "confidence": 0.9995566010475159
+        },
+        {
+          "text": " to",
+          "start": 156.26,
+          "end": 156.44,
+          "confidence": 0.999816358089447
+        },
+        {
+          "text": " distinguish",
+          "start": 156.44,
+          "end": 156.9,
+          "confidence": 0.9991750121116638
+        },
+        {
+          "text": " that",
+          "start": 156.9,
+          "end": 157.22,
+          "confidence": 0.999430239200592
+        },
+        {
+          "text": " because",
+          "start": 157.22,
+          "end": 157.58,
+          "confidence": 0.882900059223175
+        },
+        {
+          "text": " we",
+          "start": 157.58,
+          "end": 157.74,
+          "confidence": 0.9977207779884338
+        },
+        {
+          "text": " can't",
+          "start": 157.74,
+          "end": 158.02,
+          "confidence": 0.9980390965938568
+        },
+        {
+          "text": " just",
+          "start": 158.02,
+          "end": 158.14,
+          "confidence": 0.9990602135658264
+        },
+        {
+          "text": " go",
+          "start": 158.14,
+          "end": 158.36,
+          "confidence": 0.998111367225647
+        },
+        {
+          "text": " around",
+          "start": 158.36,
+          "end": 158.72,
+          "confidence": 0.9890475869178772
+        },
+        {
+          "text": " saying,",
+          "start": 158.72,
+          "end": 159.08,
+          "confidence": 0.9978305697441101
+        }
+      ]
+    },
+    {
+      "start": 159.08,
+      "end": 164.46,
+      "text": "saying, oh, this flood is definitely because of climate change. But we can say that it's",
+      "words": [
+        {
+          "text": " saying,",
+          "start": 159.08,
+          "end": 159.38,
+          "confidence": 0.0854405090212822
+        },
+        {
+          "text": " oh,",
+          "start": 159.56,
+          "end": 159.76,
+          "confidence": 0.4293630123138428
+        },
+        {
+          "text": " this",
+          "start": 159.78,
+          "end": 159.96,
+          "confidence": 0.994877278804779
+        },
+        {
+          "text": " flood",
+          "start": 159.96,
+          "end": 160.26,
+          "confidence": 0.9943291544914246
+        },
+        {
+          "text": " is",
+          "start": 160.26,
+          "end": 160.64,
+          "confidence": 0.9946010112762451
+        },
+        {
+          "text": " definitely",
+          "start": 160.64,
+          "end": 161.04,
+          "confidence": 0.9968720078468323
+        },
+        {
+          "text": " because",
+          "start": 161.04,
+          "end": 161.28,
+          "confidence": 0.9908862113952637
+        },
+        {
+          "text": " of",
+          "start": 161.28,
+          "end": 161.44,
+          "confidence": 0.9840572476387024
+        },
+        {
+          "text": " climate",
+          "start": 161.44,
+          "end": 161.68,
+          "confidence": 0.9910035133361816
+        },
+        {
+          "text": " change.",
+          "start": 161.68,
+          "end": 161.98,
+          "confidence": 0.9992679953575134
+        },
+        {
+          "text": " But",
+          "start": 162.1,
+          "end": 162.18,
+          "confidence": 0.9913716316223145
+        },
+        {
+          "text": " we",
+          "start": 162.18,
+          "end": 162.36,
+          "confidence": 0.9963713884353638
+        },
+        {
+          "text": " can",
+          "start": 162.36,
+          "end": 162.8,
+          "confidence": 0.9984869956970215
+        },
+        {
+          "text": " say",
+          "start": 162.8,
+          "end": 163.48,
+          "confidence": 0.9982888102531433
+        },
+        {
+          "text": " that",
+          "start": 163.48,
+          "end": 164.28,
+          "confidence": 0.9822539687156677
+        },
+        {
+          "text": " it's",
+          "start": 164.28,
+          "end": 164.46,
+          "confidence": 0.9796679615974426
+        }
+      ]
+    },
+    {
+      "start": 164.46,
+      "end": 168.08,
+      "text": "more likely because of climate change and the fingerprints of climate change are there,",
+      "words": [
+        {
+          "text": " more",
+          "start": 164.46,
+          "end": 164.6,
+          "confidence": 0.9992642998695374
+        },
+        {
+          "text": " likely",
+          "start": 164.6,
+          "end": 164.96,
+          "confidence": 0.9980633854866028
+        },
+        {
+          "text": " because",
+          "start": 164.96,
+          "end": 165.28,
+          "confidence": 0.9873344898223877
+        },
+        {
+          "text": " of",
+          "start": 165.28,
+          "end": 165.44,
+          "confidence": 0.9893807172775269
+        },
+        {
+          "text": " climate",
+          "start": 165.44,
+          "end": 165.68,
+          "confidence": 0.9983088970184326
+        },
+        {
+          "text": " change",
+          "start": 165.68,
+          "end": 166.02,
+          "confidence": 0.9995458722114563
+        },
+        {
+          "text": " and",
+          "start": 166.02,
+          "end": 166.42,
+          "confidence": 0.3575325012207031
+        },
+        {
+          "text": " the",
+          "start": 166.42,
+          "end": 166.58,
+          "confidence": 0.9940668344497681
+        },
+        {
+          "text": " fingerprints",
+          "start": 166.58,
+          "end": 166.9,
+          "confidence": 0.992146909236908
+        },
+        {
+          "text": " of",
+          "start": 166.9,
+          "end": 167.16,
+          "confidence": 0.9961744546890259
+        },
+        {
+          "text": " climate",
+          "start": 167.16,
+          "end": 167.38,
+          "confidence": 0.9968704581260681
+        },
+        {
+          "text": " change",
+          "start": 167.38,
+          "end": 167.62,
+          "confidence": 0.9954031705856323
+        },
+        {
+          "text": " are",
+          "start": 167.62,
+          "end": 167.76,
+          "confidence": 0.9422945976257324
+        },
+        {
+          "text": " there,",
+          "start": 167.76,
+          "end": 168.08,
+          "confidence": 0.9981812238693237
+        }
+      ]
+    },
+    {
+      "start": 168.46,
+      "end": 174.3,
+      "text": "which means that we need to take it seriously. So it's almost like there's the effect that",
+      "words": [
+        {
+          "text": " which",
+          "start": 168.46,
+          "end": 168.7,
+          "confidence": 0.9986047148704529
+        },
+        {
+          "text": " means",
+          "start": 168.7,
+          "end": 168.92,
+          "confidence": 0.9989539384841919
+        },
+        {
+          "text": " that",
+          "start": 168.92,
+          "end": 169.1,
+          "confidence": 0.9713408946990967
+        },
+        {
+          "text": " we",
+          "start": 169.1,
+          "end": 169.18,
+          "confidence": 0.9992988109588623
+        },
+        {
+          "text": " need",
+          "start": 169.18,
+          "end": 169.4,
+          "confidence": 0.9974533915519714
+        },
+        {
+          "text": " to",
+          "start": 169.4,
+          "end": 169.52,
+          "confidence": 0.9974960684776306
+        },
+        {
+          "text": " take",
+          "start": 169.52,
+          "end": 169.78,
+          "confidence": 0.999591052532196
+        },
+        {
+          "text": " it",
+          "start": 169.78,
+          "end": 169.88,
+          "confidence": 0.9983553290367126
+        },
+        {
+          "text": " seriously.",
+          "start": 169.88,
+          "end": 170.26,
+          "confidence": 0.9982337951660156
+        },
+        {
+          "text": " So",
+          "start": 171.22,
+          "end": 171.52,
+          "confidence": 0.9303810000419617
+        },
+        {
+          "text": " it's",
+          "start": 171.52,
+          "end": 171.62,
+          "confidence": 0.866256594657898
+        },
+        {
+          "text": " almost",
+          "start": 171.62,
+          "end": 171.76,
+          "confidence": 0.9983019828796387
+        },
+        {
+          "text": " like",
+          "start": 171.76,
+          "end": 172.0,
+          "confidence": 0.9928064346313477
+        },
+        {
+          "text": " there's",
+          "start": 172.0,
+          "end": 172.34,
+          "confidence": 0.6397543847560883
+        },
+        {
+          "text": " the",
+          "start": 172.34,
+          "end": 173.24,
+          "confidence": 0.4830385744571686
+        },
+        {
+          "text": " effect",
+          "start": 173.24,
+          "end": 174.1,
+          "confidence": 0.8414017558097839
+        },
+        {
+          "text": " that",
+          "start": 174.1,
+          "end": 174.3,
+          "confidence": 0.9937282800674438
+        }
+      ]
+    },
+    {
+      "start": 174.3,
+      "end": 178.72,
+      "text": "we're having on the planet is to make things a little bit more riskier in the sort of",
+      "words": [
+        {
+          "text": " we're",
+          "start": 174.3,
+          "end": 174.4,
+          "confidence": 0.9840952455997467
+        },
+        {
+          "text": " having",
+          "start": 174.4,
+          "end": 174.56,
+          "confidence": 0.9990860223770142
+        },
+        {
+          "text": " on",
+          "start": 174.56,
+          "end": 174.7,
+          "confidence": 0.9988963603973389
+        },
+        {
+          "text": " the",
+          "start": 174.7,
+          "end": 174.78,
+          "confidence": 0.9991932511329651
+        },
+        {
+          "text": " planet",
+          "start": 174.78,
+          "end": 175.16,
+          "confidence": 0.9984038472175598
+        },
+        {
+          "text": " is",
+          "start": 175.16,
+          "end": 175.94,
+          "confidence": 0.9292895793914795
+        },
+        {
+          "text": " to",
+          "start": 175.94,
+          "end": 176.08,
+          "confidence": 0.9981244206428528
+        },
+        {
+          "text": " make",
+          "start": 176.08,
+          "end": 176.26,
+          "confidence": 0.9990954399108887
+        },
+        {
+          "text": " things",
+          "start": 176.26,
+          "end": 176.54,
+          "confidence": 0.9992194175720215
+        },
+        {
+          "text": " a",
+          "start": 176.54,
+          "end": 176.64,
+          "confidence": 0.9958575367927551
+        },
+        {
+          "text": " little",
+          "start": 176.64,
+          "end": 176.76,
+          "confidence": 0.9989705085754395
+        },
+        {
+          "text": " bit",
+          "start": 176.76,
+          "end": 176.94,
+          "confidence": 0.9986812472343445
+        },
+        {
+          "text": " more",
+          "start": 176.94,
+          "end": 177.16,
+          "confidence": 0.9971299767494202
+        },
+        {
+          "text": " riskier",
+          "start": 177.16,
+          "end": 177.76,
+          "confidence": 0.9882174432277679
+        },
+        {
+          "text": " in",
+          "start": 177.76,
+          "end": 178.12,
+          "confidence": 0.9263059496879578
+        },
+        {
+          "text": " the",
+          "start": 178.12,
+          "end": 178.3,
+          "confidence": 0.6699415445327759
+        },
+        {
+          "text": " sort",
+          "start": 178.3,
+          "end": 178.46,
+          "confidence": 0.7847886085510254
+        },
+        {
+          "text": " of",
+          "start": 178.46,
+          "end": 178.72,
+          "confidence": 0.9984650611877441
+        }
+      ]
+    },
+    {
+      "start": 178.72,
+      "end": 182.74,
+      "text": "natural disaster regard. Yeah, that's exactly it. The risk changes",
+      "words": [
+        {
+          "text": " natural",
+          "start": 178.72,
+          "end": 179.32,
+          "confidence": 0.9941976070404053
+        },
+        {
+          "text": " disaster",
+          "start": 179.32,
+          "end": 179.78,
+          "confidence": 0.9946417808532715
+        },
+        {
+          "text": " regard.",
+          "start": 179.78,
+          "end": 180.14,
+          "confidence": 0.9573431015014648
+        },
+        {
+          "text": " Yeah,",
+          "start": 180.48,
+          "end": 180.64,
+          "confidence": 0.9144196510314941
+        },
+        {
+          "text": " that's",
+          "start": 180.66,
+          "end": 180.9,
+          "confidence": 0.9786141812801361
+        },
+        {
+          "text": " exactly",
+          "start": 180.9,
+          "end": 181.26,
+          "confidence": 0.9950171113014221
+        },
+        {
+          "text": " it.",
+          "start": 181.26,
+          "end": 181.5,
+          "confidence": 0.7883548736572266
+        },
+        {
+          "text": " The",
+          "start": 181.78,
+          "end": 181.84,
+          "confidence": 0.8950003385543823
+        },
+        {
+          "text": " risk",
+          "start": 181.84,
+          "end": 182.18,
+          "confidence": 0.994183361530304
+        },
+        {
+          "text": " changes",
+          "start": 182.18,
+          "end": 182.74,
+          "confidence": 0.9794068336486816
+        }
+      ]
+    },
+    {
+      "start": 182.74,
+      "end": 186.34,
+      "text": "that factor if it's going to happen more often, it's going to be worse.",
+      "words": [
+        {
+          "text": " that",
+          "start": 182.74,
+          "end": 183.1,
+          "confidence": 0.7159271836280823
+        },
+        {
+          "text": " factor",
+          "start": 183.1,
+          "end": 183.64,
+          "confidence": 0.7754276394844055
+        },
+        {
+          "text": " if",
+          "start": 183.64,
+          "end": 183.92,
+          "confidence": 0.371233195066452
+        },
+        {
+          "text": " it's",
+          "start": 183.92,
+          "end": 184.42,
+          "confidence": 0.9899245500564575
+        },
+        {
+          "text": " going",
+          "start": 184.42,
+          "end": 184.54,
+          "confidence": 0.9507836103439331
+        },
+        {
+          "text": " to",
+          "start": 184.54,
+          "end": 184.58,
+          "confidence": 0.9970402121543884
+        },
+        {
+          "text": " happen",
+          "start": 184.58,
+          "end": 184.76,
+          "confidence": 0.9987911581993103
+        },
+        {
+          "text": " more",
+          "start": 184.76,
+          "end": 185.02,
+          "confidence": 0.9702447652816772
+        },
+        {
+          "text": " often,",
+          "start": 185.02,
+          "end": 185.28,
+          "confidence": 0.9883212447166443
+        },
+        {
+          "text": " it's",
+          "start": 185.48,
+          "end": 185.6,
+          "confidence": 0.9897940754890442
+        },
+        {
+          "text": " going",
+          "start": 185.6,
+          "end": 185.78,
+          "confidence": 0.9844079613685608
+        },
+        {
+          "text": " to",
+          "start": 185.78,
+          "end": 185.86,
+          "confidence": 0.9995855689048767
+        },
+        {
+          "text": " be",
+          "start": 185.86,
+          "end": 185.96,
+          "confidence": 0.9990366697311401
+        },
+        {
+          "text": " worse.",
+          "start": 185.96,
+          "end": 186.34,
+          "confidence": 0.9959845542907715
+        }
+      ]
+    },
+    {
+      "start": 186.34,
+      "end": 193.88,
+      "text": "And how good are we at predicting the next flood or the next extreme event like that?",
+      "words": [
+        {
+          "text": " And",
+          "start": 186.34,
+          "end": 187.12,
+          "confidence": 0.3609451353549957
+        },
+        {
+          "text": " how",
+          "start": 187.12,
+          "end": 187.3,
+          "confidence": 0.9805159568786621
+        },
+        {
+          "text": " good",
+          "start": 187.3,
+          "end": 187.56,
+          "confidence": 0.9897946715354919
+        },
+        {
+          "text": " are",
+          "start": 187.56,
+          "end": 187.68,
+          "confidence": 0.9417887926101685
+        },
+        {
+          "text": " we",
+          "start": 187.68,
+          "end": 187.92,
+          "confidence": 0.9948221445083618
+        },
+        {
+          "text": " at",
+          "start": 187.92,
+          "end": 189.4,
+          "confidence": 0.7549012303352356
+        },
+        {
+          "text": " predicting",
+          "start": 189.4,
+          "end": 189.98,
+          "confidence": 0.9960488677024841
+        },
+        {
+          "text": " the",
+          "start": 189.98,
+          "end": 191.32,
+          "confidence": 0.7706730365753174
+        },
+        {
+          "text": " next",
+          "start": 191.32,
+          "end": 191.58,
+          "confidence": 0.9958635568618774
+        },
+        {
+          "text": " flood",
+          "start": 191.58,
+          "end": 191.82,
+          "confidence": 0.9717665910720825
+        },
+        {
+          "text": " or",
+          "start": 191.82,
+          "end": 192.02,
+          "confidence": 0.953179657459259
+        },
+        {
+          "text": " the",
+          "start": 192.02,
+          "end": 192.12,
+          "confidence": 0.9869884252548218
+        },
+        {
+          "text": " next",
+          "start": 192.12,
+          "end": 192.38,
+          "confidence": 0.9974658489227295
+        },
+        {
+          "text": " extreme",
+          "start": 192.38,
+          "end": 193.02,
+          "confidence": 0.9940829873085022
+        },
+        {
+          "text": " event",
+          "start": 193.02,
+          "end": 193.42,
+          "confidence": 0.9936432838439941
+        },
+        {
+          "text": " like",
+          "start": 193.42,
+          "end": 193.62,
+          "confidence": 0.9784607291221619
+        },
+        {
+          "text": " that?",
+          "start": 193.62,
+          "end": 193.88,
+          "confidence": 0.9984993934631348
+        }
+      ]
+    },
+    {
+      "start": 194.54,
+      "end": 196.62,
+      "text": "We've got some really good models now.",
+      "words": [
+        {
+          "text": " We've",
+          "start": 194.54,
+          "end": 194.84,
+          "confidence": 0.9601061344146729
+        },
+        {
+          "text": " got",
+          "start": 194.84,
+          "end": 194.96,
+          "confidence": 0.997016191482544
+        },
+        {
+          "text": " some",
+          "start": 194.96,
+          "end": 195.1,
+          "confidence": 0.9962298274040222
+        },
+        {
+          "text": " really",
+          "start": 195.1,
+          "end": 195.48,
+          "confidence": 0.9967024922370911
+        },
+        {
+          "text": " good",
+          "start": 195.48,
+          "end": 195.84,
+          "confidence": 0.9988044500350952
+        },
+        {
+          "text": " models",
+          "start": 195.84,
+          "end": 196.28,
+          "confidence": 0.9988021850585938
+        },
+        {
+          "text": " now.",
+          "start": 196.28,
+          "end": 196.62,
+          "confidence": 0.9891062378883362
+        }
+      ]
+    },
+    {
+      "start": 196.9,
+      "end": 202.02,
+      "text": "So we have huge computer models of the Earth system that can put together how the atmosphere",
+      "words": [
+        {
+          "text": " So",
+          "start": 196.9,
+          "end": 196.96,
+          "confidence": 0.857022225856781
+        },
+        {
+          "text": " we",
+          "start": 196.96,
+          "end": 197.14,
+          "confidence": 0.8862772583961487
+        },
+        {
+          "text": " have",
+          "start": 197.14,
+          "end": 197.36,
+          "confidence": 0.9883497953414917
+        },
+        {
+          "text": " huge",
+          "start": 197.36,
+          "end": 198.0,
+          "confidence": 0.9855985045433044
+        },
+        {
+          "text": " computer",
+          "start": 198.0,
+          "end": 198.4,
+          "confidence": 0.9921912550926208
+        },
+        {
+          "text": " models",
+          "start": 198.4,
+          "end": 198.74,
+          "confidence": 0.9942619800567627
+        },
+        {
+          "text": " of",
+          "start": 198.74,
+          "end": 198.94,
+          "confidence": 0.9709885716438293
+        },
+        {
+          "text": " the",
+          "start": 198.94,
+          "end": 199.06,
+          "confidence": 0.9980323910713196
+        },
+        {
+          "text": " Earth",
+          "start": 199.06,
+          "end": 199.22,
+          "confidence": 0.6632044911384583
+        },
+        {
+          "text": " system",
+          "start": 199.22,
+          "end": 199.62,
+          "confidence": 0.8281732797622681
+        },
+        {
+          "text": " that",
+          "start": 199.62,
+          "end": 200.16,
+          "confidence": 0.9776024222373962
+        },
+        {
+          "text": " can",
+          "start": 200.16,
+          "end": 200.36,
+          "confidence": 0.9948688745498657
+        },
+        {
+          "text": " put",
+          "start": 200.36,
+          "end": 200.58,
+          "confidence": 0.9984532594680786
+        },
+        {
+          "text": " together",
+          "start": 200.58,
+          "end": 201.12,
+          "confidence": 0.9993321299552917
+        },
+        {
+          "text": " how",
+          "start": 201.12,
+          "end": 201.56,
+          "confidence": 0.982984185218811
+        },
+        {
+          "text": " the",
+          "start": 201.56,
+          "end": 201.7,
+          "confidence": 0.9980642199516296
+        },
+        {
+          "text": " atmosphere",
+          "start": 201.7,
+          "end": 202.02,
+          "confidence": 0.9990760087966919
+        }
+      ]
+    },
+    {
+      "start": 202.02,
+      "end": 205.8,
+      "text": "moves around and what's happening on the land surface and in our rivers.",
+      "words": [
+        {
+          "text": " moves",
+          "start": 202.02,
+          "end": 202.42,
+          "confidence": 0.9963147044181824
+        },
+        {
+          "text": " around",
+          "start": 202.42,
+          "end": 202.88,
+          "confidence": 0.9980879426002502
+        },
+        {
+          "text": " and",
+          "start": 202.88,
+          "end": 203.4,
+          "confidence": 0.5325354337692261
+        },
+        {
+          "text": " what's",
+          "start": 203.4,
+          "end": 203.64,
+          "confidence": 0.9892236590385437
+        },
+        {
+          "text": " happening",
+          "start": 203.64,
+          "end": 203.92,
+          "confidence": 0.9989726543426514
+        },
+        {
+          "text": " on",
+          "start": 203.92,
+          "end": 204.18,
+          "confidence": 0.9983761310577393
+        },
+        {
+          "text": " the",
+          "start": 204.18,
+          "end": 204.34,
+          "confidence": 0.9987356066703796
+        },
+        {
+          "text": " land",
+          "start": 204.34,
+          "end": 204.5,
+          "confidence": 0.9641332626342773
+        },
+        {
+          "text": " surface",
+          "start": 204.5,
+          "end": 205.02,
+          "confidence": 0.8505886197090149
+        },
+        {
+          "text": " and",
+          "start": 205.02,
+          "end": 205.3,
+          "confidence": 0.9579707384109497
+        },
+        {
+          "text": " in",
+          "start": 205.3,
+          "end": 205.4,
+          "confidence": 0.9835635423660278
+        },
+        {
+          "text": " our",
+          "start": 205.4,
+          "end": 205.54,
+          "confidence": 0.9897806644439697
+        },
+        {
+          "text": " rivers.",
+          "start": 205.54,
+          "end": 205.8,
+          "confidence": 0.9789814352989197
+        }
+      ]
+    },
+    {
+      "start": 206.28,
+      "end": 211.32,
+      "text": "And we're actually pretty good now at saying whether a natural hazard like a fire or a",
+      "words": [
+        {
+          "text": " And",
+          "start": 206.28,
+          "end": 206.52,
+          "confidence": 0.8756716847419739
+        },
+        {
+          "text": " we're",
+          "start": 206.52,
+          "end": 206.68,
+          "confidence": 0.9854834973812103
+        },
+        {
+          "text": " actually",
+          "start": 206.68,
+          "end": 206.92,
+          "confidence": 0.9959579110145569
+        },
+        {
+          "text": " pretty",
+          "start": 206.92,
+          "end": 207.32,
+          "confidence": 0.9982419013977051
+        },
+        {
+          "text": " good",
+          "start": 207.32,
+          "end": 207.62,
+          "confidence": 0.9996246099472046
+        },
+        {
+          "text": " now",
+          "start": 207.62,
+          "end": 207.9,
+          "confidence": 0.9897560477256775
+        },
+        {
+          "text": " at",
+          "start": 207.9,
+          "end": 208.14,
+          "confidence": 0.9696901440620422
+        },
+        {
+          "text": " saying",
+          "start": 208.14,
+          "end": 208.5,
+          "confidence": 0.9900416731834412
+        },
+        {
+          "text": " whether",
+          "start": 208.5,
+          "end": 208.86,
+          "confidence": 0.9916605353355408
+        },
+        {
+          "text": " a",
+          "start": 208.86,
+          "end": 209.1,
+          "confidence": 0.9857550859451294
+        },
+        {
+          "text": " natural",
+          "start": 209.1,
+          "end": 209.32,
+          "confidence": 0.9984867572784424
+        },
+        {
+          "text": " hazard",
+          "start": 209.32,
+          "end": 209.58,
+          "confidence": 0.9913219809532166
+        },
+        {
+          "text": " like",
+          "start": 209.58,
+          "end": 209.94,
+          "confidence": 0.9038413763046265
+        },
+        {
+          "text": " a",
+          "start": 209.94,
+          "end": 210.38,
+          "confidence": 0.9770769476890564
+        },
+        {
+          "text": " fire",
+          "start": 210.38,
+          "end": 210.74,
+          "confidence": 0.9980567097663879
+        },
+        {
+          "text": " or",
+          "start": 210.74,
+          "end": 211.14,
+          "confidence": 0.874325156211853
+        },
+        {
+          "text": " a",
+          "start": 211.14,
+          "end": 211.32,
+          "confidence": 0.981607973575592
+        }
+      ]
+    },
+    {
+      "start": 211.32,
+      "end": 215.24,
+      "text": "heat wave or a flood is going to happen even sometimes two or three weeks ahead.",
+      "words": [
+        {
+          "text": " heat",
+          "start": 211.32,
+          "end": 211.44,
+          "confidence": 0.9983426332473755
+        },
+        {
+          "text": " wave",
+          "start": 211.44,
+          "end": 211.68,
+          "confidence": 0.7875583171844482
+        },
+        {
+          "text": " or",
+          "start": 211.68,
+          "end": 211.98,
+          "confidence": 0.9867240786552429
+        },
+        {
+          "text": " a",
+          "start": 211.98,
+          "end": 212.08,
+          "confidence": 0.932758092880249
+        },
+        {
+          "text": " flood",
+          "start": 212.08,
+          "end": 212.3,
+          "confidence": 0.9990614056587219
+        },
+        {
+          "text": " is",
+          "start": 212.3,
+          "end": 212.5,
+          "confidence": 0.969847559928894
+        },
+        {
+          "text": " going",
+          "start": 212.5,
+          "end": 212.68,
+          "confidence": 0.9613879919052124
+        },
+        {
+          "text": " to",
+          "start": 212.68,
+          "end": 212.76,
+          "confidence": 0.9990893602371216
+        },
+        {
+          "text": " happen",
+          "start": 212.76,
+          "end": 213.0,
+          "confidence": 0.999163031578064
+        },
+        {
+          "text": " even",
+          "start": 213.0,
+          "end": 213.62,
+          "confidence": 0.5936096906661987
+        },
+        {
+          "text": " sometimes",
+          "start": 213.62,
+          "end": 214.14,
+          "confidence": 0.988410472869873
+        },
+        {
+          "text": " two",
+          "start": 214.14,
+          "end": 214.5,
+          "confidence": 0.9163703322410583
+        },
+        {
+          "text": " or",
+          "start": 214.5,
+          "end": 214.62,
+          "confidence": 0.9945659637451172
+        },
+        {
+          "text": " three",
+          "start": 214.62,
+          "end": 214.78,
+          "confidence": 0.9991359114646912
+        },
+        {
+          "text": " weeks",
+          "start": 214.78,
+          "end": 215.02,
+          "confidence": 0.999565064907074
+        },
+        {
+          "text": " ahead.",
+          "start": 215.02,
+          "end": 215.24,
+          "confidence": 0.9981208443641663
+        }
+      ]
+    },
+    {
+      "start": 215.88,
+      "end": 221.46,
+      "text": "So is that enough? Is two or three weeks ahead I guess enough to respond to that adequately?",
+      "words": [
+        {
+          "text": " So",
+          "start": 215.88,
+          "end": 216.36,
+          "confidence": 0.34969717264175415
+        },
+        {
+          "text": " is",
+          "start": 216.36,
+          "end": 216.6,
+          "confidence": 0.6802634000778198
+        },
+        {
+          "text": " that",
+          "start": 216.6,
+          "end": 217.12,
+          "confidence": 0.4870302379131317
+        },
+        {
+          "text": " enough?",
+          "start": 217.12,
+          "end": 217.5,
+          "confidence": 0.9825670123100281
+        },
+        {
+          "text": " Is",
+          "start": 217.58,
+          "end": 217.72,
+          "confidence": 0.7928336262702942
+        },
+        {
+          "text": " two",
+          "start": 217.72,
+          "end": 217.9,
+          "confidence": 0.9166267514228821
+        },
+        {
+          "text": " or",
+          "start": 217.9,
+          "end": 217.98,
+          "confidence": 0.9933573603630066
+        },
+        {
+          "text": " three",
+          "start": 217.98,
+          "end": 218.16,
+          "confidence": 0.9982993006706238
+        },
+        {
+          "text": " weeks",
+          "start": 218.16,
+          "end": 218.38,
+          "confidence": 0.9987418055534363
+        },
+        {
+          "text": " ahead",
+          "start": 218.38,
+          "end": 218.62,
+          "confidence": 0.9964699745178223
+        },
+        {
+          "text": " I",
+          "start": 218.62,
+          "end": 218.88,
+          "confidence": 0.4211443364620209
+        },
+        {
+          "text": " guess",
+          "start": 218.88,
+          "end": 219.0,
+          "confidence": 0.998609185218811
+        },
+        {
+          "text": " enough",
+          "start": 219.0,
+          "end": 219.28,
+          "confidence": 0.8862190246582031
+        },
+        {
+          "text": " to",
+          "start": 219.28,
+          "end": 219.52,
+          "confidence": 0.9978485107421875
+        },
+        {
+          "text": " respond",
+          "start": 219.52,
+          "end": 219.98,
+          "confidence": 0.9988666772842407
+        },
+        {
+          "text": " to",
+          "start": 219.98,
+          "end": 220.34,
+          "confidence": 0.9985162615776062
+        },
+        {
+          "text": " that",
+          "start": 220.34,
+          "end": 220.6,
+          "confidence": 0.9980347752571106
+        },
+        {
+          "text": " adequately?",
+          "start": 220.6,
+          "end": 221.46,
+          "confidence": 0.9710536599159241
+        }
+      ]
+    },
+    {
+      "start": 222.3,
+      "end": 225.94,
+      "text": "So it depends what you're trying to do. So if you're trying to get people out of the way,",
+      "words": [
+        {
+          "text": " So",
+          "start": 222.3,
+          "end": 222.5,
+          "confidence": 0.8733601570129395
+        },
+        {
+          "text": " it",
+          "start": 222.5,
+          "end": 222.78,
+          "confidence": 0.9572575688362122
+        },
+        {
+          "text": " depends",
+          "start": 222.78,
+          "end": 222.96,
+          "confidence": 0.9988250136375427
+        },
+        {
+          "text": " what",
+          "start": 222.96,
+          "end": 223.1,
+          "confidence": 0.975326418876648
+        },
+        {
+          "text": " you're",
+          "start": 223.1,
+          "end": 223.24,
+          "confidence": 0.98859503865242
+        },
+        {
+          "text": " trying",
+          "start": 223.24,
+          "end": 223.38,
+          "confidence": 0.999032735824585
+        },
+        {
+          "text": " to",
+          "start": 223.38,
+          "end": 223.5,
+          "confidence": 0.9992121458053589
+        },
+        {
+          "text": " do.",
+          "start": 223.5,
+          "end": 223.66,
+          "confidence": 0.9986288547515869
+        },
+        {
+          "text": " So",
+          "start": 223.94,
+          "end": 224.12,
+          "confidence": 0.486758828163147
+        },
+        {
+          "text": " if",
+          "start": 224.12,
+          "end": 224.24,
+          "confidence": 0.9802200198173523
+        },
+        {
+          "text": " you're",
+          "start": 224.24,
+          "end": 224.36,
+          "confidence": 0.9948212504386902
+        },
+        {
+          "text": " trying",
+          "start": 224.36,
+          "end": 224.5,
+          "confidence": 0.9983866214752197
+        },
+        {
+          "text": " to",
+          "start": 224.5,
+          "end": 224.64,
+          "confidence": 0.9992190599441528
+        },
+        {
+          "text": " get",
+          "start": 224.64,
+          "end": 224.78,
+          "confidence": 0.9989210367202759
+        },
+        {
+          "text": " people",
+          "start": 224.78,
+          "end": 225.18,
+          "confidence": 0.9983949065208435
+        },
+        {
+          "text": " out",
+          "start": 225.18,
+          "end": 225.38,
+          "confidence": 0.9992197751998901
+        },
+        {
+          "text": " of",
+          "start": 225.38,
+          "end": 225.56,
+          "confidence": 0.9871429800987244
+        },
+        {
+          "text": " the",
+          "start": 225.56,
+          "end": 225.64,
+          "confidence": 0.9991499185562134
+        },
+        {
+          "text": " way,",
+          "start": 225.64,
+          "end": 225.94,
+          "confidence": 0.9991594552993774
+        }
+      ]
+    },
+    {
+      "start": 226.18,
+      "end": 232.92,
+      "text": "then you need at least a week sometimes to prepare all of that stuff in advance. We only",
+      "words": [
+        {
+          "text": " then",
+          "start": 226.18,
+          "end": 226.76,
+          "confidence": 0.9601075053215027
+        },
+        {
+          "text": " you",
+          "start": 226.76,
+          "end": 227.36,
+          "confidence": 0.9948651194572449
+        },
+        {
+          "text": " need",
+          "start": 227.36,
+          "end": 227.74,
+          "confidence": 0.9981234669685364
+        },
+        {
+          "text": " at",
+          "start": 227.74,
+          "end": 228.0,
+          "confidence": 0.9935817718505859
+        },
+        {
+          "text": " least",
+          "start": 228.0,
+          "end": 228.24,
+          "confidence": 0.9991762042045593
+        },
+        {
+          "text": " a",
+          "start": 228.24,
+          "end": 228.44,
+          "confidence": 0.9952930808067322
+        },
+        {
+          "text": " week",
+          "start": 228.44,
+          "end": 228.7,
+          "confidence": 0.9992831349372864
+        },
+        {
+          "text": " sometimes",
+          "start": 228.7,
+          "end": 229.0,
+          "confidence": 0.7742612361907959
+        },
+        {
+          "text": " to",
+          "start": 229.0,
+          "end": 229.24,
+          "confidence": 0.9956092238426208
+        },
+        {
+          "text": " prepare",
+          "start": 229.24,
+          "end": 229.68,
+          "confidence": 0.9973834156990051
+        },
+        {
+          "text": " all",
+          "start": 229.68,
+          "end": 230.14,
+          "confidence": 0.9900858402252197
+        },
+        {
+          "text": " of",
+          "start": 230.14,
+          "end": 230.28,
+          "confidence": 0.9959520101547241
+        },
+        {
+          "text": " that",
+          "start": 230.28,
+          "end": 230.46,
+          "confidence": 0.9995539784431458
+        },
+        {
+          "text": " stuff",
+          "start": 230.46,
+          "end": 230.8,
+          "confidence": 0.9992215633392334
+        },
+        {
+          "text": " in",
+          "start": 230.8,
+          "end": 231.04,
+          "confidence": 0.9986966252326965
+        },
+        {
+          "text": " advance.",
+          "start": 231.04,
+          "end": 231.46,
+          "confidence": 0.9992824196815491
+        },
+        {
+          "text": " We",
+          "start": 232.18,
+          "end": 232.66,
+          "confidence": 0.8790555000305176
+        },
+        {
+          "text": " only",
+          "start": 232.66,
+          "end": 232.92,
+          "confidence": 0.9946265816688538
+        }
+      ]
+    },
+    {
+      "start": 232.92,
+      "end": 237.5,
+      "text": "tend to hear about things a day in advance. Somebody says, you know, actually tomorrow",
+      "words": [
+        {
+          "text": " tend",
+          "start": 232.92,
+          "end": 233.24,
+          "confidence": 0.998213529586792
+        },
+        {
+          "text": " to",
+          "start": 233.24,
+          "end": 233.4,
+          "confidence": 0.9968542456626892
+        },
+        {
+          "text": " hear",
+          "start": 233.4,
+          "end": 233.52,
+          "confidence": 0.9983432292938232
+        },
+        {
+          "text": " about",
+          "start": 233.52,
+          "end": 233.8,
+          "confidence": 0.9951990246772766
+        },
+        {
+          "text": " things",
+          "start": 233.8,
+          "end": 234.12,
+          "confidence": 0.9968143105506897
+        },
+        {
+          "text": " a",
+          "start": 234.12,
+          "end": 234.34,
+          "confidence": 0.98301100730896
+        },
+        {
+          "text": " day",
+          "start": 234.34,
+          "end": 234.58,
+          "confidence": 0.9997736811637878
+        },
+        {
+          "text": " in",
+          "start": 234.58,
+          "end": 234.78,
+          "confidence": 0.9938750863075256
+        },
+        {
+          "text": " advance.",
+          "start": 234.78,
+          "end": 235.02,
+          "confidence": 0.9976972937583923
+        },
+        {
+          "text": " Somebody",
+          "start": 235.22,
+          "end": 235.38,
+          "confidence": 0.97882080078125
+        },
+        {
+          "text": " says,",
+          "start": 235.38,
+          "end": 235.6,
+          "confidence": 0.9838323593139648
+        },
+        {
+          "text": " you",
+          "start": 235.86,
+          "end": 236.08,
+          "confidence": 0.5353939533233643
+        },
+        {
+          "text": " know,",
+          "start": 236.08,
+          "end": 236.24,
+          "confidence": 0.9990673661231995
+        },
+        {
+          "text": " actually",
+          "start": 236.26,
+          "end": 236.74,
+          "confidence": 0.8752996921539307
+        },
+        {
+          "text": " tomorrow",
+          "start": 236.74,
+          "end": 237.5,
+          "confidence": 0.6482145190238953
+        }
+      ]
+    },
+    {
+      "start": 237.5,
+      "end": 242.28,
+      "text": "it's going to rain really hard. You need to, you know, get out of your house. But behind",
+      "words": [
+        {
+          "text": " it's",
+          "start": 237.5,
+          "end": 237.96,
+          "confidence": 0.7467855364084244
+        },
+        {
+          "text": " going",
+          "start": 237.96,
+          "end": 238.06,
+          "confidence": 0.7226090431213379
+        },
+        {
+          "text": " to",
+          "start": 238.06,
+          "end": 238.14,
+          "confidence": 0.9989365935325623
+        },
+        {
+          "text": " rain",
+          "start": 238.14,
+          "end": 238.38,
+          "confidence": 0.9974243640899658
+        },
+        {
+          "text": " really",
+          "start": 238.38,
+          "end": 238.62,
+          "confidence": 0.9953872561454773
+        },
+        {
+          "text": " hard.",
+          "start": 238.62,
+          "end": 238.96,
+          "confidence": 0.999152660369873
+        },
+        {
+          "text": " You",
+          "start": 239.12,
+          "end": 239.24,
+          "confidence": 0.995399534702301
+        },
+        {
+          "text": " need",
+          "start": 239.24,
+          "end": 239.4,
+          "confidence": 0.9966647028923035
+        },
+        {
+          "text": " to,",
+          "start": 239.4,
+          "end": 239.6,
+          "confidence": 0.9973503351211548
+        },
+        {
+          "text": " you",
+          "start": 239.62,
+          "end": 240.18,
+          "confidence": 0.9960175156593323
+        },
+        {
+          "text": " know,",
+          "start": 240.18,
+          "end": 240.3,
+          "confidence": 0.9989001750946045
+        },
+        {
+          "text": " get",
+          "start": 240.32,
+          "end": 240.6,
+          "confidence": 0.9968484044075012
+        },
+        {
+          "text": " out",
+          "start": 240.6,
+          "end": 240.8,
+          "confidence": 0.999206006526947
+        },
+        {
+          "text": " of",
+          "start": 240.8,
+          "end": 240.98,
+          "confidence": 0.9986659288406372
+        },
+        {
+          "text": " your",
+          "start": 240.98,
+          "end": 241.1,
+          "confidence": 0.9993467926979065
+        },
+        {
+          "text": " house.",
+          "start": 241.1,
+          "end": 241.46,
+          "confidence": 0.9985548853874207
+        },
+        {
+          "text": " But",
+          "start": 241.56,
+          "end": 241.88,
+          "confidence": 0.9938640594482422
+        },
+        {
+          "text": " behind",
+          "start": 241.88,
+          "end": 242.28,
+          "confidence": 0.9960700273513794
+        }
+      ]
+    },
+    {
+      "start": 242.28,
+      "end": 246.8,
+      "text": "the scenes people are moving around putting equipment in the right place going on alert.",
+      "words": [
+        {
+          "text": " the",
+          "start": 242.28,
+          "end": 242.56,
+          "confidence": 0.6143110394477844
+        },
+        {
+          "text": " scenes",
+          "start": 242.56,
+          "end": 242.86,
+          "confidence": 0.9627106189727783
+        },
+        {
+          "text": " people",
+          "start": 242.86,
+          "end": 243.22,
+          "confidence": 0.5316040515899658
+        },
+        {
+          "text": " are",
+          "start": 243.22,
+          "end": 243.4,
+          "confidence": 0.9945918917655945
+        },
+        {
+          "text": " moving",
+          "start": 243.4,
+          "end": 243.68,
+          "confidence": 0.9951602816581726
+        },
+        {
+          "text": " around",
+          "start": 243.68,
+          "end": 244.14,
+          "confidence": 0.9984143972396851
+        },
+        {
+          "text": " putting",
+          "start": 244.14,
+          "end": 244.46,
+          "confidence": 0.6823503375053406
+        },
+        {
+          "text": " equipment",
+          "start": 244.46,
+          "end": 244.9,
+          "confidence": 0.9601637721061707
+        },
+        {
+          "text": " in",
+          "start": 244.9,
+          "end": 245.12,
+          "confidence": 0.9982282519340515
+        },
+        {
+          "text": " the",
+          "start": 245.12,
+          "end": 245.2,
+          "confidence": 0.9989393353462219
+        },
+        {
+          "text": " right",
+          "start": 245.2,
+          "end": 245.36,
+          "confidence": 0.9989134073257446
+        },
+        {
+          "text": " place",
+          "start": 245.36,
+          "end": 245.66,
+          "confidence": 0.9950813055038452
+        },
+        {
+          "text": " going",
+          "start": 245.66,
+          "end": 246.3,
+          "confidence": 0.695892333984375
+        },
+        {
+          "text": " on",
+          "start": 246.3,
+          "end": 246.5,
+          "confidence": 0.9975255131721497
+        },
+        {
+          "text": " alert.",
+          "start": 246.5,
+          "end": 246.8,
+          "confidence": 0.9867514371871948
+        }
+      ]
+    },
+    {
+      "start": 249.04,
+      "end": 253.58,
+      "text": "And with this kind of, I guess in the longer term, if I'm, you know, from my perspective",
+      "words": [
+        {
+          "text": " And",
+          "start": 249.04,
+          "end": 249.6,
+          "confidence": 0.7352810502052307
+        },
+        {
+          "text": " with",
+          "start": 249.6,
+          "end": 250.16,
+          "confidence": 0.9159603118896484
+        },
+        {
+          "text": " this",
+          "start": 250.16,
+          "end": 250.48,
+          "confidence": 0.9932869076728821
+        },
+        {
+          "text": " kind",
+          "start": 250.48,
+          "end": 250.98,
+          "confidence": 0.9044917821884155
+        },
+        {
+          "text": " of,",
+          "start": 250.98,
+          "end": 251.18,
+          "confidence": 0.9952144622802734
+        },
+        {
+          "text": " I",
+          "start": 251.28,
+          "end": 251.34,
+          "confidence": 0.9847474098205566
+        },
+        {
+          "text": " guess",
+          "start": 251.34,
+          "end": 251.48,
+          "confidence": 0.9988256096839905
+        },
+        {
+          "text": " in",
+          "start": 251.48,
+          "end": 251.6,
+          "confidence": 0.8983640074729919
+        },
+        {
+          "text": " the",
+          "start": 251.6,
+          "end": 251.7,
+          "confidence": 0.9976913928985596
+        },
+        {
+          "text": " longer",
+          "start": 251.7,
+          "end": 251.94,
+          "confidence": 0.9944761395454407
+        },
+        {
+          "text": " term,",
+          "start": 251.94,
+          "end": 252.26,
+          "confidence": 0.9392325282096863
+        },
+        {
+          "text": " if",
+          "start": 252.46,
+          "end": 252.48,
+          "confidence": 0.757142186164856
+        },
+        {
+          "text": " I'm,",
+          "start": 252.48,
+          "end": 252.76,
+          "confidence": 0.9551199078559875
+        },
+        {
+          "text": " you",
+          "start": 252.78,
+          "end": 252.88,
+          "confidence": 0.9321351051330566
+        },
+        {
+          "text": " know,",
+          "start": 252.88,
+          "end": 252.96,
+          "confidence": 0.9995798468589783
+        },
+        {
+          "text": " from",
+          "start": 253.02,
+          "end": 253.12,
+          "confidence": 0.9973646998405457
+        },
+        {
+          "text": " my",
+          "start": 253.12,
+          "end": 253.26,
+          "confidence": 0.9992652535438538
+        },
+        {
+          "text": " perspective",
+          "start": 253.26,
+          "end": 253.58,
+          "confidence": 0.9990216493606567
+        }
+      ]
+    },
+    {
+      "start": 253.58,
+      "end": 257.5,
+      "text": "as a structural engineer, I've been involved in, you know, urban planning and looking",
+      "words": [
+        {
+          "text": " as",
+          "start": 253.58,
+          "end": 253.78,
+          "confidence": 0.9476098418235779
+        },
+        {
+          "text": " a",
+          "start": 253.78,
+          "end": 253.86,
+          "confidence": 0.5096302628517151
+        },
+        {
+          "text": " structural",
+          "start": 253.86,
+          "end": 254.0,
+          "confidence": 0.9607154726982117
+        },
+        {
+          "text": " engineer,",
+          "start": 254.0,
+          "end": 254.36,
+          "confidence": 0.9881118535995483
+        },
+        {
+          "text": " I've",
+          "start": 254.5,
+          "end": 254.5,
+          "confidence": 0.9868439435958862
+        },
+        {
+          "text": " been",
+          "start": 254.5,
+          "end": 254.58,
+          "confidence": 0.9994140863418579
+        },
+        {
+          "text": " involved",
+          "start": 254.58,
+          "end": 254.88,
+          "confidence": 0.999173104763031
+        },
+        {
+          "text": " in,",
+          "start": 254.88,
+          "end": 255.32,
+          "confidence": 0.9980417490005493
+        },
+        {
+          "text": " you",
+          "start": 255.32,
+          "end": 256.08,
+          "confidence": 0.9980475902557373
+        },
+        {
+          "text": " know,",
+          "start": 256.08,
+          "end": 256.22,
+          "confidence": 0.999445378780365
+        },
+        {
+          "text": " urban",
+          "start": 256.38,
+          "end": 256.54,
+          "confidence": 0.9901618957519531
+        },
+        {
+          "text": " planning",
+          "start": 256.54,
+          "end": 256.84,
+          "confidence": 0.9996353387832642
+        },
+        {
+          "text": " and",
+          "start": 256.84,
+          "end": 257.28,
+          "confidence": 0.9458394050598145
+        },
+        {
+          "text": " looking",
+          "start": 257.28,
+          "end": 257.5,
+          "confidence": 0.9985792636871338
+        }
+      ]
+    },
+    {
+      "start": 257.5,
+      "end": 262.94,
+      "text": "at cities and so on, how can we use the kind of modeling that you do to maybe better",
+      "words": [
+        {
+          "text": " at",
+          "start": 257.5,
+          "end": 257.78,
+          "confidence": 0.9991341233253479
+        },
+        {
+          "text": " cities",
+          "start": 257.78,
+          "end": 258.24,
+          "confidence": 0.9983148574829102
+        },
+        {
+          "text": " and",
+          "start": 258.24,
+          "end": 258.52,
+          "confidence": 0.9769829511642456
+        },
+        {
+          "text": " so",
+          "start": 258.52,
+          "end": 258.74,
+          "confidence": 0.9993755221366882
+        },
+        {
+          "text": " on,",
+          "start": 258.74,
+          "end": 259.04,
+          "confidence": 0.9977845549583435
+        },
+        {
+          "text": " how",
+          "start": 259.56,
+          "end": 259.82,
+          "confidence": 0.9937506318092346
+        },
+        {
+          "text": " can",
+          "start": 259.82,
+          "end": 260.02,
+          "confidence": 0.9991846680641174
+        },
+        {
+          "text": " we",
+          "start": 260.02,
+          "end": 260.14,
+          "confidence": 0.9992715716362
+        },
+        {
+          "text": " use",
+          "start": 260.14,
+          "end": 260.32,
+          "confidence": 0.9993071556091309
+        },
+        {
+          "text": " the",
+          "start": 260.32,
+          "end": 260.4,
+          "confidence": 0.9979531764984131
+        },
+        {
+          "text": " kind",
+          "start": 260.4,
+          "end": 260.54,
+          "confidence": 0.9954472184181213
+        },
+        {
+          "text": " of",
+          "start": 260.54,
+          "end": 260.62,
+          "confidence": 0.9996651411056519
+        },
+        {
+          "text": " modeling",
+          "start": 260.62,
+          "end": 260.94,
+          "confidence": 0.5991485118865967
+        },
+        {
+          "text": " that",
+          "start": 260.94,
+          "end": 261.22,
+          "confidence": 0.9990142583847046
+        },
+        {
+          "text": " you",
+          "start": 261.22,
+          "end": 261.36,
+          "confidence": 0.9996520280838013
+        },
+        {
+          "text": " do",
+          "start": 261.36,
+          "end": 261.64,
+          "confidence": 0.997802197933197
+        },
+        {
+          "text": " to",
+          "start": 261.64,
+          "end": 262.0,
+          "confidence": 0.9935920834541321
+        },
+        {
+          "text": " maybe",
+          "start": 262.0,
+          "end": 262.6,
+          "confidence": 0.9746783375740051
+        },
+        {
+          "text": " better",
+          "start": 262.6,
+          "end": 262.94,
+          "confidence": 0.9952151775360107
+        }
+      ]
+    },
+    {
+      "start": 262.94,
+      "end": 265.52,
+      "text": "design where human beings decide to settle down?",
+      "words": [
+        {
+          "text": " design",
+          "start": 262.94,
+          "end": 263.34,
+          "confidence": 0.9960944056510925
+        },
+        {
+          "text": " where",
+          "start": 263.34,
+          "end": 263.64,
+          "confidence": 0.9952921867370605
+        },
+        {
+          "text": " human",
+          "start": 263.64,
+          "end": 263.96,
+          "confidence": 0.9969239830970764
+        },
+        {
+          "text": " beings",
+          "start": 263.96,
+          "end": 264.3,
+          "confidence": 0.9987837672233582
+        },
+        {
+          "text": " decide",
+          "start": 264.3,
+          "end": 264.9,
+          "confidence": 0.98956698179245
+        },
+        {
+          "text": " to",
+          "start": 264.9,
+          "end": 265.08,
+          "confidence": 0.999422550201416
+        },
+        {
+          "text": " settle",
+          "start": 265.08,
+          "end": 265.24,
+          "confidence": 0.9995585083961487
+        },
+        {
+          "text": " down?",
+          "start": 265.24,
+          "end": 265.52,
+          "confidence": 0.9988191723823547
+        }
+      ]
+    },
+    {
+      "start": 266.24,
+      "end": 269.54,
+      "text": "Yeah, humans have a tendency to live in very dangerous places.",
+      "words": [
+        {
+          "text": " Yeah,",
+          "start": 266.24,
+          "end": 266.52,
+          "confidence": 0.8327268362045288
+        },
+        {
+          "text": " humans",
+          "start": 266.54,
+          "end": 266.94,
+          "confidence": 0.9908196330070496
+        },
+        {
+          "text": " have",
+          "start": 266.94,
+          "end": 267.42,
+          "confidence": 0.9984437823295593
+        },
+        {
+          "text": " a",
+          "start": 267.42,
+          "end": 267.52,
+          "confidence": 0.8824472427368164
+        },
+        {
+          "text": " tendency",
+          "start": 267.52,
+          "end": 267.88,
+          "confidence": 0.9995917677879333
+        },
+        {
+          "text": " to",
+          "start": 267.88,
+          "end": 268.18,
+          "confidence": 0.999711811542511
+        },
+        {
+          "text": " live",
+          "start": 268.18,
+          "end": 268.34,
+          "confidence": 0.9981133937835693
+        },
+        {
+          "text": " in",
+          "start": 268.34,
+          "end": 268.46,
+          "confidence": 0.9982742071151733
+        },
+        {
+          "text": " very",
+          "start": 268.46,
+          "end": 268.6,
+          "confidence": 0.9938482642173767
+        },
+        {
+          "text": " dangerous",
+          "start": 268.6,
+          "end": 269.0,
+          "confidence": 0.9995877146720886
+        },
+        {
+          "text": " places.",
+          "start": 269.0,
+          "end": 269.54,
+          "confidence": 0.996615469455719
+        }
+      ]
+    },
+    {
+      "start": 269.88,
+      "end": 270.92,
+      "text": "We like water, right?",
+      "words": [
+        {
+          "text": " We",
+          "start": 269.88,
+          "end": 270.02,
+          "confidence": 0.944955587387085
+        },
+        {
+          "text": " like",
+          "start": 270.02,
+          "end": 270.22,
+          "confidence": 0.9842363595962524
+        },
+        {
+          "text": " water,",
+          "start": 270.22,
+          "end": 270.54,
+          "confidence": 0.9948295950889587
+        },
+        {
+          "text": " right?",
+          "start": 270.78,
+          "end": 270.92,
+          "confidence": 0.9770349264144897
+        }
+      ]
+    },
+    {
+      "start": 271.22,
+      "end": 271.54,
+      "text": "We do.",
+      "words": [
+        {
+          "text": " We",
+          "start": 271.22,
+          "end": 271.22,
+          "confidence": 0.9101800322532654
+        },
+        {
+          "text": " do.",
+          "start": 271.22,
+          "end": 271.54,
+          "confidence": 0.6372546553611755
+        }
+      ]
+    },
+    {
+      "start": 272.66,
+      "end": 276.26,
+      "text": "It's really pretty living next to the river and it's really functional.",
+      "words": [
+        {
+          "text": " It's",
+          "start": 272.66,
+          "end": 273.1,
+          "confidence": 0.5850372761487961
+        },
+        {
+          "text": " really",
+          "start": 273.1,
+          "end": 273.28,
+          "confidence": 0.5936797857284546
+        },
+        {
+          "text": " pretty",
+          "start": 273.28,
+          "end": 273.52,
+          "confidence": 0.9626795053482056
+        },
+        {
+          "text": " living",
+          "start": 273.52,
+          "end": 273.8,
+          "confidence": 0.8587009906768799
+        },
+        {
+          "text": " next",
+          "start": 273.8,
+          "end": 274.1,
+          "confidence": 0.9932276606559753
+        },
+        {
+          "text": " to",
+          "start": 274.1,
+          "end": 274.24,
+          "confidence": 0.9987205862998962
+        },
+        {
+          "text": " the",
+          "start": 274.24,
+          "end": 274.34,
+          "confidence": 0.9970988035202026
+        },
+        {
+          "text": " river",
+          "start": 274.34,
+          "end": 274.5,
+          "confidence": 0.9847232103347778
+        },
+        {
+          "text": " and",
+          "start": 274.5,
+          "end": 275.4,
+          "confidence": 0.39280202984809875
+        },
+        {
+          "text": " it's",
+          "start": 275.4,
+          "end": 275.78,
+          "confidence": 0.7234815508127213
+        },
+        {
+          "text": " really",
+          "start": 275.78,
+          "end": 275.9,
+          "confidence": 0.9874846339225769
+        },
+        {
+          "text": " functional.",
+          "start": 275.9,
+          "end": 276.26,
+          "confidence": 0.9914668798446655
+        }
+      ]
+    },
+    {
+      "start": 276.48,
+      "end": 278.68,
+      "text": "In London it's a really nice place to live.",
+      "words": [
+        {
+          "text": " In",
+          "start": 276.48,
+          "end": 276.48,
+          "confidence": 0.9810367822647095
+        },
+        {
+          "text": " London",
+          "start": 276.48,
+          "end": 276.74,
+          "confidence": 0.9984967708587646
+        },
+        {
+          "text": " it's",
+          "start": 276.74,
+          "end": 277.12,
+          "confidence": 0.7244307696819305
+        },
+        {
+          "text": " a",
+          "start": 277.12,
+          "end": 277.28,
+          "confidence": 0.6871364712715149
+        },
+        {
+          "text": " really",
+          "start": 277.28,
+          "end": 277.7,
+          "confidence": 0.9936107993125916
+        },
+        {
+          "text": " nice",
+          "start": 277.7,
+          "end": 278.02,
+          "confidence": 0.9988377690315247
+        },
+        {
+          "text": " place",
+          "start": 278.02,
+          "end": 278.28,
+          "confidence": 0.9993523955345154
+        },
+        {
+          "text": " to",
+          "start": 278.28,
+          "end": 278.52,
+          "confidence": 0.9972885847091675
+        },
+        {
+          "text": " live.",
+          "start": 278.52,
+          "end": 278.68,
+          "confidence": 0.9986899495124817
+        }
+      ]
+    },
+    {
+      "start": 278.8,
+      "end": 279.54,
+      "text": "People want to live there.",
+      "words": [
+        {
+          "text": " People",
+          "start": 278.8,
+          "end": 278.96,
+          "confidence": 0.9758867025375366
+        },
+        {
+          "text": " want",
+          "start": 278.96,
+          "end": 279.2,
+          "confidence": 0.9495082497596741
+        },
+        {
+          "text": " to",
+          "start": 279.2,
+          "end": 279.32,
+          "confidence": 0.9989890456199646
+        },
+        {
+          "text": " live",
+          "start": 279.32,
+          "end": 279.42,
+          "confidence": 0.997918426990509
+        },
+        {
+          "text": " there.",
+          "start": 279.42,
+          "end": 279.54,
+          "confidence": 0.989119291305542
+        }
+      ]
+    },
+    {
+      "start": 279.62,
+      "end": 280.54,
+      "text": "It's really expensive.",
+      "words": [
+        {
+          "text": " It's",
+          "start": 279.62,
+          "end": 279.72,
+          "confidence": 0.994322657585144
+        },
+        {
+          "text": " really",
+          "start": 279.72,
+          "end": 280.02,
+          "confidence": 0.9987109899520874
+        },
+        {
+          "text": " expensive.",
+          "start": 280.02,
+          "end": 280.54,
+          "confidence": 0.998807430267334
+        }
+      ]
+    },
+    {
+      "start": 281.6,
+      "end": 283.8,
+      "text": "But it can be very, very dangerous indeed.",
+      "words": [
+        {
+          "text": " But",
+          "start": 281.6,
+          "end": 282.0,
+          "confidence": 0.9653992652893066
+        },
+        {
+          "text": " it",
+          "start": 282.0,
+          "end": 282.16,
+          "confidence": 0.9961559176445007
+        },
+        {
+          "text": " can",
+          "start": 282.16,
+          "end": 282.32,
+          "confidence": 0.9994999170303345
+        },
+        {
+          "text": " be",
+          "start": 282.32,
+          "end": 282.46,
+          "confidence": 0.9992469549179077
+        },
+        {
+          "text": " very,",
+          "start": 282.46,
+          "end": 282.74,
+          "confidence": 0.9974808096885681
+        },
+        {
+          "text": " very",
+          "start": 282.74,
+          "end": 282.98,
+          "confidence": 0.9993517994880676
+        },
+        {
+          "text": " dangerous",
+          "start": 282.98,
+          "end": 283.38,
+          "confidence": 0.9980149269104004
+        },
+        {
+          "text": " indeed.",
+          "start": 283.38,
+          "end": 283.8,
+          "confidence": 0.9478581547737122
+        }
+      ]
+    },
+    {
+      "start": 284.44,
+      "end": 287.74,
+      "text": "So we have this legacy of people living in really, really dangerous places.",
+      "words": [
+        {
+          "text": " So",
+          "start": 284.44,
+          "end": 284.54,
+          "confidence": 0.931500256061554
+        },
+        {
+          "text": " we",
+          "start": 284.54,
+          "end": 284.68,
+          "confidence": 0.9540467858314514
+        },
+        {
+          "text": " have",
+          "start": 284.68,
+          "end": 284.84,
+          "confidence": 0.9963526725769043
+        },
+        {
+          "text": " this",
+          "start": 284.84,
+          "end": 285.0,
+          "confidence": 0.9991687536239624
+        },
+        {
+          "text": " legacy",
+          "start": 285.0,
+          "end": 285.38,
+          "confidence": 0.9983036518096924
+        },
+        {
+          "text": " of",
+          "start": 285.38,
+          "end": 285.54,
+          "confidence": 0.9993252754211426
+        },
+        {
+          "text": " people",
+          "start": 285.54,
+          "end": 285.78,
+          "confidence": 0.9989582300186157
+        },
+        {
+          "text": " living",
+          "start": 285.78,
+          "end": 286.08,
+          "confidence": 0.9987743496894836
+        },
+        {
+          "text": " in",
+          "start": 286.08,
+          "end": 286.3,
+          "confidence": 0.999119222164154
+        },
+        {
+          "text": " really,",
+          "start": 286.3,
+          "end": 286.58,
+          "confidence": 0.9978845715522766
+        },
+        {
+          "text": " really",
+          "start": 286.58,
+          "end": 286.84,
+          "confidence": 0.9978246688842773
+        },
+        {
+          "text": " dangerous",
+          "start": 286.84,
+          "end": 287.16,
+          "confidence": 0.9977044463157654
+        },
+        {
+          "text": " places.",
+          "start": 287.16,
+          "end": 287.74,
+          "confidence": 0.9984796643257141
+        }
+      ]
+    },
+    {
+      "start": 288.6,
+      "end": 292.94,
+      "text": "But we can use the same types of model that we use when we're forecasting whether a flood",
+      "words": [
+        {
+          "text": " But",
+          "start": 288.6,
+          "end": 288.8,
+          "confidence": 0.977773129940033
+        },
+        {
+          "text": " we",
+          "start": 288.8,
+          "end": 288.9,
+          "confidence": 0.997832715511322
+        },
+        {
+          "text": " can",
+          "start": 288.9,
+          "end": 289.04,
+          "confidence": 0.9974097609519958
+        },
+        {
+          "text": " use",
+          "start": 289.04,
+          "end": 289.2,
+          "confidence": 0.9992566704750061
+        },
+        {
+          "text": " the",
+          "start": 289.2,
+          "end": 289.3,
+          "confidence": 0.9977039694786072
+        },
+        {
+          "text": " same",
+          "start": 289.3,
+          "end": 289.44,
+          "confidence": 0.9987450838088989
+        },
+        {
+          "text": " types",
+          "start": 289.44,
+          "end": 289.78,
+          "confidence": 0.991169810295105
+        },
+        {
+          "text": " of",
+          "start": 289.78,
+          "end": 289.94,
+          "confidence": 0.9994364380836487
+        },
+        {
+          "text": " model",
+          "start": 289.94,
+          "end": 290.16,
+          "confidence": 0.7925158143043518
+        },
+        {
+          "text": " that",
+          "start": 290.16,
+          "end": 290.4,
+          "confidence": 0.9969047904014587
+        },
+        {
+          "text": " we",
+          "start": 290.4,
+          "end": 290.54,
+          "confidence": 0.9993929862976074
+        },
+        {
+          "text": " use",
+          "start": 290.54,
+          "end": 290.86,
+          "confidence": 0.9917106628417969
+        },
+        {
+          "text": " when",
+          "start": 290.86,
+          "end": 291.08,
+          "confidence": 0.9917859435081482
+        },
+        {
+          "text": " we're",
+          "start": 291.08,
+          "end": 291.42,
+          "confidence": 0.9802636206150055
+        },
+        {
+          "text": " forecasting",
+          "start": 291.42,
+          "end": 292.1,
+          "confidence": 0.9957990050315857
+        },
+        {
+          "text": " whether",
+          "start": 292.1,
+          "end": 292.6,
+          "confidence": 0.974082350730896
+        },
+        {
+          "text": " a",
+          "start": 292.6,
+          "end": 292.76,
+          "confidence": 0.9553320407867432
+        },
+        {
+          "text": " flood",
+          "start": 292.76,
+          "end": 292.94,
+          "confidence": 0.9988394379615784
+        }
+      ]
+    },
+    {
+      "start": 292.94,
+      "end": 293.72,
+      "text": "is coming next week.",
+      "words": [
+        {
+          "text": " is",
+          "start": 292.94,
+          "end": 293.08,
+          "confidence": 0.9982001781463623
+        },
+        {
+          "text": " coming",
+          "start": 293.08,
+          "end": 293.22,
+          "confidence": 0.9993575215339661
+        },
+        {
+          "text": " next",
+          "start": 293.22,
+          "end": 293.46,
+          "confidence": 0.9992103576660156
+        },
+        {
+          "text": " week.",
+          "start": 293.46,
+          "end": 293.72,
+          "confidence": 0.9995861649513245
+        }
+      ]
+    },
+    {
+      "start": 294.0,
+      "end": 297.96,
+      "text": "We can use that to work out what the risk is of any types of floods coming along.",
+      "words": [
+        {
+          "text": " We",
+          "start": 294.0,
+          "end": 294.1,
+          "confidence": 0.9962126016616821
+        },
+        {
+          "text": " can",
+          "start": 294.1,
+          "end": 294.24,
+          "confidence": 0.999103844165802
+        },
+        {
+          "text": " use",
+          "start": 294.24,
+          "end": 294.42,
+          "confidence": 0.9992591738700867
+        },
+        {
+          "text": " that",
+          "start": 294.42,
+          "end": 294.62,
+          "confidence": 0.9984205961227417
+        },
+        {
+          "text": " to",
+          "start": 294.62,
+          "end": 294.82,
+          "confidence": 0.999113142490387
+        },
+        {
+          "text": " work",
+          "start": 294.82,
+          "end": 294.98,
+          "confidence": 0.9938272833824158
+        },
+        {
+          "text": " out",
+          "start": 294.98,
+          "end": 295.16,
+          "confidence": 0.998629093170166
+        },
+        {
+          "text": " what",
+          "start": 295.16,
+          "end": 295.32,
+          "confidence": 0.9943643808364868
+        },
+        {
+          "text": " the",
+          "start": 295.32,
+          "end": 295.78,
+          "confidence": 0.9882299900054932
+        },
+        {
+          "text": " risk",
+          "start": 295.78,
+          "end": 296.08,
+          "confidence": 0.9976072311401367
+        },
+        {
+          "text": " is",
+          "start": 296.08,
+          "end": 296.28,
+          "confidence": 0.9966548681259155
+        },
+        {
+          "text": " of",
+          "start": 296.28,
+          "end": 296.44,
+          "confidence": 0.99473637342453
+        },
+        {
+          "text": " any",
+          "start": 296.44,
+          "end": 296.7,
+          "confidence": 0.9988788962364197
+        },
+        {
+          "text": " types",
+          "start": 296.7,
+          "end": 297.0,
+          "confidence": 0.9594202041625977
+        },
+        {
+          "text": " of",
+          "start": 297.0,
+          "end": 297.18,
+          "confidence": 0.9990946054458618
+        },
+        {
+          "text": " floods",
+          "start": 297.18,
+          "end": 297.34,
+          "confidence": 0.9914079308509827
+        },
+        {
+          "text": " coming",
+          "start": 297.34,
+          "end": 297.64,
+          "confidence": 0.9979497790336609
+        },
+        {
+          "text": " along.",
+          "start": 297.64,
+          "end": 297.96,
+          "confidence": 0.9996849298477173
+        }
+      ]
+    },
+    {
+      "start": 297.96,
+      "end": 299.78,
+      "text": "We can say, you know, these.",
+      "words": [
+        {
+          "text": " We",
+          "start": 297.96,
+          "end": 298.46,
+          "confidence": 0.300271213054657
+        },
+        {
+          "text": " can",
+          "start": 298.46,
+          "end": 298.64,
+          "confidence": 0.9900562763214111
+        },
+        {
+          "text": " say,",
+          "start": 298.64,
+          "end": 298.96,
+          "confidence": 0.9963033199310303
+        },
+        {
+          "text": " you",
+          "start": 299.1,
+          "end": 299.34,
+          "confidence": 0.6078686118125916
+        },
+        {
+          "text": " know,",
+          "start": 299.34,
+          "end": 299.46,
+          "confidence": 0.9974971413612366
+        },
+        {
+          "text": " these.",
+          "start": 299.6,
+          "end": 299.78,
+          "confidence": 0.9086703062057495
+        }
+      ]
+    }
+  ]
+}

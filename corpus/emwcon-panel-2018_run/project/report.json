@@ -1,0 +1,24 @@
+{
+  "source": "corpus/media/emwcon-panel-2018.webm",
+  "title": null,
+  "language": "en",
+  "candidate_count": 4000,
+  "selected_count": 5,
+  "rejected_by_context_guard": 0,
+  "truncated_by_limit": 5,
+  "rejection_reasons": {},
+  "outputs": {
+    "facebook": "corpus/emwcon-panel-2018_run/project/facebook",
+    "shorts": "corpus/emwcon-panel-2018_run/project/shorts"
+  },
+  "captions": "corpus/emwcon-panel-2018_run/project/captions",
+  "timeline": "corpus/emwcon-panel-2018_run/project/timeline",
+  "content_pack": "corpus/emwcon-panel-2018_run/project/content_pack.json",
+  "editorial_report": "corpus/emwcon-panel-2018_run/project/editorial_report.json",
+  "pacing_report": "corpus/emwcon-panel-2018_run/project/pacing_report.json",
+  "qa": "corpus/emwcon-panel-2018_run/project/qa.json",
+  "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
+  "audio": {
+    "enabled": false
+  }
+}

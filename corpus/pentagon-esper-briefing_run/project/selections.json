@@ -1,0 +1,2136 @@
+[
+  {
+    "start": 583.7,
+    "end": 611.64,
+    "text": "I don't want to characterize exactly what or how much yet until it gets exploited properly. But as a matter of course, we always do sensitive site exploitation on any objective anywhere to do that. As to whether it's his headquarters, it was an area in which he was staying. And what about prisoners? You took some, how many, and whose custody are they in now? They're in our custody and they're at a secure facility.",
+    "story_type": "conflict",
+    "hook": "I don't want to characterize exactly what or how much yet until it gets exploited properly.",
+    "payoff": "They're in our custody and they're at a secure facility.",
+    "editorial_score": 0.8625,
+    "virality_score": 0.86,
+    "context_score": 1.0,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=1.00; progression=1.00; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.03; coherence=1.00; completeness=0.75; audio_pace=0.83; silence=0.205; dead_air=0.14.",
+    "visual_potential": 0.8,
+    "words": [
+      {
+        "text": " I",
+        "start": 583.7,
+        "end": 583.78,
+        "confidence": 0.9977353811264038
+      },
+      {
+        "text": " don't",
+        "start": 583.78,
+        "end": 584.02,
+        "confidence": 0.9861181378364563
+      },
+      {
+        "text": " want",
+        "start": 584.02,
+        "end": 584.14,
+        "confidence": 0.9527145624160767
+      },
+      {
+        "text": " to",
+        "start": 584.14,
+        "end": 584.22,
+        "confidence": 0.9980823993682861
+      },
+      {
+        "text": " characterize",
+        "start": 584.22,
+        "end": 584.52,
+        "confidence": 0.9971349239349365
+      },
+      {
+        "text": " exactly",
+        "start": 584.52,
+        "end": 585.12,
+        "confidence": 0.9853631258010864
+      },
+      {
+        "text": " what",
+        "start": 585.12,
+        "end": 585.56,
+        "confidence": 0.9864451289176941
+      },
+      {
+        "text": " or",
+        "start": 585.56,
+        "end": 585.9,
+        "confidence": 0.9032210111618042
+      },
+      {
+        "text": " how",
+        "start": 585.9,
+        "end": 586.04,
+        "confidence": 0.999338686466217
+      },
+      {
+        "text": " much",
+        "start": 586.04,
+        "end": 586.3,
+        "confidence": 0.999382495880127
+      },
+      {
+        "text": " yet",
+        "start": 586.3,
+        "end": 586.52,
+        "confidence": 0.6713958978652954
+      },
+      {
+        "text": " until",
+        "start": 586.52,
+        "end": 586.9200000000001,
+        "confidence": 0.6775544285774231
+      },
+      {
+        "text": " it",
+        "start": 586.9200000000001,
+        "end": 587.06,
+        "confidence": 0.9992092847824097
+      },
+      {
+        "text": " gets",
+        "start": 587.06,
+        "end": 587.24,
+        "confidence": 0.9982226490974426
+      },
+      {
+        "text": " exploited",
+        "start": 587.24,
+        "end": 587.6,
+        "confidence": 0.9976029992103577
+      },
+      {
+        "text": " properly.",
+        "start": 587.6,
+        "end": 587.98,
+        "confidence": 0.9941117167472839
+      },
+      {
+        "text": " But",
+        "start": 588.6800000000001,
+        "end": 588.94,
+        "confidence": 0.9970690608024597
+      },
+      {
+        "text": " as",
+        "start": 588.94,
+        "end": 589.12,
+        "confidence": 0.9866560697555542
+      },
+      {
+        "text": " a",
+        "start": 589.12,
+        "end": 589.2,
+        "confidence": 0.9987484216690063
+      },
+      {
+        "text": " matter",
+        "start": 589.2,
+        "end": 589.36,
+        "confidence": 0.9999146461486816
+      },
+      {
+        "text": " of",
+        "start": 589.36,
+        "end": 589.56,
+        "confidence": 0.6902990937232971
+      },
+      {
+        "text": " course,",
+        "start": 589.56,
+        "end": 589.78,
+        "confidence": 0.9984356760978699
+      },
+      {
+        "text": " we",
+        "start": 589.96,
+        "end": 590.22,
+        "confidence": 0.9980728626251221
+      },
+      {
+        "text": " always",
+        "start": 590.22,
+        "end": 590.64,
+        "confidence": 0.9982837438583374
+      },
+      {
+        "text": " do",
+        "start": 590.64,
+        "end": 591.78,
+        "confidence": 0.9958080053329468
+      },
+      {
+        "text": " sensitive",
+        "start": 591.78,
+        "end": 592.1,
+        "confidence": 0.9970136880874634
+      },
+      {
+        "text": " site",
+        "start": 592.1,
+        "end": 592.3,
+        "confidence": 0.9011483788490295
+      },
+      {
+        "text": " exploitation",
+        "start": 592.3,
+        "end": 592.7,
+        "confidence": 0.997149646282196
+      },
+      {
+        "text": " on",
+        "start": 592.7,
+        "end": 592.98,
+        "confidence": 0.990019679069519
+      },
+      {
+        "text": " any",
+        "start": 592.98,
+        "end": 593.2,
+        "confidence": 0.9990836381912231
+      },
+      {
+        "text": " objective",
+        "start": 593.2,
+        "end": 593.78,
+        "confidence": 0.9958359003067017
+      },
+      {
+        "text": " anywhere",
+        "start": 593.78,
+        "end": 594.24,
+        "confidence": 0.8816771507263184
+      },
+      {
+        "text": " to",
+        "start": 594.24,
+        "end": 595.02,
+        "confidence": 0.9965253472328186
+      },
+      {
+        "text": " do",
+        "start": 595.02,
+        "end": 595.1600000000001,
+        "confidence": 0.9987995624542236
+      },
+      {
+        "text": " that.",
+        "start": 595.1600000000001,
+        "end": 595.3199999999999,
+        "confidence": 0.9994661211967468
+      },
+      {
+        "text": " As",
+        "start": 595.3199999999999,
+        "end": 595.9,
+        "confidence": 0.43645966053009033
+      },
+      {
+        "text": " to",
+        "start": 595.9,
+        "end": 596.0,
+        "confidence": 0.9752795696258545
+      },
+      {
+        "text": " whether",
+        "start": 596.0,
+        "end": 596.12,
+        "confidence": 0.9982852339744568
+      },
+      {
+        "text": " it's",
+        "start": 596.12,
+        "end": 596.3199999999999,
+        "confidence": 0.9480086863040924
+      },
+      {
+        "text": " his",
+        "start": 596.3199999999999,
+        "end": 596.36,
+        "confidence": 0.6933867335319519
+      },
+      {
+        "text": " headquarters,",
+        "start": 596.36,
+        "end": 596.7,
+        "confidence": 0.9861998558044434
+      },
+      {
+        "text": " it",
+        "start": 596.88,
+        "end": 596.94,
+        "confidence": 0.9952776432037354
+      },
+      {
+        "text": " was",
+        "start": 596.94,
+        "end": 597.2,
+        "confidence": 0.9974616765975952
+      },
+      {
+        "text": " an",
+        "start": 597.2,
+        "end": 597.64,
+        "confidence": 0.9886429905891418
+      },
+      {
+        "text": " area",
+        "start": 597.64,
+        "end": 597.88,
+        "confidence": 0.9991324543952942
+      },
+      {
+        "text": " in",
+        "start": 597.88,
+        "end": 598.1,
+        "confidence": 0.994897186756134
+      },
+      {
+        "text": " which",
+        "start": 598.1,
+        "end": 598.38,
+        "confidence": 0.9995313882827759
+      },
+      {
+        "text": " he",
+        "start": 598.38,
+        "end": 599.22,
+        "confidence": 0.9955974221229553
+      },
+      {
+        "text": " was",
+        "start": 599.22,
+        "end": 599.46,
+        "confidence": 0.9992120265960693
+      },
+      {
+        "text": " staying.",
+        "start": 599.46,
+        "end": 599.9,
+        "confidence": 0.995840847492218
+      },
+      {
+        "text": " And",
+        "start": 603.0,
+        "end": 603.36,
+        "confidence": 0.3092705309391022
+      },
+      {
+        "text": " what",
+        "start": 603.36,
+        "end": 603.58,
+        "confidence": 0.9813817739486694
+      },
+      {
+        "text": " about",
+        "start": 603.58,
+        "end": 603.82,
+        "confidence": 0.9987649917602539
+      },
+      {
+        "text": " prisoners?",
+        "start": 603.82,
+        "end": 604.98,
+        "confidence": 0.922197699546814
+      },
+      {
+        "text": " You",
+        "start": 605.52,
+        "end": 605.68,
+        "confidence": 0.7703017592430115
+      },
+      {
+        "text": " took",
+        "start": 605.68,
+        "end": 605.86,
+        "confidence": 0.9967969059944153
+      },
+      {
+        "text": " some,",
+        "start": 605.86,
+        "end": 606.12,
+        "confidence": 0.8338846564292908
+      },
+      {
+        "text": " how",
+        "start": 606.42,
+        "end": 606.7,
+        "confidence": 0.9833267331123352
+      },
+      {
+        "text": " many,",
+        "start": 606.7,
+        "end": 606.92,
+        "confidence": 0.9990886449813843
+      },
+      {
+        "text": " and",
+        "start": 607.34,
+        "end": 607.62,
+        "confidence": 0.9827284216880798
+      },
+      {
+        "text": " whose",
+        "start": 607.62,
+        "end": 607.9,
+        "confidence": 0.9277992844581604
+      },
+      {
+        "text": " custody",
+        "start": 607.9,
+        "end": 608.3,
+        "confidence": 0.9994801878929138
+      },
+      {
+        "text": " are",
+        "start": 608.3,
+        "end": 608.74,
+        "confidence": 0.9838842749595642
+      },
+      {
+        "text": " they",
+        "start": 608.74,
+        "end": 608.94,
+        "confidence": 0.9915932416915894
+      },
+      {
+        "text": " in",
+        "start": 608.94,
+        "end": 609.14,
+        "confidence": 0.9500443935394287
+      },
+      {
+        "text": " now?",
+        "start": 609.14,
+        "end": 609.36,
+        "confidence": 0.9917982816696167
+      },
+      {
+        "text": " They're",
+        "start": 609.68,
+        "end": 609.92,
+        "confidence": 0.9057177603244781
+      },
+      {
+        "text": " in",
+        "start": 609.92,
+        "end": 610.0,
+        "confidence": 0.9971588850021362
+      },
+      {
+        "text": " our",
+        "start": 610.0,
+        "end": 610.14,
+        "confidence": 0.9968487620353699
+      },
+      {
+        "text": " custody",
+        "start": 610.14,
+        "end": 610.48,
+        "confidence": 0.9995416402816772
+      },
+      {
+        "text": " and",
+        "start": 610.48,
+        "end": 610.66,
+        "confidence": 0.7051888704299927
+      },
+      {
+        "text": " they're",
+        "start": 610.66,
+        "end": 610.8,
+        "confidence": 0.9768456816673279
+      },
+      {
+        "text": " at",
+        "start": 610.8,
+        "end": 610.88,
+        "confidence": 0.884324848651886
+      },
+      {
+        "text": " a",
+        "start": 610.88,
+        "end": 610.96,
+        "confidence": 0.9903608560562134
+      },
+      {
+        "text": " secure",
+        "start": 610.96,
+        "end": 611.18,
+        "confidence": 0.97590172290802
+      },
+      {
+        "text": " facility.",
+        "start": 611.18,
+        "end": 611.64,
+        "confidence": 0.9985858201980591
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 0.75,
+    "llm_metadata": null,
+    "total_score": 0.9068
+  },
+  {
+    "start": 452.26,
+    "end": 483.68,
+    "text": "The terrorists should be aware of that. They should have seen that now after us doing this multiple times and with regard to your question regarding the stf We stay in continuous contact with them What was used to destroy the compound what kind of ordinance is used to destroy the compound Also, you mentioned that you had video do you have video from inside the tunnel itself? And if so were you able to get that because the canine was wearing video or did you have something else?",
+    "story_type": "conflict",
+    "hook": "The terrorists should be aware of that.",
+    "payoff": "And if so were you able to get that because the canine was wearing video or did you have something else?",
+    "editorial_score": 0.9546077153558052,
+    "virality_score": 0.707,
+    "context_score": 1.0,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.55; progression=0.99; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.11; coherence=1.00; completeness=1.00; audio_pace=0.81; silence=0.223; dead_air=0.21.",
+    "visual_potential": 0.8,
+    "words": [
+      {
+        "text": " The",
+        "start": 452.26,
+        "end": 452.7,
+        "confidence": 0.9961355924606323
+      },
+      {
+        "text": " terrorists",
+        "start": 452.7,
+        "end": 453.0,
+        "confidence": 0.9682194590568542
+      },
+      {
+        "text": " should",
+        "start": 453.0,
+        "end": 453.22,
+        "confidence": 0.9988756775856018
+      },
+      {
+        "text": " be",
+        "start": 453.22,
+        "end": 453.36,
+        "confidence": 0.9996615648269653
+      },
+      {
+        "text": " aware",
+        "start": 453.36,
+        "end": 453.56,
+        "confidence": 0.9997574687004089
+      },
+      {
+        "text": " of",
+        "start": 453.56,
+        "end": 453.7,
+        "confidence": 0.9989292025566101
+      },
+      {
+        "text": " that.",
+        "start": 453.7,
+        "end": 453.82,
+        "confidence": 0.999772846698761
+      },
+      {
+        "text": " They",
+        "start": 453.82,
+        "end": 454.1,
+        "confidence": 0.5591318607330322
+      },
+      {
+        "text": " should",
+        "start": 454.1,
+        "end": 454.26,
+        "confidence": 0.9943224191665649
+      },
+      {
+        "text": " have",
+        "start": 454.26,
+        "end": 454.48,
+        "confidence": 0.9966968297958374
+      },
+      {
+        "text": " seen",
+        "start": 454.48,
+        "end": 454.7,
+        "confidence": 0.9971010088920593
+      },
+      {
+        "text": " that",
+        "start": 454.7,
+        "end": 454.84000000000003,
+        "confidence": 0.9654354453086853
+      },
+      {
+        "text": " now",
+        "start": 454.84000000000003,
+        "end": 455.0,
+        "confidence": 0.9869446158409119
+      },
+      {
+        "text": " after",
+        "start": 455.0,
+        "end": 455.3,
+        "confidence": 0.9761601686477661
+      },
+      {
+        "text": " us",
+        "start": 455.3,
+        "end": 456.14,
+        "confidence": 0.966049075126648
+      },
+      {
+        "text": " doing",
+        "start": 456.14,
+        "end": 456.3,
+        "confidence": 0.9821970462799072
+      },
+      {
+        "text": " this",
+        "start": 456.3,
+        "end": 456.48,
+        "confidence": 0.9965709447860718
+      },
+      {
+        "text": " multiple",
+        "start": 456.48,
+        "end": 456.74,
+        "confidence": 0.9986240863800049
+      },
+      {
+        "text": " times",
+        "start": 456.74,
+        "end": 457.18,
+        "confidence": 0.996088981628418
+      },
+      {
+        "text": " and",
+        "start": 457.18,
+        "end": 457.64,
+        "confidence": 0.8836703300476074
+      },
+      {
+        "text": " with",
+        "start": 457.64,
+        "end": 457.96000000000004,
+        "confidence": 0.9745147228240967
+      },
+      {
+        "text": " regard",
+        "start": 457.96000000000004,
+        "end": 458.15999999999997,
+        "confidence": 0.9823096394538879
+      },
+      {
+        "text": " to",
+        "start": 458.15999999999997,
+        "end": 458.32,
+        "confidence": 0.9275815486907959
+      },
+      {
+        "text": " your",
+        "start": 458.32,
+        "end": 458.36,
+        "confidence": 0.9964044094085693
+      },
+      {
+        "text": " question",
+        "start": 458.36,
+        "end": 458.6,
+        "confidence": 0.9941763877868652
+      },
+      {
+        "text": " regarding",
+        "start": 458.6,
+        "end": 458.84000000000003,
+        "confidence": 0.9451484084129333
+      },
+      {
+        "text": " the",
+        "start": 458.84000000000003,
+        "end": 459.28,
+        "confidence": 0.9884853363037109
+      },
+      {
+        "text": " stf",
+        "start": 459.28,
+        "end": 459.7,
+        "confidence": 0.6341040283441544
+      },
+      {
+        "text": " We",
+        "start": 459.7,
+        "end": 459.82,
+        "confidence": 0.3882025480270386
+      },
+      {
+        "text": " stay",
+        "start": 459.82,
+        "end": 460.02,
+        "confidence": 0.8403626084327698
+      },
+      {
+        "text": " in",
+        "start": 460.02,
+        "end": 460.12,
+        "confidence": 0.9477147459983826
+      },
+      {
+        "text": " continuous",
+        "start": 460.12,
+        "end": 460.48,
+        "confidence": 0.9940097332000732
+      },
+      {
+        "text": " contact",
+        "start": 460.48,
+        "end": 460.84000000000003,
+        "confidence": 0.9939981698989868
+      },
+      {
+        "text": " with",
+        "start": 460.84000000000003,
+        "end": 461.12,
+        "confidence": 0.9958682060241699
+      },
+      {
+        "text": " them",
+        "start": 461.12,
+        "end": 461.32,
+        "confidence": 0.9763889908790588
+      },
+      {
+        "text": " What",
+        "start": 467.32,
+        "end": 467.8,
+        "confidence": 0.29923227429389954
+      },
+      {
+        "text": " was",
+        "start": 467.8,
+        "end": 468.28,
+        "confidence": 0.4011244475841522
+      },
+      {
+        "text": " used",
+        "start": 468.28,
+        "end": 468.58000000000004,
+        "confidence": 0.9570974707603455
+      },
+      {
+        "text": " to",
+        "start": 468.58000000000004,
+        "end": 469.06,
+        "confidence": 0.9926453828811646
+      },
+      {
+        "text": " destroy",
+        "start": 469.06,
+        "end": 469.56,
+        "confidence": 0.9925692677497864
+      },
+      {
+        "text": " the",
+        "start": 469.56,
+        "end": 469.84000000000003,
+        "confidence": 0.9964536428451538
+      },
+      {
+        "text": " compound",
+        "start": 469.84000000000003,
+        "end": 470.24,
+        "confidence": 0.9985415935516357
+      },
+      {
+        "text": " what",
+        "start": 470.24,
+        "end": 470.64,
+        "confidence": 0.9566074013710022
+      },
+      {
+        "text": " kind",
+        "start": 470.64,
+        "end": 470.94,
+        "confidence": 0.9971175193786621
+      },
+      {
+        "text": " of",
+        "start": 470.94,
+        "end": 471.12,
+        "confidence": 0.9937040209770203
+      },
+      {
+        "text": " ordinance",
+        "start": 471.12,
+        "end": 471.32,
+        "confidence": 0.46217161417007446
+      },
+      {
+        "text": " is",
+        "start": 471.32,
+        "end": 471.62,
+        "confidence": 0.5968591570854187
+      },
+      {
+        "text": " used",
+        "start": 471.62,
+        "end": 471.76,
+        "confidence": 0.9736968874931335
+      },
+      {
+        "text": " to",
+        "start": 471.76,
+        "end": 471.94,
+        "confidence": 0.9915955662727356
+      },
+      {
+        "text": " destroy",
+        "start": 471.94,
+        "end": 472.18,
+        "confidence": 0.9848021864891052
+      },
+      {
+        "text": " the",
+        "start": 472.18,
+        "end": 472.36,
+        "confidence": 0.9862516522407532
+      },
+      {
+        "text": " compound",
+        "start": 472.36,
+        "end": 472.64,
+        "confidence": 0.9964823722839355
+      },
+      {
+        "text": " Also,",
+        "start": 473.34000000000003,
+        "end": 473.82,
+        "confidence": 0.756763219833374
+      },
+      {
+        "text": " you",
+        "start": 473.84000000000003,
+        "end": 474.0,
+        "confidence": 0.99921715259552
+      },
+      {
+        "text": " mentioned",
+        "start": 474.0,
+        "end": 474.22,
+        "confidence": 0.9893069863319397
+      },
+      {
+        "text": " that",
+        "start": 474.22,
+        "end": 474.4,
+        "confidence": 0.9995517134666443
+      },
+      {
+        "text": " you",
+        "start": 474.4,
+        "end": 474.5,
+        "confidence": 0.9971079230308533
+      },
+      {
+        "text": " had",
+        "start": 474.5,
+        "end": 474.72,
+        "confidence": 0.9953232407569885
+      },
+      {
+        "text": " video",
+        "start": 474.72,
+        "end": 475.0,
+        "confidence": 0.989888608455658
+      },
+      {
+        "text": " do",
+        "start": 475.0,
+        "end": 475.15999999999997,
+        "confidence": 0.5919570326805115
+      },
+      {
+        "text": " you",
+        "start": 475.15999999999997,
+        "end": 475.28,
+        "confidence": 0.9933666586875916
+      },
+      {
+        "text": " have",
+        "start": 475.28,
+        "end": 475.44,
+        "confidence": 0.998267650604248
+      },
+      {
+        "text": " video",
+        "start": 475.44,
+        "end": 475.74,
+        "confidence": 0.9932435154914856
+      },
+      {
+        "text": " from",
+        "start": 475.74,
+        "end": 476.02,
+        "confidence": 0.9971743822097778
+      },
+      {
+        "text": " inside",
+        "start": 476.02,
+        "end": 476.78,
+        "confidence": 0.9127734303474426
+      },
+      {
+        "text": " the",
+        "start": 476.78,
+        "end": 477.12,
+        "confidence": 0.967927873134613
+      },
+      {
+        "text": " tunnel",
+        "start": 477.12,
+        "end": 477.44,
+        "confidence": 0.9926988482475281
+      },
+      {
+        "text": " itself?",
+        "start": 477.44,
+        "end": 478.0,
+        "confidence": 0.9545851349830627
+      },
+      {
+        "text": " And",
+        "start": 478.28,
+        "end": 478.36,
+        "confidence": 0.9548979997634888
+      },
+      {
+        "text": " if",
+        "start": 478.36,
+        "end": 478.5,
+        "confidence": 0.9866266846656799
+      },
+      {
+        "text": " so",
+        "start": 478.5,
+        "end": 478.65999999999997,
+        "confidence": 0.9992115497589111
+      },
+      {
+        "text": " were",
+        "start": 478.65999999999997,
+        "end": 478.84000000000003,
+        "confidence": 0.6393817067146301
+      },
+      {
+        "text": " you",
+        "start": 478.84000000000003,
+        "end": 478.91999999999996,
+        "confidence": 0.9849116802215576
+      },
+      {
+        "text": " able",
+        "start": 478.91999999999996,
+        "end": 479.2,
+        "confidence": 0.9989306330680847
+      },
+      {
+        "text": " to",
+        "start": 479.2,
+        "end": 479.28,
+        "confidence": 0.9997074007987976
+      },
+      {
+        "text": " get",
+        "start": 479.28,
+        "end": 479.38,
+        "confidence": 0.9959122538566589
+      },
+      {
+        "text": " that",
+        "start": 479.38,
+        "end": 479.52,
+        "confidence": 0.9970605969429016
+      },
+      {
+        "text": " because",
+        "start": 479.52,
+        "end": 479.8,
+        "confidence": 0.9927863478660583
+      },
+      {
+        "text": " the",
+        "start": 479.8,
+        "end": 480.08000000000004,
+        "confidence": 0.611501932144165
+      },
+      {
+        "text": " canine",
+        "start": 480.08000000000004,
+        "end": 480.5,
+        "confidence": 0.9473441243171692
+      },
+      {
+        "text": " was",
+        "start": 480.5,
+        "end": 480.74,
+        "confidence": 0.9790439605712891
+      },
+      {
+        "text": " wearing",
+        "start": 480.74,
+        "end": 481.3,
+        "confidence": 0.9668874144554138
+      },
+      {
+        "text": " video",
+        "start": 481.3,
+        "end": 482.4,
+        "confidence": 0.6110101938247681
+      },
+      {
+        "text": " or",
+        "start": 482.4,
+        "end": 482.64,
+        "confidence": 0.8132057785987854
+      },
+      {
+        "text": " did",
+        "start": 482.64,
+        "end": 482.82,
+        "confidence": 0.4463999569416046
+      },
+      {
+        "text": " you",
+        "start": 482.82,
+        "end": 482.98,
+        "confidence": 0.9946481585502625
+      },
+      {
+        "text": " have",
+        "start": 482.98,
+        "end": 483.2,
+        "confidence": 0.8899421691894531
+      },
+      {
+        "text": " something",
+        "start": 483.2,
+        "end": 483.52,
+        "confidence": 0.720543622970581
+      },
+      {
+        "text": " else?",
+        "start": 483.52,
+        "end": 483.68,
+        "confidence": 0.8746311068534851
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.9038
+  },
+  {
+    "start": 633.57,
+    "end": 655.53,
+    "text": "Can you in any way elaborate on what's been collected, what's being looked through now, and what that might mean? We best not do for operational reasons, because that information needs to be exploited properly for any follow-on missions that we may choose to do. And I think the – what next is we will continue the mission, and the mission is to ensure the enduring defeat of ISIS in the region, and that's our mission.",
+    "story_type": "revelation",
+    "hook": "Can you in any way elaborate on what's been collected, what's being looked through now, and what that might mean?",
+    "payoff": "And I think the – what next is we will continue the mission, and the mission is to ensure the enduring defeat of ISIS in the region, and that's our mission.",
+    "editorial_score": 0.920437552742616,
+    "virality_score": 0.5870000000000001,
+    "context_score": 1.0,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.55; progression=0.80; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.05; coherence=1.00; completeness=1.00; audio_pace=0.91; silence=0.110; dead_air=0.00.",
+    "visual_potential": 0.7,
+    "words": [
+      {
+        "text": " Can",
+        "start": 633.57,
+        "end": 633.97,
+        "confidence": 0.9981870055198669
+      },
+      {
+        "text": " you",
+        "start": 633.97,
+        "end": 634.17,
+        "confidence": 0.9995457530021667
+      },
+      {
+        "text": " in",
+        "start": 634.17,
+        "end": 634.35,
+        "confidence": 0.7170627117156982
+      },
+      {
+        "text": " any",
+        "start": 634.35,
+        "end": 634.61,
+        "confidence": 0.991688072681427
+      },
+      {
+        "text": " way",
+        "start": 634.61,
+        "end": 634.77,
+        "confidence": 0.9991551637649536
+      },
+      {
+        "text": " elaborate",
+        "start": 634.77,
+        "end": 635.17,
+        "confidence": 0.9945693016052246
+      },
+      {
+        "text": " on",
+        "start": 635.17,
+        "end": 635.49,
+        "confidence": 0.9951803684234619
+      },
+      {
+        "text": " what's",
+        "start": 635.49,
+        "end": 635.99,
+        "confidence": 0.9937974512577057
+      },
+      {
+        "text": " been",
+        "start": 635.99,
+        "end": 636.11,
+        "confidence": 0.9832507967948914
+      },
+      {
+        "text": " collected,",
+        "start": 636.11,
+        "end": 636.59,
+        "confidence": 0.9987471103668213
+      },
+      {
+        "text": " what's",
+        "start": 636.79,
+        "end": 636.97,
+        "confidence": 0.9990458190441132
+      },
+      {
+        "text": " being",
+        "start": 636.97,
+        "end": 637.15,
+        "confidence": 0.9193717241287231
+      },
+      {
+        "text": " looked",
+        "start": 637.15,
+        "end": 637.35,
+        "confidence": 0.9940699934959412
+      },
+      {
+        "text": " through",
+        "start": 637.35,
+        "end": 637.63,
+        "confidence": 0.9982581734657288
+      },
+      {
+        "text": " now,",
+        "start": 637.63,
+        "end": 637.87,
+        "confidence": 0.991196870803833
+      },
+      {
+        "text": " and",
+        "start": 638.53,
+        "end": 638.85,
+        "confidence": 0.9962000250816345
+      },
+      {
+        "text": " what",
+        "start": 638.85,
+        "end": 639.13,
+        "confidence": 0.9956339001655579
+      },
+      {
+        "text": " that",
+        "start": 639.13,
+        "end": 639.27,
+        "confidence": 0.9984142780303955
+      },
+      {
+        "text": " might",
+        "start": 639.27,
+        "end": 639.41,
+        "confidence": 0.9943253397941589
+      },
+      {
+        "text": " mean?",
+        "start": 639.41,
+        "end": 639.61,
+        "confidence": 0.999527096748352
+      },
+      {
+        "text": " We",
+        "start": 639.79,
+        "end": 639.87,
+        "confidence": 0.2965451776981354
+      },
+      {
+        "text": " best",
+        "start": 639.87,
+        "end": 640.13,
+        "confidence": 0.7046048045158386
+      },
+      {
+        "text": " not",
+        "start": 640.13,
+        "end": 640.33,
+        "confidence": 0.9573907256126404
+      },
+      {
+        "text": " do",
+        "start": 640.33,
+        "end": 640.49,
+        "confidence": 0.9416830539703369
+      },
+      {
+        "text": " for",
+        "start": 640.49,
+        "end": 640.65,
+        "confidence": 0.9001866579055786
+      },
+      {
+        "text": " operational",
+        "start": 640.65,
+        "end": 640.99,
+        "confidence": 0.9969077706336975
+      },
+      {
+        "text": " reasons,",
+        "start": 640.99,
+        "end": 641.33,
+        "confidence": 0.9973426461219788
+      },
+      {
+        "text": " because",
+        "start": 641.33,
+        "end": 641.65,
+        "confidence": 0.9993056058883667
+      },
+      {
+        "text": " that",
+        "start": 641.65,
+        "end": 641.89,
+        "confidence": 0.9991262555122375
+      },
+      {
+        "text": " information",
+        "start": 641.89,
+        "end": 642.59,
+        "confidence": 0.9987282156944275
+      },
+      {
+        "text": " needs",
+        "start": 642.59,
+        "end": 643.23,
+        "confidence": 0.9777517914772034
+      },
+      {
+        "text": " to",
+        "start": 643.23,
+        "end": 643.37,
+        "confidence": 0.9997013211250305
+      },
+      {
+        "text": " be",
+        "start": 643.37,
+        "end": 643.47,
+        "confidence": 0.9996163845062256
+      },
+      {
+        "text": " exploited",
+        "start": 643.47,
+        "end": 643.79,
+        "confidence": 0.9940484762191772
+      },
+      {
+        "text": " properly",
+        "start": 643.79,
+        "end": 644.21,
+        "confidence": 0.9972440004348755
+      },
+      {
+        "text": " for",
+        "start": 644.75,
+        "end": 645.23,
+        "confidence": 0.24916434288024902
+      },
+      {
+        "text": " any",
+        "start": 645.23,
+        "end": 645.41,
+        "confidence": 0.9223268628120422
+      },
+      {
+        "text": " follow",
+        "start": 645.41,
+        "end": 645.65,
+        "confidence": 0.9226052165031433
+      },
+      {
+        "text": "-on",
+        "start": 645.65,
+        "end": 645.77,
+        "confidence": 0.8067073225975037
+      },
+      {
+        "text": " missions",
+        "start": 645.77,
+        "end": 645.97,
+        "confidence": 0.9826885461807251
+      },
+      {
+        "text": " that",
+        "start": 645.97,
+        "end": 646.15,
+        "confidence": 0.9755345582962036
+      },
+      {
+        "text": " we",
+        "start": 646.15,
+        "end": 646.23,
+        "confidence": 0.9984723925590515
+      },
+      {
+        "text": " may",
+        "start": 646.23,
+        "end": 646.37,
+        "confidence": 0.9889699220657349
+      },
+      {
+        "text": " choose",
+        "start": 646.37,
+        "end": 646.59,
+        "confidence": 0.9896451234817505
+      },
+      {
+        "text": " to",
+        "start": 646.59,
+        "end": 646.83,
+        "confidence": 0.9942702054977417
+      },
+      {
+        "text": " do.",
+        "start": 646.83,
+        "end": 647.03,
+        "confidence": 0.9066910147666931
+      },
+      {
+        "text": " And",
+        "start": 647.29,
+        "end": 647.53,
+        "confidence": 0.7268366813659668
+      },
+      {
+        "text": " I",
+        "start": 647.53,
+        "end": 647.67,
+        "confidence": 0.9841745495796204
+      },
+      {
+        "text": " think",
+        "start": 647.67,
+        "end": 647.77,
+        "confidence": 0.9990813732147217
+      },
+      {
+        "text": " the",
+        "start": 647.77,
+        "end": 647.95,
+        "confidence": 0.5906280875205994
+      },
+      {
+        "text": " –",
+        "start": 647.95,
+        "end": 647.99,
+        "confidence": 0.5786838531494141
+      },
+      {
+        "text": " what",
+        "start": 647.99,
+        "end": 648.23,
+        "confidence": 0.954208493232727
+      },
+      {
+        "text": " next",
+        "start": 648.23,
+        "end": 648.49,
+        "confidence": 0.9372535943984985
+      },
+      {
+        "text": " is",
+        "start": 648.49,
+        "end": 648.75,
+        "confidence": 0.9574548006057739
+      },
+      {
+        "text": " we",
+        "start": 648.75,
+        "end": 649.23,
+        "confidence": 0.19069325923919678
+      },
+      {
+        "text": " will",
+        "start": 649.23,
+        "end": 649.63,
+        "confidence": 0.9537767767906189
+      },
+      {
+        "text": " continue",
+        "start": 649.63,
+        "end": 649.9300000000001,
+        "confidence": 0.9992167949676514
+      },
+      {
+        "text": " the",
+        "start": 649.9300000000001,
+        "end": 650.11,
+        "confidence": 0.9961014986038208
+      },
+      {
+        "text": " mission,",
+        "start": 650.11,
+        "end": 650.35,
+        "confidence": 0.9991469383239746
+      },
+      {
+        "text": " and",
+        "start": 650.51,
+        "end": 650.63,
+        "confidence": 0.9996342658996582
+      },
+      {
+        "text": " the",
+        "start": 650.63,
+        "end": 650.75,
+        "confidence": 0.994257926940918
+      },
+      {
+        "text": " mission",
+        "start": 650.75,
+        "end": 650.97,
+        "confidence": 0.997226893901825
+      },
+      {
+        "text": " is",
+        "start": 650.97,
+        "end": 651.21,
+        "confidence": 0.9980931878089905
+      },
+      {
+        "text": " to",
+        "start": 651.21,
+        "end": 651.47,
+        "confidence": 0.99887615442276
+      },
+      {
+        "text": " ensure",
+        "start": 651.47,
+        "end": 651.83,
+        "confidence": 0.969512939453125
+      },
+      {
+        "text": " the",
+        "start": 651.83,
+        "end": 651.97,
+        "confidence": 0.998028576374054
+      },
+      {
+        "text": " enduring",
+        "start": 651.97,
+        "end": 652.29,
+        "confidence": 0.9919840693473816
+      },
+      {
+        "text": " defeat",
+        "start": 652.29,
+        "end": 652.55,
+        "confidence": 0.9994248151779175
+      },
+      {
+        "text": " of",
+        "start": 652.55,
+        "end": 652.79,
+        "confidence": 0.9994196891784668
+      },
+      {
+        "text": " ISIS",
+        "start": 652.79,
+        "end": 653.0699999999999,
+        "confidence": 0.9477436542510986
+      },
+      {
+        "text": " in",
+        "start": 653.0699999999999,
+        "end": 653.97,
+        "confidence": 0.9979304075241089
+      },
+      {
+        "text": " the",
+        "start": 653.97,
+        "end": 654.09,
+        "confidence": 0.9998257756233215
+      },
+      {
+        "text": " region,",
+        "start": 654.09,
+        "end": 654.33,
+        "confidence": 0.9996954202651978
+      },
+      {
+        "text": " and",
+        "start": 654.75,
+        "end": 655.01,
+        "confidence": 0.9994986057281494
+      },
+      {
+        "text": " that's",
+        "start": 655.01,
+        "end": 655.21,
+        "confidence": 0.9972496032714844
+      },
+      {
+        "text": " our",
+        "start": 655.21,
+        "end": 655.33,
+        "confidence": 0.9996490478515625
+      },
+      {
+        "text": " mission.",
+        "start": 655.33,
+        "end": 655.53,
+        "confidence": 0.9992427825927734
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.8575
+  },
+  {
+    "start": 910.0,
+    "end": 922.862,
+    "text": "At the end of the day, my expectation is that it'll be fewer than what we had before. and they will be going home. And help me remind me of the first question. The first question was about the SDF commander saying that. Yeah, the SDF. So this was a U.",
+    "story_type": "revelation",
+    "hook": "At the end of the day, my expectation is that it'll be fewer than what we had before.",
+    "payoff": "So this was a U.",
+    "editorial_score": 0.8909285714285714,
+    "virality_score": 0.4492857142857143,
+    "context_score": 0.9788571428571429,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.75; progression=0.82; payoff=0.91; density=1.00; fillers=0; standalone=1.00; repetition=0.16; coherence=1.00; completeness=1.00; audio_pace=0.90; silence=0.110; dead_air=0.09.",
+    "visual_potential": 0.5499999999999999,
+    "words": [
+      {
+        "text": " At",
+        "start": 910.0,
+        "end": 910.28,
+        "confidence": 0.9919803142547607
+      },
+      {
+        "text": " the",
+        "start": 910.28,
+        "end": 910.42,
+        "confidence": 0.9984099864959717
+      },
+      {
+        "text": " end",
+        "start": 910.42,
+        "end": 910.58,
+        "confidence": 0.999678373336792
+      },
+      {
+        "text": " of",
+        "start": 910.58,
+        "end": 910.72,
+        "confidence": 0.9979444146156311
+      },
+      {
+        "text": " the",
+        "start": 910.72,
+        "end": 910.72,
+        "confidence": 0.9974954724311829
+      },
+      {
+        "text": " day,",
+        "start": 910.72,
+        "end": 911.0,
+        "confidence": 0.9995050430297852
+      },
+      {
+        "text": " my",
+        "start": 911.06,
+        "end": 911.22,
+        "confidence": 0.9993058443069458
+      },
+      {
+        "text": " expectation",
+        "start": 911.22,
+        "end": 911.64,
+        "confidence": 0.9975778460502625
+      },
+      {
+        "text": " is",
+        "start": 911.64,
+        "end": 912.22,
+        "confidence": 0.9989978671073914
+      },
+      {
+        "text": " that",
+        "start": 912.22,
+        "end": 912.56,
+        "confidence": 0.9904809594154358
+      },
+      {
+        "text": " it'll",
+        "start": 912.56,
+        "end": 913.62,
+        "confidence": 0.5939532816410065
+      },
+      {
+        "text": " be",
+        "start": 913.62,
+        "end": 913.76,
+        "confidence": 0.9992005228996277
+      },
+      {
+        "text": " fewer",
+        "start": 913.76,
+        "end": 913.98,
+        "confidence": 0.9910706281661987
+      },
+      {
+        "text": " than",
+        "start": 913.98,
+        "end": 914.1,
+        "confidence": 0.9957475066184998
+      },
+      {
+        "text": " what",
+        "start": 914.1,
+        "end": 914.2,
+        "confidence": 0.9872109889984131
+      },
+      {
+        "text": " we",
+        "start": 914.2,
+        "end": 914.3,
+        "confidence": 0.9995113611221313
+      },
+      {
+        "text": " had",
+        "start": 914.3,
+        "end": 914.44,
+        "confidence": 0.9353172779083252
+      },
+      {
+        "text": " before.",
+        "start": 914.44,
+        "end": 914.76,
+        "confidence": 0.9995546936988831
+      },
+      {
+        "text": " and",
+        "start": 914.76,
+        "end": 914.98,
+        "confidence": 0.4111233651638031
+      },
+      {
+        "text": " they",
+        "start": 914.98,
+        "end": 915.18,
+        "confidence": 0.9630274176597595
+      },
+      {
+        "text": " will",
+        "start": 915.18,
+        "end": 915.3,
+        "confidence": 0.9880468845367432
+      },
+      {
+        "text": " be",
+        "start": 915.3,
+        "end": 915.4,
+        "confidence": 0.9974768757820129
+      },
+      {
+        "text": " going",
+        "start": 915.4,
+        "end": 915.56,
+        "confidence": 0.998596727848053
+      },
+      {
+        "text": " home.",
+        "start": 915.56,
+        "end": 915.84,
+        "confidence": 0.9990449547767639
+      },
+      {
+        "text": " And",
+        "start": 917.0,
+        "end": 917.46,
+        "confidence": 0.20616412162780762
+      },
+      {
+        "text": " help",
+        "start": 917.46,
+        "end": 917.6,
+        "confidence": 0.5900395512580872
+      },
+      {
+        "text": " me",
+        "start": 917.6,
+        "end": 917.72,
+        "confidence": 0.9861191511154175
+      },
+      {
+        "text": " remind",
+        "start": 917.72,
+        "end": 918.04,
+        "confidence": 0.3606967031955719
+      },
+      {
+        "text": " me",
+        "start": 918.04,
+        "end": 918.16,
+        "confidence": 0.9455187320709229
+      },
+      {
+        "text": " of",
+        "start": 918.16,
+        "end": 918.22,
+        "confidence": 0.7324641942977905
+      },
+      {
+        "text": " the",
+        "start": 918.22,
+        "end": 918.28,
+        "confidence": 0.9800534844398499
+      },
+      {
+        "text": " first",
+        "start": 918.28,
+        "end": 918.4,
+        "confidence": 0.9950365424156189
+      },
+      {
+        "text": " question.",
+        "start": 918.4,
+        "end": 918.72,
+        "confidence": 0.997230589389801
+      },
+      {
+        "text": " The",
+        "start": 918.88,
+        "end": 919.0,
+        "confidence": 0.32948625087738037
+      },
+      {
+        "text": " first",
+        "start": 919.0,
+        "end": 919.16,
+        "confidence": 0.991054356098175
+      },
+      {
+        "text": " question",
+        "start": 919.16,
+        "end": 919.5,
+        "confidence": 0.9961414933204651
+      },
+      {
+        "text": " was",
+        "start": 919.5,
+        "end": 919.68,
+        "confidence": 0.9902843832969666
+      },
+      {
+        "text": " about",
+        "start": 919.68,
+        "end": 919.94,
+        "confidence": 0.9928858876228333
+      },
+      {
+        "text": " the",
+        "start": 919.94,
+        "end": 920.06,
+        "confidence": 0.987392008304596
+      },
+      {
+        "text": " SDF",
+        "start": 920.06,
+        "end": 920.4,
+        "confidence": 0.8568680882453918
+      },
+      {
+        "text": " commander",
+        "start": 920.4,
+        "end": 920.64,
+        "confidence": 0.5434399247169495
+      },
+      {
+        "text": " saying",
+        "start": 920.64,
+        "end": 921.02,
+        "confidence": 0.32530543208122253
+      },
+      {
+        "text": " that.",
+        "start": 921.02,
+        "end": 921.02,
+        "confidence": 0.7832985520362854
+      },
+      {
+        "text": " Yeah,",
+        "start": 921.02,
+        "end": 921.02,
+        "confidence": 0.48258766531944275
+      },
+      {
+        "text": " the",
+        "start": 921.04,
+        "end": 921.1,
+        "confidence": 0.4231712222099304
+      },
+      {
+        "text": " SDF.",
+        "start": 921.1,
+        "end": 921.4,
+        "confidence": 0.9660341739654541
+      },
+      {
+        "text": " So",
+        "start": 921.42,
+        "end": 921.56,
+        "confidence": 0.9808889031410217
+      },
+      {
+        "text": " this",
+        "start": 921.56,
+        "end": 921.74,
+        "confidence": 0.951725959777832
+      },
+      {
+        "text": " was",
+        "start": 921.74,
+        "end": 921.88,
+        "confidence": 0.9584414958953857
+      },
+      {
+        "text": " a",
+        "start": 921.88,
+        "end": 922.12,
+        "confidence": 0.9868811368942261
+      },
+      {
+        "text": " U",
+        "start": 922.12,
+        "end": 922.96,
+        "confidence": 0.9062852263450623
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.7998
+  },
+  {
+    "start": 403.08,
+    "end": 417.2,
+    "text": "Sir, do you have video of Baghdadi's final moments? And also, are you partnering with the Kurds again on the ground? Can you explain how difficult this operation would have been if you didn't have troops or bases on the ground in Syria and in Iraq?",
+    "story_type": "question",
+    "hook": "Sir, do you have video of Baghdadi's final moments?",
+    "payoff": "Can you explain how difficult this operation would have been if you didn't have troops or bases on the ground in Syria and in Iraq?",
+    "editorial_score": 0.8451971428571428,
+    "virality_score": 0.5120714285714286,
+    "context_score": 0.9247142857142857,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.77; progression=0.65; payoff=0.89; density=1.00; fillers=0; standalone=1.00; repetition=0.09; coherence=1.00; completeness=1.00; audio_pace=0.94; silence=0.069; dead_air=0.00.",
+    "visual_potential": 0.6,
+    "words": [
+      {
+        "text": " Sir,",
+        "start": 403.08,
+        "end": 403.52,
+        "confidence": 0.8188509345054626
+      },
+      {
+        "text": " do",
+        "start": 403.6,
+        "end": 403.7,
+        "confidence": 0.9921093583106995
+      },
+      {
+        "text": " you",
+        "start": 403.7,
+        "end": 403.82,
+        "confidence": 0.9957516193389893
+      },
+      {
+        "text": " have",
+        "start": 403.82,
+        "end": 403.98,
+        "confidence": 0.9919446110725403
+      },
+      {
+        "text": " video",
+        "start": 403.98,
+        "end": 404.4,
+        "confidence": 0.8529240489006042
+      },
+      {
+        "text": " of",
+        "start": 404.4,
+        "end": 404.82,
+        "confidence": 0.9939466118812561
+      },
+      {
+        "text": " Baghdadi's",
+        "start": 404.82,
+        "end": 405.46,
+        "confidence": 0.9614742994308472
+      },
+      {
+        "text": " final",
+        "start": 405.46,
+        "end": 405.72,
+        "confidence": 0.994743824005127
+      },
+      {
+        "text": " moments?",
+        "start": 405.72,
+        "end": 406.18,
+        "confidence": 0.9960989952087402
+      },
+      {
+        "text": " And",
+        "start": 406.52,
+        "end": 406.52,
+        "confidence": 0.960494339466095
+      },
+      {
+        "text": " also,",
+        "start": 406.52,
+        "end": 406.9,
+        "confidence": 0.9570406675338745
+      },
+      {
+        "text": " are",
+        "start": 406.98,
+        "end": 407.12,
+        "confidence": 0.9988141059875488
+      },
+      {
+        "text": " you",
+        "start": 407.12,
+        "end": 407.32,
+        "confidence": 0.9976199269294739
+      },
+      {
+        "text": " partnering",
+        "start": 407.32,
+        "end": 407.72,
+        "confidence": 0.9990386962890625
+      },
+      {
+        "text": " with",
+        "start": 407.72,
+        "end": 408.08,
+        "confidence": 0.9988428354263306
+      },
+      {
+        "text": " the",
+        "start": 408.08,
+        "end": 408.28,
+        "confidence": 0.9955930113792419
+      },
+      {
+        "text": " Kurds",
+        "start": 408.28,
+        "end": 408.6,
+        "confidence": 0.9973423779010773
+      },
+      {
+        "text": " again",
+        "start": 408.6,
+        "end": 408.78,
+        "confidence": 0.6778655052185059
+      },
+      {
+        "text": " on",
+        "start": 408.78,
+        "end": 409.06,
+        "confidence": 0.9394774436950684
+      },
+      {
+        "text": " the",
+        "start": 409.06,
+        "end": 409.22,
+        "confidence": 0.9973883032798767
+      },
+      {
+        "text": " ground?",
+        "start": 409.22,
+        "end": 409.52,
+        "confidence": 0.9993688464164734
+      },
+      {
+        "text": " Can",
+        "start": 410.0,
+        "end": 410.14,
+        "confidence": 0.9943522214889526
+      },
+      {
+        "text": " you",
+        "start": 410.14,
+        "end": 410.22,
+        "confidence": 0.9994527697563171
+      },
+      {
+        "text": " explain",
+        "start": 410.22,
+        "end": 410.52,
+        "confidence": 0.9960136413574219
+      },
+      {
+        "text": " how",
+        "start": 410.52,
+        "end": 410.68,
+        "confidence": 0.9981671571731567
+      },
+      {
+        "text": " difficult",
+        "start": 410.68,
+        "end": 411.12,
+        "confidence": 0.9986555576324463
+      },
+      {
+        "text": " this",
+        "start": 411.12,
+        "end": 411.5,
+        "confidence": 0.9965144991874695
+      },
+      {
+        "text": " operation",
+        "start": 411.5,
+        "end": 412.14,
+        "confidence": 0.9961870312690735
+      },
+      {
+        "text": " would",
+        "start": 412.14,
+        "end": 412.4,
+        "confidence": 0.9977959394454956
+      },
+      {
+        "text": " have",
+        "start": 412.4,
+        "end": 412.54,
+        "confidence": 0.9481905102729797
+      },
+      {
+        "text": " been",
+        "start": 412.54,
+        "end": 412.72,
+        "confidence": 0.99908447265625
+      },
+      {
+        "text": " if",
+        "start": 412.72,
+        "end": 412.86,
+        "confidence": 0.9838887453079224
+      },
+      {
+        "text": " you",
+        "start": 412.86,
+        "end": 412.98,
+        "confidence": 0.9972406625747681
+      },
+      {
+        "text": " didn't",
+        "start": 412.98,
+        "end": 413.24,
+        "confidence": 0.9971091151237488
+      },
+      {
+        "text": " have",
+        "start": 413.24,
+        "end": 413.4,
+        "confidence": 0.9986129999160767
+      },
+      {
+        "text": " troops",
+        "start": 413.4,
+        "end": 413.65999999999997,
+        "confidence": 0.9963155388832092
+      },
+      {
+        "text": " or",
+        "start": 413.65999999999997,
+        "end": 413.9,
+        "confidence": 0.9979064464569092
+      },
+      {
+        "text": " bases",
+        "start": 413.9,
+        "end": 414.24,
+        "confidence": 0.9971868395805359
+      },
+      {
+        "text": " on",
+        "start": 414.24,
+        "end": 415.36,
+        "confidence": 0.9961186647415161
+      },
+      {
+        "text": " the",
+        "start": 415.36,
+        "end": 415.5,
+        "confidence": 0.9940658807754517
+      },
+      {
+        "text": " ground",
+        "start": 415.5,
+        "end": 415.74,
+        "confidence": 0.9996640682220459
+      },
+      {
+        "text": " in",
+        "start": 415.74,
+        "end": 416.1,
+        "confidence": 0.9505549073219299
+      },
+      {
+        "text": " Syria",
+        "start": 416.1,
+        "end": 416.48,
+        "confidence": 0.9995390176773071
+      },
+      {
+        "text": " and",
+        "start": 416.48,
+        "end": 416.8,
+        "confidence": 0.9946596026420593
+      },
+      {
+        "text": " in",
+        "start": 416.8,
+        "end": 416.96000000000004,
+        "confidence": 0.968471884727478
+      },
+      {
+        "text": " Iraq?",
+        "start": 416.96000000000004,
+        "end": 417.2,
+        "confidence": 0.9987034797668457
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.7959
+  }
+]

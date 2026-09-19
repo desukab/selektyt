@@ -1,0 +1,15 @@
+{
+  "source": "corpus/media/telugu-tutorial.webm",
+  "media_info": {},
+  "fingerprint": "ddf825af17024262d91a5c2729b41c0f2fc7ee4af4edb602bef19e0cb95a349f",
+  "model": "small",
+  "language": "te",
+  "renders": {
+    "01": {
+      "fingerprint": "ddf825af17024262d91a5c2729b41c0f2fc7ee4af4edb602bef19e0cb95a349f",
+      "selection_digest": "f30978d397fd5e42b34df0d6e6db9a0fa7cc0d512bf0612f022f4a58ac8f0ec1",
+      "facebook": "corpus/telugu-tutorial_run/project/facebook/01.mp4",
+      "shorts": "corpus/telugu-tutorial_run/project/shorts/01.mp4"
+    }
+  }
+}

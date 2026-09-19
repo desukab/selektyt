@@ -157,7 +157,7 @@ def _edl_media(text: str) -> list[str]:
     return [m.group(1) for m in re.finditer(r"^\s*\*\s*FROM CLIP:\s*(.+)$", text, re.M)]
 
 
-def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps: float) -> list[tuple[str, bool, str]]:
+def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps: float, project: Path) -> list[tuple[str, bool, str]]:
     text = edl.read_text(encoding="utf-8", errors="replace")
     findings: list[tuple[str, bool, str]] = []
     stem = edl.stem
@@ -239,21 +239,64 @@ def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps:
                          f"timeline {span:.3f}s vs render {got:.3f}s "
                          f"({delta / frame:.2f} frames)" if frame else "no fps"))
 
-    # The source in/out must agree with what the selection claimed it kept.
-    # ``01.edl`` is the first selection, ``02.edl`` the second, and so on.
+    # The source in/out must agree with what was actually kept. The selection
+    # is the wrong comparison: a selection is a span, while the EDL describes
+    # the retained intervals inside it — dead air at the head or tail is
+    # removed before export, so the first event legitimately starts after the
+    # selection start. On clip 01 of the OOI source the selection began at
+    # 112.471 s but its first retained interval at 113.36 s, and the check
+    # reported a 26-frame disagreement about an export that was correct.
+    # ``edit_plan.json`` is the record of what the render concatenated.
     index = int(re.sub(r"[^0-9]", "", stem) or "0") - 1
     if 0 <= index < len(selections):
         want = selections[index]
-        src_in = min(_tc_seconds(e["src_in"], fps) for e in all_edits)
-        src_out = max(_tc_seconds(e["src_out"], fps) for e in all_edits)
-        d_start = abs(src_in - want["start"]) / frame if frame else 0.0
-        d_end = abs(src_out - want["end"]) / frame if frame else 0.0
-        ok = d_start <= FRAME_TOLERANCE + 0.5 and d_end <= FRAME_TOLERANCE + 1.5
-        findings.append((f"{stem} source interval == selection", ok,
-                         f"src {src_in:.2f}-{src_out:.2f}s vs selection "
-                         f"{want['start']:.2f}-{want['end']:.2f}s "
-                         f"(start {d_start:.1f}f, end {d_end:.1f}f)"))
+        span = _retained_span(project, index)
+        if span is None:
+            # Without the plan the check can only fall back to the selection,
+            # and a multi-interval cut will report a false disagreement. Say
+            # that rather than passing silently.
+            findings.append((f"{stem} source interval == selection", True,
+                             "SKIP (edit_plan.json unreadable; selection span "
+                             "would give a false negative on a multi-interval cut)"))
+        else:
+            lo, hi = span
+            src_in = min(_tc_seconds(e["src_in"], fps) for e in all_edits)
+            src_out = max(_tc_seconds(e["src_out"], fps) for e in all_edits)
+            d_start = abs(src_in - lo) / frame if frame else 0.0
+            d_end = abs(src_out - hi) / frame if frame else 0.0
+            ok = d_start <= FRAME_TOLERANCE + 0.5 and d_end <= FRAME_TOLERANCE + 1.5
+            findings.append((f"{stem} source interval == selection", ok,
+                             f"src {src_in:.2f}-{src_out:.2f}s vs retained "
+                             f"{lo:.2f}-{hi:.2f}s (selection "
+                             f"{want['start']:.2f}-{want['end']:.2f}s; "
+                             f"start {d_start:.1f}f, end {d_end:.1f}f)"))
     return findings
+
+
+def _retained_span(project: Path, index: int) -> tuple[float, float] | None:
+    """The first and last source second the render actually kept for a clip.
+
+    The edit plan's intervals are the concatenation the render performed, so
+    its min and max are what the interchange file is obliged to describe.
+    Returns ``None`` when the plan is missing or malformed rather than
+    silently falling back to the selection span, which would turn a real
+    disagreement into a pass on every multi-interval cut.
+    """
+    path = project / "edit_plan.json"
+    if not path.is_file():
+        return None
+    try:
+        plan = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(plan, list) or not (0 <= index < len(plan)):
+        return None
+    intervals = plan[index].get("intervals") or []
+    if not intervals or not all(
+        isinstance(iv, (list, tuple)) and len(iv) == 2 for iv in intervals
+    ):
+        return None
+    return float(min(iv[0] for iv in intervals)), float(max(iv[1] for iv in intervals))
 
 
 def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float) -> list[tuple[str, bool, str]]:
@@ -385,7 +428,7 @@ def check_project(project: Path) -> tuple[bool, list[tuple[str, bool, str]]]:
     for edl in sorted(timeline.glob("*.edl")):
         renders = {"facebook": project / "facebook" / f"{edl.stem}.mp4",
                    "shorts": project / "shorts" / f"{edl.stem}.mp4"}
-        findings += _check_edl(edl, renders, selections, fps)
+        findings += _check_edl(edl, renders, selections, fps, project)
     for fcpxml in sorted(timeline.glob("*.fcpxml")):
         renders = {"facebook": project / "facebook" / f"{fcpxml.stem}.mp4",
                    "shorts": project / "shorts" / f"{fcpxml.stem}.mp4"}

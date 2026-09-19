@@ -1,0 +1,13 @@
+TITLE:   Now in its eighth year, OOI makes it possible to investigate short-lived events as well as multi-year trends.
+
+FCM: NON-DROP FRAME
+
+001  OOI_VERT V     C        00:00:41:11 00:00:48:10 00:00:00:00 00:00:06:29
+     M2   ooi-vertical.webm
+* FROM CLIP: corpus/media/ooi-vertical.webm
+001  OOI_VERT A     C        00:00:41:11 00:00:48:10 00:00:00:00 00:00:06:29
+
+002  OOI_VERT V     C        00:00:49:15 00:00:56:15 00:00:06:29 00:00:13:29
+     M2   ooi-vertical.webm
+* FROM CLIP: corpus/media/ooi-vertical.webm
+002  OOI_VERT A     C        00:00:49:15 00:00:56:15 00:00:06:29 00:00:13:29

@@ -1,0 +1,20 @@
+{
+  "total_candidates": 3,
+  "selected_count": 3,
+  "rejected_count": 0,
+  "context_guard_rejections": 0,
+  "truncated_by_limit": 0,
+  "avg_duration": 14.38,
+  "duration_distribution": {
+    "<15s": 2,
+    "15-30s": 1,
+    "30-45s": 0,
+    "45-55s": 0
+  },
+  "silence_pct": 0.0,
+  "filler_pct": 0.0,
+  "avg_words_per_second": 3.15,
+  "avg_hook_latency": null,
+  "payoff_presence_rate": 1.0,
+  "duplicate_overlap_rate": 0.0
+}

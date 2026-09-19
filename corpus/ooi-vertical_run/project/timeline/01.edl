@@ -1,0 +1,18 @@
+TITLE:   Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.
+
+FCM: NON-DROP FRAME
+
+001  OOI_VERT V     C        00:01:53:07 00:01:55:22 00:00:00:00 00:00:02:15
+     M2   ooi-vertical.webm
+* FROM CLIP: corpus/media/ooi-vertical.webm
+001  OOI_VERT A     C        00:01:53:07 00:01:55:22 00:00:00:00 00:00:02:15
+
+002  OOI_VERT V     C        00:01:56:09 00:02:05:17 00:00:02:15 00:00:11:23
+     M2   ooi-vertical.webm
+* FROM CLIP: corpus/media/ooi-vertical.webm
+002  OOI_VERT A     C        00:01:56:09 00:02:05:17 00:00:02:15 00:00:11:23
+
+003  OOI_VERT V     C        00:02:08:05 00:02:18:29 00:00:11:23 00:00:22:17
+     M2   ooi-vertical.webm
+* FROM CLIP: corpus/media/ooi-vertical.webm
+003  OOI_VERT A     C        00:02:08:05 00:02:18:29 00:00:11:23 00:00:22:17

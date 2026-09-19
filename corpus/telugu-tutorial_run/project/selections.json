@@ -1,0 +1,58 @@
+[
+  {
+    "start": 320.26,
+    "end": 332.06,
+    "text": "నినాన్త్డందాన ంపెర్లిస్లిని. పాత్న్న్న్త్త్నవై సస్కకన్సి. .",
+    "story_type": "story",
+    "hook": "నినాన్త్డందాన ంపెర్లిస్లిని.",
+    "payoff": "పాత్న్న్న్త్త్నవై సస్కకన్సి.",
+    "editorial_score": 0.3658882055084745,
+    "virality_score": 0.1362857142857143,
+    "context_score": 0.8031944444444447,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.30; progression=0.54; payoff=0.77; density=0.73; fillers=0; standalone=1.00; repetition=0.35; coherence=0.50; completeness=1.00; audio_pace=0.55; silence=0.463; dead_air=0.46.",
+    "visual_potential": 0.35,
+    "words": [
+      {
+        "text": " నినాన్త్డందాన",
+        "start": 320.26,
+        "end": 321.88,
+        "confidence": 0.4819595981389284
+      },
+      {
+        "text": " ంపెర్లిస్లిని.",
+        "start": 321.88,
+        "end": 322.94,
+        "confidence": 0.4296127313196107
+      },
+      {
+        "text": " పాత్న్న్న్త్త్నవై",
+        "start": 328.4,
+        "end": 329.8,
+        "confidence": 0.4923553256850157
+      },
+      {
+        "text": " సస్కకన్సి",
+        "start": 329.8,
+        "end": 331.2,
+        "confidence": 0.440006290366383
+      },
+      {
+        "text": " .",
+        "start": 331.2,
+        "end": 331.5,
+        "confidence": 0.12467414885759354
+      },
+      {
+        "text": " .",
+        "start": 331.5,
+        "end": 332.06,
+        "confidence": 0.006350869312882423
+      }
+    ],
+    "coherence_score": 0.5,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.4175
+  }
+]

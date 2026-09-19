@@ -1,0 +1,98 @@
+{
+  "language": "te",
+  "asr": {
+    "engine": "faster-whisper",
+    "requested_model": "small",
+    "model": "small",
+    "downgrade_reason": null,
+    "word_timestamps": "per-token",
+    "fallback_reason": null,
+    "chunks": 2,
+    "chunking": "5 min chunks (+15s overlap)",
+    "num_threads": 4
+  },
+  "segments": [
+    {
+      "start": 311.26,
+      "end": 320.26,
+      "text": "రిన్త్న న్స్హ్లుయిసి .",
+      "words": [
+        {
+          "text": " రిన్త్న",
+          "start": 311.26,
+          "end": 313.24,
+          "confidence": 0.4467532484481732
+        },
+        {
+          "text": " న్స్హ్లుయిసి",
+          "start": 313.24,
+          "end": 317.94,
+          "confidence": 0.4395707818772644
+        },
+        {
+          "text": " .",
+          "start": 317.94,
+          "end": 320.26,
+          "confidence": 0.013017968274652958
+        }
+      ]
+    },
+    {
+      "start": 320.26,
+      "end": 322.94,
+      "text": "నినాన్త్డందాన ంపెర్లిస్లిని.",
+      "words": [
+        {
+          "text": " నినాన్త్డందాన",
+          "start": 320.26,
+          "end": 321.88,
+          "confidence": 0.4819595981389284
+        },
+        {
+          "text": " ంపెర్లిస్లిని.",
+          "start": 321.88,
+          "end": 322.94,
+          "confidence": 0.4296127313196107
+        }
+      ]
+    },
+    {
+      "start": 328.4,
+      "end": 331.5,
+      "text": "పాత్న్న్న్త్త్నవై సస్కకన్సి .",
+      "words": [
+        {
+          "text": " పాత్న్న్న్త్త్నవై",
+          "start": 328.4,
+          "end": 329.8,
+          "confidence": 0.4923553256850157
+        },
+        {
+          "text": " సస్కకన్సి",
+          "start": 329.8,
+          "end": 331.2,
+          "confidence": 0.440006290366383
+        },
+        {
+          "text": " .",
+          "start": 331.2,
+          "end": 331.5,
+          "confidence": 0.12467414885759354
+        }
+      ]
+    },
+    {
+      "start": 331.5,
+      "end": 332.06,
+      "text": ".",
+      "words": [
+        {
+          "text": " .",
+          "start": 331.5,
+          "end": 332.06,
+          "confidence": 0.006350869312882423
+        }
+      ]
+    }
+  ]
+}

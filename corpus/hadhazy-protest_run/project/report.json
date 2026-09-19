@@ -1,0 +1,24 @@
+{
+  "source": "corpus/media/hadhazy-protest.webm",
+  "title": null,
+  "language": "hu",
+  "candidate_count": 211,
+  "selected_count": 3,
+  "rejected_by_context_guard": 0,
+  "truncated_by_limit": 0,
+  "rejection_reasons": {},
+  "outputs": {
+    "facebook": "corpus/hadhazy-protest_run/project/facebook",
+    "shorts": "corpus/hadhazy-protest_run/project/shorts"
+  },
+  "captions": "corpus/hadhazy-protest_run/project/captions",
+  "timeline": "corpus/hadhazy-protest_run/project/timeline",
+  "content_pack": "corpus/hadhazy-protest_run/project/content_pack.json",
+  "editorial_report": "corpus/hadhazy-protest_run/project/editorial_report.json",
+  "pacing_report": "corpus/hadhazy-protest_run/project/pacing_report.json",
+  "qa": "corpus/hadhazy-protest_run/project/qa.json",
+  "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
+  "audio": {
+    "enabled": false
+  }
+}

@@ -1,0 +1,13 @@
+TITLE:   At the end of the day, my expectation is that it'll be fewer than what we had before.
+
+FCM: NON-DROP FRAME
+
+001  PENTAGON V     C        00:15:09:03 00:15:15:03 00:00:00:00 00:00:06:00
+     M2   pentagon-esper-briefing.mp4
+* FROM CLIP: corpus/media/pentagon-esper-briefing.mp4
+001  PENTAGON A     C        00:15:09:03 00:15:15:03 00:00:00:00 00:00:06:00
+
+002  PENTAGON V     C        00:15:16:01 00:15:21:28 00:00:06:00 00:00:11:27
+     M2   pentagon-esper-briefing.mp4
+* FROM CLIP: corpus/media/pentagon-esper-briefing.mp4
+002  PENTAGON A     C        00:15:16:01 00:15:21:28 00:00:06:00 00:00:11:27

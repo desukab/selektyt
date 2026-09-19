@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="f1" name="FFVideoFormat" frameDuration="3960/120000s" />
+    <asset id="r1" name="hadhazy-protest.webm" start="0s" duration="15115320/120000s" hasVideo="1" videoSources="1" hasAudio="1" audioSources="1" audioChannels="2">
+      <media-rep kind="original-media" src="file:///home/azureuser/selektyt/corpus/media/hadhazy-protest.webm"/>
+    </asset>
+  </resources>
+  <library>
+    <event name="Igen, ilyen tehát ez valószínűleg ez is egy ilyen a szendékos kiszúrás volt, mert mi az jelenket tipp be, hogy ide kocsitkal, minőtől a vinyétkő belehetet volna">
+      <project name="Igen, ilyen tehát ez valószínűleg ez is egy ilyen a szendékos kiszúrás volt, mert mi az jelenket tipp be, hogy ide kocsitkal, minőtől a vinyétkő belehetet volna">
+        <sequence format="f1" tcFormat="NDF">
+          <spine>
+          <asset-clip ref="r1" offset="0s" start="8506080/120000s" duration="2463120/120000s" tcFormat="NDF" />
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>

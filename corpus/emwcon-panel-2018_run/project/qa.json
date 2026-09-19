@@ -1,0 +1,114 @@
+{
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "per_file": {
+    "corpus/emwcon-panel-2018_run/project/facebook/01.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 2444388,
+      "warnings": []
+    },
+    "corpus/emwcon-panel-2018_run/project/shorts/01.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 1277287,
+      "warnings": []
+    },
+    "corpus/emwcon-panel-2018_run/project/facebook/02.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 1867826,
+      "warnings": []
+    },
+    "corpus/emwcon-panel-2018_run/project/shorts/02.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 1023413,
+      "warnings": []
+    },
+    "corpus/emwcon-panel-2018_run/project/facebook/03.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 3199453,
+      "warnings": []
+    },
+    "corpus/emwcon-panel-2018_run/project/shorts/03.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 1838637,
+      "warnings": []
+    },
+    "corpus/emwcon-panel-2018_run/project/facebook/04.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 1213452,
+      "warnings": []
+    },
+    "corpus/emwcon-panel-2018_run/project/shorts/04.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 688685,
+      "warnings": []
+    },
+    "corpus/emwcon-panel-2018_run/project/facebook/05.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 2710285,
+      "warnings": []
+    },
+    "corpus/emwcon-panel-2018_run/project/shorts/05.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 1354321,
+      "warnings": []
+    }
+  },
+  "diversity": 0.24,
+  "source_coverage": {
+    "coverage_pct": 3.7,
+    "total_covered_sec": 124.96,
+    "overlaps": [],
+    "overlap_count": 0
+  },
+  "pacing": {
+    "total_candidates": 5,
+    "selected_count": 5,
+    "rejected_count": 0,
+    "context_guard_rejections": 0,
+    "truncated_by_limit": 5,
+    "avg_duration": 24.99,
+    "duration_distribution": {
+      "<15s": 1,
+      "15-30s": 3,
+      "30-45s": 1,
+      "45-55s": 0
+    },
+    "silence_pct": 3.0,
+    "filler_pct": 0.0,
+    "avg_words_per_second": 3.09,
+    "avg_hook_latency": 3.96,
+    "payoff_presence_rate": 1.0,
+    "duplicate_overlap_rate": 0.0
+  }
+}

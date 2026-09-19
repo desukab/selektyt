@@ -1,0 +1,59 @@
+[
+  {
+    "index": 1,
+    "source_start": 112.471,
+    "source_end": 139.13,
+    "source_duration": 26.659,
+    "intervals": [
+      [
+        113.36,
+        115.86
+      ],
+      [
+        116.4,
+        125.66
+      ],
+      [
+        128.31,
+        139.13
+      ]
+    ],
+    "edited_duration": 22.58,
+    "removed_seconds": 4.079,
+    "story_type": "story"
+  },
+  {
+    "index": 2,
+    "source_start": 41.42,
+    "source_end": 56.58,
+    "source_duration": 15.16,
+    "intervals": [
+      [
+        41.42,
+        48.38
+      ],
+      [
+        49.56,
+        56.58
+      ]
+    ],
+    "edited_duration": 13.98,
+    "removed_seconds": 1.18,
+    "story_type": "story"
+  },
+  {
+    "index": 3,
+    "source_start": 89.697,
+    "source_end": 101.843,
+    "source_duration": 12.146,
+    "intervals": [
+      [
+        90.67,
+        101.79
+      ]
+    ],
+    "edited_duration": 11.12,
+    "removed_seconds": 1.026,
+    "story_type": "insight"
+  }
+]

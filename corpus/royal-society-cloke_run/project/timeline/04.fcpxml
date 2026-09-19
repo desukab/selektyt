@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="f1" name="FFVideoFormat" frameDuration="1/25s" />
+    <asset id="r1" name="royal-society-cloke.webm" start="0s" duration="15650/25s" hasVideo="1" videoSources="1" hasAudio="1" audioSources="1" audioChannels="2">
+      <media-rep kind="original-media" src="file:///home/azureuser/selektyt/corpus/media/royal-society-cloke.webm"/>
+    </asset>
+  </resources>
+  <library>
+    <event name="My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the pa">
+      <project name="My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the pa">
+        <sequence format="f1" tcFormat="NDF">
+          <spine>
+          <asset-clip ref="r1" offset="0s" start="308/25s" duration="508/25s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="508/25s" start="829/25s" duration="148/25s" tcFormat="NDF" />
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>

@@ -1,0 +1,21 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.71,Default,,0,0,0,,{\k44}Sir, {\k10}do {\k12}you {\k16}{\c&H00D7FF&\b1}have{\c&HFFFFFF&\b0} {\k42}{\c&H00D7FF&\b1}video{\c&HFFFFFF&\b0} {\k42}of
+Dialogue: 0,0:00:01.74,0:00:03.22,Default,,0,0,0,,{\k64}Baghdadi's {\k26}final {\k46}{\c&H00D7FF&\b1}moments?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:03.44,0:00:04.97,Default,,0,0,0,,{\k1}And {\k38}also, {\k14}are {\k20}you {\k40}{\c&H00D7FF&\b1}partnering{\c&HFFFFFF&\b0} {\k36}{\c&H00D7FF&\b1}with{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:05.00,0:00:06.56,Default,,0,0,0,,{\k20}the {\k32}Kurds {\k18}{\c&H00D7FF&\b1}again{\c&HFFFFFF&\b0} {\k28}on {\k16}the {\k30}{\c&H00D7FF&\b1}ground?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:06.92,0:00:08.39,Default,,0,0,0,,{\k14}Can {\k8}you {\k30}{\c&H00D7FF&\b1}explain{\c&HFFFFFF&\b0} {\k16}how {\k44}{\c&H00D7FF&\b1}difficult{\c&HFFFFFF&\b0} {\k38}this
+Dialogue: 0,0:00:08.42,0:00:09.87,Default,,0,0,0,,{\k64}{\c&H00D7FF&\b1}operation{\c&HFFFFFF&\b0} {\k26}{\c&H00D7FF&\b1}would{\c&HFFFFFF&\b0} {\k14}have {\k18}been {\k14}if {\k12}you
+Dialogue: 0,0:00:09.90,0:00:12.25,Default,,0,0,0,,{\k26}didn't {\k16}have {\k26}{\c&H00D7FF&\b1}troops{\c&HFFFFFF&\b0} {\k24}or {\k34}{\c&H00D7FF&\b1}bases{\c&HFFFFFF&\b0} {\k112}on
+Dialogue: 0,0:00:12.28,0:00:13.85,Default,,0,0,0,,{\k14}the {\k24}{\c&H00D7FF&\b1}ground{\c&HFFFFFF&\b0} {\k36}in {\k38}{\c&H00D7FF&\b1}Syria{\c&HFFFFFF&\b0} {\k32}and {\k16}in
+Dialogue: 0,0:00:13.88,0:00:14.12,Default,,0,0,0,,{\k24}{\c&H00D7FF&\b1}Iraq?{\c&HFFFFFF&\b0}

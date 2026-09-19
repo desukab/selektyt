@@ -1,0 +1,26 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.04,Default,,0,0,0,,{\k24}Why {\k10}do {\k6}you {\k22}deserve {\k30}{\c&H00D7FF&\b1}one?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:01.16,0:00:02.37,Default,,0,0,0,,{\k46}And {\k12}that {\k10}{\c&H00D7FF&\b1}goes{\c&HFFFFFF&\b0} {\k20}{\c&H00D7FF&\b1}back{\c&HFFFFFF&\b0} {\k14}to {\k22}the
+Dialogue: 0,0:00:02.40,0:00:03.79,Default,,0,0,0,,{\k36}emerging {\k44}{\c&H00D7FF&\b1}conversation{\c&HFFFFFF&\b0} {\k44}we {\k18}had
+Dialogue: 0,0:00:03.82,0:00:05.53,Default,,0,0,0,,{\k22}{\c&H00D7FF&\b1}earlier{\c&HFFFFFF&\b0} {\k42}was, {\k1}at {\k60}{\c&H00D7FF&\b1}first,{\c&HFFFFFF&\b0} {\k2}we {\k10}were
+Dialogue: 0,0:00:05.56,0:00:07.27,Default,,0,0,0,,{\k20}{\c&H00D7FF&\b1}handing{\c&HFFFFFF&\b0} {\k22}out {\k42}wikis {\k38}to {\k26}{\c&H00D7FF&\b1}everyone,{\c&HFFFFFF&\b0} {\k14}but
+Dialogue: 0,0:00:07.30,0:00:09.01,Default,,0,0,0,,{\k16}then {\k18}we {\k54}started {\k40}{\c&H00D7FF&\b1}realizing{\c&HFFFFFF&\b0} {\k46}that
+Dialogue: 0,0:00:09.04,0:00:10.60,Default,,0,0,0,,{\k32}probably {\k22}wasn't {\k14}the {\k22}best {\k54}{\c&H00D7FF&\b1}approach.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:10.86,0:00:13.43,Default,,0,0,0,,{\k1}So {\k114}{\c&H00D7FF&\b1}maybe{\c&HFFFFFF&\b0} {\k20}this {\k24}isn't {\k22}the {\k80}{\c&H00D7FF&\b1}answer{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:13.46,0:00:15.61,Default,,0,0,0,,{\k18}you {\k8}were {\k16}{\c&H00D7FF&\b1}looking{\c&HFFFFFF&\b0} {\k24}for, {\k12}but {\k130}{\c&H00D7FF&\b1}really{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:15.64,0:00:18.21,Default,,0,0,0,,{\k22}think {\k30}{\c&H00D7FF&\b1}about{\c&HFFFFFF&\b0} {\k116}the {\k30}{\c&H00D7FF&\b1}structure{\c&HFFFFFF&\b0} {\k38}of {\k24}all
+Dialogue: 0,0:00:18.24,0:00:20.39,Default,,0,0,0,,{\k12}of {\k18}{\c&H00D7FF&\b1}them{\c&HFFFFFF&\b0} {\k26}{\c&H00D7FF&\b1}together{\c&HFFFFFF&\b0} {\k36}and {\k34}how {\k92}you
+Dialogue: 0,0:00:20.42,0:00:22.23,Default,,0,0,0,,{\k28}really {\k28}want {\k32}your {\k28}whole {\k68}{\c&H00D7FF&\b1}knowledge{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:22.26,0:00:24.19,Default,,0,0,0,,{\k32}{\c&H00D7FF&\b1}corpus{\c&HFFFFFF&\b0} {\k20}to {\k12}be {\k34}{\c&H00D7FF&\b1}organized{\c&HFFFFFF&\b0} {\k60}and {\k38}split.
+Dialogue: 0,0:00:24.22,0:00:24.36,Default,,0,0,0,,{\k14}{\c&H00D7FF&\b1}it?{\c&HFFFFFF&\b0}

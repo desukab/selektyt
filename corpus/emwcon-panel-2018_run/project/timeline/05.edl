@@ -1,0 +1,13 @@
+TITLE:   Yeah, I think I agree with everything already said.
+
+FCM: NON-DROP FRAME
+
+001  EMWCON_P V     C        00:03:25:19 00:03:44:27 00:00:00:00 00:00:19:08
+     M2   emwcon-panel-2018.webm
+* FROM CLIP: corpus/media/emwcon-panel-2018.webm
+001  EMWCON_P A     C        00:03:25:19 00:03:44:27 00:00:00:00 00:00:19:08
+
+002  EMWCON_P V     C        00:03:46:10 00:03:54:08 00:00:19:08 00:00:27:06
+     M2   emwcon-panel-2018.webm
+* FROM CLIP: corpus/media/emwcon-panel-2018.webm
+002  EMWCON_P A     C        00:03:46:10 00:03:54:08 00:00:19:08 00:00:27:06

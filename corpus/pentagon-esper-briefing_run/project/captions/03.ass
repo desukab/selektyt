@@ -1,0 +1,27 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.57,Default,,0,0,0,,{\k40}Can {\k20}you {\k18}in {\k26}any {\k16}{\c&H00D7FF&\b1}way{\c&HFFFFFF&\b0} {\k40}{\c&H00D7FF&\b1}elaborate{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:01.60,0:00:03.37,Default,,0,0,0,,{\k32}on {\k50}what's {\k12}been {\k48}{\c&H00D7FF&\b1}collected,{\c&HFFFFFF&\b0} {\k18}what's
+Dialogue: 0,0:00:03.40,0:00:05.53,Default,,0,0,0,,{\k18}being {\k20}{\c&H00D7FF&\b1}looked{\c&HFFFFFF&\b0} {\k28}{\c&H00D7FF&\b1}through{\c&HFFFFFF&\b0} {\k24}now, {\k32}and {\k28}what
+Dialogue: 0,0:00:05.56,0:00:06.16,Default,,0,0,0,,{\k14}that {\k14}might {\k20}{\c&H00D7FF&\b1}mean?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:06.22,0:00:07.39,Default,,0,0,0,,{\k8}We {\k26}{\c&H00D7FF&\b1}best{\c&HFFFFFF&\b0} {\k20}not {\k16}do {\k16}for {\k34}{\c&H00D7FF&\b1}operational{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:07.42,0:00:08.99,Default,,0,0,0,,{\k34}reasons, {\k32}because {\k24}that {\k70}{\c&H00D7FF&\b1}information{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:09.02,0:00:11.63,Default,,0,0,0,,{\k64}needs {\k14}to {\k10}be {\k32}{\c&H00D7FF&\b1}exploited{\c&HFFFFFF&\b0} {\k42}{\c&H00D7FF&\b1}properly{\c&HFFFFFF&\b0} {\k48}for
+Dialogue: 0,0:00:11.66,0:00:12.63,Default,,0,0,0,,{\k18}any {\k24}{\c&H00D7FF&\b1}follow{\c&HFFFFFF&\b0} {\k12}-on {\k20}{\c&H00D7FF&\b1}missions{\c&HFFFFFF&\b0} {\k18}that {\k8}we
+Dialogue: 0,0:00:12.66,0:00:13.58,Default,,0,0,0,,{\k14}may {\k22}{\c&H00D7FF&\b1}choose{\c&HFFFFFF&\b0} {\k24}to {\k20}do.
+Dialogue: 0,0:00:13.72,0:00:14.63,Default,,0,0,0,,{\k24}And {\k14}I {\k10}{\c&H00D7FF&\b1}think{\c&HFFFFFF&\b0} {\k18}the {\k4}– {\k24}{\c&H00D7FF&\b1}what{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:14.66,0:00:16.51,Default,,0,0,0,,{\k26}next {\k26}is {\k48}we {\k40}{\c&H00D7FF&\b1}will{\c&HFFFFFF&\b0} {\k30}{\c&H00D7FF&\b1}continue{\c&HFFFFFF&\b0} {\k18}the
+Dialogue: 0,0:00:16.54,0:00:17.87,Default,,0,0,0,,{\k24}{\c&H00D7FF&\b1}mission,{\c&HFFFFFF&\b0} {\k12}and {\k12}the {\k22}{\c&H00D7FF&\b1}mission{\c&HFFFFFF&\b0} {\k24}is {\k26}to
+Dialogue: 0,0:00:17.90,0:00:19.47,Default,,0,0,0,,{\k36}ensure {\k14}the {\k32}{\c&H00D7FF&\b1}enduring{\c&HFFFFFF&\b0} {\k26}defeat {\k24}of {\k28}{\c&H00D7FF&\b1}ISIS{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:19.50,0:00:21.73,Default,,0,0,0,,{\k90}in {\k12}the {\k24}{\c&H00D7FF&\b1}region,{\c&HFFFFFF&\b0} {\k26}and {\k20}{\c&H00D7FF&\b1}that's{\c&HFFFFFF&\b0} {\k12}our
+Dialogue: 0,0:00:21.76,0:00:21.96,Default,,0,0,0,,{\k20}{\c&H00D7FF&\b1}mission.{\c&HFFFFFF&\b0}

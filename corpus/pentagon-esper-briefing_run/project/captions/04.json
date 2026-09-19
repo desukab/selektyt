@@ -1,0 +1,89 @@
+{
+  "style": "minimal",
+  "blocks": [
+    {
+      "start": 910.0,
+      "end": 911.0,
+      "text": "At the end of the day,",
+      "emphasis": [
+        " end",
+        " day,"
+      ]
+    },
+    {
+      "start": 911.06,
+      "end": 913.76,
+      "text": "my expectation is that it'll be",
+      "emphasis": [
+        " expectation",
+        " it'll"
+      ]
+    },
+    {
+      "start": 913.76,
+      "end": 914.76,
+      "text": "fewer than what we had before.",
+      "emphasis": [
+        " fewer",
+        " before."
+      ]
+    },
+    {
+      "start": 914.76,
+      "end": 915.84,
+      "text": "and they will be going home.",
+      "emphasis": [
+        " going",
+        " home."
+      ]
+    },
+    {
+      "start": 917.0,
+      "end": 918.22,
+      "text": "And help me remind me of",
+      "emphasis": [
+        " help",
+        " remind"
+      ]
+    },
+    {
+      "start": 918.22,
+      "end": 918.72,
+      "text": "the first question.",
+      "emphasis": [
+        " question."
+      ]
+    },
+    {
+      "start": 918.88,
+      "end": 920.06,
+      "text": "The first question was about the",
+      "emphasis": [
+        " question",
+        " about"
+      ]
+    },
+    {
+      "start": 920.06,
+      "end": 921.02,
+      "text": "SDF commander saying that.",
+      "emphasis": [
+        " commander"
+      ]
+    },
+    {
+      "start": 921.02,
+      "end": 921.4,
+      "text": "Yeah, the SDF.",
+      "emphasis": [
+        " SDF."
+      ]
+    },
+    {
+      "start": 921.42,
+      "end": 922.96,
+      "text": "So this was a U",
+      "emphasis": []
+    }
+  ]
+}

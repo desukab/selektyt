@@ -1,0 +1,544 @@
+{
+  "index": 2,
+  "start": 600.0,
+  "end": 626.01,
+  "decode_start": 585.0,
+  "status": "ok",
+  "language": "en",
+  "segments": [
+    {
+      "start": 601.5,
+      "end": 607.38,
+      "text": "floodwater coming through your house. It really picks the vulnerable people as well. So that's",
+      "words": [
+        {
+          "text": " floodwater",
+          "start": 601.5,
+          "end": 602.2,
+          "confidence": 0.6037825644016266
+        },
+        {
+          "text": " coming",
+          "start": 602.2,
+          "end": 602.46,
+          "confidence": 0.9969702959060669
+        },
+        {
+          "text": " through",
+          "start": 602.46,
+          "end": 602.66,
+          "confidence": 0.9978247880935669
+        },
+        {
+          "text": " your",
+          "start": 602.66,
+          "end": 602.82,
+          "confidence": 0.9983910322189331
+        },
+        {
+          "text": " house.",
+          "start": 602.82,
+          "end": 603.1,
+          "confidence": 0.9976880550384521
+        },
+        {
+          "text": " It",
+          "start": 603.58,
+          "end": 603.66,
+          "confidence": 0.8313410878181458
+        },
+        {
+          "text": " really",
+          "start": 603.66,
+          "end": 604.38,
+          "confidence": 0.933701753616333
+        },
+        {
+          "text": " picks",
+          "start": 604.38,
+          "end": 604.76,
+          "confidence": 0.919930100440979
+        },
+        {
+          "text": " the",
+          "start": 604.76,
+          "end": 604.96,
+          "confidence": 0.9708977341651917
+        },
+        {
+          "text": " vulnerable",
+          "start": 604.96,
+          "end": 605.14,
+          "confidence": 0.987986147403717
+        },
+        {
+          "text": " people",
+          "start": 605.14,
+          "end": 605.58,
+          "confidence": 0.999188244342804
+        },
+        {
+          "text": " as",
+          "start": 605.58,
+          "end": 605.8,
+          "confidence": 0.9742242097854614
+        },
+        {
+          "text": " well.",
+          "start": 605.8,
+          "end": 606.04,
+          "confidence": 0.9994913339614868
+        },
+        {
+          "text": " So",
+          "start": 606.64,
+          "end": 606.94,
+          "confidence": 0.9519399404525757
+        },
+        {
+          "text": " that's",
+          "start": 606.94,
+          "end": 607.38,
+          "confidence": 0.9834513068199158
+        }
+      ]
+    },
+    {
+      "start": 607.38,
+      "end": 611.2,
+      "text": "an obvious example of where climate and health are so intricately linked.",
+      "words": [
+        {
+          "text": " an",
+          "start": 607.38,
+          "end": 607.48,
+          "confidence": 0.9751085042953491
+        },
+        {
+          "text": " obvious",
+          "start": 607.48,
+          "end": 607.8,
+          "confidence": 0.9991289973258972
+        },
+        {
+          "text": " example",
+          "start": 607.8,
+          "end": 608.32,
+          "confidence": 0.9990777969360352
+        },
+        {
+          "text": " of",
+          "start": 608.32,
+          "end": 608.58,
+          "confidence": 0.9230414628982544
+        },
+        {
+          "text": " where",
+          "start": 608.58,
+          "end": 608.76,
+          "confidence": 0.9868142604827881
+        },
+        {
+          "text": " climate",
+          "start": 608.76,
+          "end": 609.1,
+          "confidence": 0.995329737663269
+        },
+        {
+          "text": " and",
+          "start": 609.1,
+          "end": 609.38,
+          "confidence": 0.9968433380126953
+        },
+        {
+          "text": " health",
+          "start": 609.38,
+          "end": 609.64,
+          "confidence": 0.9967039227485657
+        },
+        {
+          "text": " are",
+          "start": 609.64,
+          "end": 609.88,
+          "confidence": 0.9911386370658875
+        },
+        {
+          "text": " so",
+          "start": 609.88,
+          "end": 610.32,
+          "confidence": 0.9934173822402954
+        },
+        {
+          "text": " intricately",
+          "start": 610.32,
+          "end": 610.9,
+          "confidence": 0.9703490734100342
+        },
+        {
+          "text": " linked.",
+          "start": 610.9,
+          "end": 611.2,
+          "confidence": 0.9988943934440613
+        }
+      ]
+    },
+    {
+      "start": 611.2,
+      "end": 616.16,
+      "text": "Thank you so much for chatting to me. It's been fascinating to hear about really what's",
+      "words": [
+        {
+          "text": " Thank",
+          "start": 611.2,
+          "end": 611.86,
+          "confidence": 0.7235351800918579
+        },
+        {
+          "text": " you",
+          "start": 611.86,
+          "end": 612.08,
+          "confidence": 0.9966359734535217
+        },
+        {
+          "text": " so",
+          "start": 612.08,
+          "end": 612.24,
+          "confidence": 0.9870228171348572
+        },
+        {
+          "text": " much",
+          "start": 612.24,
+          "end": 612.46,
+          "confidence": 0.9988974332809448
+        },
+        {
+          "text": " for",
+          "start": 612.46,
+          "end": 612.74,
+          "confidence": 0.9976882934570312
+        },
+        {
+          "text": " chatting",
+          "start": 612.74,
+          "end": 613.02,
+          "confidence": 0.9954748749732971
+        },
+        {
+          "text": " to",
+          "start": 613.02,
+          "end": 613.24,
+          "confidence": 0.9733512997627258
+        },
+        {
+          "text": " me.",
+          "start": 613.24,
+          "end": 613.34,
+          "confidence": 0.9988377690315247
+        },
+        {
+          "text": " It's",
+          "start": 613.42,
+          "end": 613.52,
+          "confidence": 0.9570349752902985
+        },
+        {
+          "text": " been",
+          "start": 613.52,
+          "end": 613.74,
+          "confidence": 0.9960339665412903
+        },
+        {
+          "text": " fascinating",
+          "start": 613.74,
+          "end": 614.44,
+          "confidence": 0.9956796765327454
+        },
+        {
+          "text": " to",
+          "start": 614.44,
+          "end": 614.76,
+          "confidence": 0.9986109733581543
+        },
+        {
+          "text": " hear",
+          "start": 614.76,
+          "end": 614.96,
+          "confidence": 0.998518168926239
+        },
+        {
+          "text": " about",
+          "start": 614.96,
+          "end": 615.3,
+          "confidence": 0.986201822757721
+        },
+        {
+          "text": " really",
+          "start": 615.3,
+          "end": 615.94,
+          "confidence": 0.8656868934631348
+        },
+        {
+          "text": " what's",
+          "start": 615.94,
+          "end": 616.16,
+          "confidence": 0.9571494460105896
+        }
+      ]
+    },
+    {
+      "start": 616.16,
+      "end": 620.78,
+      "text": "a major problem worldwide, but also, you know, like you said, the psychology of the family",
+      "words": [
+        {
+          "text": " a",
+          "start": 616.16,
+          "end": 616.22,
+          "confidence": 0.9644421935081482
+        },
+        {
+          "text": " major",
+          "start": 616.22,
+          "end": 616.42,
+          "confidence": 0.99620121717453
+        },
+        {
+          "text": " problem",
+          "start": 616.42,
+          "end": 616.88,
+          "confidence": 0.9964597821235657
+        },
+        {
+          "text": " worldwide,",
+          "start": 616.88,
+          "end": 617.6,
+          "confidence": 0.9034495949745178
+        },
+        {
+          "text": " but",
+          "start": 618.22,
+          "end": 618.34,
+          "confidence": 0.997514009475708
+        },
+        {
+          "text": " also,",
+          "start": 618.34,
+          "end": 618.7,
+          "confidence": 0.9932290315628052
+        },
+        {
+          "text": " you",
+          "start": 618.76,
+          "end": 618.94,
+          "confidence": 0.6461234092712402
+        },
+        {
+          "text": " know,",
+          "start": 618.94,
+          "end": 619.04,
+          "confidence": 0.9993947744369507
+        },
+        {
+          "text": " like",
+          "start": 619.08,
+          "end": 619.14,
+          "confidence": 0.9854339361190796
+        },
+        {
+          "text": " you",
+          "start": 619.14,
+          "end": 619.24,
+          "confidence": 0.9883272051811218
+        },
+        {
+          "text": " said,",
+          "start": 619.24,
+          "end": 619.44,
+          "confidence": 0.9981681108474731
+        },
+        {
+          "text": " the",
+          "start": 619.54,
+          "end": 619.6,
+          "confidence": 0.9978466033935547
+        },
+        {
+          "text": " psychology",
+          "start": 619.6,
+          "end": 619.94,
+          "confidence": 0.9977232813835144
+        },
+        {
+          "text": " of",
+          "start": 619.94,
+          "end": 620.26,
+          "confidence": 0.9978081583976746
+        },
+        {
+          "text": " the",
+          "start": 620.26,
+          "end": 620.48,
+          "confidence": 0.9976539015769958
+        },
+        {
+          "text": " family",
+          "start": 620.48,
+          "end": 620.78,
+          "confidence": 0.9992690682411194
+        }
+      ]
+    },
+    {
+      "start": 620.78,
+      "end": 624.7,
+      "text": "or the person or the community that then has to respond to that on a local level. So I",
+      "words": [
+        {
+          "text": " or",
+          "start": 620.78,
+          "end": 620.9,
+          "confidence": 0.9628392457962036
+        },
+        {
+          "text": " the",
+          "start": 620.9,
+          "end": 620.98,
+          "confidence": 0.9949064254760742
+        },
+        {
+          "text": " person",
+          "start": 620.98,
+          "end": 621.2,
+          "confidence": 0.5850920677185059
+        },
+        {
+          "text": " or",
+          "start": 621.2,
+          "end": 621.36,
+          "confidence": 0.714542031288147
+        },
+        {
+          "text": " the",
+          "start": 621.36,
+          "end": 621.42,
+          "confidence": 0.981829047203064
+        },
+        {
+          "text": " community",
+          "start": 621.42,
+          "end": 621.74,
+          "confidence": 0.9995303153991699
+        },
+        {
+          "text": " that",
+          "start": 621.74,
+          "end": 622.04,
+          "confidence": 0.9699330925941467
+        },
+        {
+          "text": " then",
+          "start": 622.04,
+          "end": 622.28,
+          "confidence": 0.9799741506576538
+        },
+        {
+          "text": " has",
+          "start": 622.28,
+          "end": 622.44,
+          "confidence": 0.9982296824455261
+        },
+        {
+          "text": " to",
+          "start": 622.44,
+          "end": 622.56,
+          "confidence": 0.9994964599609375
+        },
+        {
+          "text": " respond",
+          "start": 622.56,
+          "end": 622.88,
+          "confidence": 0.9993643164634705
+        },
+        {
+          "text": " to",
+          "start": 622.88,
+          "end": 623.16,
+          "confidence": 0.998637855052948
+        },
+        {
+          "text": " that",
+          "start": 623.16,
+          "end": 623.28,
+          "confidence": 0.9982979893684387
+        },
+        {
+          "text": " on",
+          "start": 623.28,
+          "end": 623.4,
+          "confidence": 0.9973068237304688
+        },
+        {
+          "text": " a",
+          "start": 623.4,
+          "end": 623.48,
+          "confidence": 0.9925212264060974
+        },
+        {
+          "text": " local",
+          "start": 623.48,
+          "end": 623.66,
+          "confidence": 0.9990344047546387
+        },
+        {
+          "text": " level.",
+          "start": 623.66,
+          "end": 624.0,
+          "confidence": 0.9996364116668701
+        },
+        {
+          "text": " So",
+          "start": 624.42,
+          "end": 624.64,
+          "confidence": 0.9731783866882324
+        },
+        {
+          "text": " I",
+          "start": 624.64,
+          "end": 624.7,
+          "confidence": 0.5874239802360535
+        }
+      ]
+    },
+    {
+      "start": 624.7,
+      "end": 625.6,
+      "text": "really appreciate your time.",
+      "words": [
+        {
+          "text": " really",
+          "start": 624.7,
+          "end": 624.82,
+          "confidence": 0.9960467219352722
+        },
+        {
+          "text": " appreciate",
+          "start": 624.82,
+          "end": 625.12,
+          "confidence": 0.9992638230323792
+        },
+        {
+          "text": " your",
+          "start": 625.12,
+          "end": 625.32,
+          "confidence": 0.9980515241622925
+        },
+        {
+          "text": " time.",
+          "start": 625.32,
+          "end": 625.6,
+          "confidence": 0.9995467066764832
+        }
+      ]
+    }
+  ]
+}

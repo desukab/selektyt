@@ -1,0 +1,83 @@
+1
+0:00:00,000 --> 0:00:01,367
+The first Wiki that I worked
+
+2
+0:00:01,400 --> 0:00:04,467
+on called Robopedia at MITRE was
+
+3
+0:00:04,500 --> 0:00:06,227
+the robotics Wiki that we used
+
+4
+0:00:06,260 --> 0:00:07,547
+to document everything within the
+
+5
+0:00:07,580 --> 0:00:09,127
+robotics program I was working on.
+
+6
+0:00:09,160 --> 0:00:12,247
+and the lead of that program
+
+7
+0:00:12,280 --> 0:00:14,667
+said it didn't happen if it's
+
+8
+0:00:14,700 --> 0:00:15,720
+not in the wiki.
+
+9
+0:00:16,180 --> 0:00:18,560
+And so absolutely every meeting,
+
+10
+0:00:18,720 --> 0:00:20,507
+every interaction between any
+
+11
+0:00:20,540 --> 0:00:22,440
+people, any piece of hardware,
+
+12
+0:00:22,500 --> 0:00:25,247
+equipment, any software had to get
+
+13
+0:00:25,280 --> 0:00:26,740
+documented in the wiki.
+
+14
+0:00:27,080 --> 0:00:28,007
+And if you tried to tell
+
+15
+0:00:28,040 --> 0:00:29,747
+him something, his first question
+
+16
+0:00:29,780 --> 0:00:30,840
+was, is it in the wiki?
+
+17
+0:00:31,220 --> 0:00:32,047
+And if it wasn't in the
+
+18
+0:00:32,080 --> 0:00:32,807
+wiki, he didn't want to hear
+
+19
+0:00:32,840 --> 0:00:33,847
+about it until after it was.
+
+20
+0:00:33,880 --> 0:00:35,707
+And that was absolutely critical
+
+21
+0:00:35,740 --> 0:00:36,960
+to getting adoption.

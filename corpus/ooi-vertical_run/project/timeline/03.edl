@@ -1,0 +1,8 @@
+TITLE:   An additional cable array wires a region of the northeast 
+
+FCM: NON-DROP FRAME
+
+001  OOI_VERT V     C        00:01:30:17 00:01:41:20 00:00:00:00 00:00:11:03
+     M2   ooi-vertical.webm
+* FROM CLIP: corpus/media/ooi-vertical.webm
+001  OOI_VERT A     C        00:01:30:17 00:01:41:20 00:00:00:00 00:00:11:03

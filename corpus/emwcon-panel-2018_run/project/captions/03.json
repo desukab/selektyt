@@ -1,0 +1,184 @@
+{
+  "style": "minimal",
+  "blocks": [
+    {
+      "start": 719.3,
+      "end": 720.7,
+      "text": "The first Wiki that I worked",
+      "emphasis": [
+        " first",
+        " worked"
+      ]
+    },
+    {
+      "start": 720.7,
+      "end": 723.8,
+      "text": "on called Robopedia at MITRE was",
+      "emphasis": [
+        " Robopedia",
+        " MITRE"
+      ]
+    },
+    {
+      "start": 723.8,
+      "end": 725.56,
+      "text": "the robotics Wiki that we used",
+      "emphasis": [
+        " robotics",
+        " used"
+      ]
+    },
+    {
+      "start": 725.56,
+      "end": 726.88,
+      "text": "to document everything within the",
+      "emphasis": [
+        " everything"
+      ]
+    },
+    {
+      "start": 726.88,
+      "end": 728.46,
+      "text": "robotics program I was working on.",
+      "emphasis": [
+        " robotics",
+        " working"
+      ]
+    },
+    {
+      "start": 728.46,
+      "end": 731.58,
+      "text": "and the lead of that program",
+      "emphasis": [
+        " lead",
+        " program"
+      ]
+    },
+    {
+      "start": 731.58,
+      "end": 734.0,
+      "text": "said it didn't happen if it's",
+      "emphasis": [
+        " didn't",
+        " happen"
+      ]
+    },
+    {
+      "start": 734.0,
+      "end": 734.9,
+      "text": "not in the wiki.",
+      "emphasis": [
+        " wiki."
+      ]
+    },
+    {
+      "start": 735.48,
+      "end": 737.74,
+      "text": "And so absolutely every meeting,",
+      "emphasis": [
+        " absolutely"
+      ]
+    },
+    {
+      "start": 738.02,
+      "end": 739.84,
+      "text": "every interaction between any",
+      "emphasis": [
+        " interaction"
+      ]
+    },
+    {
+      "start": 739.84,
+      "end": 741.62,
+      "text": "people, any piece of hardware,",
+      "emphasis": [
+        " hardware,"
+      ]
+    },
+    {
+      "start": 741.8,
+      "end": 744.58,
+      "text": "equipment, any software had to get",
+      "emphasis": [
+        " equipment,",
+        " software"
+      ]
+    },
+    {
+      "start": 744.58,
+      "end": 745.92,
+      "text": "documented in the wiki.",
+      "emphasis": [
+        " documented"
+      ]
+    },
+    {
+      "start": 746.38,
+      "end": 747.34,
+      "text": "And if you tried to tell",
+      "emphasis": [
+        " tried",
+        " tell"
+      ]
+    },
+    {
+      "start": 747.34,
+      "end": 749.08,
+      "text": "him something, his first question",
+      "emphasis": [
+        " something,"
+      ]
+    },
+    {
+      "start": 749.08,
+      "end": 750.02,
+      "text": "was, is it in the wiki?",
+      "emphasis": [
+        " was,",
+        " wiki?"
+      ]
+    },
+    {
+      "start": 750.52,
+      "end": 751.38,
+      "text": "And if it wasn't in the",
+      "emphasis": [
+        " wasn't"
+      ]
+    },
+    {
+      "start": 751.38,
+      "end": 752.14,
+      "text": "wiki, he didn't want to hear",
+      "emphasis": [
+        " didn't",
+        " hear"
+      ]
+    },
+    {
+      "start": 752.14,
+      "end": 753.18,
+      "text": "about it until after it was.",
+      "emphasis": [
+        " until",
+        " after"
+      ]
+    },
+    {
+      "start": 753.18,
+      "end": 755.04,
+      "text": "And that was absolutely critical",
+      "emphasis": [
+        " absolutely"
+      ]
+    },
+    {
+      "start": 755.04,
+      "end": 756.26,
+      "text": "to getting adoption.",
+      "emphasis": [
+        " adoption."
+      ]
+    }
+  ]
+}

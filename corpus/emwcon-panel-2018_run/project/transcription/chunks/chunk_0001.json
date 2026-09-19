@@ -1,0 +1,5656 @@
+{
+  "index": 1,
+  "start": 300.0,
+  "end": 600.0,
+  "decode_start": 285.0,
+  "status": "ok",
+  "language": "en",
+  "segments": [
+    {
+      "start": 306.3,
+      "end": 311.38,
+      "text": "and you want to be in that space where you are offering solutions to the organisation",
+      "words": [
+        {
+          "text": " and",
+          "start": 306.3,
+          "end": 306.92,
+          "confidence": 0.362003892660141
+        },
+        {
+          "text": " you",
+          "start": 306.92,
+          "end": 307.08,
+          "confidence": 0.9952151775360107
+        },
+        {
+          "text": " want",
+          "start": 307.08,
+          "end": 307.26,
+          "confidence": 0.9965909719467163
+        },
+        {
+          "text": " to",
+          "start": 307.26,
+          "end": 307.42,
+          "confidence": 0.9991888403892517
+        },
+        {
+          "text": " be",
+          "start": 307.42,
+          "end": 307.52,
+          "confidence": 0.9988540410995483
+        },
+        {
+          "text": " in",
+          "start": 307.52,
+          "end": 307.64,
+          "confidence": 0.9983001351356506
+        },
+        {
+          "text": " that",
+          "start": 307.64,
+          "end": 307.76,
+          "confidence": 0.9882403612136841
+        },
+        {
+          "text": " space",
+          "start": 307.76,
+          "end": 308.1,
+          "confidence": 0.9970819354057312
+        },
+        {
+          "text": " where",
+          "start": 308.1,
+          "end": 308.4,
+          "confidence": 0.9746032357215881
+        },
+        {
+          "text": " you",
+          "start": 308.4,
+          "end": 308.6,
+          "confidence": 0.9968181848526001
+        },
+        {
+          "text": " are",
+          "start": 308.6,
+          "end": 309.3,
+          "confidence": 0.967663586139679
+        },
+        {
+          "text": " offering",
+          "start": 309.3,
+          "end": 309.54,
+          "confidence": 0.9505335688591003
+        },
+        {
+          "text": " solutions",
+          "start": 309.54,
+          "end": 310.08,
+          "confidence": 0.9974063038825989
+        },
+        {
+          "text": " to",
+          "start": 310.08,
+          "end": 310.74,
+          "confidence": 0.9981624484062195
+        },
+        {
+          "text": " the",
+          "start": 310.74,
+          "end": 310.88,
+          "confidence": 0.9992249011993408
+        },
+        {
+          "text": " organisation",
+          "start": 310.88,
+          "end": 311.38,
+          "confidence": 0.42364630103111267
+        }
+      ]
+    },
+    {
+      "start": 311.38,
+      "end": 313.0,
+      "text": "for them to go further.",
+      "words": [
+        {
+          "text": " for",
+          "start": 311.38,
+          "end": 311.86,
+          "confidence": 0.9327876567840576
+        },
+        {
+          "text": " them",
+          "start": 311.86,
+          "end": 311.98,
+          "confidence": 0.998388409614563
+        },
+        {
+          "text": " to",
+          "start": 311.98,
+          "end": 312.2,
+          "confidence": 0.9976600408554077
+        },
+        {
+          "text": " go",
+          "start": 312.2,
+          "end": 312.72,
+          "confidence": 0.9953656196594238
+        },
+        {
+          "text": " further.",
+          "start": 312.72,
+          "end": 313.0,
+          "confidence": 0.9964641332626343
+        }
+      ]
+    },
+    {
+      "start": 313.0,
+      "end": 321.89,
+      "text": "I have an opinion. I agree completely the IT department is absolutely critical and",
+      "words": [
+        {
+          "text": " I",
+          "start": 313.0,
+          "end": 313.94,
+          "confidence": 0.07496516406536102
+        },
+        {
+          "text": " have",
+          "start": 315.25,
+          "end": 315.43,
+          "confidence": 0.4748278558254242
+        },
+        {
+          "text": " an",
+          "start": 315.43,
+          "end": 315.51,
+          "confidence": 0.9501845240592957
+        },
+        {
+          "text": " opinion.",
+          "start": 315.51,
+          "end": 315.77,
+          "confidence": 0.9879187941551208
+        },
+        {
+          "text": " I",
+          "start": 318.07,
+          "end": 318.55,
+          "confidence": 0.8817357420921326
+        },
+        {
+          "text": " agree",
+          "start": 318.55,
+          "end": 318.79,
+          "confidence": 0.9835143089294434
+        },
+        {
+          "text": " completely",
+          "start": 318.79,
+          "end": 319.19,
+          "confidence": 0.9863194227218628
+        },
+        {
+          "text": " the",
+          "start": 319.19,
+          "end": 319.45,
+          "confidence": 0.5261548161506653
+        },
+        {
+          "text": " IT",
+          "start": 319.45,
+          "end": 319.69,
+          "confidence": 0.8711981773376465
+        },
+        {
+          "text": " department",
+          "start": 319.69,
+          "end": 320.07,
+          "confidence": 0.852759063243866
+        },
+        {
+          "text": " is",
+          "start": 320.07,
+          "end": 320.29,
+          "confidence": 0.979423999786377
+        },
+        {
+          "text": " absolutely",
+          "start": 320.29,
+          "end": 320.85,
+          "confidence": 0.9878882765769958
+        },
+        {
+          "text": " critical",
+          "start": 320.85,
+          "end": 321.27,
+          "confidence": 0.9927010536193848
+        },
+        {
+          "text": " and",
+          "start": 321.27,
+          "end": 321.89,
+          "confidence": 0.6212448477745056
+        }
+      ]
+    },
+    {
+      "start": 321.89,
+      "end": 328.39,
+      "text": "that can be both a good thing and it can also be a real stumbling block. I have",
+      "words": [
+        {
+          "text": " that",
+          "start": 321.89,
+          "end": 322.47,
+          "confidence": 0.976276159286499
+        },
+        {
+          "text": " can",
+          "start": 322.47,
+          "end": 322.59000000000003,
+          "confidence": 0.9812170267105103
+        },
+        {
+          "text": " be",
+          "start": 322.59000000000003,
+          "end": 322.71,
+          "confidence": 0.9938727617263794
+        },
+        {
+          "text": " both",
+          "start": 322.71,
+          "end": 322.89,
+          "confidence": 0.985896646976471
+        },
+        {
+          "text": " a",
+          "start": 322.89,
+          "end": 323.03,
+          "confidence": 0.9856507182121277
+        },
+        {
+          "text": " good",
+          "start": 323.03,
+          "end": 323.15,
+          "confidence": 0.9985156655311584
+        },
+        {
+          "text": " thing",
+          "start": 323.15,
+          "end": 323.37,
+          "confidence": 0.9935694932937622
+        },
+        {
+          "text": " and",
+          "start": 323.37,
+          "end": 323.53,
+          "confidence": 0.9551688432693481
+        },
+        {
+          "text": " it",
+          "start": 323.53,
+          "end": 323.61,
+          "confidence": 0.9487366676330566
+        },
+        {
+          "text": " can",
+          "start": 323.61,
+          "end": 323.69,
+          "confidence": 0.9513405561447144
+        },
+        {
+          "text": " also",
+          "start": 323.69,
+          "end": 324.17,
+          "confidence": 0.9840558767318726
+        },
+        {
+          "text": " be",
+          "start": 324.17,
+          "end": 325.05,
+          "confidence": 0.9894977807998657
+        },
+        {
+          "text": " a",
+          "start": 325.05,
+          "end": 325.47,
+          "confidence": 0.9933329224586487
+        },
+        {
+          "text": " real",
+          "start": 325.47,
+          "end": 325.81,
+          "confidence": 0.9886553287506104
+        },
+        {
+          "text": " stumbling",
+          "start": 325.81,
+          "end": 326.17,
+          "confidence": 0.9929041862487793
+        },
+        {
+          "text": " block.",
+          "start": 326.17,
+          "end": 326.47,
+          "confidence": 0.9974797368049622
+        },
+        {
+          "text": " I",
+          "start": 327.75,
+          "end": 328.23,
+          "confidence": 0.988567590713501
+        },
+        {
+          "text": " have",
+          "start": 328.23,
+          "end": 328.39,
+          "confidence": 0.9922148585319519
+        }
+      ]
+    },
+    {
+      "start": 328.39,
+      "end": 334.01,
+      "text": "had issues in the past where probably a lot of these people have had the same",
+      "words": [
+        {
+          "text": " had",
+          "start": 328.39,
+          "end": 328.59000000000003,
+          "confidence": 0.9687675833702087
+        },
+        {
+          "text": " issues",
+          "start": 328.59000000000003,
+          "end": 328.85,
+          "confidence": 0.9969204664230347
+        },
+        {
+          "text": " in",
+          "start": 328.85,
+          "end": 329.05,
+          "confidence": 0.9979128241539001
+        },
+        {
+          "text": " the",
+          "start": 329.05,
+          "end": 329.15,
+          "confidence": 0.9992462396621704
+        },
+        {
+          "text": " past",
+          "start": 329.15,
+          "end": 329.55,
+          "confidence": 0.9989116191864014
+        },
+        {
+          "text": " where",
+          "start": 329.55,
+          "end": 330.43,
+          "confidence": 0.7789961695671082
+        },
+        {
+          "text": " probably",
+          "start": 330.43,
+          "end": 331.97,
+          "confidence": 0.9168980121612549
+        },
+        {
+          "text": " a",
+          "start": 331.97,
+          "end": 332.17,
+          "confidence": 0.9928942322731018
+        },
+        {
+          "text": " lot",
+          "start": 332.17,
+          "end": 332.25,
+          "confidence": 0.9986043572425842
+        },
+        {
+          "text": " of",
+          "start": 332.25,
+          "end": 332.33,
+          "confidence": 0.99824059009552
+        },
+        {
+          "text": " these",
+          "start": 332.33,
+          "end": 332.47,
+          "confidence": 0.9936515092849731
+        },
+        {
+          "text": " people",
+          "start": 332.47,
+          "end": 332.75,
+          "confidence": 0.9984114170074463
+        },
+        {
+          "text": " have",
+          "start": 332.75,
+          "end": 333.29,
+          "confidence": 0.9906408190727234
+        },
+        {
+          "text": " had",
+          "start": 333.29,
+          "end": 333.65,
+          "confidence": 0.9901360869407654
+        },
+        {
+          "text": " the",
+          "start": 333.65,
+          "end": 333.83,
+          "confidence": 0.9982020854949951
+        },
+        {
+          "text": " same",
+          "start": 333.83,
+          "end": 334.01,
+          "confidence": 0.9992720484733582
+        }
+      ]
+    },
+    {
+      "start": 334.01,
+      "end": 337.81,
+      "text": "issue. Well, but we've already got a share point. We've already got confluence.",
+      "words": [
+        {
+          "text": " issue.",
+          "start": 334.01,
+          "end": 334.33,
+          "confidence": 0.9876039028167725
+        },
+        {
+          "text": " Well,",
+          "start": 334.63,
+          "end": 334.73,
+          "confidence": 0.3761540353298187
+        },
+        {
+          "text": " but",
+          "start": 334.85,
+          "end": 335.01,
+          "confidence": 0.8630905151367188
+        },
+        {
+          "text": " we've",
+          "start": 335.01,
+          "end": 335.19,
+          "confidence": 0.9770248234272003
+        },
+        {
+          "text": " already",
+          "start": 335.19,
+          "end": 335.37,
+          "confidence": 0.9965672492980957
+        },
+        {
+          "text": " got",
+          "start": 335.37,
+          "end": 335.55,
+          "confidence": 0.9887365698814392
+        },
+        {
+          "text": " a",
+          "start": 335.55,
+          "end": 335.67,
+          "confidence": 0.7999436855316162
+        },
+        {
+          "text": " share",
+          "start": 335.67,
+          "end": 335.77,
+          "confidence": 0.6665599346160889
+        },
+        {
+          "text": " point.",
+          "start": 335.77,
+          "end": 336.03,
+          "confidence": 0.9352133274078369
+        },
+        {
+          "text": " We've",
+          "start": 336.63,
+          "end": 336.93,
+          "confidence": 0.9922639429569244
+        },
+        {
+          "text": " already",
+          "start": 336.93,
+          "end": 337.09000000000003,
+          "confidence": 0.9978210926055908
+        },
+        {
+          "text": " got",
+          "start": 337.09000000000003,
+          "end": 337.27,
+          "confidence": 0.9878666400909424
+        },
+        {
+          "text": " confluence.",
+          "start": 337.27,
+          "end": 337.81,
+          "confidence": 0.9586633145809174
+        }
+      ]
+    },
+    {
+      "start": 338.23,
+      "end": 342.89,
+      "text": "We pay for something. We've got people supporting it. You want us to install",
+      "words": [
+        {
+          "text": " We",
+          "start": 338.23,
+          "end": 338.45,
+          "confidence": 0.995692789554596
+        },
+        {
+          "text": " pay",
+          "start": 338.45,
+          "end": 338.89,
+          "confidence": 0.9623498320579529
+        },
+        {
+          "text": " for",
+          "start": 338.89,
+          "end": 339.13,
+          "confidence": 0.9985209107398987
+        },
+        {
+          "text": " something.",
+          "start": 339.13,
+          "end": 339.40999999999997,
+          "confidence": 0.9974465370178223
+        },
+        {
+          "text": " We've",
+          "start": 339.51,
+          "end": 339.65,
+          "confidence": 0.9943965077400208
+        },
+        {
+          "text": " got",
+          "start": 339.65,
+          "end": 339.75,
+          "confidence": 0.9971056580543518
+        },
+        {
+          "text": " people",
+          "start": 339.75,
+          "end": 339.99,
+          "confidence": 0.9993334412574768
+        },
+        {
+          "text": " supporting",
+          "start": 339.99,
+          "end": 340.43,
+          "confidence": 0.998543381690979
+        },
+        {
+          "text": " it.",
+          "start": 340.43,
+          "end": 340.67,
+          "confidence": 0.9963961243629456
+        },
+        {
+          "text": " You",
+          "start": 341.39,
+          "end": 341.69,
+          "confidence": 0.9934511184692383
+        },
+        {
+          "text": " want",
+          "start": 341.69,
+          "end": 341.90999999999997,
+          "confidence": 0.9989402890205383
+        },
+        {
+          "text": " us",
+          "start": 341.90999999999997,
+          "end": 342.07,
+          "confidence": 0.9937359094619751
+        },
+        {
+          "text": " to",
+          "start": 342.07,
+          "end": 342.29,
+          "confidence": 0.9995999932289124
+        },
+        {
+          "text": " install",
+          "start": 342.29,
+          "end": 342.89,
+          "confidence": 0.9898708462715149
+        }
+      ]
+    },
+    {
+      "start": 342.89,
+      "end": 346.15,
+      "text": "install this piece of open source software and make us maintain it.",
+      "words": [
+        {
+          "text": " install",
+          "start": 342.89,
+          "end": 342.97,
+          "confidence": 0.04593648388981819
+        },
+        {
+          "text": " this",
+          "start": 342.97,
+          "end": 343.19,
+          "confidence": 0.9488776326179504
+        },
+        {
+          "text": " piece",
+          "start": 343.19,
+          "end": 343.45,
+          "confidence": 0.9746443629264832
+        },
+        {
+          "text": " of",
+          "start": 343.45,
+          "end": 343.59000000000003,
+          "confidence": 0.9931977987289429
+        },
+        {
+          "text": " open",
+          "start": 343.59000000000003,
+          "end": 343.81,
+          "confidence": 0.929326057434082
+        },
+        {
+          "text": " source",
+          "start": 343.81,
+          "end": 344.01,
+          "confidence": 0.7391093969345093
+        },
+        {
+          "text": " software",
+          "start": 344.01,
+          "end": 344.51,
+          "confidence": 0.9937041401863098
+        },
+        {
+          "text": " and",
+          "start": 344.51,
+          "end": 344.67,
+          "confidence": 0.9420586228370667
+        },
+        {
+          "text": " make",
+          "start": 344.67,
+          "end": 344.87,
+          "confidence": 0.9782583117485046
+        },
+        {
+          "text": " us",
+          "start": 344.87,
+          "end": 345.23,
+          "confidence": 0.9916816353797913
+        },
+        {
+          "text": " maintain",
+          "start": 345.23,
+          "end": 345.85,
+          "confidence": 0.992735743522644
+        },
+        {
+          "text": " it.",
+          "start": 345.85,
+          "end": 346.15,
+          "confidence": 0.9982317090034485
+        }
+      ]
+    },
+    {
+      "start": 348.19,
+      "end": 355.31,
+      "text": "So that's one of the reasons why I frequently talk about the need to make it easy to install,",
+      "words": [
+        {
+          "text": " So",
+          "start": 348.19,
+          "end": 348.75,
+          "confidence": 0.7534142732620239
+        },
+        {
+          "text": " that's",
+          "start": 348.75,
+          "end": 349.31,
+          "confidence": 0.8754351437091827
+        },
+        {
+          "text": " one",
+          "start": 349.31,
+          "end": 349.47,
+          "confidence": 0.9934409260749817
+        },
+        {
+          "text": " of",
+          "start": 349.47,
+          "end": 349.55,
+          "confidence": 0.9984429478645325
+        },
+        {
+          "text": " the",
+          "start": 349.55,
+          "end": 349.65,
+          "confidence": 0.9983566403388977
+        },
+        {
+          "text": " reasons",
+          "start": 349.65,
+          "end": 349.85,
+          "confidence": 0.9936316609382629
+        },
+        {
+          "text": " why",
+          "start": 349.85,
+          "end": 350.11,
+          "confidence": 0.9753471612930298
+        },
+        {
+          "text": " I",
+          "start": 350.11,
+          "end": 350.65,
+          "confidence": 0.9965147972106934
+        },
+        {
+          "text": " frequently",
+          "start": 350.65,
+          "end": 351.17,
+          "confidence": 0.9699286222457886
+        },
+        {
+          "text": " talk",
+          "start": 351.17,
+          "end": 351.71,
+          "confidence": 0.9943643808364868
+        },
+        {
+          "text": " about",
+          "start": 351.71,
+          "end": 352.17,
+          "confidence": 0.9986874461174011
+        },
+        {
+          "text": " the",
+          "start": 352.17,
+          "end": 352.45,
+          "confidence": 0.997517466545105
+        },
+        {
+          "text": " need",
+          "start": 352.45,
+          "end": 352.75,
+          "confidence": 0.9986288547515869
+        },
+        {
+          "text": " to",
+          "start": 352.75,
+          "end": 353.45,
+          "confidence": 0.9965907335281372
+        },
+        {
+          "text": " make",
+          "start": 353.45,
+          "end": 353.71,
+          "confidence": 0.9986323714256287
+        },
+        {
+          "text": " it",
+          "start": 353.71,
+          "end": 353.90999999999997,
+          "confidence": 0.9990376234054565
+        },
+        {
+          "text": " easy",
+          "start": 353.90999999999997,
+          "end": 354.29,
+          "confidence": 0.9967478513717651
+        },
+        {
+          "text": " to",
+          "start": 354.29,
+          "end": 354.69,
+          "confidence": 0.9975084066390991
+        },
+        {
+          "text": " install,",
+          "start": 354.69,
+          "end": 355.31,
+          "confidence": 0.9949742555618286
+        }
+      ]
+    },
+    {
+      "start": 355.59000000000003,
+      "end": 360.57,
+      "text": "upgrade and maintain MediaWiki that that needs to be something that is provided to the third",
+      "words": [
+        {
+          "text": " upgrade",
+          "start": 355.59000000000003,
+          "end": 355.79,
+          "confidence": 0.9900612831115723
+        },
+        {
+          "text": " and",
+          "start": 355.79,
+          "end": 356.01,
+          "confidence": 0.43877172470092773
+        },
+        {
+          "text": " maintain",
+          "start": 356.01,
+          "end": 356.40999999999997,
+          "confidence": 0.9949485063552856
+        },
+        {
+          "text": " MediaWiki",
+          "start": 356.40999999999997,
+          "end": 356.99,
+          "confidence": 0.5694528718789419
+        },
+        {
+          "text": " that",
+          "start": 356.99,
+          "end": 357.65,
+          "confidence": 0.17057238519191742
+        },
+        {
+          "text": " that",
+          "start": 357.65,
+          "end": 357.81,
+          "confidence": 0.6298205256462097
+        },
+        {
+          "text": " needs",
+          "start": 357.81,
+          "end": 358.03,
+          "confidence": 0.9915571212768555
+        },
+        {
+          "text": " to",
+          "start": 358.03,
+          "end": 358.23,
+          "confidence": 0.997683048248291
+        },
+        {
+          "text": " be",
+          "start": 358.23,
+          "end": 358.33,
+          "confidence": 0.9973987340927124
+        },
+        {
+          "text": " something",
+          "start": 358.33,
+          "end": 358.65,
+          "confidence": 0.9982060194015503
+        },
+        {
+          "text": " that",
+          "start": 358.65,
+          "end": 359.11,
+          "confidence": 0.9898431897163391
+        },
+        {
+          "text": " is",
+          "start": 359.11,
+          "end": 359.45,
+          "confidence": 0.9964908957481384
+        },
+        {
+          "text": " provided",
+          "start": 359.45,
+          "end": 359.95,
+          "confidence": 0.9952990412712097
+        },
+        {
+          "text": " to",
+          "start": 359.95,
+          "end": 360.25,
+          "confidence": 0.9968439340591431
+        },
+        {
+          "text": " the",
+          "start": 360.25,
+          "end": 360.40999999999997,
+          "confidence": 0.9950841069221497
+        },
+        {
+          "text": " third",
+          "start": 360.40999999999997,
+          "end": 360.57,
+          "confidence": 0.9582462310791016
+        }
+      ]
+    },
+    {
+      "start": 360.57,
+      "end": 367.49,
+      "text": "party community, that the third party community develops and provides to itself until you",
+      "words": [
+        {
+          "text": " party",
+          "start": 360.57,
+          "end": 360.77,
+          "confidence": 0.8557491898536682
+        },
+        {
+          "text": " community,",
+          "start": 360.77,
+          "end": 361.25,
+          "confidence": 0.997455894947052
+        },
+        {
+          "text": " that",
+          "start": 361.40999999999997,
+          "end": 361.53,
+          "confidence": 0.9469972848892212
+        },
+        {
+          "text": " the",
+          "start": 361.53,
+          "end": 361.69,
+          "confidence": 0.4787192642688751
+        },
+        {
+          "text": " third",
+          "start": 361.69,
+          "end": 361.83,
+          "confidence": 0.9972354769706726
+        },
+        {
+          "text": " party",
+          "start": 361.83,
+          "end": 361.99,
+          "confidence": 0.9773315787315369
+        },
+        {
+          "text": " community",
+          "start": 361.99,
+          "end": 362.37,
+          "confidence": 0.9962701797485352
+        },
+        {
+          "text": " develops",
+          "start": 362.37,
+          "end": 363.25,
+          "confidence": 0.9867206811904907
+        },
+        {
+          "text": " and",
+          "start": 363.25,
+          "end": 363.65,
+          "confidence": 0.9925962686538696
+        },
+        {
+          "text": " provides",
+          "start": 363.65,
+          "end": 364.01,
+          "confidence": 0.99664705991745
+        },
+        {
+          "text": " to",
+          "start": 364.01,
+          "end": 364.29,
+          "confidence": 0.998105525970459
+        },
+        {
+          "text": " itself",
+          "start": 364.29,
+          "end": 364.71,
+          "confidence": 0.9932812452316284
+        },
+        {
+          "text": " until",
+          "start": 364.71,
+          "end": 366.51,
+          "confidence": 0.4365352392196655
+        },
+        {
+          "text": " you",
+          "start": 366.51,
+          "end": 367.49,
+          "confidence": 0.9774292707443237
+        }
+      ]
+    },
+    {
+      "start": 367.49,
+      "end": 372.45,
+      "text": "can say to an IT department, hey, here's this thing, install it, don't worry, it",
+      "words": [
+        {
+          "text": " can",
+          "start": 367.49,
+          "end": 367.65,
+          "confidence": 0.9948521256446838
+        },
+        {
+          "text": " say",
+          "start": 367.65,
+          "end": 367.93,
+          "confidence": 0.9978206157684326
+        },
+        {
+          "text": " to",
+          "start": 367.93,
+          "end": 368.09000000000003,
+          "confidence": 0.9959686994552612
+        },
+        {
+          "text": " an",
+          "start": 368.09000000000003,
+          "end": 368.19,
+          "confidence": 0.9909363389015198
+        },
+        {
+          "text": " IT",
+          "start": 368.19,
+          "end": 368.43,
+          "confidence": 0.9659996032714844
+        },
+        {
+          "text": " department,",
+          "start": 368.43,
+          "end": 368.85,
+          "confidence": 0.9677318930625916
+        },
+        {
+          "text": " hey,",
+          "start": 369.13,
+          "end": 369.35,
+          "confidence": 0.6037937998771667
+        },
+        {
+          "text": " here's",
+          "start": 369.51,
+          "end": 369.95,
+          "confidence": 0.9893844127655029
+        },
+        {
+          "text": " this",
+          "start": 369.95,
+          "end": 370.13,
+          "confidence": 0.9913738369941711
+        },
+        {
+          "text": " thing,",
+          "start": 370.13,
+          "end": 370.53,
+          "confidence": 0.9954404830932617
+        },
+        {
+          "text": " install",
+          "start": 370.79,
+          "end": 371.23,
+          "confidence": 0.9948571920394897
+        },
+        {
+          "text": " it,",
+          "start": 371.23,
+          "end": 371.45,
+          "confidence": 0.9938124418258667
+        },
+        {
+          "text": " don't",
+          "start": 371.57,
+          "end": 371.73,
+          "confidence": 0.9967037737369537
+        },
+        {
+          "text": " worry,",
+          "start": 371.73,
+          "end": 372.07,
+          "confidence": 0.9987913966178894
+        },
+        {
+          "text": " it",
+          "start": 372.35,
+          "end": 372.45,
+          "confidence": 0.9981293082237244
+        }
+      ]
+    },
+    {
+      "start": 372.45,
+      "end": 376.49,
+      "text": "work that you're going to get pushback from IT.",
+      "words": [
+        {
+          "text": " work",
+          "start": 372.45,
+          "end": 372.77,
+          "confidence": 0.028725894168019295
+        },
+        {
+          "text": " that",
+          "start": 372.77,
+          "end": 374.49,
+          "confidence": 0.2928767502307892
+        },
+        {
+          "text": " you're",
+          "start": 374.49,
+          "end": 375.29,
+          "confidence": 0.7867407500743866
+        },
+        {
+          "text": " going",
+          "start": 375.29,
+          "end": 375.40999999999997,
+          "confidence": 0.8773021697998047
+        },
+        {
+          "text": " to",
+          "start": 375.40999999999997,
+          "end": 375.47,
+          "confidence": 0.9949670433998108
+        },
+        {
+          "text": " get",
+          "start": 375.47,
+          "end": 375.57,
+          "confidence": 0.9847901463508606
+        },
+        {
+          "text": " pushback",
+          "start": 375.57,
+          "end": 376.03,
+          "confidence": 0.5877095013856888
+        },
+        {
+          "text": " from",
+          "start": 376.03,
+          "end": 376.25,
+          "confidence": 0.9808743596076965
+        },
+        {
+          "text": " IT.",
+          "start": 376.25,
+          "end": 376.49,
+          "confidence": 0.8420692682266235
+        }
+      ]
+    },
+    {
+      "start": 376.89,
+      "end": 379.63,
+      "text": "And so, yeah, the IT department is absolutely critical.",
+      "words": [
+        {
+          "text": " And",
+          "start": 376.89,
+          "end": 376.89,
+          "confidence": 0.5969103574752808
+        },
+        {
+          "text": " so,",
+          "start": 376.89,
+          "end": 377.19,
+          "confidence": 0.9662253260612488
+        },
+        {
+          "text": " yeah,",
+          "start": 377.19,
+          "end": 377.75,
+          "confidence": 0.934859573841095
+        },
+        {
+          "text": " the",
+          "start": 378.01,
+          "end": 378.07,
+          "confidence": 0.9924127459526062
+        },
+        {
+          "text": " IT",
+          "start": 378.07,
+          "end": 378.27,
+          "confidence": 0.9904758334159851
+        },
+        {
+          "text": " department",
+          "start": 378.27,
+          "end": 378.57,
+          "confidence": 0.9056563973426819
+        },
+        {
+          "text": " is",
+          "start": 378.57,
+          "end": 378.77,
+          "confidence": 0.9964524507522583
+        },
+        {
+          "text": " absolutely",
+          "start": 378.77,
+          "end": 379.15,
+          "confidence": 0.9957186579704285
+        },
+        {
+          "text": " critical.",
+          "start": 379.15,
+          "end": 379.63,
+          "confidence": 0.997270405292511
+        }
+      ]
+    },
+    {
+      "start": 379.95,
+      "end": 384.11,
+      "text": "And you can either have them as your ally or your, I don't",
+      "words": [
+        {
+          "text": " And",
+          "start": 379.95,
+          "end": 380.01,
+          "confidence": 0.9757684469223022
+        },
+        {
+          "text": " you",
+          "start": 380.01,
+          "end": 380.19,
+          "confidence": 0.9937406182289124
+        },
+        {
+          "text": " can",
+          "start": 380.19,
+          "end": 380.31,
+          "confidence": 0.9861717820167542
+        },
+        {
+          "text": " either",
+          "start": 380.31,
+          "end": 380.47,
+          "confidence": 0.9902718663215637
+        },
+        {
+          "text": " have",
+          "start": 380.47,
+          "end": 381.11,
+          "confidence": 0.9927585124969482
+        },
+        {
+          "text": " them",
+          "start": 381.11,
+          "end": 381.21,
+          "confidence": 0.9625036120414734
+        },
+        {
+          "text": " as",
+          "start": 381.21,
+          "end": 381.37,
+          "confidence": 0.9977327585220337
+        },
+        {
+          "text": " your",
+          "start": 381.37,
+          "end": 381.49,
+          "confidence": 0.9941297769546509
+        },
+        {
+          "text": " ally",
+          "start": 381.49,
+          "end": 381.85,
+          "confidence": 0.9920891523361206
+        },
+        {
+          "text": " or",
+          "start": 381.85,
+          "end": 382.19,
+          "confidence": 0.9272180795669556
+        },
+        {
+          "text": " your,",
+          "start": 382.19,
+          "end": 382.47,
+          "confidence": 0.9119516015052795
+        },
+        {
+          "text": " I",
+          "start": 383.21,
+          "end": 384.03,
+          "confidence": 0.9751401543617249
+        },
+        {
+          "text": " don't",
+          "start": 384.03,
+          "end": 384.11,
+          "confidence": 0.9964302480220795
+        }
+      ]
+    },
+    {
+      "start": 384.11,
+      "end": 385.49,
+      "text": "want to say enemy, but well, you know.",
+      "words": [
+        {
+          "text": " want",
+          "start": 384.11,
+          "end": 384.19,
+          "confidence": 0.9742444157600403
+        },
+        {
+          "text": " to",
+          "start": 384.19,
+          "end": 384.27,
+          "confidence": 0.9980100989341736
+        },
+        {
+          "text": " say",
+          "start": 384.27,
+          "end": 384.37,
+          "confidence": 0.9982786178588867
+        },
+        {
+          "text": " enemy,",
+          "start": 384.37,
+          "end": 384.65,
+          "confidence": 0.9586796760559082
+        },
+        {
+          "text": " but",
+          "start": 384.90999999999997,
+          "end": 384.90999999999997,
+          "confidence": 0.9964020252227783
+        },
+        {
+          "text": " well,",
+          "start": 384.90999999999997,
+          "end": 385.17,
+          "confidence": 0.47303059697151184
+        },
+        {
+          "text": " you",
+          "start": 385.31,
+          "end": 385.35,
+          "confidence": 0.9593801498413086
+        },
+        {
+          "text": " know.",
+          "start": 385.35,
+          "end": 385.49,
+          "confidence": 0.9988928437232971
+        }
+      ]
+    },
+    {
+      "start": 387.19,
+      "end": 389.39,
+      "text": "Aaron, Darren, going on with that,",
+      "words": [
+        {
+          "text": " Aaron,",
+          "start": 387.19,
+          "end": 387.57,
+          "confidence": 0.0607813224196434
+        },
+        {
+          "text": " Darren,",
+          "start": 387.89,
+          "end": 388.11,
+          "confidence": 0.2641197741031647
+        },
+        {
+          "text": " going",
+          "start": 388.43,
+          "end": 388.85,
+          "confidence": 0.9862411022186279
+        },
+        {
+          "text": " on",
+          "start": 388.85,
+          "end": 389.03,
+          "confidence": 0.9975225329399109
+        },
+        {
+          "text": " with",
+          "start": 389.03,
+          "end": 389.21,
+          "confidence": 0.9952549934387207
+        },
+        {
+          "text": " that,",
+          "start": 389.21,
+          "end": 389.39,
+          "confidence": 0.9923757910728455
+        }
+      ]
+    },
+    {
+      "start": 389.61,
+      "end": 391.45,
+      "text": "we had some experience in NASA, maybe you can touch on,",
+      "words": [
+        {
+          "text": " we",
+          "start": 389.61,
+          "end": 389.79,
+          "confidence": 0.3164880573749542
+        },
+        {
+          "text": " had",
+          "start": 389.79,
+          "end": 389.97,
+          "confidence": 0.8417633771896362
+        },
+        {
+          "text": " some",
+          "start": 389.97,
+          "end": 390.07,
+          "confidence": 0.992286205291748
+        },
+        {
+          "text": " experience",
+          "start": 390.07,
+          "end": 390.31,
+          "confidence": 0.9716975092887878
+        },
+        {
+          "text": " in",
+          "start": 390.31,
+          "end": 390.43,
+          "confidence": 0.6749134063720703
+        },
+        {
+          "text": " NASA,",
+          "start": 390.43,
+          "end": 390.59000000000003,
+          "confidence": 0.691077470779419
+        },
+        {
+          "text": " maybe",
+          "start": 390.69,
+          "end": 390.81,
+          "confidence": 0.8547684550285339
+        },
+        {
+          "text": " you",
+          "start": 390.81,
+          "end": 390.95,
+          "confidence": 0.9870579838752747
+        },
+        {
+          "text": " can",
+          "start": 390.95,
+          "end": 391.03,
+          "confidence": 0.9753031730651855
+        },
+        {
+          "text": " touch",
+          "start": 391.03,
+          "end": 391.23,
+          "confidence": 0.9934544563293457
+        },
+        {
+          "text": " on,",
+          "start": 391.23,
+          "end": 391.45,
+          "confidence": 0.9955422282218933
+        }
+      ]
+    },
+    {
+      "start": 393.71,
+      "end": 395.89,
+      "text": "finding the right person to talk to at IT.",
+      "words": [
+        {
+          "text": " finding",
+          "start": 393.71,
+          "end": 394.09000000000003,
+          "confidence": 0.4615793824195862
+        },
+        {
+          "text": " the",
+          "start": 394.09000000000003,
+          "end": 394.47,
+          "confidence": 0.9986990690231323
+        },
+        {
+          "text": " right",
+          "start": 394.47,
+          "end": 394.63,
+          "confidence": 0.9993649125099182
+        },
+        {
+          "text": " person",
+          "start": 394.63,
+          "end": 395.03,
+          "confidence": 0.9992357492446899
+        },
+        {
+          "text": " to",
+          "start": 395.03,
+          "end": 395.17,
+          "confidence": 0.9987760186195374
+        },
+        {
+          "text": " talk",
+          "start": 395.17,
+          "end": 395.35,
+          "confidence": 0.9987494945526123
+        },
+        {
+          "text": " to",
+          "start": 395.35,
+          "end": 395.51,
+          "confidence": 0.9971244931221008
+        },
+        {
+          "text": " at",
+          "start": 395.51,
+          "end": 395.61,
+          "confidence": 0.2849082350730896
+        },
+        {
+          "text": " IT.",
+          "start": 395.61,
+          "end": 395.89,
+          "confidence": 0.9918491840362549
+        }
+      ]
+    },
+    {
+      "start": 396.69,
+      "end": 398.53,
+      "text": "If you come and present a presentation to IT,",
+      "words": [
+        {
+          "text": " If",
+          "start": 396.69,
+          "end": 396.87,
+          "confidence": 0.989703357219696
+        },
+        {
+          "text": " you",
+          "start": 396.87,
+          "end": 396.99,
+          "confidence": 0.9978565573692322
+        },
+        {
+          "text": " come",
+          "start": 396.99,
+          "end": 397.15,
+          "confidence": 0.9925520420074463
+        },
+        {
+          "text": " and",
+          "start": 397.15,
+          "end": 397.29,
+          "confidence": 0.9792496562004089
+        },
+        {
+          "text": " present",
+          "start": 397.29,
+          "end": 397.61,
+          "confidence": 0.9900908470153809
+        },
+        {
+          "text": " a",
+          "start": 397.61,
+          "end": 397.79,
+          "confidence": 0.9708356261253357
+        },
+        {
+          "text": " presentation",
+          "start": 397.79,
+          "end": 398.03,
+          "confidence": 0.9989758729934692
+        },
+        {
+          "text": " to",
+          "start": 398.03,
+          "end": 398.35,
+          "confidence": 0.7593926191329956
+        },
+        {
+          "text": " IT,",
+          "start": 398.35,
+          "end": 398.53,
+          "confidence": 0.9957356452941895
+        }
+      ]
+    },
+    {
+      "start": 398.71,
+      "end": 400.11,
+      "text": "it's more likely to get shut down.",
+      "words": [
+        {
+          "text": " it's",
+          "start": 398.71,
+          "end": 398.83,
+          "confidence": 0.99394491314888
+        },
+        {
+          "text": " more",
+          "start": 398.83,
+          "end": 399.09000000000003,
+          "confidence": 0.9980505704879761
+        },
+        {
+          "text": " likely",
+          "start": 399.09000000000003,
+          "end": 399.35,
+          "confidence": 0.9960275888442993
+        },
+        {
+          "text": " to",
+          "start": 399.35,
+          "end": 399.53,
+          "confidence": 0.9939236044883728
+        },
+        {
+          "text": " get",
+          "start": 399.53,
+          "end": 399.65,
+          "confidence": 0.9885810017585754
+        },
+        {
+          "text": " shut",
+          "start": 399.65,
+          "end": 399.81,
+          "confidence": 0.9527394771575928
+        },
+        {
+          "text": " down.",
+          "start": 399.81,
+          "end": 400.11,
+          "confidence": 0.9933479428291321
+        }
+      ]
+    },
+    {
+      "start": 400.11,
+      "end": 404.63,
+      "text": "where I think we had cases where we tried once with one person, they shut down,",
+      "words": [
+        {
+          "text": " where",
+          "start": 400.11,
+          "end": 400.40999999999997,
+          "confidence": 0.13472355902194977
+        },
+        {
+          "text": " I",
+          "start": 400.40999999999997,
+          "end": 400.53,
+          "confidence": 0.6793191432952881
+        },
+        {
+          "text": " think",
+          "start": 400.53,
+          "end": 400.67,
+          "confidence": 0.9939916729927063
+        },
+        {
+          "text": " we",
+          "start": 400.67,
+          "end": 400.85,
+          "confidence": 0.9889475107192993
+        },
+        {
+          "text": " had",
+          "start": 400.85,
+          "end": 401.03,
+          "confidence": 0.986270546913147
+        },
+        {
+          "text": " cases",
+          "start": 401.03,
+          "end": 401.33,
+          "confidence": 0.9930150508880615
+        },
+        {
+          "text": " where",
+          "start": 401.33,
+          "end": 401.63,
+          "confidence": 0.961689293384552
+        },
+        {
+          "text": " we",
+          "start": 401.63,
+          "end": 402.19,
+          "confidence": 0.9699956774711609
+        },
+        {
+          "text": " tried",
+          "start": 402.19,
+          "end": 402.49,
+          "confidence": 0.9892916083335876
+        },
+        {
+          "text": " once",
+          "start": 402.49,
+          "end": 402.90999999999997,
+          "confidence": 0.9621070027351379
+        },
+        {
+          "text": " with",
+          "start": 402.90999999999997,
+          "end": 403.19,
+          "confidence": 0.889604389667511
+        },
+        {
+          "text": " one",
+          "start": 403.19,
+          "end": 403.37,
+          "confidence": 0.9952009916305542
+        },
+        {
+          "text": " person,",
+          "start": 403.37,
+          "end": 403.73,
+          "confidence": 0.9981934428215027
+        },
+        {
+          "text": " they",
+          "start": 404.03,
+          "end": 404.27,
+          "confidence": 0.9740712642669678
+        },
+        {
+          "text": " shut",
+          "start": 404.27,
+          "end": 404.47,
+          "confidence": 0.9868198037147522
+        },
+        {
+          "text": " down,",
+          "start": 404.47,
+          "end": 404.63,
+          "confidence": 0.9897380471229553
+        }
+      ]
+    },
+    {
+      "start": 404.73,
+      "end": 408.03,
+      "text": "and we just had to find the right champion in the IT department.",
+      "words": [
+        {
+          "text": " and",
+          "start": 404.73,
+          "end": 404.73,
+          "confidence": 0.7517749667167664
+        },
+        {
+          "text": " we",
+          "start": 404.73,
+          "end": 404.79,
+          "confidence": 0.9746528267860413
+        },
+        {
+          "text": " just",
+          "start": 404.79,
+          "end": 404.90999999999997,
+          "confidence": 0.981669008731842
+        },
+        {
+          "text": " had",
+          "start": 404.90999999999997,
+          "end": 405.07,
+          "confidence": 0.904836118221283
+        },
+        {
+          "text": " to",
+          "start": 405.07,
+          "end": 405.17,
+          "confidence": 0.9930058717727661
+        },
+        {
+          "text": " find",
+          "start": 405.17,
+          "end": 405.65,
+          "confidence": 0.9597606062889099
+        },
+        {
+          "text": " the",
+          "start": 405.65,
+          "end": 405.83,
+          "confidence": 0.9959661960601807
+        },
+        {
+          "text": " right",
+          "start": 405.83,
+          "end": 406.03,
+          "confidence": 0.9974029660224915
+        },
+        {
+          "text": " champion",
+          "start": 406.03,
+          "end": 406.90999999999997,
+          "confidence": 0.9653564691543579
+        },
+        {
+          "text": " in",
+          "start": 406.90999999999997,
+          "end": 407.49,
+          "confidence": 0.9898685216903687
+        },
+        {
+          "text": " the",
+          "start": 407.49,
+          "end": 407.57,
+          "confidence": 0.9963622689247131
+        },
+        {
+          "text": " IT",
+          "start": 407.57,
+          "end": 407.71,
+          "confidence": 0.9587832093238831
+        },
+        {
+          "text": " department.",
+          "start": 407.71,
+          "end": 408.03,
+          "confidence": 0.9021826386451721
+        }
+      ]
+    },
+    {
+      "start": 408.19,
+      "end": 410.33,
+      "text": "I don't know if you can talk to how we got started there.",
+      "words": [
+        {
+          "text": " I",
+          "start": 408.19,
+          "end": 408.23,
+          "confidence": 0.9781719446182251
+        },
+        {
+          "text": " don't",
+          "start": 408.23,
+          "end": 408.29,
+          "confidence": 0.9940681755542755
+        },
+        {
+          "text": " know",
+          "start": 408.29,
+          "end": 408.37,
+          "confidence": 0.9968634843826294
+        },
+        {
+          "text": " if",
+          "start": 408.37,
+          "end": 408.47,
+          "confidence": 0.9931413531303406
+        },
+        {
+          "text": " you",
+          "start": 408.47,
+          "end": 408.53,
+          "confidence": 0.9863336682319641
+        },
+        {
+          "text": " can",
+          "start": 408.53,
+          "end": 408.73,
+          "confidence": 0.9409537315368652
+        },
+        {
+          "text": " talk",
+          "start": 408.73,
+          "end": 409.07,
+          "confidence": 0.9940710663795471
+        },
+        {
+          "text": " to",
+          "start": 409.07,
+          "end": 409.35,
+          "confidence": 0.9083152413368225
+        },
+        {
+          "text": " how",
+          "start": 409.35,
+          "end": 409.59000000000003,
+          "confidence": 0.9630918502807617
+        },
+        {
+          "text": " we",
+          "start": 409.59000000000003,
+          "end": 409.71,
+          "confidence": 0.9966244697570801
+        },
+        {
+          "text": " got",
+          "start": 409.71,
+          "end": 409.83,
+          "confidence": 0.9990056157112122
+        },
+        {
+          "text": " started",
+          "start": 409.83,
+          "end": 410.07,
+          "confidence": 0.998439371585846
+        },
+        {
+          "text": " there.",
+          "start": 410.07,
+          "end": 410.33,
+          "confidence": 0.9964761137962341
+        }
+      ]
+    },
+    {
+      "start": 411.27,
+      "end": 414.35,
+      "text": "Yeah, not to get way back into the details of our history,",
+      "words": [
+        {
+          "text": " Yeah,",
+          "start": 411.27,
+          "end": 411.71,
+          "confidence": 0.4994474947452545
+        },
+        {
+          "text": " not",
+          "start": 411.75,
+          "end": 411.89,
+          "confidence": 0.9490583539009094
+        },
+        {
+          "text": " to",
+          "start": 411.89,
+          "end": 412.01,
+          "confidence": 0.9952738881111145
+        },
+        {
+          "text": " get",
+          "start": 412.01,
+          "end": 412.13,
+          "confidence": 0.9970278143882751
+        },
+        {
+          "text": " way",
+          "start": 412.13,
+          "end": 412.29,
+          "confidence": 0.6163638830184937
+        },
+        {
+          "text": " back",
+          "start": 412.29,
+          "end": 412.71,
+          "confidence": 0.9328457713127136
+        },
+        {
+          "text": " into",
+          "start": 412.71,
+          "end": 412.93,
+          "confidence": 0.977709174156189
+        },
+        {
+          "text": " the",
+          "start": 412.93,
+          "end": 413.19,
+          "confidence": 0.9967440366744995
+        },
+        {
+          "text": " details",
+          "start": 413.19,
+          "end": 413.73,
+          "confidence": 0.9989210367202759
+        },
+        {
+          "text": " of",
+          "start": 413.73,
+          "end": 413.95,
+          "confidence": 0.9988389611244202
+        },
+        {
+          "text": " our",
+          "start": 413.95,
+          "end": 414.07,
+          "confidence": 0.9989972710609436
+        },
+        {
+          "text": " history,",
+          "start": 414.07,
+          "end": 414.35,
+          "confidence": 0.9994556307792664
+        }
+      ]
+    },
+    {
+      "start": 414.35,
+      "end": 419.85,
+      "text": "but we're in a kind of a unique case where we created the Wiki kind of underground,",
+      "words": [
+        {
+          "text": " but",
+          "start": 414.35,
+          "end": 414.71000000000004,
+          "confidence": 0.9973782300949097
+        },
+        {
+          "text": " we're",
+          "start": 414.71000000000004,
+          "end": 415.87,
+          "confidence": 0.9539268612861633
+        },
+        {
+          "text": " in",
+          "start": 415.87,
+          "end": 416.03,
+          "confidence": 0.6045001149177551
+        },
+        {
+          "text": " a",
+          "start": 416.03,
+          "end": 416.27,
+          "confidence": 0.5774029493331909
+        },
+        {
+          "text": " kind",
+          "start": 416.27,
+          "end": 416.37,
+          "confidence": 0.9274332523345947
+        },
+        {
+          "text": " of",
+          "start": 416.37,
+          "end": 416.53,
+          "confidence": 0.9987151622772217
+        },
+        {
+          "text": " a",
+          "start": 416.53,
+          "end": 416.59000000000003,
+          "confidence": 0.6145238280296326
+        },
+        {
+          "text": " unique",
+          "start": 416.59000000000003,
+          "end": 416.75,
+          "confidence": 0.9931640028953552
+        },
+        {
+          "text": " case",
+          "start": 416.75,
+          "end": 417.05,
+          "confidence": 0.9972648620605469
+        },
+        {
+          "text": " where",
+          "start": 417.05,
+          "end": 417.25,
+          "confidence": 0.9473081827163696
+        },
+        {
+          "text": " we",
+          "start": 417.25,
+          "end": 417.51,
+          "confidence": 0.9980760812759399
+        },
+        {
+          "text": " created",
+          "start": 417.51,
+          "end": 418.47,
+          "confidence": 0.9913083910942078
+        },
+        {
+          "text": " the",
+          "start": 418.47,
+          "end": 418.65,
+          "confidence": 0.9943512678146362
+        },
+        {
+          "text": " Wiki",
+          "start": 418.65,
+          "end": 418.83000000000004,
+          "confidence": 0.5184328556060791
+        },
+        {
+          "text": " kind",
+          "start": 418.83000000000004,
+          "end": 419.16999999999996,
+          "confidence": 0.7181904315948486
+        },
+        {
+          "text": " of",
+          "start": 419.16999999999996,
+          "end": 419.33000000000004,
+          "confidence": 0.9987672567367554
+        },
+        {
+          "text": " underground,",
+          "start": 419.33000000000004,
+          "end": 419.85,
+          "confidence": 0.9806877374649048
+        }
+      ]
+    },
+    {
+      "start": 420.27,
+      "end": 427.11,
+      "text": "and so we were our own IT department in hiding, like a guerrilla Wiki team.",
+      "words": [
+        {
+          "text": " and",
+          "start": 420.27,
+          "end": 420.55,
+          "confidence": 0.9717066884040833
+        },
+        {
+          "text": " so",
+          "start": 420.55,
+          "end": 421.87,
+          "confidence": 0.8758904933929443
+        },
+        {
+          "text": " we",
+          "start": 421.87,
+          "end": 422.45,
+          "confidence": 0.9533135294914246
+        },
+        {
+          "text": " were",
+          "start": 422.45,
+          "end": 422.61,
+          "confidence": 0.9953829646110535
+        },
+        {
+          "text": " our",
+          "start": 422.61,
+          "end": 422.81,
+          "confidence": 0.9958314299583435
+        },
+        {
+          "text": " own",
+          "start": 422.81,
+          "end": 423.05,
+          "confidence": 0.9991427659988403
+        },
+        {
+          "text": " IT",
+          "start": 423.05,
+          "end": 423.40999999999997,
+          "confidence": 0.9944695234298706
+        },
+        {
+          "text": " department",
+          "start": 423.40999999999997,
+          "end": 423.81,
+          "confidence": 0.9867352247238159
+        },
+        {
+          "text": " in",
+          "start": 423.81,
+          "end": 424.78999999999996,
+          "confidence": 0.9058152437210083
+        },
+        {
+          "text": " hiding,",
+          "start": 424.78999999999996,
+          "end": 425.03,
+          "confidence": 0.9868702292442322
+        },
+        {
+          "text": " like",
+          "start": 425.35,
+          "end": 425.55,
+          "confidence": 0.710117757320404
+        },
+        {
+          "text": " a",
+          "start": 425.55,
+          "end": 425.71000000000004,
+          "confidence": 0.9345917701721191
+        },
+        {
+          "text": " guerrilla",
+          "start": 425.71000000000004,
+          "end": 426.07,
+          "confidence": 0.7666439910729727
+        },
+        {
+          "text": " Wiki",
+          "start": 426.07,
+          "end": 426.75,
+          "confidence": 0.7918304204940796
+        },
+        {
+          "text": " team.",
+          "start": 426.75,
+          "end": 427.11,
+          "confidence": 0.9868935346603394
+        }
+      ]
+    },
+    {
+      "start": 428.51,
+      "end": 432.71000000000004,
+      "text": "But eventually we became public and let people know what we were doing.",
+      "words": [
+        {
+          "text": " But",
+          "start": 428.51,
+          "end": 429.03,
+          "confidence": 0.08615607768297195
+        },
+        {
+          "text": " eventually",
+          "start": 429.03,
+          "end": 429.55,
+          "confidence": 0.9601224660873413
+        },
+        {
+          "text": " we",
+          "start": 429.55,
+          "end": 429.85,
+          "confidence": 0.8055737018585205
+        },
+        {
+          "text": " became",
+          "start": 429.85,
+          "end": 430.13,
+          "confidence": 0.9895322322845459
+        },
+        {
+          "text": " public",
+          "start": 430.13,
+          "end": 430.66999999999996,
+          "confidence": 0.9889534711837769
+        },
+        {
+          "text": " and",
+          "start": 430.66999999999996,
+          "end": 431.01,
+          "confidence": 0.9621330499649048
+        },
+        {
+          "text": " let",
+          "start": 431.01,
+          "end": 431.71000000000004,
+          "confidence": 0.9036625027656555
+        },
+        {
+          "text": " people",
+          "start": 431.71000000000004,
+          "end": 431.90999999999997,
+          "confidence": 0.9983977675437927
+        },
+        {
+          "text": " know",
+          "start": 431.90999999999997,
+          "end": 432.11,
+          "confidence": 0.9962185025215149
+        },
+        {
+          "text": " what",
+          "start": 432.11,
+          "end": 432.27,
+          "confidence": 0.9903960227966309
+        },
+        {
+          "text": " we",
+          "start": 432.27,
+          "end": 432.37,
+          "confidence": 0.994867205619812
+        },
+        {
+          "text": " were",
+          "start": 432.37,
+          "end": 432.49,
+          "confidence": 0.9537880420684814
+        },
+        {
+          "text": " doing.",
+          "start": 432.49,
+          "end": 432.71000000000004,
+          "confidence": 0.9986506104469299
+        }
+      ]
+    },
+    {
+      "start": 433.19,
+      "end": 438.43,
+      "text": "And we've actually grown, we've built a good relationship with our IT department because",
+      "words": [
+        {
+          "text": " And",
+          "start": 433.19,
+          "end": 433.19,
+          "confidence": 0.466648131608963
+        },
+        {
+          "text": " we've",
+          "start": 433.19,
+          "end": 434.49,
+          "confidence": 0.9626797139644623
+        },
+        {
+          "text": " actually",
+          "start": 434.49,
+          "end": 434.66999999999996,
+          "confidence": 0.9517657160758972
+        },
+        {
+          "text": " grown,",
+          "start": 434.66999999999996,
+          "end": 434.99,
+          "confidence": 0.6205331087112427
+        },
+        {
+          "text": " we've",
+          "start": 435.19,
+          "end": 435.37,
+          "confidence": 0.9818970263004303
+        },
+        {
+          "text": " built",
+          "start": 435.37,
+          "end": 435.55,
+          "confidence": 0.9877578020095825
+        },
+        {
+          "text": " a",
+          "start": 435.55,
+          "end": 435.69,
+          "confidence": 0.997534990310669
+        },
+        {
+          "text": " good",
+          "start": 435.69,
+          "end": 435.85,
+          "confidence": 0.9974352717399597
+        },
+        {
+          "text": " relationship",
+          "start": 435.85,
+          "end": 436.35,
+          "confidence": 0.996799111366272
+        },
+        {
+          "text": " with",
+          "start": 436.35,
+          "end": 436.55,
+          "confidence": 0.9975219368934631
+        },
+        {
+          "text": " our",
+          "start": 436.55,
+          "end": 436.73,
+          "confidence": 0.9952835440635681
+        },
+        {
+          "text": " IT",
+          "start": 436.73,
+          "end": 437.09000000000003,
+          "confidence": 0.9550154209136963
+        },
+        {
+          "text": " department",
+          "start": 437.09000000000003,
+          "end": 437.43,
+          "confidence": 0.9173815250396729
+        },
+        {
+          "text": " because",
+          "start": 437.43,
+          "end": 438.43,
+          "confidence": 0.8034945130348206
+        }
+      ]
+    },
+    {
+      "start": 439.87,
+      "end": 441.23,
+      "text": "we want it to succeed.",
+      "words": [
+        {
+          "text": " we",
+          "start": 439.87,
+          "end": 440.13,
+          "confidence": 0.983279824256897
+        },
+        {
+          "text": " want",
+          "start": 440.13,
+          "end": 440.40999999999997,
+          "confidence": 0.92034512758255
+        },
+        {
+          "text": " it",
+          "start": 440.40999999999997,
+          "end": 440.53,
+          "confidence": 0.9959909319877625
+        },
+        {
+          "text": " to",
+          "start": 440.53,
+          "end": 440.69,
+          "confidence": 0.9995043277740479
+        },
+        {
+          "text": " succeed.",
+          "start": 440.69,
+          "end": 441.23,
+          "confidence": 0.9984174966812134
+        }
+      ]
+    },
+    {
+      "start": 441.65,
+      "end": 446.31,
+      "text": "So we've taken special effort to work with them to make sure we're meeting all of their",
+      "words": [
+        {
+          "text": " So",
+          "start": 441.65,
+          "end": 442.09000000000003,
+          "confidence": 0.9823456406593323
+        },
+        {
+          "text": " we've",
+          "start": 442.09000000000003,
+          "end": 442.45,
+          "confidence": 0.8826862573623657
+        },
+        {
+          "text": " taken",
+          "start": 442.45,
+          "end": 442.75,
+          "confidence": 0.9894428253173828
+        },
+        {
+          "text": " special",
+          "start": 442.75,
+          "end": 443.40999999999997,
+          "confidence": 0.9365571737289429
+        },
+        {
+          "text": " effort",
+          "start": 443.40999999999997,
+          "end": 443.85,
+          "confidence": 0.9932410717010498
+        },
+        {
+          "text": " to",
+          "start": 443.85,
+          "end": 444.11,
+          "confidence": 0.9990691542625427
+        },
+        {
+          "text": " work",
+          "start": 444.11,
+          "end": 444.28999999999996,
+          "confidence": 0.9987279772758484
+        },
+        {
+          "text": " with",
+          "start": 444.28999999999996,
+          "end": 444.57,
+          "confidence": 0.9994245767593384
+        },
+        {
+          "text": " them",
+          "start": 444.57,
+          "end": 444.78999999999996,
+          "confidence": 0.9991576671600342
+        },
+        {
+          "text": " to",
+          "start": 444.78999999999996,
+          "end": 445.03,
+          "confidence": 0.8625139594078064
+        },
+        {
+          "text": " make",
+          "start": 445.03,
+          "end": 445.16999999999996,
+          "confidence": 0.9969244599342346
+        },
+        {
+          "text": " sure",
+          "start": 445.16999999999996,
+          "end": 445.37,
+          "confidence": 0.9970580339431763
+        },
+        {
+          "text": " we're",
+          "start": 445.37,
+          "end": 445.57,
+          "confidence": 0.9862289726734161
+        },
+        {
+          "text": " meeting",
+          "start": 445.57,
+          "end": 445.81,
+          "confidence": 0.9979302883148193
+        },
+        {
+          "text": " all",
+          "start": 445.81,
+          "end": 446.07,
+          "confidence": 0.9990484118461609
+        },
+        {
+          "text": " of",
+          "start": 446.07,
+          "end": 446.19,
+          "confidence": 0.9763971567153931
+        },
+        {
+          "text": " their",
+          "start": 446.19,
+          "end": 446.31,
+          "confidence": 0.9921242594718933
+        }
+      ]
+    },
+    {
+      "start": 446.31,
+      "end": 453.33000000000004,
+      "text": "requirements and in some ways, so like for example the way that we are required to",
+      "words": [
+        {
+          "text": " requirements",
+          "start": 446.31,
+          "end": 446.93,
+          "confidence": 0.9990837574005127
+        },
+        {
+          "text": " and",
+          "start": 446.93,
+          "end": 448.25,
+          "confidence": 0.2886360287666321
+        },
+        {
+          "text": " in",
+          "start": 448.25,
+          "end": 449.49,
+          "confidence": 0.9034202098846436
+        },
+        {
+          "text": " some",
+          "start": 449.49,
+          "end": 449.66999999999996,
+          "confidence": 0.9993258714675903
+        },
+        {
+          "text": " ways,",
+          "start": 449.66999999999996,
+          "end": 449.93,
+          "confidence": 0.9174467921257019
+        },
+        {
+          "text": " so",
+          "start": 450.09000000000003,
+          "end": 450.25,
+          "confidence": 0.8227176070213318
+        },
+        {
+          "text": " like",
+          "start": 450.25,
+          "end": 450.55,
+          "confidence": 0.7890163660049438
+        },
+        {
+          "text": " for",
+          "start": 450.55,
+          "end": 451.39,
+          "confidence": 0.49602603912353516
+        },
+        {
+          "text": " example",
+          "start": 451.39,
+          "end": 451.71000000000004,
+          "confidence": 0.998989999294281
+        },
+        {
+          "text": " the",
+          "start": 451.71000000000004,
+          "end": 451.93,
+          "confidence": 0.6193599700927734
+        },
+        {
+          "text": " way",
+          "start": 451.93,
+          "end": 452.15,
+          "confidence": 0.998909592628479
+        },
+        {
+          "text": " that",
+          "start": 452.15,
+          "end": 452.35,
+          "confidence": 0.9623896479606628
+        },
+        {
+          "text": " we",
+          "start": 452.35,
+          "end": 452.51,
+          "confidence": 0.9986416697502136
+        },
+        {
+          "text": " are",
+          "start": 452.51,
+          "end": 452.65,
+          "confidence": 0.986170768737793
+        },
+        {
+          "text": " required",
+          "start": 452.65,
+          "end": 453.03,
+          "confidence": 0.9986133575439453
+        },
+        {
+          "text": " to",
+          "start": 453.03,
+          "end": 453.33000000000004,
+          "confidence": 0.999360978603363
+        }
+      ]
+    },
+    {
+      "start": 453.33000000000004,
+      "end": 457.37,
+      "text": "audit users when they request access and how their",
+      "words": [
+        {
+          "text": " audit",
+          "start": 453.33000000000004,
+          "end": 453.69,
+          "confidence": 0.35172173380851746
+        },
+        {
+          "text": " users",
+          "start": 453.69,
+          "end": 454.37,
+          "confidence": 0.9606125950813293
+        },
+        {
+          "text": " when",
+          "start": 454.37,
+          "end": 455.13,
+          "confidence": 0.8372193574905396
+        },
+        {
+          "text": " they",
+          "start": 455.13,
+          "end": 455.27,
+          "confidence": 0.990275502204895
+        },
+        {
+          "text": " request",
+          "start": 455.27,
+          "end": 455.57,
+          "confidence": 0.9906826019287109
+        },
+        {
+          "text": " access",
+          "start": 455.57,
+          "end": 456.07,
+          "confidence": 0.9920839071273804
+        },
+        {
+          "text": " and",
+          "start": 456.07,
+          "end": 456.33000000000004,
+          "confidence": 0.8449866771697998
+        },
+        {
+          "text": " how",
+          "start": 456.33000000000004,
+          "end": 456.51,
+          "confidence": 0.9722089767456055
+        },
+        {
+          "text": " their",
+          "start": 456.51,
+          "end": 457.37,
+          "confidence": 0.8746187090873718
+        }
+      ]
+    },
+    {
+      "start": 457.83000000000004,
+      "end": 462.25,
+      "text": "usership is maintained, we do a way better job than SharePoint.",
+      "words": [
+        {
+          "text": " usership",
+          "start": 457.83000000000004,
+          "end": 458.23,
+          "confidence": 0.8640877902507782
+        },
+        {
+          "text": " is",
+          "start": 458.23,
+          "end": 458.37,
+          "confidence": 0.9365977644920349
+        },
+        {
+          "text": " maintained,",
+          "start": 458.37,
+          "end": 458.81,
+          "confidence": 0.9808712601661682
+        },
+        {
+          "text": " we",
+          "start": 460.01,
+          "end": 460.63,
+          "confidence": 0.9705373644828796
+        },
+        {
+          "text": " do",
+          "start": 460.63,
+          "end": 460.83000000000004,
+          "confidence": 0.9932045936584473
+        },
+        {
+          "text": " a",
+          "start": 460.83000000000004,
+          "end": 460.95,
+          "confidence": 0.9781355857849121
+        },
+        {
+          "text": " way",
+          "start": 460.95,
+          "end": 461.11,
+          "confidence": 0.9829892516136169
+        },
+        {
+          "text": " better",
+          "start": 461.11,
+          "end": 461.33000000000004,
+          "confidence": 0.9961817264556885
+        },
+        {
+          "text": " job",
+          "start": 461.33000000000004,
+          "end": 461.65,
+          "confidence": 0.9897773861885071
+        },
+        {
+          "text": " than",
+          "start": 461.65,
+          "end": 461.85,
+          "confidence": 0.9327999949455261
+        },
+        {
+          "text": " SharePoint.",
+          "start": 461.85,
+          "end": 462.25,
+          "confidence": 0.9705608487129211
+        }
+      ]
+    },
+    {
+      "start": 462.59000000000003,
+      "end": 466.90999999999997,
+      "text": "Like SharePoint somehow has this rule where they're an exception",
+      "words": [
+        {
+          "text": " Like",
+          "start": 462.59000000000003,
+          "end": 462.69,
+          "confidence": 0.5945760011672974
+        },
+        {
+          "text": " SharePoint",
+          "start": 462.69,
+          "end": 462.99,
+          "confidence": 0.88621386885643
+        },
+        {
+          "text": " somehow",
+          "start": 462.99,
+          "end": 463.28999999999996,
+          "confidence": 0.9469083547592163
+        },
+        {
+          "text": " has",
+          "start": 463.28999999999996,
+          "end": 463.66999999999996,
+          "confidence": 0.9798968434333801
+        },
+        {
+          "text": " this",
+          "start": 463.66999999999996,
+          "end": 463.90999999999997,
+          "confidence": 0.9786037802696228
+        },
+        {
+          "text": " rule",
+          "start": 463.90999999999997,
+          "end": 464.99,
+          "confidence": 0.5774310231208801
+        },
+        {
+          "text": " where",
+          "start": 464.99,
+          "end": 465.19,
+          "confidence": 0.9231799244880676
+        },
+        {
+          "text": " they're",
+          "start": 465.19,
+          "end": 466.51,
+          "confidence": 0.7853129804134369
+        },
+        {
+          "text": " an",
+          "start": 466.51,
+          "end": 466.63,
+          "confidence": 0.8402635455131531
+        },
+        {
+          "text": " exception",
+          "start": 466.63,
+          "end": 466.90999999999997,
+          "confidence": 0.9990702271461487
+        }
+      ]
+    },
+    {
+      "start": 466.90999999999997,
+      "end": 468.01,
+      "text": "and they don't have to do it.",
+      "words": [
+        {
+          "text": " and",
+          "start": 466.90999999999997,
+          "end": 467.15,
+          "confidence": 0.9394611120223999
+        },
+        {
+          "text": " they",
+          "start": 467.15,
+          "end": 467.25,
+          "confidence": 0.9903562068939209
+        },
+        {
+          "text": " don't",
+          "start": 467.25,
+          "end": 467.37,
+          "confidence": 0.9978702962398529
+        },
+        {
+          "text": " have",
+          "start": 467.37,
+          "end": 467.55,
+          "confidence": 0.99824059009552
+        },
+        {
+          "text": " to",
+          "start": 467.55,
+          "end": 467.66999999999996,
+          "confidence": 0.9984546899795532
+        },
+        {
+          "text": " do",
+          "start": 467.66999999999996,
+          "end": 467.83000000000004,
+          "confidence": 0.9986050724983215
+        },
+        {
+          "text": " it.",
+          "start": 467.83000000000004,
+          "end": 468.01,
+          "confidence": 0.9970360994338989
+        }
+      ]
+    },
+    {
+      "start": 468.33000000000004,
+      "end": 470.03,
+      "text": "And we're like, well, that's lame.",
+      "words": [
+        {
+          "text": " And",
+          "start": 468.33000000000004,
+          "end": 468.33000000000004,
+          "confidence": 0.4390909969806671
+        },
+        {
+          "text": " we're",
+          "start": 468.33000000000004,
+          "end": 468.71000000000004,
+          "confidence": 0.9696131348609924
+        },
+        {
+          "text": " like,",
+          "start": 468.71000000000004,
+          "end": 468.87,
+          "confidence": 0.9871459007263184
+        },
+        {
+          "text": " well,",
+          "start": 468.97,
+          "end": 469.07,
+          "confidence": 0.6377527713775635
+        },
+        {
+          "text": " that's",
+          "start": 469.11,
+          "end": 469.39,
+          "confidence": 0.9984539151191711
+        },
+        {
+          "text": " lame.",
+          "start": 469.39,
+          "end": 470.03,
+          "confidence": 0.9981643557548523
+        }
+      ]
+    },
+    {
+      "start": 470.27,
+      "end": 473.25,
+      "text": "But we go ahead and work with them to meet those requirements.",
+      "words": [
+        {
+          "text": " But",
+          "start": 470.27,
+          "end": 470.37,
+          "confidence": 0.9583339095115662
+        },
+        {
+          "text": " we",
+          "start": 470.37,
+          "end": 470.87,
+          "confidence": 0.9705018997192383
+        },
+        {
+          "text": " go",
+          "start": 470.87,
+          "end": 471.03,
+          "confidence": 0.9860302805900574
+        },
+        {
+          "text": " ahead",
+          "start": 471.03,
+          "end": 471.15,
+          "confidence": 0.9370233416557312
+        },
+        {
+          "text": " and",
+          "start": 471.15,
+          "end": 471.25,
+          "confidence": 0.9775437712669373
+        },
+        {
+          "text": " work",
+          "start": 471.25,
+          "end": 471.37,
+          "confidence": 0.9976612329483032
+        },
+        {
+          "text": " with",
+          "start": 471.37,
+          "end": 471.61,
+          "confidence": 0.9989632368087769
+        },
+        {
+          "text": " them",
+          "start": 471.61,
+          "end": 471.78999999999996,
+          "confidence": 0.9985242486000061
+        },
+        {
+          "text": " to",
+          "start": 471.78999999999996,
+          "end": 472.09000000000003,
+          "confidence": 0.9972124695777893
+        },
+        {
+          "text": " meet",
+          "start": 472.09000000000003,
+          "end": 472.51,
+          "confidence": 0.9980918765068054
+        },
+        {
+          "text": " those",
+          "start": 472.51,
+          "end": 472.73,
+          "confidence": 0.9969412684440613
+        },
+        {
+          "text": " requirements.",
+          "start": 472.73,
+          "end": 473.25,
+          "confidence": 0.997628390789032
+        }
+      ]
+    },
+    {
+      "start": 473.45,
+      "end": 475.90999999999997,
+      "text": "And so now we're kind of like the golden standard.",
+      "words": [
+        {
+          "text": " And",
+          "start": 473.45,
+          "end": 473.49,
+          "confidence": 0.9220673441886902
+        },
+        {
+          "text": " so",
+          "start": 473.49,
+          "end": 473.61,
+          "confidence": 0.9950443506240845
+        },
+        {
+          "text": " now",
+          "start": 473.61,
+          "end": 473.78999999999996,
+          "confidence": 0.9700503349304199
+        },
+        {
+          "text": " we're",
+          "start": 473.78999999999996,
+          "end": 473.97,
+          "confidence": 0.9228863716125488
+        },
+        {
+          "text": " kind",
+          "start": 473.97,
+          "end": 474.15,
+          "confidence": 0.787670910358429
+        },
+        {
+          "text": " of",
+          "start": 474.15,
+          "end": 474.28999999999996,
+          "confidence": 0.9970418810844421
+        },
+        {
+          "text": " like",
+          "start": 474.28999999999996,
+          "end": 474.40999999999997,
+          "confidence": 0.9557472467422485
+        },
+        {
+          "text": " the",
+          "start": 474.40999999999997,
+          "end": 474.73,
+          "confidence": 0.8261449337005615
+        },
+        {
+          "text": " golden",
+          "start": 474.73,
+          "end": 475.47,
+          "confidence": 0.8806880116462708
+        },
+        {
+          "text": " standard.",
+          "start": 475.47,
+          "end": 475.90999999999997,
+          "confidence": 0.9980680346488953
+        }
+      ]
+    },
+    {
+      "start": 476.35,
+      "end": 478.31,
+      "text": "People look at us and say, oh, you've done really well",
+      "words": [
+        {
+          "text": " People",
+          "start": 476.35,
+          "end": 476.53,
+          "confidence": 0.9961400628089905
+        },
+        {
+          "text": " look",
+          "start": 476.53,
+          "end": 476.71000000000004,
+          "confidence": 0.9952717423439026
+        },
+        {
+          "text": " at",
+          "start": 476.71000000000004,
+          "end": 476.85,
+          "confidence": 0.9992963075637817
+        },
+        {
+          "text": " us",
+          "start": 476.85,
+          "end": 476.99,
+          "confidence": 0.9995601773262024
+        },
+        {
+          "text": " and",
+          "start": 476.99,
+          "end": 477.07,
+          "confidence": 0.9913719892501831
+        },
+        {
+          "text": " say,",
+          "start": 477.07,
+          "end": 477.21000000000004,
+          "confidence": 0.99493008852005
+        },
+        {
+          "text": " oh,",
+          "start": 477.25,
+          "end": 477.40999999999997,
+          "confidence": 0.7887327075004578
+        },
+        {
+          "text": " you've",
+          "start": 477.43,
+          "end": 477.73,
+          "confidence": 0.8165884912014008
+        },
+        {
+          "text": " done",
+          "start": 477.73,
+          "end": 477.89,
+          "confidence": 0.9972109198570251
+        },
+        {
+          "text": " really",
+          "start": 477.89,
+          "end": 478.11,
+          "confidence": 0.9975765347480774
+        },
+        {
+          "text": " well",
+          "start": 478.11,
+          "end": 478.31,
+          "confidence": 0.9968175888061523
+        }
+      ]
+    },
+    {
+      "start": 478.31,
+      "end": 478.75,
+      "text": "with the Wiki.",
+      "words": [
+        {
+          "text": " with",
+          "start": 478.31,
+          "end": 478.47,
+          "confidence": 0.994335949420929
+        },
+        {
+          "text": " the",
+          "start": 478.47,
+          "end": 478.57,
+          "confidence": 0.9862627983093262
+        },
+        {
+          "text": " Wiki.",
+          "start": 478.57,
+          "end": 478.75,
+          "confidence": 0.5316112041473389
+        }
+      ]
+    },
+    {
+      "start": 479.40999999999997,
+      "end": 483.95,
+      "text": "So now we've built cloud, I think, by working with our IT department.",
+      "words": [
+        {
+          "text": " So",
+          "start": 479.40999999999997,
+          "end": 479.77,
+          "confidence": 0.19913557171821594
+        },
+        {
+          "text": " now",
+          "start": 479.77,
+          "end": 480.03,
+          "confidence": 0.8501095175743103
+        },
+        {
+          "text": " we've",
+          "start": 480.03,
+          "end": 480.99,
+          "confidence": 0.8299812376499176
+        },
+        {
+          "text": " built",
+          "start": 480.99,
+          "end": 481.15,
+          "confidence": 0.991523265838623
+        },
+        {
+          "text": " cloud,",
+          "start": 481.15,
+          "end": 481.45,
+          "confidence": 0.4489125907421112
+        },
+        {
+          "text": " I",
+          "start": 481.63,
+          "end": 481.73,
+          "confidence": 0.9775367975234985
+        },
+        {
+          "text": " think,",
+          "start": 481.73,
+          "end": 481.93,
+          "confidence": 0.9994383454322815
+        },
+        {
+          "text": " by",
+          "start": 482.11,
+          "end": 482.51,
+          "confidence": 0.9952552914619446
+        },
+        {
+          "text": " working",
+          "start": 482.51,
+          "end": 482.85,
+          "confidence": 0.9991126656532288
+        },
+        {
+          "text": " with",
+          "start": 482.85,
+          "end": 483.09000000000003,
+          "confidence": 0.9976160526275635
+        },
+        {
+          "text": " our",
+          "start": 483.09000000000003,
+          "end": 483.23,
+          "confidence": 0.9930636286735535
+        },
+        {
+          "text": " IT",
+          "start": 483.23,
+          "end": 483.65,
+          "confidence": 0.98044753074646
+        },
+        {
+          "text": " department.",
+          "start": 483.65,
+          "end": 483.95,
+          "confidence": 0.979227602481842
+        }
+      ]
+    },
+    {
+      "start": 488.8,
+      "end": 489.53999999999996,
+      "text": "Any other questions?",
+      "words": [
+        {
+          "text": " Any",
+          "start": 488.8,
+          "end": 489.14,
+          "confidence": 0.44488072395324707
+        },
+        {
+          "text": " other",
+          "start": 489.14,
+          "end": 489.26,
+          "confidence": 0.99396151304245
+        },
+        {
+          "text": " questions?",
+          "start": 489.26,
+          "end": 489.53999999999996,
+          "confidence": 0.9963401556015015
+        }
+      ]
+    },
+    {
+      "start": 490.74,
+      "end": 492.3,
+      "text": "I have a big one from the list here really quick.",
+      "words": [
+        {
+          "text": " I",
+          "start": 490.74,
+          "end": 490.86,
+          "confidence": 0.9472039937973022
+        },
+        {
+          "text": " have",
+          "start": 490.86,
+          "end": 490.98,
+          "confidence": 0.5668676495552063
+        },
+        {
+          "text": " a",
+          "start": 490.98,
+          "end": 491.22,
+          "confidence": 0.7370984554290771
+        },
+        {
+          "text": " big",
+          "start": 491.22,
+          "end": 491.34000000000003,
+          "confidence": 0.8620579242706299
+        },
+        {
+          "text": " one",
+          "start": 491.34000000000003,
+          "end": 491.48,
+          "confidence": 0.9873180985450745
+        },
+        {
+          "text": " from",
+          "start": 491.48,
+          "end": 491.6,
+          "confidence": 0.9094850420951843
+        },
+        {
+          "text": " the",
+          "start": 491.6,
+          "end": 491.7,
+          "confidence": 0.9440470933914185
+        },
+        {
+          "text": " list",
+          "start": 491.7,
+          "end": 491.84000000000003,
+          "confidence": 0.9858644008636475
+        },
+        {
+          "text": " here",
+          "start": 491.84000000000003,
+          "end": 491.98,
+          "confidence": 0.9717132449150085
+        },
+        {
+          "text": " really",
+          "start": 491.98,
+          "end": 492.12,
+          "confidence": 0.894385039806366
+        },
+        {
+          "text": " quick.",
+          "start": 492.12,
+          "end": 492.3,
+          "confidence": 0.9300870895385742
+        }
+      ]
+    },
+    {
+      "start": 492.52,
+      "end": 498.32,
+      "text": "And Cindy, and I think all of you have kind of mentioned this when I asked the first question about how do you get off the project with the ground.",
+      "words": [
+        {
+          "text": " And",
+          "start": 492.52,
+          "end": 492.52,
+          "confidence": 0.6899142265319824
+        },
+        {
+          "text": " Cindy,",
+          "start": 492.52,
+          "end": 492.78,
+          "confidence": 0.7973096370697021
+        },
+        {
+          "text": " and",
+          "start": 493.06,
+          "end": 493.08000000000004,
+          "confidence": 0.8920045495033264
+        },
+        {
+          "text": " I",
+          "start": 493.08000000000004,
+          "end": 493.2,
+          "confidence": 0.9924389123916626
+        },
+        {
+          "text": " think",
+          "start": 493.2,
+          "end": 493.32,
+          "confidence": 0.9983599781990051
+        },
+        {
+          "text": " all",
+          "start": 493.32,
+          "end": 494.0,
+          "confidence": 0.7793490290641785
+        },
+        {
+          "text": " of",
+          "start": 494.0,
+          "end": 494.1,
+          "confidence": 0.9969894289970398
+        },
+        {
+          "text": " you",
+          "start": 494.1,
+          "end": 494.18,
+          "confidence": 0.9924227595329285
+        },
+        {
+          "text": " have",
+          "start": 494.18,
+          "end": 494.26,
+          "confidence": 0.3643098771572113
+        },
+        {
+          "text": " kind",
+          "start": 494.26,
+          "end": 494.44,
+          "confidence": 0.8484929800033569
+        },
+        {
+          "text": " of",
+          "start": 494.44,
+          "end": 494.44,
+          "confidence": 0.9936202168464661
+        },
+        {
+          "text": " mentioned",
+          "start": 494.44,
+          "end": 494.64,
+          "confidence": 0.9876261353492737
+        },
+        {
+          "text": " this",
+          "start": 494.64,
+          "end": 494.88,
+          "confidence": 0.9947445392608643
+        },
+        {
+          "text": " when",
+          "start": 494.88,
+          "end": 495.03999999999996,
+          "confidence": 0.808051347732544
+        },
+        {
+          "text": " I",
+          "start": 495.03999999999996,
+          "end": 495.15999999999997,
+          "confidence": 0.994026780128479
+        },
+        {
+          "text": " asked",
+          "start": 495.15999999999997,
+          "end": 495.32,
+          "confidence": 0.8887966871261597
+        },
+        {
+          "text": " the",
+          "start": 495.32,
+          "end": 495.44,
+          "confidence": 0.9937281608581543
+        },
+        {
+          "text": " first",
+          "start": 495.44,
+          "end": 495.64,
+          "confidence": 0.996123731136322
+        },
+        {
+          "text": " question",
+          "start": 495.64,
+          "end": 495.98,
+          "confidence": 0.9966965913772583
+        },
+        {
+          "text": " about",
+          "start": 495.98,
+          "end": 496.22,
+          "confidence": 0.9840090274810791
+        },
+        {
+          "text": " how",
+          "start": 496.22,
+          "end": 497.22,
+          "confidence": 0.9193026423454285
+        },
+        {
+          "text": " do",
+          "start": 497.22,
+          "end": 497.26,
+          "confidence": 0.5140246152877808
+        },
+        {
+          "text": " you",
+          "start": 497.26,
+          "end": 497.3,
+          "confidence": 0.9863719344139099
+        },
+        {
+          "text": " get",
+          "start": 497.3,
+          "end": 497.38,
+          "confidence": 0.9742926359176636
+        },
+        {
+          "text": " off",
+          "start": 497.38,
+          "end": 497.46000000000004,
+          "confidence": 0.876556396484375
+        },
+        {
+          "text": " the",
+          "start": 497.46000000000004,
+          "end": 497.58000000000004,
+          "confidence": 0.9794548749923706
+        },
+        {
+          "text": " project",
+          "start": 497.58000000000004,
+          "end": 497.86,
+          "confidence": 0.9840001463890076
+        },
+        {
+          "text": " with",
+          "start": 497.86,
+          "end": 498.02,
+          "confidence": 0.7853004336357117
+        },
+        {
+          "text": " the",
+          "start": 498.02,
+          "end": 498.12,
+          "confidence": 0.9848307371139526
+        },
+        {
+          "text": " ground.",
+          "start": 498.12,
+          "end": 498.32,
+          "confidence": 0.9937073588371277
+        }
+      ]
+    },
+    {
+      "start": 499.08000000000004,
+      "end": 509.38,
+      "text": "So Wikis are different than I think what a lot of people may be experiencing in their careers, SharePoint and other things kind of are ubiquitous and other, you know, between companies, between positions and so on and so forth.",
+      "words": [
+        {
+          "text": " So",
+          "start": 499.08000000000004,
+          "end": 499.18,
+          "confidence": 0.9799280166625977
+        },
+        {
+          "text": " Wikis",
+          "start": 499.18,
+          "end": 499.56,
+          "confidence": 0.7648172378540039
+        },
+        {
+          "text": " are",
+          "start": 499.56,
+          "end": 499.7,
+          "confidence": 0.9985326528549194
+        },
+        {
+          "text": " different",
+          "start": 499.7,
+          "end": 500.02,
+          "confidence": 0.9994016885757446
+        },
+        {
+          "text": " than",
+          "start": 500.02,
+          "end": 500.5,
+          "confidence": 0.9332157969474792
+        },
+        {
+          "text": " I",
+          "start": 500.5,
+          "end": 500.65999999999997,
+          "confidence": 0.7101864814758301
+        },
+        {
+          "text": " think",
+          "start": 500.65999999999997,
+          "end": 500.78,
+          "confidence": 0.9990764856338501
+        },
+        {
+          "text": " what",
+          "start": 500.78,
+          "end": 500.94,
+          "confidence": 0.87175452709198
+        },
+        {
+          "text": " a",
+          "start": 500.94,
+          "end": 500.98,
+          "confidence": 0.9880819320678711
+        },
+        {
+          "text": " lot",
+          "start": 500.98,
+          "end": 501.1,
+          "confidence": 0.9977738261222839
+        },
+        {
+          "text": " of",
+          "start": 501.1,
+          "end": 501.14,
+          "confidence": 0.9406256675720215
+        },
+        {
+          "text": " people",
+          "start": 501.14,
+          "end": 501.22,
+          "confidence": 0.9520100355148315
+        },
+        {
+          "text": " may",
+          "start": 501.22,
+          "end": 501.36,
+          "confidence": 0.5042414665222168
+        },
+        {
+          "text": " be",
+          "start": 501.36,
+          "end": 501.44,
+          "confidence": 0.9026297926902771
+        },
+        {
+          "text": " experiencing",
+          "start": 501.44,
+          "end": 501.94,
+          "confidence": 0.9495143294334412
+        },
+        {
+          "text": " in",
+          "start": 501.94,
+          "end": 502.15999999999997,
+          "confidence": 0.4964386522769928
+        },
+        {
+          "text": " their",
+          "start": 502.15999999999997,
+          "end": 502.28,
+          "confidence": 0.9969720840454102
+        },
+        {
+          "text": " careers,",
+          "start": 502.28,
+          "end": 502.72,
+          "confidence": 0.9927992820739746
+        },
+        {
+          "text": " SharePoint",
+          "start": 502.98,
+          "end": 503.53999999999996,
+          "confidence": 0.8164600133895874
+        },
+        {
+          "text": " and",
+          "start": 503.53999999999996,
+          "end": 503.78,
+          "confidence": 0.771655261516571
+        },
+        {
+          "text": " other",
+          "start": 503.78,
+          "end": 503.9,
+          "confidence": 0.7504546046257019
+        },
+        {
+          "text": " things",
+          "start": 503.9,
+          "end": 504.56,
+          "confidence": 0.9806097149848938
+        },
+        {
+          "text": " kind",
+          "start": 504.56,
+          "end": 504.9,
+          "confidence": 0.4723414182662964
+        },
+        {
+          "text": " of",
+          "start": 504.9,
+          "end": 505.08000000000004,
+          "confidence": 0.9951866269111633
+        },
+        {
+          "text": " are",
+          "start": 505.08000000000004,
+          "end": 505.26,
+          "confidence": 0.8692594170570374
+        },
+        {
+          "text": " ubiquitous",
+          "start": 505.26,
+          "end": 505.8,
+          "confidence": 0.9984058737754822
+        },
+        {
+          "text": " and",
+          "start": 505.8,
+          "end": 506.0,
+          "confidence": 0.28831756114959717
+        },
+        {
+          "text": " other,",
+          "start": 506.0,
+          "end": 506.12,
+          "confidence": 0.5822855830192566
+        },
+        {
+          "text": " you",
+          "start": 506.38,
+          "end": 506.46000000000004,
+          "confidence": 0.5909121036529541
+        },
+        {
+          "text": " know,",
+          "start": 506.46000000000004,
+          "end": 506.6,
+          "confidence": 0.9986914992332458
+        },
+        {
+          "text": " between",
+          "start": 507.0,
+          "end": 507.18,
+          "confidence": 0.99409419298172
+        },
+        {
+          "text": " companies,",
+          "start": 507.18,
+          "end": 508.02,
+          "confidence": 0.9484065175056458
+        },
+        {
+          "text": " between",
+          "start": 508.3,
+          "end": 508.3,
+          "confidence": 0.9777787327766418
+        },
+        {
+          "text": " positions",
+          "start": 508.3,
+          "end": 508.68,
+          "confidence": 0.9850130081176758
+        },
+        {
+          "text": " and",
+          "start": 508.68,
+          "end": 508.91999999999996,
+          "confidence": 0.5196468830108643
+        },
+        {
+          "text": " so",
+          "start": 508.91999999999996,
+          "end": 508.91999999999996,
+          "confidence": 0.9661377668380737
+        },
+        {
+          "text": " on",
+          "start": 508.91999999999996,
+          "end": 509.0,
+          "confidence": 0.6314455270767212
+        },
+        {
+          "text": " and",
+          "start": 509.0,
+          "end": 509.0,
+          "confidence": 0.9079395532608032
+        },
+        {
+          "text": " so",
+          "start": 509.0,
+          "end": 509.14,
+          "confidence": 0.9973915815353394
+        },
+        {
+          "text": " forth.",
+          "start": 509.14,
+          "end": 509.38,
+          "confidence": 0.9984812140464783
+        }
+      ]
+    },
+    {
+      "start": 509.38,
+      "end": 512.24,
+      "text": "So they can be a little foreign and a little different.",
+      "words": [
+        {
+          "text": " So",
+          "start": 509.38,
+          "end": 510.18,
+          "confidence": 0.14138300716876984
+        },
+        {
+          "text": " they",
+          "start": 510.18,
+          "end": 510.96000000000004,
+          "confidence": 0.6446105241775513
+        },
+        {
+          "text": " can",
+          "start": 510.96000000000004,
+          "end": 511.06,
+          "confidence": 0.897666871547699
+        },
+        {
+          "text": " be",
+          "start": 511.06,
+          "end": 511.18,
+          "confidence": 0.9892005920410156
+        },
+        {
+          "text": " a",
+          "start": 511.18,
+          "end": 511.26,
+          "confidence": 0.9466081857681274
+        },
+        {
+          "text": " little",
+          "start": 511.26,
+          "end": 511.32,
+          "confidence": 0.9957886338233948
+        },
+        {
+          "text": " foreign",
+          "start": 511.32,
+          "end": 511.65999999999997,
+          "confidence": 0.8904775977134705
+        },
+        {
+          "text": " and",
+          "start": 511.65999999999997,
+          "end": 511.82,
+          "confidence": 0.7668242454528809
+        },
+        {
+          "text": " a",
+          "start": 511.82,
+          "end": 511.91999999999996,
+          "confidence": 0.8555559515953064
+        },
+        {
+          "text": " little",
+          "start": 511.91999999999996,
+          "end": 511.96000000000004,
+          "confidence": 0.9853854775428772
+        },
+        {
+          "text": " different.",
+          "start": 511.96000000000004,
+          "end": 512.24,
+          "confidence": 0.997096061706543
+        }
+      ]
+    },
+    {
+      "start": 513.06,
+      "end": 514.6,
+      "text": "How do you make it something they're comfortable with?",
+      "words": [
+        {
+          "text": " How",
+          "start": 513.06,
+          "end": 513.28,
+          "confidence": 0.9728514552116394
+        },
+        {
+          "text": " do",
+          "start": 513.28,
+          "end": 513.34,
+          "confidence": 0.995996356010437
+        },
+        {
+          "text": " you",
+          "start": 513.34,
+          "end": 513.44,
+          "confidence": 0.9950156807899475
+        },
+        {
+          "text": " make",
+          "start": 513.44,
+          "end": 513.62,
+          "confidence": 0.9960777163505554
+        },
+        {
+          "text": " it",
+          "start": 513.62,
+          "end": 513.7,
+          "confidence": 0.981282114982605
+        },
+        {
+          "text": " something",
+          "start": 513.7,
+          "end": 513.86,
+          "confidence": 0.9957050681114197
+        },
+        {
+          "text": " they're",
+          "start": 513.86,
+          "end": 514.06,
+          "confidence": 0.8446037769317627
+        },
+        {
+          "text": " comfortable",
+          "start": 514.06,
+          "end": 514.3,
+          "confidence": 0.9949619770050049
+        },
+        {
+          "text": " with?",
+          "start": 514.3,
+          "end": 514.6,
+          "confidence": 0.9902369379997253
+        }
+      ]
+    },
+    {
+      "start": 514.6800000000001,
+      "end": 518.1800000000001,
+      "text": "How do you get those, find those, as you mentioned, Brian, those champions?",
+      "words": [
+        {
+          "text": " How",
+          "start": 514.6800000000001,
+          "end": 514.74,
+          "confidence": 0.872780442237854
+        },
+        {
+          "text": " do",
+          "start": 514.74,
+          "end": 514.8199999999999,
+          "confidence": 0.9946686625480652
+        },
+        {
+          "text": " you",
+          "start": 514.8199999999999,
+          "end": 514.92,
+          "confidence": 0.9976627826690674
+        },
+        {
+          "text": " get",
+          "start": 514.92,
+          "end": 515.08,
+          "confidence": 0.5589926242828369
+        },
+        {
+          "text": " those,",
+          "start": 515.08,
+          "end": 515.36,
+          "confidence": 0.9673780202865601
+        },
+        {
+          "text": " find",
+          "start": 515.5,
+          "end": 515.62,
+          "confidence": 0.933779776096344
+        },
+        {
+          "text": " those,",
+          "start": 515.62,
+          "end": 515.84,
+          "confidence": 0.9967036843299866
+        },
+        {
+          "text": " as",
+          "start": 516.02,
+          "end": 516.1,
+          "confidence": 0.9922602772712708
+        },
+        {
+          "text": " you",
+          "start": 516.1,
+          "end": 516.1800000000001,
+          "confidence": 0.9974460601806641
+        },
+        {
+          "text": " mentioned,",
+          "start": 516.1800000000001,
+          "end": 516.38,
+          "confidence": 0.968549370765686
+        },
+        {
+          "text": " Brian,",
+          "start": 516.48,
+          "end": 516.66,
+          "confidence": 0.8332033753395081
+        },
+        {
+          "text": " those",
+          "start": 517.26,
+          "end": 517.54,
+          "confidence": 0.9934983253479004
+        },
+        {
+          "text": " champions?",
+          "start": 517.54,
+          "end": 518.1800000000001,
+          "confidence": 0.9734125137329102
+        }
+      ]
+    },
+    {
+      "start": 518.78,
+      "end": 523.16,
+      "text": "What are some of your best practices to encouraging folks to take the wiki approach as it were?",
+      "words": [
+        {
+          "text": " What",
+          "start": 518.78,
+          "end": 519.02,
+          "confidence": 0.9846898317337036
+        },
+        {
+          "text": " are",
+          "start": 519.02,
+          "end": 519.12,
+          "confidence": 0.7600374817848206
+        },
+        {
+          "text": " some",
+          "start": 519.12,
+          "end": 519.24,
+          "confidence": 0.16079343855381012
+        },
+        {
+          "text": " of",
+          "start": 519.24,
+          "end": 519.34,
+          "confidence": 0.9933156371116638
+        },
+        {
+          "text": " your",
+          "start": 519.34,
+          "end": 519.4,
+          "confidence": 0.9324479103088379
+        },
+        {
+          "text": " best",
+          "start": 519.4,
+          "end": 519.52,
+          "confidence": 0.5818113088607788
+        },
+        {
+          "text": " practices",
+          "start": 519.52,
+          "end": 519.98,
+          "confidence": 0.9951868653297424
+        },
+        {
+          "text": " to",
+          "start": 519.98,
+          "end": 520.36,
+          "confidence": 0.9763467311859131
+        },
+        {
+          "text": " encouraging",
+          "start": 520.36,
+          "end": 520.76,
+          "confidence": 0.5966305136680603
+        },
+        {
+          "text": " folks",
+          "start": 520.76,
+          "end": 521.3199999999999,
+          "confidence": 0.9865213632583618
+        },
+        {
+          "text": " to",
+          "start": 521.3199999999999,
+          "end": 521.62,
+          "confidence": 0.9930878281593323
+        },
+        {
+          "text": " take",
+          "start": 521.62,
+          "end": 521.86,
+          "confidence": 0.9980598092079163
+        },
+        {
+          "text": " the",
+          "start": 521.86,
+          "end": 522.02,
+          "confidence": 0.9912469983100891
+        },
+        {
+          "text": " wiki",
+          "start": 522.02,
+          "end": 522.2,
+          "confidence": 0.8442426025867462
+        },
+        {
+          "text": " approach",
+          "start": 522.2,
+          "end": 522.66,
+          "confidence": 0.9964722394943237
+        },
+        {
+          "text": " as",
+          "start": 522.66,
+          "end": 522.94,
+          "confidence": 0.5781066417694092
+        },
+        {
+          "text": " it",
+          "start": 522.94,
+          "end": 523.08,
+          "confidence": 0.9281655550003052
+        },
+        {
+          "text": " were?",
+          "start": 523.08,
+          "end": 523.16,
+          "confidence": 0.9750365614891052
+        }
+      ]
+    },
+    {
+      "start": 525.28,
+      "end": 526.48,
+      "text": "I'll just kick things off.",
+      "words": [
+        {
+          "text": " I'll",
+          "start": 525.28,
+          "end": 525.56,
+          "confidence": 0.5820147097110748
+        },
+        {
+          "text": " just",
+          "start": 525.56,
+          "end": 525.74,
+          "confidence": 0.9981439113616943
+        },
+        {
+          "text": " kick",
+          "start": 525.74,
+          "end": 526.0,
+          "confidence": 0.8725584149360657
+        },
+        {
+          "text": " things",
+          "start": 526.0,
+          "end": 526.24,
+          "confidence": 0.9982176423072815
+        },
+        {
+          "text": " off.",
+          "start": 526.24,
+          "end": 526.48,
+          "confidence": 0.9971081614494324
+        }
+      ]
+    },
+    {
+      "start": 527.56,
+      "end": 534.72,
+      "text": "I think one of the strengths of a wiki is it allows each person to contribute in the way in which they're comfortable.",
+      "words": [
+        {
+          "text": " I",
+          "start": 527.56,
+          "end": 527.86,
+          "confidence": 0.9590972661972046
+        },
+        {
+          "text": " think",
+          "start": 527.86,
+          "end": 528.04,
+          "confidence": 0.9986149072647095
+        },
+        {
+          "text": " one",
+          "start": 528.04,
+          "end": 529.06,
+          "confidence": 0.9642626643180847
+        },
+        {
+          "text": " of",
+          "start": 529.06,
+          "end": 529.1800000000001,
+          "confidence": 0.9990610480308533
+        },
+        {
+          "text": " the",
+          "start": 529.1800000000001,
+          "end": 529.3,
+          "confidence": 0.9728778600692749
+        },
+        {
+          "text": " strengths",
+          "start": 529.3,
+          "end": 529.64,
+          "confidence": 0.9879647493362427
+        },
+        {
+          "text": " of",
+          "start": 529.64,
+          "end": 529.86,
+          "confidence": 0.996941864490509
+        },
+        {
+          "text": " a",
+          "start": 529.86,
+          "end": 529.94,
+          "confidence": 0.9041144251823425
+        },
+        {
+          "text": " wiki",
+          "start": 529.94,
+          "end": 530.14,
+          "confidence": 0.9895502924919128
+        },
+        {
+          "text": " is",
+          "start": 530.14,
+          "end": 530.38,
+          "confidence": 0.9803439378738403
+        },
+        {
+          "text": " it",
+          "start": 530.38,
+          "end": 530.5,
+          "confidence": 0.8352255821228027
+        },
+        {
+          "text": " allows",
+          "start": 530.5,
+          "end": 530.9,
+          "confidence": 0.9940184354782104
+        },
+        {
+          "text": " each",
+          "start": 530.9,
+          "end": 531.66,
+          "confidence": 0.9977008700370789
+        },
+        {
+          "text": " person",
+          "start": 531.66,
+          "end": 532.14,
+          "confidence": 0.998572587966919
+        },
+        {
+          "text": " to",
+          "start": 532.14,
+          "end": 532.46,
+          "confidence": 0.999413251876831
+        },
+        {
+          "text": " contribute",
+          "start": 532.46,
+          "end": 532.92,
+          "confidence": 0.9983276724815369
+        },
+        {
+          "text": " in",
+          "start": 532.92,
+          "end": 533.22,
+          "confidence": 0.9939271807670593
+        },
+        {
+          "text": " the",
+          "start": 533.22,
+          "end": 533.3199999999999,
+          "confidence": 0.9615016579627991
+        },
+        {
+          "text": " way",
+          "start": 533.3199999999999,
+          "end": 533.52,
+          "confidence": 0.9961866736412048
+        },
+        {
+          "text": " in",
+          "start": 533.52,
+          "end": 533.92,
+          "confidence": 0.4906376302242279
+        },
+        {
+          "text": " which",
+          "start": 533.92,
+          "end": 534.06,
+          "confidence": 0.9977097511291504
+        },
+        {
+          "text": " they're",
+          "start": 534.06,
+          "end": 534.28,
+          "confidence": 0.9816076457500458
+        },
+        {
+          "text": " comfortable.",
+          "start": 534.28,
+          "end": 534.72,
+          "confidence": 0.9993141889572144
+        }
+      ]
+    },
+    {
+      "start": 535.42,
+      "end": 538.6800000000001,
+      "text": "So like some people are very technical detail oriented.",
+      "words": [
+        {
+          "text": " So",
+          "start": 535.42,
+          "end": 535.52,
+          "confidence": 0.8898887038230896
+        },
+        {
+          "text": " like",
+          "start": 535.52,
+          "end": 535.72,
+          "confidence": 0.7831599712371826
+        },
+        {
+          "text": " some",
+          "start": 535.72,
+          "end": 535.92,
+          "confidence": 0.8241358995437622
+        },
+        {
+          "text": " people",
+          "start": 535.92,
+          "end": 536.1800000000001,
+          "confidence": 0.9992357492446899
+        },
+        {
+          "text": " are",
+          "start": 536.1800000000001,
+          "end": 536.4,
+          "confidence": 0.9947595000267029
+        },
+        {
+          "text": " very",
+          "start": 536.4,
+          "end": 536.72,
+          "confidence": 0.9665737152099609
+        },
+        {
+          "text": " technical",
+          "start": 536.72,
+          "end": 537.54,
+          "confidence": 0.9881529211997986
+        },
+        {
+          "text": " detail",
+          "start": 537.54,
+          "end": 538.06,
+          "confidence": 0.4897095561027527
+        },
+        {
+          "text": " oriented.",
+          "start": 538.06,
+          "end": 538.6800000000001,
+          "confidence": 0.706257700920105
+        }
+      ]
+    },
+    {
+      "start": 539.2,
+      "end": 543.0,
+      "text": "some people would rather work on the structure and the organization of things.",
+      "words": [
+        {
+          "text": " some",
+          "start": 539.2,
+          "end": 539.58,
+          "confidence": 0.12333068996667862
+        },
+        {
+          "text": " people",
+          "start": 539.58,
+          "end": 539.84,
+          "confidence": 0.9732351899147034
+        },
+        {
+          "text": " would",
+          "start": 539.84,
+          "end": 540.08,
+          "confidence": 0.9708974957466125
+        },
+        {
+          "text": " rather",
+          "start": 540.08,
+          "end": 540.42,
+          "confidence": 0.9879959225654602
+        },
+        {
+          "text": " work",
+          "start": 540.42,
+          "end": 540.86,
+          "confidence": 0.9928359389305115
+        },
+        {
+          "text": " on",
+          "start": 540.86,
+          "end": 541.02,
+          "confidence": 0.9964237809181213
+        },
+        {
+          "text": " the",
+          "start": 541.02,
+          "end": 541.1600000000001,
+          "confidence": 0.9872598648071289
+        },
+        {
+          "text": " structure",
+          "start": 541.1600000000001,
+          "end": 541.54,
+          "confidence": 0.9969208240509033
+        },
+        {
+          "text": " and",
+          "start": 541.54,
+          "end": 541.76,
+          "confidence": 0.8882317543029785
+        },
+        {
+          "text": " the",
+          "start": 541.76,
+          "end": 541.8399999999999,
+          "confidence": 0.9781663417816162
+        },
+        {
+          "text": " organization",
+          "start": 541.8399999999999,
+          "end": 542.38,
+          "confidence": 0.8448483347892761
+        },
+        {
+          "text": " of",
+          "start": 542.38,
+          "end": 542.6800000000001,
+          "confidence": 0.9946164488792419
+        },
+        {
+          "text": " things.",
+          "start": 542.6800000000001,
+          "end": 543.0,
+          "confidence": 0.9966394901275635
+        }
+      ]
+    },
+    {
+      "start": 543.76,
+      "end": 547.96,
+      "text": "Some people are more kind of collaborative and want to, you know, I mean it kind of",
+      "words": [
+        {
+          "text": " Some",
+          "start": 543.76,
+          "end": 544.0,
+          "confidence": 0.9535530209541321
+        },
+        {
+          "text": " people",
+          "start": 544.0,
+          "end": 544.3,
+          "confidence": 0.9980455636978149
+        },
+        {
+          "text": " are",
+          "start": 544.3,
+          "end": 544.54,
+          "confidence": 0.993707001209259
+        },
+        {
+          "text": " more",
+          "start": 544.54,
+          "end": 544.8199999999999,
+          "confidence": 0.9899029731750488
+        },
+        {
+          "text": " kind",
+          "start": 544.8199999999999,
+          "end": 545.54,
+          "confidence": 0.49685418605804443
+        },
+        {
+          "text": " of",
+          "start": 545.54,
+          "end": 545.62,
+          "confidence": 0.9985249638557434
+        },
+        {
+          "text": " collaborative",
+          "start": 545.62,
+          "end": 546.06,
+          "confidence": 0.9884173274040222
+        },
+        {
+          "text": " and",
+          "start": 546.06,
+          "end": 546.36,
+          "confidence": 0.8566153645515442
+        },
+        {
+          "text": " want",
+          "start": 546.36,
+          "end": 546.52,
+          "confidence": 0.5784448981285095
+        },
+        {
+          "text": " to,",
+          "start": 546.52,
+          "end": 546.74,
+          "confidence": 0.9347131848335266
+        },
+        {
+          "text": " you",
+          "start": 547.12,
+          "end": 547.2,
+          "confidence": 0.660844087600708
+        },
+        {
+          "text": " know,",
+          "start": 547.2,
+          "end": 547.28,
+          "confidence": 0.9963494539260864
+        },
+        {
+          "text": " I",
+          "start": 547.3199999999999,
+          "end": 547.36,
+          "confidence": 0.7784574031829834
+        },
+        {
+          "text": " mean",
+          "start": 547.36,
+          "end": 547.44,
+          "confidence": 0.9914816617965698
+        },
+        {
+          "text": " it",
+          "start": 547.44,
+          "end": 547.76,
+          "confidence": 0.5294227600097656
+        },
+        {
+          "text": " kind",
+          "start": 547.76,
+          "end": 547.9,
+          "confidence": 0.8666317462921143
+        },
+        {
+          "text": " of",
+          "start": 547.9,
+          "end": 547.96,
+          "confidence": 0.9910234212875366
+        }
+      ]
+    },
+    {
+      "start": 547.96,
+      "end": 551.38,
+      "text": "goes back a little bit to the gamification motives that I've talked about before, but",
+      "words": [
+        {
+          "text": " goes",
+          "start": 547.96,
+          "end": 548.0799999999999,
+          "confidence": 0.9925633072853088
+        },
+        {
+          "text": " back",
+          "start": 548.0799999999999,
+          "end": 548.26,
+          "confidence": 0.9974300265312195
+        },
+        {
+          "text": " a",
+          "start": 548.26,
+          "end": 548.4200000000001,
+          "confidence": 0.9852275848388672
+        },
+        {
+          "text": " little",
+          "start": 548.4200000000001,
+          "end": 548.5,
+          "confidence": 0.9980263113975525
+        },
+        {
+          "text": " bit",
+          "start": 548.5,
+          "end": 548.64,
+          "confidence": 0.9949474334716797
+        },
+        {
+          "text": " to",
+          "start": 548.64,
+          "end": 548.8,
+          "confidence": 0.9914599657058716
+        },
+        {
+          "text": " the",
+          "start": 548.8,
+          "end": 548.9200000000001,
+          "confidence": 0.993898868560791
+        },
+        {
+          "text": " gamification",
+          "start": 548.9200000000001,
+          "end": 549.3,
+          "confidence": 0.9946925938129425
+        },
+        {
+          "text": " motives",
+          "start": 549.3,
+          "end": 549.9200000000001,
+          "confidence": 0.9850869178771973
+        },
+        {
+          "text": " that",
+          "start": 549.9200000000001,
+          "end": 550.4200000000001,
+          "confidence": 0.6833305358886719
+        },
+        {
+          "text": " I've",
+          "start": 550.4200000000001,
+          "end": 550.56,
+          "confidence": 0.979896754026413
+        },
+        {
+          "text": " talked",
+          "start": 550.56,
+          "end": 550.7,
+          "confidence": 0.9977869987487793
+        },
+        {
+          "text": " about",
+          "start": 550.7,
+          "end": 550.9,
+          "confidence": 0.9935232400894165
+        },
+        {
+          "text": " before,",
+          "start": 550.9,
+          "end": 551.2,
+          "confidence": 0.9976410865783691
+        },
+        {
+          "text": " but",
+          "start": 551.26,
+          "end": 551.38,
+          "confidence": 0.968995213508606
+        }
+      ]
+    },
+    {
+      "start": 553.0799999999999,
+      "end": 557.5799999999999,
+      "text": "so you don't have to tell people this is your role and you have to do this with",
+      "words": [
+        {
+          "text": " so",
+          "start": 553.0799999999999,
+          "end": 553.46,
+          "confidence": 0.7173172831535339
+        },
+        {
+          "text": " you",
+          "start": 553.46,
+          "end": 553.8399999999999,
+          "confidence": 0.8322343230247498
+        },
+        {
+          "text": " don't",
+          "start": 553.8399999999999,
+          "end": 554.0,
+          "confidence": 0.9988832175731659
+        },
+        {
+          "text": " have",
+          "start": 554.0,
+          "end": 554.2,
+          "confidence": 0.9994712471961975
+        },
+        {
+          "text": " to",
+          "start": 554.2,
+          "end": 554.3399999999999,
+          "confidence": 0.999620795249939
+        },
+        {
+          "text": " tell",
+          "start": 554.3399999999999,
+          "end": 554.56,
+          "confidence": 0.9982494115829468
+        },
+        {
+          "text": " people",
+          "start": 554.56,
+          "end": 554.9,
+          "confidence": 0.9990572333335876
+        },
+        {
+          "text": " this",
+          "start": 554.9,
+          "end": 555.52,
+          "confidence": 0.4876011908054352
+        },
+        {
+          "text": " is",
+          "start": 555.52,
+          "end": 555.72,
+          "confidence": 0.99644935131073
+        },
+        {
+          "text": " your",
+          "start": 555.72,
+          "end": 555.9,
+          "confidence": 0.9979227185249329
+        },
+        {
+          "text": " role",
+          "start": 555.9,
+          "end": 556.1800000000001,
+          "confidence": 0.990800678730011
+        },
+        {
+          "text": " and",
+          "start": 556.1800000000001,
+          "end": 556.3199999999999,
+          "confidence": 0.8917877078056335
+        },
+        {
+          "text": " you",
+          "start": 556.3199999999999,
+          "end": 556.44,
+          "confidence": 0.9978639483451843
+        },
+        {
+          "text": " have",
+          "start": 556.44,
+          "end": 556.6600000000001,
+          "confidence": 0.9985647797584534
+        },
+        {
+          "text": " to",
+          "start": 556.6600000000001,
+          "end": 556.8399999999999,
+          "confidence": 0.9983546137809753
+        },
+        {
+          "text": " do",
+          "start": 556.8399999999999,
+          "end": 557.2,
+          "confidence": 0.9986466765403748
+        },
+        {
+          "text": " this",
+          "start": 557.2,
+          "end": 557.4200000000001,
+          "confidence": 0.9988470077514648
+        },
+        {
+          "text": " with",
+          "start": 557.4200000000001,
+          "end": 557.5799999999999,
+          "confidence": 0.9966168999671936
+        }
+      ]
+    },
+    {
+      "start": 557.5799999999999,
+      "end": 561.06,
+      "text": "the wiki, you can just kind of let them gravitate to where they are going to be most useful.",
+      "words": [
+        {
+          "text": " the",
+          "start": 557.5799999999999,
+          "end": 557.6800000000001,
+          "confidence": 0.9629883766174316
+        },
+        {
+          "text": " wiki,",
+          "start": 557.6800000000001,
+          "end": 557.8399999999999,
+          "confidence": 0.7552474439144135
+        },
+        {
+          "text": " you",
+          "start": 557.98,
+          "end": 558.0799999999999,
+          "confidence": 0.9941042065620422
+        },
+        {
+          "text": " can",
+          "start": 558.0799999999999,
+          "end": 558.1800000000001,
+          "confidence": 0.9634881615638733
+        },
+        {
+          "text": " just",
+          "start": 558.1800000000001,
+          "end": 558.3199999999999,
+          "confidence": 0.982178270816803
+        },
+        {
+          "text": " kind",
+          "start": 558.3199999999999,
+          "end": 558.46,
+          "confidence": 0.9676306843757629
+        },
+        {
+          "text": " of",
+          "start": 558.46,
+          "end": 558.52,
+          "confidence": 0.9952878952026367
+        },
+        {
+          "text": " let",
+          "start": 558.52,
+          "end": 558.6600000000001,
+          "confidence": 0.9942581653594971
+        },
+        {
+          "text": " them",
+          "start": 558.6600000000001,
+          "end": 558.8199999999999,
+          "confidence": 0.9869376420974731
+        },
+        {
+          "text": " gravitate",
+          "start": 558.8199999999999,
+          "end": 559.3,
+          "confidence": 0.9957533776760101
+        },
+        {
+          "text": " to",
+          "start": 559.3,
+          "end": 559.5,
+          "confidence": 0.9902966618537903
+        },
+        {
+          "text": " where",
+          "start": 559.5,
+          "end": 559.72,
+          "confidence": 0.995899498462677
+        },
+        {
+          "text": " they",
+          "start": 559.72,
+          "end": 559.94,
+          "confidence": 0.9756852388381958
+        },
+        {
+          "text": " are",
+          "start": 559.94,
+          "end": 560.0799999999999,
+          "confidence": 0.5298921465873718
+        },
+        {
+          "text": " going",
+          "start": 560.0799999999999,
+          "end": 560.22,
+          "confidence": 0.8410401940345764
+        },
+        {
+          "text": " to",
+          "start": 560.22,
+          "end": 560.3,
+          "confidence": 0.9980251789093018
+        },
+        {
+          "text": " be",
+          "start": 560.3,
+          "end": 560.4200000000001,
+          "confidence": 0.9981473684310913
+        },
+        {
+          "text": " most",
+          "start": 560.4200000000001,
+          "end": 560.6600000000001,
+          "confidence": 0.987794041633606
+        },
+        {
+          "text": " useful.",
+          "start": 560.6600000000001,
+          "end": 561.06,
+          "confidence": 0.9973883032798767
+        }
+      ]
+    },
+    {
+      "start": 565.7,
+      "end": 572.26,
+      "text": "I think it's a... the key thing is a critical mass. So once you get enough",
+      "words": [
+        {
+          "text": " I",
+          "start": 565.7,
+          "end": 566.1,
+          "confidence": 0.21595178544521332
+        },
+        {
+          "text": " think",
+          "start": 566.1,
+          "end": 566.3199999999999,
+          "confidence": 0.9833895564079285
+        },
+        {
+          "text": " it's",
+          "start": 566.3199999999999,
+          "end": 566.6600000000001,
+          "confidence": 0.7731906771659851
+        },
+        {
+          "text": " a...",
+          "start": 566.6600000000001,
+          "end": 567.54,
+          "confidence": 0.5411407053470612
+        },
+        {
+          "text": " the",
+          "start": 567.54,
+          "end": 568.14,
+          "confidence": 0.6010438799858093
+        },
+        {
+          "text": " key",
+          "start": 568.14,
+          "end": 568.3,
+          "confidence": 0.9959368705749512
+        },
+        {
+          "text": " thing",
+          "start": 568.3,
+          "end": 568.46,
+          "confidence": 0.9729574918746948
+        },
+        {
+          "text": " is",
+          "start": 568.46,
+          "end": 568.56,
+          "confidence": 0.9793094396591187
+        },
+        {
+          "text": " a",
+          "start": 568.56,
+          "end": 568.6600000000001,
+          "confidence": 0.47861310839653015
+        },
+        {
+          "text": " critical",
+          "start": 568.6600000000001,
+          "end": 569.26,
+          "confidence": 0.7616095542907715
+        },
+        {
+          "text": " mass.",
+          "start": 569.26,
+          "end": 569.6800000000001,
+          "confidence": 0.9208155870437622
+        },
+        {
+          "text": " So",
+          "start": 570.04,
+          "end": 570.22,
+          "confidence": 0.8314789533615112
+        },
+        {
+          "text": " once",
+          "start": 570.22,
+          "end": 571.36,
+          "confidence": 0.6318022012710571
+        },
+        {
+          "text": " you",
+          "start": 571.36,
+          "end": 571.6800000000001,
+          "confidence": 0.9973558187484741
+        },
+        {
+          "text": " get",
+          "start": 571.6800000000001,
+          "end": 571.88,
+          "confidence": 0.9924943447113037
+        },
+        {
+          "text": " enough",
+          "start": 571.88,
+          "end": 572.26,
+          "confidence": 0.9943905472755432
+        }
+      ]
+    },
+    {
+      "start": 572.26,
+      "end": 576.36,
+      "text": "people who find the value in the wiki, so rather than having to ask someone they",
+      "words": [
+        {
+          "text": " people",
+          "start": 572.26,
+          "end": 572.74,
+          "confidence": 0.9984558820724487
+        },
+        {
+          "text": " who",
+          "start": 572.74,
+          "end": 573.0799999999999,
+          "confidence": 0.9592598080635071
+        },
+        {
+          "text": " find",
+          "start": 573.0799999999999,
+          "end": 573.5,
+          "confidence": 0.991004467010498
+        },
+        {
+          "text": " the",
+          "start": 573.5,
+          "end": 573.7,
+          "confidence": 0.9865764379501343
+        },
+        {
+          "text": " value",
+          "start": 573.7,
+          "end": 573.98,
+          "confidence": 0.9975741505622864
+        },
+        {
+          "text": " in",
+          "start": 573.98,
+          "end": 574.1600000000001,
+          "confidence": 0.9917112588882446
+        },
+        {
+          "text": " the",
+          "start": 574.1600000000001,
+          "end": 574.26,
+          "confidence": 0.984643816947937
+        },
+        {
+          "text": " wiki,",
+          "start": 574.26,
+          "end": 574.5,
+          "confidence": 0.7537628412246704
+        },
+        {
+          "text": " so",
+          "start": 574.76,
+          "end": 574.9,
+          "confidence": 0.7442038655281067
+        },
+        {
+          "text": " rather",
+          "start": 574.9,
+          "end": 575.38,
+          "confidence": 0.8684886693954468
+        },
+        {
+          "text": " than",
+          "start": 575.38,
+          "end": 575.56,
+          "confidence": 0.9820339679718018
+        },
+        {
+          "text": " having",
+          "start": 575.56,
+          "end": 575.6800000000001,
+          "confidence": 0.9777904748916626
+        },
+        {
+          "text": " to",
+          "start": 575.6800000000001,
+          "end": 575.8399999999999,
+          "confidence": 0.989253580570221
+        },
+        {
+          "text": " ask",
+          "start": 575.8399999999999,
+          "end": 576.02,
+          "confidence": 0.9894075989723206
+        },
+        {
+          "text": " someone",
+          "start": 576.02,
+          "end": 576.22,
+          "confidence": 0.9829959273338318
+        },
+        {
+          "text": " they",
+          "start": 576.22,
+          "end": 576.36,
+          "confidence": 0.7140225172042847
+        }
+      ]
+    },
+    {
+      "start": 576.36,
+      "end": 579.64,
+      "text": "can find that information. I'm not saying don't communicate but you know there",
+      "words": [
+        {
+          "text": " can",
+          "start": 576.36,
+          "end": 576.46,
+          "confidence": 0.975296139717102
+        },
+        {
+          "text": " find",
+          "start": 576.46,
+          "end": 576.74,
+          "confidence": 0.993675172328949
+        },
+        {
+          "text": " that",
+          "start": 576.74,
+          "end": 576.94,
+          "confidence": 0.9546916484832764
+        },
+        {
+          "text": " information.",
+          "start": 576.94,
+          "end": 577.3,
+          "confidence": 0.9954264760017395
+        },
+        {
+          "text": " I'm",
+          "start": 577.46,
+          "end": 577.52,
+          "confidence": 0.9808917045593262
+        },
+        {
+          "text": " not",
+          "start": 577.52,
+          "end": 577.64,
+          "confidence": 0.9968768358230591
+        },
+        {
+          "text": " saying",
+          "start": 577.64,
+          "end": 577.8199999999999,
+          "confidence": 0.9967873096466064
+        },
+        {
+          "text": " don't",
+          "start": 577.8199999999999,
+          "end": 577.98,
+          "confidence": 0.8631634712219238
+        },
+        {
+          "text": " communicate",
+          "start": 577.98,
+          "end": 578.36,
+          "confidence": 0.9959036707878113
+        },
+        {
+          "text": " but",
+          "start": 578.36,
+          "end": 578.64,
+          "confidence": 0.43381768465042114
+        },
+        {
+          "text": " you",
+          "start": 578.64,
+          "end": 578.8399999999999,
+          "confidence": 0.531284511089325
+        },
+        {
+          "text": " know",
+          "start": 578.8399999999999,
+          "end": 578.96,
+          "confidence": 0.9972177743911743
+        },
+        {
+          "text": " there",
+          "start": 578.96,
+          "end": 579.64,
+          "confidence": 0.6065400838851929
+        }
+      ]
+    },
+    {
+      "start": 579.64,
+      "end": 583.7,
+      "text": "are the times where you want to find some information that wiki finds it. That...",
+      "words": [
+        {
+          "text": " are",
+          "start": 579.64,
+          "end": 579.76,
+          "confidence": 0.9084740877151489
+        },
+        {
+          "text": " the",
+          "start": 579.76,
+          "end": 579.86,
+          "confidence": 0.7717571258544922
+        },
+        {
+          "text": " times",
+          "start": 579.86,
+          "end": 580.1,
+          "confidence": 0.9911760091781616
+        },
+        {
+          "text": " where",
+          "start": 580.1,
+          "end": 580.3199999999999,
+          "confidence": 0.8228793144226074
+        },
+        {
+          "text": " you",
+          "start": 580.3199999999999,
+          "end": 580.4,
+          "confidence": 0.9931432008743286
+        },
+        {
+          "text": " want",
+          "start": 580.4,
+          "end": 580.54,
+          "confidence": 0.9943150877952576
+        },
+        {
+          "text": " to",
+          "start": 580.54,
+          "end": 580.6600000000001,
+          "confidence": 0.9972737431526184
+        },
+        {
+          "text": " find",
+          "start": 580.6600000000001,
+          "end": 580.78,
+          "confidence": 0.9970840811729431
+        },
+        {
+          "text": " some",
+          "start": 580.78,
+          "end": 580.9,
+          "confidence": 0.9828456044197083
+        },
+        {
+          "text": " information",
+          "start": 580.9,
+          "end": 581.3,
+          "confidence": 0.9980862140655518
+        },
+        {
+          "text": " that",
+          "start": 581.3,
+          "end": 581.7,
+          "confidence": 0.4622417092323303
+        },
+        {
+          "text": " wiki",
+          "start": 581.7,
+          "end": 581.9,
+          "confidence": 0.9926289021968842
+        },
+        {
+          "text": " finds",
+          "start": 581.9,
+          "end": 582.28,
+          "confidence": 0.9791311025619507
+        },
+        {
+          "text": " it.",
+          "start": 582.28,
+          "end": 582.48,
+          "confidence": 0.8400010466575623
+        },
+        {
+          "text": " That...",
+          "start": 583.3,
+          "end": 583.7,
+          "confidence": 0.3341650068759918
+        }
+      ]
+    },
+    {
+      "start": 583.7,
+      "end": 587.76,
+      "text": "you've then convinced that person the value of the wiki and when",
+      "words": [
+        {
+          "text": " you've",
+          "start": 583.7,
+          "end": 584.04,
+          "confidence": 0.8420389592647552
+        },
+        {
+          "text": " then",
+          "start": 584.04,
+          "end": 584.24,
+          "confidence": 0.9856415390968323
+        },
+        {
+          "text": " convinced",
+          "start": 584.24,
+          "end": 585.06,
+          "confidence": 0.5047130584716797
+        },
+        {
+          "text": " that",
+          "start": 585.06,
+          "end": 585.44,
+          "confidence": 0.9950874447822571
+        },
+        {
+          "text": " person",
+          "start": 585.44,
+          "end": 585.88,
+          "confidence": 0.9988093376159668
+        },
+        {
+          "text": " the",
+          "start": 585.88,
+          "end": 586.26,
+          "confidence": 0.9403002858161926
+        },
+        {
+          "text": " value",
+          "start": 586.26,
+          "end": 586.52,
+          "confidence": 0.9982806444168091
+        },
+        {
+          "text": " of",
+          "start": 586.52,
+          "end": 586.64,
+          "confidence": 0.9935583472251892
+        },
+        {
+          "text": " the",
+          "start": 586.64,
+          "end": 586.72,
+          "confidence": 0.9951981902122498
+        },
+        {
+          "text": " wiki",
+          "start": 586.72,
+          "end": 587.02,
+          "confidence": 0.9980233311653137
+        },
+        {
+          "text": " and",
+          "start": 587.02,
+          "end": 587.64,
+          "confidence": 0.5008833408355713
+        },
+        {
+          "text": " when",
+          "start": 587.64,
+          "end": 587.76,
+          "confidence": 0.997605562210083
+        }
+      ]
+    },
+    {
+      "start": 587.76,
+      "end": 591.2,
+      "text": "you get to a certain stage this critical mass happens and they all start",
+      "words": [
+        {
+          "text": " you",
+          "start": 587.76,
+          "end": 587.9,
+          "confidence": 0.9980371594429016
+        },
+        {
+          "text": " get",
+          "start": 587.9,
+          "end": 588.1,
+          "confidence": 0.9987427592277527
+        },
+        {
+          "text": " to",
+          "start": 588.1,
+          "end": 588.28,
+          "confidence": 0.9973690509796143
+        },
+        {
+          "text": " a",
+          "start": 588.28,
+          "end": 588.4,
+          "confidence": 0.9981470108032227
+        },
+        {
+          "text": " certain",
+          "start": 588.4,
+          "end": 588.56,
+          "confidence": 0.9993403553962708
+        },
+        {
+          "text": " stage",
+          "start": 588.56,
+          "end": 588.94,
+          "confidence": 0.997060239315033
+        },
+        {
+          "text": " this",
+          "start": 588.94,
+          "end": 589.28,
+          "confidence": 0.9358295798301697
+        },
+        {
+          "text": " critical",
+          "start": 589.28,
+          "end": 589.62,
+          "confidence": 0.9938955903053284
+        },
+        {
+          "text": " mass",
+          "start": 589.62,
+          "end": 589.86,
+          "confidence": 0.9965835809707642
+        },
+        {
+          "text": " happens",
+          "start": 589.86,
+          "end": 590.3,
+          "confidence": 0.9938533306121826
+        },
+        {
+          "text": " and",
+          "start": 590.3,
+          "end": 590.56,
+          "confidence": 0.9767467975616455
+        },
+        {
+          "text": " they",
+          "start": 590.56,
+          "end": 590.72,
+          "confidence": 0.9896067976951599
+        },
+        {
+          "text": " all",
+          "start": 590.72,
+          "end": 590.88,
+          "confidence": 0.9290801286697388
+        },
+        {
+          "text": " start",
+          "start": 590.88,
+          "end": 591.2,
+          "confidence": 0.9960617423057556
+        }
+      ]
+    },
+    {
+      "start": 591.2,
+      "end": 594.44,
+      "text": "contributing because they want to be part of this and they see the value of",
+      "words": [
+        {
+          "text": " contributing",
+          "start": 591.2,
+          "end": 591.96,
+          "confidence": 0.9961073994636536
+        },
+        {
+          "text": " because",
+          "start": 591.96,
+          "end": 592.4200000000001,
+          "confidence": 0.9502978324890137
+        },
+        {
+          "text": " they",
+          "start": 592.4200000000001,
+          "end": 592.5799999999999,
+          "confidence": 0.9984017014503479
+        },
+        {
+          "text": " want",
+          "start": 592.5799999999999,
+          "end": 592.74,
+          "confidence": 0.9963333606719971
+        },
+        {
+          "text": " to",
+          "start": 592.74,
+          "end": 592.88,
+          "confidence": 0.9986798167228699
+        },
+        {
+          "text": " be",
+          "start": 592.88,
+          "end": 592.96,
+          "confidence": 0.9973090887069702
+        },
+        {
+          "text": " part",
+          "start": 592.96,
+          "end": 593.22,
+          "confidence": 0.9844345450401306
+        },
+        {
+          "text": " of",
+          "start": 593.22,
+          "end": 593.4,
+          "confidence": 0.9987524747848511
+        },
+        {
+          "text": " this",
+          "start": 593.4,
+          "end": 593.54,
+          "confidence": 0.9929330348968506
+        },
+        {
+          "text": " and",
+          "start": 593.54,
+          "end": 593.6800000000001,
+          "confidence": 0.9614365696907043
+        },
+        {
+          "text": " they",
+          "start": 593.6800000000001,
+          "end": 593.78,
+          "confidence": 0.9761742353439331
+        },
+        {
+          "text": " see",
+          "start": 593.78,
+          "end": 593.94,
+          "confidence": 0.9978576302528381
+        },
+        {
+          "text": " the",
+          "start": 593.94,
+          "end": 594.06,
+          "confidence": 0.9982763528823853
+        },
+        {
+          "text": " value",
+          "start": 594.06,
+          "end": 594.3,
+          "confidence": 0.9986591339111328
+        },
+        {
+          "text": " of",
+          "start": 594.3,
+          "end": 594.44,
+          "confidence": 0.9935234785079956
+        }
+      ]
+    },
+    {
+      "start": 594.44,
+      "end": 599.98,
+      "text": "it and getting to that stage is the challenge so there's you've either",
+      "words": [
+        {
+          "text": " it",
+          "start": 594.44,
+          "end": 594.56,
+          "confidence": 0.42427313327789307
+        },
+        {
+          "text": " and",
+          "start": 594.56,
+          "end": 595.1,
+          "confidence": 0.521057665348053
+        },
+        {
+          "text": " getting",
+          "start": 595.1,
+          "end": 596.04,
+          "confidence": 0.8004134297370911
+        },
+        {
+          "text": " to",
+          "start": 596.04,
+          "end": 596.38,
+          "confidence": 0.9950836896896362
+        },
+        {
+          "text": " that",
+          "start": 596.38,
+          "end": 596.6,
+          "confidence": 0.9973350167274475
+        },
+        {
+          "text": " stage",
+          "start": 596.6,
+          "end": 596.98,
+          "confidence": 0.9983764886856079
+        },
+        {
+          "text": " is",
+          "start": 596.98,
+          "end": 597.36,
+          "confidence": 0.9179036617279053
+        },
+        {
+          "text": " the",
+          "start": 597.36,
+          "end": 597.52,
+          "confidence": 0.990656316280365
+        },
+        {
+          "text": " challenge",
+          "start": 597.52,
+          "end": 597.8199999999999,
+          "confidence": 0.9980772733688354
+        },
+        {
+          "text": " so",
+          "start": 597.8199999999999,
+          "end": 598.22,
+          "confidence": 0.457021027803421
+        },
+        {
+          "text": " there's",
+          "start": 598.22,
+          "end": 599.1600000000001,
+          "confidence": 0.8428559303283691
+        },
+        {
+          "text": " you've",
+          "start": 599.1600000000001,
+          "end": 599.8,
+          "confidence": 0.679019957780838
+        },
+        {
+          "text": " either",
+          "start": 599.8,
+          "end": 599.98,
+          "confidence": 0.9661570191383362
+        }
+      ]
+    }
+  ]
+}

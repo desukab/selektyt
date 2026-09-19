@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="f1" name="FFVideoFormat" frameDuration="1001/30000s" />
+    <asset id="r1" name="emwcon-panel-2018.webm" start="0s" duration="100168068/30000s" hasVideo="1" videoSources="1" hasAudio="1" audioSources="1" audioChannels="2">
+      <media-rep kind="original-media" src="file:///home/azureuser/selektyt/corpus/media/emwcon-panel-2018.webm"/>
+    </asset>
+  </resources>
+  <library>
+    <event name="The first Wiki that I worked on called Robopedia at MITRE was the robotics Wiki that we used to document everything within the robotics program I was working on">
+      <project name="The first Wiki that I worked on called Robopedia at MITRE was the robotics Wiki that we used to document everything within the robotics program I was working on">
+        <sequence format="f1" tcFormat="NDF">
+          <spine>
+          <asset-clip ref="r1" offset="0s" start="21578557/30000s" duration="1109108/30000s" tcFormat="NDF" />
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>

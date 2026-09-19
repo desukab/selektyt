@@ -1,0 +1,19 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.19,Default,,0,0,0,,{\k12}I'm {\k20}kind {\k6}of {\k28}{\c&H00D7FF&\b1}curious{\c&HFFFFFF&\b0} {\k38}{\c&H00D7FF&\b1}actually,{\c&HFFFFFF&\b0} {\k12}I'd
+Dialogue: 0,0:00:01.22,0:00:02.55,Default,,0,0,0,,{\k12}like {\k14}to {\k26}pull {\k36}the {\k16}{\c&H00D7FF&\b1}whole{\c&HFFFFFF&\b0} {\k32}{\c&H00D7FF&\b1}room{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:02.58,0:00:05.27,Default,,0,0,0,,{\k26}like, {\k90}do {\k56}your {\k48}{\c&H00D7FF&\b1}organizations{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:05.30,0:00:08.33,Default,,0,0,0,,{\k88}care {\k80}if {\k76}all {\k14}of {\k10}{\c&H00D7FF&\b1}your{\c&HFFFFFF&\b0} {\k38}{\c&H00D7FF&\b1}employees{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:08.36,0:00:10.63,Default,,0,0,0,,{\k18}are {\k38}{\c&H00D7FF&\b1}contributing{\c&HFFFFFF&\b0} {\k52}or {\k76}are {\k16}they {\k30}{\c&H00D7FF&\b1}okay{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:10.66,0:00:11.95,Default,,0,0,0,,{\k32}if {\k22}{\c&H00D7FF&\b1}only{\c&HFFFFFF&\b0} {\k22}10 {\k26}% {\k18}of {\k12}{\c&H00D7FF&\b1}your{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:11.98,0:00:13.08,Default,,0,0,0,,{\k38}employees {\k28}are {\k44}{\c&H00D7FF&\b1}contributing?{\c&HFFFFFF&\b0}

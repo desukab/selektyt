@@ -1,0 +1,38 @@
+{
+  "source": "corpus/media/royal-society-cloke.webm",
+  "media_info": {},
+  "fingerprint": "3362ea31ffdcad7201811d8ceb70d15a2fd48c4db0e6e4c30147bfd612a21ec5",
+  "model": "small",
+  "language": "en",
+  "renders": {
+    "01": {
+      "fingerprint": "3362ea31ffdcad7201811d8ceb70d15a2fd48c4db0e6e4c30147bfd612a21ec5",
+      "selection_digest": "9283807050e93b7c117b2f58713411d9c812c77bec07b2a0f74f601f76974abc",
+      "facebook": "corpus/royal-society-cloke_run/project/facebook/01.mp4",
+      "shorts": "corpus/royal-society-cloke_run/project/shorts/01.mp4"
+    },
+    "02": {
+      "fingerprint": "3362ea31ffdcad7201811d8ceb70d15a2fd48c4db0e6e4c30147bfd612a21ec5",
+      "selection_digest": "9283807050e93b7c117b2f58713411d9c812c77bec07b2a0f74f601f76974abc",
+      "facebook": "corpus/royal-society-cloke_run/project/facebook/02.mp4",
+      "shorts": "corpus/royal-society-cloke_run/project/shorts/02.mp4"
+    },
+    "03": {
+      "fingerprint": "3362ea31ffdcad7201811d8ceb70d15a2fd48c4db0e6e4c30147bfd612a21ec5",
+      "selection_digest": "9283807050e93b7c117b2f58713411d9c812c77bec07b2a0f74f601f76974abc",
+      "facebook": "corpus/royal-society-cloke_run/project/facebook/03.mp4",
+      "shorts": "corpus/royal-society-cloke_run/project/shorts/03.mp4"
+    },
+    "04": {
+      "fingerprint": "3362ea31ffdcad7201811d8ceb70d15a2fd48c4db0e6e4c30147bfd612a21ec5",
+      "selection_digest": "9283807050e93b7c117b2f58713411d9c812c77bec07b2a0f74f601f76974abc",
+      "facebook": "corpus/royal-society-cloke_run/project/facebook/04.mp4",
+      "shorts": "corpus/royal-society-cloke_run/project/shorts/04.mp4"
+    }
+  },
+  "render_fingerprint": "3362ea31ffdcad7201811d8ceb70d15a2fd48c4db0e6e4c30147bfd612a21ec5",
+  "render_selection_digest": "9283807050e93b7c117b2f58713411d9c812c77bec07b2a0f74f601f76974abc",
+  "selected_count": 4,
+  "qa": "corpus/royal-society-cloke_run/project/qa.json",
+  "complete": true
+}

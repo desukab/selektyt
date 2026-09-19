@@ -1,0 +1,51 @@
+1
+0:00:00,000 --> 0:00:01,267
+Welcome to the world's largest
+
+2
+0:00:01,300 --> 0:00:01,787
+clean room.
+
+3
+0:00:01,820 --> 0:00:03,320
+This is amazing, right?
+
+4
+0:00:03,680 --> 0:00:05,347
+The reason we have this exact
+
+5
+0:00:05,380 --> 0:00:07,627
+mechanical replication of it, we
+
+6
+0:00:07,660 --> 0:00:09,087
+need something that looks just
+
+7
+0:00:09,120 --> 0:00:10,627
+like Hubble, functions just like
+
+8
+0:00:10,660 --> 0:00:12,947
+Hubble, so everybody can see what
+
+9
+0:00:12,980 --> 0:00:13,947
+it really looks like when we
+
+10
+0:00:13,980 --> 0:00:14,787
+get up here to work on
+
+11
+0:00:14,820 --> 0:00:15,200
+it.
+
+12
+0:00:15,320 --> 0:00:16,627
+So Mike, Hubble has more than
+
+13
+0:00:16,660 --> 0:00:17,080
+one instrument.

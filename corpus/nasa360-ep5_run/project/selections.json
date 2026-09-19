@@ -1,0 +1,2192 @@
+[
+  {
+    "start": 414.3,
+    "end": 439.15999999999997,
+    "text": "very much like the electronic camera you have at home. So think of a megapixel camera. This is about the 1,024 pixels along this direction, another 1,000 along this direction. And it's taking snapshots. And if we know how far this object, how far away it is from us, and we can figure out how much light is in each little box, each little pixel of this image, we can figure out how big and how bright the thing is that we're looking at. So, Carrie, looking at space from space is truly the way to go.",
+    "story_type": "conflict",
+    "hook": "very much like the electronic camera you have at home.",
+    "payoff": "So, Carrie, looking at space from space is truly the way to go.",
+    "editorial_score": 0.9884830363036304,
+    "virality_score": 0.735,
+    "context_score": 1.0,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.75; progression=0.95; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.18; coherence=1.00; completeness=1.00; audio_pace=0.88; silence=0.147; dead_air=0.00.",
+    "visual_potential": 0.85,
+    "words": [
+      {
+        "text": " very",
+        "start": 414.3,
+        "end": 414.46000000000004,
+        "confidence": 0.9916627407073975
+      },
+      {
+        "text": " much",
+        "start": 414.46000000000004,
+        "end": 414.68,
+        "confidence": 0.9980512857437134
+      },
+      {
+        "text": " like",
+        "start": 414.68,
+        "end": 414.84000000000003,
+        "confidence": 0.9801037311553955
+      },
+      {
+        "text": " the",
+        "start": 414.84000000000003,
+        "end": 414.98,
+        "confidence": 0.9145765900611877
+      },
+      {
+        "text": " electronic",
+        "start": 414.98,
+        "end": 415.28,
+        "confidence": 0.9856614470481873
+      },
+      {
+        "text": " camera",
+        "start": 415.28,
+        "end": 415.58000000000004,
+        "confidence": 0.9927476048469543
+      },
+      {
+        "text": " you",
+        "start": 415.58000000000004,
+        "end": 415.68,
+        "confidence": 0.9863161444664001
+      },
+      {
+        "text": " have",
+        "start": 415.68,
+        "end": 415.88,
+        "confidence": 0.9748328328132629
+      },
+      {
+        "text": " at",
+        "start": 415.88,
+        "end": 415.98,
+        "confidence": 0.9889593124389648
+      },
+      {
+        "text": " home.",
+        "start": 415.98,
+        "end": 416.15999999999997,
+        "confidence": 0.9994865655899048
+      },
+      {
+        "text": " So",
+        "start": 416.76,
+        "end": 416.84000000000003,
+        "confidence": 0.7761616706848145
+      },
+      {
+        "text": " think",
+        "start": 416.84000000000003,
+        "end": 417.03999999999996,
+        "confidence": 0.7924689054489136
+      },
+      {
+        "text": " of",
+        "start": 417.03999999999996,
+        "end": 417.15999999999997,
+        "confidence": 0.995850682258606
+      },
+      {
+        "text": " a",
+        "start": 417.15999999999997,
+        "end": 417.22,
+        "confidence": 0.9154927730560303
+      },
+      {
+        "text": " megapixel",
+        "start": 417.22,
+        "end": 417.64,
+        "confidence": 0.9416134059429169
+      },
+      {
+        "text": " camera.",
+        "start": 417.64,
+        "end": 417.96000000000004,
+        "confidence": 0.9985238909721375
+      },
+      {
+        "text": " This",
+        "start": 418.1,
+        "end": 418.18,
+        "confidence": 0.9930739402770996
+      },
+      {
+        "text": " is",
+        "start": 418.18,
+        "end": 418.28,
+        "confidence": 0.9885222911834717
+      },
+      {
+        "text": " about",
+        "start": 418.28,
+        "end": 418.46000000000004,
+        "confidence": 0.984438955783844
+      },
+      {
+        "text": " the",
+        "start": 418.46000000000004,
+        "end": 418.62,
+        "confidence": 0.28015872836112976
+      },
+      {
+        "text": " 1",
+        "start": 418.62,
+        "end": 418.74,
+        "confidence": 0.5601589679718018
+      },
+      {
+        "text": ",024",
+        "start": 418.74,
+        "end": 419.22,
+        "confidence": 0.9915783802668253
+      },
+      {
+        "text": " pixels",
+        "start": 419.22,
+        "end": 419.58000000000004,
+        "confidence": 0.985653281211853
+      },
+      {
+        "text": " along",
+        "start": 419.58000000000004,
+        "end": 420.1,
+        "confidence": 0.9588267207145691
+      },
+      {
+        "text": " this",
+        "start": 420.1,
+        "end": 420.36,
+        "confidence": 0.9874442219734192
+      },
+      {
+        "text": " direction,",
+        "start": 420.36,
+        "end": 420.7,
+        "confidence": 0.9969010353088379
+      },
+      {
+        "text": " another",
+        "start": 420.8,
+        "end": 421.03999999999996,
+        "confidence": 0.8138337135314941
+      },
+      {
+        "text": " 1",
+        "start": 421.03999999999996,
+        "end": 421.3,
+        "confidence": 0.6457375288009644
+      },
+      {
+        "text": ",000",
+        "start": 421.3,
+        "end": 421.4,
+        "confidence": 0.9453086853027344
+      },
+      {
+        "text": " along",
+        "start": 421.4,
+        "end": 421.62,
+        "confidence": 0.9766594171524048
+      },
+      {
+        "text": " this",
+        "start": 421.62,
+        "end": 421.82,
+        "confidence": 0.9972561001777649
+      },
+      {
+        "text": " direction.",
+        "start": 421.82,
+        "end": 422.15999999999997,
+        "confidence": 0.9977056384086609
+      },
+      {
+        "text": " And",
+        "start": 422.68,
+        "end": 423.03999999999996,
+        "confidence": 0.9483684301376343
+      },
+      {
+        "text": " it's",
+        "start": 423.03999999999996,
+        "end": 423.3,
+        "confidence": 0.9904345571994781
+      },
+      {
+        "text": " taking",
+        "start": 423.3,
+        "end": 423.5,
+        "confidence": 0.9982957243919373
+      },
+      {
+        "text": " snapshots.",
+        "start": 423.5,
+        "end": 424.06,
+        "confidence": 0.9802716076374054
+      },
+      {
+        "text": " And",
+        "start": 424.7,
+        "end": 424.88,
+        "confidence": 0.9842891097068787
+      },
+      {
+        "text": " if",
+        "start": 424.88,
+        "end": 424.98,
+        "confidence": 0.9897346496582031
+      },
+      {
+        "text": " we",
+        "start": 424.98,
+        "end": 425.1,
+        "confidence": 0.9989075660705566
+      },
+      {
+        "text": " know",
+        "start": 425.1,
+        "end": 425.36,
+        "confidence": 0.9982325434684753
+      },
+      {
+        "text": " how",
+        "start": 425.36,
+        "end": 425.53999999999996,
+        "confidence": 0.994635283946991
+      },
+      {
+        "text": " far",
+        "start": 425.53999999999996,
+        "end": 425.74,
+        "confidence": 0.9984784722328186
+      },
+      {
+        "text": " this",
+        "start": 425.74,
+        "end": 425.91999999999996,
+        "confidence": 0.8958442807197571
+      },
+      {
+        "text": " object,",
+        "start": 425.91999999999996,
+        "end": 426.15999999999997,
+        "confidence": 0.9957712292671204
+      },
+      {
+        "text": " how",
+        "start": 426.44,
+        "end": 426.76,
+        "confidence": 0.9377558827400208
+      },
+      {
+        "text": " far",
+        "start": 426.76,
+        "end": 426.96000000000004,
+        "confidence": 0.9988310933113098
+      },
+      {
+        "text": " away",
+        "start": 426.96000000000004,
+        "end": 427.15999999999997,
+        "confidence": 0.9955722093582153
+      },
+      {
+        "text": " it",
+        "start": 427.15999999999997,
+        "end": 427.28,
+        "confidence": 0.9765328764915466
+      },
+      {
+        "text": " is",
+        "start": 427.28,
+        "end": 427.38,
+        "confidence": 0.996985137462616
+      },
+      {
+        "text": " from",
+        "start": 427.38,
+        "end": 427.53999999999996,
+        "confidence": 0.9933690428733826
+      },
+      {
+        "text": " us,",
+        "start": 427.53999999999996,
+        "end": 427.74,
+        "confidence": 0.9993124008178711
+      },
+      {
+        "text": " and",
+        "start": 428.14,
+        "end": 428.32,
+        "confidence": 0.9869927167892456
+      },
+      {
+        "text": " we",
+        "start": 428.32,
+        "end": 428.46000000000004,
+        "confidence": 0.9937624335289001
+      },
+      {
+        "text": " can",
+        "start": 428.46000000000004,
+        "end": 428.62,
+        "confidence": 0.9985435009002686
+      },
+      {
+        "text": " figure",
+        "start": 428.62,
+        "end": 428.86,
+        "confidence": 0.9986989498138428
+      },
+      {
+        "text": " out",
+        "start": 428.86,
+        "end": 429.03999999999996,
+        "confidence": 0.9949274063110352
+      },
+      {
+        "text": " how",
+        "start": 429.03999999999996,
+        "end": 429.18,
+        "confidence": 0.9881719946861267
+      },
+      {
+        "text": " much",
+        "start": 429.18,
+        "end": 429.38,
+        "confidence": 0.9993739724159241
+      },
+      {
+        "text": " light",
+        "start": 429.38,
+        "end": 429.58000000000004,
+        "confidence": 0.996870219707489
+      },
+      {
+        "text": " is",
+        "start": 429.58000000000004,
+        "end": 429.78,
+        "confidence": 0.9127696752548218
+      },
+      {
+        "text": " in",
+        "start": 429.78,
+        "end": 429.88,
+        "confidence": 0.9726656675338745
+      },
+      {
+        "text": " each",
+        "start": 429.88,
+        "end": 430.02,
+        "confidence": 0.9946010112762451
+      },
+      {
+        "text": " little",
+        "start": 430.02,
+        "end": 430.2,
+        "confidence": 0.9966063499450684
+      },
+      {
+        "text": " box,",
+        "start": 430.2,
+        "end": 430.44,
+        "confidence": 0.9960673451423645
+      },
+      {
+        "text": " each",
+        "start": 430.53999999999996,
+        "end": 430.65999999999997,
+        "confidence": 0.9684529900550842
+      },
+      {
+        "text": " little",
+        "start": 430.65999999999997,
+        "end": 430.82,
+        "confidence": 0.9892973303794861
+      },
+      {
+        "text": " pixel",
+        "start": 430.82,
+        "end": 431.08000000000004,
+        "confidence": 0.9976353645324707
+      },
+      {
+        "text": " of",
+        "start": 431.08000000000004,
+        "end": 431.46000000000004,
+        "confidence": 0.8822671175003052
+      },
+      {
+        "text": " this",
+        "start": 431.46000000000004,
+        "end": 431.6,
+        "confidence": 0.9962434768676758
+      },
+      {
+        "text": " image,",
+        "start": 431.6,
+        "end": 431.86,
+        "confidence": 0.9988590478897095
+      },
+      {
+        "text": " we",
+        "start": 432.18,
+        "end": 432.41999999999996,
+        "confidence": 0.9957165122032166
+      },
+      {
+        "text": " can",
+        "start": 432.41999999999996,
+        "end": 432.58000000000004,
+        "confidence": 0.9986205101013184
+      },
+      {
+        "text": " figure",
+        "start": 432.58000000000004,
+        "end": 432.84000000000003,
+        "confidence": 0.9983795881271362
+      },
+      {
+        "text": " out",
+        "start": 432.84000000000003,
+        "end": 433.2,
+        "confidence": 0.995870053768158
+      },
+      {
+        "text": " how",
+        "start": 433.2,
+        "end": 433.68,
+        "confidence": 0.9911122918128967
+      },
+      {
+        "text": " big",
+        "start": 433.68,
+        "end": 433.94,
+        "confidence": 0.9952392578125
+      },
+      {
+        "text": " and",
+        "start": 433.94,
+        "end": 434.18,
+        "confidence": 0.8907238841056824
+      },
+      {
+        "text": " how",
+        "start": 434.18,
+        "end": 434.34000000000003,
+        "confidence": 0.9727046489715576
+      },
+      {
+        "text": " bright",
+        "start": 434.34000000000003,
+        "end": 434.6,
+        "confidence": 0.996993899345398
+      },
+      {
+        "text": " the",
+        "start": 434.6,
+        "end": 434.76,
+        "confidence": 0.9911421537399292
+      },
+      {
+        "text": " thing",
+        "start": 434.76,
+        "end": 434.91999999999996,
+        "confidence": 0.9972792267799377
+      },
+      {
+        "text": " is",
+        "start": 434.91999999999996,
+        "end": 435.06,
+        "confidence": 0.9949337840080261
+      },
+      {
+        "text": " that",
+        "start": 435.06,
+        "end": 435.15999999999997,
+        "confidence": 0.9751818776130676
+      },
+      {
+        "text": " we're",
+        "start": 435.15999999999997,
+        "end": 435.26,
+        "confidence": 0.990455836057663
+      },
+      {
+        "text": " looking",
+        "start": 435.26,
+        "end": 435.44,
+        "confidence": 0.998988687992096
+      },
+      {
+        "text": " at.",
+        "start": 435.44,
+        "end": 435.56,
+        "confidence": 0.9917347431182861
+      },
+      {
+        "text": " So,",
+        "start": 435.56,
+        "end": 435.91999999999996,
+        "confidence": 0.747471809387207
+      },
+      {
+        "text": " Carrie,",
+        "start": 436.08000000000004,
+        "end": 436.28,
+        "confidence": 0.36262771487236023
+      },
+      {
+        "text": " looking",
+        "start": 436.68,
+        "end": 436.88,
+        "confidence": 0.9867227673530579
+      },
+      {
+        "text": " at",
+        "start": 436.88,
+        "end": 437.08000000000004,
+        "confidence": 0.9911613464355469
+      },
+      {
+        "text": " space",
+        "start": 437.08000000000004,
+        "end": 437.28,
+        "confidence": 0.988416314125061
+      },
+      {
+        "text": " from",
+        "start": 437.28,
+        "end": 437.52,
+        "confidence": 0.9869583249092102
+      },
+      {
+        "text": " space",
+        "start": 437.52,
+        "end": 437.88,
+        "confidence": 0.993098795413971
+      },
+      {
+        "text": " is",
+        "start": 437.88,
+        "end": 438.41999999999996,
+        "confidence": 0.9607152342796326
+      },
+      {
+        "text": " truly",
+        "start": 438.41999999999996,
+        "end": 438.68,
+        "confidence": 0.9899173378944397
+      },
+      {
+        "text": " the",
+        "start": 438.68,
+        "end": 438.82,
+        "confidence": 0.9915866851806641
+      },
+      {
+        "text": " way",
+        "start": 438.82,
+        "end": 438.94,
+        "confidence": 0.9984570741653442
+      },
+      {
+        "text": " to",
+        "start": 438.94,
+        "end": 439.03999999999996,
+        "confidence": 0.9983956217765808
+      },
+      {
+        "text": " go.",
+        "start": 439.03999999999996,
+        "end": 439.15999999999997,
+        "confidence": 0.9984069466590881
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.9255
+  },
+  {
+    "start": 327.86,
+    "end": 346.28,
+    "text": "Welcome to the world's largest clean room. This is amazing, right? The reason we have this exact mechanical replication of it, we need something that looks just like Hubble, functions just like Hubble, so everybody can see what it really looks like when we get up here to work on it. So Mike, Hubble has more than one instrument.",
+    "story_type": "conflict",
+    "hook": "Welcome to the world's largest clean room.",
+    "payoff": "So Mike, Hubble has more than one instrument.",
+    "editorial_score": 0.9626514285714285,
+    "virality_score": 0.7692142857142857,
+    "context_score": 1.0,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.77; progression=1.00; payoff=0.95; density=1.00; fillers=0; standalone=1.00; repetition=0.07; coherence=1.00; completeness=1.00; audio_pace=0.86; silence=0.168; dead_air=0.09.",
+    "visual_potential": 0.8,
+    "words": [
+      {
+        "text": " Welcome",
+        "start": 327.86,
+        "end": 328.34000000000003,
+        "confidence": 0.6536720991134644
+      },
+      {
+        "text": " to",
+        "start": 328.34000000000003,
+        "end": 328.56,
+        "confidence": 0.9944770932197571
+      },
+      {
+        "text": " the",
+        "start": 328.56,
+        "end": 328.68,
+        "confidence": 0.9945057034492493
+      },
+      {
+        "text": " world's",
+        "start": 328.68,
+        "end": 329.15999999999997,
+        "confidence": 0.9899809956550598
+      },
+      {
+        "text": " largest",
+        "start": 329.15999999999997,
+        "end": 329.15999999999997,
+        "confidence": 0.9977512955665588
+      },
+      {
+        "text": " clean",
+        "start": 329.15999999999997,
+        "end": 329.44,
+        "confidence": 0.9694026708602905
+      },
+      {
+        "text": " room.",
+        "start": 329.44,
+        "end": 329.68,
+        "confidence": 0.9587084650993347
+      },
+      {
+        "text": " This",
+        "start": 329.68,
+        "end": 330.3,
+        "confidence": 0.30268043279647827
+      },
+      {
+        "text": " is",
+        "start": 330.3,
+        "end": 330.3,
+        "confidence": 0.9888560175895691
+      },
+      {
+        "text": " amazing,",
+        "start": 330.3,
+        "end": 330.68,
+        "confidence": 0.9902265071868896
+      },
+      {
+        "text": " right?",
+        "start": 330.94,
+        "end": 331.06,
+        "confidence": 0.8042728900909424
+      },
+      {
+        "text": " The",
+        "start": 331.54,
+        "end": 331.76,
+        "confidence": 0.34763452410697937
+      },
+      {
+        "text": " reason",
+        "start": 331.76,
+        "end": 332.04,
+        "confidence": 0.9967363476753235
+      },
+      {
+        "text": " we",
+        "start": 332.04,
+        "end": 332.26,
+        "confidence": 0.9754176139831543
+      },
+      {
+        "text": " have",
+        "start": 332.26,
+        "end": 332.48,
+        "confidence": 0.9976682066917419
+      },
+      {
+        "text": " this",
+        "start": 332.48,
+        "end": 332.78,
+        "confidence": 0.9935864806175232
+      },
+      {
+        "text": " exact",
+        "start": 332.78,
+        "end": 333.24,
+        "confidence": 0.9958815574645996
+      },
+      {
+        "text": " mechanical",
+        "start": 333.24,
+        "end": 333.98,
+        "confidence": 0.7947154641151428
+      },
+      {
+        "text": " replication",
+        "start": 333.98,
+        "end": 334.84000000000003,
+        "confidence": 0.9650889039039612
+      },
+      {
+        "text": " of",
+        "start": 334.84000000000003,
+        "end": 335.14,
+        "confidence": 0.9741991758346558
+      },
+      {
+        "text": " it,",
+        "start": 335.14,
+        "end": 335.26,
+        "confidence": 0.9963957667350769
+      },
+      {
+        "text": " we",
+        "start": 335.38,
+        "end": 335.52,
+        "confidence": 0.9554509520530701
+      },
+      {
+        "text": " need",
+        "start": 335.52,
+        "end": 335.72,
+        "confidence": 0.9967960715293884
+      },
+      {
+        "text": " something",
+        "start": 335.72,
+        "end": 336.0,
+        "confidence": 0.997668445110321
+      },
+      {
+        "text": " that",
+        "start": 336.0,
+        "end": 336.24,
+        "confidence": 0.9886562824249268
+      },
+      {
+        "text": " looks",
+        "start": 336.24,
+        "end": 336.56,
+        "confidence": 0.9877891540527344
+      },
+      {
+        "text": " just",
+        "start": 336.56,
+        "end": 336.98,
+        "confidence": 0.9335931539535522
+      },
+      {
+        "text": " like",
+        "start": 336.98,
+        "end": 337.26,
+        "confidence": 0.9967712759971619
+      },
+      {
+        "text": " Hubble,",
+        "start": 337.26,
+        "end": 337.46,
+        "confidence": 0.9878751635551453
+      },
+      {
+        "text": " functions",
+        "start": 337.65999999999997,
+        "end": 337.92,
+        "confidence": 0.952247679233551
+      },
+      {
+        "text": " just",
+        "start": 337.92,
+        "end": 338.28,
+        "confidence": 0.9946621060371399
+      },
+      {
+        "text": " like",
+        "start": 338.28,
+        "end": 338.52,
+        "confidence": 0.9973176121711731
+      },
+      {
+        "text": " Hubble,",
+        "start": 338.52,
+        "end": 338.86,
+        "confidence": 0.9983731508255005
+      },
+      {
+        "text": " so",
+        "start": 339.1,
+        "end": 339.54,
+        "confidence": 0.9892480969429016
+      },
+      {
+        "text": " everybody",
+        "start": 339.54,
+        "end": 340.18,
+        "confidence": 0.9578120708465576
+      },
+      {
+        "text": " can",
+        "start": 340.18,
+        "end": 340.48,
+        "confidence": 0.9920557141304016
+      },
+      {
+        "text": " see",
+        "start": 340.48,
+        "end": 340.65999999999997,
+        "confidence": 0.9935240745544434
+      },
+      {
+        "text": " what",
+        "start": 340.65999999999997,
+        "end": 340.84000000000003,
+        "confidence": 0.9913250207901001
+      },
+      {
+        "text": " it",
+        "start": 340.84000000000003,
+        "end": 340.94,
+        "confidence": 0.9915680289268494
+      },
+      {
+        "text": " really",
+        "start": 340.94,
+        "end": 341.14,
+        "confidence": 0.9910591244697571
+      },
+      {
+        "text": " looks",
+        "start": 341.14,
+        "end": 341.38,
+        "confidence": 0.9647403955459595
+      },
+      {
+        "text": " like",
+        "start": 341.38,
+        "end": 341.56,
+        "confidence": 0.9971684813499451
+      },
+      {
+        "text": " when",
+        "start": 341.56,
+        "end": 341.74,
+        "confidence": 0.9230756759643555
+      },
+      {
+        "text": " we",
+        "start": 341.74,
+        "end": 341.84000000000003,
+        "confidence": 0.2964012026786804
+      },
+      {
+        "text": " get",
+        "start": 341.84000000000003,
+        "end": 341.96,
+        "confidence": 0.8537090420722961
+      },
+      {
+        "text": " up",
+        "start": 341.96,
+        "end": 342.12,
+        "confidence": 0.8768569231033325
+      },
+      {
+        "text": " here",
+        "start": 342.12,
+        "end": 342.22,
+        "confidence": 0.6627642512321472
+      },
+      {
+        "text": " to",
+        "start": 342.22,
+        "end": 342.3,
+        "confidence": 0.9422906637191772
+      },
+      {
+        "text": " work",
+        "start": 342.3,
+        "end": 342.48,
+        "confidence": 0.9974639415740967
+      },
+      {
+        "text": " on",
+        "start": 342.48,
+        "end": 342.68,
+        "confidence": 0.8870723843574524
+      },
+      {
+        "text": " it.",
+        "start": 342.68,
+        "end": 342.94,
+        "confidence": 0.8400125503540039
+      },
+      {
+        "text": " So",
+        "start": 344.52,
+        "end": 344.86,
+        "confidence": 0.8619552254676819
+      },
+      {
+        "text": " Mike,",
+        "start": 344.86,
+        "end": 345.0,
+        "confidence": 0.6000308394432068
+      },
+      {
+        "text": " Hubble",
+        "start": 345.22,
+        "end": 345.32,
+        "confidence": 0.9972234964370728
+      },
+      {
+        "text": " has",
+        "start": 345.32,
+        "end": 345.52,
+        "confidence": 0.9971174001693726
+      },
+      {
+        "text": " more",
+        "start": 345.52,
+        "end": 345.7,
+        "confidence": 0.9987707734107971
+      },
+      {
+        "text": " than",
+        "start": 345.7,
+        "end": 345.86,
+        "confidence": 0.9934078454971313
+      },
+      {
+        "text": " one",
+        "start": 345.86,
+        "end": 345.96,
+        "confidence": 0.9908814430236816
+      },
+      {
+        "text": " instrument.",
+        "start": 345.96,
+        "end": 346.28,
+        "confidence": 0.9893993735313416
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.9186
+  },
+  {
+    "start": 654.94,
+    "end": 671.38,
+    "text": "Well, we're studying the energy transfer in and out of this region of the atmosphere and the dynamics that result from the energy being put into the part of this atmosphere. So the research you're doing today with timed will hopefully keep us one day from I'm never having to say, can you hear me now? Can you hear me now?",
+    "story_type": "revelation",
+    "hook": "Well, we're studying the energy transfer in and out of this region of the atmosphere and the dynamics that result from the energy being put into the part of thi",
+    "payoff": "Can you hear me now?",
+    "editorial_score": 0.9449559821428573,
+    "virality_score": 0.6549285714285714,
+    "context_score": 1.0,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.77; progression=0.82; payoff=0.97; density=1.00; fillers=0; standalone=1.00; repetition=0.19; coherence=1.00; completeness=1.00; audio_pace=0.97; silence=0.036; dead_air=0.00.",
+    "visual_potential": 0.7,
+    "words": [
+      {
+        "text": " Well,",
+        "start": 654.94,
+        "end": 655.12,
+        "confidence": 0.9462372660636902
+      },
+      {
+        "text": " we're",
+        "start": 655.14,
+        "end": 655.3,
+        "confidence": 0.9912165403366089
+      },
+      {
+        "text": " studying",
+        "start": 655.3,
+        "end": 655.6,
+        "confidence": 0.9939407110214233
+      },
+      {
+        "text": " the",
+        "start": 655.6,
+        "end": 655.78,
+        "confidence": 0.9474741220474243
+      },
+      {
+        "text": " energy",
+        "start": 655.78,
+        "end": 656.1,
+        "confidence": 0.9935304522514343
+      },
+      {
+        "text": " transfer",
+        "start": 656.1,
+        "end": 656.62,
+        "confidence": 0.9953208565711975
+      },
+      {
+        "text": " in",
+        "start": 656.62,
+        "end": 656.98,
+        "confidence": 0.9952964186668396
+      },
+      {
+        "text": " and",
+        "start": 656.98,
+        "end": 657.1,
+        "confidence": 0.9967843294143677
+      },
+      {
+        "text": " out",
+        "start": 657.1,
+        "end": 657.3,
+        "confidence": 0.9989909529685974
+      },
+      {
+        "text": " of",
+        "start": 657.3,
+        "end": 657.46,
+        "confidence": 0.9925662279129028
+      },
+      {
+        "text": " this",
+        "start": 657.46,
+        "end": 657.62,
+        "confidence": 0.9969051480293274
+      },
+      {
+        "text": " region",
+        "start": 657.62,
+        "end": 657.9,
+        "confidence": 0.9967722296714783
+      },
+      {
+        "text": " of",
+        "start": 657.9,
+        "end": 658.04,
+        "confidence": 0.9876109957695007
+      },
+      {
+        "text": " the",
+        "start": 658.04,
+        "end": 658.12,
+        "confidence": 0.9968674778938293
+      },
+      {
+        "text": " atmosphere",
+        "start": 658.12,
+        "end": 658.56,
+        "confidence": 0.9965136647224426
+      },
+      {
+        "text": " and",
+        "start": 658.56,
+        "end": 659.1,
+        "confidence": 0.8025160431861877
+      },
+      {
+        "text": " the",
+        "start": 659.1,
+        "end": 659.2,
+        "confidence": 0.9398025274276733
+      },
+      {
+        "text": " dynamics",
+        "start": 659.2,
+        "end": 659.62,
+        "confidence": 0.9962130784988403
+      },
+      {
+        "text": " that",
+        "start": 659.62,
+        "end": 659.86,
+        "confidence": 0.9967219233512878
+      },
+      {
+        "text": " result",
+        "start": 659.86,
+        "end": 660.22,
+        "confidence": 0.995591938495636
+      },
+      {
+        "text": " from",
+        "start": 660.22,
+        "end": 661.02,
+        "confidence": 0.9973287582397461
+      },
+      {
+        "text": " the",
+        "start": 661.02,
+        "end": 661.28,
+        "confidence": 0.9954149723052979
+      },
+      {
+        "text": " energy",
+        "start": 661.28,
+        "end": 661.62,
+        "confidence": 0.9984908103942871
+      },
+      {
+        "text": " being",
+        "start": 661.62,
+        "end": 662.06,
+        "confidence": 0.9845689535140991
+      },
+      {
+        "text": " put",
+        "start": 662.06,
+        "end": 662.28,
+        "confidence": 0.9974598288536072
+      },
+      {
+        "text": " into",
+        "start": 662.28,
+        "end": 662.48,
+        "confidence": 0.9843788743019104
+      },
+      {
+        "text": " the",
+        "start": 662.48,
+        "end": 662.62,
+        "confidence": 0.9673658609390259
+      },
+      {
+        "text": " part",
+        "start": 662.62,
+        "end": 662.84,
+        "confidence": 0.9960399866104126
+      },
+      {
+        "text": " of",
+        "start": 662.84,
+        "end": 662.96,
+        "confidence": 0.9981818199157715
+      },
+      {
+        "text": " this",
+        "start": 662.96,
+        "end": 663.1,
+        "confidence": 0.9433186054229736
+      },
+      {
+        "text": " atmosphere.",
+        "start": 663.1,
+        "end": 663.52,
+        "confidence": 0.9973043203353882
+      },
+      {
+        "text": " So",
+        "start": 663.8,
+        "end": 663.98,
+        "confidence": 0.985293447971344
+      },
+      {
+        "text": " the",
+        "start": 663.98,
+        "end": 664.16,
+        "confidence": 0.5923823714256287
+      },
+      {
+        "text": " research",
+        "start": 664.16,
+        "end": 664.48,
+        "confidence": 0.998572826385498
+      },
+      {
+        "text": " you're",
+        "start": 664.48,
+        "end": 664.7,
+        "confidence": 0.985196441411972
+      },
+      {
+        "text": " doing",
+        "start": 664.7,
+        "end": 664.84,
+        "confidence": 0.9987534284591675
+      },
+      {
+        "text": " today",
+        "start": 664.84,
+        "end": 665.08,
+        "confidence": 0.9958654642105103
+      },
+      {
+        "text": " with",
+        "start": 665.08,
+        "end": 665.3199999999999,
+        "confidence": 0.9952526092529297
+      },
+      {
+        "text": " timed",
+        "start": 665.3199999999999,
+        "end": 665.76,
+        "confidence": 0.9660195112228394
+      },
+      {
+        "text": " will",
+        "start": 665.76,
+        "end": 666.3199999999999,
+        "confidence": 0.9250306487083435
+      },
+      {
+        "text": " hopefully",
+        "start": 666.3199999999999,
+        "end": 666.98,
+        "confidence": 0.9619883894920349
+      },
+      {
+        "text": " keep",
+        "start": 666.98,
+        "end": 667.54,
+        "confidence": 0.9845761060714722
+      },
+      {
+        "text": " us",
+        "start": 667.54,
+        "end": 667.8,
+        "confidence": 0.9971030354499817
+      },
+      {
+        "text": " one",
+        "start": 667.8,
+        "end": 668.1800000000001,
+        "confidence": 0.9320938587188721
+      },
+      {
+        "text": " day",
+        "start": 668.1800000000001,
+        "end": 668.44,
+        "confidence": 0.98848956823349
+      },
+      {
+        "text": " from",
+        "start": 668.44,
+        "end": 668.84,
+        "confidence": 0.8617071509361267
+      },
+      {
+        "text": " I'm",
+        "start": 668.84,
+        "end": 668.92,
+        "confidence": 0.6197853088378906
+      },
+      {
+        "text": " never",
+        "start": 668.92,
+        "end": 669.14,
+        "confidence": 0.9931229948997498
+      },
+      {
+        "text": " having",
+        "start": 669.14,
+        "end": 669.4,
+        "confidence": 0.9961208701133728
+      },
+      {
+        "text": " to",
+        "start": 669.4,
+        "end": 669.6,
+        "confidence": 0.995993971824646
+      },
+      {
+        "text": " say,",
+        "start": 669.6,
+        "end": 669.78,
+        "confidence": 0.9985873699188232
+      },
+      {
+        "text": " can",
+        "start": 669.9,
+        "end": 670.02,
+        "confidence": 0.2525322437286377
+      },
+      {
+        "text": " you",
+        "start": 670.02,
+        "end": 670.16,
+        "confidence": 0.9989666938781738
+      },
+      {
+        "text": " hear",
+        "start": 670.16,
+        "end": 670.3199999999999,
+        "confidence": 0.9967681169509888
+      },
+      {
+        "text": " me",
+        "start": 670.3199999999999,
+        "end": 670.42,
+        "confidence": 0.9966963529586792
+      },
+      {
+        "text": " now?",
+        "start": 670.42,
+        "end": 670.7,
+        "confidence": 0.9948282837867737
+      },
+      {
+        "text": " Can",
+        "start": 670.88,
+        "end": 670.94,
+        "confidence": 0.715054988861084
+      },
+      {
+        "text": " you",
+        "start": 670.94,
+        "end": 671.06,
+        "confidence": 0.9977430105209351
+      },
+      {
+        "text": " hear",
+        "start": 671.06,
+        "end": 671.16,
+        "confidence": 0.9956995248794556
+      },
+      {
+        "text": " me",
+        "start": 671.16,
+        "end": 671.26,
+        "confidence": 0.978650689125061
+      },
+      {
+        "text": " now?",
+        "start": 671.26,
+        "end": 671.38,
+        "confidence": 0.5680071711540222
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.8785
+  },
+  {
+    "start": 606.02,
+    "end": 620.02,
+    "text": "Well, it's the interface and buffer region of the Earth's atmosphere. It's where the Sun's energy is first deposited into the atmosphere, and it's where the the atmosphere interacts with the near space environment. So scientists have known for years that the sun impacts the earth, right?",
+    "story_type": "revelation",
+    "hook": "Well, it's the interface and buffer region of the Earth's atmosphere.",
+    "payoff": "So scientists have known for years that the sun impacts the earth, right?",
+    "editorial_score": 0.8891988278388278,
+    "virality_score": 0.6377857142857143,
+    "context_score": 0.9701391941391941,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.77; progression=0.78; payoff=0.91; density=1.00; fillers=0; standalone=1.00; repetition=0.25; coherence=1.00; completeness=1.00; audio_pace=0.94; silence=0.076; dead_air=0.00.",
+    "visual_potential": 0.7,
+    "words": [
+      {
+        "text": " Well,",
+        "start": 606.02,
+        "end": 606.2,
+        "confidence": 0.9581287503242493
+      },
+      {
+        "text": " it's",
+        "start": 606.2,
+        "end": 606.38,
+        "confidence": 0.996607631444931
+      },
+      {
+        "text": " the",
+        "start": 606.38,
+        "end": 606.54,
+        "confidence": 0.9982485771179199
+      },
+      {
+        "text": " interface",
+        "start": 606.54,
+        "end": 606.92,
+        "confidence": 0.9268730282783508
+      },
+      {
+        "text": " and",
+        "start": 606.92,
+        "end": 607.26,
+        "confidence": 0.9874151349067688
+      },
+      {
+        "text": " buffer",
+        "start": 607.26,
+        "end": 607.54,
+        "confidence": 0.9976837635040283
+      },
+      {
+        "text": " region",
+        "start": 607.54,
+        "end": 608.0,
+        "confidence": 0.9942893981933594
+      },
+      {
+        "text": " of",
+        "start": 608.0,
+        "end": 608.2,
+        "confidence": 0.9989744424819946
+      },
+      {
+        "text": " the",
+        "start": 608.2,
+        "end": 608.34,
+        "confidence": 0.9952237010002136
+      },
+      {
+        "text": " Earth's",
+        "start": 608.34,
+        "end": 608.64,
+        "confidence": 0.9889338612556458
+      },
+      {
+        "text": " atmosphere.",
+        "start": 608.64,
+        "end": 609.08,
+        "confidence": 0.9996354579925537
+      },
+      {
+        "text": " It's",
+        "start": 609.48,
+        "end": 609.7,
+        "confidence": 0.9947565197944641
+      },
+      {
+        "text": " where",
+        "start": 609.7,
+        "end": 609.84,
+        "confidence": 0.9968269467353821
+      },
+      {
+        "text": " the",
+        "start": 609.84,
+        "end": 609.94,
+        "confidence": 0.997061550617218
+      },
+      {
+        "text": " Sun's",
+        "start": 609.94,
+        "end": 610.38,
+        "confidence": 0.7784101963043213
+      },
+      {
+        "text": " energy",
+        "start": 610.38,
+        "end": 610.7,
+        "confidence": 0.9972354769706726
+      },
+      {
+        "text": " is",
+        "start": 610.7,
+        "end": 610.88,
+        "confidence": 0.9969857335090637
+      },
+      {
+        "text": " first",
+        "start": 610.88,
+        "end": 611.1,
+        "confidence": 0.998660683631897
+      },
+      {
+        "text": " deposited",
+        "start": 611.1,
+        "end": 611.7,
+        "confidence": 0.9960901141166687
+      },
+      {
+        "text": " into",
+        "start": 611.7,
+        "end": 612.04,
+        "confidence": 0.9500396847724915
+      },
+      {
+        "text": " the",
+        "start": 612.04,
+        "end": 612.16,
+        "confidence": 0.9989528656005859
+      },
+      {
+        "text": " atmosphere,",
+        "start": 612.16,
+        "end": 612.64,
+        "confidence": 0.9995692372322083
+      },
+      {
+        "text": " and",
+        "start": 612.88,
+        "end": 613.42,
+        "confidence": 0.99793940782547
+      },
+      {
+        "text": " it's",
+        "start": 613.42,
+        "end": 613.58,
+        "confidence": 0.9977366328239441
+      },
+      {
+        "text": " where",
+        "start": 613.58,
+        "end": 613.7,
+        "confidence": 0.9968305230140686
+      },
+      {
+        "text": " the",
+        "start": 613.7,
+        "end": 613.82,
+        "confidence": 0.9987137317657471
+      },
+      {
+        "text": " the",
+        "start": 613.82,
+        "end": 614.3,
+        "confidence": 0.2520100772380829
+      },
+      {
+        "text": " atmosphere",
+        "start": 614.3,
+        "end": 614.3,
+        "confidence": 0.7700034976005554
+      },
+      {
+        "text": " interacts",
+        "start": 614.3,
+        "end": 614.96,
+        "confidence": 0.985144853591919
+      },
+      {
+        "text": " with",
+        "start": 614.96,
+        "end": 615.26,
+        "confidence": 0.99702388048172
+      },
+      {
+        "text": " the",
+        "start": 615.26,
+        "end": 615.48,
+        "confidence": 0.9577502608299255
+      },
+      {
+        "text": " near",
+        "start": 615.48,
+        "end": 615.66,
+        "confidence": 0.9095210433006287
+      },
+      {
+        "text": " space",
+        "start": 615.66,
+        "end": 615.98,
+        "confidence": 0.8273780941963196
+      },
+      {
+        "text": " environment.",
+        "start": 615.98,
+        "end": 616.56,
+        "confidence": 0.9910569190979004
+      },
+      {
+        "text": " So",
+        "start": 616.9,
+        "end": 617.0,
+        "confidence": 0.6145498752593994
+      },
+      {
+        "text": " scientists",
+        "start": 617.0,
+        "end": 617.22,
+        "confidence": 0.8531314730644226
+      },
+      {
+        "text": " have",
+        "start": 617.22,
+        "end": 617.46,
+        "confidence": 0.9837607741355896
+      },
+      {
+        "text": " known",
+        "start": 617.46,
+        "end": 617.6,
+        "confidence": 0.9835994243621826
+      },
+      {
+        "text": " for",
+        "start": 617.6,
+        "end": 617.82,
+        "confidence": 0.9961637258529663
+      },
+      {
+        "text": " years",
+        "start": 617.82,
+        "end": 618.16,
+        "confidence": 0.997092604637146
+      },
+      {
+        "text": " that",
+        "start": 618.16,
+        "end": 618.42,
+        "confidence": 0.6393153071403503
+      },
+      {
+        "text": " the",
+        "start": 618.42,
+        "end": 618.54,
+        "confidence": 0.9921425580978394
+      },
+      {
+        "text": " sun",
+        "start": 618.54,
+        "end": 618.84,
+        "confidence": 0.6729496121406555
+      },
+      {
+        "text": " impacts",
+        "start": 618.84,
+        "end": 619.38,
+        "confidence": 0.9889358878135681
+      },
+      {
+        "text": " the",
+        "start": 619.38,
+        "end": 619.64,
+        "confidence": 0.9953423738479614
+      },
+      {
+        "text": " earth,",
+        "start": 619.64,
+        "end": 619.8,
+        "confidence": 0.7779938578605652
+      },
+      {
+        "text": " right?",
+        "start": 619.88,
+        "end": 620.02,
+        "confidence": 0.9959406852722168
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.8535
+  },
+  {
+    "start": 94.98,
+    "end": 112.64,
+    "text": "Well, the Hubble Space Telescope has revealed more to us about space in the past 10 years than we've ever known about the universe. Ever. And it's the direct solution to a problem these telescopes have faced since the earliest days of their invention.",
+    "story_type": "fact",
+    "hook": "Well, the Hubble Space Telescope has revealed more to us about space in the past 10 years than we've ever known about the universe.",
+    "payoff": "And it's the direct solution to a problem these telescopes have faced since the earliest days of their invention.",
+    "editorial_score": 0.757516272447824,
+    "virality_score": 0.3142142857142857,
+    "context_score": 0.9151428571428571,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.53; progression=0.65; payoff=0.88; density=0.93; fillers=0; standalone=1.00; repetition=0.00; coherence=1.00; completeness=1.00; audio_pace=0.65; silence=0.408; dead_air=0.41.",
+    "visual_potential": 0.5499999999999999,
+    "words": [
+      {
+        "text": " Well,",
+        "start": 94.98,
+        "end": 95.26,
+        "confidence": 0.9603562355041504
+      },
+      {
+        "text": " the",
+        "start": 95.3,
+        "end": 95.4,
+        "confidence": 0.9845784306526184
+      },
+      {
+        "text": " Hubble",
+        "start": 95.4,
+        "end": 95.5,
+        "confidence": 0.9941204190254211
+      },
+      {
+        "text": " Space",
+        "start": 95.5,
+        "end": 95.72,
+        "confidence": 0.9909563660621643
+      },
+      {
+        "text": " Telescope",
+        "start": 95.72,
+        "end": 96.2,
+        "confidence": 0.9989575147628784
+      },
+      {
+        "text": " has",
+        "start": 96.2,
+        "end": 96.32,
+        "confidence": 0.9730970859527588
+      },
+      {
+        "text": " revealed",
+        "start": 96.32,
+        "end": 96.56,
+        "confidence": 0.9970500469207764
+      },
+      {
+        "text": " more",
+        "start": 96.56,
+        "end": 96.78,
+        "confidence": 0.992098331451416
+      },
+      {
+        "text": " to",
+        "start": 96.78,
+        "end": 96.9,
+        "confidence": 0.9761951565742493
+      },
+      {
+        "text": " us",
+        "start": 96.9,
+        "end": 97.04,
+        "confidence": 0.9990060925483704
+      },
+      {
+        "text": " about",
+        "start": 97.04,
+        "end": 97.22,
+        "confidence": 0.9803001880645752
+      },
+      {
+        "text": " space",
+        "start": 97.22,
+        "end": 97.56,
+        "confidence": 0.9838150143623352
+      },
+      {
+        "text": " in",
+        "start": 97.56,
+        "end": 97.76,
+        "confidence": 0.9623302817344666
+      },
+      {
+        "text": " the",
+        "start": 97.76,
+        "end": 97.82,
+        "confidence": 0.9973984956741333
+      },
+      {
+        "text": " past",
+        "start": 97.82,
+        "end": 98.02,
+        "confidence": 0.9950128197669983
+      },
+      {
+        "text": " 10",
+        "start": 98.02,
+        "end": 98.28,
+        "confidence": 0.636803150177002
+      },
+      {
+        "text": " years",
+        "start": 98.28,
+        "end": 98.58,
+        "confidence": 0.9982888102531433
+      },
+      {
+        "text": " than",
+        "start": 98.58,
+        "end": 99.06,
+        "confidence": 0.8185763955116272
+      },
+      {
+        "text": " we've",
+        "start": 99.06,
+        "end": 99.26,
+        "confidence": 0.8303464651107788
+      },
+      {
+        "text": " ever",
+        "start": 99.26,
+        "end": 99.4,
+        "confidence": 0.9937713742256165
+      },
+      {
+        "text": " known",
+        "start": 99.4,
+        "end": 99.52,
+        "confidence": 0.7722982168197632
+      },
+      {
+        "text": " about",
+        "start": 99.52,
+        "end": 99.72,
+        "confidence": 0.9936624765396118
+      },
+      {
+        "text": " the",
+        "start": 99.72,
+        "end": 99.86,
+        "confidence": 0.998553454875946
+      },
+      {
+        "text": " universe.",
+        "start": 99.86,
+        "end": 100.18,
+        "confidence": 0.6374301910400391
+      },
+      {
+        "text": " Ever.",
+        "start": 101.08,
+        "end": 101.56,
+        "confidence": 0.973341703414917
+      },
+      {
+        "text": " And",
+        "start": 107.82,
+        "end": 108.26,
+        "confidence": 0.9899659156799316
+      },
+      {
+        "text": " it's",
+        "start": 108.26,
+        "end": 108.4,
+        "confidence": 0.9906592965126038
+      },
+      {
+        "text": " the",
+        "start": 108.4,
+        "end": 108.5,
+        "confidence": 0.9957101345062256
+      },
+      {
+        "text": " direct",
+        "start": 108.5,
+        "end": 108.8,
+        "confidence": 0.9956047534942627
+      },
+      {
+        "text": " solution",
+        "start": 108.8,
+        "end": 109.34,
+        "confidence": 0.998392641544342
+      },
+      {
+        "text": " to",
+        "start": 109.34,
+        "end": 109.52,
+        "confidence": 0.9970081448554993
+      },
+      {
+        "text": " a",
+        "start": 109.52,
+        "end": 109.62,
+        "confidence": 0.9856904149055481
+      },
+      {
+        "text": " problem",
+        "start": 109.62,
+        "end": 110.0,
+        "confidence": 0.9996508359909058
+      },
+      {
+        "text": " these",
+        "start": 110.0,
+        "end": 110.22,
+        "confidence": 0.9837051033973694
+      },
+      {
+        "text": " telescopes",
+        "start": 110.22,
+        "end": 110.7,
+        "confidence": 0.9966418743133545
+      },
+      {
+        "text": " have",
+        "start": 110.7,
+        "end": 110.94,
+        "confidence": 0.97336745262146
+      },
+      {
+        "text": " faced",
+        "start": 110.94,
+        "end": 111.12,
+        "confidence": 0.9889786839485168
+      },
+      {
+        "text": " since",
+        "start": 111.12,
+        "end": 111.44,
+        "confidence": 0.9654370546340942
+      },
+      {
+        "text": " the",
+        "start": 111.44,
+        "end": 111.68,
+        "confidence": 0.9950331449508667
+      },
+      {
+        "text": " earliest",
+        "start": 111.68,
+        "end": 111.86,
+        "confidence": 0.992332935333252
+      },
+      {
+        "text": " days",
+        "start": 111.86,
+        "end": 112.12,
+        "confidence": 0.996204674243927
+      },
+      {
+        "text": " of",
+        "start": 112.12,
+        "end": 112.26,
+        "confidence": 0.9946894645690918
+      },
+      {
+        "text": " their",
+        "start": 112.26,
+        "end": 112.34,
+        "confidence": 0.9961141347885132
+      },
+      {
+        "text": " invention.",
+        "start": 112.34,
+        "end": 112.64,
+        "confidence": 0.998737633228302
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.7225
+  },
+  {
+    "start": 507.11,
+    "end": 516.17,
+    "text": "See the pure science of how these three things interact, it's huge. That's why NASA has made studying that dynamic a priority. And that's why right now, Jennifer Pulley is making it a priority. Jennifer.",
+    "story_type": "story",
+    "hook": "See the pure science of how these three things interact, it's huge.",
+    "payoff": "Jennifer.",
+    "editorial_score": 0.7978685714285715,
+    "virality_score": 0.3092857142857143,
+    "context_score": 0.8768571428571429,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.75; progression=0.65; payoff=0.84; density=1.00; fillers=0; standalone=1.00; repetition=0.16; coherence=1.00; completeness=1.00; audio_pace=0.86; silence=0.179; dead_air=0.00.",
+    "visual_potential": 0.44999999999999996,
+    "words": [
+      {
+        "text": " See",
+        "start": 507.11,
+        "end": 507.25,
+        "confidence": 0.9396553635597229
+      },
+      {
+        "text": " the",
+        "start": 507.25,
+        "end": 507.35,
+        "confidence": 0.41792330145835876
+      },
+      {
+        "text": " pure",
+        "start": 507.35,
+        "end": 507.57,
+        "confidence": 0.9939209222793579
+      },
+      {
+        "text": " science",
+        "start": 507.57,
+        "end": 507.95,
+        "confidence": 0.8804276585578918
+      },
+      {
+        "text": " of",
+        "start": 507.95,
+        "end": 508.09000000000003,
+        "confidence": 0.9863103628158569
+      },
+      {
+        "text": " how",
+        "start": 508.09000000000003,
+        "end": 508.19,
+        "confidence": 0.9960117340087891
+      },
+      {
+        "text": " these",
+        "start": 508.19,
+        "end": 508.39,
+        "confidence": 0.9966112971305847
+      },
+      {
+        "text": " three",
+        "start": 508.39,
+        "end": 508.57,
+        "confidence": 0.9599506258964539
+      },
+      {
+        "text": " things",
+        "start": 508.57,
+        "end": 508.83000000000004,
+        "confidence": 0.9978135824203491
+      },
+      {
+        "text": " interact,",
+        "start": 508.83000000000004,
+        "end": 509.13,
+        "confidence": 0.9959255456924438
+      },
+      {
+        "text": " it's",
+        "start": 509.40999999999997,
+        "end": 509.61,
+        "confidence": 0.9830294549465179
+      },
+      {
+        "text": " huge.",
+        "start": 509.61,
+        "end": 509.81,
+        "confidence": 0.9988850951194763
+      },
+      {
+        "text": " That's",
+        "start": 510.16999999999996,
+        "end": 510.43,
+        "confidence": 0.9952031672000885
+      },
+      {
+        "text": " why",
+        "start": 510.43,
+        "end": 510.55,
+        "confidence": 0.9974762797355652
+      },
+      {
+        "text": " NASA",
+        "start": 510.55,
+        "end": 510.85,
+        "confidence": 0.9986936450004578
+      },
+      {
+        "text": " has",
+        "start": 510.85,
+        "end": 511.05,
+        "confidence": 0.995912492275238
+      },
+      {
+        "text": " made",
+        "start": 511.05,
+        "end": 511.16999999999996,
+        "confidence": 0.9929261803627014
+      },
+      {
+        "text": " studying",
+        "start": 511.16999999999996,
+        "end": 511.43,
+        "confidence": 0.99294114112854
+      },
+      {
+        "text": " that",
+        "start": 511.43,
+        "end": 511.69,
+        "confidence": 0.994855523109436
+      },
+      {
+        "text": " dynamic",
+        "start": 511.69,
+        "end": 512.11,
+        "confidence": 0.9971752166748047
+      },
+      {
+        "text": " a",
+        "start": 512.11,
+        "end": 512.31,
+        "confidence": 0.920295774936676
+      },
+      {
+        "text": " priority.",
+        "start": 512.31,
+        "end": 512.69,
+        "confidence": 0.9971019625663757
+      },
+      {
+        "text": " And",
+        "start": 512.99,
+        "end": 513.09,
+        "confidence": 0.9829755425453186
+      },
+      {
+        "text": " that's",
+        "start": 513.09,
+        "end": 513.25,
+        "confidence": 0.9945839047431946
+      },
+      {
+        "text": " why",
+        "start": 513.25,
+        "end": 513.37,
+        "confidence": 0.9943227767944336
+      },
+      {
+        "text": " right",
+        "start": 513.37,
+        "end": 513.61,
+        "confidence": 0.9638512134552002
+      },
+      {
+        "text": " now,",
+        "start": 513.61,
+        "end": 513.89,
+        "confidence": 0.9990561604499817
+      },
+      {
+        "text": " Jennifer",
+        "start": 514.17,
+        "end": 514.31,
+        "confidence": 0.9822887182235718
+      },
+      {
+        "text": " Pulley",
+        "start": 514.31,
+        "end": 514.69,
+        "confidence": 0.7272771745920181
+      },
+      {
+        "text": " is",
+        "start": 514.69,
+        "end": 514.79,
+        "confidence": 0.6271766424179077
+      },
+      {
+        "text": " making",
+        "start": 514.79,
+        "end": 514.97,
+        "confidence": 0.9988903403282166
+      },
+      {
+        "text": " it",
+        "start": 514.97,
+        "end": 515.11,
+        "confidence": 0.805427610874176
+      },
+      {
+        "text": " a",
+        "start": 515.11,
+        "end": 515.19,
+        "confidence": 0.9918640851974487
+      },
+      {
+        "text": " priority.",
+        "start": 515.19,
+        "end": 515.51,
+        "confidence": 0.9990554451942444
+      },
+      {
+        "text": " Jennifer.",
+        "start": 515.91,
+        "end": 516.17,
+        "confidence": 0.9963106513023376
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.7155
+  }
+]

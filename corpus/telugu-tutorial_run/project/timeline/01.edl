@@ -1,0 +1,9 @@
+TITLE:   SelekyT Edit
+* COMMENT: the edit's title is not ASCII; it is kept in the timeline sidecar
+
+FCM: NON-DROP FRAME
+
+001  TELUGU_T V     C        00:05:20:10 00:05:32:02 00:00:00:00 00:00:11:31
+     M2   telugu-tutorial.webm
+* FROM CLIP: corpus/media/telugu-tutorial.webm
+001  TELUGU_T A     C        00:05:20:10 00:05:32:02 00:00:00:00 00:00:11:31

@@ -1,0 +1,17 @@
+[
+  {
+    "index": 1,
+    "source_start": 320.26,
+    "source_end": 332.06,
+    "source_duration": 11.8,
+    "intervals": [
+      [
+        320.26,
+        332.06
+      ]
+    ],
+    "edited_duration": 11.8,
+    "removed_seconds": 0.0,
+    "story_type": "story"
+  }
+]

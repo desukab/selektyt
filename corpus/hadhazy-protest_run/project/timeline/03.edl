@@ -1,0 +1,9 @@
+TITLE:   SelekyT Edit
+* COMMENT: the edit's title is not ASCII; it is kept in the timeline sidecar
+
+FCM: NON-DROP FRAME
+
+001  HADHAZY_ V     C        00:00:33:04 00:00:44:22 00:00:00:00 00:00:11:18
+     M2   hadhazy-protest.webm
+* FROM CLIP: corpus/media/hadhazy-protest.webm
+001  HADHAZY_ A     C        00:00:33:04 00:00:44:22 00:00:00:00 00:00:11:18

@@ -1,0 +1,64 @@
+{
+  "style": "minimal",
+  "blocks": [
+    {
+      "start": 32.81,
+      "end": 35.25,
+      "text": "Én voltam a hülyener, én előre",
+      "emphasis": [
+        " voltam",
+        " hülyener,"
+      ]
+    },
+    {
+      "start": 35.25,
+      "end": 36.69,
+      "text": "mantam nekik, hogy én most után",
+      "emphasis": [
+        " mantam",
+        " nekik,"
+      ]
+    },
+    {
+      "start": 36.69,
+      "end": 38.57,
+      "text": "a csinálni, földény, hiszteni,",
+      "emphasis": [
+        " hiszteni,"
+      ]
+    },
+    {
+      "start": 38.75,
+      "end": 40.15,
+      "text": "állnak valgább ként, és biztos",
+      "emphasis": [
+        " valgább"
+      ]
+    },
+    {
+      "start": 40.15,
+      "end": 40.65,
+      "text": "lezárták.",
+      "emphasis": [
+        " lezárták."
+      ]
+    },
+    {
+      "start": 41.01,
+      "end": 42.51,
+      "text": "Egyiként mi van, kinek van, előre",
+      "emphasis": [
+        " Egyiként",
+        " előre"
+      ]
+    },
+    {
+      "start": 42.51,
+      "end": 44.31,
+      "text": "jön, ott a földet megúrjunk.",
+      "emphasis": [
+        " megúrjunk."
+      ]
+    }
+  ]
+}

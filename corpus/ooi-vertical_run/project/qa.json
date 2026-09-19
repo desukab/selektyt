@@ -1,0 +1,82 @@
+{
+  "ok": true,
+  "errors": [],
+  "warnings": [],
+  "per_file": {
+    "corpus/ooi-vertical_run/project/facebook/01.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 13102213,
+      "warnings": []
+    },
+    "corpus/ooi-vertical_run/project/shorts/01.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 28129334,
+      "warnings": []
+    },
+    "corpus/ooi-vertical_run/project/facebook/02.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.25,
+      "size": 4723895,
+      "warnings": []
+    },
+    "corpus/ooi-vertical_run/project/shorts/02.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 10509297,
+      "warnings": []
+    },
+    "corpus/ooi-vertical_run/project/facebook/03.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 3263846,
+      "warnings": []
+    },
+    "corpus/ooi-vertical_run/project/shorts/03.mp4": {
+      "errors": [],
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 7854626,
+      "warnings": []
+    }
+  },
+  "diversity": 0.44,
+  "source_coverage": {
+    "coverage_pct": 35.5,
+    "total_covered_sec": 53.96,
+    "overlaps": [],
+    "overlap_count": 0
+  },
+  "pacing": {
+    "total_candidates": 3,
+    "selected_count": 3,
+    "rejected_count": 0,
+    "context_guard_rejections": 0,
+    "truncated_by_limit": 1,
+    "avg_duration": 17.99,
+    "duration_distribution": {
+      "<15s": 1,
+      "15-30s": 2,
+      "30-45s": 0,
+      "45-55s": 0
+    },
+    "silence_pct": 7.7,
+    "filler_pct": 0.0,
+    "avg_words_per_second": 2.21,
+    "avg_hook_latency": 5.47,
+    "payoff_presence_rate": 1.0,
+    "duplicate_overlap_rate": 0.0
+  }
+}

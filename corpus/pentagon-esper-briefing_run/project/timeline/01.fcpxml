@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="f1" name="FFVideoFormat" frameDuration="1001/30000s" />
+    <asset id="r1" name="pentagon-esper-briefing.mp4" start="0s" duration="30415385/30000s" hasVideo="1" videoSources="1" hasAudio="1" audioSources="1" audioChannels="2">
+      <media-rep kind="original-media" src="file:///home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4"/>
+    </asset>
+  </resources>
+  <library>
+    <event name="I don&apos;t want to characterize exactly what or how much yet until it gets exploited properly.">
+      <project name="I don&apos;t want to characterize exactly what or how much yet until it gets exploited properly.">
+        <sequence format="f1" tcFormat="NDF">
+          <spine>
+          <asset-clip ref="r1" offset="0s" start="17511494/30000s" duration="134134/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="134134/30000s" start="17658641/30000s" duration="343343/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="477477/30000s" start="18088070/30000s" duration="261261/30000s" tcFormat="NDF" />
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>

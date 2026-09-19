@@ -1,0 +1,84 @@
+{
+  "style": "minimal",
+  "blocks": [
+    {
+      "start": 403.08,
+      "end": 404.82,
+      "text": "Sir, do you have video of",
+      "emphasis": [
+        " have",
+        " video"
+      ]
+    },
+    {
+      "start": 404.82,
+      "end": 406.18,
+      "text": "Baghdadi's final moments?",
+      "emphasis": [
+        " moments?"
+      ]
+    },
+    {
+      "start": 406.52,
+      "end": 408.08,
+      "text": "And also, are you partnering with",
+      "emphasis": [
+        " partnering",
+        " with"
+      ]
+    },
+    {
+      "start": 408.08,
+      "end": 409.52,
+      "text": "the Kurds again on the ground?",
+      "emphasis": [
+        " again",
+        " ground?"
+      ]
+    },
+    {
+      "start": 410.0,
+      "end": 411.5,
+      "text": "Can you explain how difficult this",
+      "emphasis": [
+        " explain",
+        " difficult"
+      ]
+    },
+    {
+      "start": 411.5,
+      "end": 412.98,
+      "text": "operation would have been if you",
+      "emphasis": [
+        " operation",
+        " would"
+      ]
+    },
+    {
+      "start": 412.98,
+      "end": 415.36,
+      "text": "didn't have troops or bases on",
+      "emphasis": [
+        " troops",
+        " bases"
+      ]
+    },
+    {
+      "start": 415.36,
+      "end": 416.96,
+      "text": "the ground in Syria and in",
+      "emphasis": [
+        " ground",
+        " Syria"
+      ]
+    },
+    {
+      "start": 416.96,
+      "end": 417.2,
+      "text": "Iraq?",
+      "emphasis": [
+        " Iraq?"
+      ]
+    }
+  ]
+}

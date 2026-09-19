@@ -1,0 +1,118 @@
+{
+  "style": "minimal",
+  "blocks": [
+    {
+      "start": 793.68,
+      "end": 794.74,
+      "text": "Just one thing too is to",
+      "emphasis": [
+        " Just",
+        " thing"
+      ]
+    },
+    {
+      "start": 794.74,
+      "end": 796.66,
+      "text": "talk to the users about fault",
+      "emphasis": [
+        " about",
+        " fault"
+      ]
+    },
+    {
+      "start": 796.66,
+      "end": 798.72,
+      "text": "tolerance and just say mess up,",
+      "emphasis": [
+        " tolerance",
+        " mess"
+      ]
+    },
+    {
+      "start": 799.0,
+      "end": 800.38,
+      "text": "do whatever, and watch how quickly",
+      "emphasis": [
+        " whatever,",
+        " quickly"
+      ]
+    },
+    {
+      "start": 800.38,
+      "end": 801.48,
+      "text": "it gets cleaned up, right?",
+      "emphasis": [
+        " right?"
+      ]
+    },
+    {
+      "start": 801.82,
+      "end": 803.1,
+      "text": "So a lot of people are",
+      "emphasis": [
+        " lot",
+        " people"
+      ]
+    },
+    {
+      "start": 803.1,
+      "end": 804.38,
+      "text": "afraid to kind of edit this",
+      "emphasis": [
+        " afraid",
+        " edit"
+      ]
+    },
+    {
+      "start": 804.38,
+      "end": 805.44,
+      "text": "space where everybody else is",
+      "emphasis": [
+        " everybody"
+      ]
+    },
+    {
+      "start": 805.44,
+      "end": 807.56,
+      "text": "looking, but if you show them",
+      "emphasis": [
+        " looking,",
+        " them"
+      ]
+    },
+    {
+      "start": 807.56,
+      "end": 808.86,
+      "text": "how easy it is to revert",
+      "emphasis": [
+        " easy",
+        " revert"
+      ]
+    },
+    {
+      "start": 808.86,
+      "end": 811.8,
+      "text": "and edit or that other people",
+      "emphasis": [
+        " other",
+        " people"
+      ]
+    },
+    {
+      "start": 811.8,
+      "end": 813.22,
+      "text": "are watching, it becomes really",
+      "emphasis": [
+        " watching,"
+      ]
+    },
+    {
+      "start": 813.22,
+      "end": 813.6,
+      "text": "powerful.",
+      "emphasis": [
+        " powerful."
+      ]
+    }
+  ]
+}

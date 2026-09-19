@@ -1,0 +1,25 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.03,Default,,0,0,0,,{\k22}{\c&H00D7FF&\b1}Just{\c&HFFFFFF&\b0} {\k16}one {\k18}{\c&H00D7FF&\b1}thing{\c&HFFFFFF&\b0} {\k20}too {\k14}is {\k16}to
+Dialogue: 0,0:00:01.06,0:00:02.95,Default,,0,0,0,,{\k40}talk {\k64}to {\k8}the {\k14}users {\k30}{\c&H00D7FF&\b1}about{\c&HFFFFFF&\b0} {\k36}{\c&H00D7FF&\b1}fault{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:02.98,0:00:05.16,Default,,0,0,0,,{\k40}{\c&H00D7FF&\b1}tolerance{\c&HFFFFFF&\b0} {\k62}and {\k40}just {\k18}say {\k20}{\c&H00D7FF&\b1}mess{\c&HFFFFFF&\b0} {\k26}up,
+Dialogue: 0,0:00:05.32,0:00:06.67,Default,,0,0,0,,{\k12}do {\k24}{\c&H00D7FF&\b1}whatever,{\c&HFFFFFF&\b0} {\k8}and {\k28}watch {\k14}how {\k24}{\c&H00D7FF&\b1}quickly{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:06.70,0:00:07.92,Default,,0,0,0,,{\k18}it {\k14}gets {\k28}cleaned {\k22}up, {\k20}{\c&H00D7FF&\b1}right?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:08.14,0:00:09.39,Default,,0,0,0,,{\k1}So {\k80}a {\k10}{\c&H00D7FF&\b1}lot{\c&HFFFFFF&\b0} {\k6}of {\k14}{\c&H00D7FF&\b1}people{\c&HFFFFFF&\b0} {\k18}are
+Dialogue: 0,0:00:09.42,0:00:10.67,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}afraid{\c&HFFFFFF&\b0} {\k28}to {\k14}kind {\k8}of {\k18}{\c&H00D7FF&\b1}edit{\c&HFFFFFF&\b0} {\k24}this
+Dialogue: 0,0:00:10.70,0:00:11.73,Default,,0,0,0,,{\k26}space {\k18}where {\k28}{\c&H00D7FF&\b1}everybody{\c&HFFFFFF&\b0} {\k20}else {\k14}is
+Dialogue: 0,0:00:11.76,0:00:13.85,Default,,0,0,0,,{\k24}{\c&H00D7FF&\b1}looking,{\c&HFFFFFF&\b0} {\k24}but {\k84}if {\k14}you {\k24}show {\k10}{\c&H00D7FF&\b1}them{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:13.88,0:00:15.15,Default,,0,0,0,,{\k18}how {\k28}{\c&H00D7FF&\b1}easy{\c&HFFFFFF&\b0} {\k16}it {\k20}is {\k12}to {\k36}{\c&H00D7FF&\b1}revert{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:15.18,0:00:18.09,Default,,0,0,0,,{\k60}and {\k32}edit {\k60}or {\k84}that {\k36}{\c&H00D7FF&\b1}other{\c&HFFFFFF&\b0} {\k22}{\c&H00D7FF&\b1}people{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:18.12,0:00:19.51,Default,,0,0,0,,{\k14}are {\k32}{\c&H00D7FF&\b1}watching,{\c&HFFFFFF&\b0} {\k6}it {\k36}becomes {\k28}really
+Dialogue: 0,0:00:19.54,0:00:19.92,Default,,0,0,0,,{\k38}{\c&H00D7FF&\b1}powerful.{\c&HFFFFFF&\b0}

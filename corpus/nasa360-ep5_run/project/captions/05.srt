@@ -1,0 +1,39 @@
+1
+0:00:00,000 --> 0:00:01,187
+Well, the Hubble Space Telescope
+
+2
+0:00:01,220 --> 0:00:02,207
+has revealed more to us about
+
+3
+0:00:02,240 --> 0:00:03,567
+space in the past 10 years
+
+4
+0:00:03,600 --> 0:00:04,847
+than we've ever known about the
+
+5
+0:00:04,880 --> 0:00:05,320
+universe.
+
+6
+0:00:06,100 --> 0:00:06,700
+Ever.
+
+7
+0:00:12,840 --> 0:00:14,507
+And it's the direct solution to
+
+8
+0:00:14,540 --> 0:00:15,927
+a problem these telescopes have
+
+9
+0:00:15,960 --> 0:00:17,247
+faced since the earliest days of
+
+10
+0:00:17,280 --> 0:00:17,660
+their invention.

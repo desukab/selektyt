@@ -1,0 +1,20 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.05,Default,,0,0,0,,{\k14}See {\k10}the {\k22}{\c&H00D7FF&\b1}pure{\c&HFFFFFF&\b0} {\k38}{\c&H00D7FF&\b1}science{\c&HFFFFFF&\b0} {\k14}of {\k10}how
+Dialogue: 0,0:00:01.08,0:00:02.47,Default,,0,0,0,,{\k20}these {\k18}three {\k26}things {\k30}{\c&H00D7FF&\b1}interact,{\c&HFFFFFF&\b0} {\k20}it's
+Dialogue: 0,0:00:02.50,0:00:02.82,Default,,0,0,0,,{\k20}{\c&H00D7FF&\b1}huge.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:03.06,0:00:04.29,Default,,0,0,0,,{\k26}That's {\k12}why {\k30}{\c&H00D7FF&\b1}NASA{\c&HFFFFFF&\b0} {\k20}has {\k12}made {\k26}{\c&H00D7FF&\b1}studying{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:04.32,0:00:05.70,Default,,0,0,0,,{\k26}that {\k42}dynamic {\k20}a {\k38}{\c&H00D7FF&\b1}priority.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:05.88,0:00:07.17,Default,,0,0,0,,{\k10}And {\k16}that's {\k12}why {\k24}{\c&H00D7FF&\b1}right{\c&HFFFFFF&\b0} {\k28}now, {\k14}{\c&H00D7FF&\b1}Jennifer{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:07.20,0:00:08.52,Default,,0,0,0,,{\k38}Pulley {\k10}is {\k18}{\c&H00D7FF&\b1}making{\c&HFFFFFF&\b0} {\k14}it {\k8}a {\k32}{\c&H00D7FF&\b1}priority.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:08.80,0:00:09.06,Default,,0,0,0,,{\k26}{\c&H00D7FF&\b1}Jennifer.{\c&HFFFFFF&\b0}

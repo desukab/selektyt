@@ -1,0 +1,1278 @@
+{
+  "index": 3,
+  "start": 900.0,
+  "end": 1013.852875,
+  "decode_start": 885.0,
+  "status": "ok",
+  "language": "en",
+  "segments": [
+    {
+      "start": 901.86,
+      "end": 903.5,
+      "text": "that mission of securing the oil fields",
+      "words": [
+        {
+          "text": " that",
+          "start": 901.86,
+          "end": 902.06,
+          "confidence": 0.9990139007568359
+        },
+        {
+          "text": " mission",
+          "start": 902.06,
+          "end": 902.28,
+          "confidence": 0.9970260262489319
+        },
+        {
+          "text": " of",
+          "start": 902.28,
+          "end": 902.46,
+          "confidence": 0.9925328493118286
+        },
+        {
+          "text": " securing",
+          "start": 902.46,
+          "end": 902.76,
+          "confidence": 0.997159481048584
+        },
+        {
+          "text": " the",
+          "start": 902.76,
+          "end": 902.92,
+          "confidence": 0.9782277345657349
+        },
+        {
+          "text": " oil",
+          "start": 902.92,
+          "end": 903.14,
+          "confidence": 0.9991948008537292
+        },
+        {
+          "text": " fields",
+          "start": 903.14,
+          "end": 903.5,
+          "confidence": 0.9162561297416687
+        }
+      ]
+    },
+    {
+      "start": 903.5,
+      "end": 905.6,
+      "text": "in order to deny them access to ISIS.",
+      "words": [
+        {
+          "text": " in",
+          "start": 903.5,
+          "end": 903.8,
+          "confidence": 0.9760181903839111
+        },
+        {
+          "text": " order",
+          "start": 903.8,
+          "end": 903.94,
+          "confidence": 0.998754620552063
+        },
+        {
+          "text": " to",
+          "start": 903.94,
+          "end": 904.08,
+          "confidence": 0.9997333884239197
+        },
+        {
+          "text": " deny",
+          "start": 904.08,
+          "end": 904.44,
+          "confidence": 0.9763997793197632
+        },
+        {
+          "text": " them",
+          "start": 904.44,
+          "end": 904.64,
+          "confidence": 0.8793725967407227
+        },
+        {
+          "text": " access",
+          "start": 904.64,
+          "end": 905.1,
+          "confidence": 0.998275876045227
+        },
+        {
+          "text": " to",
+          "start": 905.1,
+          "end": 905.36,
+          "confidence": 0.999634861946106
+        },
+        {
+          "text": " ISIS.",
+          "start": 905.36,
+          "end": 905.6,
+          "confidence": 0.8842191100120544
+        }
+      ]
+    },
+    {
+      "start": 906.0,
+      "end": 908.46,
+      "text": "So will there be more going in than there were coming out?",
+      "words": [
+        {
+          "text": " So",
+          "start": 906.0,
+          "end": 906.22,
+          "confidence": 0.5322328209877014
+        },
+        {
+          "text": " will",
+          "start": 906.22,
+          "end": 906.34,
+          "confidence": 0.462846964597702
+        },
+        {
+          "text": " there",
+          "start": 906.34,
+          "end": 906.44,
+          "confidence": 0.9462475776672363
+        },
+        {
+          "text": " be",
+          "start": 906.44,
+          "end": 906.6,
+          "confidence": 0.997040331363678
+        },
+        {
+          "text": " more",
+          "start": 906.6,
+          "end": 906.8,
+          "confidence": 0.9987873435020447
+        },
+        {
+          "text": " going",
+          "start": 906.8,
+          "end": 907.08,
+          "confidence": 0.9974768757820129
+        },
+        {
+          "text": " in",
+          "start": 907.08,
+          "end": 907.4,
+          "confidence": 0.9802215099334717
+        },
+        {
+          "text": " than",
+          "start": 907.4,
+          "end": 907.64,
+          "confidence": 0.8095821142196655
+        },
+        {
+          "text": " there",
+          "start": 907.64,
+          "end": 907.8,
+          "confidence": 0.9288623332977295
+        },
+        {
+          "text": " were",
+          "start": 907.8,
+          "end": 907.92,
+          "confidence": 0.42982402443885803
+        },
+        {
+          "text": " coming",
+          "start": 907.92,
+          "end": 908.14,
+          "confidence": 0.9949775338172913
+        },
+        {
+          "text": " out?",
+          "start": 908.14,
+          "end": 908.46,
+          "confidence": 0.9984588623046875
+        }
+      ]
+    },
+    {
+      "start": 908.68,
+      "end": 909.32,
+      "text": "Sorry, just to clear that up.",
+      "words": [
+        {
+          "text": " Sorry,",
+          "start": 908.68,
+          "end": 908.9,
+          "confidence": 0.9351016283035278
+        },
+        {
+          "text": " just",
+          "start": 908.96,
+          "end": 909.08,
+          "confidence": 0.9496580958366394
+        },
+        {
+          "text": " to",
+          "start": 909.08,
+          "end": 909.2,
+          "confidence": 0.9549433588981628
+        },
+        {
+          "text": " clear",
+          "start": 909.2,
+          "end": 909.32,
+          "confidence": 0.49412012100219727
+        },
+        {
+          "text": " that",
+          "start": 909.32,
+          "end": 909.32,
+          "confidence": 0.5234779119491577
+        },
+        {
+          "text": " up.",
+          "start": 909.32,
+          "end": 909.32,
+          "confidence": 0.5274929404258728
+        }
+      ]
+    },
+    {
+      "start": 909.32,
+      "end": 909.78,
+      "text": "No, no, no.",
+      "words": [
+        {
+          "text": " No,",
+          "start": 909.32,
+          "end": 909.5,
+          "confidence": 0.943018913269043
+        },
+        {
+          "text": " no,",
+          "start": 909.5,
+          "end": 909.68,
+          "confidence": 0.9216200709342957
+        },
+        {
+          "text": " no.",
+          "start": 909.68,
+          "end": 909.78,
+          "confidence": 0.8570196032524109
+        }
+      ]
+    },
+    {
+      "start": 910.0,
+      "end": 911.64,
+      "text": "At the end of the day, my expectation",
+      "words": [
+        {
+          "text": " At",
+          "start": 910.0,
+          "end": 910.28,
+          "confidence": 0.9919803142547607
+        },
+        {
+          "text": " the",
+          "start": 910.28,
+          "end": 910.42,
+          "confidence": 0.9984099864959717
+        },
+        {
+          "text": " end",
+          "start": 910.42,
+          "end": 910.58,
+          "confidence": 0.999678373336792
+        },
+        {
+          "text": " of",
+          "start": 910.58,
+          "end": 910.72,
+          "confidence": 0.9979444146156311
+        },
+        {
+          "text": " the",
+          "start": 910.72,
+          "end": 910.72,
+          "confidence": 0.9974954724311829
+        },
+        {
+          "text": " day,",
+          "start": 910.72,
+          "end": 911.0,
+          "confidence": 0.9995050430297852
+        },
+        {
+          "text": " my",
+          "start": 911.06,
+          "end": 911.22,
+          "confidence": 0.9993058443069458
+        },
+        {
+          "text": " expectation",
+          "start": 911.22,
+          "end": 911.64,
+          "confidence": 0.9975778460502625
+        }
+      ]
+    },
+    {
+      "start": 911.64,
+      "end": 914.76,
+      "text": "is that it'll be fewer than what we had before.",
+      "words": [
+        {
+          "text": " is",
+          "start": 911.64,
+          "end": 912.22,
+          "confidence": 0.9989978671073914
+        },
+        {
+          "text": " that",
+          "start": 912.22,
+          "end": 912.56,
+          "confidence": 0.9904809594154358
+        },
+        {
+          "text": " it'll",
+          "start": 912.56,
+          "end": 913.62,
+          "confidence": 0.5939532816410065
+        },
+        {
+          "text": " be",
+          "start": 913.62,
+          "end": 913.76,
+          "confidence": 0.9992005228996277
+        },
+        {
+          "text": " fewer",
+          "start": 913.76,
+          "end": 913.98,
+          "confidence": 0.9910706281661987
+        },
+        {
+          "text": " than",
+          "start": 913.98,
+          "end": 914.1,
+          "confidence": 0.9957475066184998
+        },
+        {
+          "text": " what",
+          "start": 914.1,
+          "end": 914.2,
+          "confidence": 0.9872109889984131
+        },
+        {
+          "text": " we",
+          "start": 914.2,
+          "end": 914.3,
+          "confidence": 0.9995113611221313
+        },
+        {
+          "text": " had",
+          "start": 914.3,
+          "end": 914.44,
+          "confidence": 0.9353172779083252
+        },
+        {
+          "text": " before.",
+          "start": 914.44,
+          "end": 914.76,
+          "confidence": 0.9995546936988831
+        }
+      ]
+    },
+    {
+      "start": 914.76,
+      "end": 915.84,
+      "text": "and they will be going home.",
+      "words": [
+        {
+          "text": " and",
+          "start": 914.76,
+          "end": 914.98,
+          "confidence": 0.4111233651638031
+        },
+        {
+          "text": " they",
+          "start": 914.98,
+          "end": 915.18,
+          "confidence": 0.9630274176597595
+        },
+        {
+          "text": " will",
+          "start": 915.18,
+          "end": 915.3,
+          "confidence": 0.9880468845367432
+        },
+        {
+          "text": " be",
+          "start": 915.3,
+          "end": 915.4,
+          "confidence": 0.9974768757820129
+        },
+        {
+          "text": " going",
+          "start": 915.4,
+          "end": 915.56,
+          "confidence": 0.998596727848053
+        },
+        {
+          "text": " home.",
+          "start": 915.56,
+          "end": 915.84,
+          "confidence": 0.9990449547767639
+        }
+      ]
+    },
+    {
+      "start": 917.0,
+      "end": 918.72,
+      "text": "And help me remind me of the first question.",
+      "words": [
+        {
+          "text": " And",
+          "start": 917.0,
+          "end": 917.46,
+          "confidence": 0.20616412162780762
+        },
+        {
+          "text": " help",
+          "start": 917.46,
+          "end": 917.6,
+          "confidence": 0.5900395512580872
+        },
+        {
+          "text": " me",
+          "start": 917.6,
+          "end": 917.72,
+          "confidence": 0.9861191511154175
+        },
+        {
+          "text": " remind",
+          "start": 917.72,
+          "end": 918.04,
+          "confidence": 0.3606967031955719
+        },
+        {
+          "text": " me",
+          "start": 918.04,
+          "end": 918.16,
+          "confidence": 0.9455187320709229
+        },
+        {
+          "text": " of",
+          "start": 918.16,
+          "end": 918.22,
+          "confidence": 0.7324641942977905
+        },
+        {
+          "text": " the",
+          "start": 918.22,
+          "end": 918.28,
+          "confidence": 0.9800534844398499
+        },
+        {
+          "text": " first",
+          "start": 918.28,
+          "end": 918.4,
+          "confidence": 0.9950365424156189
+        },
+        {
+          "text": " question.",
+          "start": 918.4,
+          "end": 918.72,
+          "confidence": 0.997230589389801
+        }
+      ]
+    },
+    {
+      "start": 918.88,
+      "end": 921.02,
+      "text": "The first question was about the SDF commander saying that.",
+      "words": [
+        {
+          "text": " The",
+          "start": 918.88,
+          "end": 919.0,
+          "confidence": 0.32948625087738037
+        },
+        {
+          "text": " first",
+          "start": 919.0,
+          "end": 919.16,
+          "confidence": 0.991054356098175
+        },
+        {
+          "text": " question",
+          "start": 919.16,
+          "end": 919.5,
+          "confidence": 0.9961414933204651
+        },
+        {
+          "text": " was",
+          "start": 919.5,
+          "end": 919.68,
+          "confidence": 0.9902843832969666
+        },
+        {
+          "text": " about",
+          "start": 919.68,
+          "end": 919.94,
+          "confidence": 0.9928858876228333
+        },
+        {
+          "text": " the",
+          "start": 919.94,
+          "end": 920.06,
+          "confidence": 0.987392008304596
+        },
+        {
+          "text": " SDF",
+          "start": 920.06,
+          "end": 920.4,
+          "confidence": 0.8568680882453918
+        },
+        {
+          "text": " commander",
+          "start": 920.4,
+          "end": 920.64,
+          "confidence": 0.5434399247169495
+        },
+        {
+          "text": " saying",
+          "start": 920.64,
+          "end": 921.02,
+          "confidence": 0.32530543208122253
+        },
+        {
+          "text": " that.",
+          "start": 921.02,
+          "end": 921.02,
+          "confidence": 0.7832985520362854
+        }
+      ]
+    },
+    {
+      "start": 921.02,
+      "end": 921.4,
+      "text": "Yeah, the SDF.",
+      "words": [
+        {
+          "text": " Yeah,",
+          "start": 921.02,
+          "end": 921.02,
+          "confidence": 0.48258766531944275
+        },
+        {
+          "text": " the",
+          "start": 921.04,
+          "end": 921.1,
+          "confidence": 0.4231712222099304
+        },
+        {
+          "text": " SDF.",
+          "start": 921.1,
+          "end": 921.4,
+          "confidence": 0.9660341739654541
+        }
+      ]
+    },
+    {
+      "start": 921.42,
+      "end": 928.18,
+      "text": "So this was a U.S.-only operation for personnel that were on the objective.",
+      "words": [
+        {
+          "text": " So",
+          "start": 921.42,
+          "end": 921.56,
+          "confidence": 0.9808889031410217
+        },
+        {
+          "text": " this",
+          "start": 921.56,
+          "end": 921.74,
+          "confidence": 0.951725959777832
+        },
+        {
+          "text": " was",
+          "start": 921.74,
+          "end": 921.88,
+          "confidence": 0.9584414958953857
+        },
+        {
+          "text": " a",
+          "start": 921.88,
+          "end": 922.12,
+          "confidence": 0.9868811368942261
+        },
+        {
+          "text": " U",
+          "start": 922.12,
+          "end": 922.96,
+          "confidence": 0.9062852263450623
+        },
+        {
+          "text": ".S.-only",
+          "start": 922.96,
+          "end": 923.36,
+          "confidence": 0.893775224685669
+        },
+        {
+          "text": " operation",
+          "start": 923.36,
+          "end": 923.9,
+          "confidence": 0.9975550770759583
+        },
+        {
+          "text": " for",
+          "start": 923.9,
+          "end": 924.36,
+          "confidence": 0.9966546297073364
+        },
+        {
+          "text": " personnel",
+          "start": 924.36,
+          "end": 926.36,
+          "confidence": 0.9978466033935547
+        },
+        {
+          "text": " that",
+          "start": 926.36,
+          "end": 926.68,
+          "confidence": 0.9962435960769653
+        },
+        {
+          "text": " were",
+          "start": 926.68,
+          "end": 926.88,
+          "confidence": 0.9984437823295593
+        },
+        {
+          "text": " on",
+          "start": 926.88,
+          "end": 927.66,
+          "confidence": 0.9968585968017578
+        },
+        {
+          "text": " the",
+          "start": 927.66,
+          "end": 927.8,
+          "confidence": 0.9994526505470276
+        },
+        {
+          "text": " objective.",
+          "start": 927.8,
+          "end": 928.18,
+          "confidence": 0.9976486563682556
+        }
+      ]
+    },
+    {
+      "start": 930.6,
+      "end": 932.0,
+      "text": "I know what you're referring to.",
+      "words": [
+        {
+          "text": " I",
+          "start": 930.6,
+          "end": 931.06,
+          "confidence": 0.8494075536727905
+        },
+        {
+          "text": " know",
+          "start": 931.06,
+          "end": 931.24,
+          "confidence": 0.9798222184181213
+        },
+        {
+          "text": " what",
+          "start": 931.24,
+          "end": 931.44,
+          "confidence": 0.5577014684677124
+        },
+        {
+          "text": " you're",
+          "start": 931.44,
+          "end": 931.58,
+          "confidence": 0.9693174958229065
+        },
+        {
+          "text": " referring",
+          "start": 931.58,
+          "end": 931.82,
+          "confidence": 0.9986513257026672
+        },
+        {
+          "text": " to.",
+          "start": 931.82,
+          "end": 932.0,
+          "confidence": 0.9967376589775085
+        }
+      ]
+    },
+    {
+      "start": 932.1,
+      "end": 938.7,
+      "text": "There was a comment somewhere reported in the media that the SDF had soldiers or troops",
+      "words": [
+        {
+          "text": " There",
+          "start": 932.1,
+          "end": 932.18,
+          "confidence": 0.9906656742095947
+        },
+        {
+          "text": " was",
+          "start": 932.18,
+          "end": 932.32,
+          "confidence": 0.9726116061210632
+        },
+        {
+          "text": " a",
+          "start": 932.32,
+          "end": 932.48,
+          "confidence": 0.9860764741897583
+        },
+        {
+          "text": " comment",
+          "start": 932.48,
+          "end": 932.82,
+          "confidence": 0.9982072114944458
+        },
+        {
+          "text": " somewhere",
+          "start": 932.82,
+          "end": 933.18,
+          "confidence": 0.8245893120765686
+        },
+        {
+          "text": " reported",
+          "start": 933.18,
+          "end": 933.6,
+          "confidence": 0.9780534505844116
+        },
+        {
+          "text": " in",
+          "start": 933.6,
+          "end": 933.76,
+          "confidence": 0.992976188659668
+        },
+        {
+          "text": " the",
+          "start": 933.76,
+          "end": 933.86,
+          "confidence": 0.998460054397583
+        },
+        {
+          "text": " media",
+          "start": 933.86,
+          "end": 934.18,
+          "confidence": 0.9996762275695801
+        },
+        {
+          "text": " that",
+          "start": 934.18,
+          "end": 935.44,
+          "confidence": 0.9684503078460693
+        },
+        {
+          "text": " the",
+          "start": 935.44,
+          "end": 935.64,
+          "confidence": 0.9986066222190857
+        },
+        {
+          "text": " SDF",
+          "start": 935.64,
+          "end": 936.5,
+          "confidence": 0.9981326460838318
+        },
+        {
+          "text": " had",
+          "start": 936.5,
+          "end": 937.06,
+          "confidence": 0.9976988434791565
+        },
+        {
+          "text": " soldiers",
+          "start": 937.06,
+          "end": 938.16,
+          "confidence": 0.9972769618034363
+        },
+        {
+          "text": " or",
+          "start": 938.16,
+          "end": 938.4,
+          "confidence": 0.9486150741577148
+        },
+        {
+          "text": " troops",
+          "start": 938.4,
+          "end": 938.7,
+          "confidence": 0.99772709608078
+        }
+      ]
+    },
+    {
+      "start": 938.7,
+      "end": 942.38,
+      "text": "or one person or something on the objective with our forces.",
+      "words": [
+        {
+          "text": " or",
+          "start": 938.7,
+          "end": 938.9,
+          "confidence": 0.9627580642700195
+        },
+        {
+          "text": " one",
+          "start": 938.9,
+          "end": 939.1,
+          "confidence": 0.9887925982475281
+        },
+        {
+          "text": " person",
+          "start": 939.1,
+          "end": 939.42,
+          "confidence": 0.9964093565940857
+        },
+        {
+          "text": " or",
+          "start": 939.42,
+          "end": 939.6,
+          "confidence": 0.9907530546188354
+        },
+        {
+          "text": " something",
+          "start": 939.6,
+          "end": 939.84,
+          "confidence": 0.9985491633415222
+        },
+        {
+          "text": " on",
+          "start": 939.84,
+          "end": 940.88,
+          "confidence": 0.9683290123939514
+        },
+        {
+          "text": " the",
+          "start": 940.88,
+          "end": 941.06,
+          "confidence": 0.9997902512550354
+        },
+        {
+          "text": " objective",
+          "start": 941.06,
+          "end": 941.5,
+          "confidence": 0.9993712306022644
+        },
+        {
+          "text": " with",
+          "start": 941.5,
+          "end": 941.76,
+          "confidence": 0.9813406467437744
+        },
+        {
+          "text": " our",
+          "start": 941.76,
+          "end": 941.92,
+          "confidence": 0.9993259906768799
+        },
+        {
+          "text": " forces.",
+          "start": 941.92,
+          "end": 942.38,
+          "confidence": 0.9990019202232361
+        }
+      ]
+    },
+    {
+      "start": 943.1,
+      "end": 948.2,
+      "text": "I'm not going to comment on what may or may not have happened with the SDF on the objective,",
+      "words": [
+        {
+          "text": " I'm",
+          "start": 943.1,
+          "end": 943.56,
+          "confidence": 0.8383621275424957
+        },
+        {
+          "text": " not",
+          "start": 943.56,
+          "end": 943.66,
+          "confidence": 0.9985696077346802
+        },
+        {
+          "text": " going",
+          "start": 943.66,
+          "end": 943.78,
+          "confidence": 0.9926691055297852
+        },
+        {
+          "text": " to",
+          "start": 943.78,
+          "end": 943.84,
+          "confidence": 0.9994156360626221
+        },
+        {
+          "text": " comment",
+          "start": 943.84,
+          "end": 944.16,
+          "confidence": 0.9995610117912292
+        },
+        {
+          "text": " on",
+          "start": 944.16,
+          "end": 944.48,
+          "confidence": 0.9977120161056519
+        },
+        {
+          "text": " what",
+          "start": 944.48,
+          "end": 945.26,
+          "confidence": 0.9971857666969299
+        },
+        {
+          "text": " may",
+          "start": 945.26,
+          "end": 945.52,
+          "confidence": 0.9963046312332153
+        },
+        {
+          "text": " or",
+          "start": 945.52,
+          "end": 945.72,
+          "confidence": 0.9910039901733398
+        },
+        {
+          "text": " may",
+          "start": 945.72,
+          "end": 945.9,
+          "confidence": 0.9950318336486816
+        },
+        {
+          "text": " not",
+          "start": 945.9,
+          "end": 946.1,
+          "confidence": 0.9986664056777954
+        },
+        {
+          "text": " have",
+          "start": 946.1,
+          "end": 946.24,
+          "confidence": 0.9948112964630127
+        },
+        {
+          "text": " happened",
+          "start": 946.24,
+          "end": 946.56,
+          "confidence": 0.9967932105064392
+        },
+        {
+          "text": " with",
+          "start": 946.56,
+          "end": 946.78,
+          "confidence": 0.9979094862937927
+        },
+        {
+          "text": " the",
+          "start": 946.78,
+          "end": 946.94,
+          "confidence": 0.9976972937583923
+        },
+        {
+          "text": " SDF",
+          "start": 946.94,
+          "end": 947.5,
+          "confidence": 0.9201506078243256
+        },
+        {
+          "text": " on",
+          "start": 947.5,
+          "end": 947.74,
+          "confidence": 0.9949500560760498
+        },
+        {
+          "text": " the",
+          "start": 947.74,
+          "end": 947.86,
+          "confidence": 0.9989858269691467
+        },
+        {
+          "text": " objective,",
+          "start": 947.86,
+          "end": 948.2,
+          "confidence": 0.9974080920219421
+        }
+      ]
+    },
+    {
+      "start": 948.7,
+      "end": 954.12,
+      "text": "the actions on the objective, the aircraft coming in, the aircraft overhead, and the soldiers",
+      "words": [
+        {
+          "text": " the",
+          "start": 948.7,
+          "end": 948.84,
+          "confidence": 0.9755073189735413
+        },
+        {
+          "text": " actions",
+          "start": 948.84,
+          "end": 949.1800000000001,
+          "confidence": 0.994997501373291
+        },
+        {
+          "text": " on",
+          "start": 949.1800000000001,
+          "end": 949.54,
+          "confidence": 0.9979738593101501
+        },
+        {
+          "text": " the",
+          "start": 949.54,
+          "end": 949.66,
+          "confidence": 0.999433696269989
+        },
+        {
+          "text": " objective,",
+          "start": 949.66,
+          "end": 950.04,
+          "confidence": 0.9981018900871277
+        },
+        {
+          "text": " the",
+          "start": 950.94,
+          "end": 951.08,
+          "confidence": 0.9833536148071289
+        },
+        {
+          "text": " aircraft",
+          "start": 951.08,
+          "end": 952.22,
+          "confidence": 0.9863511919975281
+        },
+        {
+          "text": " coming",
+          "start": 952.22,
+          "end": 952.52,
+          "confidence": 0.9833627939224243
+        },
+        {
+          "text": " in,",
+          "start": 952.52,
+          "end": 952.7,
+          "confidence": 0.9959355592727661
+        },
+        {
+          "text": " the",
+          "start": 952.78,
+          "end": 952.8199999999999,
+          "confidence": 0.9735298752784729
+        },
+        {
+          "text": " aircraft",
+          "start": 952.8199999999999,
+          "end": 953.04,
+          "confidence": 0.999127209186554
+        },
+        {
+          "text": " overhead,",
+          "start": 953.04,
+          "end": 953.4,
+          "confidence": 0.9807788133621216
+        },
+        {
+          "text": " and",
+          "start": 953.72,
+          "end": 953.8,
+          "confidence": 0.9983811378479004
+        },
+        {
+          "text": " the",
+          "start": 953.8,
+          "end": 953.94,
+          "confidence": 0.9780259728431702
+        },
+        {
+          "text": " soldiers",
+          "start": 953.94,
+          "end": 954.12,
+          "confidence": 0.981994092464447
+        }
+      ]
+    },
+    {
+      "start": 954.12,
+      "end": 956.02,
+      "text": "conducting assault was a U.S.-only operation.",
+      "words": [
+        {
+          "text": " conducting",
+          "start": 954.12,
+          "end": 954.54,
+          "confidence": 0.9806622266769409
+        },
+        {
+          "text": " assault",
+          "start": 954.54,
+          "end": 954.94,
+          "confidence": 0.7904578447341919
+        },
+        {
+          "text": " was",
+          "start": 954.94,
+          "end": 955.14,
+          "confidence": 0.8783870935440063
+        },
+        {
+          "text": " a",
+          "start": 955.14,
+          "end": 955.26,
+          "confidence": 0.9318820238113403
+        },
+        {
+          "text": " U",
+          "start": 955.26,
+          "end": 955.36,
+          "confidence": 0.9585891366004944
+        },
+        {
+          "text": ".S.-only",
+          "start": 955.36,
+          "end": 955.66,
+          "confidence": 0.8754497021436691
+        },
+        {
+          "text": " operation.",
+          "start": 955.66,
+          "end": 956.02,
+          "confidence": 0.9966699481010437
+        }
+      ]
+    },
+    {
+      "start": 956.02,
+      "end": 957.62,
+      "text": "All right, thanks guys.",
+      "words": [
+        {
+          "text": " All",
+          "start": 956.02,
+          "end": 956.54,
+          "confidence": 0.08044558763504028
+        },
+        {
+          "text": " right,",
+          "start": 956.54,
+          "end": 957.1,
+          "confidence": 0.9920386075973511
+        },
+        {
+          "text": " thanks",
+          "start": 957.14,
+          "end": 957.36,
+          "confidence": 0.9344700574874878
+        },
+        {
+          "text": " guys.",
+          "start": 957.36,
+          "end": 957.62,
+          "confidence": 0.7528548240661621
+        }
+      ]
+    },
+    {
+      "start": 957.78,
+      "end": 959.6800000000001,
+      "text": "If you have any follow-ups, you can come to me and Mr. Hoffman.",
+      "words": [
+        {
+          "text": " If",
+          "start": 957.78,
+          "end": 957.8,
+          "confidence": 0.9674984216690063
+        },
+        {
+          "text": " you",
+          "start": 957.8,
+          "end": 957.9,
+          "confidence": 0.9938732385635376
+        },
+        {
+          "text": " have",
+          "start": 957.9,
+          "end": 957.98,
+          "confidence": 0.9935060739517212
+        },
+        {
+          "text": " any",
+          "start": 957.98,
+          "end": 958.12,
+          "confidence": 0.9962537288665771
+        },
+        {
+          "text": " follow",
+          "start": 958.12,
+          "end": 958.42,
+          "confidence": 0.4681350886821747
+        },
+        {
+          "text": "-ups,",
+          "start": 958.42,
+          "end": 958.58,
+          "confidence": 0.6710807085037231
+        },
+        {
+          "text": " you",
+          "start": 958.64,
+          "end": 958.64,
+          "confidence": 0.9795127511024475
+        },
+        {
+          "text": " can",
+          "start": 958.64,
+          "end": 958.76,
+          "confidence": 0.9950405955314636
+        },
+        {
+          "text": " come",
+          "start": 958.76,
+          "end": 958.86,
+          "confidence": 0.7038391828536987
+        },
+        {
+          "text": " to",
+          "start": 958.86,
+          "end": 959.0,
+          "confidence": 0.8012029528617859
+        },
+        {
+          "text": " me",
+          "start": 959.0,
+          "end": 959.1,
+          "confidence": 0.9256507158279419
+        },
+        {
+          "text": " and",
+          "start": 959.1,
+          "end": 959.16,
+          "confidence": 0.6926360726356506
+        },
+        {
+          "text": " Mr.",
+          "start": 959.16,
+          "end": 959.3199999999999,
+          "confidence": 0.8668628931045532
+        },
+        {
+          "text": " Hoffman.",
+          "start": 959.46,
+          "end": 959.6800000000001,
+          "confidence": 0.7970045804977417
+        }
+      ]
+    }
+  ]
+}

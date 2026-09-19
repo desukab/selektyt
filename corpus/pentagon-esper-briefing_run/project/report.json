@@ -1,0 +1,24 @@
+{
+  "source": "corpus/media/pentagon-esper-briefing.mp4",
+  "title": null,
+  "language": "en",
+  "candidate_count": 3172,
+  "selected_count": 5,
+  "rejected_by_context_guard": 0,
+  "truncated_by_limit": 7,
+  "rejection_reasons": {},
+  "outputs": {
+    "facebook": "corpus/pentagon-esper-briefing_run/project/facebook",
+    "shorts": "corpus/pentagon-esper-briefing_run/project/shorts"
+  },
+  "captions": "corpus/pentagon-esper-briefing_run/project/captions",
+  "timeline": "corpus/pentagon-esper-briefing_run/project/timeline",
+  "content_pack": "corpus/pentagon-esper-briefing_run/project/content_pack.json",
+  "editorial_report": "corpus/pentagon-esper-briefing_run/project/editorial_report.json",
+  "pacing_report": "corpus/pentagon-esper-briefing_run/project/pacing_report.json",
+  "qa": "corpus/pentagon-esper-briefing_run/project/qa.json",
+  "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
+  "audio": {
+    "enabled": false
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "style": "minimal",
+  "blocks": [
+    {
+      "start": 90.73,
+      "end": 93.09,
+      "text": "An additional cable array wires a",
+      "emphasis": [
+        " additional",
+        " wires"
+      ]
+    },
+    {
+      "start": 93.09,
+      "end": 94.31,
+      "text": "region of the northeast Pacific",
+      "emphasis": [
+        " northeast"
+      ]
+    },
+    {
+      "start": 94.31,
+      "end": 96.77,
+      "text": "Ocean with a high -power high",
+      "emphasis": [
+        " Ocean",
+        "-power"
+      ]
+    },
+    {
+      "start": 96.77,
+      "end": 98.71,
+      "text": "-speed fiber optic grid that",
+      "emphasis": [
+        " optic"
+      ]
+    },
+    {
+      "start": 98.71,
+      "end": 100.01,
+      "text": "enables observation of the",
+      "emphasis": [
+        " observation"
+      ]
+    },
+    {
+      "start": 100.01,
+      "end": 101.73,
+      "text": "seafloor and water column.",
+      "emphasis": [
+        " seafloor"
+      ]
+    }
+  ]
+}

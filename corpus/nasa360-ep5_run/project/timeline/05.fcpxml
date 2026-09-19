@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="f1" name="FFVideoFormat" frameDuration="1001/30000s" />
+    <asset id="r1" name="nasa360-ep5.mov" start="0s" duration="44093049/30000s" hasVideo="1" videoSources="1" hasAudio="1" audioSources="1" audioChannels="2">
+      <media-rep kind="original-media" src="file:///home/azureuser/selektyt/corpus/media/nasa360-ep5.mov"/>
+    </asset>
+  </resources>
+  <library>
+    <event name="Well, the Hubble Space Telescope has revealed more to us about space in the past 10 years than we&apos;ve ever known about the universe.">
+      <project name="Well, the Hubble Space Telescope has revealed more to us about space in the past 10 years than we&apos;ve ever known about the universe.">
+        <sequence format="f1" tcFormat="NDF">
+          <spine>
+          <asset-clip ref="r1" offset="0s" start="2849847/30000s" duration="529529/30000s" tcFormat="NDF" />
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>

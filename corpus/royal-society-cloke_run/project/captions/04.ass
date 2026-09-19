@@ -1,0 +1,26 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.91,Default,,0,0,0,,{\k50}My {\k20}next {\k28}guest {\k38}is {\k28}{\c&H00D7FF&\b1}Hannah{\c&HFFFFFF&\b0} {\k30}{\c&H00D7FF&\b1}cloak{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:01.94,0:00:04.13,Default,,0,0,0,,{\k40}a {\k58}{\c&H00D7FF&\b1}specialist{\c&HFFFFFF&\b0} {\k30}in {\k48}extreme {\k46}weather
+Dialogue: 0,0:00:04.16,0:00:06.71,Default,,0,0,0,,{\k34}and {\k44}{\c&H00D7FF&\b1}professor{\c&HFFFFFF&\b0} {\k46}of {\k80}{\c&H00D7FF&\b1}hydrology{\c&HFFFFFF&\b0} {\k46}at {\k8}the
+Dialogue: 0,0:00:06.74,0:00:08.93,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}University{\c&HFFFFFF&\b0} {\k50}of {\k20}Reading {\k44}She {\k14}has
+Dialogue: 0,0:00:08.96,0:00:10.75,Default,,0,0,0,,{\k20}{\c&H00D7FF&\b1}appeared{\c&HFFFFFF&\b0} {\k26}on {\k28}TV {\k58}{\c&H00D7FF&\b1}including{\c&HFFFFFF&\b0} {\k40}in {\k10}the
+Dialogue: 0,0:00:10.78,0:00:13.15,Default,,0,0,0,,{\k52}{\c&H00D7FF&\b1}panorama{\c&HFFFFFF&\b0} {\k54}episode {\k62}wild {\k36}weather {\k36}our
+Dialogue: 0,0:00:13.18,0:00:15.39,Default,,0,0,0,,{\k36}world {\k30}{\c&H00D7FF&\b1}under{\c&HFFFFFF&\b0} {\k30}{\c&H00D7FF&\b1}threat{\c&HFFFFFF&\b0} {\k84}And {\k32}she {\k12}was
+Dialogue: 0,0:00:15.42,0:00:16.99,Default,,0,0,0,,{\k14}a {\k28}{\c&H00D7FF&\b1}subject{\c&HFFFFFF&\b0} {\k32}of {\k12}the {\k26}Life {\k48}{\c&H00D7FF&\b1}Scientific{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:17.02,0:00:18.76,Default,,0,0,0,,{\k44}on {\k24}Radio {\k26}4 {\k22}in {\k46}{\c&H00D7FF&\b1}2021.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:19.30,0:00:20.28,Default,,0,0,0,,{\k50}{\c&H00D7FF&\b1}Welcome{\c&HFFFFFF&\b0} {\k36}Hannah.
+Dialogue: 0,0:00:20.40,0:00:21.34,Default,,0,0,0,,{\k16}It's {\k16}{\c&H00D7FF&\b1}lovely{\c&HFFFFFF&\b0} {\k18}to {\k12}be {\k20}here.
+Dialogue: 0,0:00:21.78,0:00:23.99,Default,,0,0,0,,{\k50}When {\k18}did {\k12}you {\k44}{\c&H00D7FF&\b1}first{\c&HFFFFFF&\b0} {\k64}{\c&H00D7FF&\b1}discover{\c&HFFFFFF&\b0} {\k36}your
+Dialogue: 0,0:00:24.02,0:00:25.93,Default,,0,0,0,,{\k84}{\c&H00D7FF&\b1}fascination{\c&HFFFFFF&\b0} {\k50}with {\k36}water {\k24}and
+Dialogue: 0,0:00:25.96,0:00:26.26,Default,,0,0,0,,{\k30}{\c&H00D7FF&\b1}geography?{\c&HFFFFFF&\b0}

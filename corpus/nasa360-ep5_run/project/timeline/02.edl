@@ -1,0 +1,13 @@
+TITLE:   Welcome to the world's largest clean room.
+
+FCM: NON-DROP FRAME
+
+001  NASA360_ V     C        00:05:27:16 00:05:42:23 00:00:00:00 00:00:15:07
+     M2   nasa360-ep5.mov
+* FROM CLIP: corpus/media/nasa360-ep5.mov
+001  NASA360_ A     C        00:05:27:16 00:05:42:23 00:00:00:00 00:00:15:07
+
+002  NASA360_ V     C        00:05:44:03 00:05:45:28 00:00:15:07 00:00:17:02
+     M2   nasa360-ep5.mov
+* FROM CLIP: corpus/media/nasa360-ep5.mov
+002  NASA360_ A     C        00:05:44:03 00:05:45:28 00:00:15:07 00:00:17:02

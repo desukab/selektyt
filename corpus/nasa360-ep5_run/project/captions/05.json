@@ -1,0 +1,90 @@
+{
+  "style": "minimal",
+  "blocks": [
+    {
+      "start": 94.98,
+      "end": 96.2,
+      "text": "Well, the Hubble Space Telescope",
+      "emphasis": [
+        " Telescope"
+      ]
+    },
+    {
+      "start": 96.2,
+      "end": 97.22,
+      "text": "has revealed more to us about",
+      "emphasis": [
+        " revealed",
+        " about"
+      ]
+    },
+    {
+      "start": 97.22,
+      "end": 98.58,
+      "text": "space in the past 10 years",
+      "emphasis": [
+        " space",
+        " years"
+      ]
+    },
+    {
+      "start": 98.58,
+      "end": 99.86,
+      "text": "than we've ever known about the",
+      "emphasis": [
+        " known",
+        " about"
+      ]
+    },
+    {
+      "start": 99.86,
+      "end": 100.18,
+      "text": "universe.",
+      "emphasis": [
+        " universe."
+      ]
+    },
+    {
+      "start": 101.08,
+      "end": 101.56,
+      "text": "Ever.",
+      "emphasis": [
+        " Ever."
+      ]
+    },
+    {
+      "start": 107.82,
+      "end": 109.52,
+      "text": "And it's the direct solution to",
+      "emphasis": [
+        " direct",
+        " solution"
+      ]
+    },
+    {
+      "start": 109.52,
+      "end": 110.94,
+      "text": "a problem these telescopes have",
+      "emphasis": [
+        " telescopes"
+      ]
+    },
+    {
+      "start": 110.94,
+      "end": 112.26,
+      "text": "faced since the earliest days of",
+      "emphasis": [
+        " since",
+        " earliest"
+      ]
+    },
+    {
+      "start": 112.26,
+      "end": 112.64,
+      "text": "their invention.",
+      "emphasis": [
+        " invention."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "start": 320.26,
+    "end": 332.06,
+    "text": "నినాన్త్డందాన ంపెర్లిస్లిని. పాత్న్న్న్త్త్నవై సస్కకన్సి. .",
+    "story_type": "story",
+    "hook": "నినాన్త్డందాన ంపెర్లిస్లిని.",
+    "payoff": "పాత్న్న్న్త్త్నవై సస్కకన్సి.",
+    "editorial_score": 0.366,
+    "virality_score": 0.136,
+    "context_score": 0.803,
+    "confidence": 0.9,
+    "visual_potential": 0.35,
+    "total_score": 0.418,
+    "reason": "Structural editorial score: opening=0.30; progression=0.54; payoff=0.77; density=0.73; fillers=0; standalone=1.00; repetition=0.35; coherence=0.50; completeness=1.00; audio_pace=0.55; silence=0.463; dead_air=0.46.",
+    "llm_metadata": null
+  }
+]

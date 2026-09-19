@@ -1,0 +1,97 @@
+[
+  {
+    "index": 1,
+    "source_start": 583.7,
+    "source_end": 611.64,
+    "source_duration": 27.94,
+    "intervals": [
+      [
+        583.7,
+        588.16
+      ],
+      [
+        588.62,
+        600.08
+      ],
+      [
+        602.94,
+        611.64
+      ]
+    ],
+    "edited_duration": 24.62,
+    "removed_seconds": 3.32,
+    "story_type": "conflict"
+  },
+  {
+    "index": 2,
+    "source_start": 452.26,
+    "source_end": 483.68,
+    "source_duration": 31.42,
+    "intervals": [
+      [
+        452.26,
+        461.5
+      ],
+      [
+        467.26,
+        472.82
+      ],
+      [
+        473.28,
+        483.68
+      ]
+    ],
+    "edited_duration": 25.2,
+    "removed_seconds": 6.22,
+    "story_type": "conflict"
+  },
+  {
+    "index": 3,
+    "source_start": 633.57,
+    "source_end": 655.53,
+    "source_duration": 21.96,
+    "intervals": [
+      [
+        633.57,
+        655.53
+      ]
+    ],
+    "edited_duration": 21.96,
+    "removed_seconds": 0.0,
+    "story_type": "revelation"
+  },
+  {
+    "index": 4,
+    "source_start": 910.0,
+    "source_end": 922.862,
+    "source_duration": 12.862,
+    "intervals": [
+      [
+        910.0,
+        916.02
+      ],
+      [
+        916.94,
+        922.862
+      ]
+    ],
+    "edited_duration": 11.942,
+    "removed_seconds": 0.92,
+    "story_type": "revelation"
+  },
+  {
+    "index": 5,
+    "source_start": 403.08,
+    "source_end": 417.2,
+    "source_duration": 14.12,
+    "intervals": [
+      [
+        403.08,
+        417.2
+      ]
+    ],
+    "edited_duration": 14.12,
+    "removed_seconds": 0.0,
+    "story_type": "question"
+  }
+]

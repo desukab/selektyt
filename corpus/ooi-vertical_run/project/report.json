@@ -1,0 +1,24 @@
+{
+  "source": "corpus/media/ooi-vertical.webm",
+  "title": null,
+  "language": "en",
+  "candidate_count": 168,
+  "selected_count": 3,
+  "rejected_by_context_guard": 0,
+  "truncated_by_limit": 1,
+  "rejection_reasons": {},
+  "outputs": {
+    "facebook": "corpus/ooi-vertical_run/project/facebook",
+    "shorts": "corpus/ooi-vertical_run/project/shorts"
+  },
+  "captions": "corpus/ooi-vertical_run/project/captions",
+  "timeline": "corpus/ooi-vertical_run/project/timeline",
+  "content_pack": "corpus/ooi-vertical_run/project/content_pack.json",
+  "editorial_report": "corpus/ooi-vertical_run/project/editorial_report.json",
+  "pacing_report": "corpus/ooi-vertical_run/project/pacing_report.json",
+  "qa": "corpus/ooi-vertical_run/project/qa.json",
+  "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
+  "audio": {
+    "enabled": false
+  }
+}

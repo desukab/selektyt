@@ -1,0 +1,19 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:02.41,Default,,0,0,0,,{\k56}Én {\k34}{\c&H00D7FF&\b1}voltam{\c&HFFFFFF&\b0} {\k10}a {\k44}{\c&H00D7FF&\b1}hülyener,{\c&HFFFFFF&\b0} {\k16}én {\k46}előre
+Dialogue: 0,0:00:02.44,0:00:03.85,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}mantam{\c&HFFFFFF&\b0} {\k28}{\c&H00D7FF&\b1}nekik,{\c&HFFFFFF&\b0} {\k1}hogy {\k16}én {\k16}most {\k28}után
+Dialogue: 0,0:00:03.88,0:00:05.88,Default,,0,0,0,,{\k14}a {\k52}csinálni, {\k40}földény, {\k74}{\c&H00D7FF&\b1}hiszteni,{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:05.94,0:00:07.31,Default,,0,0,0,,{\k24}állnak {\k34}{\c&H00D7FF&\b1}valgább{\c&HFFFFFF&\b0} {\k36}ként, {\k14}és {\k20}biztos
+Dialogue: 0,0:00:07.34,0:00:07.96,Default,,0,0,0,,{\k50}{\c&H00D7FF&\b1}lezárták.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:08.20,0:00:09.67,Default,,0,0,0,,{\k28}{\c&H00D7FF&\b1}Egyiként{\c&HFFFFFF&\b0} {\k12}mi {\k12}van, {\k10}kinek {\k24}van, {\k42}{\c&H00D7FF&\b1}előre{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:09.70,0:00:11.50,Default,,0,0,0,,{\k18}jön, {\k8}ott {\k22}a {\k60}földet {\k56}{\c&H00D7FF&\b1}megúrjunk.{\c&HFFFFFF&\b0}

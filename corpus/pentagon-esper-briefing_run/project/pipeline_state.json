@@ -1,0 +1,44 @@
+{
+  "source": "corpus/media/pentagon-esper-briefing.mp4",
+  "media_info": {},
+  "fingerprint": "f4280a88866e685fb632066a8c49217b59acd1ff211f4f9a38be2e2542008bd0",
+  "model": "small",
+  "language": "en",
+  "renders": {
+    "01": {
+      "fingerprint": "f4280a88866e685fb632066a8c49217b59acd1ff211f4f9a38be2e2542008bd0",
+      "selection_digest": "6fb19fcbba9bf3eb8d943548587d39729cd27abd98b14d492dc316a1cd663a6c",
+      "facebook": "corpus/pentagon-esper-briefing_run/project/facebook/01.mp4",
+      "shorts": "corpus/pentagon-esper-briefing_run/project/shorts/01.mp4"
+    },
+    "02": {
+      "fingerprint": "f4280a88866e685fb632066a8c49217b59acd1ff211f4f9a38be2e2542008bd0",
+      "selection_digest": "6fb19fcbba9bf3eb8d943548587d39729cd27abd98b14d492dc316a1cd663a6c",
+      "facebook": "corpus/pentagon-esper-briefing_run/project/facebook/02.mp4",
+      "shorts": "corpus/pentagon-esper-briefing_run/project/shorts/02.mp4"
+    },
+    "03": {
+      "fingerprint": "f4280a88866e685fb632066a8c49217b59acd1ff211f4f9a38be2e2542008bd0",
+      "selection_digest": "6fb19fcbba9bf3eb8d943548587d39729cd27abd98b14d492dc316a1cd663a6c",
+      "facebook": "corpus/pentagon-esper-briefing_run/project/facebook/03.mp4",
+      "shorts": "corpus/pentagon-esper-briefing_run/project/shorts/03.mp4"
+    },
+    "04": {
+      "fingerprint": "f4280a88866e685fb632066a8c49217b59acd1ff211f4f9a38be2e2542008bd0",
+      "selection_digest": "6fb19fcbba9bf3eb8d943548587d39729cd27abd98b14d492dc316a1cd663a6c",
+      "facebook": "corpus/pentagon-esper-briefing_run/project/facebook/04.mp4",
+      "shorts": "corpus/pentagon-esper-briefing_run/project/shorts/04.mp4"
+    },
+    "05": {
+      "fingerprint": "f4280a88866e685fb632066a8c49217b59acd1ff211f4f9a38be2e2542008bd0",
+      "selection_digest": "6fb19fcbba9bf3eb8d943548587d39729cd27abd98b14d492dc316a1cd663a6c",
+      "facebook": "corpus/pentagon-esper-briefing_run/project/facebook/05.mp4",
+      "shorts": "corpus/pentagon-esper-briefing_run/project/shorts/05.mp4"
+    }
+  },
+  "render_fingerprint": "f4280a88866e685fb632066a8c49217b59acd1ff211f4f9a38be2e2542008bd0",
+  "render_selection_digest": "6fb19fcbba9bf3eb8d943548587d39729cd27abd98b14d492dc316a1cd663a6c",
+  "selected_count": 5,
+  "qa": "corpus/pentagon-esper-briefing_run/project/qa.json",
+  "complete": true
+}

@@ -1,0 +1,23 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.06,0:00:01.97,Default,,0,0,0,,{\k52}{\c&H00D7FF&\b1}Gliders{\c&HFFFFFF&\b0} {\k32}fill {\k14}in {\k24}gaps {\k46}{\c&H00D7FF&\b1}between{\c&HFFFFFF&\b0} {\k26}the
+Dialogue: 0,0:00:02.00,0:00:03.11,Default,,0,0,0,,{\k32}arrays, {\k58}{\c&H00D7FF&\b1}traveling{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:03.14,0:00:06.49,Default,,0,0,0,,{\k338}on
+Dialogue: 0,0:00:06.52,0:00:08.41,Default,,0,0,0,,{\k1}a {\k38}data {\k42}mules {\k56}send {\k56}{\c&H00D7FF&\b1}oceanographic{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:08.44,0:00:10.59,Default,,0,0,0,,{\k62}{\c&H00D7FF&\b1}measurements{\c&HFFFFFF&\b0} {\k42}back {\k20}to {\k50}OOI {\k44}servers
+Dialogue: 0,0:00:10.62,0:00:11.70,Default,,0,0,0,,{\k52}when {\k16}they {\k28}{\c&H00D7FF&\b1}surface.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:11.82,0:00:13.49,Default,,0,0,0,,{\k10}The {\k34}Ocean {\k74}{\c&H00D7FF&\b1}Observatories{\c&HFFFFFF&\b0} {\k52}Initiative
+Dialogue: 0,0:00:13.52,0:00:15.93,Default,,0,0,0,,{\k52}has {\k110}{\c&H00D7FF&\b1}revolutionized{\c&HFFFFFF&\b0} {\k28}marine {\k54}research
+Dialogue: 0,0:00:15.96,0:00:18.35,Default,,0,0,0,,{\k78}with {\k36}free {\k38}{\c&H00D7FF&\b1}access{\c&HFFFFFF&\b0} {\k26}to {\k32}high {\k32}{\c&H00D7FF&\b1}quality{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:18.38,0:00:20.91,Default,,0,0,0,,{\k44}data {\k48}from {\k34}{\c&H00D7FF&\b1}remote{\c&HFFFFFF&\b0} {\k50}{\c&H00D7FF&\b1}locations{\c&HFFFFFF&\b0} {\k66}and {\k14}at
+Dialogue: 0,0:00:20.94,0:00:22.58,Default,,0,0,0,,{\k72}{\c&H00D7FF&\b1}unprecedented{\c&HFFFFFF&\b0} {\k92}timescales.

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="f1" name="FFVideoFormat" frameDuration="1001/30000s" />
+    <asset id="r1" name="pentagon-esper-briefing.mp4" start="0s" duration="30415385/30000s" hasVideo="1" videoSources="1" hasAudio="1" audioSources="1" audioChannels="2">
+      <media-rep kind="original-media" src="file:///home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4"/>
+    </asset>
+  </resources>
+  <library>
+    <event name="Can you in any way elaborate on what&apos;s been collected, what&apos;s being looked through now, and what that might mean?">
+      <project name="Can you in any way elaborate on what&apos;s been collected, what&apos;s being looked through now, and what that might mean?">
+        <sequence format="f1" tcFormat="NDF">
+          <spine>
+          <asset-clip ref="r1" offset="0s" start="19006988/30000s" duration="658658/30000s" tcFormat="NDF" />
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>

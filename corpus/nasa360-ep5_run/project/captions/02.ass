@@ -1,0 +1,25 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.27,Default,,0,0,0,,{\k48}Welcome {\k22}to {\k12}the {\k48}world's {\k1}{\c&H00D7FF&\b1}largest{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:01.30,0:00:01.79,Default,,0,0,0,,{\k28}{\c&H00D7FF&\b1}clean{\c&HFFFFFF&\b0} {\k24}room.
+Dialogue: 0,0:00:01.82,0:00:03.32,Default,,0,0,0,,{\k62}This {\k1}is {\k38}amazing, {\k12}{\c&H00D7FF&\b1}right?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:03.68,0:00:05.35,Default,,0,0,0,,{\k22}The {\k28}{\c&H00D7FF&\b1}reason{\c&HFFFFFF&\b0} {\k22}we {\k22}have {\k30}this {\k46}{\c&H00D7FF&\b1}exact{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:05.38,0:00:07.63,Default,,0,0,0,,{\k74}mechanical {\k86}{\c&H00D7FF&\b1}replication{\c&HFFFFFF&\b0} {\k30}of {\k12}it, {\k14}we
+Dialogue: 0,0:00:07.66,0:00:09.09,Default,,0,0,0,,{\k20}need {\k28}{\c&H00D7FF&\b1}something{\c&HFFFFFF&\b0} {\k24}that {\k32}looks {\k42}just
+Dialogue: 0,0:00:09.12,0:00:10.63,Default,,0,0,0,,{\k28}like {\k20}Hubble, {\k26}{\c&H00D7FF&\b1}functions{\c&HFFFFFF&\b0} {\k36}just {\k24}like
+Dialogue: 0,0:00:10.66,0:00:12.95,Default,,0,0,0,,{\k34}{\c&H00D7FF&\b1}Hubble,{\c&HFFFFFF&\b0} {\k44}so {\k64}{\c&H00D7FF&\b1}everybody{\c&HFFFFFF&\b0} {\k30}can {\k18}see {\k18}what
+Dialogue: 0,0:00:12.98,0:00:13.95,Default,,0,0,0,,{\k10}it {\k20}{\c&H00D7FF&\b1}really{\c&HFFFFFF&\b0} {\k24}{\c&H00D7FF&\b1}looks{\c&HFFFFFF&\b0} {\k18}like {\k18}when {\k10}we
+Dialogue: 0,0:00:13.98,0:00:14.79,Default,,0,0,0,,{\k12}get {\k16}up {\k10}{\c&H00D7FF&\b1}here{\c&HFFFFFF&\b0} {\k8}to {\k18}{\c&H00D7FF&\b1}work{\c&HFFFFFF&\b0} {\k20}on
+Dialogue: 0,0:00:14.82,0:00:15.20,Default,,0,0,0,,{\k26}{\c&H00D7FF&\b1}it.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:15.32,0:00:16.63,Default,,0,0,0,,{\k34}So {\k14}Mike, {\k10}{\c&H00D7FF&\b1}Hubble{\c&HFFFFFF&\b0} {\k20}has {\k18}more {\k16}{\c&H00D7FF&\b1}than{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:16.66,0:00:17.08,Default,,0,0,0,,{\k10}one {\k32}{\c&H00D7FF&\b1}instrument.{\c&HFFFFFF&\b0}

@@ -1,0 +1,15 @@
+{
+  "language": "te",
+  "asr": {
+    "engine": "faster-whisper",
+    "requested_model": "small",
+    "model": "small",
+    "downgrade_reason": null,
+    "word_timestamps": "per-token",
+    "fallback_reason": null,
+    "chunks": 1,
+    "chunking": "5 min chunks (+15s overlap)",
+    "num_threads": 4
+  },
+  "segments": []
+}

@@ -1,0 +1,654 @@
+{
+  "index": 11,
+  "start": 3300.0,
+  "end": 3338.958375,
+  "decode_start": 3285.0,
+  "status": "ok",
+  "language": "en",
+  "segments": [
+    {
+      "start": 3302.86,
+      "end": 3305.76,
+      "text": "it's not in that list, it's somewhere else.",
+      "words": [
+        {
+          "text": " it's",
+          "start": 3302.86,
+          "end": 3303.02,
+          "confidence": 0.9956760406494141
+        },
+        {
+          "text": " not",
+          "start": 3303.02,
+          "end": 3303.2,
+          "confidence": 0.9994151592254639
+        },
+        {
+          "text": " in",
+          "start": 3303.2,
+          "end": 3303.46,
+          "confidence": 0.9967538714408875
+        },
+        {
+          "text": " that",
+          "start": 3303.46,
+          "end": 3303.64,
+          "confidence": 0.9949990510940552
+        },
+        {
+          "text": " list,",
+          "start": 3303.64,
+          "end": 3304.88,
+          "confidence": 0.7378613948822021
+        },
+        {
+          "text": " it's",
+          "start": 3305.06,
+          "end": 3305.22,
+          "confidence": 0.9957463145256042
+        },
+        {
+          "text": " somewhere",
+          "start": 3305.22,
+          "end": 3305.46,
+          "confidence": 0.9977881908416748
+        },
+        {
+          "text": " else.",
+          "start": 3305.46,
+          "end": 3305.76,
+          "confidence": 0.9984704852104187
+        }
+      ]
+    },
+    {
+      "start": 3305.84,
+      "end": 3306.8,
+      "text": "You gotta go and look for it.",
+      "words": [
+        {
+          "text": " You",
+          "start": 3305.84,
+          "end": 3305.9,
+          "confidence": 0.969050407409668
+        },
+        {
+          "text": " gotta",
+          "start": 3305.9,
+          "end": 3306.04,
+          "confidence": 0.33262038230895996
+        },
+        {
+          "text": " go",
+          "start": 3306.04,
+          "end": 3306.22,
+          "confidence": 0.9884589314460754
+        },
+        {
+          "text": " and",
+          "start": 3306.22,
+          "end": 3306.3,
+          "confidence": 0.9682754874229431
+        },
+        {
+          "text": " look",
+          "start": 3306.3,
+          "end": 3306.46,
+          "confidence": 0.9970109462738037
+        },
+        {
+          "text": " for",
+          "start": 3306.46,
+          "end": 3306.66,
+          "confidence": 0.9862861037254333
+        },
+        {
+          "text": " it.",
+          "start": 3306.66,
+          "end": 3306.8,
+          "confidence": 0.9952308535575867
+        }
+      ]
+    },
+    {
+      "start": 3306.92,
+      "end": 3308.8,
+      "text": "And all of the extensions are documented",
+      "words": [
+        {
+          "text": " And",
+          "start": 3306.92,
+          "end": 3307.34,
+          "confidence": 0.05781104788184166
+        },
+        {
+          "text": " all",
+          "start": 3307.34,
+          "end": 3307.44,
+          "confidence": 0.9956551790237427
+        },
+        {
+          "text": " of",
+          "start": 3307.44,
+          "end": 3307.54,
+          "confidence": 0.9830769300460815
+        },
+        {
+          "text": " the",
+          "start": 3307.54,
+          "end": 3307.62,
+          "confidence": 0.9954825639724731
+        },
+        {
+          "text": " extensions",
+          "start": 3307.62,
+          "end": 3307.94,
+          "confidence": 0.9972954392433167
+        },
+        {
+          "text": " are",
+          "start": 3307.94,
+          "end": 3308.22,
+          "confidence": 0.9985663294792175
+        },
+        {
+          "text": " documented",
+          "start": 3308.22,
+          "end": 3308.8,
+          "confidence": 0.9988333582878113
+        }
+      ]
+    },
+    {
+      "start": 3308.8,
+      "end": 3309.46,
+      "text": "slightly differently.",
+      "words": [
+        {
+          "text": " slightly",
+          "start": 3308.8,
+          "end": 3309.08,
+          "confidence": 0.9980941414833069
+        },
+        {
+          "text": " differently.",
+          "start": 3309.08,
+          "end": 3309.46,
+          "confidence": 0.9618645310401917
+        }
+      ]
+    },
+    {
+      "start": 3309.66,
+      "end": 3310.94,
+      "text": "Well, that's part of what I'm saying is",
+      "words": [
+        {
+          "text": " Well,",
+          "start": 3309.66,
+          "end": 3309.74,
+          "confidence": 0.8713656067848206
+        },
+        {
+          "text": " that's",
+          "start": 3309.76,
+          "end": 3309.96,
+          "confidence": 0.9940457940101624
+        },
+        {
+          "text": " part",
+          "start": 3309.96,
+          "end": 3310.12,
+          "confidence": 0.8356985449790955
+        },
+        {
+          "text": " of",
+          "start": 3310.12,
+          "end": 3310.22,
+          "confidence": 0.7296580076217651
+        },
+        {
+          "text": " what",
+          "start": 3310.22,
+          "end": 3310.3,
+          "confidence": 0.9977936744689941
+        },
+        {
+          "text": " I'm",
+          "start": 3310.3,
+          "end": 3310.46,
+          "confidence": 0.9974725544452667
+        },
+        {
+          "text": " saying",
+          "start": 3310.46,
+          "end": 3310.68,
+          "confidence": 0.9978148937225342
+        },
+        {
+          "text": " is",
+          "start": 3310.68,
+          "end": 3310.94,
+          "confidence": 0.4424143135547638
+        }
+      ]
+    },
+    {
+      "start": 3310.94,
+      "end": 3312.62,
+      "text": "the more extensions you put in,",
+      "words": [
+        {
+          "text": " the",
+          "start": 3310.94,
+          "end": 3311.36,
+          "confidence": 0.536723256111145
+        },
+        {
+          "text": " more",
+          "start": 3311.36,
+          "end": 3311.48,
+          "confidence": 0.9967074394226074
+        },
+        {
+          "text": " extensions",
+          "start": 3311.48,
+          "end": 3311.88,
+          "confidence": 0.9852399826049805
+        },
+        {
+          "text": " you",
+          "start": 3311.88,
+          "end": 3312.26,
+          "confidence": 0.9608307480812073
+        },
+        {
+          "text": " put",
+          "start": 3312.26,
+          "end": 3312.44,
+          "confidence": 0.9916497468948364
+        },
+        {
+          "text": " in,",
+          "start": 3312.44,
+          "end": 3312.62,
+          "confidence": 0.9957150816917419
+        }
+      ]
+    },
+    {
+      "start": 3312.62,
+      "end": 3315.36,
+      "text": "the more diverse your documentation is.",
+      "words": [
+        {
+          "text": " the",
+          "start": 3312.62,
+          "end": 3312.8,
+          "confidence": 0.4555710256099701
+        },
+        {
+          "text": " more",
+          "start": 3312.8,
+          "end": 3312.98,
+          "confidence": 0.997820258140564
+        },
+        {
+          "text": " diverse",
+          "start": 3312.98,
+          "end": 3313.44,
+          "confidence": 0.9901427030563354
+        },
+        {
+          "text": " your",
+          "start": 3313.44,
+          "end": 3313.66,
+          "confidence": 0.9829535484313965
+        },
+        {
+          "text": " documentation",
+          "start": 3313.66,
+          "end": 3314.2,
+          "confidence": 0.9981789588928223
+        },
+        {
+          "text": " is.",
+          "start": 3314.2,
+          "end": 3315.36,
+          "confidence": 0.4574452340602875
+        }
+      ]
+    },
+    {
+      "start": 3319.02,
+      "end": 3320.84,
+      "text": "Well we are getting close to time.",
+      "words": [
+        {
+          "text": " Well",
+          "start": 3319.02,
+          "end": 3319.5,
+          "confidence": 0.578309178352356
+        },
+        {
+          "text": " we",
+          "start": 3319.5,
+          "end": 3319.68,
+          "confidence": 0.6916067600250244
+        },
+        {
+          "text": " are",
+          "start": 3319.68,
+          "end": 3319.76,
+          "confidence": 0.9763551354408264
+        },
+        {
+          "text": " getting",
+          "start": 3319.76,
+          "end": 3319.92,
+          "confidence": 0.9992189407348633
+        },
+        {
+          "text": " close",
+          "start": 3319.92,
+          "end": 3320.2,
+          "confidence": 0.9939244389533997
+        },
+        {
+          "text": " to",
+          "start": 3320.2,
+          "end": 3320.44,
+          "confidence": 0.9988886713981628
+        },
+        {
+          "text": " time.",
+          "start": 3320.44,
+          "end": 3320.84,
+          "confidence": 0.9965460896492004
+        }
+      ]
+    },
+    {
+      "start": 3321.16,
+      "end": 3322.42,
+      "text": "I actually think we're a little over time.",
+      "words": [
+        {
+          "text": " I",
+          "start": 3321.16,
+          "end": 3321.2,
+          "confidence": 0.6990142464637756
+        },
+        {
+          "text": " actually",
+          "start": 3321.2,
+          "end": 3321.38,
+          "confidence": 0.7532055974006653
+        },
+        {
+          "text": " think",
+          "start": 3321.38,
+          "end": 3321.58,
+          "confidence": 0.8966619372367859
+        },
+        {
+          "text": " we're",
+          "start": 3321.58,
+          "end": 3321.72,
+          "confidence": 0.9573936760425568
+        },
+        {
+          "text": " a",
+          "start": 3321.72,
+          "end": 3321.78,
+          "confidence": 0.9179626703262329
+        },
+        {
+          "text": " little",
+          "start": 3321.78,
+          "end": 3321.88,
+          "confidence": 0.9967933297157288
+        },
+        {
+          "text": " over",
+          "start": 3321.88,
+          "end": 3322.12,
+          "confidence": 0.9527090787887573
+        },
+        {
+          "text": " time.",
+          "start": 3322.12,
+          "end": 3322.42,
+          "confidence": 0.9879412055015564
+        }
+      ]
+    },
+    {
+      "start": 3322.9,
+      "end": 3325.82,
+      "text": "So I think at this point I think we'll wind down",
+      "words": [
+        {
+          "text": " So",
+          "start": 3322.9,
+          "end": 3323.1,
+          "confidence": 0.9203906655311584
+        },
+        {
+          "text": " I",
+          "start": 3323.1,
+          "end": 3323.98,
+          "confidence": 0.9095525741577148
+        },
+        {
+          "text": " think",
+          "start": 3323.98,
+          "end": 3324.1,
+          "confidence": 0.9995090961456299
+        },
+        {
+          "text": " at",
+          "start": 3324.1,
+          "end": 3324.26,
+          "confidence": 0.9840532541275024
+        },
+        {
+          "text": " this",
+          "start": 3324.26,
+          "end": 3324.42,
+          "confidence": 0.9996211528778076
+        },
+        {
+          "text": " point",
+          "start": 3324.42,
+          "end": 3324.66,
+          "confidence": 0.9996461868286133
+        },
+        {
+          "text": " I",
+          "start": 3324.66,
+          "end": 3325.08,
+          "confidence": 0.49827539920806885
+        },
+        {
+          "text": " think",
+          "start": 3325.08,
+          "end": 3325.24,
+          "confidence": 0.7034622430801392
+        },
+        {
+          "text": " we'll",
+          "start": 3325.24,
+          "end": 3325.34,
+          "confidence": 0.9777092635631561
+        },
+        {
+          "text": " wind",
+          "start": 3325.34,
+          "end": 3325.5,
+          "confidence": 0.996181845664978
+        },
+        {
+          "text": " down",
+          "start": 3325.5,
+          "end": 3325.82,
+          "confidence": 0.9945675134658813
+        }
+      ]
+    },
+    {
+      "start": 3325.82,
+      "end": 3329.38,
+      "text": "and we'll thank our panel members for participating",
+      "words": [
+        {
+          "text": " and",
+          "start": 3325.82,
+          "end": 3326.44,
+          "confidence": 0.9008979797363281
+        },
+        {
+          "text": " we'll",
+          "start": 3326.44,
+          "end": 3326.78,
+          "confidence": 0.9768831431865692
+        },
+        {
+          "text": " thank",
+          "start": 3326.78,
+          "end": 3326.96,
+          "confidence": 0.9930064678192139
+        },
+        {
+          "text": " our",
+          "start": 3326.96,
+          "end": 3327.56,
+          "confidence": 0.998944103717804
+        },
+        {
+          "text": " panel",
+          "start": 3327.56,
+          "end": 3328.26,
+          "confidence": 0.9960575103759766
+        },
+        {
+          "text": " members",
+          "start": 3328.26,
+          "end": 3328.52,
+          "confidence": 0.9921658039093018
+        },
+        {
+          "text": " for",
+          "start": 3328.52,
+          "end": 3328.84,
+          "confidence": 0.9964950680732727
+        },
+        {
+          "text": " participating",
+          "start": 3328.84,
+          "end": 3329.38,
+          "confidence": 0.998798131942749
+        }
+      ]
+    },
+    {
+      "start": 3329.38,
+      "end": 3331.58,
+      "text": "and thank you all for asking questions and listening,",
+      "words": [
+        {
+          "text": " and",
+          "start": 3329.38,
+          "end": 3329.8,
+          "confidence": 0.670218288898468
+        },
+        {
+          "text": " thank",
+          "start": 3329.8,
+          "end": 3330.1,
+          "confidence": 0.995837926864624
+        },
+        {
+          "text": " you",
+          "start": 3330.1,
+          "end": 3330.22,
+          "confidence": 0.9988045692443848
+        },
+        {
+          "text": " all",
+          "start": 3330.22,
+          "end": 3330.34,
+          "confidence": 0.9981175661087036
+        },
+        {
+          "text": " for",
+          "start": 3330.34,
+          "end": 3330.54,
+          "confidence": 0.9986384510993958
+        },
+        {
+          "text": " asking",
+          "start": 3330.54,
+          "end": 3330.88,
+          "confidence": 0.9989431500434875
+        },
+        {
+          "text": " questions",
+          "start": 3330.88,
+          "end": 3331.2,
+          "confidence": 0.9972900152206421
+        },
+        {
+          "text": " and",
+          "start": 3331.2,
+          "end": 3331.4,
+          "confidence": 0.9717560410499573
+        },
+        {
+          "text": " listening,",
+          "start": 3331.4,
+          "end": 3331.58,
+          "confidence": 0.9837660789489746
+        }
+      ]
+    },
+    {
+      "start": 3331.72,
+      "end": 3332.3,
+      "text": "following along.",
+      "words": [
+        {
+          "text": " following",
+          "start": 3331.72,
+          "end": 3332.06,
+          "confidence": 0.9450398087501526
+        },
+        {
+          "text": " along.",
+          "start": 3332.06,
+          "end": 3332.3,
+          "confidence": 0.998801589012146
+        }
+      ]
+    },
+    {
+      "start": 3332.56,
+      "end": 3332.78,
+      "text": "Thank you.",
+      "words": [
+        {
+          "text": " Thank",
+          "start": 3332.56,
+          "end": 3332.66,
+          "confidence": 0.9945257902145386
+        },
+        {
+          "text": " you.",
+          "start": 3332.66,
+          "end": 3332.78,
+          "confidence": 0.9922796487808228
+        }
+      ]
+    }
+  ]
+}

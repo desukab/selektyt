@@ -1,0 +1,43 @@
+1
+0:00:00,060 --> 0:00:01,967
+Gliders fill in gaps between the
+
+2
+0:00:02,000 --> 0:00:03,107
+arrays, traveling
+
+3
+0:00:03,140 --> 0:00:06,487
+on
+
+4
+0:00:06,520 --> 0:00:08,407
+a data mules send oceanographic
+
+5
+0:00:08,440 --> 0:00:10,587
+measurements back to OOI servers
+
+6
+0:00:10,620 --> 0:00:11,700
+when they surface.
+
+7
+0:00:11,820 --> 0:00:13,487
+The Ocean Observatories Initiative
+
+8
+0:00:13,520 --> 0:00:15,927
+has revolutionized marine research
+
+9
+0:00:15,960 --> 0:00:18,347
+with free access to high quality
+
+10
+0:00:18,380 --> 0:00:20,907
+data from remote locations and at
+
+11
+0:00:20,940 --> 0:00:22,580
+unprecedented timescales.

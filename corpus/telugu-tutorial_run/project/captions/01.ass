@@ -1,0 +1,17 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.59,Default,,0,0,0,,{\k162}{\c&H00D7FF&\b1}నినాన్త్డందాన{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:01.62,0:00:02.80,Default,,0,0,0,,{\k106}{\c&H00D7FF&\b1}ంపెర్లిస్లిని.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:08.14,0:00:09.51,Default,,0,0,0,,{\k140}{\c&H00D7FF&\b1}పాత్న్న్న్త్త్నవై{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:09.54,0:00:11.21,Default,,0,0,0,,{\k140}{\c&H00D7FF&\b1}సస్కకన్సి{\c&HFFFFFF&\b0} {\k30}.
+Dialogue: 0,0:00:11.24,0:00:11.80,Default,,0,0,0,,{\k56}.

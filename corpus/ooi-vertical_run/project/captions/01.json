@@ -1,0 +1,94 @@
+{
+  "style": "minimal",
+  "blocks": [
+    {
+      "start": 113.42,
+      "end": 115.36,
+      "text": "Gliders fill in gaps between the",
+      "emphasis": [
+        " Gliders",
+        " between"
+      ]
+    },
+    {
+      "start": 115.36,
+      "end": 117.04,
+      "text": "arrays, traveling",
+      "emphasis": [
+        " traveling"
+      ]
+    },
+    {
+      "start": 117.04,
+      "end": 120.42,
+      "text": "on",
+      "emphasis": []
+    },
+    {
+      "start": 120.42,
+      "end": 122.34,
+      "text": "a data mules send oceanographic",
+      "emphasis": [
+        " oceanographic"
+      ]
+    },
+    {
+      "start": 122.34,
+      "end": 124.52,
+      "text": "measurements back to OOI servers",
+      "emphasis": [
+        " measurements"
+      ]
+    },
+    {
+      "start": 124.52,
+      "end": 125.48,
+      "text": "when they surface.",
+      "emphasis": [
+        " surface."
+      ]
+    },
+    {
+      "start": 128.37,
+      "end": 130.07,
+      "text": "The Ocean Observatories Initiative",
+      "emphasis": [
+        " Observatories"
+      ]
+    },
+    {
+      "start": 130.07,
+      "end": 132.51,
+      "text": "has revolutionized marine research",
+      "emphasis": [
+        " revolutionized"
+      ]
+    },
+    {
+      "start": 132.51,
+      "end": 134.93,
+      "text": "with free access to high quality",
+      "emphasis": [
+        " access",
+        " quality"
+      ]
+    },
+    {
+      "start": 134.93,
+      "end": 137.49,
+      "text": "data from remote locations and at",
+      "emphasis": [
+        " remote",
+        " locations"
+      ]
+    },
+    {
+      "start": 137.49,
+      "end": 139.13,
+      "text": "unprecedented timescales.",
+      "emphasis": [
+        " unprecedented"
+      ]
+    }
+  ]
+}

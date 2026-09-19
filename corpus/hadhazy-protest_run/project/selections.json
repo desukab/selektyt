@@ -1,0 +1,860 @@
+[
+  {
+    "start": 52.57,
+    "end": 63.69,
+    "text": "És ugye a jövő érgő, hogy annak diák én, amíg csak akkor a folyamatos félgetnek történetkező, de annak diák aki azt mondja, hogy a folyamatosan fontos, és ez az eddig minden nap négy nem tudom, hogy minden gyűjtényet egyébként nem tudom.",
+    "story_type": "insight",
+    "hook": "És ugye a jövő érgő, hogy annak diák én, amíg csak akkor a folyamatos félgetnek",
+    "payoff": "gő, hogy annak diák én, amíg csak akkor a folyamatos félgetnek történetkező, de annak diák aki azt mondja, hogy a folyamatosan fontos, és ez az eddig minden nap négy nem tudom, hogy minden gyűjtényet egyébként nem tudom.",
+    "editorial_score": 0.5573939107142857,
+    "virality_score": 0.1605714285714286,
+    "context_score": 0.7947976190476191,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.30; progression=0.42; payoff=0.61; density=1.00; fillers=0; standalone=1.00; repetition=0.10; coherence=1.00; completeness=0.75; audio_pace=0.93; silence=0.083; dead_air=0.00.",
+    "visual_potential": 0.44999999999999996,
+    "words": [
+      {
+        "text": " És",
+        "start": 52.57,
+        "end": 53.05,
+        "confidence": 0.03719409182667732
+      },
+      {
+        "text": " ugye",
+        "start": 53.05,
+        "end": 53.43,
+        "confidence": 0.7602753043174744
+      },
+      {
+        "text": " a",
+        "start": 53.43,
+        "end": 53.51,
+        "confidence": 0.5380068421363831
+      },
+      {
+        "text": " jövő",
+        "start": 53.51,
+        "end": 53.67,
+        "confidence": 0.4872906357049942
+      },
+      {
+        "text": " érgő,",
+        "start": 53.67,
+        "end": 54.07,
+        "confidence": 0.3202835451811552
+      },
+      {
+        "text": " hogy",
+        "start": 54.23,
+        "end": 54.23,
+        "confidence": 0.7948334813117981
+      },
+      {
+        "text": " annak",
+        "start": 54.23,
+        "end": 54.53,
+        "confidence": 0.7236550450325012
+      },
+      {
+        "text": " diák",
+        "start": 54.53,
+        "end": 54.85,
+        "confidence": 0.7319094836711884
+      },
+      {
+        "text": " én,",
+        "start": 54.85,
+        "end": 55.15,
+        "confidence": 0.2729756832122803
+      },
+      {
+        "text": " amíg",
+        "start": 55.19,
+        "end": 55.47,
+        "confidence": 0.38297074536482495
+      },
+      {
+        "text": " csak",
+        "start": 55.47,
+        "end": 55.51,
+        "confidence": 0.3881325423717499
+      },
+      {
+        "text": " akkor",
+        "start": 55.51,
+        "end": 55.81,
+        "confidence": 0.75874924659729
+      },
+      {
+        "text": " a",
+        "start": 55.81,
+        "end": 55.99,
+        "confidence": 0.9733566045761108
+      },
+      {
+        "text": " folyamatos",
+        "start": 55.99,
+        "end": 56.23,
+        "confidence": 0.43784014508128166
+      },
+      {
+        "text": " félgetnek",
+        "start": 56.23,
+        "end": 56.67,
+        "confidence": 0.36446282640099525
+      },
+      {
+        "text": " történetkező,",
+        "start": 56.67,
+        "end": 57.27,
+        "confidence": 0.503853548850332
+      },
+      {
+        "text": " de",
+        "start": 57.35,
+        "end": 57.43,
+        "confidence": 0.9581993818283081
+      },
+      {
+        "text": " annak",
+        "start": 57.43,
+        "end": 57.61,
+        "confidence": 0.40401703119277954
+      },
+      {
+        "text": " diák",
+        "start": 57.61,
+        "end": 57.79,
+        "confidence": 0.89215287566185
+      },
+      {
+        "text": " aki",
+        "start": 57.79,
+        "end": 58.03,
+        "confidence": 0.848246157169342
+      },
+      {
+        "text": " azt",
+        "start": 58.03,
+        "end": 58.19,
+        "confidence": 0.6352912783622742
+      },
+      {
+        "text": " mondja,",
+        "start": 58.19,
+        "end": 58.45,
+        "confidence": 0.9850176274776459
+      },
+      {
+        "text": " hogy",
+        "start": 58.95,
+        "end": 58.95,
+        "confidence": 0.9437878131866455
+      },
+      {
+        "text": " a",
+        "start": 58.95,
+        "end": 59.33,
+        "confidence": 0.6618272662162781
+      },
+      {
+        "text": " folyamatosan",
+        "start": 59.33,
+        "end": 59.83,
+        "confidence": 0.6054094791412353
+      },
+      {
+        "text": " fontos,",
+        "start": 59.83,
+        "end": 60.25,
+        "confidence": 0.9652323722839355
+      },
+      {
+        "text": " és",
+        "start": 60.27,
+        "end": 60.41,
+        "confidence": 0.7535769939422607
+      },
+      {
+        "text": " ez",
+        "start": 60.41,
+        "end": 60.55,
+        "confidence": 0.6311374306678772
+      },
+      {
+        "text": " az",
+        "start": 60.55,
+        "end": 60.63,
+        "confidence": 0.20905360579490662
+      },
+      {
+        "text": " eddig",
+        "start": 60.63,
+        "end": 60.71,
+        "confidence": 0.44965071976184845
+      },
+      {
+        "text": " minden",
+        "start": 60.71,
+        "end": 61.01,
+        "confidence": 0.8428860604763031
+      },
+      {
+        "text": " nap",
+        "start": 61.01,
+        "end": 61.21,
+        "confidence": 0.3401312828063965
+      },
+      {
+        "text": " négy",
+        "start": 61.21,
+        "end": 61.37,
+        "confidence": 0.4075006991624832
+      },
+      {
+        "text": " nem",
+        "start": 61.37,
+        "end": 61.47,
+        "confidence": 0.31378912925720215
+      },
+      {
+        "text": " tudom,",
+        "start": 61.47,
+        "end": 61.89,
+        "confidence": 0.3308263570070267
+      },
+      {
+        "text": " hogy",
+        "start": 62.01,
+        "end": 62.13,
+        "confidence": 0.2921521067619324
+      },
+      {
+        "text": " minden",
+        "start": 62.13,
+        "end": 62.43,
+        "confidence": 0.5286061838269234
+      },
+      {
+        "text": " gyűjtényet",
+        "start": 62.43,
+        "end": 62.89,
+        "confidence": 0.3461853712797165
+      },
+      {
+        "text": " egyébként",
+        "start": 62.89,
+        "end": 63.21,
+        "confidence": 0.7575843632221222
+      },
+      {
+        "text": " nem",
+        "start": 63.21,
+        "end": 63.45,
+        "confidence": 0.7070621252059937
+      },
+      {
+        "text": " tudom.",
+        "start": 63.45,
+        "end": 63.69,
+        "confidence": 0.6571717262268066
+      }
+    ],
+    "coherence_score": 1.0,
+    "completeness": 0.75,
+    "llm_metadata": null,
+    "total_score": 0.6005
+  },
+  {
+    "start": 70.87,
+    "end": 91.39,
+    "text": "Igen, ilyen tehát ez valószínűleg ez is egy ilyen a szendékos kiszúrás volt, mert mi az jelenket tipp be, hogy ide kocsitkal, minőtől a vinyétkő belehetet volna jönni, senni akadárjának nem lepólne. Ez nem engedték a lendőről, kasz mondták, hogy majd a pusztok ide jönnek be, és akkor azért, hogy a pusztoknak talcsi, tehát ez egy akadékos korás volt.",
+    "story_type": "story",
+    "hook": "Igen, ilyen tehát ez valószínűleg ez is egy ilyen a szendékos kiszúrás volt, mert mi az jelenket tipp be, hogy ide kocsitkal, minőtől a vinyétkő belehetet volna",
+    "payoff": "Ez nem engedték a lendőről, kasz mondták, hogy majd a pusztok ide jönnek be, és akkor azért, hogy a pusztoknak talcsi, tehát ez egy akadékos korás volt.",
+    "editorial_score": 0.4513245026785716,
+    "virality_score": 0.1862857142857143,
+    "context_score": 0.9290238095238095,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.30; progression=0.53; payoff=0.95; density=1.00; fillers=0; standalone=1.00; repetition=0.03; coherence=0.50; completeness=0.75; audio_pace=0.92; silence=0.096; dead_air=0.00.",
+    "visual_potential": 0.44999999999999996,
+    "words": [
+      {
+        "text": " Igen,",
+        "start": 70.87,
+        "end": 71.21,
+        "confidence": 0.9819016456604004
+      },
+      {
+        "text": " ilyen",
+        "start": 71.39,
+        "end": 71.63,
+        "confidence": 0.6350662310918173
+      },
+      {
+        "text": " tehát",
+        "start": 71.63,
+        "end": 71.79,
+        "confidence": 0.69495889544487
+      },
+      {
+        "text": " ez",
+        "start": 71.79,
+        "end": 71.97,
+        "confidence": 0.8860458135604858
+      },
+      {
+        "text": " valószínűleg",
+        "start": 71.97,
+        "end": 72.53,
+        "confidence": 0.9233692089716593
+      },
+      {
+        "text": " ez",
+        "start": 72.53,
+        "end": 72.71,
+        "confidence": 0.8317047953605652
+      },
+      {
+        "text": " is",
+        "start": 72.71,
+        "end": 72.83,
+        "confidence": 0.933691143989563
+      },
+      {
+        "text": " egy",
+        "start": 72.83,
+        "end": 72.97,
+        "confidence": 0.9774445295333862
+      },
+      {
+        "text": " ilyen",
+        "start": 72.97,
+        "end": 73.15,
+        "confidence": 0.9396690130233765
+      },
+      {
+        "text": " a",
+        "start": 73.15,
+        "end": 73.31,
+        "confidence": 0.030370082706212997
+      },
+      {
+        "text": " szendékos",
+        "start": 73.31,
+        "end": 73.91,
+        "confidence": 0.4362732253968716
+      },
+      {
+        "text": " kiszúrás",
+        "start": 73.91,
+        "end": 74.39,
+        "confidence": 0.7570069432258606
+      },
+      {
+        "text": " volt,",
+        "start": 74.39,
+        "end": 74.81,
+        "confidence": 0.9368121027946472
+      },
+      {
+        "text": " mert",
+        "start": 75.29,
+        "end": 75.57,
+        "confidence": 0.749099463224411
+      },
+      {
+        "text": " mi",
+        "start": 75.57,
+        "end": 76.53,
+        "confidence": 0.11590561270713806
+      },
+      {
+        "text": " az",
+        "start": 76.53,
+        "end": 76.91,
+        "confidence": 0.42736297845840454
+      },
+      {
+        "text": " jelenket",
+        "start": 76.91,
+        "end": 77.37,
+        "confidence": 0.40389640629291534
+      },
+      {
+        "text": " tipp",
+        "start": 77.37,
+        "end": 77.59,
+        "confidence": 0.2423686981201172
+      },
+      {
+        "text": " be,",
+        "start": 77.59,
+        "end": 77.75,
+        "confidence": 0.15985403954982758
+      },
+      {
+        "text": " hogy",
+        "start": 77.79,
+        "end": 77.89,
+        "confidence": 0.974378764629364
+      },
+      {
+        "text": " ide",
+        "start": 77.89,
+        "end": 78.07,
+        "confidence": 0.8554205298423767
+      },
+      {
+        "text": " kocsitkal,",
+        "start": 78.07,
+        "end": 78.63,
+        "confidence": 0.5708108007907867
+      },
+      {
+        "text": " minőtől",
+        "start": 78.75,
+        "end": 79.13,
+        "confidence": 0.37421444058418274
+      },
+      {
+        "text": " a",
+        "start": 79.13,
+        "end": 79.25,
+        "confidence": 0.24209409952163696
+      },
+      {
+        "text": " vinyétkő",
+        "start": 79.25,
+        "end": 79.63,
+        "confidence": 0.47058268189430236
+      },
+      {
+        "text": " belehetet",
+        "start": 79.63,
+        "end": 80.13,
+        "confidence": 0.6061459680398306
+      },
+      {
+        "text": " volna",
+        "start": 80.13,
+        "end": 80.43,
+        "confidence": 0.906724214553833
+      },
+      {
+        "text": " jönni,",
+        "start": 80.43,
+        "end": 80.91,
+        "confidence": 0.7530457576115926
+      },
+      {
+        "text": " senni",
+        "start": 80.99,
+        "end": 81.85,
+        "confidence": 0.40381866196791333
+      },
+      {
+        "text": " akadárjának",
+        "start": 81.85,
+        "end": 82.89,
+        "confidence": 0.8227409819761912
+      },
+      {
+        "text": " nem",
+        "start": 82.89,
+        "end": 83.03,
+        "confidence": 0.762744665145874
+      },
+      {
+        "text": " lepólne.",
+        "start": 83.03,
+        "end": 83.51,
+        "confidence": 0.3872394934296608
+      },
+      {
+        "text": " Ez",
+        "start": 83.59,
+        "end": 83.63,
+        "confidence": 0.41587400436401367
+      },
+      {
+        "text": " nem",
+        "start": 83.63,
+        "end": 83.79,
+        "confidence": 0.9893652200698853
+      },
+      {
+        "text": " engedték",
+        "start": 83.79,
+        "end": 84.21,
+        "confidence": 0.9050921052694321
+      },
+      {
+        "text": " a",
+        "start": 84.21,
+        "end": 84.37,
+        "confidence": 0.8698503375053406
+      },
+      {
+        "text": " lendőről,",
+        "start": 84.37,
+        "end": 84.75,
+        "confidence": 0.6201765239238739
+      },
+      {
+        "text": " kasz",
+        "start": 84.87,
+        "end": 84.95,
+        "confidence": 0.43144485354423523
+      },
+      {
+        "text": " mondták,",
+        "start": 84.95,
+        "end": 85.27,
+        "confidence": 0.7841331958770752
+      },
+      {
+        "text": " hogy",
+        "start": 85.37,
+        "end": 85.47,
+        "confidence": 0.9929169416427612
+      },
+      {
+        "text": " majd",
+        "start": 85.47,
+        "end": 85.63,
+        "confidence": 0.9553722739219666
+      },
+      {
+        "text": " a",
+        "start": 85.63,
+        "end": 85.73,
+        "confidence": 0.9581355452537537
+      },
+      {
+        "text": " pusztok",
+        "start": 85.73,
+        "end": 85.97,
+        "confidence": 0.6280319094657898
+      },
+      {
+        "text": " ide",
+        "start": 85.97,
+        "end": 86.13,
+        "confidence": 0.5391560196876526
+      },
+      {
+        "text": " jönnek",
+        "start": 86.13,
+        "end": 86.49,
+        "confidence": 0.7738146583239237
+      },
+      {
+        "text": " be,",
+        "start": 86.49,
+        "end": 86.67,
+        "confidence": 0.6119788885116577
+      },
+      {
+        "text": " és",
+        "start": 86.73,
+        "end": 86.85,
+        "confidence": 0.9867123365402222
+      },
+      {
+        "text": " akkor",
+        "start": 86.85,
+        "end": 87.07,
+        "confidence": 0.9643434882164001
+      },
+      {
+        "text": " azért,",
+        "start": 87.07,
+        "end": 87.39,
+        "confidence": 0.872767984867096
+      },
+      {
+        "text": " hogy",
+        "start": 87.45,
+        "end": 87.55,
+        "confidence": 0.8277243375778198
+      },
+      {
+        "text": " a",
+        "start": 87.55,
+        "end": 87.61,
+        "confidence": 0.786703884601593
+      },
+      {
+        "text": " pusztoknak",
+        "start": 87.61,
+        "end": 88.07,
+        "confidence": 0.7390263117849827
+      },
+      {
+        "text": " talcsi,",
+        "start": 88.07,
+        "end": 88.51,
+        "confidence": 0.3782130926847458
+      },
+      {
+        "text": " tehát",
+        "start": 89.15,
+        "end": 89.43,
+        "confidence": 0.6575190424919128
+      },
+      {
+        "text": " ez",
+        "start": 89.43,
+        "end": 89.61,
+        "confidence": 0.4765176475048065
+      },
+      {
+        "text": " egy",
+        "start": 89.61,
+        "end": 89.77,
+        "confidence": 0.6887302994728088
+      },
+      {
+        "text": " akadékos",
+        "start": 89.77,
+        "end": 90.87,
+        "confidence": 0.6919750392436981
+      },
+      {
+        "text": " korás",
+        "start": 90.87,
+        "end": 91.11,
+        "confidence": 0.5358797460794449
+      },
+      {
+        "text": " volt.",
+        "start": 91.11,
+        "end": 91.39,
+        "confidence": 0.9977116584777832
+      }
+    ],
+    "coherence_score": 0.5,
+    "completeness": 0.75,
+    "llm_metadata": null,
+    "total_score": 0.4853
+  },
+  {
+    "start": 32.81,
+    "end": 44.31,
+    "text": "Én voltam a hülyener, én előre mantam nekik, hogy én most után a csinálni, földény, hiszteni, állnak valgább ként, és biztos lezárták. Egyiként mi van, kinek van, előre jön, ott a földet megúrjunk.",
+    "story_type": "story",
+    "hook": "Én voltam a hülyener, én előre mantam nekik, hogy én most után a csinálni, földény, hiszteni, állnak valgább ként, és biztos lezárták.",
+    "payoff": "Egyiként mi van, kinek van, előre jön, ott a földet megúrjunk.",
+    "editorial_score": 0.4544286428571429,
+    "virality_score": 0.14914285714285716,
+    "context_score": 0.8295952380952382,
+    "confidence": 0.9,
+    "reason": "Structural editorial score: opening=0.30; progression=0.53; payoff=0.81; density=1.00; fillers=0; standalone=1.00; repetition=0.00; coherence=0.50; completeness=1.00; audio_pace=0.88; silence=0.148; dead_air=0.00.",
+    "visual_potential": 0.35,
+    "words": [
+      {
+        "text": " Én",
+        "start": 32.81,
+        "end": 33.37,
+        "confidence": 0.8816344439983368
+      },
+      {
+        "text": " voltam",
+        "start": 33.37,
+        "end": 33.71,
+        "confidence": 0.9600132703781128
+      },
+      {
+        "text": " a",
+        "start": 33.71,
+        "end": 33.81,
+        "confidence": 0.9506241679191589
+      },
+      {
+        "text": " hülyener,",
+        "start": 33.81,
+        "end": 34.25,
+        "confidence": 0.5069647759199143
+      },
+      {
+        "text": " én",
+        "start": 34.63,
+        "end": 34.79,
+        "confidence": 0.47294512391090393
+      },
+      {
+        "text": " előre",
+        "start": 34.79,
+        "end": 35.25,
+        "confidence": 0.9803099632263184
+      },
+      {
+        "text": " mantam",
+        "start": 35.25,
+        "end": 35.61,
+        "confidence": 0.6910847276449203
+      },
+      {
+        "text": " nekik,",
+        "start": 35.61,
+        "end": 35.89,
+        "confidence": 0.7160577575365702
+      },
+      {
+        "text": " hogy",
+        "start": 36.09,
+        "end": 36.09,
+        "confidence": 0.9704649448394775
+      },
+      {
+        "text": " én",
+        "start": 36.09,
+        "end": 36.25,
+        "confidence": 0.8380643725395203
+      },
+      {
+        "text": " most",
+        "start": 36.25,
+        "end": 36.41,
+        "confidence": 0.21348778903484344
+      },
+      {
+        "text": " után",
+        "start": 36.41,
+        "end": 36.69,
+        "confidence": 0.2175021655857563
+      },
+      {
+        "text": " a",
+        "start": 36.69,
+        "end": 36.83,
+        "confidence": 0.14412525296211243
+      },
+      {
+        "text": " csinálni,",
+        "start": 36.83,
+        "end": 37.35,
+        "confidence": 0.7063923254609108
+      },
+      {
+        "text": " földény,",
+        "start": 37.43,
+        "end": 37.83,
+        "confidence": 0.3442526627331972
+      },
+      {
+        "text": " hiszteni,",
+        "start": 37.83,
+        "end": 38.57,
+        "confidence": 0.3133938852697611
+      },
+      {
+        "text": " állnak",
+        "start": 38.75,
+        "end": 38.99,
+        "confidence": 0.7160244584083557
+      },
+      {
+        "text": " valgább",
+        "start": 38.99,
+        "end": 39.33,
+        "confidence": 0.45108047872781754
+      },
+      {
+        "text": " ként,",
+        "start": 39.33,
+        "end": 39.69,
+        "confidence": 0.3310490995645523
+      },
+      {
+        "text": " és",
+        "start": 39.81,
+        "end": 39.95,
+        "confidence": 0.23352408409118652
+      },
+      {
+        "text": " biztos",
+        "start": 39.95,
+        "end": 40.15,
+        "confidence": 0.6369811991850535
+      },
+      {
+        "text": " lezárták.",
+        "start": 40.15,
+        "end": 40.65,
+        "confidence": 0.863969337940216
+      },
+      {
+        "text": " Egyiként",
+        "start": 41.01,
+        "end": 41.29,
+        "confidence": 0.7159059382975101
+      },
+      {
+        "text": " mi",
+        "start": 41.29,
+        "end": 41.41,
+        "confidence": 0.11570659279823303
+      },
+      {
+        "text": " van,",
+        "start": 41.41,
+        "end": 41.53,
+        "confidence": 0.23305743932724
+      },
+      {
+        "text": " kinek",
+        "start": 41.59,
+        "end": 41.69,
+        "confidence": 0.3977237492799759
+      },
+      {
+        "text": " van,",
+        "start": 41.69,
+        "end": 41.93,
+        "confidence": 0.33140262961387634
+      },
+      {
+        "text": " előre",
+        "start": 42.09,
+        "end": 42.51,
+        "confidence": 0.40717726449171704
+      },
+      {
+        "text": " jön,",
+        "start": 42.51,
+        "end": 42.69,
+        "confidence": 0.3408621661365032
+      },
+      {
+        "text": " ott",
+        "start": 42.85,
+        "end": 42.93,
+        "confidence": 0.5963386297225952
+      },
+      {
+        "text": " a",
+        "start": 42.93,
+        "end": 43.15,
+        "confidence": 0.44378045201301575
+      },
+      {
+        "text": " földet",
+        "start": 43.15,
+        "end": 43.75,
+        "confidence": 0.5823091268539429
+      },
+      {
+        "text": " megúrjunk.",
+        "start": 43.75,
+        "end": 44.31,
+        "confidence": 0.1742507889866829
+      }
+    ],
+    "coherence_score": 0.5,
+    "completeness": 1.0,
+    "llm_metadata": null,
+    "total_score": 0.4509
+  }
+]

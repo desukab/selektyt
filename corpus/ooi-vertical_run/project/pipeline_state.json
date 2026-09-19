@@ -1,0 +1,32 @@
+{
+  "source": "corpus/media/ooi-vertical.webm",
+  "media_info": {},
+  "fingerprint": "808ec6c79f65fffa27de25088fa1437deac5b9f949c39bf7a2e76bf6147bf20d",
+  "model": "small",
+  "language": "en",
+  "renders": {
+    "01": {
+      "fingerprint": "808ec6c79f65fffa27de25088fa1437deac5b9f949c39bf7a2e76bf6147bf20d",
+      "selection_digest": "5507506e8f51c4a66c9e242c86abe7261c82d5b7a799340b98d6c822816961cd",
+      "facebook": "corpus/ooi-vertical_run/project/facebook/01.mp4",
+      "shorts": "corpus/ooi-vertical_run/project/shorts/01.mp4"
+    },
+    "02": {
+      "fingerprint": "808ec6c79f65fffa27de25088fa1437deac5b9f949c39bf7a2e76bf6147bf20d",
+      "selection_digest": "5507506e8f51c4a66c9e242c86abe7261c82d5b7a799340b98d6c822816961cd",
+      "facebook": "corpus/ooi-vertical_run/project/facebook/02.mp4",
+      "shorts": "corpus/ooi-vertical_run/project/shorts/02.mp4"
+    },
+    "03": {
+      "fingerprint": "808ec6c79f65fffa27de25088fa1437deac5b9f949c39bf7a2e76bf6147bf20d",
+      "selection_digest": "5507506e8f51c4a66c9e242c86abe7261c82d5b7a799340b98d6c822816961cd",
+      "facebook": "corpus/ooi-vertical_run/project/facebook/03.mp4",
+      "shorts": "corpus/ooi-vertical_run/project/shorts/03.mp4"
+    }
+  },
+  "render_fingerprint": "808ec6c79f65fffa27de25088fa1437deac5b9f949c39bf7a2e76bf6147bf20d",
+  "render_selection_digest": "5507506e8f51c4a66c9e242c86abe7261c82d5b7a799340b98d6c822816961cd",
+  "selected_count": 3,
+  "qa": "corpus/ooi-vertical_run/project/qa.json",
+  "complete": true
+}

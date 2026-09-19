@@ -1,0 +1,50 @@
+[
+  {
+    "start": 112.471,
+    "end": 139.13,
+    "text": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface. The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
+    "story_type": "story",
+    "hook": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.",
+    "payoff": "The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
+    "editorial_score": 0.613,
+    "virality_score": 0.165,
+    "context_score": 0.96,
+    "confidence": 0.9,
+    "visual_potential": 0.45,
+    "total_score": 0.644,
+    "reason": "Structural editorial score: opening=0.30; progression=0.53; payoff=0.87; density=0.59; fillers=0; standalone=1.00; repetition=0.00; coherence=1.00; completeness=1.00; audio_pace=0.87; silence=0.138; dead_air=0.14.",
+    "llm_metadata": null
+  },
+  {
+    "start": 41.42,
+    "end": 56.58,
+    "text": "Now in its eighth year, OOI makes it possible to investigate short-lived events as well as multi-year trends. That provides researchers around the globe with critical insights into climate change and its effect on marine ecosystems.",
+    "story_type": "story",
+    "hook": "Now in its eighth year, OOI makes it possible to investigate short-lived events as well as multi-year trends.",
+    "payoff": "That provides researchers around the globe with critical insights into climate change and its effect on marine ecosystems.",
+    "editorial_score": 0.665,
+    "virality_score": 0.156,
+    "context_score": 0.854,
+    "confidence": 0.9,
+    "visual_potential": 0.45,
+    "total_score": 0.641,
+    "reason": "Structural editorial score: opening=0.30; progression=0.53; payoff=0.84; density=0.90; fillers=0; standalone=1.00; repetition=0.00; coherence=1.00; completeness=1.00; audio_pace=0.87; silence=0.145; dead_air=0.09.",
+    "llm_metadata": null
+  },
+  {
+    "start": 89.697,
+    "end": 101.843,
+    "text": "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
+    "story_type": "insight",
+    "hook": "An additional cable array wires a region of the northeast ",
+    "payoff": "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
+    "editorial_score": 0.578,
+    "virality_score": 0.145,
+    "context_score": 0.767,
+    "confidence": 0.9,
+    "visual_potential": 0.35,
+    "total_score": 0.587,
+    "reason": "Structural editorial score: opening=0.30; progression=0.42; payoff=0.55; density=0.88; fillers=0; standalone=1.00; repetition=0.07; coherence=1.00; completeness=1.00; audio_pace=0.98; silence=0.031; dead_air=0.00.",
+    "llm_metadata": null
+  }
+]

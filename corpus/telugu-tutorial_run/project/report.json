@@ -1,0 +1,24 @@
+{
+  "source": "corpus/media/telugu-tutorial.webm",
+  "title": null,
+  "language": "te",
+  "candidate_count": 6,
+  "selected_count": 1,
+  "rejected_by_context_guard": 0,
+  "truncated_by_limit": 0,
+  "rejection_reasons": {},
+  "outputs": {
+    "facebook": "corpus/telugu-tutorial_run/project/facebook",
+    "shorts": "corpus/telugu-tutorial_run/project/shorts"
+  },
+  "captions": "corpus/telugu-tutorial_run/project/captions",
+  "timeline": "corpus/telugu-tutorial_run/project/timeline",
+  "content_pack": "corpus/telugu-tutorial_run/project/content_pack.json",
+  "editorial_report": "corpus/telugu-tutorial_run/project/editorial_report.json",
+  "pacing_report": "corpus/telugu-tutorial_run/project/pacing_report.json",
+  "qa": "corpus/telugu-tutorial_run/project/qa.json",
+  "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
+  "audio": {
+    "enabled": false
+  }
+}

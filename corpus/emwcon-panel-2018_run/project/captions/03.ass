@@ -1,0 +1,33 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.37,Default,,0,0,0,,{\k16}The {\k34}{\c&H00D7FF&\b1}first{\c&HFFFFFF&\b0} {\k30}Wiki {\k24}that {\k12}I {\k24}{\c&H00D7FF&\b1}worked{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:01.40,0:00:04.47,Default,,0,0,0,,{\k34}on {\k74}called {\k58}{\c&H00D7FF&\b1}Robopedia{\c&HFFFFFF&\b0} {\k40}at {\k36}{\c&H00D7FF&\b1}MITRE{\c&HFFFFFF&\b0} {\k68}was
+Dialogue: 0,0:00:04.50,0:00:06.23,Default,,0,0,0,,{\k28}the {\k54}{\c&H00D7FF&\b1}robotics{\c&HFFFFFF&\b0} {\k38}Wiki {\k18}that {\k14}we {\k24}{\c&H00D7FF&\b1}used{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:06.26,0:00:07.55,Default,,0,0,0,,{\k18}to {\k34}document {\k36}{\c&H00D7FF&\b1}everything{\c&HFFFFFF&\b0} {\k28}within {\k16}the
+Dialogue: 0,0:00:07.58,0:00:09.13,Default,,0,0,0,,{\k32}{\c&H00D7FF&\b1}robotics{\c&HFFFFFF&\b0} {\k42}program {\k20}I {\k10}was {\k24}{\c&H00D7FF&\b1}working{\c&HFFFFFF&\b0} {\k30}on.
+Dialogue: 0,0:00:09.16,0:00:12.25,Default,,0,0,0,,{\k66}and {\k48}the {\k78}{\c&H00D7FF&\b1}lead{\c&HFFFFFF&\b0} {\k16}of {\k22}that {\k82}{\c&H00D7FF&\b1}program{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:12.28,0:00:14.67,Default,,0,0,0,,{\k88}said {\k26}it {\k28}{\c&H00D7FF&\b1}didn't{\c&HFFFFFF&\b0} {\k48}{\c&H00D7FF&\b1}happen{\c&HFFFFFF&\b0} {\k32}if {\k20}it's
+Dialogue: 0,0:00:14.70,0:00:15.72,Default,,0,0,0,,{\k24}not {\k28}in {\k16}the {\k22}{\c&H00D7FF&\b1}wiki.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:16.18,0:00:18.56,Default,,0,0,0,,{\k12}And {\k26}so {\k76}{\c&H00D7FF&\b1}absolutely{\c&HFFFFFF&\b0} {\k52}every {\k60}meeting,
+Dialogue: 0,0:00:18.72,0:00:20.51,Default,,0,0,0,,{\k16}every {\k98}{\c&H00D7FF&\b1}interaction{\c&HFFFFFF&\b0} {\k44}between {\k24}any
+Dialogue: 0,0:00:20.54,0:00:22.44,Default,,0,0,0,,{\k40}people, {\k14}any {\k28}piece {\k16}of {\k34}{\c&H00D7FF&\b1}hardware,{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:22.50,0:00:25.25,Default,,0,0,0,,{\k40}{\c&H00D7FF&\b1}equipment,{\c&HFFFFFF&\b0} {\k18}any {\k66}{\c&H00D7FF&\b1}software{\c&HFFFFFF&\b0} {\k84}had {\k18}to {\k14}get
+Dialogue: 0,0:00:25.28,0:00:26.74,Default,,0,0,0,,{\k54}{\c&H00D7FF&\b1}documented{\c&HFFFFFF&\b0} {\k36}in {\k18}the {\k26}wiki.
+Dialogue: 0,0:00:27.08,0:00:28.01,Default,,0,0,0,,{\k22}And {\k14}if {\k8}you {\k18}{\c&H00D7FF&\b1}tried{\c&HFFFFFF&\b0} {\k18}to {\k16}{\c&H00D7FF&\b1}tell{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:28.04,0:00:29.75,Default,,0,0,0,,{\k14}him {\k36}{\c&H00D7FF&\b1}something,{\c&HFFFFFF&\b0} {\k22}his {\k20}first {\k38}question
+Dialogue: 0,0:00:29.78,0:00:30.84,Default,,0,0,0,,{\k20}{\c&H00D7FF&\b1}was,{\c&HFFFFFF&\b0} {\k12}is {\k12}it {\k12}in {\k8}the {\k24}{\c&H00D7FF&\b1}wiki?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:31.22,0:00:32.05,Default,,0,0,0,,{\k26}And {\k12}if {\k10}it {\k20}{\c&H00D7FF&\b1}wasn't{\c&HFFFFFF&\b0} {\k14}in {\k4}the
+Dialogue: 0,0:00:32.08,0:00:32.81,Default,,0,0,0,,{\k16}wiki, {\k8}he {\k12}{\c&H00D7FF&\b1}didn't{\c&HFFFFFF&\b0} {\k12}want {\k10}to {\k10}{\c&H00D7FF&\b1}hear{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:32.84,0:00:33.85,Default,,0,0,0,,{\k20}about {\k14}it {\k16}{\c&H00D7FF&\b1}until{\c&HFFFFFF&\b0} {\k26}{\c&H00D7FF&\b1}after{\c&HFFFFFF&\b0} {\k14}it {\k14}was.
+Dialogue: 0,0:00:33.88,0:00:35.71,Default,,0,0,0,,{\k60}And {\k40}that {\k12}was {\k34}{\c&H00D7FF&\b1}absolutely{\c&HFFFFFF&\b0} {\k40}critical
+Dialogue: 0,0:00:35.74,0:00:36.96,Default,,0,0,0,,{\k30}to {\k40}getting {\k52}{\c&H00D7FF&\b1}adoption.{\c&HFFFFFF&\b0}

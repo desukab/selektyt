@@ -1,0 +1,24 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:01.63,Default,,0,0,0,,{\k34}Igen, {\k24}ilyen {\k16}tehát {\k18}ez {\k56}{\c&H00D7FF&\b1}valószínűleg{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:01.66,0:00:03.01,Default,,0,0,0,,{\k18}ez {\k12}is {\k14}egy {\k18}{\c&H00D7FF&\b1}ilyen{\c&HFFFFFF&\b0} {\k16}a {\k60}{\c&H00D7FF&\b1}szendékos{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:03.04,0:00:06.01,Default,,0,0,0,,{\k48}{\c&H00D7FF&\b1}kiszúrás{\c&HFFFFFF&\b0} {\k42}volt, {\k28}mert {\k96}mi {\k38}az
+Dialogue: 0,0:00:06.04,0:00:07.17,Default,,0,0,0,,{\k46}{\c&H00D7FF&\b1}jelenket{\c&HFFFFFF&\b0} {\k22}tipp {\k16}be, {\k10}hogy {\k18}ide
+Dialogue: 0,0:00:07.20,0:00:08.73,Default,,0,0,0,,{\k56}{\c&H00D7FF&\b1}kocsitkal,{\c&HFFFFFF&\b0} {\k38}minőtől {\k12}a {\k38}vinyétkő
+Dialogue: 0,0:00:08.76,0:00:10.95,Default,,0,0,0,,{\k50}{\c&H00D7FF&\b1}belehetet{\c&HFFFFFF&\b0} {\k30}volna {\k48}jönni, {\k86}senni
+Dialogue: 0,0:00:10.98,0:00:12.69,Default,,0,0,0,,{\k104}{\c&H00D7FF&\b1}akadárjának{\c&HFFFFFF&\b0} {\k14}nem {\k48}lepólne.
+Dialogue: 0,0:00:12.72,0:00:14.05,Default,,0,0,0,,{\k4}Ez {\k16}nem {\k42}{\c&H00D7FF&\b1}engedték{\c&HFFFFFF&\b0} {\k16}a {\k38}{\c&H00D7FF&\b1}lendőről,{\c&HFFFFFF&\b0} {\k8}kasz
+Dialogue: 0,0:00:14.08,0:00:15.23,Default,,0,0,0,,{\k32}{\c&H00D7FF&\b1}mondták,{\c&HFFFFFF&\b0} {\k10}hogy {\k16}majd {\k10}a {\k24}{\c&H00D7FF&\b1}pusztok{\c&HFFFFFF&\b0} {\k16}ide
+Dialogue: 0,0:00:15.26,0:00:16.65,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}jönnek{\c&HFFFFFF&\b0} {\k18}be, {\k12}és {\k22}akkor {\k32}{\c&H00D7FF&\b1}azért,{\c&HFFFFFF&\b0} {\k10}hogy
+Dialogue: 0,0:00:16.68,0:00:18.87,Default,,0,0,0,,{\k6}a {\k46}{\c&H00D7FF&\b1}pusztoknak{\c&HFFFFFF&\b0} {\k44}{\c&H00D7FF&\b1}talcsi,{\c&HFFFFFF&\b0} {\k28}tehát {\k18}ez {\k16}egy
+Dialogue: 0,0:00:18.90,0:00:20.52,Default,,0,0,0,,{\k110}{\c&H00D7FF&\b1}akadékos{\c&HFFFFFF&\b0} {\k24}korás {\k28}volt.

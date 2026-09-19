@@ -1,0 +1,32 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+Dialogue: 0,0:00:00.00,0:00:00.95,Default,,0,0,0,,{\k16}very {\k22}much {\k16}like {\k14}the {\k30}{\c&H00D7FF&\b1}electronic{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.98,0:00:01.98,Default,,0,0,0,,{\k30}{\c&H00D7FF&\b1}camera{\c&HFFFFFF&\b0} {\k10}you {\k20}have {\k10}at {\k18}home.
+Dialogue: 0,0:00:02.46,0:00:03.77,Default,,0,0,0,,{\k8}So {\k20}think {\k12}of {\k6}a {\k42}{\c&H00D7FF&\b1}megapixel{\c&HFFFFFF&\b0} {\k32}{\c&H00D7FF&\b1}camera.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:03.80,0:00:04.89,Default,,0,0,0,,{\k8}This {\k10}is {\k18}{\c&H00D7FF&\b1}about{\c&HFFFFFF&\b0} {\k16}the {\k12}1 {\k48}{\c&H00D7FF&\b1},024{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:04.92,0:00:06.47,Default,,0,0,0,,{\k36}pixels {\k52}along {\k26}this {\k34}{\c&H00D7FF&\b1}direction,{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:06.50,0:00:07.49,Default,,0,0,0,,{\k24}another {\k26}1 {\k10}{\c&H00D7FF&\b1},000{\c&HFFFFFF&\b0} {\k22}along {\k20}this
+Dialogue: 0,0:00:07.52,0:00:07.98,Default,,0,0,0,,{\k34}{\c&H00D7FF&\b1}direction.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:08.38,0:00:09.88,Default,,0,0,0,,{\k36}And {\k26}it's {\k20}taking {\k56}{\c&H00D7FF&\b1}snapshots.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:10.40,0:00:11.41,Default,,0,0,0,,{\k18}And {\k10}if {\k12}we {\k26}{\c&H00D7FF&\b1}know{\c&HFFFFFF&\b0} {\k18}how {\k20}{\c&H00D7FF&\b1}far{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:11.44,0:00:12.95,Default,,0,0,0,,{\k18}this {\k24}{\c&H00D7FF&\b1}object,{\c&HFFFFFF&\b0} {\k32}how {\k20}far {\k20}{\c&H00D7FF&\b1}away{\c&HFFFFFF&\b0} {\k12}it
+Dialogue: 0,0:00:12.98,0:00:14.29,Default,,0,0,0,,{\k10}is {\k16}{\c&H00D7FF&\b1}from{\c&HFFFFFF&\b0} {\k20}us, {\k18}and {\k14}we {\k16}{\c&H00D7FF&\b1}can{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:14.32,0:00:15.45,Default,,0,0,0,,{\k24}{\c&H00D7FF&\b1}figure{\c&HFFFFFF&\b0} {\k18}out {\k14}how {\k20}much {\k20}{\c&H00D7FF&\b1}light{\c&HFFFFFF&\b0} {\k20}is
+Dialogue: 0,0:00:15.48,0:00:16.49,Default,,0,0,0,,{\k10}in {\k14}each {\k18}{\c&H00D7FF&\b1}little{\c&HFFFFFF&\b0} {\k24}box, {\k12}each {\k16}{\c&H00D7FF&\b1}little{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:16.52,0:00:18.25,Default,,0,0,0,,{\k26}{\c&H00D7FF&\b1}pixel{\c&HFFFFFF&\b0} {\k38}of {\k14}this {\k26}{\c&H00D7FF&\b1}image,{\c&HFFFFFF&\b0} {\k24}we {\k16}can
+Dialogue: 0,0:00:18.28,0:00:20.01,Default,,0,0,0,,{\k26}{\c&H00D7FF&\b1}figure{\c&HFFFFFF&\b0} {\k36}out {\k48}how {\k26}big {\k24}and {\k16}{\c&H00D7FF&\b1}how{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:20.04,0:00:20.93,Default,,0,0,0,,{\k26}{\c&H00D7FF&\b1}bright{\c&HFFFFFF&\b0} {\k16}the {\k16}{\c&H00D7FF&\b1}thing{\c&HFFFFFF&\b0} {\k14}is {\k10}that {\k10}we're
+Dialogue: 0,0:00:20.96,0:00:21.23,Default,,0,0,0,,{\k18}{\c&H00D7FF&\b1}looking{\c&HFFFFFF&\b0} {\k12}at.
+Dialogue: 0,0:00:21.26,0:00:23.19,Default,,0,0,0,,{\k36}So, {\k20}{\c&H00D7FF&\b1}Carrie,{\c&HFFFFFF&\b0} {\k20}{\c&H00D7FF&\b1}looking{\c&HFFFFFF&\b0} {\k20}at {\k20}space {\k24}from
+Dialogue: 0,0:00:23.22,0:00:24.71,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}space{\c&HFFFFFF&\b0} {\k54}is {\k26}{\c&H00D7FF&\b1}truly{\c&HFFFFFF&\b0} {\k14}the {\k12}way {\k10}to
+Dialogue: 0,0:00:24.74,0:00:24.86,Default,,0,0,0,,{\k12}{\c&H00D7FF&\b1}go.{\c&HFFFFFF&\b0}

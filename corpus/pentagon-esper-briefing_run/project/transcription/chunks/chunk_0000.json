@@ -1,0 +1,5305 @@
+{
+  "index": 0,
+  "start": 0.0,
+  "end": 300.0,
+  "decode_start": 0.0,
+  "status": "ok",
+  "language": "en",
+  "segments": [
+    {
+      "start": 6.67,
+      "end": 7.97,
+      "text": "Well, good afternoon everyone.",
+      "words": [
+        {
+          "text": " Well,",
+          "start": 6.67,
+          "end": 7.17,
+          "confidence": 0.622982919216156
+        },
+        {
+          "text": " good",
+          "start": 7.17,
+          "end": 7.33,
+          "confidence": 0.9939953684806824
+        },
+        {
+          "text": " afternoon",
+          "start": 7.33,
+          "end": 7.65,
+          "confidence": 0.9956948757171631
+        },
+        {
+          "text": " everyone.",
+          "start": 7.65,
+          "end": 7.97,
+          "confidence": 0.6223107576370239
+        }
+      ]
+    },
+    {
+      "start": 9.45,
+      "end": 14.99,
+      "text": "As President Trump announced yesterday, United States Joint Special Operations Forces",
+      "words": [
+        {
+          "text": " As",
+          "start": 9.45,
+          "end": 10.19,
+          "confidence": 0.9889610409736633
+        },
+        {
+          "text": " President",
+          "start": 10.19,
+          "end": 10.57,
+          "confidence": 0.9476616382598877
+        },
+        {
+          "text": " Trump",
+          "start": 10.57,
+          "end": 10.87,
+          "confidence": 0.9955161213874817
+        },
+        {
+          "text": " announced",
+          "start": 10.87,
+          "end": 11.35,
+          "confidence": 0.9969028830528259
+        },
+        {
+          "text": " yesterday,",
+          "start": 11.35,
+          "end": 11.85,
+          "confidence": 0.9923774003982544
+        },
+        {
+          "text": " United",
+          "start": 12.37,
+          "end": 12.45,
+          "confidence": 0.869902491569519
+        },
+        {
+          "text": " States",
+          "start": 12.45,
+          "end": 12.87,
+          "confidence": 0.9929376244544983
+        },
+        {
+          "text": " Joint",
+          "start": 12.87,
+          "end": 13.35,
+          "confidence": 0.9390947818756104
+        },
+        {
+          "text": " Special",
+          "start": 13.35,
+          "end": 13.83,
+          "confidence": 0.9972155094146729
+        },
+        {
+          "text": " Operations",
+          "start": 13.83,
+          "end": 14.43,
+          "confidence": 0.9924582242965698
+        },
+        {
+          "text": " Forces",
+          "start": 14.43,
+          "end": 14.99,
+          "confidence": 0.9455936551094055
+        }
+      ]
+    },
+    {
+      "start": 14.99,
+      "end": 18.45,
+      "text": "conducted a successful raid on Saturday night",
+      "words": [
+        {
+          "text": " conducted",
+          "start": 14.99,
+          "end": 15.81,
+          "confidence": 0.9592341184616089
+        },
+        {
+          "text": " a",
+          "start": 15.81,
+          "end": 16.03,
+          "confidence": 0.9980353713035583
+        },
+        {
+          "text": " successful",
+          "start": 16.03,
+          "end": 16.59,
+          "confidence": 0.9928261041641235
+        },
+        {
+          "text": " raid",
+          "start": 16.59,
+          "end": 17.43,
+          "confidence": 0.99004727602005
+        },
+        {
+          "text": " on",
+          "start": 17.43,
+          "end": 17.67,
+          "confidence": 0.9977008700370789
+        },
+        {
+          "text": " Saturday",
+          "start": 17.67,
+          "end": 17.99,
+          "confidence": 0.9983071088790894
+        },
+        {
+          "text": " night",
+          "start": 17.99,
+          "end": 18.45,
+          "confidence": 0.9717236161231995
+        }
+      ]
+    },
+    {
+      "start": 18.45,
+      "end": 24.45,
+      "text": "resulting in the death of Abu Bakr al-Baghdadi, the founder and leader of ISIS.",
+      "words": [
+        {
+          "text": " resulting",
+          "start": 18.45,
+          "end": 19.07,
+          "confidence": 0.3378129303455353
+        },
+        {
+          "text": " in",
+          "start": 19.07,
+          "end": 19.55,
+          "confidence": 0.9973959922790527
+        },
+        {
+          "text": " the",
+          "start": 19.55,
+          "end": 19.65,
+          "confidence": 0.9993308782577515
+        },
+        {
+          "text": " death",
+          "start": 19.65,
+          "end": 19.97,
+          "confidence": 0.9979793429374695
+        },
+        {
+          "text": " of",
+          "start": 19.97,
+          "end": 20.27,
+          "confidence": 0.9979457259178162
+        },
+        {
+          "text": " Abu",
+          "start": 20.27,
+          "end": 20.75,
+          "confidence": 0.9505808353424072
+        },
+        {
+          "text": " Bakr",
+          "start": 20.75,
+          "end": 21.35,
+          "confidence": 0.8522675633430481
+        },
+        {
+          "text": " al",
+          "start": 21.35,
+          "end": 21.77,
+          "confidence": 0.8229826092720032
+        },
+        {
+          "text": "-Baghdadi,",
+          "start": 21.77,
+          "end": 22.35,
+          "confidence": 0.9780742883682251
+        },
+        {
+          "text": " the",
+          "start": 23.01,
+          "end": 23.15,
+          "confidence": 0.9939963817596436
+        },
+        {
+          "text": " founder",
+          "start": 23.15,
+          "end": 23.43,
+          "confidence": 0.9555886387825012
+        },
+        {
+          "text": " and",
+          "start": 23.43,
+          "end": 23.73,
+          "confidence": 0.9972180128097534
+        },
+        {
+          "text": " leader",
+          "start": 23.73,
+          "end": 23.93,
+          "confidence": 0.9956272840499878
+        },
+        {
+          "text": " of",
+          "start": 23.93,
+          "end": 24.21,
+          "confidence": 0.9993430972099304
+        },
+        {
+          "text": " ISIS.",
+          "start": 24.21,
+          "end": 24.45,
+          "confidence": 0.9841229319572449
+        }
+      ]
+    },
+    {
+      "start": 25.23,
+      "end": 28.17,
+      "text": "This operation was the culmination of a multi-year",
+      "words": [
+        {
+          "text": " This",
+          "start": 25.23,
+          "end": 25.65,
+          "confidence": 0.996345579624176
+        },
+        {
+          "text": " operation",
+          "start": 25.65,
+          "end": 26.07,
+          "confidence": 0.9976518750190735
+        },
+        {
+          "text": " was",
+          "start": 26.07,
+          "end": 26.33,
+          "confidence": 0.9990465044975281
+        },
+        {
+          "text": " the",
+          "start": 26.33,
+          "end": 26.47,
+          "confidence": 0.9918803572654724
+        },
+        {
+          "text": " culmination",
+          "start": 26.47,
+          "end": 27.03,
+          "confidence": 0.844048410654068
+        },
+        {
+          "text": " of",
+          "start": 27.03,
+          "end": 27.39,
+          "confidence": 0.9989118576049805
+        },
+        {
+          "text": " a",
+          "start": 27.39,
+          "end": 27.47,
+          "confidence": 0.9962943196296692
+        },
+        {
+          "text": " multi",
+          "start": 27.47,
+          "end": 27.79,
+          "confidence": 0.985739529132843
+        },
+        {
+          "text": "-year",
+          "start": 27.79,
+          "end": 28.17,
+          "confidence": 0.8941545486450195
+        }
+      ]
+    },
+    {
+      "start": 28.87,
+      "end": 31.91,
+      "text": "interagency effort to find him and then capture or kill him.",
+      "words": [
+        {
+          "text": " interagency",
+          "start": 28.87,
+          "end": 29.29,
+          "confidence": 0.8891679048538208
+        },
+        {
+          "text": " effort",
+          "start": 29.29,
+          "end": 29.65,
+          "confidence": 0.9960426092147827
+        },
+        {
+          "text": " to",
+          "start": 29.65,
+          "end": 29.81,
+          "confidence": 0.9956251978874207
+        },
+        {
+          "text": " find",
+          "start": 29.81,
+          "end": 30.07,
+          "confidence": 0.9970285296440125
+        },
+        {
+          "text": " him",
+          "start": 30.07,
+          "end": 30.29,
+          "confidence": 0.993718147277832
+        },
+        {
+          "text": " and",
+          "start": 30.29,
+          "end": 30.69,
+          "confidence": 0.8364022970199585
+        },
+        {
+          "text": " then",
+          "start": 30.69,
+          "end": 30.83,
+          "confidence": 0.9939817786216736
+        },
+        {
+          "text": " capture",
+          "start": 30.83,
+          "end": 31.13,
+          "confidence": 0.9964019060134888
+        },
+        {
+          "text": " or",
+          "start": 31.13,
+          "end": 31.45,
+          "confidence": 0.9805758595466614
+        },
+        {
+          "text": " kill",
+          "start": 31.45,
+          "end": 31.71,
+          "confidence": 0.9976775050163269
+        },
+        {
+          "text": " him.",
+          "start": 31.71,
+          "end": 31.91,
+          "confidence": 0.9989405274391174
+        }
+      ]
+    },
+    {
+      "start": 32.91,
+      "end": 38.55,
+      "text": "Baghdadi and the thugs who follow him were responsible for some of the most brutal atrocities of our time.",
+      "words": [
+        {
+          "text": " Baghdadi",
+          "start": 32.91,
+          "end": 33.47,
+          "confidence": 0.7038045972585678
+        },
+        {
+          "text": " and",
+          "start": 33.47,
+          "end": 33.69,
+          "confidence": 0.9480232000350952
+        },
+        {
+          "text": " the",
+          "start": 33.69,
+          "end": 33.81,
+          "confidence": 0.9770448207855225
+        },
+        {
+          "text": " thugs",
+          "start": 33.81,
+          "end": 34.09,
+          "confidence": 0.9693703651428223
+        },
+        {
+          "text": " who",
+          "start": 34.09,
+          "end": 34.21,
+          "confidence": 0.9735081791877747
+        },
+        {
+          "text": " follow",
+          "start": 34.21,
+          "end": 34.47,
+          "confidence": 0.9771225452423096
+        },
+        {
+          "text": " him",
+          "start": 34.47,
+          "end": 34.65,
+          "confidence": 0.9946696162223816
+        },
+        {
+          "text": " were",
+          "start": 34.65,
+          "end": 34.77,
+          "confidence": 0.8986191749572754
+        },
+        {
+          "text": " responsible",
+          "start": 34.77,
+          "end": 35.27,
+          "confidence": 0.9988508224487305
+        },
+        {
+          "text": " for",
+          "start": 35.27,
+          "end": 35.77,
+          "confidence": 0.9909740090370178
+        },
+        {
+          "text": " some",
+          "start": 35.77,
+          "end": 35.95,
+          "confidence": 0.984032928943634
+        },
+        {
+          "text": " of",
+          "start": 35.95,
+          "end": 36.07,
+          "confidence": 0.9879213571548462
+        },
+        {
+          "text": " the",
+          "start": 36.07,
+          "end": 36.09,
+          "confidence": 0.9976206421852112
+        },
+        {
+          "text": " most",
+          "start": 36.09,
+          "end": 36.21,
+          "confidence": 0.9880500435829163
+        },
+        {
+          "text": " brutal",
+          "start": 36.21,
+          "end": 36.57,
+          "confidence": 0.9986172914505005
+        },
+        {
+          "text": " atrocities",
+          "start": 36.57,
+          "end": 37.45,
+          "confidence": 0.9978941679000854
+        },
+        {
+          "text": " of",
+          "start": 37.45,
+          "end": 38.09,
+          "confidence": 0.9933725595474243
+        },
+        {
+          "text": " our",
+          "start": 38.09,
+          "end": 38.23,
+          "confidence": 0.9933537244796753
+        },
+        {
+          "text": " time.",
+          "start": 38.23,
+          "end": 38.55,
+          "confidence": 0.9982455968856812
+        }
+      ]
+    },
+    {
+      "start": 39.13,
+      "end": 44.93,
+      "text": "His death marks a devastating blow for the remnants of ISIS, who are now deprived of their inspirational leader,",
+      "words": [
+        {
+          "text": " His",
+          "start": 39.13,
+          "end": 39.57,
+          "confidence": 0.9911744594573975
+        },
+        {
+          "text": " death",
+          "start": 39.57,
+          "end": 39.81,
+          "confidence": 0.9994331002235413
+        },
+        {
+          "text": " marks",
+          "start": 39.81,
+          "end": 40.05,
+          "confidence": 0.9964800477027893
+        },
+        {
+          "text": " a",
+          "start": 40.05,
+          "end": 40.23,
+          "confidence": 0.9977229237556458
+        },
+        {
+          "text": " devastating",
+          "start": 40.23,
+          "end": 40.59,
+          "confidence": 0.9986693859100342
+        },
+        {
+          "text": " blow",
+          "start": 40.59,
+          "end": 41.01,
+          "confidence": 0.9993951320648193
+        },
+        {
+          "text": " for",
+          "start": 41.01,
+          "end": 41.23,
+          "confidence": 0.9904572367668152
+        },
+        {
+          "text": " the",
+          "start": 41.23,
+          "end": 41.33,
+          "confidence": 0.9955623149871826
+        },
+        {
+          "text": " remnants",
+          "start": 41.33,
+          "end": 41.55,
+          "confidence": 0.9970109462738037
+        },
+        {
+          "text": " of",
+          "start": 41.55,
+          "end": 41.83,
+          "confidence": 0.9992202520370483
+        },
+        {
+          "text": " ISIS,",
+          "start": 41.83,
+          "end": 42.13,
+          "confidence": 0.97798091173172
+        },
+        {
+          "text": " who",
+          "start": 42.69,
+          "end": 42.83,
+          "confidence": 0.9951242804527283
+        },
+        {
+          "text": " are",
+          "start": 42.83,
+          "end": 42.93,
+          "confidence": 0.9929913282394409
+        },
+        {
+          "text": " now",
+          "start": 42.93,
+          "end": 43.09,
+          "confidence": 0.9981669187545776
+        },
+        {
+          "text": " deprived",
+          "start": 43.09,
+          "end": 43.49,
+          "confidence": 0.9972516894340515
+        },
+        {
+          "text": " of",
+          "start": 43.49,
+          "end": 43.95,
+          "confidence": 0.9979508519172668
+        },
+        {
+          "text": " their",
+          "start": 43.95,
+          "end": 44.05,
+          "confidence": 0.9949158430099487
+        },
+        {
+          "text": " inspirational",
+          "start": 44.05,
+          "end": 44.57,
+          "confidence": 0.9935818910598755
+        },
+        {
+          "text": " leader,",
+          "start": 44.57,
+          "end": 44.93,
+          "confidence": 0.9947269558906555
+        }
+      ]
+    },
+    {
+      "start": 45.45,
+      "end": 48.59,
+      "text": "following the destruction of their physical caliphate earlier this year.",
+      "words": [
+        {
+          "text": " following",
+          "start": 45.45,
+          "end": 45.73,
+          "confidence": 0.9735971093177795
+        },
+        {
+          "text": " the",
+          "start": 45.73,
+          "end": 45.91,
+          "confidence": 0.9962930083274841
+        },
+        {
+          "text": " destruction",
+          "start": 45.91,
+          "end": 46.27,
+          "confidence": 0.9970263838768005
+        },
+        {
+          "text": " of",
+          "start": 46.27,
+          "end": 46.57,
+          "confidence": 0.9983225464820862
+        },
+        {
+          "text": " their",
+          "start": 46.57,
+          "end": 46.65,
+          "confidence": 0.9923669695854187
+        },
+        {
+          "text": " physical",
+          "start": 46.65,
+          "end": 46.95,
+          "confidence": 0.9962249994277954
+        },
+        {
+          "text": " caliphate",
+          "start": 46.95,
+          "end": 47.57,
+          "confidence": 0.9840632081031799
+        },
+        {
+          "text": " earlier",
+          "start": 47.57,
+          "end": 47.89,
+          "confidence": 0.9936510920524597
+        },
+        {
+          "text": " this",
+          "start": 47.89,
+          "end": 48.39,
+          "confidence": 0.9938468337059021
+        },
+        {
+          "text": " year.",
+          "start": 48.39,
+          "end": 48.59,
+          "confidence": 0.9991432428359985
+        }
+      ]
+    },
+    {
+      "start": 49.71,
+      "end": 56.45,
+      "text": "I want to thank our brave service members who took part in this daring raid, along with our interagency partners who supported the mission.",
+      "words": [
+        {
+          "text": " I",
+          "start": 49.71,
+          "end": 50.27,
+          "confidence": 0.9965672492980957
+        },
+        {
+          "text": " want",
+          "start": 50.27,
+          "end": 50.39,
+          "confidence": 0.9931890964508057
+        },
+        {
+          "text": " to",
+          "start": 50.39,
+          "end": 50.53,
+          "confidence": 0.9970110654830933
+        },
+        {
+          "text": " thank",
+          "start": 50.53,
+          "end": 50.73,
+          "confidence": 0.9976469874382019
+        },
+        {
+          "text": " our",
+          "start": 50.73,
+          "end": 50.93,
+          "confidence": 0.9963971972465515
+        },
+        {
+          "text": " brave",
+          "start": 50.93,
+          "end": 51.21,
+          "confidence": 0.9773364663124084
+        },
+        {
+          "text": " service",
+          "start": 51.21,
+          "end": 51.63,
+          "confidence": 0.8983772993087769
+        },
+        {
+          "text": " members",
+          "start": 51.63,
+          "end": 51.97,
+          "confidence": 0.9875631332397461
+        },
+        {
+          "text": " who",
+          "start": 51.97,
+          "end": 52.17,
+          "confidence": 0.9751881957054138
+        },
+        {
+          "text": " took",
+          "start": 52.17,
+          "end": 52.35,
+          "confidence": 0.997870683670044
+        },
+        {
+          "text": " part",
+          "start": 52.35,
+          "end": 52.63,
+          "confidence": 0.998997151851654
+        },
+        {
+          "text": " in",
+          "start": 52.63,
+          "end": 52.79,
+          "confidence": 0.999204695224762
+        },
+        {
+          "text": " this",
+          "start": 52.79,
+          "end": 52.93,
+          "confidence": 0.9911980032920837
+        },
+        {
+          "text": " daring",
+          "start": 52.93,
+          "end": 53.19,
+          "confidence": 0.9769647121429443
+        },
+        {
+          "text": " raid,",
+          "start": 53.19,
+          "end": 53.53,
+          "confidence": 0.9977436065673828
+        },
+        {
+          "text": " along",
+          "start": 53.87,
+          "end": 54.17,
+          "confidence": 0.99713134765625
+        },
+        {
+          "text": " with",
+          "start": 54.17,
+          "end": 54.37,
+          "confidence": 0.9993895292282104
+        },
+        {
+          "text": " our",
+          "start": 54.37,
+          "end": 54.47,
+          "confidence": 0.9953041076660156
+        },
+        {
+          "text": " interagency",
+          "start": 54.47,
+          "end": 54.93,
+          "confidence": 0.8985638419787089
+        },
+        {
+          "text": " partners",
+          "start": 54.93,
+          "end": 55.31,
+          "confidence": 0.9988927245140076
+        },
+        {
+          "text": " who",
+          "start": 55.31,
+          "end": 55.67,
+          "confidence": 0.9057148694992065
+        },
+        {
+          "text": " supported",
+          "start": 55.67,
+          "end": 56.05,
+          "confidence": 0.982106626033783
+        },
+        {
+          "text": " the",
+          "start": 56.05,
+          "end": 56.23,
+          "confidence": 0.9974370002746582
+        },
+        {
+          "text": " mission.",
+          "start": 56.23,
+          "end": 56.45,
+          "confidence": 0.9956954717636108
+        }
+      ]
+    },
+    {
+      "start": 56.45,
+      "end": 62.25,
+      "text": "There is no guarantee of success in an operation with this level of difficulty, and President",
+      "words": [
+        {
+          "text": " There",
+          "start": 56.45,
+          "end": 57.27,
+          "confidence": 0.27131131291389465
+        },
+        {
+          "text": " is",
+          "start": 57.27,
+          "end": 57.61,
+          "confidence": 0.955929696559906
+        },
+        {
+          "text": " no",
+          "start": 57.61,
+          "end": 57.83,
+          "confidence": 0.9940301179885864
+        },
+        {
+          "text": " guarantee",
+          "start": 57.83,
+          "end": 58.15,
+          "confidence": 0.9957889914512634
+        },
+        {
+          "text": " of",
+          "start": 58.15,
+          "end": 58.45,
+          "confidence": 0.9987276196479797
+        },
+        {
+          "text": " success",
+          "start": 58.45,
+          "end": 58.83,
+          "confidence": 0.9951431751251221
+        },
+        {
+          "text": " in",
+          "start": 58.83,
+          "end": 59.43,
+          "confidence": 0.9903243780136108
+        },
+        {
+          "text": " an",
+          "start": 59.43,
+          "end": 59.53,
+          "confidence": 0.9905624985694885
+        },
+        {
+          "text": " operation",
+          "start": 59.53,
+          "end": 59.91,
+          "confidence": 0.9979345798492432
+        },
+        {
+          "text": " with",
+          "start": 59.91,
+          "end": 60.21,
+          "confidence": 0.9960458874702454
+        },
+        {
+          "text": " this",
+          "start": 60.21,
+          "end": 60.37,
+          "confidence": 0.9985045194625854
+        },
+        {
+          "text": " level",
+          "start": 60.37,
+          "end": 60.61,
+          "confidence": 0.9975577592849731
+        },
+        {
+          "text": " of",
+          "start": 60.61,
+          "end": 60.75,
+          "confidence": 0.9991071820259094
+        },
+        {
+          "text": " difficulty,",
+          "start": 60.75,
+          "end": 61.13,
+          "confidence": 0.9953645467758179
+        },
+        {
+          "text": " and",
+          "start": 61.77,
+          "end": 61.97,
+          "confidence": 0.996663510799408
+        },
+        {
+          "text": " President",
+          "start": 61.97,
+          "end": 62.25,
+          "confidence": 0.9968210458755493
+        }
+      ]
+    },
+    {
+      "start": 62.25,
+      "end": 67.71,
+      "text": "Trump knew this when he made the bold decision to order the raid confident in the expertise",
+      "words": [
+        {
+          "text": " Trump",
+          "start": 62.25,
+          "end": 62.53,
+          "confidence": 0.9987565279006958
+        },
+        {
+          "text": " knew",
+          "start": 62.53,
+          "end": 62.75,
+          "confidence": 0.9979202151298523
+        },
+        {
+          "text": " this",
+          "start": 62.75,
+          "end": 62.99,
+          "confidence": 0.9856436252593994
+        },
+        {
+          "text": " when",
+          "start": 62.99,
+          "end": 63.15,
+          "confidence": 0.9901129007339478
+        },
+        {
+          "text": " he",
+          "start": 63.15,
+          "end": 63.23,
+          "confidence": 0.9984979629516602
+        },
+        {
+          "text": " made",
+          "start": 63.23,
+          "end": 63.39,
+          "confidence": 0.9985803365707397
+        },
+        {
+          "text": " the",
+          "start": 63.39,
+          "end": 63.53,
+          "confidence": 0.9931380152702332
+        },
+        {
+          "text": " bold",
+          "start": 63.53,
+          "end": 63.79,
+          "confidence": 0.9974195957183838
+        },
+        {
+          "text": " decision",
+          "start": 63.79,
+          "end": 64.21,
+          "confidence": 0.9992582201957703
+        },
+        {
+          "text": " to",
+          "start": 64.21,
+          "end": 64.89,
+          "confidence": 0.9962220191955566
+        },
+        {
+          "text": " order",
+          "start": 64.89,
+          "end": 65.07,
+          "confidence": 0.9973002076148987
+        },
+        {
+          "text": " the",
+          "start": 65.07,
+          "end": 65.23,
+          "confidence": 0.9982587695121765
+        },
+        {
+          "text": " raid",
+          "start": 65.23,
+          "end": 65.51,
+          "confidence": 0.9528425931930542
+        },
+        {
+          "text": " confident",
+          "start": 65.51,
+          "end": 66.39,
+          "confidence": 0.45810118317604065
+        },
+        {
+          "text": " in",
+          "start": 66.39,
+          "end": 67.11,
+          "confidence": 0.9946750402450562
+        },
+        {
+          "text": " the",
+          "start": 67.11,
+          "end": 67.21,
+          "confidence": 0.9972907900810242
+        },
+        {
+          "text": " expertise",
+          "start": 67.21,
+          "end": 67.71,
+          "confidence": 0.9988216757774353
+        }
+      ]
+    },
+    {
+      "start": 67.71,
+      "end": 68.45,
+      "text": "of our forces.",
+      "words": [
+        {
+          "text": " of",
+          "start": 67.71,
+          "end": 67.99,
+          "confidence": 0.9990301132202148
+        },
+        {
+          "text": " our",
+          "start": 67.99,
+          "end": 68.11,
+          "confidence": 0.9983558058738708
+        },
+        {
+          "text": " forces.",
+          "start": 68.11,
+          "end": 68.45,
+          "confidence": 0.9962345957756042
+        }
+      ]
+    },
+    {
+      "start": 69.69,
+      "end": 74.15,
+      "text": "Our service members conducted themselves with incredible skill and professionalism, and",
+      "words": [
+        {
+          "text": " Our",
+          "start": 69.69,
+          "end": 70.07,
+          "confidence": 0.9977836012840271
+        },
+        {
+          "text": " service",
+          "start": 70.07,
+          "end": 70.39,
+          "confidence": 0.9049844741821289
+        },
+        {
+          "text": " members",
+          "start": 70.39,
+          "end": 70.69,
+          "confidence": 0.9957799911499023
+        },
+        {
+          "text": " conducted",
+          "start": 70.69,
+          "end": 71.13,
+          "confidence": 0.9962891340255737
+        },
+        {
+          "text": " themselves",
+          "start": 71.13,
+          "end": 71.45,
+          "confidence": 0.996773898601532
+        },
+        {
+          "text": " with",
+          "start": 71.45,
+          "end": 71.81,
+          "confidence": 0.9987698197364807
+        },
+        {
+          "text": " incredible",
+          "start": 71.81,
+          "end": 72.17,
+          "confidence": 0.998936116695404
+        },
+        {
+          "text": " skill",
+          "start": 72.17,
+          "end": 72.61,
+          "confidence": 0.9966817498207092
+        },
+        {
+          "text": " and",
+          "start": 72.61,
+          "end": 72.79,
+          "confidence": 0.9983822107315063
+        },
+        {
+          "text": " professionalism,",
+          "start": 72.79,
+          "end": 73.51,
+          "confidence": 0.9993131756782532
+        },
+        {
+          "text": " and",
+          "start": 73.79,
+          "end": 74.15,
+          "confidence": 0.9995989203453064
+        }
+      ]
+    },
+    {
+      "start": 74.15,
+      "end": 76.99,
+      "text": "they executed the raid in all of its facets brilliantly.",
+      "words": [
+        {
+          "text": " they",
+          "start": 74.15,
+          "end": 74.23,
+          "confidence": 0.998136043548584
+        },
+        {
+          "text": " executed",
+          "start": 74.23,
+          "end": 74.61,
+          "confidence": 0.869935929775238
+        },
+        {
+          "text": " the",
+          "start": 74.61,
+          "end": 74.89,
+          "confidence": 0.9948257207870483
+        },
+        {
+          "text": " raid",
+          "start": 74.89,
+          "end": 75.09,
+          "confidence": 0.9984477758407593
+        },
+        {
+          "text": " in",
+          "start": 75.09,
+          "end": 75.27,
+          "confidence": 0.996032178401947
+        },
+        {
+          "text": " all",
+          "start": 75.27,
+          "end": 75.49,
+          "confidence": 0.9966499209403992
+        },
+        {
+          "text": " of",
+          "start": 75.49,
+          "end": 75.59,
+          "confidence": 0.9242821335792542
+        },
+        {
+          "text": " its",
+          "start": 75.59,
+          "end": 75.73,
+          "confidence": 0.9917500615119934
+        },
+        {
+          "text": " facets",
+          "start": 75.73,
+          "end": 76.09,
+          "confidence": 0.9970171451568604
+        },
+        {
+          "text": " brilliantly.",
+          "start": 76.09,
+          "end": 76.99,
+          "confidence": 0.9902543127536774
+        }
+      ]
+    },
+    {
+      "start": 77.79,
+      "end": 81.97,
+      "text": "Not a single United States service member was killed in this high-risk operation.",
+      "words": [
+        {
+          "text": " Not",
+          "start": 77.79,
+          "end": 78.01,
+          "confidence": 0.9927846193313599
+        },
+        {
+          "text": " a",
+          "start": 78.01,
+          "end": 78.13,
+          "confidence": 0.9991378784179688
+        },
+        {
+          "text": " single",
+          "start": 78.13,
+          "end": 78.41,
+          "confidence": 0.9999041557312012
+        },
+        {
+          "text": " United",
+          "start": 78.41,
+          "end": 78.67,
+          "confidence": 0.9802113771438599
+        },
+        {
+          "text": " States",
+          "start": 78.67,
+          "end": 78.99,
+          "confidence": 0.9878410696983337
+        },
+        {
+          "text": " service",
+          "start": 78.99,
+          "end": 79.27,
+          "confidence": 0.8468977808952332
+        },
+        {
+          "text": " member",
+          "start": 79.27,
+          "end": 79.59,
+          "confidence": 0.9968281388282776
+        },
+        {
+          "text": " was",
+          "start": 79.59,
+          "end": 79.91,
+          "confidence": 0.9989714622497559
+        },
+        {
+          "text": " killed",
+          "start": 79.91,
+          "end": 80.25,
+          "confidence": 0.998855471611023
+        },
+        {
+          "text": " in",
+          "start": 80.25,
+          "end": 80.87,
+          "confidence": 0.9985864162445068
+        },
+        {
+          "text": " this",
+          "start": 80.87,
+          "end": 81.03,
+          "confidence": 0.9943769574165344
+        },
+        {
+          "text": " high",
+          "start": 81.03,
+          "end": 81.25,
+          "confidence": 0.9970700740814209
+        },
+        {
+          "text": "-risk",
+          "start": 81.25,
+          "end": 81.41,
+          "confidence": 0.9447947442531586
+        },
+        {
+          "text": " operation.",
+          "start": 81.41,
+          "end": 81.97,
+          "confidence": 0.998683750629425
+        }
+      ]
+    },
+    {
+      "start": 82.95,
+      "end": 87.29,
+      "text": "Despite Baghdadi's death, the security situation in Syria remains complex.",
+      "words": [
+        {
+          "text": " Despite",
+          "start": 82.95,
+          "end": 83.55,
+          "confidence": 0.12468161433935165
+        },
+        {
+          "text": " Baghdadi's",
+          "start": 83.55,
+          "end": 84.15,
+          "confidence": 0.9418680220842361
+        },
+        {
+          "text": " death,",
+          "start": 84.15,
+          "end": 84.39,
+          "confidence": 0.9932376146316528
+        },
+        {
+          "text": " the",
+          "start": 84.75,
+          "end": 84.81,
+          "confidence": 0.9964495897293091
+        },
+        {
+          "text": " security",
+          "start": 84.81,
+          "end": 85.13,
+          "confidence": 0.9983898401260376
+        },
+        {
+          "text": " situation",
+          "start": 85.13,
+          "end": 85.75,
+          "confidence": 0.9988332390785217
+        },
+        {
+          "text": " in",
+          "start": 85.75,
+          "end": 85.97,
+          "confidence": 0.9923310279846191
+        },
+        {
+          "text": " Syria",
+          "start": 85.97,
+          "end": 86.29,
+          "confidence": 0.9976134300231934
+        },
+        {
+          "text": " remains",
+          "start": 86.29,
+          "end": 86.77,
+          "confidence": 0.9958975315093994
+        },
+        {
+          "text": " complex.",
+          "start": 86.77,
+          "end": 87.29,
+          "confidence": 0.9990743398666382
+        }
+      ]
+    },
+    {
+      "start": 88.15,
+      "end": 93.13,
+      "text": "Multiple state and non-state actors continue to vie for control of territory and resources",
+      "words": [
+        {
+          "text": " Multiple",
+          "start": 88.15,
+          "end": 88.57,
+          "confidence": 0.9754042029380798
+        },
+        {
+          "text": " state",
+          "start": 88.57,
+          "end": 88.97,
+          "confidence": 0.8722081184387207
+        },
+        {
+          "text": " and",
+          "start": 88.97,
+          "end": 89.23,
+          "confidence": 0.9758642315864563
+        },
+        {
+          "text": " non",
+          "start": 89.23,
+          "end": 89.39,
+          "confidence": 0.9961511492729187
+        },
+        {
+          "text": "-state",
+          "start": 89.39,
+          "end": 89.63,
+          "confidence": 0.9791911542415619
+        },
+        {
+          "text": " actors",
+          "start": 89.63,
+          "end": 89.97,
+          "confidence": 0.9963579773902893
+        },
+        {
+          "text": " continue",
+          "start": 89.97,
+          "end": 90.47,
+          "confidence": 0.9973913431167603
+        },
+        {
+          "text": " to",
+          "start": 90.47,
+          "end": 91.05,
+          "confidence": 0.9826420545578003
+        },
+        {
+          "text": " vie",
+          "start": 91.05,
+          "end": 91.23,
+          "confidence": 0.49197426438331604
+        },
+        {
+          "text": " for",
+          "start": 91.23,
+          "end": 91.43,
+          "confidence": 0.9972639083862305
+        },
+        {
+          "text": " control",
+          "start": 91.43,
+          "end": 91.75,
+          "confidence": 0.993720531463623
+        },
+        {
+          "text": " of",
+          "start": 91.75,
+          "end": 91.91,
+          "confidence": 0.9921699166297913
+        },
+        {
+          "text": " territory",
+          "start": 91.91,
+          "end": 92.21,
+          "confidence": 0.988890528678894
+        },
+        {
+          "text": " and",
+          "start": 92.21,
+          "end": 92.67,
+          "confidence": 0.9974743723869324
+        },
+        {
+          "text": " resources",
+          "start": 92.67,
+          "end": 93.13,
+          "confidence": 0.9950880408287048
+        }
+      ]
+    },
+    {
+      "start": 93.13,
+      "end": 94.13,
+      "text": "within the country.",
+      "words": [
+        {
+          "text": " within",
+          "start": 93.13,
+          "end": 93.69,
+          "confidence": 0.9789897799491882
+        },
+        {
+          "text": " the",
+          "start": 93.69,
+          "end": 93.85,
+          "confidence": 0.9941179752349854
+        },
+        {
+          "text": " country.",
+          "start": 93.85,
+          "end": 94.13,
+          "confidence": 0.9987857937812805
+        }
+      ]
+    },
+    {
+      "start": 95.29,
+      "end": 99.03,
+      "text": "As we have learned from our recent history in the Middle East, it is very easy to get",
+      "words": [
+        {
+          "text": " As",
+          "start": 95.29,
+          "end": 95.71,
+          "confidence": 0.9934614896774292
+        },
+        {
+          "text": " we",
+          "start": 95.71,
+          "end": 95.83,
+          "confidence": 0.9989405274391174
+        },
+        {
+          "text": " have",
+          "start": 95.83,
+          "end": 95.93,
+          "confidence": 0.976285457611084
+        },
+        {
+          "text": " learned",
+          "start": 95.93,
+          "end": 96.11,
+          "confidence": 0.9887431859970093
+        },
+        {
+          "text": " from",
+          "start": 96.11,
+          "end": 96.27,
+          "confidence": 0.9946630001068115
+        },
+        {
+          "text": " our",
+          "start": 96.27,
+          "end": 96.39,
+          "confidence": 0.9973746538162231
+        },
+        {
+          "text": " recent",
+          "start": 96.39,
+          "end": 96.63,
+          "confidence": 0.997722327709198
+        },
+        {
+          "text": " history",
+          "start": 96.63,
+          "end": 96.99,
+          "confidence": 0.9970537424087524
+        },
+        {
+          "text": " in",
+          "start": 96.99,
+          "end": 97.11,
+          "confidence": 0.9906983971595764
+        },
+        {
+          "text": " the",
+          "start": 97.11,
+          "end": 97.19,
+          "confidence": 0.9985489249229431
+        },
+        {
+          "text": " Middle",
+          "start": 97.19,
+          "end": 97.33,
+          "confidence": 0.9907031059265137
+        },
+        {
+          "text": " East,",
+          "start": 97.33,
+          "end": 97.67,
+          "confidence": 0.9976263642311096
+        },
+        {
+          "text": " it",
+          "start": 98.07,
+          "end": 98.11,
+          "confidence": 0.9978182315826416
+        },
+        {
+          "text": " is",
+          "start": 98.11,
+          "end": 98.23,
+          "confidence": 0.9923837780952454
+        },
+        {
+          "text": " very",
+          "start": 98.23,
+          "end": 98.45,
+          "confidence": 0.9908167123794556
+        },
+        {
+          "text": " easy",
+          "start": 98.45,
+          "end": 98.77,
+          "confidence": 0.9989988207817078
+        },
+        {
+          "text": " to",
+          "start": 98.77,
+          "end": 98.91,
+          "confidence": 0.9994199275970459
+        },
+        {
+          "text": " get",
+          "start": 98.91,
+          "end": 99.03,
+          "confidence": 0.9980738162994385
+        }
+      ]
+    },
+    {
+      "start": 99.03,
+      "end": 102.51,
+      "text": "drawn into continued conflict if our objectives are not clear.",
+      "words": [
+        {
+          "text": " drawn",
+          "start": 99.03,
+          "end": 99.35,
+          "confidence": 0.998792290687561
+        },
+        {
+          "text": " into",
+          "start": 99.35,
+          "end": 99.57,
+          "confidence": 0.9772533774375916
+        },
+        {
+          "text": " continued",
+          "start": 99.57,
+          "end": 100.01,
+          "confidence": 0.8813432455062866
+        },
+        {
+          "text": " conflict",
+          "start": 100.01,
+          "end": 100.49,
+          "confidence": 0.9977376461029053
+        },
+        {
+          "text": " if",
+          "start": 100.49,
+          "end": 101.05,
+          "confidence": 0.9256694316864014
+        },
+        {
+          "text": " our",
+          "start": 101.05,
+          "end": 101.27,
+          "confidence": 0.9989836812019348
+        },
+        {
+          "text": " objectives",
+          "start": 101.27,
+          "end": 101.71,
+          "confidence": 0.99648118019104
+        },
+        {
+          "text": " are",
+          "start": 101.71,
+          "end": 102.05,
+          "confidence": 0.9984059929847717
+        },
+        {
+          "text": " not",
+          "start": 102.05,
+          "end": 102.21,
+          "confidence": 0.9983539581298828
+        },
+        {
+          "text": " clear.",
+          "start": 102.21,
+          "end": 102.51,
+          "confidence": 0.9977691173553467
+        }
+      ]
+    },
+    {
+      "start": 103.27,
+      "end": 107.55,
+      "text": "Acting as a police force out to solve every dispute is not our mission.",
+      "words": [
+        {
+          "text": " Acting",
+          "start": 103.27,
+          "end": 103.67,
+          "confidence": 0.9901795387268066
+        },
+        {
+          "text": " as",
+          "start": 103.67,
+          "end": 104.09,
+          "confidence": 0.9982516169548035
+        },
+        {
+          "text": " a",
+          "start": 104.09,
+          "end": 104.23,
+          "confidence": 0.9970635771751404
+        },
+        {
+          "text": " police",
+          "start": 104.23,
+          "end": 104.49,
+          "confidence": 0.9955975413322449
+        },
+        {
+          "text": " force",
+          "start": 104.49,
+          "end": 104.83,
+          "confidence": 0.9996881484985352
+        },
+        {
+          "text": " out",
+          "start": 104.83,
+          "end": 105.13,
+          "confidence": 0.7932868003845215
+        },
+        {
+          "text": " to",
+          "start": 105.13,
+          "end": 105.27,
+          "confidence": 0.9857000708580017
+        },
+        {
+          "text": " solve",
+          "start": 105.27,
+          "end": 105.51,
+          "confidence": 0.9965270161628723
+        },
+        {
+          "text": " every",
+          "start": 105.51,
+          "end": 105.77,
+          "confidence": 0.9966230392456055
+        },
+        {
+          "text": " dispute",
+          "start": 105.77,
+          "end": 106.23,
+          "confidence": 0.999666690826416
+        },
+        {
+          "text": " is",
+          "start": 106.23,
+          "end": 106.77,
+          "confidence": 0.991234540939331
+        },
+        {
+          "text": " not",
+          "start": 106.77,
+          "end": 106.99,
+          "confidence": 0.9992265701293945
+        },
+        {
+          "text": " our",
+          "start": 106.99,
+          "end": 107.27,
+          "confidence": 0.9990432858467102
+        },
+        {
+          "text": " mission.",
+          "start": 107.27,
+          "end": 107.55,
+          "confidence": 0.9974621534347534
+        }
+      ]
+    },
+    {
+      "start": 108.19,
+      "end": 113.01,
+      "text": "Our mission in Syria today remains the same as it was when we first began operations in",
+      "words": [
+        {
+          "text": " Our",
+          "start": 108.19,
+          "end": 108.79,
+          "confidence": 0.25369980931282043
+        },
+        {
+          "text": " mission",
+          "start": 108.79,
+          "end": 109.11,
+          "confidence": 0.9950975775718689
+        },
+        {
+          "text": " in",
+          "start": 109.11,
+          "end": 109.31,
+          "confidence": 0.9777688980102539
+        },
+        {
+          "text": " Syria",
+          "start": 109.31,
+          "end": 109.53,
+          "confidence": 0.9996941089630127
+        },
+        {
+          "text": " today",
+          "start": 109.53,
+          "end": 109.83,
+          "confidence": 0.8932366967201233
+        },
+        {
+          "text": " remains",
+          "start": 109.83,
+          "end": 110.27,
+          "confidence": 0.9975764155387878
+        },
+        {
+          "text": " the",
+          "start": 110.27,
+          "end": 110.55,
+          "confidence": 0.9988002777099609
+        },
+        {
+          "text": " same",
+          "start": 110.55,
+          "end": 110.87,
+          "confidence": 0.9994339346885681
+        },
+        {
+          "text": " as",
+          "start": 110.87,
+          "end": 111.15,
+          "confidence": 0.9920699000358582
+        },
+        {
+          "text": " it",
+          "start": 111.15,
+          "end": 111.25,
+          "confidence": 0.9938191771507263
+        },
+        {
+          "text": " was",
+          "start": 111.25,
+          "end": 111.43,
+          "confidence": 0.9990662932395935
+        },
+        {
+          "text": " when",
+          "start": 111.43,
+          "end": 111.59,
+          "confidence": 0.9951162338256836
+        },
+        {
+          "text": " we",
+          "start": 111.59,
+          "end": 111.73,
+          "confidence": 0.998177170753479
+        },
+        {
+          "text": " first",
+          "start": 111.73,
+          "end": 111.87,
+          "confidence": 0.9868484139442444
+        },
+        {
+          "text": " began",
+          "start": 111.87,
+          "end": 112.19,
+          "confidence": 0.9969979524612427
+        },
+        {
+          "text": " operations",
+          "start": 112.19,
+          "end": 112.61,
+          "confidence": 0.9878942370414734
+        },
+        {
+          "text": " in",
+          "start": 112.61,
+          "end": 113.01,
+          "confidence": 0.9976102113723755
+        }
+      ]
+    },
+    {
+      "start": 113.01,
+      "end": 116.13,
+      "text": "2014 to enable the enduring defeat of ISIS.",
+      "words": [
+        {
+          "text": " 2014",
+          "start": 113.01,
+          "end": 113.69,
+          "confidence": 0.9984062314033508
+        },
+        {
+          "text": " to",
+          "start": 113.69,
+          "end": 114.53,
+          "confidence": 0.7363266944885254
+        },
+        {
+          "text": " enable",
+          "start": 114.53,
+          "end": 114.83,
+          "confidence": 0.9979854822158813
+        },
+        {
+          "text": " the",
+          "start": 114.83,
+          "end": 115.01,
+          "confidence": 0.998769223690033
+        },
+        {
+          "text": " enduring",
+          "start": 115.01,
+          "end": 115.35,
+          "confidence": 0.9927403330802917
+        },
+        {
+          "text": " defeat",
+          "start": 115.35,
+          "end": 115.65,
+          "confidence": 0.9995651841163635
+        },
+        {
+          "text": " of",
+          "start": 115.65,
+          "end": 115.89,
+          "confidence": 0.999220609664917
+        },
+        {
+          "text": " ISIS.",
+          "start": 115.89,
+          "end": 116.13,
+          "confidence": 0.9877368211746216
+        }
+      ]
+    },
+    {
+      "start": 117.15,
+      "end": 122.01,
+      "text": "Our recent repositioning of forces within the country is intended to posture us to continue",
+      "words": [
+        {
+          "text": " Our",
+          "start": 117.15,
+          "end": 117.31,
+          "confidence": 0.9557856917381287
+        },
+        {
+          "text": " recent",
+          "start": 117.31,
+          "end": 117.61,
+          "confidence": 0.9892515540122986
+        },
+        {
+          "text": " repositioning",
+          "start": 117.61,
+          "end": 118.27,
+          "confidence": 0.9885324041048685
+        },
+        {
+          "text": " of",
+          "start": 118.27,
+          "end": 118.37,
+          "confidence": 0.9232804179191589
+        },
+        {
+          "text": " forces",
+          "start": 118.37,
+          "end": 118.65,
+          "confidence": 0.9867067933082581
+        },
+        {
+          "text": " within",
+          "start": 118.65,
+          "end": 118.97,
+          "confidence": 0.997319757938385
+        },
+        {
+          "text": " the",
+          "start": 118.97,
+          "end": 119.11,
+          "confidence": 0.920396089553833
+        },
+        {
+          "text": " country",
+          "start": 119.11,
+          "end": 119.41,
+          "confidence": 0.9990333318710327
+        },
+        {
+          "text": " is",
+          "start": 119.41,
+          "end": 119.99,
+          "confidence": 0.9976544976234436
+        },
+        {
+          "text": " intended",
+          "start": 119.99,
+          "end": 120.45,
+          "confidence": 0.9978801012039185
+        },
+        {
+          "text": " to",
+          "start": 120.45,
+          "end": 121.01,
+          "confidence": 0.9972469806671143
+        },
+        {
+          "text": " posture",
+          "start": 121.01,
+          "end": 121.31,
+          "confidence": 0.7620680332183838
+        },
+        {
+          "text": " us",
+          "start": 121.31,
+          "end": 121.53,
+          "confidence": 0.9966673254966736
+        },
+        {
+          "text": " to",
+          "start": 121.53,
+          "end": 121.65,
+          "confidence": 0.9960933327674866
+        },
+        {
+          "text": " continue",
+          "start": 121.65,
+          "end": 122.01,
+          "confidence": 0.9996199607849121
+        }
+      ]
+    },
+    {
+      "start": 122.01,
+      "end": 126.27,
+      "text": "this mission and give the President options while returning the balance back home to the",
+      "words": [
+        {
+          "text": " this",
+          "start": 122.01,
+          "end": 122.23,
+          "confidence": 0.9968171715736389
+        },
+        {
+          "text": " mission",
+          "start": 122.23,
+          "end": 122.53,
+          "confidence": 0.9987078905105591
+        },
+        {
+          "text": " and",
+          "start": 122.53,
+          "end": 122.69,
+          "confidence": 0.9908565282821655
+        },
+        {
+          "text": " give",
+          "start": 122.69,
+          "end": 122.83,
+          "confidence": 0.9946598410606384
+        },
+        {
+          "text": " the",
+          "start": 122.83,
+          "end": 122.95,
+          "confidence": 0.9956443309783936
+        },
+        {
+          "text": " President",
+          "start": 122.95,
+          "end": 123.25,
+          "confidence": 0.8278915882110596
+        },
+        {
+          "text": " options",
+          "start": 123.25,
+          "end": 123.87,
+          "confidence": 0.9981504082679749
+        },
+        {
+          "text": " while",
+          "start": 123.87,
+          "end": 124.45,
+          "confidence": 0.9138941764831543
+        },
+        {
+          "text": " returning",
+          "start": 124.45,
+          "end": 124.79,
+          "confidence": 0.9956965446472168
+        },
+        {
+          "text": " the",
+          "start": 124.79,
+          "end": 124.97,
+          "confidence": 0.9966952800750732
+        },
+        {
+          "text": " balance",
+          "start": 124.97,
+          "end": 125.31,
+          "confidence": 0.9983105659484863
+        },
+        {
+          "text": " back",
+          "start": 125.31,
+          "end": 125.77,
+          "confidence": 0.9897335171699524
+        },
+        {
+          "text": " home",
+          "start": 125.77,
+          "end": 126.05,
+          "confidence": 0.9984710812568665
+        },
+        {
+          "text": " to",
+          "start": 126.05,
+          "end": 126.19,
+          "confidence": 0.9981390237808228
+        },
+        {
+          "text": " the",
+          "start": 126.19,
+          "end": 126.27,
+          "confidence": 0.9764522910118103
+        }
+      ]
+    },
+    {
+      "start": 126.27,
+      "end": 126.77,
+      "text": "United States.",
+      "words": [
+        {
+          "text": " United",
+          "start": 126.27,
+          "end": 126.37,
+          "confidence": 0.9939759373664856
+        },
+        {
+          "text": " States.",
+          "start": 126.37,
+          "end": 126.77,
+          "confidence": 0.9985411167144775
+        }
+      ]
+    },
+    {
+      "start": 127.65,
+      "end": 132.59,
+      "text": "Those who remain will continue to execute counterterrorism operations while staying",
+      "words": [
+        {
+          "text": " Those",
+          "start": 127.65,
+          "end": 127.99,
+          "confidence": 0.9979034662246704
+        },
+        {
+          "text": " who",
+          "start": 127.99,
+          "end": 128.21,
+          "confidence": 0.9948674440383911
+        },
+        {
+          "text": " remain",
+          "start": 128.21,
+          "end": 128.55,
+          "confidence": 0.9984548091888428
+        },
+        {
+          "text": " will",
+          "start": 128.55,
+          "end": 128.83,
+          "confidence": 0.9958369731903076
+        },
+        {
+          "text": " continue",
+          "start": 128.83,
+          "end": 129.15,
+          "confidence": 0.9983578324317932
+        },
+        {
+          "text": " to",
+          "start": 129.15,
+          "end": 129.33,
+          "confidence": 0.9996894598007202
+        },
+        {
+          "text": " execute",
+          "start": 129.33,
+          "end": 129.67,
+          "confidence": 0.9952225089073181
+        },
+        {
+          "text": " counterterrorism",
+          "start": 129.67,
+          "end": 130.87,
+          "confidence": 0.9686552484830221
+        },
+        {
+          "text": " operations",
+          "start": 130.87,
+          "end": 131.33,
+          "confidence": 0.9931883811950684
+        },
+        {
+          "text": " while",
+          "start": 131.33,
+          "end": 132.31,
+          "confidence": 0.8245310187339783
+        },
+        {
+          "text": " staying",
+          "start": 132.31,
+          "end": 132.59,
+          "confidence": 0.9992762207984924
+        }
+      ]
+    },
+    {
+      "start": 132.59,
+      "end": 136.51,
+      "text": "in close contact with the Syrian Democratic Forces who have fought alongside us.",
+      "words": [
+        {
+          "text": " in",
+          "start": 132.59,
+          "end": 132.75,
+          "confidence": 0.9990346431732178
+        },
+        {
+          "text": " close",
+          "start": 132.75,
+          "end": 132.95,
+          "confidence": 0.9969320297241211
+        },
+        {
+          "text": " contact",
+          "start": 132.95,
+          "end": 133.45,
+          "confidence": 0.9995133876800537
+        },
+        {
+          "text": " with",
+          "start": 133.45,
+          "end": 133.71,
+          "confidence": 0.9972978234291077
+        },
+        {
+          "text": " the",
+          "start": 133.71,
+          "end": 133.83,
+          "confidence": 0.9955573678016663
+        },
+        {
+          "text": " Syrian",
+          "start": 133.83,
+          "end": 134.07,
+          "confidence": 0.9992716908454895
+        },
+        {
+          "text": " Democratic",
+          "start": 134.07,
+          "end": 134.39,
+          "confidence": 0.7933036088943481
+        },
+        {
+          "text": " Forces",
+          "start": 134.39,
+          "end": 134.93,
+          "confidence": 0.41753464937210083
+        },
+        {
+          "text": " who",
+          "start": 134.93,
+          "end": 135.41,
+          "confidence": 0.9815680384635925
+        },
+        {
+          "text": " have",
+          "start": 135.41,
+          "end": 135.53,
+          "confidence": 0.9874020218849182
+        },
+        {
+          "text": " fought",
+          "start": 135.53,
+          "end": 135.71,
+          "confidence": 0.9994705319404602
+        },
+        {
+          "text": " alongside",
+          "start": 135.71,
+          "end": 136.19,
+          "confidence": 0.9988686442375183
+        },
+        {
+          "text": " us.",
+          "start": 136.19,
+          "end": 136.51,
+          "confidence": 0.9993447661399841
+        }
+      ]
+    },
+    {
+      "start": 137.21,
+      "end": 141.25,
+      "text": "Additionally, the United States will retain control of oil fields in northeast Syria.",
+      "words": [
+        {
+          "text": " Additionally,",
+          "start": 137.21,
+          "end": 137.77,
+          "confidence": 0.03346848487854004
+        },
+        {
+          "text": " the",
+          "start": 138.31,
+          "end": 138.55,
+          "confidence": 0.9946070313453674
+        },
+        {
+          "text": " United",
+          "start": 138.55,
+          "end": 138.71,
+          "confidence": 0.9934281706809998
+        },
+        {
+          "text": " States",
+          "start": 138.71,
+          "end": 139.05,
+          "confidence": 0.9974767565727234
+        },
+        {
+          "text": " will",
+          "start": 139.05,
+          "end": 139.17,
+          "confidence": 0.9959801435470581
+        },
+        {
+          "text": " retain",
+          "start": 139.17,
+          "end": 139.43,
+          "confidence": 0.9939782619476318
+        },
+        {
+          "text": " control",
+          "start": 139.43,
+          "end": 139.69,
+          "confidence": 0.9978961944580078
+        },
+        {
+          "text": " of",
+          "start": 139.69,
+          "end": 139.87,
+          "confidence": 0.9967615008354187
+        },
+        {
+          "text": " oil",
+          "start": 139.87,
+          "end": 140.11,
+          "confidence": 0.9992258548736572
+        },
+        {
+          "text": " fields",
+          "start": 140.11,
+          "end": 140.37,
+          "confidence": 0.8890460133552551
+        },
+        {
+          "text": " in",
+          "start": 140.37,
+          "end": 140.61,
+          "confidence": 0.9951725602149963
+        },
+        {
+          "text": " northeast",
+          "start": 140.61,
+          "end": 140.87,
+          "confidence": 0.7757387161254883
+        },
+        {
+          "text": " Syria.",
+          "start": 140.87,
+          "end": 141.25,
+          "confidence": 0.998872697353363
+        }
+      ]
+    },
+    {
+      "start": 142.15,
+      "end": 146.57,
+      "text": "At the height of Baghdadi's reign, these oil fields provided ISIS with the bulk of financial",
+      "words": [
+        {
+          "text": " At",
+          "start": 142.15,
+          "end": 142.43,
+          "confidence": 0.9945018291473389
+        },
+        {
+          "text": " the",
+          "start": 142.43,
+          "end": 142.51,
+          "confidence": 0.9989036321640015
+        },
+        {
+          "text": " height",
+          "start": 142.51,
+          "end": 142.67,
+          "confidence": 0.9974326491355896
+        },
+        {
+          "text": " of",
+          "start": 142.67,
+          "end": 142.79,
+          "confidence": 0.9991733431816101
+        },
+        {
+          "text": " Baghdadi's",
+          "start": 142.79,
+          "end": 143.35,
+          "confidence": 0.9672663807868958
+        },
+        {
+          "text": " reign,",
+          "start": 143.35,
+          "end": 143.55,
+          "confidence": 0.986603856086731
+        },
+        {
+          "text": " these",
+          "start": 143.73,
+          "end": 143.87,
+          "confidence": 0.9974920749664307
+        },
+        {
+          "text": " oil",
+          "start": 143.87,
+          "end": 144.21,
+          "confidence": 0.9986611604690552
+        },
+        {
+          "text": " fields",
+          "start": 144.21,
+          "end": 144.49,
+          "confidence": 0.9920990467071533
+        },
+        {
+          "text": " provided",
+          "start": 144.49,
+          "end": 144.91,
+          "confidence": 0.9776328206062317
+        },
+        {
+          "text": " ISIS",
+          "start": 144.91,
+          "end": 145.33,
+          "confidence": 0.9777548909187317
+        },
+        {
+          "text": " with",
+          "start": 145.33,
+          "end": 145.57,
+          "confidence": 0.995637834072113
+        },
+        {
+          "text": " the",
+          "start": 145.57,
+          "end": 145.71,
+          "confidence": 0.5590521097183228
+        },
+        {
+          "text": " bulk",
+          "start": 145.71,
+          "end": 145.97,
+          "confidence": 0.9985299110412598
+        },
+        {
+          "text": " of",
+          "start": 145.97,
+          "end": 146.23,
+          "confidence": 0.9985059499740601
+        },
+        {
+          "text": " financial",
+          "start": 146.23,
+          "end": 146.57,
+          "confidence": 0.9807332754135132
+        }
+      ]
+    },
+    {
+      "start": 146.57,
+      "end": 148.55,
+      "text": "resources used to fund its terror.",
+      "words": [
+        {
+          "text": " resources",
+          "start": 146.57,
+          "end": 147.19,
+          "confidence": 0.9979280233383179
+        },
+        {
+          "text": " used",
+          "start": 147.19,
+          "end": 147.65,
+          "confidence": 0.9986910223960876
+        },
+        {
+          "text": " to",
+          "start": 147.65,
+          "end": 147.93,
+          "confidence": 0.9994403719902039
+        },
+        {
+          "text": " fund",
+          "start": 147.93,
+          "end": 148.09,
+          "confidence": 0.9984346032142639
+        },
+        {
+          "text": " its",
+          "start": 148.09,
+          "end": 148.29,
+          "confidence": 0.9946240782737732
+        },
+        {
+          "text": " terror.",
+          "start": 148.29,
+          "end": 148.55,
+          "confidence": 0.9503898024559021
+        }
+      ]
+    },
+    {
+      "start": 149.87,
+      "end": 154.77,
+      "text": "U.S. troops will remain positioned in this strategic area to deny ISIS access to those",
+      "words": [
+        {
+          "text": " U",
+          "start": 149.87,
+          "end": 150.31,
+          "confidence": 0.7581194043159485
+        },
+        {
+          "text": ".S.",
+          "start": 150.31,
+          "end": 150.47,
+          "confidence": 0.9975781142711639
+        },
+        {
+          "text": " troops",
+          "start": 150.51,
+          "end": 150.61,
+          "confidence": 0.998009979724884
+        },
+        {
+          "text": " will",
+          "start": 150.61,
+          "end": 150.81,
+          "confidence": 0.9934026598930359
+        },
+        {
+          "text": " remain",
+          "start": 150.81,
+          "end": 151.01,
+          "confidence": 0.9981581568717957
+        },
+        {
+          "text": " positioned",
+          "start": 151.01,
+          "end": 151.45,
+          "confidence": 0.936870276927948
+        },
+        {
+          "text": " in",
+          "start": 151.45,
+          "end": 151.65,
+          "confidence": 0.9986581802368164
+        },
+        {
+          "text": " this",
+          "start": 151.65,
+          "end": 151.77,
+          "confidence": 0.8661099076271057
+        },
+        {
+          "text": " strategic",
+          "start": 151.77,
+          "end": 152.09,
+          "confidence": 0.9962702989578247
+        },
+        {
+          "text": " area",
+          "start": 152.09,
+          "end": 152.49,
+          "confidence": 0.9984285235404968
+        },
+        {
+          "text": " to",
+          "start": 152.49,
+          "end": 152.81,
+          "confidence": 0.9978943467140198
+        },
+        {
+          "text": " deny",
+          "start": 152.81,
+          "end": 153.13,
+          "confidence": 0.9935933947563171
+        },
+        {
+          "text": " ISIS",
+          "start": 153.13,
+          "end": 153.59,
+          "confidence": 0.9976959824562073
+        },
+        {
+          "text": " access",
+          "start": 153.59,
+          "end": 154.35,
+          "confidence": 0.9960438013076782
+        },
+        {
+          "text": " to",
+          "start": 154.35,
+          "end": 154.71,
+          "confidence": 0.9835666418075562
+        },
+        {
+          "text": " those",
+          "start": 154.71,
+          "end": 154.77,
+          "confidence": 0.9806545376777649
+        }
+      ]
+    },
+    {
+      "start": 155.45,
+      "end": 156.25,
+      "text": "vital resources.",
+      "words": [
+        {
+          "text": " vital",
+          "start": 155.45,
+          "end": 155.73,
+          "confidence": 0.9998212456703186
+        },
+        {
+          "text": " resources.",
+          "start": 155.73,
+          "end": 156.25,
+          "confidence": 0.9955269694328308
+        }
+      ]
+    },
+    {
+      "start": 157.17,
+      "end": 162.37,
+      "text": "And we will respond with overwhelming military force against any group that threatens the",
+      "words": [
+        {
+          "text": " And",
+          "start": 157.17,
+          "end": 157.43,
+          "confidence": 0.9784857034683228
+        },
+        {
+          "text": " we",
+          "start": 157.43,
+          "end": 157.55,
+          "confidence": 0.9942551255226135
+        },
+        {
+          "text": " will",
+          "start": 157.55,
+          "end": 157.63,
+          "confidence": 0.8029193878173828
+        },
+        {
+          "text": " respond",
+          "start": 157.63,
+          "end": 157.97,
+          "confidence": 0.933057963848114
+        },
+        {
+          "text": " with",
+          "start": 157.97,
+          "end": 158.45,
+          "confidence": 0.9966878294944763
+        },
+        {
+          "text": " overwhelming",
+          "start": 158.45,
+          "end": 158.97,
+          "confidence": 0.9807887673377991
+        },
+        {
+          "text": " military",
+          "start": 158.97,
+          "end": 159.33,
+          "confidence": 0.9972696900367737
+        },
+        {
+          "text": " force",
+          "start": 159.33,
+          "end": 159.91,
+          "confidence": 0.9962045550346375
+        },
+        {
+          "text": " against",
+          "start": 159.91,
+          "end": 160.57,
+          "confidence": 0.9901608228683472
+        },
+        {
+          "text": " any",
+          "start": 160.57,
+          "end": 160.93,
+          "confidence": 0.9995952248573303
+        },
+        {
+          "text": " group",
+          "start": 160.93,
+          "end": 161.25,
+          "confidence": 0.998170018196106
+        },
+        {
+          "text": " that",
+          "start": 161.25,
+          "end": 161.93,
+          "confidence": 0.9984286427497864
+        },
+        {
+          "text": " threatens",
+          "start": 161.93,
+          "end": 162.21,
+          "confidence": 0.9990770816802979
+        },
+        {
+          "text": " the",
+          "start": 162.21,
+          "end": 162.37,
+          "confidence": 0.9950218200683594
+        }
+      ]
+    },
+    {
+      "start": 162.37,
+      "end": 163.77,
+      "text": "safety of our forces there.",
+      "words": [
+        {
+          "text": " safety",
+          "start": 162.37,
+          "end": 162.61,
+          "confidence": 0.9985631108283997
+        },
+        {
+          "text": " of",
+          "start": 162.61,
+          "end": 162.87,
+          "confidence": 0.9985632300376892
+        },
+        {
+          "text": " our",
+          "start": 162.87,
+          "end": 162.97,
+          "confidence": 0.9983037710189819
+        },
+        {
+          "text": " forces",
+          "start": 162.97,
+          "end": 163.31,
+          "confidence": 0.9983731508255005
+        },
+        {
+          "text": " there.",
+          "start": 163.31,
+          "end": 163.77,
+          "confidence": 0.992243230342865
+        }
+      ]
+    },
+    {
+      "start": 163.77,
+      "end": 169.35,
+      "text": "air. These oil fields also provide a critical source of funding to the SDF, which enables",
+      "words": [
+        {
+          "text": " air.",
+          "start": 163.77,
+          "end": 163.83,
+          "confidence": 0.010235149413347244
+        },
+        {
+          "text": " These",
+          "start": 164.51,
+          "end": 165.05,
+          "confidence": 0.9083318114280701
+        },
+        {
+          "text": " oil",
+          "start": 165.05,
+          "end": 165.37,
+          "confidence": 0.9984074234962463
+        },
+        {
+          "text": " fields",
+          "start": 165.37,
+          "end": 165.65,
+          "confidence": 0.919528067111969
+        },
+        {
+          "text": " also",
+          "start": 165.65,
+          "end": 165.97,
+          "confidence": 0.990358293056488
+        },
+        {
+          "text": " provide",
+          "start": 165.97,
+          "end": 166.37,
+          "confidence": 0.9959828853607178
+        },
+        {
+          "text": " a",
+          "start": 166.37,
+          "end": 166.51,
+          "confidence": 0.9922885298728943
+        },
+        {
+          "text": " critical",
+          "start": 166.51,
+          "end": 166.79,
+          "confidence": 0.9942857623100281
+        },
+        {
+          "text": " source",
+          "start": 166.79,
+          "end": 167.11,
+          "confidence": 0.9960208535194397
+        },
+        {
+          "text": " of",
+          "start": 167.11,
+          "end": 167.27,
+          "confidence": 0.9985105395317078
+        },
+        {
+          "text": " funding",
+          "start": 167.27,
+          "end": 167.47,
+          "confidence": 0.9975973963737488
+        },
+        {
+          "text": " to",
+          "start": 167.47,
+          "end": 167.65,
+          "confidence": 0.9935315251350403
+        },
+        {
+          "text": " the",
+          "start": 167.65,
+          "end": 167.77,
+          "confidence": 0.9951710104942322
+        },
+        {
+          "text": " SDF,",
+          "start": 167.77,
+          "end": 168.37,
+          "confidence": 0.9446956813335419
+        },
+        {
+          "text": " which",
+          "start": 168.83,
+          "end": 169.03,
+          "confidence": 0.9985513091087341
+        },
+        {
+          "text": " enables",
+          "start": 169.03,
+          "end": 169.35,
+          "confidence": 0.9965685606002808
+        }
+      ]
+    },
+    {
+      "start": 169.35,
+      "end": 174.51,
+      "text": "their ability to secure ISIS prison camps and conduct operations against ISIS, among other",
+      "words": [
+        {
+          "text": " their",
+          "start": 169.35,
+          "end": 169.57,
+          "confidence": 0.9956201910972595
+        },
+        {
+          "text": " ability",
+          "start": 169.57,
+          "end": 169.87,
+          "confidence": 0.9991289973258972
+        },
+        {
+          "text": " to",
+          "start": 169.87,
+          "end": 170.11,
+          "confidence": 0.9987474679946899
+        },
+        {
+          "text": " secure",
+          "start": 170.11,
+          "end": 170.43,
+          "confidence": 0.9970895648002625
+        },
+        {
+          "text": " ISIS",
+          "start": 170.43,
+          "end": 170.73,
+          "confidence": 0.9790038466453552
+        },
+        {
+          "text": " prison",
+          "start": 170.73,
+          "end": 171.07,
+          "confidence": 0.6947346329689026
+        },
+        {
+          "text": " camps",
+          "start": 171.07,
+          "end": 171.43,
+          "confidence": 0.9991790652275085
+        },
+        {
+          "text": " and",
+          "start": 171.43,
+          "end": 172.09,
+          "confidence": 0.94655841588974
+        },
+        {
+          "text": " conduct",
+          "start": 172.09,
+          "end": 172.43,
+          "confidence": 0.9980436563491821
+        },
+        {
+          "text": " operations",
+          "start": 172.43,
+          "end": 172.93,
+          "confidence": 0.9963162541389465
+        },
+        {
+          "text": " against",
+          "start": 172.93,
+          "end": 173.37,
+          "confidence": 0.9989894032478333
+        },
+        {
+          "text": " ISIS,",
+          "start": 173.37,
+          "end": 173.83,
+          "confidence": 0.9950991272926331
+        },
+        {
+          "text": " among",
+          "start": 174.05,
+          "end": 174.21,
+          "confidence": 0.9973184466362
+        },
+        {
+          "text": " other",
+          "start": 174.21,
+          "end": 174.51,
+          "confidence": 0.9967345595359802
+        }
+      ]
+    },
+    {
+      "start": 174.51,
+      "end": 174.77,
+      "text": "things.",
+      "words": [
+        {
+          "text": " things.",
+          "start": 174.51,
+          "end": 174.77,
+          "confidence": 0.9985917210578918
+        }
+      ]
+    },
+    {
+      "start": 175.83,
+      "end": 180.27,
+      "text": "Last week I was in Brussels for the NATO Defense Ministerial, and I spoke with our allies",
+      "words": [
+        {
+          "text": " Last",
+          "start": 175.83,
+          "end": 176.13,
+          "confidence": 0.987643837928772
+        },
+        {
+          "text": " week",
+          "start": 176.13,
+          "end": 176.43,
+          "confidence": 0.9991971850395203
+        },
+        {
+          "text": " I",
+          "start": 176.43,
+          "end": 176.61,
+          "confidence": 0.5839077830314636
+        },
+        {
+          "text": " was",
+          "start": 176.61,
+          "end": 176.73,
+          "confidence": 0.9997323155403137
+        },
+        {
+          "text": " in",
+          "start": 176.73,
+          "end": 176.83,
+          "confidence": 0.9979243278503418
+        },
+        {
+          "text": " Brussels",
+          "start": 176.83,
+          "end": 177.07,
+          "confidence": 0.9991233944892883
+        },
+        {
+          "text": " for",
+          "start": 177.07,
+          "end": 177.51,
+          "confidence": 0.9816921949386597
+        },
+        {
+          "text": " the",
+          "start": 177.51,
+          "end": 177.61,
+          "confidence": 0.995258629322052
+        },
+        {
+          "text": " NATO",
+          "start": 177.61,
+          "end": 177.85,
+          "confidence": 0.9989796280860901
+        },
+        {
+          "text": " Defense",
+          "start": 177.85,
+          "end": 178.23,
+          "confidence": 0.8149662613868713
+        },
+        {
+          "text": " Ministerial,",
+          "start": 178.23,
+          "end": 178.89,
+          "confidence": 0.9552327692508698
+        },
+        {
+          "text": " and",
+          "start": 179.11,
+          "end": 179.27,
+          "confidence": 0.9985554814338684
+        },
+        {
+          "text": " I",
+          "start": 179.27,
+          "end": 179.35,
+          "confidence": 0.9907129406929016
+        },
+        {
+          "text": " spoke",
+          "start": 179.35,
+          "end": 179.59,
+          "confidence": 0.9993797540664673
+        },
+        {
+          "text": " with",
+          "start": 179.59,
+          "end": 179.81,
+          "confidence": 0.9949843883514404
+        },
+        {
+          "text": " our",
+          "start": 179.81,
+          "end": 179.95,
+          "confidence": 0.9974594712257385
+        },
+        {
+          "text": " allies",
+          "start": 179.95,
+          "end": 180.27,
+          "confidence": 0.9627020359039307
+        }
+      ]
+    },
+    {
+      "start": 180.27,
+      "end": 185.45,
+      "text": "about the situation in Syria. I reiterated our commitment to the defeat of ISIS and",
+      "words": [
+        {
+          "text": " about",
+          "start": 180.27,
+          "end": 180.95,
+          "confidence": 0.9957733750343323
+        },
+        {
+          "text": " the",
+          "start": 180.95,
+          "end": 181.11,
+          "confidence": 0.9914034008979797
+        },
+        {
+          "text": " situation",
+          "start": 181.11,
+          "end": 181.57,
+          "confidence": 0.9997164607048035
+        },
+        {
+          "text": " in",
+          "start": 181.57,
+          "end": 181.81,
+          "confidence": 0.9984825253486633
+        },
+        {
+          "text": " Syria.",
+          "start": 181.81,
+          "end": 182.07,
+          "confidence": 0.9993733763694763
+        },
+        {
+          "text": " I",
+          "start": 182.79,
+          "end": 183.03,
+          "confidence": 0.9971140623092651
+        },
+        {
+          "text": " reiterated",
+          "start": 183.03,
+          "end": 183.59,
+          "confidence": 0.9913194179534912
+        },
+        {
+          "text": " our",
+          "start": 183.59,
+          "end": 183.87,
+          "confidence": 0.9984934329986572
+        },
+        {
+          "text": " commitment",
+          "start": 183.87,
+          "end": 184.13,
+          "confidence": 0.9988547563552856
+        },
+        {
+          "text": " to",
+          "start": 184.13,
+          "end": 184.39,
+          "confidence": 0.9986433386802673
+        },
+        {
+          "text": " the",
+          "start": 184.39,
+          "end": 184.49,
+          "confidence": 0.9936589598655701
+        },
+        {
+          "text": " defeat",
+          "start": 184.49,
+          "end": 184.73,
+          "confidence": 0.9980553388595581
+        },
+        {
+          "text": " of",
+          "start": 184.73,
+          "end": 184.89,
+          "confidence": 0.9996683597564697
+        },
+        {
+          "text": " ISIS",
+          "start": 184.89,
+          "end": 185.15,
+          "confidence": 0.9987775683403015
+        },
+        {
+          "text": " and",
+          "start": 185.15,
+          "end": 185.45,
+          "confidence": 0.914473295211792
+        }
+      ]
+    },
+    {
+      "start": 185.45,
+      "end": 189.85,
+      "text": "called on other nations who have much at stake to offer their support to help",
+      "words": [
+        {
+          "text": " called",
+          "start": 185.45,
+          "end": 185.69,
+          "confidence": 0.9977827668190002
+        },
+        {
+          "text": " on",
+          "start": 185.69,
+          "end": 185.83,
+          "confidence": 0.9992809891700745
+        },
+        {
+          "text": " other",
+          "start": 185.83,
+          "end": 186.07,
+          "confidence": 0.9993656277656555
+        },
+        {
+          "text": " nations",
+          "start": 186.07,
+          "end": 186.45,
+          "confidence": 0.9975835084915161
+        },
+        {
+          "text": " who",
+          "start": 186.45,
+          "end": 187.11,
+          "confidence": 0.5695664882659912
+        },
+        {
+          "text": " have",
+          "start": 187.11,
+          "end": 187.23,
+          "confidence": 0.9753804206848145
+        },
+        {
+          "text": " much",
+          "start": 187.23,
+          "end": 187.47,
+          "confidence": 0.9989728927612305
+        },
+        {
+          "text": " at",
+          "start": 187.47,
+          "end": 187.59,
+          "confidence": 0.9986292123794556
+        },
+        {
+          "text": " stake",
+          "start": 187.59,
+          "end": 187.93,
+          "confidence": 0.9995689988136292
+        },
+        {
+          "text": " to",
+          "start": 187.93,
+          "end": 188.35,
+          "confidence": 0.9948362112045288
+        },
+        {
+          "text": " offer",
+          "start": 188.35,
+          "end": 188.53,
+          "confidence": 0.9986566305160522
+        },
+        {
+          "text": " their",
+          "start": 188.53,
+          "end": 188.75,
+          "confidence": 0.9985949397087097
+        },
+        {
+          "text": " support",
+          "start": 188.75,
+          "end": 189.19,
+          "confidence": 0.9995822310447693
+        },
+        {
+          "text": " to",
+          "start": 189.19,
+          "end": 189.73,
+          "confidence": 0.9925091862678528
+        },
+        {
+          "text": " help",
+          "start": 189.73,
+          "end": 189.85,
+          "confidence": 0.9889332056045532
+        }
+      ]
+    },
+    {
+      "start": 189.85,
+      "end": 191.75,
+      "text": "mitigate the ongoing security crisis.",
+      "words": [
+        {
+          "text": " mitigate",
+          "start": 189.85,
+          "end": 190.11,
+          "confidence": 0.9995648264884949
+        },
+        {
+          "text": " the",
+          "start": 190.11,
+          "end": 190.49,
+          "confidence": 0.9987419247627258
+        },
+        {
+          "text": " ongoing",
+          "start": 190.49,
+          "end": 190.81,
+          "confidence": 0.9930682182312012
+        },
+        {
+          "text": " security",
+          "start": 190.81,
+          "end": 191.27,
+          "confidence": 0.9946936964988708
+        },
+        {
+          "text": " crisis.",
+          "start": 191.27,
+          "end": 191.75,
+          "confidence": 0.9982730150222778
+        }
+      ]
+    },
+    {
+      "start": 192.59,
+      "end": 197.25,
+      "text": "Turkey continues to bear responsibility for the consequences of their unwarranted incursion,",
+      "words": [
+        {
+          "text": " Turkey",
+          "start": 192.59,
+          "end": 193.15,
+          "confidence": 0.9193747639656067
+        },
+        {
+          "text": " continues",
+          "start": 193.15,
+          "end": 193.71,
+          "confidence": 0.9883403778076172
+        },
+        {
+          "text": " to",
+          "start": 193.71,
+          "end": 193.93,
+          "confidence": 0.9987332224845886
+        },
+        {
+          "text": " bear",
+          "start": 193.93,
+          "end": 194.05,
+          "confidence": 0.9909346699714661
+        },
+        {
+          "text": " responsibility",
+          "start": 194.05,
+          "end": 194.67,
+          "confidence": 0.9934715032577515
+        },
+        {
+          "text": " for",
+          "start": 194.67,
+          "end": 194.97,
+          "confidence": 0.9943016767501831
+        },
+        {
+          "text": " the",
+          "start": 194.97,
+          "end": 195.07,
+          "confidence": 0.9982648491859436
+        },
+        {
+          "text": " consequences",
+          "start": 195.07,
+          "end": 195.59,
+          "confidence": 0.9928937554359436
+        },
+        {
+          "text": " of",
+          "start": 195.59,
+          "end": 195.99,
+          "confidence": 0.997326135635376
+        },
+        {
+          "text": " their",
+          "start": 195.99,
+          "end": 196.09,
+          "confidence": 0.991122841835022
+        },
+        {
+          "text": " unwarranted",
+          "start": 196.09,
+          "end": 196.65,
+          "confidence": 0.9678664406140646
+        },
+        {
+          "text": " incursion,",
+          "start": 196.65,
+          "end": 197.25,
+          "confidence": 0.9780391454696655
+        }
+      ]
+    },
+    {
+      "start": 197.65,
+      "end": 199.65,
+      "text": "which has brought further instability to the region.",
+      "words": [
+        {
+          "text": " which",
+          "start": 197.65,
+          "end": 197.85,
+          "confidence": 0.9983200430870056
+        },
+        {
+          "text": " has",
+          "start": 197.85,
+          "end": 197.95,
+          "confidence": 0.9820775389671326
+        },
+        {
+          "text": " brought",
+          "start": 197.95,
+          "end": 198.15,
+          "confidence": 0.9973141551017761
+        },
+        {
+          "text": " further",
+          "start": 198.15,
+          "end": 198.45,
+          "confidence": 0.9975824356079102
+        },
+        {
+          "text": " instability",
+          "start": 198.45,
+          "end": 198.93,
+          "confidence": 0.9807511568069458
+        },
+        {
+          "text": " to",
+          "start": 198.93,
+          "end": 199.29,
+          "confidence": 0.9983148574829102
+        },
+        {
+          "text": " the",
+          "start": 199.29,
+          "end": 199.41,
+          "confidence": 0.9976866245269775
+        },
+        {
+          "text": " region.",
+          "start": 199.41,
+          "end": 199.65,
+          "confidence": 0.9994706511497498
+        }
+      ]
+    },
+    {
+      "start": 200.63,
+      "end": 204.91,
+      "text": "A number of allies have expressed their desire to help with the implementation of a safe",
+      "words": [
+        {
+          "text": " A",
+          "start": 200.63,
+          "end": 200.77,
+          "confidence": 0.9944674968719482
+        },
+        {
+          "text": " number",
+          "start": 200.77,
+          "end": 201.03,
+          "confidence": 0.9995896220207214
+        },
+        {
+          "text": " of",
+          "start": 201.03,
+          "end": 201.17,
+          "confidence": 0.9988859295845032
+        },
+        {
+          "text": " allies",
+          "start": 201.17,
+          "end": 201.45,
+          "confidence": 0.7582939863204956
+        },
+        {
+          "text": " have",
+          "start": 201.45,
+          "end": 201.67,
+          "confidence": 0.9978729486465454
+        },
+        {
+          "text": " expressed",
+          "start": 201.67,
+          "end": 201.99,
+          "confidence": 0.998034656047821
+        },
+        {
+          "text": " their",
+          "start": 201.99,
+          "end": 202.27,
+          "confidence": 0.998035728931427
+        },
+        {
+          "text": " desire",
+          "start": 202.27,
+          "end": 202.57,
+          "confidence": 0.9935988187789917
+        },
+        {
+          "text": " to",
+          "start": 202.57,
+          "end": 202.79,
+          "confidence": 0.9992682337760925
+        },
+        {
+          "text": " help",
+          "start": 202.79,
+          "end": 203.07,
+          "confidence": 0.9990962743759155
+        },
+        {
+          "text": " with",
+          "start": 203.07,
+          "end": 203.61,
+          "confidence": 0.9671173691749573
+        },
+        {
+          "text": " the",
+          "start": 203.61,
+          "end": 203.73,
+          "confidence": 0.9527652263641357
+        },
+        {
+          "text": " implementation",
+          "start": 203.73,
+          "end": 204.15,
+          "confidence": 0.997957706451416
+        },
+        {
+          "text": " of",
+          "start": 204.15,
+          "end": 204.49,
+          "confidence": 0.9987970590591431
+        },
+        {
+          "text": " a",
+          "start": 204.49,
+          "end": 204.61,
+          "confidence": 0.9959895014762878
+        },
+        {
+          "text": " safe",
+          "start": 204.61,
+          "end": 204.91,
+          "confidence": 0.9826763868331909
+        }
+      ]
+    },
+    {
+      "start": 204.91,
+      "end": 206.51,
+      "text": "zone along the Syria-Turkey border.",
+      "words": [
+        {
+          "text": " zone",
+          "start": 204.91,
+          "end": 205.17,
+          "confidence": 0.9968361854553223
+        },
+        {
+          "text": " along",
+          "start": 205.17,
+          "end": 205.43,
+          "confidence": 0.9966728687286377
+        },
+        {
+          "text": " the",
+          "start": 205.43,
+          "end": 205.63,
+          "confidence": 0.9988647699356079
+        },
+        {
+          "text": " Syria",
+          "start": 205.63,
+          "end": 205.85,
+          "confidence": 0.9865384101867676
+        },
+        {
+          "text": "-Turkey",
+          "start": 205.85,
+          "end": 206.21,
+          "confidence": 0.9500379711389542
+        },
+        {
+          "text": " border.",
+          "start": 206.21,
+          "end": 206.51,
+          "confidence": 0.996364414691925
+        }
+      ]
+    },
+    {
+      "start": 207.95,
+      "end": 212.81,
+      "text": "The United States remain focused on our core mission and continue to work closely with",
+      "words": [
+        {
+          "text": " The",
+          "start": 207.95,
+          "end": 208.19,
+          "confidence": 0.9923332929611206
+        },
+        {
+          "text": " United",
+          "start": 208.19,
+          "end": 208.31,
+          "confidence": 0.9972392320632935
+        },
+        {
+          "text": " States",
+          "start": 208.31,
+          "end": 208.65,
+          "confidence": 0.9990372657775879
+        },
+        {
+          "text": " remain",
+          "start": 208.65,
+          "end": 208.85,
+          "confidence": 0.39624661207199097
+        },
+        {
+          "text": " focused",
+          "start": 208.85,
+          "end": 209.35,
+          "confidence": 0.9867364764213562
+        },
+        {
+          "text": " on",
+          "start": 209.35,
+          "end": 210.15,
+          "confidence": 0.9974615573883057
+        },
+        {
+          "text": " our",
+          "start": 210.15,
+          "end": 210.39,
+          "confidence": 0.9984145164489746
+        },
+        {
+          "text": " core",
+          "start": 210.39,
+          "end": 210.59,
+          "confidence": 0.9818620085716248
+        },
+        {
+          "text": " mission",
+          "start": 210.59,
+          "end": 210.89,
+          "confidence": 0.9992340803146362
+        },
+        {
+          "text": " and",
+          "start": 210.89,
+          "end": 211.17,
+          "confidence": 0.9269033670425415
+        },
+        {
+          "text": " continue",
+          "start": 211.17,
+          "end": 211.51,
+          "confidence": 0.9979007244110107
+        },
+        {
+          "text": " to",
+          "start": 211.51,
+          "end": 211.67,
+          "confidence": 0.998489499092102
+        },
+        {
+          "text": " work",
+          "start": 211.67,
+          "end": 211.77,
+          "confidence": 0.9992477893829346
+        },
+        {
+          "text": " closely",
+          "start": 211.77,
+          "end": 212.21,
+          "confidence": 0.9990384578704834
+        },
+        {
+          "text": " with",
+          "start": 212.21,
+          "end": 212.81,
+          "confidence": 0.9991664886474609
+        }
+      ]
+    },
+    {
+      "start": 212.81,
+      "end": 216.61,
+      "text": "the Defeat ISIS Coalition as we implement the next phase of the campaign.",
+      "words": [
+        {
+          "text": " the",
+          "start": 212.81,
+          "end": 212.91,
+          "confidence": 0.992405116558075
+        },
+        {
+          "text": " Defeat",
+          "start": 212.91,
+          "end": 213.23,
+          "confidence": 0.9473185936609904
+        },
+        {
+          "text": " ISIS",
+          "start": 213.23,
+          "end": 213.45,
+          "confidence": 0.9307728409767151
+        },
+        {
+          "text": " Coalition",
+          "start": 213.45,
+          "end": 213.97,
+          "confidence": 0.8909626007080078
+        },
+        {
+          "text": " as",
+          "start": 213.97,
+          "end": 214.63,
+          "confidence": 0.972394585609436
+        },
+        {
+          "text": " we",
+          "start": 214.63,
+          "end": 214.77,
+          "confidence": 0.9996053576469421
+        },
+        {
+          "text": " implement",
+          "start": 214.77,
+          "end": 215.11,
+          "confidence": 0.9984171390533447
+        },
+        {
+          "text": " the",
+          "start": 215.11,
+          "end": 215.35,
+          "confidence": 0.9990248680114746
+        },
+        {
+          "text": " next",
+          "start": 215.35,
+          "end": 215.55,
+          "confidence": 0.9957418441772461
+        },
+        {
+          "text": " phase",
+          "start": 215.55,
+          "end": 215.91,
+          "confidence": 0.9974064230918884
+        },
+        {
+          "text": " of",
+          "start": 215.91,
+          "end": 216.11,
+          "confidence": 0.9993535876274109
+        },
+        {
+          "text": " the",
+          "start": 216.11,
+          "end": 216.17,
+          "confidence": 0.9984448552131653
+        },
+        {
+          "text": " campaign.",
+          "start": 216.17,
+          "end": 216.61,
+          "confidence": 0.9893757104873657
+        }
+      ]
+    },
+    {
+      "start": 217.87,
+      "end": 222.41,
+      "text": "Baghdadi's death will not rid the world of terrorism or end the ongoing conflict in Syria,",
+      "words": [
+        {
+          "text": " Baghdadi's",
+          "start": 217.87,
+          "end": 218.39,
+          "confidence": 0.8081564530730247
+        },
+        {
+          "text": " death",
+          "start": 218.39,
+          "end": 218.71,
+          "confidence": 0.9909896850585938
+        },
+        {
+          "text": " will",
+          "start": 218.71,
+          "end": 219.03,
+          "confidence": 0.9908304214477539
+        },
+        {
+          "text": " not",
+          "start": 219.03,
+          "end": 219.23,
+          "confidence": 0.9985717535018921
+        },
+        {
+          "text": " rid",
+          "start": 219.23,
+          "end": 219.41,
+          "confidence": 0.9952924251556396
+        },
+        {
+          "text": " the",
+          "start": 219.41,
+          "end": 219.57,
+          "confidence": 0.9969812035560608
+        },
+        {
+          "text": " world",
+          "start": 219.57,
+          "end": 219.75,
+          "confidence": 0.9952989220619202
+        },
+        {
+          "text": " of",
+          "start": 219.75,
+          "end": 219.91,
+          "confidence": 0.9939157366752625
+        },
+        {
+          "text": " terrorism",
+          "start": 219.91,
+          "end": 220.35,
+          "confidence": 0.9972314238548279
+        },
+        {
+          "text": " or",
+          "start": 220.35,
+          "end": 220.61,
+          "confidence": 0.9304026365280151
+        },
+        {
+          "text": " end",
+          "start": 220.61,
+          "end": 220.89,
+          "confidence": 0.9983693957328796
+        },
+        {
+          "text": " the",
+          "start": 220.89,
+          "end": 221.01,
+          "confidence": 0.9976765513420105
+        },
+        {
+          "text": " ongoing",
+          "start": 221.01,
+          "end": 221.27,
+          "confidence": 0.9754368662834167
+        },
+        {
+          "text": " conflict",
+          "start": 221.27,
+          "end": 221.81,
+          "confidence": 0.9986961483955383
+        },
+        {
+          "text": " in",
+          "start": 221.81,
+          "end": 222.07,
+          "confidence": 0.9949707984924316
+        },
+        {
+          "text": " Syria,",
+          "start": 222.07,
+          "end": 222.41,
+          "confidence": 0.9992388486862183
+        }
+      ]
+    },
+    {
+      "start": 222.97,
+      "end": 227.69,
+      "text": "but it will certainly send a message to those who would question America's resolve and provide",
+      "words": [
+        {
+          "text": " but",
+          "start": 222.97,
+          "end": 223.49,
+          "confidence": 0.9976814985275269
+        },
+        {
+          "text": " it",
+          "start": 223.49,
+          "end": 223.57,
+          "confidence": 0.9916003942489624
+        },
+        {
+          "text": " will",
+          "start": 223.57,
+          "end": 223.69,
+          "confidence": 0.9977403879165649
+        },
+        {
+          "text": " certainly",
+          "start": 223.69,
+          "end": 223.99,
+          "confidence": 0.9906713962554932
+        },
+        {
+          "text": " send",
+          "start": 223.99,
+          "end": 224.21,
+          "confidence": 0.9970345497131348
+        },
+        {
+          "text": " a",
+          "start": 224.21,
+          "end": 224.33,
+          "confidence": 0.9978742599487305
+        },
+        {
+          "text": " message",
+          "start": 224.33,
+          "end": 224.61,
+          "confidence": 0.9997300505638123
+        },
+        {
+          "text": " to",
+          "start": 224.61,
+          "end": 224.83,
+          "confidence": 0.9828442335128784
+        },
+        {
+          "text": " those",
+          "start": 224.83,
+          "end": 225.03,
+          "confidence": 0.9993689656257629
+        },
+        {
+          "text": " who",
+          "start": 225.03,
+          "end": 225.21,
+          "confidence": 0.9934955835342407
+        },
+        {
+          "text": " would",
+          "start": 225.21,
+          "end": 225.29,
+          "confidence": 0.8465913534164429
+        },
+        {
+          "text": " question",
+          "start": 225.29,
+          "end": 225.63,
+          "confidence": 0.9975830316543579
+        },
+        {
+          "text": " America's",
+          "start": 225.63,
+          "end": 226.25,
+          "confidence": 0.997172623872757
+        },
+        {
+          "text": " resolve",
+          "start": 226.25,
+          "end": 226.69,
+          "confidence": 0.996762752532959
+        },
+        {
+          "text": " and",
+          "start": 226.69,
+          "end": 227.31,
+          "confidence": 0.9295677542686462
+        },
+        {
+          "text": " provide",
+          "start": 227.31,
+          "end": 227.69,
+          "confidence": 0.9979896545410156
+        }
+      ]
+    },
+    {
+      "start": 227.69,
+      "end": 230.13,
+      "text": "a warning to terrorists who think they can hide.",
+      "words": [
+        {
+          "text": " a",
+          "start": 227.69,
+          "end": 227.93,
+          "confidence": 0.9961225390434265
+        },
+        {
+          "text": " warning",
+          "start": 227.93,
+          "end": 228.17,
+          "confidence": 0.999722421169281
+        },
+        {
+          "text": " to",
+          "start": 228.17,
+          "end": 228.41,
+          "confidence": 0.9993531107902527
+        },
+        {
+          "text": " terrorists",
+          "start": 228.41,
+          "end": 228.81,
+          "confidence": 0.9984126091003418
+        },
+        {
+          "text": " who",
+          "start": 228.81,
+          "end": 229.33,
+          "confidence": 0.9868882298469543
+        },
+        {
+          "text": " think",
+          "start": 229.33,
+          "end": 229.55,
+          "confidence": 0.99718177318573
+        },
+        {
+          "text": " they",
+          "start": 229.55,
+          "end": 229.73,
+          "confidence": 0.9988126754760742
+        },
+        {
+          "text": " can",
+          "start": 229.73,
+          "end": 229.89,
+          "confidence": 0.998089611530304
+        },
+        {
+          "text": " hide.",
+          "start": 229.89,
+          "end": 230.13,
+          "confidence": 0.9990181922912598
+        }
+      ]
+    },
+    {
+      "start": 231.33,
+      "end": 237.29,
+      "text": "The United States, more than any other nation in the world, possesses the power and the",
+      "words": [
+        {
+          "text": " The",
+          "start": 231.33,
+          "end": 231.55,
+          "confidence": 0.9885819554328918
+        },
+        {
+          "text": " United",
+          "start": 231.55,
+          "end": 231.73,
+          "confidence": 0.998708963394165
+        },
+        {
+          "text": " States,",
+          "start": 231.73,
+          "end": 232.25,
+          "confidence": 0.9988144636154175
+        },
+        {
+          "text": " more",
+          "start": 232.79,
+          "end": 233.05,
+          "confidence": 0.9993927478790283
+        },
+        {
+          "text": " than",
+          "start": 233.05,
+          "end": 233.19,
+          "confidence": 0.9989442229270935
+        },
+        {
+          "text": " any",
+          "start": 233.19,
+          "end": 233.47,
+          "confidence": 0.999396800994873
+        },
+        {
+          "text": " other",
+          "start": 233.47,
+          "end": 233.73,
+          "confidence": 0.9993882179260254
+        },
+        {
+          "text": " nation",
+          "start": 233.73,
+          "end": 234.09,
+          "confidence": 0.9983365535736084
+        },
+        {
+          "text": " in",
+          "start": 234.09,
+          "end": 234.29,
+          "confidence": 0.9976970553398132
+        },
+        {
+          "text": " the",
+          "start": 234.29,
+          "end": 234.39,
+          "confidence": 0.9994912147521973
+        },
+        {
+          "text": " world,",
+          "start": 234.39,
+          "end": 234.69,
+          "confidence": 0.9994400143623352
+        },
+        {
+          "text": " possesses",
+          "start": 235.33,
+          "end": 235.89,
+          "confidence": 0.9915435910224915
+        },
+        {
+          "text": " the",
+          "start": 235.89,
+          "end": 236.05,
+          "confidence": 0.999213695526123
+        },
+        {
+          "text": " power",
+          "start": 236.05,
+          "end": 236.53,
+          "confidence": 0.9980753660202026
+        },
+        {
+          "text": " and",
+          "start": 236.53,
+          "end": 237.17,
+          "confidence": 0.9871006011962891
+        },
+        {
+          "text": " the",
+          "start": 237.17,
+          "end": 237.29,
+          "confidence": 0.989412248134613
+        }
+      ]
+    },
+    {
+      "start": 237.29,
+      "end": 242.55,
+      "text": "will to hunt to the ends of the earth those who wish to bring harm upon the American",
+      "words": [
+        {
+          "text": " will",
+          "start": 237.29,
+          "end": 237.55,
+          "confidence": 0.9986270666122437
+        },
+        {
+          "text": " to",
+          "start": 237.55,
+          "end": 238.07,
+          "confidence": 0.9990758895874023
+        },
+        {
+          "text": " hunt",
+          "start": 238.07,
+          "end": 238.37,
+          "confidence": 0.9942905902862549
+        },
+        {
+          "text": " to",
+          "start": 238.37,
+          "end": 238.65,
+          "confidence": 0.9961819648742676
+        },
+        {
+          "text": " the",
+          "start": 238.65,
+          "end": 238.77,
+          "confidence": 0.9992616772651672
+        },
+        {
+          "text": " ends",
+          "start": 238.77,
+          "end": 239.07,
+          "confidence": 0.9966211318969727
+        },
+        {
+          "text": " of",
+          "start": 239.07,
+          "end": 239.21,
+          "confidence": 0.9993011951446533
+        },
+        {
+          "text": " the",
+          "start": 239.21,
+          "end": 239.31,
+          "confidence": 0.999206006526947
+        },
+        {
+          "text": " earth",
+          "start": 239.31,
+          "end": 239.65,
+          "confidence": 0.5580837726593018
+        },
+        {
+          "text": " those",
+          "start": 239.65,
+          "end": 240.37,
+          "confidence": 0.8119624257087708
+        },
+        {
+          "text": " who",
+          "start": 240.37,
+          "end": 240.61,
+          "confidence": 0.9969118237495422
+        },
+        {
+          "text": " wish",
+          "start": 240.61,
+          "end": 240.73,
+          "confidence": 0.9983991980552673
+        },
+        {
+          "text": " to",
+          "start": 240.73,
+          "end": 240.85,
+          "confidence": 0.9993032217025757
+        },
+        {
+          "text": " bring",
+          "start": 240.85,
+          "end": 240.99,
+          "confidence": 0.9991218447685242
+        },
+        {
+          "text": " harm",
+          "start": 240.99,
+          "end": 241.37,
+          "confidence": 0.9989688396453857
+        },
+        {
+          "text": " upon",
+          "start": 241.37,
+          "end": 242.03,
+          "confidence": 0.995213508605957
+        },
+        {
+          "text": " the",
+          "start": 242.03,
+          "end": 242.25,
+          "confidence": 0.9994809031486511
+        },
+        {
+          "text": " American",
+          "start": 242.25,
+          "end": 242.55,
+          "confidence": 0.9980411529541016
+        }
+      ]
+    },
+    {
+      "start": 242.55,
+      "end": 242.91,
+      "text": "people.",
+      "words": [
+        {
+          "text": " people.",
+          "start": 242.55,
+          "end": 242.91,
+          "confidence": 0.997861921787262
+        }
+      ]
+    },
+    {
+      "start": 242.91,
+      "end": 248.47,
+      "text": "The Saturday's operation is just one example of the incredible determination and great",
+      "words": [
+        {
+          "text": " The",
+          "start": 242.91,
+          "end": 243.57,
+          "confidence": 0.044036418199539185
+        },
+        {
+          "text": " Saturday's",
+          "start": 243.57,
+          "end": 244.49,
+          "confidence": 0.41223497688770294
+        },
+        {
+          "text": " operation",
+          "start": 244.49,
+          "end": 244.73,
+          "confidence": 0.9587420225143433
+        },
+        {
+          "text": " is",
+          "start": 244.73,
+          "end": 245.11,
+          "confidence": 0.9852768778800964
+        },
+        {
+          "text": " just",
+          "start": 245.11,
+          "end": 245.25,
+          "confidence": 0.9763785600662231
+        },
+        {
+          "text": " one",
+          "start": 245.25,
+          "end": 245.47,
+          "confidence": 0.9900181293487549
+        },
+        {
+          "text": " example",
+          "start": 245.47,
+          "end": 245.85,
+          "confidence": 0.994055986404419
+        },
+        {
+          "text": " of",
+          "start": 245.85,
+          "end": 246.15,
+          "confidence": 0.9970239996910095
+        },
+        {
+          "text": " the",
+          "start": 246.15,
+          "end": 246.23,
+          "confidence": 0.9936926364898682
+        },
+        {
+          "text": " incredible",
+          "start": 246.23,
+          "end": 246.71,
+          "confidence": 0.997061550617218
+        },
+        {
+          "text": " determination",
+          "start": 246.71,
+          "end": 247.29,
+          "confidence": 0.9967269897460938
+        },
+        {
+          "text": " and",
+          "start": 247.29,
+          "end": 248.17,
+          "confidence": 0.9815365672111511
+        },
+        {
+          "text": " great",
+          "start": 248.17,
+          "end": 248.47,
+          "confidence": 0.9508586525917053
+        }
+      ]
+    },
+    {
+      "start": 248.47,
+      "end": 250.37,
+      "text": "skill of the United States military.",
+      "words": [
+        {
+          "text": " skill",
+          "start": 248.47,
+          "end": 248.81,
+          "confidence": 0.995093584060669
+        },
+        {
+          "text": " of",
+          "start": 248.81,
+          "end": 249.51,
+          "confidence": 0.9957834482192993
+        },
+        {
+          "text": " the",
+          "start": 249.51,
+          "end": 249.59,
+          "confidence": 0.9842798709869385
+        },
+        {
+          "text": " United",
+          "start": 249.59,
+          "end": 249.71,
+          "confidence": 0.9944306015968323
+        },
+        {
+          "text": " States",
+          "start": 249.71,
+          "end": 250.05,
+          "confidence": 0.9969292283058167
+        },
+        {
+          "text": " military.",
+          "start": 250.05,
+          "end": 250.37,
+          "confidence": 0.9487455487251282
+        }
+      ]
+    },
+    {
+      "start": 251.29,
+      "end": 254.97,
+      "text": "I'll now ask General Milley to bride you with some additional details on the operation.",
+      "words": [
+        {
+          "text": " I'll",
+          "start": 251.29,
+          "end": 251.57,
+          "confidence": 0.8877164423465729
+        },
+        {
+          "text": " now",
+          "start": 251.57,
+          "end": 251.75,
+          "confidence": 0.9963071346282959
+        },
+        {
+          "text": " ask",
+          "start": 251.75,
+          "end": 252.03,
+          "confidence": 0.9971771240234375
+        },
+        {
+          "text": " General",
+          "start": 252.03,
+          "end": 252.27,
+          "confidence": 0.9829104542732239
+        },
+        {
+          "text": " Milley",
+          "start": 252.27,
+          "end": 252.55,
+          "confidence": 0.8150204420089722
+        },
+        {
+          "text": " to",
+          "start": 252.55,
+          "end": 252.67,
+          "confidence": 0.9090902805328369
+        },
+        {
+          "text": " bride",
+          "start": 252.67,
+          "end": 252.87,
+          "confidence": 0.684150218963623
+        },
+        {
+          "text": " you",
+          "start": 252.87,
+          "end": 253.07,
+          "confidence": 0.9721181988716125
+        },
+        {
+          "text": " with",
+          "start": 253.07,
+          "end": 253.25,
+          "confidence": 0.9931212067604065
+        },
+        {
+          "text": " some",
+          "start": 253.25,
+          "end": 253.37,
+          "confidence": 0.9706203937530518
+        },
+        {
+          "text": " additional",
+          "start": 253.37,
+          "end": 253.69,
+          "confidence": 0.9944213032722473
+        },
+        {
+          "text": " details",
+          "start": 253.69,
+          "end": 254.11,
+          "confidence": 0.9935742020606995
+        },
+        {
+          "text": " on",
+          "start": 254.11,
+          "end": 254.49,
+          "confidence": 0.9952030181884766
+        },
+        {
+          "text": " the",
+          "start": 254.49,
+          "end": 254.59,
+          "confidence": 0.9886427521705627
+        },
+        {
+          "text": " operation.",
+          "start": 254.59,
+          "end": 254.97,
+          "confidence": 0.996691107749939
+        }
+      ]
+    },
+    {
+      "start": 255.47,
+      "end": 255.85,
+      "text": "Thank you.",
+      "words": [
+        {
+          "text": " Thank",
+          "start": 255.47,
+          "end": 255.69,
+          "confidence": 0.9962890148162842
+        },
+        {
+          "text": " you.",
+          "start": 255.69,
+          "end": 255.85,
+          "confidence": 0.9980539083480835
+        }
+      ]
+    },
+    {
+      "start": 256.37,
+      "end": 257.51,
+      "text": "So good afternoon, everyone.",
+      "words": [
+        {
+          "text": " So",
+          "start": 256.37,
+          "end": 256.77,
+          "confidence": 0.18526409566402435
+        },
+        {
+          "text": " good",
+          "start": 256.77,
+          "end": 256.89,
+          "confidence": 0.7461085319519043
+        },
+        {
+          "text": " afternoon,",
+          "start": 256.89,
+          "end": 257.23,
+          "confidence": 0.9936716556549072
+        },
+        {
+          "text": " everyone.",
+          "start": 257.27,
+          "end": 257.51,
+          "confidence": 0.9927754402160645
+        }
+      ]
+    },
+    {
+      "start": 257.71,
+      "end": 263.45,
+      "text": "As Secretary Esper stated, United States Special Operations Forces under the command and control",
+      "words": [
+        {
+          "text": " As",
+          "start": 257.71,
+          "end": 257.83,
+          "confidence": 0.9717994928359985
+        },
+        {
+          "text": " Secretary",
+          "start": 257.83,
+          "end": 258.19,
+          "confidence": 0.858346700668335
+        },
+        {
+          "text": " Esper",
+          "start": 258.19,
+          "end": 258.65,
+          "confidence": 0.9011222124099731
+        },
+        {
+          "text": " stated,",
+          "start": 258.65,
+          "end": 259.13,
+          "confidence": 0.9545682072639465
+        },
+        {
+          "text": " United",
+          "start": 259.83,
+          "end": 260.15,
+          "confidence": 0.8823274970054626
+        },
+        {
+          "text": " States",
+          "start": 260.15,
+          "end": 260.57,
+          "confidence": 0.9962299466133118
+        },
+        {
+          "text": " Special",
+          "start": 260.57,
+          "end": 260.83,
+          "confidence": 0.8437463641166687
+        },
+        {
+          "text": " Operations",
+          "start": 260.83,
+          "end": 261.25,
+          "confidence": 0.9927071928977966
+        },
+        {
+          "text": " Forces",
+          "start": 261.25,
+          "end": 261.83,
+          "confidence": 0.8828701972961426
+        },
+        {
+          "text": " under",
+          "start": 261.83,
+          "end": 262.15,
+          "confidence": 0.7845763564109802
+        },
+        {
+          "text": " the",
+          "start": 262.15,
+          "end": 262.41,
+          "confidence": 0.9945785999298096
+        },
+        {
+          "text": " command",
+          "start": 262.41,
+          "end": 263.01,
+          "confidence": 0.7674177885055542
+        },
+        {
+          "text": " and",
+          "start": 263.01,
+          "end": 263.15,
+          "confidence": 0.9739570021629333
+        },
+        {
+          "text": " control",
+          "start": 263.15,
+          "end": 263.45,
+          "confidence": 0.9990426898002625
+        }
+      ]
+    },
+    {
+      "start": 263.45,
+      "end": 268.81,
+      "text": "of United States Central Command, General Frank McKenzie conducted a counterterrorism",
+      "words": [
+        {
+          "text": " of",
+          "start": 263.45,
+          "end": 263.69,
+          "confidence": 0.9978323578834534
+        },
+        {
+          "text": " United",
+          "start": 263.69,
+          "end": 263.83,
+          "confidence": 0.933039665222168
+        },
+        {
+          "text": " States",
+          "start": 263.83,
+          "end": 264.21,
+          "confidence": 0.992339015007019
+        },
+        {
+          "text": " Central",
+          "start": 264.21,
+          "end": 264.47,
+          "confidence": 0.8391277194023132
+        },
+        {
+          "text": " Command,",
+          "start": 264.47,
+          "end": 264.85,
+          "confidence": 0.9916091561317444
+        },
+        {
+          "text": " General",
+          "start": 265.43,
+          "end": 265.87,
+          "confidence": 0.9611285328865051
+        },
+        {
+          "text": " Frank",
+          "start": 265.87,
+          "end": 266.25,
+          "confidence": 0.9920350909233093
+        },
+        {
+          "text": " McKenzie",
+          "start": 266.25,
+          "end": 266.67,
+          "confidence": 0.9122328162193298
+        },
+        {
+          "text": " conducted",
+          "start": 266.67,
+          "end": 267.85,
+          "confidence": 0.4208446443080902
+        },
+        {
+          "text": " a",
+          "start": 267.85,
+          "end": 268.07,
+          "confidence": 0.987047553062439
+        },
+        {
+          "text": " counterterrorism",
+          "start": 268.07,
+          "end": 268.81,
+          "confidence": 0.7953474422295889
+        }
+      ]
+    },
+    {
+      "start": 268.81,
+      "end": 272.89,
+      "text": "operation which resulted in the death of the founder and the leader of ISIS Abu Bakr",
+      "words": [
+        {
+          "text": " operation",
+          "start": 268.81,
+          "end": 269.13,
+          "confidence": 0.9987026453018188
+        },
+        {
+          "text": " which",
+          "start": 269.13,
+          "end": 269.51,
+          "confidence": 0.8521108031272888
+        },
+        {
+          "text": " resulted",
+          "start": 269.51,
+          "end": 269.83,
+          "confidence": 0.9979401230812073
+        },
+        {
+          "text": " in",
+          "start": 269.83,
+          "end": 270.11,
+          "confidence": 0.9965050220489502
+        },
+        {
+          "text": " the",
+          "start": 270.11,
+          "end": 270.19,
+          "confidence": 0.9970544576644897
+        },
+        {
+          "text": " death",
+          "start": 270.19,
+          "end": 270.35,
+          "confidence": 0.9966269731521606
+        },
+        {
+          "text": " of",
+          "start": 270.35,
+          "end": 270.49,
+          "confidence": 0.9977777600288391
+        },
+        {
+          "text": " the",
+          "start": 270.49,
+          "end": 270.59,
+          "confidence": 0.9925745725631714
+        },
+        {
+          "text": " founder",
+          "start": 270.59,
+          "end": 270.87,
+          "confidence": 0.9457469582557678
+        },
+        {
+          "text": " and",
+          "start": 270.87,
+          "end": 271.03,
+          "confidence": 0.9836432337760925
+        },
+        {
+          "text": " the",
+          "start": 271.03,
+          "end": 271.13,
+          "confidence": 0.967312216758728
+        },
+        {
+          "text": " leader",
+          "start": 271.13,
+          "end": 271.29,
+          "confidence": 0.995764970779419
+        },
+        {
+          "text": " of",
+          "start": 271.29,
+          "end": 271.47,
+          "confidence": 0.9972919821739197
+        },
+        {
+          "text": " ISIS",
+          "start": 271.47,
+          "end": 271.79,
+          "confidence": 0.9168403744697571
+        },
+        {
+          "text": " Abu",
+          "start": 271.79,
+          "end": 272.51,
+          "confidence": 0.38487306237220764
+        },
+        {
+          "text": " Bakr",
+          "start": 272.51,
+          "end": 272.89,
+          "confidence": 0.9777835607528687
+        }
+      ]
+    },
+    {
+      "start": 272.89,
+      "end": 278.25,
+      "text": "Baghdadi. Intelligence from numerous organizations throughout the Department of Defense and across",
+      "words": [
+        {
+          "text": " Baghdadi.",
+          "start": 272.89,
+          "end": 273.37,
+          "confidence": 0.8485268751780192
+        },
+        {
+          "text": " Intelligence",
+          "start": 274.05,
+          "end": 274.51,
+          "confidence": 0.9857656955718994
+        },
+        {
+          "text": " from",
+          "start": 274.51,
+          "end": 274.89,
+          "confidence": 0.994353175163269
+        },
+        {
+          "text": " numerous",
+          "start": 274.89,
+          "end": 275.23,
+          "confidence": 0.9979425072669983
+        },
+        {
+          "text": " organizations",
+          "start": 275.23,
+          "end": 275.89,
+          "confidence": 0.9955865144729614
+        },
+        {
+          "text": " throughout",
+          "start": 275.89,
+          "end": 276.17,
+          "confidence": 0.9890701770782471
+        },
+        {
+          "text": " the",
+          "start": 276.17,
+          "end": 276.35,
+          "confidence": 0.999281108379364
+        },
+        {
+          "text": " Department",
+          "start": 276.35,
+          "end": 276.67,
+          "confidence": 0.986254096031189
+        },
+        {
+          "text": " of",
+          "start": 276.67,
+          "end": 277.51,
+          "confidence": 0.9987510442733765
+        },
+        {
+          "text": " Defense",
+          "start": 277.51,
+          "end": 277.85,
+          "confidence": 0.9958251714706421
+        },
+        {
+          "text": " and",
+          "start": 277.85,
+          "end": 278.03,
+          "confidence": 0.9528534412384033
+        },
+        {
+          "text": " across",
+          "start": 278.03,
+          "end": 278.25,
+          "confidence": 0.9986611604690552
+        }
+      ]
+    },
+    {
+      "start": 278.25,
+      "end": 283.61,
+      "text": "the entire interagency identified the target location approximately four miles from the",
+      "words": [
+        {
+          "text": " the",
+          "start": 278.25,
+          "end": 278.53,
+          "confidence": 0.9986900687217712
+        },
+        {
+          "text": " entire",
+          "start": 278.53,
+          "end": 278.85,
+          "confidence": 0.9984993934631348
+        },
+        {
+          "text": " interagency",
+          "start": 278.85,
+          "end": 279.53,
+          "confidence": 0.9410471518834432
+        },
+        {
+          "text": " identified",
+          "start": 279.53,
+          "end": 280.57,
+          "confidence": 0.9786577820777893
+        },
+        {
+          "text": " the",
+          "start": 280.57,
+          "end": 280.81,
+          "confidence": 0.9927225708961487
+        },
+        {
+          "text": " target",
+          "start": 280.81,
+          "end": 281.03,
+          "confidence": 0.9976797699928284
+        },
+        {
+          "text": " location",
+          "start": 281.03,
+          "end": 281.47,
+          "confidence": 0.9979082345962524
+        },
+        {
+          "text": " approximately",
+          "start": 281.47,
+          "end": 281.85,
+          "confidence": 0.9637465476989746
+        },
+        {
+          "text": " four",
+          "start": 281.85,
+          "end": 282.31,
+          "confidence": 0.9519059062004089
+        },
+        {
+          "text": " miles",
+          "start": 282.31,
+          "end": 282.69,
+          "confidence": 0.9995125532150269
+        },
+        {
+          "text": " from",
+          "start": 282.69,
+          "end": 283.49,
+          "confidence": 0.9984556436538696
+        },
+        {
+          "text": " the",
+          "start": 283.49,
+          "end": 283.61,
+          "confidence": 0.9968377351760864
+        }
+      ]
+    },
+    {
+      "start": 283.61,
+      "end": 289.05,
+      "text": "Turkish border in Idlib province of Syria. In order to reduce the risk to U.S. forces",
+      "words": [
+        {
+          "text": " Turkish",
+          "start": 283.61,
+          "end": 283.85,
+          "confidence": 0.998588502407074
+        },
+        {
+          "text": " border",
+          "start": 283.85,
+          "end": 284.23,
+          "confidence": 0.9982876181602478
+        },
+        {
+          "text": " in",
+          "start": 284.23,
+          "end": 284.43,
+          "confidence": 0.6801631450653076
+        },
+        {
+          "text": " Idlib",
+          "start": 284.43,
+          "end": 284.63,
+          "confidence": 0.9896893799304962
+        },
+        {
+          "text": " province",
+          "start": 284.63,
+          "end": 285.09,
+          "confidence": 0.8081523180007935
+        },
+        {
+          "text": " of",
+          "start": 285.09,
+          "end": 285.29,
+          "confidence": 0.997822642326355
+        },
+        {
+          "text": " Syria.",
+          "start": 285.29,
+          "end": 285.61,
+          "confidence": 0.9991793036460876
+        },
+        {
+          "text": " In",
+          "start": 286.35,
+          "end": 286.57,
+          "confidence": 0.9960384368896484
+        },
+        {
+          "text": " order",
+          "start": 286.57,
+          "end": 286.73,
+          "confidence": 0.9998936653137207
+        },
+        {
+          "text": " to",
+          "start": 286.73,
+          "end": 286.87,
+          "confidence": 0.9996335506439209
+        },
+        {
+          "text": " reduce",
+          "start": 286.87,
+          "end": 287.25,
+          "confidence": 0.9974476099014282
+        },
+        {
+          "text": " the",
+          "start": 287.25,
+          "end": 287.57,
+          "confidence": 0.9966944456100464
+        },
+        {
+          "text": " risk",
+          "start": 287.57,
+          "end": 287.95,
+          "confidence": 0.9800676703453064
+        },
+        {
+          "text": " to",
+          "start": 287.95,
+          "end": 288.41,
+          "confidence": 0.98691326379776
+        },
+        {
+          "text": " U",
+          "start": 288.41,
+          "end": 288.55,
+          "confidence": 0.9089337587356567
+        },
+        {
+          "text": ".S.",
+          "start": 288.55,
+          "end": 288.67,
+          "confidence": 0.9978528916835785
+        },
+        {
+          "text": " forces",
+          "start": 288.85,
+          "end": 289.05,
+          "confidence": 0.9872395396232605
+        }
+      ]
+    },
+    {
+      "start": 289.47,
+      "end": 295.47,
+      "text": "and prevent miscalculation and escalation, an action consistent with operations in the",
+      "words": [
+        {
+          "text": " and",
+          "start": 289.47,
+          "end": 289.79,
+          "confidence": 0.9216771721839905
+        },
+        {
+          "text": " prevent",
+          "start": 289.79,
+          "end": 290.09,
+          "confidence": 0.9958136677742004
+        },
+        {
+          "text": " miscalculation",
+          "start": 290.09,
+          "end": 291.09,
+          "confidence": 0.9884807765483856
+        },
+        {
+          "text": " and",
+          "start": 291.09,
+          "end": 291.83,
+          "confidence": 0.9949758052825928
+        },
+        {
+          "text": " escalation,",
+          "start": 291.83,
+          "end": 292.61,
+          "confidence": 0.9983436167240143
+        },
+        {
+          "text": " an",
+          "start": 293.07,
+          "end": 293.15,
+          "confidence": 0.9720439314842224
+        },
+        {
+          "text": " action",
+          "start": 293.15,
+          "end": 293.49,
+          "confidence": 0.9992594122886658
+        },
+        {
+          "text": " consistent",
+          "start": 293.49,
+          "end": 294.05,
+          "confidence": 0.998256504535675
+        },
+        {
+          "text": " with",
+          "start": 294.05,
+          "end": 294.35,
+          "confidence": 0.9995065927505493
+        },
+        {
+          "text": " operations",
+          "start": 294.35,
+          "end": 295.09,
+          "confidence": 0.9794043302536011
+        },
+        {
+          "text": " in",
+          "start": 295.09,
+          "end": 295.37,
+          "confidence": 0.997395396232605
+        },
+        {
+          "text": " the",
+          "start": 295.37,
+          "end": 295.47,
+          "confidence": 0.9995275735855103
+        }
+      ]
+    },
+    {
+      "start": 295.47,
+      "end": 299.73,
+      "text": "past, we coordinated with appropriate militaries and other organizations in the region",
+      "words": [
+        {
+          "text": " past,",
+          "start": 295.47,
+          "end": 295.79,
+          "confidence": 0.9994475245475769
+        },
+        {
+          "text": " we",
+          "start": 295.89,
+          "end": 295.97,
+          "confidence": 0.99949049949646
+        },
+        {
+          "text": " coordinated",
+          "start": 295.97,
+          "end": 296.43,
+          "confidence": 0.9987660646438599
+        },
+        {
+          "text": " with",
+          "start": 296.43,
+          "end": 297.15,
+          "confidence": 0.9823916554450989
+        },
+        {
+          "text": " appropriate",
+          "start": 297.15,
+          "end": 297.51,
+          "confidence": 0.9567623138427734
+        },
+        {
+          "text": " militaries",
+          "start": 297.51,
+          "end": 298.29,
+          "confidence": 0.9767435193061829
+        },
+        {
+          "text": " and",
+          "start": 298.29,
+          "end": 298.45,
+          "confidence": 0.9542416930198669
+        },
+        {
+          "text": " other",
+          "start": 298.45,
+          "end": 298.61,
+          "confidence": 0.9979512095451355
+        },
+        {
+          "text": " organizations",
+          "start": 298.61,
+          "end": 299.11,
+          "confidence": 0.9978297352790833
+        },
+        {
+          "text": " in",
+          "start": 299.11,
+          "end": 299.39,
+          "confidence": 0.9988166093826294
+        },
+        {
+          "text": " the",
+          "start": 299.39,
+          "end": 299.47,
+          "confidence": 0.9995065927505493
+        },
+        {
+          "text": " region",
+          "start": 299.47,
+          "end": 299.73,
+          "confidence": 0.9988759160041809
+        }
+      ]
+    },
+    {
+      "start": 299.73,
+      "end": 299.83,
+      "text": "Thank you for watching.",
+      "words": [
+        {
+          "text": " Thank",
+          "start": 299.73,
+          "end": 299.73,
+          "confidence": 0.057164110243320465
+        },
+        {
+          "text": " you",
+          "start": 299.73,
+          "end": 299.73,
+          "confidence": 0.9770421981811523
+        },
+        {
+          "text": " for",
+          "start": 299.73,
+          "end": 299.81,
+          "confidence": 0.1860160082578659
+        },
+        {
+          "text": " watching.",
+          "start": 299.81,
+          "end": 299.83,
+          "confidence": 0.5852086544036865
+        }
+      ]
+    }
+  ]
+}

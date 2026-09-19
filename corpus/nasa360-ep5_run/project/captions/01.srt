@@ -1,0 +1,79 @@
+1
+0:00:00,000 --> 0:00:00,947
+very much like the electronic
+
+2
+0:00:00,980 --> 0:00:01,980
+camera you have at home.
+
+3
+0:00:02,460 --> 0:00:03,767
+So think of a megapixel camera.
+
+4
+0:00:03,800 --> 0:00:04,887
+This is about the 1 ,024
+
+5
+0:00:04,920 --> 0:00:06,467
+pixels along this direction,
+
+6
+0:00:06,500 --> 0:00:07,487
+another 1 ,000 along this
+
+7
+0:00:07,520 --> 0:00:07,980
+direction.
+
+8
+0:00:08,380 --> 0:00:09,880
+And it's taking snapshots.
+
+9
+0:00:10,400 --> 0:00:11,407
+And if we know how far
+
+10
+0:00:11,440 --> 0:00:12,947
+this object, how far away it
+
+11
+0:00:12,980 --> 0:00:14,287
+is from us, and we can
+
+12
+0:00:14,320 --> 0:00:15,447
+figure out how much light is
+
+13
+0:00:15,480 --> 0:00:16,487
+in each little box, each little
+
+14
+0:00:16,520 --> 0:00:18,247
+pixel of this image, we can
+
+15
+0:00:18,280 --> 0:00:20,007
+figure out how big and how
+
+16
+0:00:20,040 --> 0:00:20,927
+bright the thing is that we're
+
+17
+0:00:20,960 --> 0:00:21,227
+looking at.
+
+18
+0:00:21,260 --> 0:00:23,187
+So, Carrie, looking at space from
+
+19
+0:00:23,220 --> 0:00:24,707
+space is truly the way to
+
+20
+0:00:24,740 --> 0:00:24,860
+go.
