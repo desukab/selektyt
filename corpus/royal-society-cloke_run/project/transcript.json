@@ -9,7 +9,8 @@
     "fallback_reason": null,
     "chunks": 3,
     "chunking": "5 min chunks (+15s overlap)",
-    "num_threads": 4
+    "num_threads": 4,
+    "vad_filter": true
   },
   "segments": [
     {

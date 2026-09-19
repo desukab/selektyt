@@ -182,11 +182,15 @@ def run_one(entry: dict, workdir: Path, keep_media: bool) -> dict:
         # A corpus result whose evidence the harness deletes is not a result.
         # The pipeline writes its artifacts under out_root / "project"
         # (selekyt/pipeline.py), which is the directory the audits are pointed at.
+        # The directory has just been rmtree'd above so a re-run starts clean,
+        # so it must be recreated here: guarding the write on is_dir() instead
+        # silently dropped the probe on every re-run, and once the media was
+        # deleted there was no frame rate left anywhere in the project.
         probe_dir = project / "project"
-        if probe_dir.is_dir():
-            (probe_dir / "source_probe.json").write_text(
-                json.dumps({"source": str(media), **probe_facts}, ensure_ascii=False),
-                encoding="utf-8")
+        probe_dir.mkdir(parents=True, exist_ok=True)
+        (probe_dir / "source_probe.json").write_text(
+            json.dumps({"source": str(media), **probe_facts}, ensure_ascii=False),
+            encoding="utf-8")
 
         cli = sys.executable
         cmd = [cli, "-m", "selekyt.cli", str(media), "--out", str(project),
@@ -222,7 +226,17 @@ def run_one(entry: dict, workdir: Path, keep_media: bool) -> dict:
                     rec["status"] = "NO_STORIES_PASSED"
                     break
         if not keep_media:
-            shutil.rmtree(media_dir / media.name, ignore_errors=True)
+            # ``fetch`` writes a regular file, and ``shutil.rmtree`` on a regular
+            # file raises NotADirectoryError, which ``ignore_errors`` swallowed —
+            # so this never deleted anything. That made every "the media was
+            # deleted, so the relink checks could not run" explanation in the
+            # corpus results untrue, and silently undid the point of --keep-media
+            # being opt-in: disk filled up with sources nobody was looking at.
+            gone = media_dir / media.name
+            try:
+                gone.unlink()
+            except OSError:
+                pass
     except subprocess.TimeoutExpired:
         rec["status"] = "TIMEOUT"
         rec["elapsed_s"] = round(time.monotonic() - t0, 1)

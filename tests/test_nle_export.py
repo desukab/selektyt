@@ -422,3 +422,51 @@ def test_export_carries_source_traceability_for_every_event():
     for clip in tl.clips:
         assert f"* FROM CLIP: {clip.source.path}" in text
         assert clip.name in text
+
+
+def test_an_edl_never_ships_a_relative_from_clip(tmp_path, monkeypatch):
+    """Regression: the EDL wrote ``clip.source.path`` verbatim, so a CLI
+    invocation given a relative source emitted a FROM CLIP that only resolves
+    from the directory the export was run in. An NLE resolves it against the
+    timeline's own directory, so the same file imported with every clip
+    offline. ``render_fcpxml`` already absolutised; ``render_edl`` did not.
+
+    Measured on a real corpus project: the EDL read
+    ``corpus/media/royal-society-cloke.webm`` from ``project/timeline/01.edl``.
+    """
+    from engine.timeline import Clip, SourceMedia, Timeline
+
+    real = tmp_path / "media" / "talk.mp4"
+    real.parent.mkdir(parents=True, exist_ok=True)
+    real.write_bytes(b"stub")
+    # The CLI is handed a source relative to its working directory, as
+    # tools/corpus_run.py hands it one.
+    monkeypatch.chdir(tmp_path)
+    media = SourceMedia(path="media/talk.mp4", fps=30.0, duration=10.0)
+    tl = Timeline(clips=[Clip(media, 0.0, 5.0, 0.0, 5.0, name="clip one")])
+    text = render_edl(tl)
+
+    m = re.search(r"^\s*\*\s*FROM CLIP:\s*(.+)$", text, re.M)
+    assert m, "the EDL must annotate every event with its source"
+    emitted = Path(m.group(1))
+    assert emitted.is_absolute(), f"FROM CLIP must be absolute, got {emitted!r}"
+    assert emitted == real.resolve()
+
+
+def test_an_edl_that_cannot_resolve_its_source_fails_the_export(tmp_path, monkeypatch):
+    """A path that cannot be made absolute must fail loudly rather than ship an
+    offline timeline, exactly as the FCPXML path already does."""
+    from engine.timeline import Clip, SourceMedia, Timeline
+    from engine.nle_export import _from_clip_path
+
+    def unresolvable(self, strict=False):
+        raise OSError("working directory has been removed")
+
+    monkeypatch.setattr(Path, "resolve", unresolvable)
+    with pytest.raises(RuntimeError, match="cannot make the source path absolute"):
+        _from_clip_path("a/b.mov")
+    # And the export itself, not just the helper.
+    media = SourceMedia(path="a/b.mov", fps=30.0, duration=10.0)
+    tl = Timeline(clips=[Clip(media, 0.0, 5.0, 0.0, 5.0, name="clip one")])
+    with pytest.raises(RuntimeError, match="cannot make the source path absolute"):
+        render_edl(tl)

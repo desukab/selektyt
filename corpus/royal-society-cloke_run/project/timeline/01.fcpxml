@@ -14,7 +14,7 @@
           <spine>
           <asset-clip ref="r1" offset="0s" start="4543/25s" duration="998/25s" tcFormat="NDF" />
           <asset-clip ref="r1" offset="998/25s" start="5556/25s" duration="235/25s" tcFormat="NDF" />
-          <asset-clip ref="r1" offset="1233/25s" start="5803/25s" duration="78/25s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="1233/25s" start="5803/25s" duration="77/25s" tcFormat="NDF" />
           </spine>
         </sequence>
       </project>

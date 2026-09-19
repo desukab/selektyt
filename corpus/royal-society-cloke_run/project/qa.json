@@ -5,22 +5,28 @@
   "per_file": {
     "corpus/royal-society-cloke_run/project/facebook/01.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 14315258,
+      "size": 14303567,
       "warnings": []
     },
     "corpus/royal-society-cloke_run/project/shorts/01.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 5339532,
+      "size": 5337169,
       "warnings": []
     },
     "corpus/royal-society-cloke_run/project/facebook/02.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
@@ -29,6 +35,8 @@
     },
     "corpus/royal-society-cloke_run/project/shorts/02.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
@@ -37,6 +45,8 @@
     },
     "corpus/royal-society-cloke_run/project/facebook/03.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
@@ -45,6 +55,8 @@
     },
     "corpus/royal-society-cloke_run/project/shorts/03.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
@@ -53,6 +65,8 @@
     },
     "corpus/royal-society-cloke_run/project/facebook/04.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
@@ -61,6 +75,8 @@
     },
     "corpus/royal-society-cloke_run/project/shorts/04.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,

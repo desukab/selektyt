@@ -115,6 +115,32 @@ def _to_file_uri(path: str) -> str:
     return "".join(encoded)
 
 
+def _from_clip_path(path: str) -> str:
+    """An absolute path for ``* FROM CLIP:``, or a failure naming the path.
+
+    The same problem ``_to_file_uri`` guards against, on the EDL side: an NLE
+    resolves a relative FROM CLIP against the timeline file's *own directory*,
+    which is almost never where the media is, so the sequence imports with
+    every clip offline and the editor faces a relink dialog for a file that
+    never moved. ``_to_file_uri`` turns the source into an absolute URI and
+    refuses to ship one it cannot resolve; an EDL has no URI, only a path, so
+    the equivalent guarantee is an absolute path. A CLI invocation given a
+    relative source produced exactly this on a real corpus run — the EDL read
+    ``corpus/media/x.webm`` while sitting in ``project/timeline/`` — and the
+    audit passed it, because the audit resolved the same relative string
+    against its own working directory instead of the timeline's.
+    """
+    if path.startswith(("file://", "http://", "https://")):
+        return path
+    try:
+        return str(Path(path).resolve())
+    except (OSError, ValueError) as exc:
+        raise RuntimeError(
+            "cannot make the source path absolute, so the EDL would reference "
+            f"media an NLE cannot relink: {path!r}"
+        ) from exc
+
+
 def _reel_name(path: str, taken: set[str]) -> str:
     """Classic CMX reel id: uppercase, no spaces, 8 characters. Uniqueness is
     enforced so two sources cannot share a reel and silently relink to each
@@ -297,7 +323,7 @@ def render_edl(timeline: Timeline) -> str:
         )
         if first_block:
             out.append(f"     M2   {ev.clip_name}")
-            out.append(f"* FROM CLIP: {ev.source_path}")
+            out.append(f"* FROM CLIP: {_from_clip_path(ev.source_path)}")
             if ev.non_ascii_name:
                 out.append(
                     "* COMMENT: clip name is not ASCII; the reel name is used "

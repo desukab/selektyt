@@ -138,6 +138,35 @@ def test_a_clip_reading_past_its_asset_is_caught(tmp_path):
     assert any("reads past the end of its asset" in d for _n, _o, d in findings)
 
 
+def test_an_edl_media_path_is_resolved_against_the_timeline_not_the_audit(tmp_path, monkeypatch):
+    """Regression: the audit checked ``Path(from_clip).exists()`` from *its own*
+    working directory. The emitter writes the path from its working directory
+    too, so when both were run from the same place — as they always are in this
+    repo — a relative path resolved the same lucky way on both sides and the
+    check passed an EDL that imports with every clip offline. An NLE resolves a
+    relative FROM CLIP against the timeline's own directory, so that is the
+    base the audit must use.
+
+    Reproduced from the real corpus project: the EDL read
+    ``corpus/media/x.webm`` while sitting in ``project/timeline/``.
+    """
+    project = _build_project(tmp_path / "project")
+    media = project / "source" / "movie.mov"
+    # The audit is run from the directory the path *does* resolve from. The
+    # pre-fix check passed here precisely because it shared that directory.
+    monkeypatch.chdir(project)
+    edl = (project / "timeline" / "01.edl").read_text()
+    (project / "timeline" / "01.edl").write_text(
+        edl.replace(str(media), str(Path("source") / "movie.mov"))
+    )
+    ok, findings = _audit(project)
+    assert not ok, "a FROM CLIP an NLE cannot resolve must fail the audit"
+    assert any("edl media exists" in n and not cok for n, cok, _d in findings), (
+        [f"{n}: {d}" for n, cok, d in findings]
+    )
+    assert media.is_file(), "the failure is the path base, not the media being gone"
+
+
 def test_an_overlapping_record_span_is_caught(tmp_path):
     """Two edits on the *same* channel whose record spans overlap is an import
     conflict; separate channels are separate tracks, so those may coincide."""

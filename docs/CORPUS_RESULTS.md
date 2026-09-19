@@ -23,14 +23,47 @@ required axes were attempted.
 | roman-portrait-trailer | creator | NO_SPEECH_DETECTED | 0 | — | en |
 
 Every OK source was also audited with `tools/nle_check.py`, with the `pycmx`
-independent EDL parse executing rather than skipping. The honest summary is not
-"0 FAIL everywhere": the interchange audit reported relink failures on all
-seven, because `tools/corpus_run.py` deletes the source media after each run
-and the EDL/FCPXML point at it. That was an audit artifact, not an export
-defect; `nle_check.py` now records those as NOT RUN and counts them separately,
-and this section was previously stating a pass rate that the tool could not
-actually have produced at the time. Re-run with `--keep-media` to exercise the
-relink checks for real.
+independent EDL parse executing rather than skipping. **This section has been
+wrong twice, and the second wrong version is the more instructive one.**
+
+The first version of this paragraph said the interchange audit reported relink
+failures on all seven *because `corpus_run.py` deletes the source media*, and
+called that an audit artifact rather than an export defect. That explanation
+does not survive checking the code. `corpus_run.py`'s cleanup is
+
+```python
+shutil.rmtree(media_dir / media.name, ignore_errors=True)
+```
+
+and `fetch()` writes a regular **file**. `shutil.rmtree` on a file raises
+`NotADirectoryError`, which `ignore_errors=True` swallowed, so the media was
+never deleted by the harness at all. (Verified directly: the file survives.)
+The sources that are gone were removed out of band for disk, not by the tool —
+which means `--keep-media` was not doing anything, and "re-run with
+`--keep-media` to exercise the relink checks" was advice about a switch that
+had no effect. Fixed to `unlink()`; `tests/test_corpus_run.py` now asserts the
+media really is gone and that the source probe survives it.
+
+The second, worse problem: the relink checks that *did* run were resolving media
+paths from the wrong base. Every corpus EDL carries a **repo-root-relative**
+`* FROM CLIP:` — `corpus/media/emwcon-panel-2018.webm` — written verbatim from
+the path the CLI was handed, while sitting in `project/timeline/01.edl`. An NLE
+resolves a relative FROM CLIP against the **timeline's own directory**, so all
+seven projects would have imported with every clip offline and the editor
+staring at a relink dialog for a file that never moved. `nle_check.py` checked
+`Path(p).exists()` from *its own* working directory, which was the repo root —
+the same directory the emitter had written the relative path from. Both sides
+resolved the same broken string the same lucky way, so the audit passed an
+export that a real NLE rejects. The FCPXML side has absolutised since an earlier
+run hit exactly this; the EDL side did not.
+
+Both are fixed, and both fixes are pinned by tests that fail on the pre-fix code:
+the EDL now carries an absolute path and refuses to export one it cannot resolve
+(mirroring the guarantee `render_fcpxml` already had), and the audit resolves a
+relative FROM CLIP against the timeline's directory, as an NLE does. The
+`NOT RUN` verdict is now derived from the media the artifacts actually name
+rather than from a separate path in `pipeline_state.json`, which carried the
+same working-directory assumption.
 
 `tools/editorial_audit.py` **failed on four of the seven** — `emwcon-panel-2018`,
 `ooi-vertical`, `pentagon-esper-briefing`, `royal-society-cloke` — every one of
@@ -68,8 +101,18 @@ ALL CHECKS PASS
 ```
 
 and `tools/nle_check.py` on the same retained media reports **62/62 PASS**,
-including the `edl media exists` and `fcpxml media relinkable` checks that the
-first run could not exercise at all because the media had been deleted.
+including `edl media exists` and `fcpxml media relinkable`.
+
+**That 62 was itself a false pass, and is the reason the count is now worth
+something.** It was measured before the path-resolution fix above, so `edl
+media exists` passed only because the audit and the emitter shared a working
+directory. Re-audited with a relative FROM CLIP resolved the way an NLE resolves
+it, the same project reported `edl media exists` **FAIL on all four clips** —
+`project/timeline/corpus/media/royal-society-cloke.webm` does not exist. The
+EDLs were then re-emitted with `tools/regenerate_timelines.py` (see below), and
+the audit passes 62/62 for real: `01 edl media exists … 3 clip path(s)`, no
+`NOT RUN`, no working-directory dependence.
+
 `pycmx` parses every EDL independently of the project venv; timelines agree with
 both rendered presets to 0.53 frames, and EDL↔FCPXML to 0.00 frames.
 
@@ -158,7 +201,7 @@ gate correctly rejecting unusable material, or the gate being too strict for
 a 54-second source with sparse speech, cannot be determined from this run —
 it needs a human who speaks Hindi to read the transcript against the audio.
 
-## Two real defects the corpus found, both fixed and pinned
+## Four real defects the corpus found, all fixed and pinned
 
 1. **The rendered deliverable shipped with no audio stream.** On the OOI
    source (AV1/Opus WebM), input seeking past ~15 s dropped the audio stream
@@ -174,6 +217,30 @@ it needs a human who speaks Hindi to read the transcript against the audio.
    clip 01 this reported a 26-frame disagreement about an export that was
    correct. Fixed in `tools/nle_check.py` to compare against the edit plan's
    retained span. Verified still-catches-real-errors by perturbing the plan.
+3. **Every corpus EDL would have imported with every clip offline.** All
+   seven OK sources shipped a repo-root-relative `* FROM CLIP:` inside a
+   timeline that lives two directories below the repo root, so an NLE
+   resolving it against the timeline's own directory finds nothing. The
+   FCPXML alongside each one was correct — it has absolutised since an
+   earlier run hit this exact failure — so the two formats disagreed about
+   where the media was, and only the format nobody had opened was wrong.
+   Fixed at the emitter (`_from_clip_path`, which refuses to ship a path it
+   cannot make absolute) and at the audit, which now resolves a relative FROM
+   CLIP against the timeline's directory instead of its own working
+   directory. Two tests pin it; both fail on the pre-fix code. The shipped
+   files are regenerated without a re-run by
+   `tools/regenerate_timelines.py`, and the fact that every FCPXML came back
+   byte-identical is the evidence that the re-emit reproduced the same
+   timeline rather than a new one.
+4. **The corpus harness never deleted the media it claimed to.**
+   `shutil.rmtree` on a regular file is a silent no-op under
+   `ignore_errors=True`, so `keep_media=False` left every source on disk and
+   the `NOT RUN` branch above was guarding against a condition that never
+   occurred. Fixed to `unlink()`, and `tests/test_corpus_run.py` asserts the
+   deletion actually happens and — the reason this mattered — that the
+   recorded frame rate outlives the media. That probe write was itself
+   silently dropped on every re-run until the same session, because it was
+   guarded on a directory `run_one` had just `rmtree`d.
 
 ## Determinism, re-verified on a fresh download
 
@@ -205,6 +272,19 @@ Criterion P13 holds on a real re-run, not only in the unit test.
   and 29.97 fps. 23.976, 50 and 59.94 remain untested, and no 4K/H.265 source
   was attempted — that axis is still open and is still the largest
   unquantified risk named in `docs/BUSINESS_MODEL.md` §9.
+- **Six of the seven OK sources still ship broken EDLs.** The path fix is in
+  the emitter, but the artifacts on disk were written by the old emitter, and
+  only `royal-society-cloke` has been re-emitted — the one source whose media
+  is still on disk. The other six carry relative `* FROM CLIP:` paths
+  (`emwcon-panel-2018`, `hadhazy-protest`, `nasa360-ep5`, `ooi-vertical`,
+  `pentagon-esper-briefing`, `telugu-tutorial`), and
+  `tools/regenerate_timelines.py` refuses to run without the media, which is
+  the correct refusal. Confirming them needs the media re-downloaded and the
+  tool re-run, not a full pipeline re-run — but it does need the disk.
+- **No NLE has opened any of this.** `edl media exists` passing is an audit
+  statement about path resolution, not evidence an editor imported the
+  sequence. It is stronger than it was — it now resolves the way an NLE does —
+  but it is still a model of an import, not an import.
 
 ## Exact next actions, in priority order
 
@@ -215,7 +295,11 @@ Criterion P13 holds on a real re-run, not only in the unit test.
 2. Fix the no-speech error to distinguish an unreadable container from a
    speechless source — remux to a clean container and retry before reporting
    "no audible spoken content".
-3. Score WER against `corpus/manifest.json`'s C9/C10 audio-only corpora
+3. Re-download the six sources whose media is gone and re-emit their EDLs with
+   `tools/regenerate_timelines.py`, so the shipped artifacts match the fixed
+   emitter. No re-transcode needed; the media is the only thing missing, and
+   it is needed one source at a time to stay inside the disk limit.
+4. Score WER against `corpus/manifest.json`'s C9/C10 audio-only corpora
    (`docs/EVALUATION.md` §2.2), which are the ground truth the video sources
    lack.
-4. Add a 23.976, a 50 and a 59.94 source, and one 4K/H.265 source.
+5. Add a 23.976, a 50 and a 59.94 source, and one 4K/H.265 source.

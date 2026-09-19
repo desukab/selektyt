@@ -191,8 +191,59 @@ def _edl_events(text: str) -> list[dict]:
     return [events[n] for n in sorted(events)]
 
 
-def _edl_media(text: str) -> list[str]:
-    return [m.group(1) for m in re.finditer(r"^\s*\*\s*FROM CLIP:\s*(.+)$", text, re.M)]
+def _edl_media(text: str, edl: Path | None = None) -> list[str]:
+    """The FROM CLIP paths an NLE would resolve, resolved the way an NLE does.
+
+    A relative path is found relative to the EDL's *own directory*, not the
+    directory the audit happens to be run from. Checking ``Path(rel).exists()``
+    from the audit's working directory passes an EDL that imports with every
+    clip offline — the audit and the emitter shared a working directory, so
+    both resolved the same broken string the same lucky way. That is the bug
+    this audit exists to catch, so resolve against the timeline first and fall
+    back to the raw string only for a URI an EDL cannot meaningfully carry.
+    """
+    raw = [m.group(1) for m in re.finditer(r"^\s*\*\s*FROM CLIP:\s*(.+)$", text, re.M)]
+    if edl is None:
+        return raw
+    resolved: list[str] = []
+    for p in raw:
+        if p.startswith(("file://", "http://", "https://")):
+            resolved.append(p)
+            continue
+        candidate = Path(p)
+        resolved.append(str(candidate if candidate.is_absolute()
+                           else (edl.parent / candidate)))
+    return resolved
+
+
+def _referenced_media_present(timeline: Path) -> bool:
+    """Whether any media the timelines name is actually reachable.
+
+    ``NOT RUN`` means "no evidence either way", so it must be claimed only when
+    the media really is unreachable by every path the artifacts carry — not when
+    the audit's working directory happens not to be the one a relative path was
+    written against. Asking the artifacts themselves, resolved the way the
+    checks below resolve them, keeps that decision honest; deriving it from a
+    separate path recorded in ``pipeline_state.json`` carries the same
+    working-directory assumption and makes NOT RUN depend on where the audit
+    was invoked from.
+    """
+    for edl in sorted(timeline.glob("*.edl")):
+        text = edl.read_text(encoding="utf-8", errors="replace")
+        for p in _edl_media(text, edl):
+            if not p.startswith(("file://", "http://", "https://")) and Path(p).is_file():
+                return True
+    for fx in sorted(timeline.glob("*.fcpxml")):
+        try:
+            root = ET.fromstring(fx.read_text(encoding="utf-8"))
+        except ET.ParseError:
+            continue
+        for rep in root.iter("media-rep"):
+            src = rep.get("src", "")
+            if src.startswith("file://") and Path(
+                    urllib.parse.unquote(src[len("file://"):])).is_file():
+                return True
+    return False
 
 
 def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps: float,
@@ -253,7 +304,7 @@ def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps:
     # is the source the pipeline was given, so when the harness deleted that
     # source afterwards the check has no evidence either way — NOT RUN, not a
     # defect in the export.
-    media = _edl_media(text)
+    media = _edl_media(text, edl)
     missing = [p for p in media if not Path(p).exists()]
     if missing and not media_retained:
         findings.append((f"{stem} edl media exists", True,
@@ -502,7 +553,8 @@ def check_project(project: Path) -> tuple[bool, list[tuple[str, bool, str]]]:
     # the interchange, so the checks below are told the media is absent and
     # report NOT RUN instead of FAIL. ``source`` is already None in that case —
     # the pipeline_state fallback above only accepts a path that still exists.
-    media_retained = source is not None and Path(source).is_file()
+    media_retained = (source is not None and Path(source).is_file()
+                      or _referenced_media_present(timeline))
     findings.append(("source frame rate", fps > 0,
                      f"{source.name if source else '?'} @ {fps:.4f} fps"
                      if fps else "could not probe the source"))
