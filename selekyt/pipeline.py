@@ -209,6 +209,14 @@ def run(
         media, info = Path(source).expanduser(), {}
         if not media.is_file():
             raise RuntimeError(f"Local video not found: {media}")
+        # A local source is not copied into the project tree, so `source` is
+        # the media's own path rather than a URL. tools/nle_check.py reads that
+        # key to find the media and derive the frame rate the timelines were
+        # stamped with; without it, every fps-dependent check reports "could
+        # not probe the source" on a local-file run that otherwise succeeded.
+        if state.get("source") != source:
+            state.update({"source": source, "media_info": {}})
+            _save_state(state_path, state)
 
     fingerprint = _fingerprint(media, source, model, language)
     transcript_path = project / "transcript.json"
@@ -428,8 +436,8 @@ def run(
         ):
             print(f"[cache] reusing rendered clip {idx:02d}", flush=True)
         else:
-            render_clip(media, c, fb, caption, vertical=False)
-            render_clip(media, c, sh, caption, vertical=True)
+            render_clip(media, c, fb, caption, vertical=False, fps=source_fps)
+            render_clip(media, c, sh, caption, vertical=True, fps=source_fps)
             renders[f"{idx:02d}"] = {
                 "fingerprint": fingerprint,
                 "selection_digest": sel_digest,
@@ -441,9 +449,11 @@ def run(
             state["renders"] = renders
             _save_state(state_path, state)
         # The editable interchange for this clip. The timeline is built from
-        # the same retention_intervals the render just concatenated, so its
-        # duration is the rendered file's duration — an NLE relinking these
-        # clips gets the cut that was shipped, not an approximation of it.
+        # the same retention_intervals the render just concatenated and stamped
+        # on the same frame grid, so an NLE relinking these clips gets the cut
+        # that was shipped. tools/nle_check.py compares the two on every run —
+        # the render and the interchange are asserted to agree to within
+        # RENDER_FRAME_TOLERANCE rather than assumed to.
         tl = timeline_for_candidate(media, c, fps=source_fps, duration=source_duration)
         exported = nle_export(tl, project / "timeline", stem=f"{idx:02d}")
         # CMX 3600 declares no frame rate, so the list is validated on the grid

@@ -190,3 +190,48 @@ def test_render_rejects_empty_intervals(tmp_path):
     c = Candidate(0.0, 1.0, "", "story", "h", "p", 0.8, 0.7, 0.9, 0.9, "t")
     with pytest.raises(RuntimeError, match="no renderable intervals"):
         render_clip(source, c, tmp_path / "fb" / "01.mp4")
+
+
+def _probe_frames(path: Path) -> int:
+    import subprocess
+
+    out = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=nb_frames",
+         "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
+        capture_output=True, text=True, check=True,
+    )
+    return int(out.stdout.strip())
+
+
+def test_render_multi_part_is_frame_accurate(tmp_path):
+    """A multi-interval clip must render exactly the frames its exported
+    timeline is stamped with.
+
+    Passing a bare ``-t`` to ffmpeg emits every frame at or below the requested
+    time, so a non-whole-frame interval rounds *up*. Each concatenated part
+    does that independently, and the overshoot grew with the cut count while
+    the EDL stayed on the frame grid — 2.63 frames on a two-part real-world
+    clip, which tools/nle_check.py flagged as a render/timeline disagreement.
+    The two candidates below ask for 5.3 and 7.3 frames at 15 fps, so the
+    rounding is exercised exactly; the expected counts are what
+    engine.timecode.format_smpte resolves the same intervals to, which is the
+    invariant that makes an EDL describe the file that was actually shipped.
+    """
+    source = _video(tmp_path / "source.mp4", frames=120, fps=15)
+    # 5.3 and 7.3 frames at 15 fps -> neither interval is a whole frame count,
+    # which is the case the bare ``-t`` path rounded up: ffmpeg emits every
+    # frame whose timestamp is at or below the request (6 and 8 frames here),
+    # one more than the grid the timecode is stamped with (5 and 7). The rate
+    # passed here is the same one the timeline is stamped with, mirroring how
+    # the pipeline hands probe_fps(media) to both the render and the export.
+    cases = [(1.0, 1.0 + 5.3 / 15.0, 5), (6.0, 6.0 + 7.3 / 15.0, 7)]
+    for i, (start, end, expected) in enumerate(cases, start=1):
+        out = tmp_path / "fb" / f"{i:02d}.mp4"
+        render_clip(source, _candidate_with_words(start, end), out, fps=15)
+        got = _probe_frames(out)
+        assert got == expected, (
+            f"clip {i} rendered {got} frames but its timeline is stamped with "
+            f"{expected}: an NLE relinking this cut would not get the file that "
+            f"was shipped"
+        )
