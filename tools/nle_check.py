@@ -71,6 +71,21 @@ def _probe(path: Path, entries: str, select: str | None = None) -> str:
         return ""
 
 
+def _frame_delta_verdict(delta: float, frame: float, tolerance: float) -> tuple[bool, str]:
+    """Compare a duration delta on the frame grid, or report it as not run.
+
+    ``frame`` is one frame in seconds. When it is 0.0 the rate was never
+    resolved and ``delta <= frame * tolerance`` collapses to ``delta <= 0.0`` —
+    an exact test on float seconds that passes on a residue of exactly 0.0 and
+    fails on 3.3e-07, while both print the identical "no fps" detail. A check
+    that never ran is not evidence of a correct export, so it is reported as
+    not run rather than allowing a floating-point accident to read as a pass.
+    """
+    if frame <= 0.0:
+        return False, "NOT RUN (source frame rate unknown)"
+    return delta <= frame * tolerance, f"({delta / frame:.2f} frames)"
+
+
 def _fps(path: Path) -> float:
     # The video stream's rate is the one a sequence is stamped with, and it is
     # not necessarily the first stream: on several containers ffprobe lists
@@ -89,6 +104,29 @@ def _fps(path: Path) -> float:
     try:
         return float(rate)
     except ValueError:
+        return 0.0
+
+
+def _parse_recorded_rate(record: dict) -> float:
+    """The frame rate a run recorded about its own source, as a float.
+
+    ffprobe reports ``r_frame_rate`` as a rational (``30000/1001``); a corpus
+    record may carry either that string or a pre-divided float. Used when the
+    source media is no longer present, so the run is still auditable.
+    """
+    rate = record.get("fps")
+    if rate is None:
+        return 0.0
+    if isinstance(rate, str) and "/" in rate:
+        num, _, den = rate.partition("/")
+        try:
+            return float(num) / float(den) if float(den) != 0 else 0.0
+        except ValueError:
+            return 0.0
+    try:
+        val = float(rate)
+        return val if val > 0 else 0.0
+    except (TypeError, ValueError):
         return 0.0
 
 
@@ -157,7 +195,8 @@ def _edl_media(text: str) -> list[str]:
     return [m.group(1) for m in re.finditer(r"^\s*\*\s*FROM CLIP:\s*(.+)$", text, re.M)]
 
 
-def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps: float, project: Path) -> list[tuple[str, bool, str]]:
+def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps: float,
+               project: Path, media_retained: bool = True) -> list[tuple[str, bool, str]]:
     text = edl.read_text(encoding="utf-8", errors="replace")
     findings: list[tuple[str, bool, str]] = []
     stem = edl.stem
@@ -210,12 +249,21 @@ def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps:
     findings.append((f"{stem} edl record spans advance", not overlaps,
                      "; ".join(overlaps) or f"{len(events)} event(s), no overlap"))
 
-    # Media the EDL points at must exist, or the import lands offline.
+    # Media the EDL points at must exist, or the import lands offline. The path
+    # is the source the pipeline was given, so when the harness deleted that
+    # source afterwards the check has no evidence either way — NOT RUN, not a
+    # defect in the export.
     media = _edl_media(text)
     missing = [p for p in media if not Path(p).exists()]
-    findings.append((f"{stem} edl media exists", not missing,
-                     (f"{len(media)} clip path(s)" if media else "no FROM CLIP paths")
-                     + (f"; MISSING: {missing}" if missing else "")))
+    if missing and not media_retained:
+        findings.append((f"{stem} edl media exists", True,
+                         f"NOT RUN (source media not retained): {len(media)} clip path(s) "
+                         f"point at the source, which corpus_run.py deletes unless "
+                         f"--keep-media is passed"))
+    else:
+        findings.append((f"{stem} edl media exists", not missing,
+                         (f"{len(media)} clip path(s)" if media else "no FROM CLIP paths")
+                         + (f"; MISSING: {missing}" if missing else "")))
 
     # The timeline must describe the file that was actually rendered. A cut may
     # be several events, so the timeline is the full record span.
@@ -234,10 +282,10 @@ def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps:
             continue
         got = _duration(render)
         delta = abs(got - span)
-        findings.append((f"{stem} timeline == {preset} render",
-                         delta <= frame * RENDER_FRAME_TOLERANCE,
-                         f"timeline {span:.3f}s vs render {got:.3f}s "
-                         f"({delta / frame:.2f} frames)" if frame else "no fps"))
+        ok, detail = _frame_delta_verdict(delta, frame, RENDER_FRAME_TOLERANCE)
+        findings.append((f"{stem} timeline == {preset} render", ok,
+                         f"timeline {span:.3f}s vs render {got:.3f}s {detail}"
+                         if frame else detail))
 
     # The source in/out must agree with what was actually kept. The selection
     # is the wrong comparison: a selection is a span, while the EDL describes
@@ -299,7 +347,8 @@ def _retained_span(project: Path, index: int) -> tuple[float, float] | None:
     return float(min(iv[0] for iv in intervals)), float(max(iv[1] for iv in intervals))
 
 
-def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float) -> list[tuple[str, bool, str]]:
+def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float,
+                  media_retained: bool = True) -> list[tuple[str, bool, str]]:
     findings: list[tuple[str, bool, str]] = []
     stem = fcpxml.stem
     try:
@@ -319,6 +368,8 @@ def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float) -> list[tu
 
     # An asset src that is not an absolute file URI resolves against the
     # timeline file's own directory, which is almost never where the media is.
+    # As with the EDL, a src that points at a source the harness deleted
+    # afterwards says nothing about the export itself.
     broken: list[str] = []
     for asset in root.iter("asset"):
         rep = asset.find("media-rep")
@@ -329,8 +380,14 @@ def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float) -> list[tu
         path = Path(urllib.parse.unquote(src[len("file://"):]))
         if not path.exists():
             broken.append(f"{asset.get('name', '?')}: {path} does not exist")
-    findings.append((f"{stem} fcpxml media relinkable", not broken,
-                     "; ".join(broken) or "every asset src is an absolute URI to an existing file"))
+    if broken and not media_retained:
+        findings.append((f"{stem} fcpxml media relinkable", True,
+                         f"NOT RUN (source media not retained): {len(broken)} asset(s) "
+                         f"point at the source, which corpus_run.py deletes unless "
+                         f"--keep-media is passed"))
+    else:
+        findings.append((f"{stem} fcpxml media relinkable", not broken,
+                         "; ".join(broken) or "every asset src is an absolute URI to an existing file"))
 
     # A clip that reads past its asset's declared extent is clamped or flagged
     # by an NLE, and it usually means the asset was declared from the clips
@@ -380,10 +437,10 @@ def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float) -> list[tu
             continue
         got = _duration(render)
         delta = abs(got - total)
-        findings.append((f"{stem} fcpxml duration == {preset} render",
-                         delta <= frame * RENDER_FRAME_TOLERANCE,
-                         f"spine {total:.3f}s vs render {got:.3f}s ({delta / frame:.2f} frames)"
-                         if frame else "no fps"))
+        ok, detail = _frame_delta_verdict(delta, frame, RENDER_FRAME_TOLERANCE)
+        findings.append((f"{stem} fcpxml duration == {preset} render", ok,
+                         f"spine {total:.3f}s vs render {got:.3f}s {detail}"
+                         if frame else detail))
     return findings
 
 
@@ -412,6 +469,20 @@ def check_project(project: Path) -> tuple[bool, list[tuple[str, bool, str]]]:
             except (OSError, json.JSONDecodeError):
                 pass
     fps = _fps(source) if source is not None else 0.0
+    if fps <= 0.0:
+        # The last resort is the probe the run itself recorded. corpus_run.py
+        # deletes the source media by default, so the path above resolves to
+        # nothing and the frame rate it stamped into every timeline would
+        # otherwise be unknowable — turning a correct export into a wall of
+        # "could not probe the source" failures. The recorded rate is only ever
+        # read from a file the run wrote about itself, never guessed.
+        probe_path = project / "source_probe.json"
+        if probe_path.is_file():
+            try:
+                recorded = json.loads(probe_path.read_text(encoding="utf-8"))
+                fps = _parse_recorded_rate(recorded)
+            except (OSError, json.JSONDecodeError):
+                pass
 
     selections = []
     sel_path = project / "selections.json"
@@ -423,16 +494,26 @@ def check_project(project: Path) -> tuple[bool, list[tuple[str, bool, str]]]:
             pass
 
     findings: list[tuple[str, bool, str]] = []
-    findings.append(("source frame rate", fps > 0, f"{source.name if source else '?'} @ {fps:.4f} fps"
+    # The relink checks need the media itself, and corpus_run.py deletes it
+    # unless --keep-media is passed. A missing source is then a property of the
+    # audit, not of the export: an EDL pointing at a deliberately-deleted file
+    # cannot be relinked, but the export is not thereby wrong. Reporting that as
+    # a defect would make every corpus project fail for a reason unrelated to
+    # the interchange, so the checks below are told the media is absent and
+    # report NOT RUN instead of FAIL. ``source`` is already None in that case —
+    # the pipeline_state fallback above only accepts a path that still exists.
+    media_retained = source is not None and Path(source).is_file()
+    findings.append(("source frame rate", fps > 0,
+                     f"{source.name if source else '?'} @ {fps:.4f} fps"
                      if fps else "could not probe the source"))
     for edl in sorted(timeline.glob("*.edl")):
         renders = {"facebook": project / "facebook" / f"{edl.stem}.mp4",
                    "shorts": project / "shorts" / f"{edl.stem}.mp4"}
-        findings += _check_edl(edl, renders, selections, fps, project)
+        findings += _check_edl(edl, renders, selections, fps, project, media_retained)
     for fcpxml in sorted(timeline.glob("*.fcpxml")):
         renders = {"facebook": project / "facebook" / f"{fcpxml.stem}.mp4",
                    "shorts": project / "shorts" / f"{fcpxml.stem}.mp4"}
-        findings += _check_fcpxml(fcpxml, renders, fps)
+        findings += _check_fcpxml(fcpxml, renders, fps, media_retained)
 
     # The two formats must agree with each other as well as with the render.
     stems = {p.stem for p in timeline.glob("*.edl")} & {p.stem for p in timeline.glob("*.fcpxml")}
@@ -453,9 +534,10 @@ def check_project(project: Path) -> tuple[bool, list[tuple[str, bool, str]]]:
                     - min(_tc_seconds(e["rec_in"], fps) for e in every))
             frame = 1.0 / fps if fps else 0.0
             delta = abs(span - spine_total)
-            findings.append((f"{stem} edl == fcpxml duration", delta <= frame * 1.5,
-                             f"edl {span:.3f}s vs fcpxml {spine_total:.3f}s ({delta / frame:.2f} frames)"
-                             if frame else "no fps"))
+            ok, detail = _frame_delta_verdict(delta, frame, 1.5)
+            findings.append((f"{stem} edl == fcpxml duration", ok,
+                             f"edl {span:.3f}s vs fcpxml {spine_total:.3f}s {detail}"
+                             if frame else detail))
     return all(ok for _name, ok, _detail in findings), findings
 
 
@@ -469,11 +551,29 @@ def main(argv: list[str]) -> int:
         return 2
     ok, findings = check_project(project)
     width = max((len(n) for n, _o, _d in findings), default=8)
+    # SKIP and NOT RUN both leave the verdict open rather than confirmed: the
+    # former is a deliberate omission, the latter a check that had no evidence
+    # to work from. Both are counted separately below so a run cannot look fully
+    # verified while checks were quietly unable to run.
+    n_notrun = 0
     for name, cok, detail in findings:
-        mark = "SKIP " if cok and detail.startswith("SKIP") else ("PASS" if cok else "FAIL")
+        if not cok:
+            mark = "FAIL"
+        elif detail.startswith(("SKIP", "NOT RUN")):
+            mark = "SKIP "
+            if detail.startswith("NOT RUN"):
+                n_notrun += 1
+        else:
+            mark = "PASS"
         print(f"{name:<{width}}  {mark}  {detail}")
     print()
-    print("ALL CHECKS PASS" if ok else "FAILURES PRESENT")
+    if not ok:
+        print("FAILURES PRESENT")
+    elif n_notrun:
+        print(f"ALL RUN CHECKS PASS, but {n_notrun} could not run "
+              "(source media not retained; re-run with --keep-media to verify relink)")
+    else:
+        print("ALL CHECKS PASS")
     return 0 if ok else 1
 
 

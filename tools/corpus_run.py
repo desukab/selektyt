@@ -168,11 +168,25 @@ def run_one(entry: dict, workdir: Path, keep_media: bool) -> dict:
             rec.update(status="FETCH_FAILED", error=ferr, elapsed_s=round(time.monotonic() - t0, 1))
             return rec
         rec["media"] = str(media)
-        rec.update(probe(media))
+        probe_facts = probe(media)
+        rec.update(probe_facts)
 
         project = workdir / f"{entry['id']}_run"
         if project.is_dir():
             shutil.rmtree(project)
+        # The probe facts the run was cut on are written into the project so the
+        # audits stay reproducible after the media is deleted below. Without it,
+        # tools/nle_check.py cannot resolve the frame rate it stamped into every
+        # timeline and interchange file, and every fps-dependent check reports
+        # "could not probe the source" on an export that was correct when made.
+        # A corpus result whose evidence the harness deletes is not a result.
+        # The pipeline writes its artifacts under out_root / "project"
+        # (selekyt/pipeline.py), which is the directory the audits are pointed at.
+        probe_dir = project / "project"
+        if probe_dir.is_dir():
+            (probe_dir / "source_probe.json").write_text(
+                json.dumps({"source": str(media), **probe_facts}, ensure_ascii=False),
+                encoding="utf-8")
 
         cli = sys.executable
         cmd = [cli, "-m", "selekyt.cli", str(media), "--out", str(project),
