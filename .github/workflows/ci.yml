@@ -60,14 +60,18 @@ jobs:
           path: ${{ github.workspace }}/rust/target/release
       - name: Make sidecar executable
         run: chmod +x rust/target/release/selekyt-mech
-      - name: Install package (test + LLM deps)
+      - name: Install package (test + LLM + NLE audit deps)
         # requests is imported at collection time via engine.llm_editorial;
         # faster-whisper and sherpa-onnx are transcription backends that are
         # imported lazily and are deliberately optional extras here. The
         # sherpa backend's missing-library and missing-model error paths are
         # pinned by tests/test_sherpa.py without needing the wheel, so CI
         # stays green on hosts where neither engine is installed.
-        run: pip install -e ".[dev,llm]"
+        # pycmx is the independent CMX 3600 reader that
+        # tools/nle_check.py uses to parse SelekyT's own EDL with a parser it
+        # did not write. Without it that check FAILS rather than skipping, so
+        # the extra is installed here to keep the independent audit live in CI.
+        run: pip install -e ".[dev,llm,nle]"
       - name: Node (for the web shell harness tests)
         run: node --version
       - name: Pytest

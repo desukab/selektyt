@@ -18,9 +18,12 @@ rather than against the exporter's own idea of what it wrote.
 It reads only the artifacts a normal run already writes, plus ffprobe on the
 rendered media. The EDL is parsed by ``pycmx``, an independent CMX 3600 reader,
 rather than by SelekyT's own emitter: validating our output with our own parser
-proves nothing. If pycmx is not installed that check reports SKIP and the rest
-still run. The exit code is nonzero if any hard check fails, so this composes
-with CI like ``tools/editorial_audit.py``.
+proves nothing. If pycmx is not installed that check FAILS — it does not skip —
+because a check that passes while its validator is absent is how a
+self-consistent-but-wrong emitter ships unchallenged. Install the ``nle`` extra
+(``pip install -e '.[nle]'``) to make it execute. The exit code is nonzero if
+any hard check fails, so this composes with CI like
+``tools/editorial_audit.py``.
 """
 from __future__ import annotations
 
@@ -154,10 +157,17 @@ def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps:
     notes: list[str] = []
 
     # Independent parse: a third-party CMX 3600 reader must accept the file.
+    # A missing reader is a FAIL, not a SKIP: a check that passes when its
+    # validator is absent proves nothing, and an emitter can then ship a
+    # self-consistent-but-wrong EDL through every audit in the repo. Install
+    # the `nle` extra (`pip install -e '.[nle]'`) to make this check execute.
     try:
         from pycmx import parse_cmx3600  # type: ignore
     except ImportError:
-        findings.append((f"{stem} edl independent parse", True, "SKIP (pycmx not installed)"))
+        findings.append((f"{stem} edl independent parse", False,
+                         "pycmx is not installed, so this EDL was never parsed by an "
+                         "independent reader. Install the `nle` extra: "
+                         "pip install -e '.[nle]'"))
     else:
         try:
             parsed = parse_cmx3600(io.StringIO(text))
