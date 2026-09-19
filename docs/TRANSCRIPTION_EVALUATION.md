@@ -755,19 +755,70 @@ collapsed. So "upgrade the model" is not one decision with one answer — it is 
 per-language question that only reference transcripts can settle, which is why
 recommendation 5 leads on Hindi rather than on the most dramatic failure.
 
-**3. Add a coverage check to the pipeline (proposed, not implemented).** The
-one measurement that surfaced every failure in this exercise without needing a
-human speaker is *coverage*: how much of the audio the transcript claims as
-speech, against how much of it carries speech energy. `telugu-tutorial` is the
-clean example — 73% of its 340 s is speech-energy audio and the transcript
-covers 15.3 s (4.5%). That gap is computable from artifacts the pipeline
-already produces (the transcript's segment spans and the VAD scores), and a
-transcript whose coverage is a fraction of the audio's speech-energy fraction
-should fail loudly the way a speechless source does, instead of shipping as an
-"OK" source. The existing
+**3. Add a coverage check to the pipeline — IMPLEMENTED.** The one measurement
+that surfaced every failure in this exercise without needing a human speaker is
+*coverage*: how much of the audio the transcript claims as speech, against how
+much of it carries speech energy. `telugu-tutorial` is the clean example — 73%
+of its 340 s is speech-energy audio and the transcript covers 15.3 s (4.5%).
+That gap is computable from artifacts the pipeline already produces (the
+transcript's segment spans and the VAD scores), and a transcript whose coverage
+is a fraction of the audio's speech-energy fraction should fail loudly the way
+a speechless source does, instead of shipping as an "OK" source. The existing
 `selekyt/pipeline.py` "no audible spoken content" check catches the empty case;
-this would catch the *near-empty* case, which is the one that actually shipped
+this catches the *near-empty* case, which is the one that actually shipped
 three times.
+
+Implemented as `engine/coverage.py`, wired into `selekyt/pipeline.py` between
+the empty-transcript guard and selection, so it runs before the expensive
+parts. Overridable with `--skip-coverage-check`, and the measurement is written
+into `report.json` on every run — including the runs where it could not measure
+anything, because a `not_computable` recorded honestly is worth more than a
+`pass` assumed.
+
+Before the threshold was written into production it was measured, not chosen
+(`tools/coverage_measure.py`, record at
+`corpus/wer/runs/coverage-2026-09-19.json`), across all eleven sources rather
+than the three this section measured:
+
+| source | energy-VAD speech | ASR coverage | ratio | verdict |
+| --- | --- | --- | --- | --- |
+| `telugu-tutorial` | 72.6% | 4.5% | **0.062** | `coverage_collapse` |
+| `royal-society-cloke` | 71.7% | 93.3% | 1.302 | `ok` |
+| `ooi-vertical` | 48.2% | 85.3% | 1.769 | `ok` |
+| `emwcon-panel-2018` | 29.6% | 85.1% | 2.876 | `ok` |
+| `hindi-baiga-interview` | 20.8% | 93.0% | 4.477 | `ok` |
+| `nasa360-ep5` | 15.4% | 79.3% | 5.150 | `ok` |
+| `pentagon-esper-briefing` | 0.4% | 82.0% | 186.978 | `not_computable` |
+| `hadhazy-protest` | 0.0% | 87.1% | — | `not_computable` |
+| `alice-1903` | 0.0% | 0.0% | — | `not_computable` |
+| `telugu-launch` | 95.5% | 0.0% | 0.000 | (empty guard fires first) |
+| `roman-portrait-trailer` | 1.6% | 0.0% | 0.000 | (empty guard fires first) |
+
+The failure at 0.062 is separated from the lowest good source at 1.302 by a
+factor of 21 with nothing in between, so a cut point anywhere in that gap is
+safe; `COLLAPSE_RATIO = 0.25` sits inside it with 4× below and 5× above. With
+one failure and nine good sources this is not a calibrated threshold and is not
+presented as one.
+
+Two properties the corpus-wide measurement forced on the design, both of which
+a first-draft check would have gotten backwards:
+
+* **It is one-directional.** `hadhazy-protest` at 0% VAD against 87% ASR is a
+  broken VAD, not a broken transcript — its mean is −43.3 dBFS, below
+  `EnergyVAD`'s absolute 0.02 threshold (recommendation 4). A symmetric check
+  would have failed a source whose transcript is fine.
+* **It degrades rather than passes below a VAD floor.** `pentagon-esper-briefing`
+  is the case that makes the floor non-negotiable: its raw ratio is 187, and a
+  check without the floor would report "the transcript covers 187× the speech
+  energy" as though that were a clean pass. Below a 10% VAD fraction the
+  denominator is not trustworthy, so the verdict is `not_computable` and the
+  report says why.
+
+What it still cannot see: an energy VAD cannot distinguish speech from music,
+so a source that is mostly score with a little dialogue has a high
+speech-energy fraction and a legitimately low transcript coverage and would be
+flagged. The error cost is asymmetric and deliberately so — a false positive is
+a loud request to verify, a false negative ships wrong captions as a success.
 
 **4. Fix the energy VAD's blindness to quiet audio (separate finding,
 selection layer).** `hadhazy-protest` is mean −41.8 dBFS and the pipeline's

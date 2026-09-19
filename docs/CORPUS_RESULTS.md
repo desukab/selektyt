@@ -153,6 +153,15 @@ mechanical audits cannot see it.
   not against reality*. The transcript is wrong, so the captions faithfully
   reproduce a wrong transcript. Geometry, timing, EDL/FCPXML agreement: all
   pass. The clip is garbage.
+  **This specific failure is now caught.** The source's transcript covers 4.5%
+  of a 339.6 s file that is 72.6% speech-energy audio; `engine/coverage.py`
+  compares those two numbers and aborts the run before selection or render,
+  which is the check `docs/TRANSCRIPTION_EVALUATION.md` §8 recommendation 3
+  proposed and is now implemented and measured across all eleven sources
+  (`corpus/wer/runs/coverage-2026-09-19.json`). Re-run against the same
+  artifacts, the verdict is `coverage_collapse`. The remaining gap is that
+  *this* source's media is needed to confirm it end to end — see the next
+  actions.
 - `hadhazy-protest` transcribes Hungarian into short fragments
   (`Azért akarjunk így, hogy nagyon jó.` — "That's why we want it this way,
   that it's very good") that are individually plausible Hungarian but, read
@@ -288,18 +297,24 @@ Criterion P13 holds on a real re-run, not only in the unit test.
 
 ## Exact next actions, in priority order
 
-1. Re-run the three non-English sources at `medium` and `large-v3` and
-   measure whether the transcript quality that a human can verify improves.
-   This is the cheapest test in this document and it addresses the finding
-   that the audits cannot see.
+1. **The Telugu coverage collapse is caught in code; confirm it on the real
+   source.** The check fires on the retained extraction, but the pipeline path
+   — abort before render, `--skip-coverage-check` override, the measurement in
+   `report.json` — has only been exercised on synthetic media. One re-run of
+   `telugu-tutorial` with `--keep-media` closes that, and it is the single
+   highest-confidence-per-byte action open.
 2. Fix the no-speech error to distinguish an unreadable container from a
    speechless source — remux to a clean container and retry before reporting
-   "no audible spoken content".
+   "no audible spoken content". `telugu-launch` is the case: 95.5%
+   speech-energy audio, and the run reported no speech at all.
 3. Re-download the six sources whose media is gone and re-emit their EDLs with
    `tools/regenerate_timelines.py`, so the shipped artifacts match the fixed
    emitter. No re-transcode needed; the media is the only thing missing, and
    it is needed one source at a time to stay inside the disk limit.
-4. Score WER against `corpus/manifest.json`'s C9/C10 audio-only corpora
+4. Re-run the three sources whose `selections.json` still holds pre-fix
+   word-split bounds (`emwcon-panel-2018`, `ooi-vertical`,
+   `pentagon-esper-briefing`), which a re-emit cannot repair.
+5. Score WER against `corpus/manifest.json`'s C9/C10 audio-only corpora
    (`docs/EVALUATION.md` §2.2), which are the ground truth the video sources
    lack.
-5. Add a 23.976, a 50 and a 59.94 source, and one 4K/H.265 source.
+6. Add a 23.976, a 50 and a 59.94 source, and one 4K/H.265 source.

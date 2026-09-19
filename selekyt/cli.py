@@ -160,6 +160,13 @@ def main() -> None:
         help="Export Final Cut Pro XML (FCPXML 1.11) alongside cut list",
     )
     p.add_argument(
+        "--skip-coverage-check", action="store_true",
+        help="Ship a run whose transcript covers far less audio than the audio "
+             "contains speech. The check exists because that condition shipped "
+             "wrong captions as a success; only pass this after verifying the "
+             "transcript by hand.",
+    )
+    p.add_argument(
         "--json", action="store_true",
         help="Print the final machine-readable report as JSON on stdout",
     )
@@ -195,6 +202,7 @@ def main() -> None:
         keep_pauses=args.keep_pauses,
         remove_filler=args.remove_filler,
         export_fcpxml=args.export_fcpxml,
+        skip_coverage_check=args.skip_coverage_check,
     )
     if args.json:
         report_path = project / "report.json"

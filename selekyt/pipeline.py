@@ -14,6 +14,7 @@ from engine.captions import ass_for_candidate, srt_for_candidate
 from engine.caption_director import caption_metadata
 from engine.content_pack import build_content_pack
 from engine.context_guard import validate
+from engine.coverage import check as check_coverage
 from engine.edit_plan import retention_intervals, pacing_report, aggregate_pacing_report
 from engine.qa import write_report
 from engine.render import render_clip
@@ -176,6 +177,7 @@ def run(
     keep_pauses: bool = True,
     remove_filler: bool = True,
     export_fcpxml: bool = False,
+    skip_coverage_check: bool = False,
 ) -> Path:
     # Reject unusable parameters before touching the network or the disk: a
     # bad --limit used to survive download + transcription and then surface as
@@ -295,6 +297,24 @@ def run(
             "spoken content. Check that the file has an audio track and that "
             "it contains speech (a silent or music-only source has nothing "
             "to select)."
+        )
+
+    # The near-empty case: a transcript that is well-formed, non-empty and in
+    # the right language yet describes a small fraction of audio that is
+    # mostly speech. Nothing else in the pipeline sees this, because every
+    # other audit compares the transcript against itself or against the
+    # selection, never against the audio — the corpus shipped exactly this as
+    # an OK deliverable (4.5% of a 73%-speech-energy source). Runs before
+    # selection and render, which are the parts that cost time.
+    coverage = check_coverage(project / "transcription" / "audio.wav",
+                              [{"start": s.start, "end": s.end} for s in transcript])
+    if coverage.verdict == "coverage_collapse" and not skip_coverage_check:
+        raise RuntimeError(
+            f"Transcription coverage collapse: {coverage.detail}. Re-run with a "
+            "larger model if the language is a low-resource one, or pass "
+            "--skip-coverage-check once you have verified the transcript by "
+            "hand — but verify it, because this check exists to stop a wrong "
+            "deliverable shipping as a success."
         )
 
     thoughts = make_thoughts(transcript)
@@ -518,6 +538,11 @@ def run(
         "pacing_report": str(project / "pacing_report.json"),
         "qa": str(qa_path),
         "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
+        # The completeness measurement behind the coverage guard. Recorded on
+        # every run, not only on failures: a `not_computable` verdict is a
+        # statement that the check could not measure anything, and recording
+        # only the failures would make the silent case look like a pass.
+        "coverage": coverage.as_dict(),
     }
     # The audio section is always present: either the full provenance summary,
     # or an explicit `enabled: False` so a B2B consumer can distinguish
