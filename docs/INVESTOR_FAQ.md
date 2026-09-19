@@ -223,11 +223,15 @@ by `tests/test_nle_export.py::test_edl_reel_names_are_ascii_and_unique`. So a
 reel cannot ship over length, but the same construction *truncates silently*.
 Verified on this host: `interview_take_1.mp4` and `interview_take_2.mp4`
 produce `INTERVIE` and `INTERVI1` — unique, so they cannot relink to each
-other, but the second no longer points back at its own filename, so an editor
-walking event 002 to its footage has nothing to follow. That is a real defect
-class for a multi-source timeline, and it has not been exercised because the
-one real run has a single source. It gets checked before any FCP compatibility
-is claimed rather than after.
+other, but the second no longer points back at its own filename. That is a
+cosmetic loss, not a functional one, because the traceability is carried
+elsewhere: every event carries a `* FROM CLIP:` annotation with the full
+absolute source path (measured on `out/web/pipeline/project/timeline/01.edl`,
+and pinned by `test_export_carries_source_traceability_for_every_event`), so
+an editor walking an event to its footage follows that annotation rather than
+the reel name. The reel-name limit is therefore closed as a compatibility
+risk. It is recorded here because the limit had to be measured against real
+output before that could be said.
 
 ## 6. "How do you get your first 100 customers?"
 
