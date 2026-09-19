@@ -1,10 +1,22 @@
 # SelekyT
 
-Local-first long-form → social video editorial engine.
+**An AI-native editorial engine for turning long-form video into structured, editable stories and publishable social cuts.**
+
+SelekyT is being built around a simple idea: **let the machine do the first-pass editorial work without taking the editor out of the loop.**
+
+It analyzes long-form video, understands complete story units, ranks what is worth keeping, applies context/truth safeguards, removes dead air, reframes the subject for vertical video, and produces both finished media **and an editable timeline**.
+
+The goal is not another black-box “AI clip generator”. SelekyT is an **auditable editorial pipeline** that can turn one long video into:
+
+- publishable 16:9 and 9:16 cuts
+- word-timed captions
+- ranked story selections and editorial reports
+- **FCPXML + CMX 3600 EDL timelines that an editor can open and continue working on**
+- machine-readable cutlists and provenance
 
 **Input:** one YouTube URL **or** one local video file.
 
-**Output:** a small ranked set of publishable Facebook cuts and 9:16 Shorts/Reels, with minimal language-preserving subtitles and subject-aware reframing.
+**Output:** editorial decisions, editable timelines, captions, and rendered social-video cuts.
 
 ## One command
 
@@ -50,19 +62,22 @@ Word timestamps from this backend are distributed by character proportion within
 
 ## What SelekyT actually does
 
-1. Downloads a single supplied YouTube video with `yt-dlp`.
+SelekyT treats editing as a pipeline of **editorial decisions**, not just a rendering task.
+
+1. Downloads a supplied YouTube video with `yt-dlp`, or accepts a local video.
 2. Transcribes locally with faster-whisper using word timestamps and VAD.
-3. Groups transcript segments into complete thoughts rather than arbitrary 30-second windows.
-4. Scores stories for hook strength, curiosity, contrast, information density, surprise, emotional pull, payoff, context and visual potential.
-5. Applies a context/truth guard so sensational framing cannot outrun the source.
-6. Removes conservative amounts of dead-air between recognized words instead of applying a fake universal cut rate.
-7. Produces a normal 16:9 Facebook edit and a separate 9:16 vertical edit.
-8. Tracks a face when available; otherwise estimates the visually active region and moves the crop over time. This avoids the common "center crop chopped the speaker" failure.
-9. Burns minimal subtitles using a Unicode-capable font profile. Set `SELEKYT_FONT` if the machine uses a different installed font.
-10. Writes selections, transcript and report JSON alongside the MP4s.
-11. Writes a CMX 3600 EDL and an FCPXML 1.11 timeline per shipped cut, built from
-    the same interval list the render concatenated, so an NLE relinks the cut
-    that was actually shipped. Both are validated at write time.
+3. Groups transcript segments into **complete thoughts and story units**, rather than arbitrary time windows.
+4. Scores candidate stories for hook strength, curiosity, contrast, information density, surprise, emotional pull, payoff, context and visual potential.
+5. Applies a **context/truth guard** so an attention-grabbing edit cannot outrun what the source actually says.
+6. Removes conservative amounts of dead air and redundant pauses while preserving natural speech.
+7. Produces separate 16:9 and 9:16 edits.
+8. Tracks a face when available; otherwise estimates the visually active region and moves the crop over time.
+9. Generates Unicode-safe word-timed captions.
+10. Writes the editorial selections, transcript, provenance, QA data and rejection reasons as structured JSON.
+11. Exports the **same edit decision as an editable FCPXML 1.11 timeline and CMX 3600 EDL**, using the exact intervals that were rendered.
+12. Validates the exported timeline so the edit sent to an NLE is the edit SelekyT actually shipped.
+
+The important distinction is that SelekyT can produce a finished video **without throwing away the editorial decision behind it**. The timeline, cutlist and provenance remain available for a human editor to inspect, modify and continue from.
 
 With `--audio-analysis`, the same run additionally produces a VAD-driven jump-cut
 edit: speech-region cutlist, pause classification, an audio-truth layer that
@@ -203,15 +218,19 @@ For vertical delivery, Meta recommends native 9:16 creative with audio and impor
 
 ## Roadmap
 
-- Local Ollama editorial pass for deeper semantic story selection.
+The next phase is about making SelekyT a **repeatable editorial system**, not simply adding more effects:
+
+- Local Ollama editorial passes for deeper semantic story selection.
 - Better person/object tracking for vertical reframing.
 - Motion-aware cut points and B-roll-aware visual rhythm.
 - Channel-specific retention learning from exported analytics.
+- Editorial feedback loops so repeated decisions can improve future selections.
 - Automated title/hook variants without fabricating claims.
+- Stronger NLE interoperability and timeline workflows.
 
 Already shipped, not roadmap: native SRT alongside ASS with four caption
-presets (`--caption-style`), FCPXML 1.11 and cutlist export
-(`--audio-analysis --export-fcpxml`), and the web shell's video pipeline.
+presets (`--caption-style`), FCPXML 1.11 and CMX 3600 EDL export, structured
+cutlists/provenance, audio analysis, and the web shell's video pipeline.
 
 ## Rights
 
