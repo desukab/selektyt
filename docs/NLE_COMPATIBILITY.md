@@ -113,11 +113,20 @@ trial:
    single biggest credibility risk in the whole venture — see
    `docs/CUSTOMER_DISCOVERY.md`.
 2. **The FCPXML is not schema-validated against Apple's XSD.** Apple's
-   published schema could not be retrieved (candidate URLs returned 404/403;
-   web search returned nothing). The vocabulary check is a *guard over the
-   elements SelekyT emits plus the structural containers an NLE accepts* — it
-   is deliberately not a claim that Apple's full schema was applied. A
-   document can pass this check and still be rejected by FCP.
+   published schema could not be retrieved: candidate GitHub mirrors returned
+   404, and the web-search tool in this environment is **non-functional** —
+   it returns zero links and, on some queries, a stale model-memory fallback
+   in another language instead of results. So this is an environment
+   limitation, *not* evidence that no schema exists, and a session with
+   working search should retry before treating the gap as permanent. Apple
+   documents the format in the *Final Cut Pro X XML Reference* rather than
+   shipping a machine-checkable XSD, and the community-maintained schemas
+   that do circulate mostly stop at 1.8–1.10, so even a retrieved schema
+   would need its version coverage checked before being applied to a 1.11
+   document. The vocabulary check here is a *guard over the elements SelekyT
+   emits plus the structural containers an NLE accepts* — it is deliberately
+   not a claim that Apple's full schema was applied. A document can pass
+   this check and still be rejected by FCP.
 3. **Interchange is one direction and one shape.** SelekyT writes EDL and
    FCPXML; it does not read either. Multi-cam, roles, captions-in-FCPXML,
    transitions and effects are not emitted; a cut with no video is not
