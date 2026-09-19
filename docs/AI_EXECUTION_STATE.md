@@ -8,9 +8,12 @@ every line below was true on this host at that point.
 * Repository: `/home/azureuser/selektyt`, on `main`, working tree **clean**.
 * Up to date with `origin/main` (`https://github.com/desukab/selektyt.git`).
   Nothing unpushed, nothing stashed, nothing in `git stash list`.
-* **Latest commit:** `61faa9f` — *docs: persistent AI execution state
-  checkpoint*. The last substantive change is `2dd4ff1` — *docs: release
-  validation record and updated product gap map*.
+* **Latest commit:** this file's own commit — *docs: persistent AI execution
+  state checkpoint*. It is a doc-only checkpoint with no code change. The last
+  *substantive* change is `2dd4ff1` — *docs: release validation record and
+  updated product gap map*; the five defects it fixed are listed below. Run
+  `git log -1` for the current hash rather than trusting a hash printed here,
+  since amending this file changes its own commit hash.
 * Test suite: **819 passed, 10 skipped** (~64 s). The 10 skips are optional
   backends absent from this host (sherpa-onnx, silero, ollama) and tests that
   depend on them. Re-run to confirm this number before trusting any claim in
