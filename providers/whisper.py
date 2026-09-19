@@ -110,13 +110,14 @@ def _extract_audio(media: Path, audio: Path) -> None:
     tmp.replace(audio)
 
 
-def _transcribe_chunk(model, path: Path, offset: float, language: str | None, beam_size: int = 1):
+def _transcribe_chunk(model, path: Path, offset: float, language: str | None,
+                      beam_size: int = 1, vad_filter: bool = True):
     segments, info = model.transcribe(
         str(path),
         language=language,
         beam_size=beam_size,
         word_timestamps=True,
-        vad_filter=True,
+        vad_filter=vad_filter,
         condition_on_previous_text=False,
     )
     out: list[Segment] = []
@@ -150,6 +151,7 @@ def transcribe(
     overlap_seconds: float = 15.0,
     cpu_threads: int | None = None,
     beam_size: int = 1,
+    vad_filter: bool = True,
 ) -> tuple[list[Segment], str, dict]:
     """Transcribe long media in bounded, resumable chunks.
 
@@ -242,7 +244,9 @@ def transcribe(
             print(f"[transcribe] chunk {index + 1}/{count}: {start / 60:.1f}-{end / 60:.1f} min", flush=True)
             failed: str | None = None
             try:
-                chunk_segments, detected = _transcribe_chunk(model, wav, decode_start, language, beam_size)
+                chunk_segments, detected = _transcribe_chunk(
+                    model, wav, decode_start, language, beam_size, vad_filter,
+                )
             except Exception as exc:
                 # Record the failure but never checkpoint it as a result: an
                 # empty segments list written as "ok" would look identical to a

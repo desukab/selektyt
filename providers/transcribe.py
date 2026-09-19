@@ -32,6 +32,7 @@ def transcribe(
     chunk_minutes: int = 5,
     cpu_threads: int | None = None,
     beam_size: int = 1,
+    vad_filter: bool = True,
 ) -> tuple[list[Segment], str, dict]:
     """Transcribe with the best engine available on this host.
 
@@ -42,7 +43,8 @@ def transcribe(
         from providers.whisper import transcribe as _fw
         segments, lang, prov = _fw(
             media, model_name, language, checkpoint_dir,
-            chunk_minutes=chunk_minutes, cpu_threads=cpu_threads, beam_size=beam_size,
+            chunk_minutes=chunk_minutes, cpu_threads=cpu_threads,
+            beam_size=beam_size, vad_filter=vad_filter,
         )
         return segments, lang, {
             "engine": "faster-whisper",
@@ -56,6 +58,10 @@ def transcribe(
             "chunks": prov.get("chunks"),
             "chunking": prov.get("chunking"),
             "num_threads": prov.get("num_threads"),
+            # The faster-whisper VAD gate is part of the decode path, so it is
+            # recorded: it changes segment boundaries, not just which frames
+            # are looked at.
+            "vad_filter": vad_filter,
         }
 
     from providers.sherpa import transcribe as _so, is_available
@@ -79,6 +85,10 @@ def transcribe(
             "fallback_reason": "faster-whisper unavailable (no ctranslate2 wheel for this platform)",
             "chunking": prov.get("chunking"),
             "num_threads": prov.get("num_threads"),
+            # sherpa-onnx has no whisper-internal VAD gate of its own; the
+            # field is present so a consumer comparing provenance across
+            # engines does not see a missing key as a difference that matters.
+            "vad_filter": False,
         }
 
     raise RuntimeError(

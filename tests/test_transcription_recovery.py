@@ -16,7 +16,6 @@ F5 — provenance must name the model that actually ran, not the one that was
 """
 from __future__ import annotations
 
-import json
 import sys
 import types
 import wave
@@ -25,10 +24,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from models.core import Segment, Word
-from providers.atomic import read_json, write_json_atomic
+from models.core import Segment
 from providers import transcribe as transcribe_auto
-
+from providers.atomic import read_json, write_json_atomic
 
 # ── shared fixtures ──
 
@@ -78,8 +76,14 @@ def _stub_ffmpeg(tmp_path: Path):
     return fake_run
 
 
-def _fake_decode(model, wav, offset, language, beam_size):
-    """Deterministic stand-in for a whisper decode: one segment per window."""
+def _fake_decode(model, wav, offset, language, *args, **kwargs):
+    """Deterministic stand-in for a whisper decode: one segment per window.
+
+    Takes the decode parameters loosely (``*args, **kwargs``) rather than
+    spelling out the production signature: a stub that names every parameter
+    breaks whenever ``_transcribe_chunk`` gains one, and the failure surfaces
+    as a fake transcription error that looks like a real one.
+    """
     return [Segment(offset, offset + 1.0, "hello world", [])], "en"
 
 
@@ -155,7 +159,7 @@ def test_failed_chunk_retries_on_resume(tmp_path):
 
     attempts = {"n": 0}
 
-    def flaky(model, wav, offset, language, beam_size):
+    def flaky(model, wav, offset, language, *args, **kwargs):
         attempts["n"] += 1
         if attempts["n"] == 1:
             raise RuntimeError("transient")
@@ -190,7 +194,7 @@ def test_silence_stays_cached_and_distinguishable_from_failure(tmp_path):
 
     decodes = {"n": 0}
 
-    def silent(model, wav, offset, language, beam_size):
+    def silent(model, wav, offset, language, *args, **kwargs):
         decodes["n"] += 1
         return [], "en"
 
@@ -223,7 +227,7 @@ def test_truncated_checkpoint_is_re_decoded(tmp_path):
 
     decodes = {"n": 0}
 
-    def once(model, wav, offset, language, beam_size):
+    def once(model, wav, offset, language, *args, **kwargs):
         decodes["n"] += 1
         return [Segment(offset, offset + 1.0, "redone", [])], "en"
 
@@ -288,7 +292,7 @@ def test_selector_provenance_is_rich(monkeypatch):
     }
     monkeypatch.setattr(transcribe_auto, "_faster_whisper_available", lambda: False)
 
-    import providers.sherpa as sherpa
+    from providers import sherpa
 
     monkeypatch.setattr(sherpa, "is_available", lambda *a, **k: True)
     monkeypatch.setattr(
@@ -335,7 +339,7 @@ def test_state_helpers_recover_from_corruption(tmp_path):
     primary: a crash costs the last stage, not the run. What must survive is
     the expensive, non-reproducible part — the download cache.
     """
-    from selekyt.pipeline import _load_state, _save_state, STATE_NAME
+    from selekyt.pipeline import STATE_NAME, _load_state, _save_state
 
     state_path = tmp_path / STATE_NAME
     # Two saves: the first establishes the file, the second rotates the
@@ -362,7 +366,7 @@ def test_state_helpers_recover_from_corruption(tmp_path):
 
 def test_state_recovery_preserves_download_cache(tmp_path):
     """The point of recovery: a resumed run must not re-download."""
-    from selekyt.pipeline import _load_state, _save_state, STATE_NAME
+    from selekyt.pipeline import STATE_NAME, _load_state, _save_state
 
     media = tmp_path / "v.mp4"
     media.write_bytes(b"x" * 64)
@@ -381,7 +385,7 @@ def test_state_recovery_preserves_download_cache(tmp_path):
 
 def test_state_helpers_start_fresh_when_nothing_recovers(tmp_path):
     """No good state and no backup yields an empty dict, never a raise."""
-    from selekyt.pipeline import _load_state, STATE_NAME
+    from selekyt.pipeline import STATE_NAME, _load_state
 
     state_path = tmp_path / STATE_NAME
     state_path.write_text('{"broken": ', encoding="utf-8")
@@ -391,7 +395,7 @@ def test_state_helpers_start_fresh_when_nothing_recovers(tmp_path):
 
 def test_state_backup_only_rotates_from_valid_state(tmp_path):
     """The backup must always be something the recovery path can trust."""
-    from selekyt.pipeline import _load_state, _save_state, STATE_NAME
+    from selekyt.pipeline import STATE_NAME, _load_state, _save_state
 
     state_path = tmp_path / STATE_NAME
     _save_state(state_path, {"v": 1})
