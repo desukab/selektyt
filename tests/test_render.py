@@ -332,7 +332,23 @@ def test_render_multi_part_is_frame_accurate(tmp_path):
     cases = [(1.0, 1.0 + 5.3 / 15.0, 5), (6.0, 6.0 + 7.3 / 15.0, 7)]
     for i, (start, end, expected) in enumerate(cases, start=1):
         out = tmp_path / "fb" / f"{i:02d}.mp4"
-        render_clip(source, _candidate_with_words(start, end), out, fps=15)
+        # A word edge is placed exactly at the candidate's end. retention_intervals
+        # now snaps a boundary that falls inside a word, so a candidate whose end
+        # straddled one would have its interval moved and the frame counts below
+        # would no longer be what the timeline is stamped with. Landing on an edge
+        # keeps the fractional durations the rounding depends on.
+        span = end - start
+        c = Candidate(
+            start, end, "hello world today", "story", "hello", "world today",
+            editorial_score=0.8, virality_score=0.7, context_score=0.9,
+            confidence=0.9, reason="t", visual_potential=0.8,
+            words=[
+                Word("hello", start, start + span * 0.45),
+                Word("world", start + span * 0.45, end),
+                Word("today", end, end + span * 0.4),
+            ],
+        )
+        render_clip(source, c, out, fps=15)
         got = _probe_frames(out)
         assert got == expected, (
             f"clip {i} rendered {got} frames but its timeline is stamped with "

@@ -17,6 +17,26 @@ def _is_filler(text: str) -> bool:
     return t in _FILLER_TEXTS
 
 
+def _word_aligned(t: float, words: list[Word]) -> float:
+    """Move ``t`` back to a word boundary when it falls inside a word.
+
+    A boundary inside a word cuts the speaker mid-word on one side of the cut:
+    the deliverable opens or closes on a partial syllable. Selection bounds are
+    chosen for content, not for phonetics, so a boundary that lands inside a
+    word is moved back to that word's start. For a clip start that keeps the
+    whole opening word; for a clip end it drops the partial word, which belongs
+    to whatever the speaker said next rather than to this story.
+
+    Measured on a real selection, a candidate ending 235.237 s clipped 143 ms
+    off a word spanning 235.220-235.380 s, and the shipped render cut the
+    speaker mid-word. This is what prevents that.
+    """
+    for w in words:
+        if w.start < t < w.end:
+            return w.start
+    return t
+
+
 def retention_intervals(c: Candidate, min_pause: float = 0.70, keep_pause: float = 0.18, keep_edge: float = 0.06) -> list[tuple[float, float]]:
     """Build conservative source intervals using actual word timestamps.
 
@@ -29,29 +49,38 @@ def retention_intervals(c: Candidate, min_pause: float = 0.70, keep_pause: float
     if len(words) < 2:
         return [(c.start, c.end)]
 
+    # Both ends of the selection are snapped to word boundaries before the
+    # intervals are built, so every boundary the loop emits is word-aligned.
+    # No clamp here: a start that snaps back moves *earlier* by design, to keep
+    # the opening word whole, so a max() against c.start would undo the snap.
+    sel_start = _word_aligned(c.start, words)
+    sel_end = _word_aligned(c.end, words)
+    if sel_end <= sel_start:
+        return [(c.start, c.end)]
+
     intervals: list[tuple[float, float]] = []
-    cur_start = max(c.start, words[0].start - keep_edge)
+    cur_start = max(sel_start, words[0].start - keep_edge)
     prev_end = words[0].end
     for w in words[1:]:
         gap = max(0.0, w.start - prev_end)
         if gap >= min_pause:
-            cut_end = min(c.end, prev_end + keep_pause)
+            cut_end = min(sel_end, prev_end + keep_pause)
             if cut_end - cur_start >= 0.45:
                 intervals.append((cur_start, cut_end))
-            cur_start = max(c.start, w.start - keep_edge)
+            cur_start = max(sel_start, w.start - keep_edge)
         prev_end = max(prev_end, w.end)
 
-    end = min(c.end, prev_end + keep_edge)
+    end = min(sel_end, prev_end + keep_edge)
     if end - cur_start >= 0.45:
         intervals.append((cur_start, end))
     if not intervals:
-        return [(c.start, c.end)]
+        return [(sel_start, sel_end)]
 
     kept = sum(b - a for a, b in intervals)
-    original = max(0.01, c.end - c.start)
+    original = max(0.01, sel_end - sel_start)
     # If the edit would remove too much material, prefer the intact source story.
     if len(intervals) > 3 or kept / original < 0.72:
-        return [(c.start, c.end)]
+        return [(sel_start, sel_end)]
     return intervals
 
 
