@@ -232,9 +232,15 @@ Already shipped, not roadmap: native SRT alongside ASS with four caption
 presets (`--caption-style`), FCPXML 1.11 and CMX 3600 EDL export, structured
 cutlists/provenance, audio analysis, and the web shell's video pipeline.
 
-## Rights
+## License
 
-Use SelekyT only with videos you own, have permission to edit, or are otherwise legally entitled to process and republish. A public YouTube URL does not itself grant republication rights.
+SelekyT is **proprietary and source-available**. The source code is provided for authorized evaluation, development and collaboration only.
+
+No permission is granted to copy, modify, distribute, sublicense, publish, sell, lease, host as a competing service, or create derivative commercial products from this software without prior written permission from the copyright holder.
+
+Access to the repository does not transfer ownership or grant commercial rights. Separate written agreements may grant additional rights.
+
+See [LICENSE](./LICENSE) for the full terms.
 
 
 ## License
