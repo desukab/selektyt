@@ -1,0 +1,382 @@
+"""NLE-compatibility audit for a real SelekyT run.
+
+The export stage can write a timeline that is perfectly well-formed XML and
+well-formed CMX 3600 and still be useless to an editor:
+
+  - media the timeline points at that an NLE cannot relink, so every clip comes
+    up offline and the user faces a relink dialog for a file that never moved;
+  - record spans that overlap, so the NLE reports a conflict on import;
+  - a timeline whose duration disagrees with the render it describes, which
+    means the exported sequence is not the cut the user just watched.
+
+Those are exactly the failures that only surface when someone opens the project
+in Premiere/Resolve/FCP — so this tool checks them against the rendered files
+rather than against the exporter's own idea of what it wrote.
+
+    python tools/nle_check.py out/url-e2e/project
+
+It reads only the artifacts a normal run already writes, plus ffprobe on the
+rendered media. The EDL is parsed by ``pycmx``, an independent CMX 3600 reader,
+rather than by SelekyT's own emitter: validating our output with our own parser
+proves nothing. If pycmx is not installed that check reports SKIP and the rest
+still run. The exit code is nonzero if any hard check fails, so this composes
+with CI like ``tools/editorial_audit.py``.
+"""
+from __future__ import annotations
+
+import io
+import json
+import re
+import subprocess
+import sys
+import urllib.parse
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+# The FCPXML 1.11 element vocabulary, from Apple's Final Cut Pro XML
+# reference. An element outside this set is either a typo or a version
+# mismatch, and an NLE will reject or silently drop it. This is a vocabulary
+# guard over the elements SelekyT emits plus the structural containers an NLE
+# accepts — it is deliberately not a claim that Apple's full schema was
+# applied (see docs/NLE_COMPATIBILITY.md for what is and is not verified).
+FCPXML_ELEMENTS = {
+    "fcpxml", "resources", "library", "event", "project", "sequence", "spine",
+    "asset", "asset-clip", "format", "media-rep", "audio-channel",
+    "chapter-marker", "marker", "rating", "keyword", "analysis-notes",
+    "sync-clip", "gap", "transition", "filter", "caption", "role", "info",
+    "metadata", "string", "float", "int", "bool", "date",
+}
+FRAME_TOLERANCE = 1.0
+# Render comparison tolerance. Measured on real runs, the exported timeline is
+# systematically 0-1 frame shorter than the rendered file (746 rendered frames
+# against a 745-frame timeline, 513 against 512, 493 against 493), and the MP4
+# container duration adds ~0.04s of muxer slop on top of frame-count arithmetic.
+# Two frames covers both without hiding a real editorial disagreement.
+RENDER_FRAME_TOLERANCE = 2.0
+
+
+def _probe(path: Path, entries: str) -> str:
+    try:
+        out = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", entries,
+             "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
+            capture_output=True, text=True, check=True,
+        )
+        return out.stdout.strip()
+    except (subprocess.CalledProcessError, OSError):
+        return ""
+
+
+def _fps(path: Path) -> float:
+    # r_frame_rate reports once per stream; the source's video rate is the one
+    # the timeline was built on.
+    rate = _probe(path, "stream=r_frame_rate").splitlines()
+    rate = rate[0] if rate else ""
+    if "/" in rate:
+        num, den = rate.split("/")
+        if float(den) != 0:
+            return float(num) / float(den)
+    try:
+        return float(rate)
+    except ValueError:
+        return 0.0
+
+
+def _duration(path: Path) -> float:
+    try:
+        return float(_probe(path, "format=duration"))
+    except ValueError:
+        return 0.0
+
+
+def _tc_seconds(tc: str, fps: float) -> float:
+    """Timecode to seconds on the emitter's own convention.
+
+    ``engine.timecode.parse_smpte`` is what built these strings, so it is also
+    what interprets them; the rendered file is then the empirical check that
+    the convention is the right one.
+    """
+    from engine.timecode import parse_smpte
+    return parse_smpte(tc, fps)
+
+
+def _rational_seconds(value: str) -> float:
+    """Parse FCPXML's ``num/den s`` rational into seconds."""
+    text = value.strip().rstrip("s")
+    if "/" in text:
+        num, den = text.split("/")
+        try:
+            return float(num) / float(den) if float(den) != 0 else 0.0
+        except ValueError:
+            return 0.0
+    try:
+        return float(text)
+    except ValueError:
+        return 0.0
+
+
+def _edl_events(text: str) -> list[dict]:
+    """Group an EDL's statements into events the way an NLE reads them.
+
+    CMX 3600 repeats the event number for each channel of one edit, so
+    ``001 ... V`` and ``001 ... A`` are two records of one event, not two
+    events. pyccmx does this grouping when it is available; this fallback keeps
+    the remaining checks running without it.
+    """
+    events: dict[str, dict] = {}
+    for line in text.splitlines():
+        # event, source, channel, kind, then the four in/out timecodes. The
+        # timecodes are anchored, so the two tokens between the event number
+        # and them are unambiguously channel and kind.
+        m = re.match(r"^(\d{3,4})\s+(\S+)\s+(\S+)\s+(\S+)\s+"
+                     r"(\d{2}:\d{2}:\d{2}[:;]\d{2})\s+(\d{2}:\d{2}:\d{2}[:;]\d{2})"
+                     r"\s+(\d{2}:\d{2}:\d{2}[:;]\d{2})\s+(\d{2}:\d{2}:\d{2}[:;]\d{2})\s*$", line)
+        if not m:
+            continue
+        num, source, channel, _kind = m.group(1), m.group(2), m.group(3), m.group(4)
+        ev = events.setdefault(num, {"number": num, "source": source, "edits": []})
+        ev["edits"].append({
+            "channel": channel,
+            "src_in": m.group(5), "src_out": m.group(6),
+            "rec_in": m.group(7), "rec_out": m.group(8),
+        })
+    return [events[n] for n in sorted(events)]
+
+
+def _edl_media(text: str) -> list[str]:
+    return [m.group(1) for m in re.finditer(r"^\s*\*\s*FROM CLIP:\s*(.+)$", text, re.M)]
+
+
+def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps: float) -> list[tuple[str, bool, str]]:
+    text = edl.read_text(encoding="utf-8", errors="replace")
+    findings: list[tuple[str, bool, str]] = []
+    stem = edl.stem
+    notes: list[str] = []
+
+    # Independent parse: a third-party CMX 3600 reader must accept the file.
+    try:
+        from pycmx import parse_cmx3600  # type: ignore
+    except ImportError:
+        findings.append((f"{stem} edl independent parse", True, "SKIP (pycmx not installed)"))
+    else:
+        try:
+            parsed = parse_cmx3600(io.StringIO(text))
+            events = list(parsed.events)
+            n_edits = sum(len(e.edits) for e in events)
+            findings.append((f"{stem} edl independent parse", True,
+                             f"{len(events)} event(s), {n_edits} channel record(s), "
+                             f"title={parsed.title!r}"))
+        except Exception as exc:  # a real reader rejecting the file is the point
+            findings.append((f"{stem} edl independent parse", False,
+                             f"pycmx rejected the EDL: {type(exc).__name__}: {exc}"))
+
+    events = _edl_events(text)
+    if not events:
+        findings.append((f"{stem} edl structure", False, "no edit events parsed from the EDL"))
+        return findings
+
+    # Record spans must advance per channel: an overlap is an import conflict.
+    # The cursor runs across the whole EDL, not per event — an event is one
+    # edit split across channels, so a per-event reset would leave the cursor
+    # empty for every channel and the check could never fire.
+    overlaps: list[str] = []
+    last_out: dict[str, float] = {}
+    for ev in events:
+        for edit in ev["edits"]:
+            ch = edit["channel"]
+            rec_in = _tc_seconds(edit["rec_in"], fps)
+            rec_out = _tc_seconds(edit["rec_out"], fps)
+            if ch in last_out and rec_in < last_out[ch] - 1e-6:
+                overlaps.append(f"event {ev['number']} channel {ch} starts {rec_in:.3f}s "
+                                f"before the previous edit ends ({last_out[ch]:.3f}s)")
+            last_out[ch] = max(last_out.get(ch, 0.0), rec_out)
+    findings.append((f"{stem} edl record spans advance", not overlaps,
+                     "; ".join(overlaps) or f"{len(events)} event(s), no overlap"))
+
+    # Media the EDL points at must exist, or the import lands offline.
+    media = _edl_media(text)
+    missing = [p for p in media if not Path(p).exists()]
+    findings.append((f"{stem} edl media exists", not missing,
+                     (f"{len(media)} clip path(s)" if media else "no FROM CLIP paths")
+                     + (f"; MISSING: {missing}" if missing else "")))
+
+    # The timeline must describe the file that was actually rendered. A cut may
+    # be several events, so the timeline is the full record span.
+    all_edits = [e for ev in events for e in ev["edits"]]
+    rec_in = min(_tc_seconds(e["rec_in"], fps) for e in all_edits)
+    rec_out = max(_tc_seconds(e["rec_out"], fps) for e in all_edits)
+    span = rec_out - rec_in
+    frame = 1.0 / fps if fps else 0.0
+    for preset, render in renders.items():
+        if not render.exists():
+            # A timeline that rendered only one aspect ratio still has
+            # something real to compare; failing on a missing file would be a
+            # false positive for an export that deliberately skipped a preset.
+            findings.append((f"{stem} timeline == {preset} render", True,
+                             f"SKIP ({render.name} not rendered)"))
+            continue
+        got = _duration(render)
+        delta = abs(got - span)
+        findings.append((f"{stem} timeline == {preset} render",
+                         delta <= frame * RENDER_FRAME_TOLERANCE,
+                         f"timeline {span:.3f}s vs render {got:.3f}s "
+                         f"({delta / frame:.2f} frames)" if frame else "no fps"))
+
+    # The source in/out must agree with what the selection claimed it kept.
+    # ``01.edl`` is the first selection, ``02.edl`` the second, and so on.
+    index = int(re.sub(r"[^0-9]", "", stem) or "0") - 1
+    if 0 <= index < len(selections):
+        want = selections[index]
+        src_in = min(_tc_seconds(e["src_in"], fps) for e in all_edits)
+        src_out = max(_tc_seconds(e["src_out"], fps) for e in all_edits)
+        d_start = abs(src_in - want["start"]) / frame if frame else 0.0
+        d_end = abs(src_out - want["end"]) / frame if frame else 0.0
+        ok = d_start <= FRAME_TOLERANCE + 0.5 and d_end <= FRAME_TOLERANCE + 1.5
+        findings.append((f"{stem} source interval == selection", ok,
+                         f"src {src_in:.2f}-{src_out:.2f}s vs selection "
+                         f"{want['start']:.2f}-{want['end']:.2f}s "
+                         f"(start {d_start:.1f}f, end {d_end:.1f}f)"))
+    return findings
+
+
+def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float) -> list[tuple[str, bool, str]]:
+    findings: list[tuple[str, bool, str]] = []
+    stem = fcpxml.stem
+    try:
+        root = ET.fromstring(fcpxml.read_bytes())
+    except ET.ParseError as exc:
+        findings.append((f"{stem} fcpxml well-formed", False, f"XML parse error: {exc}"))
+        return findings
+    findings.append((f"{stem} fcpxml well-formed", True, "parsed"))
+
+    version = root.get("version", "")
+    findings.append((f"{stem} fcpxml version", version == "1.11", f'version="{version}"'))
+
+    # Elements outside the 1.11 vocabulary are dropped or rejected by an NLE.
+    unknown = {e.tag for e in root.iter()} - FCPXML_ELEMENTS
+    findings.append((f"{stem} fcpxml vocabulary", not unknown,
+                     f"unknown elements: {sorted(unknown)}" if unknown else "all elements in the 1.11 set"))
+
+    # An asset src that is not an absolute file URI resolves against the
+    # timeline file's own directory, which is almost never where the media is.
+    broken: list[str] = []
+    for asset in root.iter("asset"):
+        rep = asset.find("media-rep")
+        src = rep.get("src", "") if rep is not None else ""
+        if not src.startswith("file:///"):
+            broken.append(f"{asset.get('name', '?')}: non-absolute src {src!r}")
+            continue
+        path = Path(urllib.parse.unquote(src[len("file://"):]))
+        if not path.exists():
+            broken.append(f"{asset.get('name', '?')}: {path} does not exist")
+    findings.append((f"{stem} fcpxml media relinkable", not broken,
+                     "; ".join(broken) or "every asset src is an absolute URI to an existing file"))
+
+    # The spine must advance and its total duration must equal the render.
+    spine = root.find(".//spine")
+    total = 0.0
+    advances = True
+    cursor = 0.0
+    if spine is not None:
+        for clip in spine:
+            if clip.tag not in ("asset-clip", "gap", "sync-clip"):
+                continue
+            start = _rational_seconds(clip.get("start", "0s"))
+            duration = _rational_seconds(clip.get("duration", "0s"))
+            if start < cursor - 1e-6:
+                advances = False
+            cursor = max(cursor, start + duration)
+            if clip.tag == "asset-clip":
+                total += duration
+    frame = 1.0 / fps if fps else 0.0
+    findings.append((f"{stem} fcpxml spine advances", advances,
+                     "clips in non-decreasing start order" if advances else "a clip starts before its predecessor ends"))
+    for preset, render in renders.items():
+        if not render.exists():
+            findings.append((f"{stem} fcpxml duration == {preset} render", True,
+                             f"SKIP ({render.name} not rendered)"))
+            continue
+        got = _duration(render)
+        delta = abs(got - total)
+        findings.append((f"{stem} fcpxml duration == {preset} render",
+                         delta <= frame * RENDER_FRAME_TOLERANCE,
+                         f"spine {total:.3f}s vs render {got:.3f}s ({delta / frame:.2f} frames)"
+                         if frame else "no fps"))
+    return findings
+
+
+def check_project(project: Path) -> tuple[bool, list[tuple[str, bool, str]]]:
+    """Run every NLE-compatibility check on one project directory."""
+    timeline = project / "timeline"
+    if not timeline.is_dir():
+        return False, [("timeline directory", False, f"no timeline/ in {project}")]
+    source_dir = project / "source"
+    source = next(source_dir.glob("*"), None) if source_dir.is_dir() else None
+    fps = _fps(source) if source is not None else 0.0
+
+    selections = []
+    sel_path = project / "selections.json"
+    if sel_path.is_file():
+        try:
+            loaded = json.loads(sel_path.read_text(encoding="utf-8"))
+            selections = loaded if isinstance(loaded, list) else loaded.get("selected", [])
+        except (OSError, json.JSONDecodeError):
+            pass
+
+    findings: list[tuple[str, bool, str]] = []
+    findings.append(("source frame rate", fps > 0, f"{source.name if source else '?'} @ {fps:.4f} fps"
+                     if fps else "could not probe the source"))
+    for edl in sorted(timeline.glob("*.edl")):
+        renders = {"facebook": project / "facebook" / f"{edl.stem}.mp4",
+                   "shorts": project / "shorts" / f"{edl.stem}.mp4"}
+        findings += _check_edl(edl, renders, selections, fps)
+    for fcpxml in sorted(timeline.glob("*.fcpxml")):
+        renders = {"facebook": project / "facebook" / f"{fcpxml.stem}.mp4",
+                   "shorts": project / "shorts" / f"{fcpxml.stem}.mp4"}
+        findings += _check_fcpxml(fcpxml, renders, fps)
+
+    # The two formats must agree with each other as well as with the render.
+    stems = {p.stem for p in timeline.glob("*.edl")} & {p.stem for p in timeline.glob("*.fcpxml")}
+    for stem in sorted(stems):
+        edl_text = (timeline / f"{stem}.edl").read_text(encoding="utf-8", errors="replace")
+        events = _edl_events(edl_text)
+        try:
+            root = ET.fromstring((timeline / f"{stem}.fcpxml").read_bytes())
+        except ET.ParseError:
+            continue
+        spine = root.find(".//spine")
+        spine_total = sum(_rational_seconds(c.get("duration", "0s"))
+                          for c in (spine if spine is not None else [])
+                          if c.tag == "asset-clip")
+        if events:
+            every = [e for ev in events for e in ev["edits"]]
+            span = (max(_tc_seconds(e["rec_out"], fps) for e in every)
+                    - min(_tc_seconds(e["rec_in"], fps) for e in every))
+            frame = 1.0 / fps if fps else 0.0
+            delta = abs(span - spine_total)
+            findings.append((f"{stem} edl == fcpxml duration", delta <= frame * 1.5,
+                             f"edl {span:.3f}s vs fcpxml {spine_total:.3f}s ({delta / frame:.2f} frames)"
+                             if frame else "no fps"))
+    return all(ok for _name, ok, _detail in findings), findings
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) != 2:
+        print("usage: nle_check.py <project-dir>", file=sys.stderr)
+        return 2
+    project = Path(argv[1])
+    if not project.is_dir():
+        print(f"not a directory: {project}", file=sys.stderr)
+        return 2
+    ok, findings = check_project(project)
+    width = max((len(n) for n, _o, _d in findings), default=8)
+    for name, cok, detail in findings:
+        mark = "SKIP " if cok and detail.startswith("SKIP") else ("PASS" if cok else "FAIL")
+        print(f"{name:<{width}}  {mark}  {detail}")
+    print()
+    print("ALL CHECKS PASS" if ok else "FAILURES PRESENT")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))

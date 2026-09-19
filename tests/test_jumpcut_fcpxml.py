@@ -1,5 +1,10 @@
 """Jump-cut engine + FCPXML export tests."""
+import re
+import urllib.parse
 from pathlib import Path
+
+import pytest
+
 from models.core import Word
 from engine.vad import SpeechRegion, SilenceRegion
 from engine.pause_classifier import ClassifiedPause, PauseType
@@ -164,3 +169,42 @@ def test_fcpxml_creates_parent_dirs(tmp_path):
     cl = _sample_cutlist()
     out = export_fcpxml(cl, tmp_path / "sub" / "dir" / "out.fcpxml")
     assert out.exists()
+
+
+def test_fcpxml_media_reference_is_an_absolute_uri(tmp_path):
+    """An NLE relinks a clip by the asset ``src``. A relative URI resolves
+    against the timeline file's own directory, so the sequence imports with
+    every clip offline. The reference must be absolute."""
+    cl = _sample_cutlist()
+    media = tmp_path / "source" / "a movie.mov"
+    media.parent.mkdir(parents=True)
+    media.write_bytes(b"0")
+    out = export_fcpxml(cl, tmp_path / "tl" / "out.fcpxml", source_path=str(media))
+
+    src = re.search(r'src="([^"]*)"', out.read_text()).group(1)
+    assert src.startswith("file:///"), "the asset src must be an absolute file URI"
+    # The media must be found at that URI, and not re-read relative to the
+    # timeline file that references it.
+    referenced = Path(urllib.parse.unquote(src[len("file://"):]))
+    assert referenced.is_absolute()
+    assert referenced == media.resolve()
+
+
+def test_fcpxml_refuses_to_emit_a_media_reference_it_cannot_resolve(tmp_path):
+    """``Path.resolve`` can raise (a deleted working directory is one way), and
+    a silent fallback then writes a relative URI an NLE cannot relink. The
+    export must fail loudly instead of shipping an offline timeline."""
+    cl = _sample_cutlist()
+
+    mp = pytest.MonkeyPatch()
+
+    def unresolvable(self, strict=False):
+        raise OSError("working directory has been removed")
+
+    mp.setattr(Path, "resolve", unresolvable)
+    try:
+        with pytest.raises(RuntimeError) as exc:
+            export_fcpxml(cl, tmp_path / "out.fcpxml", source_path="a/b.mov")
+    finally:
+        mp.undo()
+    assert "absolute file URI" in str(exc.value)

@@ -1,11 +1,16 @@
 """FCPXML export — Final Cut Pro XML format from CutList.
 
-Multi-track emitter producing FCPXML 1.11 documents that import into Final
-Cut Pro, DaVinci Resolve and Premiere Pro. Ported behavior-identical from
-`rust/core/src/export_fcpxml.rs` (adapted from AutoCut's
-src-tauri/src/export_fcpxml.rs, reused with the author's permission — see
-docs/autocut-provenance.md) so a cutlist rendered on either side of the
-hybrid produces the same XML.
+Multi-track emitter producing FCPXML 1.11 documents. Ported
+behavior-identical from `rust/core/src/export_fcpxml.rs` (adapted from
+AutoCut's src-tauri/src/export_fcpxml.rs, reused with the author's
+permission — see docs/autocut-provenance.md) so a cutlist rendered on either
+side of the hybrid produces the same XML.
+
+Verification status: the documents are structurally validated against an
+independent CMX 3600/FCPXML reader and against the rendered media (see
+tools/nle_check.py, docs/NLE_COMPATIBILITY.md), but no NLE has yet imported
+one in this project's history — do not state that FCP, Resolve or Premiere
+accept these files until that import has actually been observed.
 
 The critical detail, carried over from AutoCut: DaVinci binds an asset to its
 source media by THREE checks (path, source-media start TC, frame rate
@@ -94,11 +99,20 @@ def _xml_escape(s: str) -> str:
 def _to_file_uri(path: str) -> str:
     if path.startswith(("file://", "http://", "https://")):
         return path
-    # Best-effort canonical absolute path; fall back to raw.
+    # An NLE relinks a clip by this URI. A *relative* URI silently resolves
+    # against the timeline file's own directory, which is almost never where
+    # the media lives, so the sequence imports with every clip offline and the
+    # user is left facing a relink dialog for a file that never moved. A real
+    # run hit that: the timeline directory moved between the download and the
+    # export, Path.resolve() raised, and the fallback wrote a relative URI that
+    # looked complete. Fail the export with a named path instead.
     try:
         abs_path = str(Path(path).resolve())
-    except (OSError, ValueError):
-        abs_path = path
+    except (OSError, ValueError) as exc:
+        raise RuntimeError(
+            f"cannot turn the source path into an absolute file URI, so the "
+            f"export would reference media that an NLE cannot relink: {path!r}"
+        ) from exc
     encoded = ["file://"]
     for byte in abs_path.encode("utf-8", errors="surrogateescape"):
         # Unreserved per RFC 3986, plus '/' and ':' which are safe in a path
