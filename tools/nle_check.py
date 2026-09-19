@@ -58,27 +58,34 @@ FRAME_TOLERANCE = 1.0
 RENDER_FRAME_TOLERANCE = 2.0
 
 
-def _probe(path: Path, entries: str) -> str:
+def _probe(path: Path, entries: str, select: str | None = None) -> str:
     try:
-        out = subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", entries,
-             "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
-            capture_output=True, text=True, check=True,
-        )
+        cmd = ["ffprobe", "-v", "error"]
+        if select:
+            cmd += ["-select_streams", select]
+        cmd += ["-show_entries", entries,
+                "-of", "default=noprint_wrappers=1:nokey=1", str(path)]
+        out = subprocess.run(cmd, capture_output=True, text=True, check=True)
         return out.stdout.strip()
     except (subprocess.CalledProcessError, OSError):
         return ""
 
 
 def _fps(path: Path) -> float:
-    # r_frame_rate reports once per stream; the source's video rate is the one
-    # the timeline was built on.
-    rate = _probe(path, "stream=r_frame_rate").splitlines()
-    rate = rate[0] if rate else ""
+    # The video stream's rate is the one a sequence is stamped with, and it is
+    # not necessarily the first stream: on several containers ffprobe lists
+    # the audio stream first, whose r_frame_rate is 0/0. Select v:0
+    # explicitly, the way providers/ffmpeg.py:probe_fps does. A probe that
+    # takes whichever stream comes first reads the audio rate on those files
+    # and returns 0.0, which fails every fps-dependent check below.
+    rate = _probe(path, "stream=r_frame_rate", select="v:0").strip()
     if "/" in rate:
-        num, den = rate.split("/")
-        if float(den) != 0:
-            return float(num) / float(den)
+        num, _, den = rate.partition("/")
+        try:
+            if float(den) != 0:
+                return float(num) / float(den)
+        except ValueError:
+            return 0.0
     try:
         return float(rate)
     except ValueError:
@@ -344,6 +351,23 @@ def check_project(project: Path) -> tuple[bool, list[tuple[str, bool, str]]]:
         return False, [("timeline directory", False, f"no timeline/ in {project}")]
     source_dir = project / "source"
     source = next(source_dir.glob("*"), None) if source_dir.is_dir() else None
+    # A local-file run does not copy the media into the project tree, so there
+    # is nothing to glob. The pipeline's `source` key holds the media's own
+    # path in that case (a URL run stores the URL and downloads into source/).
+    # Fall back to it so a local run is auditable to the same standard; without
+    # it every fps-dependent check reports "could not probe the source" on a
+    # run that itself succeeded.
+    if source is None:
+        state_path = project / "pipeline_state.json"
+        if state_path.is_file():
+            try:
+                recorded = json.loads(state_path.read_text(encoding="utf-8"))
+                candidate = recorded.get("source")
+                if candidate:
+                    resolved = Path(candidate)
+                    source = resolved if resolved.is_file() else None
+            except (OSError, json.JSONDecodeError):
+                pass
     fps = _fps(source) if source is not None else 0.0
 
     selections = []
