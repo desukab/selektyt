@@ -90,3 +90,76 @@ def test_the_probe_outlives_the_media(harness):
     media = harness / "media" / "source.webm"
     assert not media.exists()
     assert _probe(harness).is_file()
+
+
+_SILENT = (
+    '  File "selekyt/pipeline.py", line 468, in run\n'
+    "    raise RuntimeError(...)\n"
+    "RuntimeError: Transcription produced no speech: the source has no audible "
+    "spoken content. the extracted audio track is digital silence, so a silent "
+    "or music-only source has nothing to select; check that the file has an "
+    "audio track at all.\n"
+)
+
+_DAMAGED = (
+    '  File "selekyt/pipeline.py", line 468, in run\n'
+    "    raise RuntimeError(...)\n"
+    "RuntimeError: Transcription produced no speech: the source has no audible "
+    "spoken content. the extracted audio is not silent (peak -22.4 dBFS) but no "
+    "transcript could be decoded, and a stream-copy remux did not help — the "
+    "container or codec is likely damaged. Try re-muxing or re-encoding the "
+    "source by hand.\n"
+)
+
+
+@pytest.mark.parametrize(
+    "stderr, expected",
+    [(_SILENT, "silent_track"), (_DAMAGED, "damaged_container")],
+    ids=["silent track", "damaged container"],
+)
+def test_a_no_speech_failure_records_which_of_the_two_causes_it_was(
+        harness, monkeypatch, stderr, expected):
+    """An empty transcript has two unrelated causes — a genuinely silent track,
+    and audio that is there but would not decode — and the pipeline's own
+    message already separates them. The record has to carry that separation,
+    because ``run_one`` deletes the media by default: once it is gone the peak
+    measurement that decided the case is not recoverable, and a bare
+    ``NO_SPEECH_DETECTED`` row cannot be classified later. The three real rows
+    in ``corpus/results.jsonl`` predate this field and are unclassifiable for
+    exactly that reason."""
+    class _Result:
+        returncode = 1
+        stdout = ""
+        # A class-body annotation cannot see the enclosing parameter, so the
+        # attribute is set after the class exists.
+        stderr = ""
+
+    _Result.stderr = stderr
+
+    monkeypatch.setattr(
+        "tools.corpus_run.subprocess.run", lambda *a, **kw: _Result()
+    )
+    rec = run_one(dict(_ENTRY), harness, keep_media=True)
+    assert rec["status"] == "NO_SPEECH_DETECTED"
+    assert rec["no_speech_cause"] == expected
+
+
+def test_an_unrecognised_no_speech_message_is_labelled_not_guessed(harness, monkeypatch):
+    """If the message text drifts, say ``unknown`` rather than silently filing
+    the failure under whichever cause the classifier happened to match — a wrong
+    classification here is worse than an admitted gap, because it is what a
+    later reader will trust."""
+    class _Result:
+        returncode = 1
+        stdout = ""
+        stderr = (
+            "RuntimeError: Transcription produced no speech: the source has no "
+            "audible spoken content. [a message shape this harness has not met]\n"
+        )
+
+    monkeypatch.setattr(
+        "tools.corpus_run.subprocess.run", lambda *a, **kw: _Result()
+    )
+    rec = run_one(dict(_ENTRY), harness, keep_media=True)
+    assert rec["status"] == "NO_SPEECH_DETECTED"
+    assert rec["no_speech_cause"] == "unknown"

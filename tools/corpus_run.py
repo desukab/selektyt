@@ -221,6 +221,19 @@ def run_one(entry: dict, workdir: Path, keep_media: bool) -> dict:
             for line in (r.stderr or "").splitlines():
                 if "no audible spoken content" in line:
                     rec["status"] = "NO_SPEECH_DETECTED"
+                    # The message the pipeline raises already separates the two
+                    # unrelated causes — a silent track and a damaged container
+                    # — but only inside a string that a human reads. Recording
+                    # which one fired is what makes a corpus failure diagnosable
+                    # after the media is gone: the three NO_SPEECH rows this
+                    # runner produced before this field existed cannot now be
+                    # classified, because their source files were deleted.
+                    if "digital silence" in line:
+                        rec["no_speech_cause"] = "silent_track"
+                    elif "likely damaged" in line:
+                        rec["no_speech_cause"] = "damaged_container"
+                    else:
+                        rec["no_speech_cause"] = "unknown"
                     break
                 if "passed the editorial/context gate" in line:
                     rec["status"] = "NO_STORIES_PASSED"
