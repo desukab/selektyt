@@ -16,10 +16,11 @@ every line below was true on this host at that point.
   messages carry root cause plus the pinning test. Run `git log -1` for the
   current hash rather than trusting a hash printed here, since amending this
   file changes its own commit hash.
-* Test suite: **834 passed, 10 skipped** (~110 s). The 10 skips are optional
-  backends absent from this host (sherpa-onnx, silero, ollama) and tests that
-  depend on them. Re-run to confirm this number before trusting any claim in
-  this file — see the self-checkpoint note at the bottom.
+* Test suite: **834 passed, 10 skipped in 71 s** (re-run 2026-09-19 by the
+  integrating operator). The 10 skips are optional backends absent from this
+  host (sherpa-onnx, silero, ollama) and tests that depend on them. Re-run to
+  confirm this number before trusting any claim in this file — see the
+  self-checkpoint note at the bottom.
 * Five commits landed on `origin/main` from outside this session
   (`36bdff4`..`edf3b30`): a switch from MIT to a proprietary license plus
   project-positioning docs. They were integrated by rebase, not overwritten.
@@ -42,8 +43,9 @@ every line below was true on this host at that point.
   sidecar cannot resolve `yt-dlp`. Plain `nohup … &` dies with the shell.
 * No project server is listening right now. Scratch run scripts in `/tmp` were
   removed.
-* Disk: 14 G free of 29 G. The real NASA source alone is 883 MB under
-  `out/web/pipeline/project/source/`.
+* Disk: 4.6 G free of 29 G (`df -h /`, 2026-09-19). The real NASA source alone
+  is 884 MB under `out/web/pipeline/project/source/`, and the full project is
+  952 MB. A second long source will not fit comfortably; check `df` first.
 
 ## Completed work
 
@@ -126,6 +128,68 @@ the previously documented evidence — but the run now yields six clips rather
 than three, so the run is 6×(2 aspect ratios). Both presets measure correctly:
 `shorts` 308×486 SAR 8:9 → DAR 1232:2187 (0.5633, ≈9:16); `facebook` 864×486
 SAR 1:1 → exactly 16:9.
+
+### This session — the document set was measured, not merged
+
+The multi-agent instruction was to synthesise agent findings rather than merge
+them. That meant re-verifying every load-bearing number the agents produced,
+and the verification found real defects — in the agents' output and in the
+repo's own record. Five committed doc corrections resulted, plus five new
+protocol documents.
+
+**A metric that did not measure what it claimed.** `tools/editorial_audit.py:check_silence_share`
+reports "silence share" but computes `1 - spoken_overlap/kept_duration` purely
+from transcript word timings over the edit plan's intervals; **it never decodes
+audio.** Clip 05's 40.8% looked like 7 s of dead air in a 17.68 s clip, and the
+docs of record explained it as "a deliberate pause". Measuring the window
+showed the explanation was invented:
+
+* mean −31.4 dB, max −14.1 dB, **0.00 s** of silence at `-40dB:d=0.25`;
+* spectral flatness 0.007–0.012 sustained across all 7 s — a **music bed**;
+* standalone re-transcription with the same `small`/int8/beam-1 model returns
+  only "Ever.", so the pipeline dropped no speech and the transcript is sound.
+
+The metric's *name* is the defect. `docs/METRICS.md` A2.4 now says so and asks
+for a rename; the runbook tells a presenter not to quote the column as a
+silence measurement.
+
+**A measurement that was a tool artifact.** The runbook claimed all six renders
+held 0.00 s of silence. That figure came from running `silencedetect` at
+`-v error`, which **suppresses the filter's output** — an empty result that
+read as "no silence found". Re-run at default verbosity, clip 04 holds 0.66 s
+(0.28 + 0.37) of 14.01 s. The honest floor is ≤4.7%. Two lessons: every number
+here now names its command, and a probe that returns nothing is a result about
+the probe, not about the system.
+
+**A cost model describing a run that no longer existed.** `docs/BUSINESS_MODEL.md`
+was written before the artifacts were regenerated at 07:36 and shipped 3 clips
+per preset; the artifacts carry 6. Every downstream figure was stale. Yield
+3.98%→6.753%, delivered 116.95 s→198.507 s, total RTF 0.2849→0.2917, all-in
+$0.00098→$0.001035 per source-minute. **The conclusion survived and
+strengthened**: compute for a 300-minute month is $1.43 against a $29 plan, a
+95.1% gross margin. The drift's *direction* is the point — yield rose 70% while
+cost rose 5.6%, because yield multiplies only the render stage.
+
+**Two integrity defects in investor-facing documents.** `INVESTOR_READINESS.md`
+quoted a 3.6–14.7% silence range for the six-clip run, quietly omitting clips 05
+(40.8%) and 06 (17.9%) — a selective range in a document a diligence reader
+would trust. And RED_TEAM stated "31 of 140 commits are machine-authored" when
+the measured figure is **45 of 154**. Both corrected, with the command to
+reproduce them.
+
+**What the verification also confirmed:** the `pycmx` finding is real — without
+it on `PYTHONPATH`, six independent-parse checks silently SKIP rather than pass,
+so the audit reads 86/0/6 instead of 92/0/0. `pycmx` is in no dependency extra,
+so CI cannot run the independent check at all. That is a genuine circularity in
+a check the Pro tier's value proposition rests on.
+
+The five new documents are `EVALUATION.md`, `TIME_SAVINGS.md`,
+`TRACTION_DASHBOARD.md`, `USE_OF_FUNDS.md` and `INVESTOR_PIPELINE.md`. Each was
+checked before committing: the budget sums to exactly $1,000K; the 393.6 s
+machine-time figure is a verifiable sum of components; the 18×–73× ratio is
+labelled a model with an unobserved denominator and carries a falsifier
+declared in advance; and outreach remains unauthorized with no investor named
+anywhere.
 
 ## Outstanding work
 
@@ -278,6 +342,20 @@ Ordered by evidence gained per unit of work, not by lines of code.
   map.md` says "as of `2dd4ff1`"; any future change to a verified path must
   update that row with what was actually exercised, not what the code now
   claims to do.
+* **A probe that returns no output is a result about the probe.** `silencedetect`
+  at `-v error` returns nothing and looks like "no silence found". Two doc
+  errors in this repo came from exactly that. Filter *after* capturing, never
+  by suppressing the tool's own output channel.
+* **Every measurement carries its command, and counts drift within a day.** The
+  doc set held three different test counts (819, 824, 834) and two commit counts
+  (140, 154) simultaneously, and the machine-authored share was stated as 31
+  when it was 45. A quoted count is stale the moment it is written; a
+  re-runnable command is not.
+* **Agent output is material to verify, not material to merge.** Two of five
+  new documents contained figures contradicted by the artifacts they described,
+  and one external citation (a BLS median) was for the wrong occupational group.
+  The multi-agent instruction was explicit on this point and it was followed:
+  every load-bearing number was re-measured before any of it was committed.
 
 ## What another Atria session must know
 
@@ -294,6 +372,10 @@ Ordered by evidence gained per unit of work, not by lines of code.
   from "a user can rely on this".
 * **Start any work by re-running the suite** (`.venv/bin/python -m pytest -q`)
   and confirming 834/10. A number other than that means something has drifted.
+  The count was refreshed across the doc set this session after RED_TEAM,
+  AI_EXECUTION_STATE and an agent appendix disagreed within one day (824, 819,
+  834). The same applies to commit counts — the repo is at 154 commits, 45 of
+  them machine-authored under the "Ubuntu" identity.
   This line is itself a self-checkpoint and it has to be edited whenever the
   count changes — a previous session let it sit at 819 through fifteen new
   tests, and the drift was found only because a red-team agent audited it.
