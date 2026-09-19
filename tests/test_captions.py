@@ -16,6 +16,7 @@ from engine.captions import (
     preset_for,
     srt_for_candidate,
 )
+from engine.edit_plan import retention_intervals
 from models.core import Candidate, Word
 
 
@@ -53,6 +54,13 @@ def _parse_srt(path: Path) -> list[dict]:
 def _parse_ass_dialogues(path: Path) -> list[str]:
     lines = path.read_text(encoding="utf-8").splitlines()
     return [ln for ln in lines if ln.startswith("Dialogue:")]
+
+
+def _srt_sec(ts: str) -> float:
+    """``HH:MM:SS,mmm`` → seconds, so a cue bound can be compared to a duration."""
+    h, m, rest = ts.split(":")
+    s, ms = rest.split(",")
+    return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000
 
 
 def test_srt_is_well_formed_and_ordered(tmp_path):
@@ -105,6 +113,38 @@ def test_empty_candidate_writes_an_empty_file_not_a_crash(tmp_path):
     out = tmp_path / "01.srt"
     srt_for_candidate(c, out)
     assert out.read_text(encoding="utf-8") == ""
+
+
+def test_a_word_straddling_the_selection_end_is_not_captioned(tmp_path):
+    """Regression: a word overlapping the selection end is in ``candidate.words``
+    but is cut from the render, because ``retention_intervals`` snaps that end
+    back to the word's start. A caption showing it describes audio the
+    deliverable does not contain, and its cue ran past the end of the render.
+
+    Measured on a real selection: a word at 235.220-235.380 s survived into the
+    captions of a candidate ending 235.237 s, appeared in the SRT but not in the
+    transcript, and its cue ended 0.06 s past the 52.42 s render.
+    """
+    words = [Word(f"w{i}", 10.0 + i * 0.4, 10.0 + i * 0.4 + 0.35)
+             for i in range(9)]
+    straddle = words[-1]
+    # A word whose span crosses the selection end.
+    trailing = Word("straddled", straddle.end + 0.04, straddle.end + 0.30)
+    words.append(trailing)
+    # The selection ends inside that trailing word.
+    end = trailing.start + 0.017
+    c = Candidate(10.0, end, " ".join(w.text for w in words[:-1]), "story",
+                  "h", "p", 0.8, 0.7, 0.9, 0.9, "t", 0.8, words)
+    assert trailing.start < c.end < trailing.end  # really straddling
+
+    out = tmp_path / "01.srt"
+    srt_for_candidate(c, out)
+    body = out.read_text(encoding="utf-8")
+    assert "straddled" not in body
+    # And no cue may run past what the render actually contains.
+    rendered = sum(b - a for a, b in retention_intervals(c))
+    for cue in _parse_srt(out):
+        assert _srt_sec(cue["en"]) <= rendered + 0.15
 
 
 def _candidate_with_a_removed_pause():
@@ -174,21 +214,16 @@ def test_ass_and_srt_still_agree_after_retiming(tmp_path):
     ass_lines = _parse_ass_dialogues(ass)
     assert len(srt_cues) == len(ass_lines)
 
-    def srt_sec(ts: str) -> float:
-        h, m, rest = ts.split(":")
-        s, ms = rest.split(",")
-        return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000
-
     def ass_sec(ts: str) -> float:
         h, m, s = ts.split(":")
         return int(h) * 3600 + int(m) * 60 + float(s)
 
     for cue, line in zip(srt_cues, ass_lines):
         fields = line.split(",", 9)
-        assert abs(srt_sec(cue["st"]) - ass_sec(fields[1])) < 0.02, (
+        assert abs(_srt_sec(cue["st"]) - ass_sec(fields[1])) < 0.02, (
             f"ASS and SRT disagree on cue {cue['idx']} start"
         )
-        assert abs(srt_sec(cue["en"]) - ass_sec(fields[2])) < 0.02, (
+        assert abs(_srt_sec(cue["en"]) - ass_sec(fields[2])) < 0.02, (
             f"ASS and SRT disagree on cue {cue['idx']} end"
         )
 

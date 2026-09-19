@@ -73,6 +73,17 @@ def _emphasis(words: list[Word]) -> set[int]:
 def build_blocks(candidate: Candidate, max_words: int = 6, max_width: int = 34, max_duration: float = 3.2) -> list[CaptionBlock]:
     words = sorted((candidate.words or []), key=lambda w: (w.start, w.end))
     words = [w for w in words if _clean(w.text)]
+    # A word straddling the selection end belongs to what the speaker said
+    # next, not to this story: engine/edit_plan.py snaps that end back to the
+    # word's start so the render drops it, and a caption that still shows it
+    # describes audio the deliverable does not contain. Excluding a word that
+    # overlaps the bound keeps the caption track a transcript of the render
+    # rather than of the pre-snap span. Measured on a real selection: a word
+    # at 235.220-235.380 s survived into the captions of a candidate ending
+    # 235.237 s, appeared in the SRT but not in the transcript, and its cue ran
+    # past the end of the 52.42 s render.
+    if words and candidate.end > candidate.start:
+        words = [w for w in words if w.end <= candidate.end]
     if not words:
         return []
 

@@ -35,5 +35,5 @@ SDF commander saying that.
 Yeah, the SDF.
 
 10
-0:00:10,500 --> 0:00:11,942
-So this was a U
+0:00:10,500 --> 0:00:11,200
+So this was a

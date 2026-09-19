@@ -22,9 +22,81 @@ required axes were attempted.
 | alice-1903 | difficult-audio | NO_SPEECH_DETECTED | 0 | — | en |
 | roman-portrait-trailer | creator | NO_SPEECH_DETECTED | 0 | — | en |
 
-Every OK source was also audited: `tools/nle_check.py` reports **0 FAIL** on
-all seven, with the `pycmx` independent EDL parse executing rather than
-skipping. `tools/editorial_audit.py` passes on all seven.
+Every OK source was also audited with `tools/nle_check.py`, with the `pycmx`
+independent EDL parse executing rather than skipping. The honest summary is not
+"0 FAIL everywhere": the interchange audit reported relink failures on all
+seven, because `tools/corpus_run.py` deletes the source media after each run
+and the EDL/FCPXML point at it. That was an audit artifact, not an export
+defect; `nle_check.py` now records those as NOT RUN and counts them separately,
+and this section was previously stating a pass rate that the tool could not
+actually have produced at the time. Re-run with `--keep-media` to exercise the
+relink checks for real.
+
+`tools/editorial_audit.py` **failed on four of the seven** — `emwcon-panel-2018`,
+`ooi-vertical`, `pentagon-esper-briefing`, `royal-society-cloke` — every one of
+them a selection bound landing inside a word (`end 115.86s splits ' arrays,'
+/ ' traveling'`). That is a real defect, and it is fixed in `engine/edit_plan.py`
+(both bounds now snap back to the enclosing word boundary).
+
+**That fix has since been confirmed on one of the four**, and the confirmation
+exposed a second defect the first audit could not see.
+
+`royal-society-cloke` was re-run with `--keep-media` after the word-alignment
+fix. The four word-split failures are gone — clips 02/03/04 and the cross-clip
+check all pass. But clip 01 still failed, on something else: its last caption
+cue read `Somebody`, a word that appears in the SRT but **not in the
+transcript**, and its cue ended at 52.485 s on a 52.421 s render. The selection
+ends at 235.237 s; the word `Somebody` spans 235.220–235.380 s, so it
+*straddles* the bound. `_word_aligned` correctly snaps that end back to the
+word's start for the render — the render is right — but `build_blocks` in
+`engine/caption_director.py` still built captions from the un-snapped
+`candidate.words`, so the caption track described audio the deliverable does not
+contain. Fixed: a word whose span crosses `candidate.end` is now excluded.
+Regression test in `tests/test_captions.py`, verified to fail on the pre-fix
+code.
+
+After both fixes, `royal-society-cloke` is the first corpus source where both
+audits are fully green:
+
+```
+clip 01     PASS  silence share 6.8%; rendered 52.42s, 33 cues
+clip 02     PASS  silence share 10.7%; rendered 27.50s, 21 cues
+clip 03     PASS  silence share 6.8%; rendered 21.26s, 14 cues
+clip 04     PASS  silence share 7.8%; rendered 26.26s, 14 cues
+cross-clip  PASS  no duplicated sentences
+ALL CHECKS PASS
+```
+
+and `tools/nle_check.py` on the same retained media reports **62/62 PASS**,
+including the `edl media exists` and `fcpxml media relinkable` checks that the
+first run could not exercise at all because the media had been deleted.
+`pycmx` parses every EDL independently of the project venv; timelines agree with
+both rendered presets to 0.53 frames, and EDL↔FCPXML to 0.00 frames.
+
+**What is still not established by this.** The other three sources were
+re-audited, and they **still fail** — for a reason that is worth being precise
+about, because it separates two different fixes:
+
+| Source | After re-emit | Remaining failure |
+|---|---|---|
+| `emwcon-panel-2018` | clips 01, 05 FAIL | `end 67.09s splits ' was,'/' at'`; `end 225.13s splits ' comes'/' I'` |
+| `ooi-vertical` | clip 01 FAIL | `end 115.86s splits ' arrays,'/' traveling'` |
+| `pentagon-esper-briefing` | clip 02 FAIL | `end 461.50s splits ' them'/' What'`; `end 472.82s splits ' compound'/' Also,'` |
+
+These are word-split failures, and the word-split fix lives in
+`engine/edit_plan.py:: _word_aligned`, which runs **upstream** of where
+`selections.json` is written — it moves the selection bounds themselves. The
+`selections.json` on disk for these three still holds the pre-fix bounds, so
+re-emitting captions from it reproduces the pre-fix captions byte-for-byte
+(hence `unchanged` on all of `emwcon-panel-2018` and `ooi-vertical`). The
+straddle fix, by contrast, is purely caption-side, which is why it *was*
+recoverable this way — `pentagon-esper-briefing` clip 04 was rewritten and now
+passes, its last word ` U` spanning 922.120–922.960 s against an end of
+922.862 s.
+
+So: the caption-straddle fix is confirmed on two sources. The word-split fix is
+confirmed on one (`royal-society-cloke`, fully re-run). **The other three still
+need real re-runs**, and no claim in this document says otherwise.
 
 ## The finding that matters more than the pass rate
 
