@@ -107,3 +107,64 @@ def test_download_reports_bot_detection_without_credentials(tmp_path, monkeypatc
         download("https://youtube.com/watch?v=x", tmp_path / "src")
     assert "automated traffic" in str(exc.value)
     assert "cookies" in str(exc.value).lower()
+
+
+def _recording_stub(monkeypatch, results: list, *, metadata_json: dict | None = None):
+    """Run each canned result in order and record the client each attempt used."""
+    calls: list[str] = []
+
+    def fake_run(cmd, *args, **kw):
+        for a, b in zip(cmd, cmd[1:]):
+            if a == "--extractor-args" and str(b).startswith("youtube:player_client="):
+                calls.append(str(b).split("player_client=")[1])
+        is_metadata = "--dump-single-json" in cmd
+        outcome = results.pop(0) if results else ("ok", "")
+        if outcome[0] == "bot":
+            raise subprocess.CalledProcessError(1, cmd, stderr="Sign in to confirm you're not a bot")
+        if outcome[0] == "err":
+            raise subprocess.CalledProcessError(1, cmd, stderr=outcome[1])
+        if is_metadata:
+            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(metadata_json or {"id": "v"}), stderr="")
+        target = next((a for a in cmd if "%(ext)s" in str(a)), None)
+        if target is not None:
+            Path(str(target).replace("%(ext)s", "mp4")).write_bytes(b"0" * 1024)
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    _no_cookie_args(monkeypatch)
+    return calls
+
+
+def test_download_retries_the_next_player_client_when_one_is_blocked(tmp_path, monkeypatch):
+    """The sign-in wall is per-video, not per-client: a blocked client must not
+    end the download when another client is still untried."""
+    calls = _recording_stub(monkeypatch, [("bot",), ("bot",), ("ok", ""), ("ok", "")])
+
+    media, _info = download("https://youtube.com/watch?v=v", tmp_path / "src")
+
+    assert media.suffix == ".mp4"
+    # The lookup had to fall through to the third default client, and the
+    # download then started from that client rather than redoing the two
+    # blocked attempts.
+    assert calls == ["android", "tv_embedded", "web_safari", "web_safari"]
+
+
+def test_download_does_not_retry_a_real_download_failure(tmp_path, monkeypatch):
+    """An error that is not the sign-in wall must be raised immediately, without
+    burning the remaining clients."""
+    calls = _recording_stub(monkeypatch, [("err", "HTTP Error 403: Forbidden")])
+
+    with pytest.raises(RuntimeError) as exc:
+        download("https://youtube.com/watch?v=v", tmp_path / "src")
+    assert "403" in str(exc.value)
+    assert calls == ["android"]
+
+
+def test_player_client_list_is_configurable(tmp_path, monkeypatch):
+    """A network where the default list is entirely refused can override it."""
+    monkeypatch.setenv("SELEKYT_YOUTUBE_PLAYER_CLIENT", "ios,web")
+    calls = _recording_stub(monkeypatch, [("ok", ""), ("ok", "")])
+
+    download("https://youtube.com/watch?v=v", tmp_path / "src")
+
+    assert calls == ["ios", "ios"]
