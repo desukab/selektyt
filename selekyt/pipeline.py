@@ -270,6 +270,20 @@ def run(
         state.update({"fingerprint": fingerprint, "model": model, "language": detected})
         _save_state(state_path, state)
 
+    if not transcript:
+        # A source with no detectable speech has no stories to select, and
+        # every candidate would be rejected for having too few words. Failing
+        # here names the actual cause instead of letting it surface forty
+        # minutes later as "no complete standalone stories passed the gate",
+        # which tells a user nothing they can act on. Hit on a real URL whose
+        # audio track was digital silence.
+        raise RuntimeError(
+            "Transcription produced no speech: the source has no audible "
+            "spoken content. Check that the file has an audio track and that "
+            "it contains speech (a silent or music-only source has nothing "
+            "to select)."
+        )
+
     thoughts = make_thoughts(transcript)
     ranked = rank(thoughts, limit=max(limit * 3, limit))
     # Validate once, not twice: the previous form called validate() again when
