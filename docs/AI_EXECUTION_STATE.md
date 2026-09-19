@@ -10,17 +10,15 @@ every line below was true on this host at that point.
   Nothing unpushed, nothing stashed, nothing in `git stash list`.
 * **Latest commit:** this file's own commit — *docs: persistent AI execution
   state checkpoint*. It is a doc-only checkpoint with no code change. The last
-  *substantive* changes are the interchange-validation commits of this session
-  (the absolute asset URI, the probed source duration, the SAR-aware landscape
-  render, the path-guard boundary, and `tools/nle_check.py` itself); their
-  messages carry root cause plus the pinning test. Run `git log -1` for the
-  current hash rather than trusting a hash printed here, since amending this
-  file changes its own commit hash.
-* Test suite: **834 passed, 10 skipped in 71 s** (re-run 2026-09-19 by the
-  integrating operator). The 10 skips are optional backends absent from this
-  host (sherpa-onnx, silero, ollama) and tests that depend on them. Re-run to
-  confirm this number before trusting any claim in this file — see the
-  self-checkpoint note at the bottom.
+  *substantive* change is `ee4f53f` — the first multi-source corpus, plus the
+  two defects it found (audio dropped by input seeking; the audit comparing
+  the wrong span). Run `git log -1` for the current hash rather than trusting a
+  hash printed here, since amending this file changes its own commit hash.
+* Test suite: **837 passed, 10 skipped in 76 s** (re-run 2026-09-19, after the
+  two new render tests landed). The 10 skips are optional backends absent from
+  this host (sherpa-onnx, silero, ollama) and tests that depend on them.
+  Re-run to confirm this number before trusting any claim in this file — see
+  the self-checkpoint note at the bottom.
 * Five commits landed on `origin/main` from outside this session
   (`36bdff4`..`edf3b30`): a switch from MIT to a proprietary license plus
   project-positioning docs. They were integrated by rebase, not overwritten.
@@ -43,9 +41,12 @@ every line below was true on this host at that point.
   sidecar cannot resolve `yt-dlp`. Plain `nohup … &` dies with the shell.
 * No project server is listening right now. Scratch run scripts in `/tmp` were
   removed.
-* Disk: 4.6 G free of 29 G (`df -h /`, 2026-09-19). The real NASA source alone
-  is 884 MB under `out/web/pipeline/project/source/`, and the full project is
-  952 MB. A second long source will not fit comfortably; check `df` first.
+* Disk: 5.7 G free of 29 G (`df -h /`, 2026-09-19). The corpus's downloaded
+  media is deliberately *not* kept — `corpus/media/` is gitignored and
+  regenerable from `corpus/manifest.json`, and it had to be removed mid-run
+  when the filesystem hit 118 MB free and started failing every Bash call.
+  The text artifacts (transcript, selections, edit plan, EDL/FCPXML) are the
+  evidence and they are committed. Check `df` before any long run.
 
 ## Completed work
 
@@ -191,6 +192,59 @@ labelled a model with an unobserved denominator and carries a falsifier
 declared in advance; and outreach remains unauthorized with no investor named
 anywhere.
 
+### This session — the corpus ran, and it changed what is known
+
+The phase's instruction was to stop treating documentation as the primary
+work and start producing external product evidence. The corpus is that work:
+**11 sources across all eight required axes, run end to end, outcomes
+recorded in `corpus/results.jsonl` including every failure.** 7 produced
+deliverables and 4 did not, and each of the four failures is diagnosed in
+`docs/CORPUS_RESULTS.md` rather than dropped.
+
+Three things changed about what SelekyT can claim.
+
+**One: the strongest evidence in the repo is now a negative result.** Three of
+the seven "OK" sources — Telugu, Hungarian, Hindi — produced transcripts that
+are fluent-looking phonetic noise. Every mechanical audit passes on them. The
+caption-transcript equality check compares captions against the transcript,
+not against reality, so a wrong transcript is faithfully reproduced into wrong
+captions that pass. Geometry, timing, EDL/FCPXML agreement: all green, all
+meaningless. This is the direct, concrete justification for the blinded
+protocol, and it promotes the never-measured WER criteria (P8/P9) from an
+academic item to the highest-priority follow-up.
+
+**Two: two real defects, found by running new sources rather than by reading
+code.** Both fixed, both pinned by a test that fails against the pre-fix code.
+* The rendered deliverable shipped **with no audio stream** on the OOI source
+  (AV1/Opus WebM): input seeking dropped the audio on 7 of 8 sampled positions
+  while the container provably held 7601 audio packets across all 152 s, and
+  ffmpeg reported nothing. `engine/qa.py` caught it and failed the run — the
+  reporting layer was already correct; what was missing was producing a
+  correct file.
+* `tools/nle_check.py` compared each EDL's source in/out against the
+  **selection span** rather than the retained intervals the render
+  concatenated, and reported a 26-frame disagreement about an export that was
+  correct. Verified the fix still catches a real error: perturbing one clip's
+  intervals FAILs it while its neighbours stay PASS.
+
+**Three: the interchange strategy question is settled with sources, not
+reputation.** FCPXML is imported by 2 of the 4 editors (Premiere "does not
+recognize" it; Avid's 1317-page guide has no FCPXML path at all); EDL covers
+3; the existing dual export is what covers the set. Reel-name length is
+already ≤8 and already tested, so the research validated code rather than
+requiring a change. Recorded in `docs/NLE_INTERCHANGE.md`.
+
+Determinism was re-verified on a **fresh download** of the reference source:
+selections byte-identical between two independent runs weeks of commits apart
+(P13 holds on a real re-run, not only in a unit test). All seven OK sources
+pass `tools/nle_check.py` with 0 FAIL, with `pycmx` executing rather than the
+six checks that used to skip.
+
+**The honest limit, unchanged:** no NLE has opened an artifact. This host has
+no NLE binary and no display. What is established is mechanical
+self-consistency across containers, frame rates, aspect ratios and languages —
+which is necessary and is not sufficient.
+
 ## Outstanding work
 
 In rough order of how much it would cost a user (fuller list in
@@ -223,72 +277,117 @@ In rough order of how much it would cost a user (fuller list in
    binary is packaged and the webview has never rendered (no webkit2gtk).
 5. **Optional backends untested here** — sherpa-onnx, silero, ollama are wired
    and degrade cleanly by design, but unit-tested only.
-6. **Editorial judgement is unmeasured at scale** — three clips from one source
-   passing the audit is evidence the machinery is sound, not that the choices
-   would survive comparison with a human editor across sources and languages.
-7. **Vertical reframing verified on one anamorphic + synthetic sources only** —
+6. **Editorial judgement is unmeasured at scale — and the corpus proved the
+   mechanical audits cannot substitute.** Three of seven "OK" sources produced
+   transcripts that are fluent-looking phonetic noise and passed every audit,
+   because the caption-transcript equality check compares captions to the
+   transcript, not to the audio. `docs/BLINDED_PROTOCOL.md` is the design that
+   would settle it; **it has not been run, and no editor has been contacted.**
+7. **The no-speech error conflates two unrelated causes.** A structurally
+   damaged `.ogv` (non-monotonic DTS, mis-marked keyframes) is reported as "no
+   audible spoken content" when the source has speech — a clean remux of the
+   same file transcribes to 11 segments. This tells a user their media is
+   speechless when it is not, and it is the most misleading failure mode in the
+   product. Open, diagnosed, unfixed: remux to a clean container and retry
+   before reporting no speech.
+8. **Non-English transcription quality is unmeasured and probably inadequate.**
+   The `small` model produced garbage in Telugu, Hungarian and Hindi. This is
+   an *observation from reading transcripts*, not a score: WER (P8/P9) has
+   never been measured on any source, in any language.
+9. **Vertical reframing verified on one anamorphic + synthetic sources only** —
    the SAR fix is provably correct *geometry*, but whether the wider crop keeps
    a moving subject well framed is not measured. A 9:16 cut from SD footage is
    sub-SD (308×486), a property of the input.
+10. **Frame-rate and codec coverage is narrow.** The corpus added 25, 30 and
+    29.97 fps. 23.976, 50 and 59.94 remain untested, and no 4K/H.265 source was
+    attempted — still the largest unquantified risk in `docs/BUSINESS_MODEL.md`
+    §9.
 
 ## Current strategic objective
 
-Take SelekyT from "verified local-file release" toward a genuinely usable v1
-for real users. The phase's own rule was to **discover whether it actually
-produces good short-form edits from real-world human speech and real URL
-sources**, not to add features: do not restart a broad feature-development
-cycle, do not rewrite working architecture, fix only measurable problems with
-the smallest robust fix, and record concrete failures rather than hiding them.
+The phase's instruction was explicit: **stop treating documentation as the
+primary work; the bottleneck is insufficient external product evidence.** The
+corpus was the answer to that, and it moved the objective rather than merely
+progressing it.
 
-That objective is largely met for the local-file and URL paths. The remaining
-work above is what separates the current state from a production-ready v1.
+Where the objective stood before — "discover whether it actually produces good
+short-form edits from real-world human speech and real URL sources" — the
+answer is now *partially in and uncomfortably specific*: the machinery is
+sound across containers, frame rates, aspect ratios and languages (11 sources,
+7 clean through both audits, determinism byte-identical across independent
+downloads), **but three of those seven produced transcripts that are phonetic
+noise, and no mechanical check can see it.**
+
+So the objective splits into two things that must not be conflated:
+
+* **Mechanical correctness** — largely established, and the remaining hole is
+  NLE import, which is zero capital.
+* **Editorial quality** — not merely unmeasured, but demonstrated to be
+  *unmeasurable by the audits that exist*. That is what
+  `docs/BLINDED_PROTOCOL.md` exists for, and it has not been run. No editor has
+  been contacted; the standing instruction forbids contacting anyone without
+  founder approval.
+
+The next milestone is still the one the phase named: **a real editor uses
+SelekyT, saves measurable time, and would choose to use it again.** Nothing in
+this session's work should be reported as progress toward that milestone. What
+this session produced is the evidence that the milestone is not yet met, and
+the cheapest tests that would move it.
 
 ## Next 10 highest-leverage tasks
 
 Ordered by evidence gained per unit of work, not by lines of code.
 
+*Closed this session:* "run the editorial audit across 3–5 more real sources"
+(exceeded: 11 sources, 7 clean) and "add a second source to the determinism
+check" (exceeded: two independent *downloads*, byte-identical selections).
+
 1. **Import a timeline into a real NLE. This is the single highest-leverage
-   action available.** It is zero capital and one engineer-day: install
-   DaVinci Resolve's free tier on any machine with a display (macOS or
-   Windows — Resolve on Linux needs an unsupported workaround), import
-   `out/web/pipeline/project/timeline/01.edl` and `01.fcpxml`, and record
-   whether the project opens, whether the clips are online or offline, whether
-   the timeline duration matches the rendered `facebook/01.mp4` (24.892 s),
-   whether the source in-points match the selection (414.30 s), and whether a
-   relink dialog appears. The pass criterion is decided in advance: **the
-   sequence opens with all clips online and its duration matches the render to
-   within two frames.** Anything less is a defect to fix, not a result to
-   report. Until this is done, every external statement about NLE compatibility
-   must say what `docs/NLE_COMPATIBILITY.md` says: structurally validated by an
-   independent reader, duration verified against the render, **never opened in
-   an NLE**.
-2. **Get a *second* YouTube fetch observed** to establish whether the
+   action available and it is still open.** It is zero capital and one
+   engineer-day: install DaVinci Resolve's free tier on any machine with a
+   display (macOS or Windows — Resolve on Linux needs an unsupported
+   workaround), import `out/web/pipeline/project/timeline/01.edl` and
+   `01.fcpxml`, and record whether the project opens, whether the clips are
+   online or offline, whether the timeline duration matches the rendered
+   `facebook/01.mp4` (24.892 s), whether the source in-points match the
+   selection (414.30 s), and whether a relink dialog appears. The pass
+   criterion is decided in advance: **the sequence opens with all clips online
+   and its duration matches the render to within two frames.** Anything less
+   is a defect to fix, not a result to report. Until this is done, every
+   external statement about NLE compatibility must say what
+   `docs/NLE_COMPATIBILITY.md` says: structurally validated by an independent
+   reader, duration verified against the render, **never opened in an NLE**.
+2. **Re-run the three non-English sources at `medium` and `large-v3`.** This is
+   the cheapest test that addresses the finding the mechanical audits cannot
+   see (item 6 in Outstanding work). It is a model-choice question answerable
+   by re-running `tools/corpus_run.py --only telugu-tutorial,hadhazy-protest,
+   hindi-baiga-interview` with a different `--model`, and it decides whether
+   the product can claim multilingual support at all. Budget compute: `medium`
+   is several× `small` on a 4-core CPU-only host.
+3. **Fix the no-speech misdiagnosis** (Outstanding work item 7): remux to a
+   clean container and retry before reporting "no audible spoken content", so
+   an unreadable container stops being described as a speechless source.
+4. **Score WER against `corpus/manifest.json`'s C9/C10 audio-only corpora**
+   (`docs/EVALUATION.md` §2.2) — the ground truth the video sources lack. P8/P9
+   have never been measured; the corpus's non-English findings are impressions
+   from reading transcripts, not scores.
+5. **Get a *second* YouTube fetch observed** to establish whether the
    intermittent block is per-video, per-hour, or random. One success is not
    reliability. Use `--cookies` / a browser cookie file, a residential proxy,
    or a non-datacenter network if the block recurs.
-3. **Run the editorial audit across 3–5 more real sources** of differing
-   length, language and production style, and record *which* checks fail. This
-   directly attacks G6, the least-measured remaining risk.
-4. **Test the `.mpg` path end to end.** The accept-any-container fix (defect 2)
+6. **Test the `.mpg` path end to end.** The accept-any-container fix (defect 2)
    is pinned at the discovery step only; a full run through a real MPEG-PS
    source would exercise transcription, render and export on that wrapper.
-5. **Re-measure subject framing after the wider anamorphic crop** on a source
-   with real lateral motion (G7). The SAR fix is provably correct as geometry;
-   whether the tracked subject stays well composed is not measured.
-6. **Resolve the web-shell / CLI input disagreement** (G3). Decide between
+7. **Add a 23.976, a 50 and a 59.94 source, and one 4K/H.265 source.** The
+   corpus covered 25/30/29.97; the rest is untested and is the largest
+   unquantified risk named in `docs/BUSINESS_MODEL.md` §9.
+8. **Resolve the web-shell / CLI input disagreement** (G3). Decide between
    exposing a video upload route or documenting the project-root confinement —
    the previous session decided URL-first with no code change, which is why
    upload is still missing.
-7. **Verify the sherpa-onnx and silero fallbacks actually fire.** Install one
-   optional backend on a scratch venv and confirm `fallback_reason` reports it
-   and the output is still usable. Only do this if it unblocks a release
-   question — it is not on the critical path.
-8. **Package the Tauri shell once, on one platform** (G4), or record explicitly
+9. **Package the Tauri shell once, on one platform** (G4), or record explicitly
    that v1 ships CLI + web shell only. Do not spend main effort here until G1
    and G2 are settled.
-9. **Add a second source to the determinism check.** The web shell reproduced
-   the CLI run's selection exactly, but on one source; a second source would
-   make that claim real.
 10. **Audit the preserved worktrees for now-merged or superseded work** and
     record the verdict in `docs/agent-worktrees.md`. The timeline worktree in
     particular may duplicate or conflict with live `engine/timeline*`.
@@ -319,6 +418,25 @@ Ordered by evidence gained per unit of work, not by lines of code.
   conflict to the user** rather than silently picking one.
 * **Never `git push --force`, never reset or rewrite history, never delete the
   preserved agent worktrees.**
+* **EDL is the primary interchange format, not FCPXML.** The research
+  (`docs/NLE_INTERCHANGE.md`) inverted the assumption the phase's instruction
+  warned against: FCPXML is imported by 2 of the 4 editors — Premiere "does not
+  recognize" it and Avid's 1317-page guide has no FCPXML path — while CMX 3600
+  EDL covers 3. The existing dual export already covers the union, so the
+  finding validated the code rather than changing it, and the 8-character reel
+  limit is the CMX standard rather than an arbitrary tidy choice. The decision
+  to keep both formats stands; the decision to *describe* EDL as primary is
+  new.
+* **A corpus failure is a result, not an interruption.** `tools/corpus_run.py`
+  never raises on a difficult source and writes the record including the log
+  tail; the only non-zero exit is a harness failure. Two of the four
+  non-OK sources are *correct* rejections (a silent film and a music reel),
+  and the distinction between "correctly rejected" and "misdiagnosed" is only
+  visible because the failures were recorded rather than retried or dropped.
+* **Downloaded media is not evidence.** `corpus/media/` is gitignored and
+  regenerable; the transcript, selections, edit plan and EDL/FCPXML are the
+  evidence and they are committed. Keeping 11 sources on disk filled the
+  filesystem to 118 MB free and took every Bash call down with it.
 
 ## Known risks
 
@@ -346,6 +464,17 @@ Ordered by evidence gained per unit of work, not by lines of code.
   at `-v error` returns nothing and looks like "no silence found". Two doc
   errors in this repo came from exactly that. Filter *after* capturing, never
   by suppressing the tool's own output channel.
+* **The same class applies to empty transcripts.** `NO_SPEECH_DETECTED` can
+  mean the source is speechless (correct — a silent film, a music reel) *or*
+  that the container is unreadable (incorrect — a damaged `.ogv` that
+  transcribes to 11 segments after a clean remux). The error message does not
+  distinguish them, and the second case tells a user something false about
+  their own media. Open defect, diagnosed in `docs/CORPUS_RESULTS.md`.
+* **`ffmpeg` failing silently is a real failure mode, not a hypothetical.**
+  Input seeking dropped the audio stream on an AV1/Opus WebM and exited 0. The
+  only reason the artifact did not ship is that `engine/qa.py` probes the
+  result. Any new render path must be covered by a QA probe, not by an
+  ffmpeg exit code.
 * **Every measurement carries its command, and counts drift within a day.** The
   doc set held three different test counts (819, 824, 834) and two commit counts
   (140, 154) simultaneously, and the machine-authored share was stated as 31
@@ -364,18 +493,22 @@ Ordered by evidence gained per unit of work, not by lines of code.
   *asserted by the code and false*. The `crop=ih*9/16:ih` filter even carried a
   comment saying it had produced "an exact 9:16 frame". Verify geometry,
   durations and cue counts by probing the rendered files.
-* **Read the three docs first**: `docs/NLE_COMPATIBILITY.md` (what is and is
-  not verified about interchange, and the experiment that closes it),
+* **Read the four docs first**: `docs/CORPUS_RESULTS.md` (what 11 sources
+  actually did, including the finding the audits cannot see),
+  `docs/BLINDED_PROTOCOL.md` (the evaluation that would settle editorial
+  quality — designed, not run), `docs/NLE_INTERCHANGE.md` (why EDL rather than
+  FCPXML is the primary interchange, and what is *not* verified) and
   `docs/release-validation.md` (what was actually run, what failed, what was
-  fixed) and `docs/product-gap-map.md` (per-capability status with the basis
-  for each claim). All three distinguish "code exists and unit tests pass"
-  from "a user can rely on this".
+  fixed). All four distinguish "code exists and unit tests pass" from "a user
+  can rely on this".
 * **Start any work by re-running the suite** (`.venv/bin/python -m pytest -q`)
-  and confirming 834/10. A number other than that means something has drifted.
-  The count was refreshed across the doc set this session after RED_TEAM,
+  and confirming 837/10. A number other than that means something has drifted.
+  The count was refreshed across the doc set after RED_TEAM,
   AI_EXECUTION_STATE and an agent appendix disagreed within one day (824, 819,
-  834). The same applies to commit counts — the repo is at 154 commits, 45 of
-  them machine-authored under the "Ubuntu" identity.
+  834); it moved again to 837 when the two render tests landed. The same
+  applies to commit counts — the repo is at **165 commits, 56 of them
+  machine-authored under the "Ubuntu" identity** (`git log --format='%an' |
+  grep -ci ubuntu`).
   This line is itself a self-checkpoint and it has to be edited whenever the
   count changes — a previous session let it sit at 819 through fifteen new
   tests, and the drift was found only because a red-team agent audited it.
@@ -386,10 +519,22 @@ Ordered by evidence gained per unit of work, not by lines of code.
   `_to_file_uri`. Fixing the wrong one has no effect on any shipped artifact —
   this session did exactly that, and proved it by re-running the pipeline and
   re-auditing. Trace the call site before touching either.
+* **A passing audit is not a correct result.** The corpus produced three
+  sources whose transcripts are phonetic noise and which pass every check in
+  `tools/nle_check.py` and `tools/editorial_audit.py`, because the
+  caption-transcript equality check compares captions to the transcript, not
+  to the audio. Never describe the audit result as evidence that a transcript
+  is accurate; describe it as evidence that the artifacts agree with each
+  other. This is the single most important caveat in the repo and it is the
+  reason P8/P9 (WER, never measured) outrank every other open item.
+* **The corpus is re-runnable and append-only.** `tools/corpus_run.py
+  corpus/manifest.json` skips sources already recorded OK and appends new
+  records, so a later session can grow it without re-running it whole. Media
+  is deliberately not kept; re-downloading is cheap, and keeping it filled the
+  disk once already.
 * **The previous phase's own framing applies**: do not simply report that
-  SelekyT is complete. The purpose is to discover whether it produces good
-  short-form edits from real speech and real URLs. Of the two claims with no
-  real-world evidence at all, one now has partial evidence — a single YouTube
-  fetch did succeed this session, though not reliably. **G2 (NLE import)
-  remains the only claim in the venture with zero real-world evidence behind
-  it**, and it is the cheapest gap to close.
+  SelekyT is complete. **G2 (NLE import) remains the only claim in the venture
+  with zero real-world evidence behind it**, and it is the cheapest gap to
+  close. The corpus closed several others and opened one that matters more:
+  editorial quality is not just unmeasured, it is unmeasurable by the tools
+  that exist.
