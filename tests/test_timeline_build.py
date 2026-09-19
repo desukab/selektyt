@@ -13,6 +13,7 @@ either side on its own would not catch the drift.
 """
 from __future__ import annotations
 
+import re
 import shutil
 from pathlib import Path
 
@@ -119,6 +120,34 @@ def test_clips_tile_the_timeline_without_gaps(tmp_path):
     for prev, clip in zip(tl.clips, tl.clips[1:]):
         assert clip.timeline_in == prev.timeline_out, "clips must abut"
     assert tl.clips[0].timeline_in == 0.0
+
+
+def test_the_asset_declares_the_medias_real_duration(tmp_path):
+    """An NLE's asset is the whole file: the media browser shows the declared
+    duration and clips read against it. Left unset, the exporter falls back to
+    the furthest point any clip reaches, and that can land a frame *short* of
+    the clip it is meant to cover — measured on the shipped run, where the
+    asset was declared 671.371s and the clip read to 671.404s. Passing the
+    probed duration must win."""
+    media = _video(tmp_path / "source.mp4")
+    real = probe_duration(media)
+    c = _candidate(0.5, 3.5)
+    tl = timeline_for_candidate(media, c, fps=FPS, duration=real)
+    fcpxml = export(tl, tmp_path / "timeline", stem="01")["fcpxml"].read_text()
+
+    m = re.search(r'<asset id="r1"[^>]*duration="([^"]+)"', fcpxml)
+    assert m, "no asset duration attribute was emitted"
+    num, _, den = m.group(1).rstrip("s").partition("/")
+    declared = float(num) / float(den or 1)
+    assert abs(declared - real) < 1.0 / FPS, (
+        f"the asset declared {declared:.3f}s, the media is {real:.3f}s"
+    )
+    # And no clip may read past the extent that was declared.
+    clip = re.search(r'<asset-clip[^>]*start="([^"]+)"[^>]*duration="([^"]+)"', fcpxml)
+    snum, _, sden = clip.group(1).rstrip("s").partition("/")
+    dnum, _, dden = clip.group(2).rstrip("s").partition("/")
+    end = float(snum) / float(sden or 1) + float(dnum) / float(dden or 1)
+    assert end <= declared + 1e-6, f"the clip reads to {end:.3f}s past {declared:.3f}s"
 
 
 def test_clips_point_back_at_the_source(tmp_path):

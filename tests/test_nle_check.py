@@ -123,6 +123,21 @@ def test_an_offline_media_reference_is_caught(tmp_path):
     assert any("non-absolute src" in d for _n, _o, d in findings)
 
 
+def test_a_clip_reading_past_its_asset_is_caught(tmp_path):
+    """A clip whose extent exceeds the asset's declared duration is clamped or
+    flagged by an NLE. The measured case was exactly one frame, so the
+    assertion must not be frame-tolerant: one frame over is still over."""
+    project = _build_project(tmp_path / "project")
+    fcpxml = (project / "timeline" / "01.fcpxml").read_text()
+    # The clip reads 0:00:01:00 to 0:00:02:00 but the asset is one second.
+    broken = fcpxml.replace('duration="25/25s" />', 'duration="50/25s" />')
+    assert broken != fcpxml, "the template changed; pick a new clip duration"
+    (project / "timeline" / "01.fcpxml").write_text(broken)
+    ok, findings = _audit(project)
+    assert not ok
+    assert any("reads past the end of its asset" in d for _n, _o, d in findings)
+
+
 def test_an_overlapping_record_span_is_caught(tmp_path):
     """Two edits on the *same* channel whose record spans overlap is an import
     conflict; separate channels are separate tracks, so those may coincide."""

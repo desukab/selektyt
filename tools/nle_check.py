@@ -272,6 +272,28 @@ def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float) -> list[tu
     findings.append((f"{stem} fcpxml media relinkable", not broken,
                      "; ".join(broken) or "every asset src is an absolute URI to an existing file"))
 
+    # A clip that reads past its asset's declared extent is clamped or flagged
+    # by an NLE, and it usually means the asset was declared from the clips
+    # rather than from the media. The measured case was exactly one frame.
+    assets: dict[str, ET.Element] = {a.get("id"): a for a in root.iter("asset")}
+    over: list[str] = []
+    for clip in root.iter("asset-clip"):
+        ref = clip.get("ref", "")
+        asset = assets.get(ref)
+        if asset is None:
+            continue
+        extent = (_rational_seconds(asset.get("start", "0s")) or 0.0) + (
+            _rational_seconds(asset.get("duration", "0s")) or 0.0
+        )
+        end = (_rational_seconds(clip.get("start", "0s")) or 0.0) + (
+            _rational_seconds(clip.get("duration", "0s")) or 0.0
+        )
+        if end > extent + 1e-6:
+            over.append(f"clip ref={ref} reads past the end of its asset "
+                        f"(to {end:.3f}s; the asset extends to {extent:.3f}s)")
+    findings.append((f"{stem} fcpxml clips within asset", not over,
+                     "; ".join(over) or "no clip reads past its asset"))
+
     # The spine must advance and its total duration must equal the render.
     spine = root.find(".//spine")
     total = 0.0

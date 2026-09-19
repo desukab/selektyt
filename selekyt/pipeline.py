@@ -21,7 +21,7 @@ from engine.timeline_build import timeline_for_candidate
 from engine.nle_export import export as nle_export, validate_edl, validate_fcpxml
 from engine.llm_editorial import attach_metadata
 from engine.pipeline_audio import run_pipeline_audio
-from providers.ffmpeg import probe_fps
+from providers.ffmpeg import FfmpegError, probe_duration, probe_fps
 from providers.youtube import download
 from providers.transcribe import transcribe as transcribe_auto
 from models.core import Segment, Word
@@ -382,6 +382,16 @@ def run(
     # Probed once and reused: the whole run cuts one source, and the frame
     # rate is what makes an EDL's timecodes land on whole frames.
     source_fps = probe_fps(media)
+    # The exported asset's declared extent: the whole file, not the last clip
+    # that reads from it, so an NLE's media browser shows the real length and
+    # no clip can read past the end of the asset that hosts it. Like the frame
+    # rate this is metadata for the interchange rather than an input to the
+    # render, so a media file ffprobe cannot read falls back to the exporter's
+    # own extent instead of aborting a run that would otherwise have succeeded.
+    try:
+        source_duration = probe_duration(media)
+    except FfmpegError:
+        source_duration = None
     # Per-clip render cache. The previous single render_fingerprint was only
     # written after the whole loop completed, so a run killed during clip 3 of
     # 6 re-rendered all six even though 1 and 2 were already on disk.
@@ -434,7 +444,7 @@ def run(
         # the same retention_intervals the render just concatenated, so its
         # duration is the rendered file's duration — an NLE relinking these
         # clips gets the cut that was shipped, not an approximation of it.
-        tl = timeline_for_candidate(media, c, fps=source_fps)
+        tl = timeline_for_candidate(media, c, fps=source_fps, duration=source_duration)
         exported = nle_export(tl, project / "timeline", stem=f"{idx:02d}")
         # CMX 3600 declares no frame rate, so the list is validated on the grid
         # it was written on. Without the real rate a 24 fps cut is read as 30

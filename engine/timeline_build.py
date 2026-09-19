@@ -25,12 +25,20 @@ def timeline_for_candidate(
     candidate: Candidate,
     fps: float = 30.0,
     title: str | None = None,
+    duration: float | None = None,
 ) -> Timeline:
     """One candidate's edited cut as an exportable timeline.
 
     The record cursor accumulates the *kept* durations only — the pauses the
     edit removes are not present on the edited timeline, which is what makes
     the exported duration match the rendered MP4.
+
+    ``duration`` is the *probed* length of the source media and should be
+    passed whenever it is known. An NLE's asset is the whole file, so the
+    declared duration is what the media browser shows and the limit clips read
+    against; leaving it unset makes the exporter fall back to the furthest
+    point any clip reaches, which can land a frame short of that clip and leave
+    the asset shorter than the file it names.
     """
     intervals = retention_intervals(candidate)
     if not intervals:
@@ -42,6 +50,7 @@ def timeline_for_candidate(
         fps=fps,
         # The duration is the source's, not the clip's; an asset in an NLE is
         # the whole file, and the clips reference into it.
+        duration=duration,
         start_timecode=None,
     )
     cursor = 0.0
