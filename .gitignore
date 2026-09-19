@@ -22,6 +22,13 @@ htmlcov/
 # tools/corpus_run.py, and committing ~400 MB of binary per run makes the
 # repo unclonable for no evidentiary gain.
 corpus/media/
+
+# WER scratch (tools/wer_bench.py): ground-truth audio, downloaded corpus
+# tarballs, cached PCM, and model weights live here — several GB of regenerable
+# binary. The run records under corpus/wer/runs/ ARE the evidence and stay in.
+corpus/wer/*
+!corpus/wer/runs/
+
 corpus/*_run/project/facebook/
 corpus/*_run/project/shorts/
 corpus/*_run/project/source/

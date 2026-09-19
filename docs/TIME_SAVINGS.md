@@ -6,6 +6,15 @@ adversarially rather than as a selling point.
 **Company status, stated plainly:** SelekyT has **zero users, zero revenue, zero pilots, and zero
 investors**. There is no customer, no pilot, and no usage data of any kind behind anything below.
 
+> **UPDATE — a later pass on the same day, after the corpus ran.** Sections 1–9 below were written
+> before the 11-source corpus existed. They are kept intact because they are the record of the model
+> as it stood, and the model is still the model. **§10 onwards is controlling.** It (a) audits every
+> assumption in the 18×–73× chain, (b) recomputes the model against machine rates that are now
+> *measured* rather than summed from components, (c) shows that the top of the quoted range is
+> **arithmetically infeasible**, not merely unmeasured, and (d) restates what the project may say
+> today. Nothing in §1–9 is deleted and the 18×–73× figure is still there, still labelled a model —
+> but §10.3 corrects its inputs and §10.4 bounds its ceiling, and **§8 is superseded by §10.10**.
+
 ## Evidence conventions
 
 | Marker | Meaning |
@@ -85,7 +94,7 @@ Re-measured today against the artifacts that are actually on disk:
 | Quantity | `BUSINESS_MODEL.md` says | Re-measured today |
 | --- | --- | --- |
 | Clips per preset | 3 (`facebook/0{1,2,3}.mp4`) | **6** |
-| Delivered duration | 116.95 s total, 58.48 s per preset | **198.507 s total, 99.254 s per preset** |
+| Delivered duration | 116.95 s total, 58.48 s per preset | **198.307 s total, 99.154 s per preset** |
 | Clip yield | 7.96% (3.98%/preset) | **13.506% total (6.753%/preset)** |
 | Delivered bytes | 9.9 MB | **19.13 MB** (11.90 16:9 + 7.20 9:16 + 0.03 captions + 0.009 timelines) |
 | 9:16 coded geometry | 272×486, DAR 1088:2187 | **308×486, SAR 8:9, DAR 1232:2187** |
@@ -282,3 +291,519 @@ claim from ASSUMPTION to VERIFIED for those conditions, and only for those condi
 - **The fix is cheap and specified:** a blinded 6-editor study at ≈$867, with a 30%-faster-at-
   equal-quality falsifier declared in advance (§7). Until that runs, this claim should be presented
   as an untested hypothesis in every external document.
+
+---
+
+# 10. Post-corpus update — the model audited, recomputed, and bounded
+
+Written later on 2026-09-19, after `tools/corpus_run.py` ran the 11-source corpus. Sections 1–9
+above are the record of the model as it stood before the corpus existed. **This section controls.**
+Its status markers are the same conventions used above: VERIFIED (I ran it on this host today,
+command given), COMPUTED (arithmetic from VERIFIED inputs), ASSUMPTION (discardable).
+
+One new marker is needed, and it is the point of the whole document:
+
+| Marker | Meaning |
+| --- | --- |
+| **MODEL, NOT MEASURED** | A number derived from a measured machine side and an *unmeasured* human side. It is a sensitivity map. It is not a result. |
+| **PENDING EXTERNAL VALIDATION** | A design or instrument that exists on paper. No participant has been contacted. Founder approval for external contact has not been given. |
+
+**No human editor has been timed, observed, recruited or contacted. Nothing in this section is a
+measurement of any person's work. Every measured number below is a machine-side number producible
+by a command that exists in this repository today.**
+
+---
+
+## 10.1 What is now measured that was not when §1–9 were written
+
+§2 said plainly that **no end-to-end wall clock for the pipeline had ever been recorded** and that
+the 6.6-minute figure was a *sum of component measurements*. That is no longer true. The corpus run
+recorded a real wall clock per source:
+
+```
+corpus/results.jsonl   # one JSON record per source, field elapsed_s, written by tools/corpus_run.py
+```
+
+`elapsed_s` is `time.monotonic()` around the whole `run_one()` in `tools/corpus_run.py:154` — it
+therefore **includes the network fetch of the source, the ffprobe, the model load, transcription,
+editorial passes and rendering**. It is a full end-to-end wall clock, and it is the first one that
+has ever existed for this pipeline. 11 sources, 7 of which completed. This is genuine measured data,
+and it changes the machine side of the model in three ways that §1–9 could not know about.
+
+---
+
+## 10.2 The assumption audit — every input in the 18×–73× chain
+
+The chain in §5 is: *machine time (from §2) ÷ assumed human time (from §4)*. Each input, labelled:
+
+| # | Input | Value used in §5 | Status | Where it came from | Drifted? |
+| --- | --- | --- | --- | --- | --- |
+| A1 | Transcription RTF, `small`/int8/beam 1 | 0.1505 | VERIFIED, but on a **warmed** model and a **240 s** audio sample | §2 microbenchmark | **YES — scope.** Re-measured cold/in-pipeline on a real source: **0.186** warm, **0.269** as the pipeline itself reports it in-run (§10.7). The published figure is 1.24×–1.79× optimistic under pipeline conditions. |
+| A2 | Audio decode to 16 kHz mono | 0.10 RTF | **ASSUMPTION** (never measured) | carried from `docs/BUSINESS_MODEL.md` §3 | **Still assumed.** Not isolated by any artifact. |
+| A3 | Editorial pass (story units, rank, gate, export) | 0.00241 RTF | VERIFIED (microbenchmark, 3,546 ms) | §2 | No — corroborated by the corpus: editorial is a rounding error in every run. |
+| A4 | Render RTF 16:9 / 9:16 | 0.00862 / 0.00625 | VERIFIED on 60 s windows of the **SD** reference | §2 | **YES — badly.** On a 1080×1920 source the render+decode+editorial share of wall time is **83.1%** and total cost is **5.93× the SD reference per source-minute** (§10.7). §2's budget was measured on the cheapest geometry the product will ever see. |
+| A5 | Machine time for the reference source | 393.6 s (6.6 min) | **COMPUTED** — 4 measured components + 1 assumed | §2 table | **YES — superseded by measurement.** The same source's recorded end-to-end wall clock is **337.2 s** (§10.3). |
+| A6 | Clip yield (reference source) | 6 clips, 99.254 s per preset, 13.506% | VERIFIED, **one source** | §2 | **YES — does not generalise.** Across the 7 completed sources yield ranges **6.95% to 68.48%** — a **9.9× spread** (§10.3). |
+| A7 | Human editor time, same deliverable | 2–8 h | **ASSUMPTION — never observed** | §4 reasoning | **Untouched.** Still no editor has ever been timed. This is the denominator and it is the whole problem. |
+| A8 | Editor cost rate | $36.10/h ($75,420/yr) | RESEARCHED (BLS OOH, 2026-09-19) | §4 | No — but it is an **employee wage**, not a freelance billable rate, so it *understates* the human hour. |
+| A9 | **Human review and correction time in the machine arm** | **absent** | **MISSING FROM THE MODEL** | — | **This is the model's defining omission.** Quantified and bounded in §10.5. |
+| A10 | **Fixed per-run overhead** (model load, decode startup, fetch) | **absent** | **MISSING FROM THE MODEL** | — | Measured from the corpus: **≈225 s of fixed overhead per run**, independent of source length (§10.3). |
+| A11 | Network fetch of the source | explicitly excluded | — | §2 caveat | Now inside the measured number for the reference source (337.2 s) and bounded in §10.7. |
+
+**Two structural conclusions from the audit.** (i) The machine side has drifted *and* is now
+measurable, so §5 must be recomputed (§10.3). (ii) The two things the model left out entirely —
+human review/correction time (A9) and fixed per-run overhead (A10) — are precisely the two that
+bound the claim from above (§10.4, §10.5).
+
+---
+
+## 10.3 The measured machine side, per source
+
+VERIFIED from `corpus/results.jsonl` plus `ffprobe` over every delivered file:
+
+```
+# per-source machine budget — the command that produced the table below
+.venv/bin/python - <<'EOF'
+import json, subprocess
+from pathlib import Path
+for r in map(json.loads, open('corpus/results.jsonl')):
+    if r.get('status') != 'OK': continue
+    p = Path(f"corpus/{r['id']}_run/project"); d, e = r['duration'], r['elapsed_s']
+    tot = 0.0
+    for sub in ('facebook','shorts'):
+        for f in sorted((p/sub).glob('*.mp4')):
+            tot += float(subprocess.run(['ffprobe','-v','error','-show_entries','format=duration',
+                '-of','default=noprint_wrappers=1:nokey=1',str(f)],
+                capture_output=True,text=True).stdout)
+    print(r['id'], round(d,1), round(e,1), round(e/d,3), r.get('clips'), round(tot,2),
+          round(100*tot/d,2))
+EOF
+```
+
+| Source | Source length | Wall clock (incl. fetch) | RTF | Segments | Clips | Delivered (both presets) | Yield | Playback floor |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `emwcon-panel-2018` | 55:39 | 10:01 | **0.180** | 842 | 5 | 243.20 s | 7.28% | 4.05 min |
+| `nasa360-ep5` | 24:30 | 5:37 | 0.229 | 425 | 6 | 198.31 s | 13.49% | 3.31 min |
+| `pentagon-esper-briefing` | 16:54 | 4:51 | 0.287 | 278 | 5 | 195.80 s | 19.31% | 3.26 min |
+| `royal-society-cloke` | 10:26 | 3:44 | 0.358 | 156 | 4 | 254.97 s | 40.73% | 4.25 min |
+| `ooi-vertical` | 2:32 | 2:20 | 0.922 | 26 | 3 | 95.40 s | 62.76% | 1.59 min |
+| `hadhazy-protest` | 2:06 | 2:24 | 1.140 | 38 | 3 | 86.26 s | 68.48% | 1.44 min |
+| `telugu-tutorial` | 5:40 | 9:53 | **1.746** | 4 | 1 | 23.59 s | 6.95% | 0.39 min |
+
+Aggregate over the 7 completed sources, COMPUTED:
+
+| Quantity | Value |
+| --- | --- |
+| Source processed | 7,066.2 s = **117.77 min** |
+| Total wall clock | 2,330.4 s = **38.84 min** |
+| **Overall RTF** | **0.3298** |
+| Clips delivered | **27 selected clips → 54 rendered files** (2 presets each) |
+| Delivered video | 1,097.5 s = **18.29 min** |
+| Yield | **15.53%** of source duration |
+| Delivered seconds per elapsed minute | **28.3 s** |
+| Source-minutes consumed per delivered minute | **6.44** |
+
+**Per-source variation is the finding, not a nuisance.** RTF spans **0.180 to 1.746 — a 9.7×
+spread** — and three of seven sources ran **slower than real time**. An average is meaningless
+without that spread, which is why it is reported per source above and decomposed below.
+
+**Fixed overhead, measured.** A least-squares fit of `elapsed = a + b × duration` over the seven
+completed sources gives:
+
+```
+elapsed_s = 225.2 + 0.1067 × duration_s      (R^2 = 0.390)
+```
+
+The intercept is the part of the job that does not shrink with the tape: model load, decode
+startup, fetch, teardown. **≈225 s of fixed overhead per run, measured from the corpus.** The
+marginal rate once warm is **0.1067 RTF**. The crossover — the source length below which the
+pipeline is slower than real time — is **252 s ≈ 4.2 minutes**. Sources shorter than that, which is
+most short-form-adjacent material, cost more machine time than they contain content.
+
+**Honest yield — usable output.** `docs/CORPUS_RESULTS.md` reports that two of the seven "OK"
+sources are not actually usable because the transcript is phonetic noise
+(`telugu-tutorial`, `hadhazy-protest`). Excluding them, COMPUTED:
+
+| Set | Sources | RTF | Delivered | Yield | Delivered s / elapsed min |
+| --- | --- | --- | --- | --- | --- |
+| All 7 completed | 7 | 0.330 | 18.29 min | 15.53% | 28.3 |
+| Minus the 2 transcript-noise sources | 5 | **0.241** | 16.46 min | 14.96% | **37.2** |
+
+The yield barely moves (15.5% → 15.0%) but the *efficiency* moves a lot (28.3 → 37.2 delivered
+seconds per machine minute): **the two unusable sources consumed 32% more machine time per delivered
+second than the usable ones** — 592.9 s of machine time for a single 23.6 s clip in the Telugu case.
+Bad transcripts are not free on the machine side either.
+
+---
+
+## 10.4 Recomputed model — old figure against new inputs
+
+§5's machine input (393.6 s) is superseded by measurement. Three candidate replacements, each
+labelled, and the ratio each implies against the same 2–8 h ASSUMED human baseline:
+
+| Machine input | Value for the 24.5-min reference source | Status | Ratio @ 2 h | @ 4 h | @ 8 h |
+| --- | --- | --- | --- | --- | --- |
+| §5 as published (component sum) | 393.6 s = 6.60 min | COMPUTED from 4 VERIFIED + 1 ASSUMED | 18.3× | 36.6× | 73.2× |
+| **Recorded end-to-end wall clock, same source** (`corpus/results.jsonl`, incl. fetch) | **337.2 s = 5.62 min** | **VERIFIED** | **21.4×** | **42.7×** | **85.4×** |
+| Corpus-average rate (0.3298 RTF) | 484.6 s = 8.08 min | COMPUTED from 7 VERIFIED runs | 14.9× | 29.7× | 59.4× |
+| Fixed-overhead fit (225.2 + 0.1067·d) | 382.0 s = 6.37 min | COMPUTED, R²=0.390 | 18.8× | 37.7× | 75.4× |
+
+**The published range moves, but not in one direction, and that is the point.** The *reference*
+source got cheaper when measured (5.62 vs 6.60 min) because the component sum was pessimistic. The
+*corpus-average* source got more expensive (8.08 min) because the reference is a fast, clean,
+SD, English tape. **A model whose inputs drift this much with the choice of source is not a
+measurement waiting to happen — it is a sensitivity map whose centre is arbitrary.**
+
+**Status of the recomputed figures: MODEL, NOT MEASURED.** Every ratio above divides a measured
+machine number by an unmeasured human number. Changing which machine number is used moves the ratio
+by 1.4×; nothing here is evidence about an editor.
+
+---
+
+## 10.5 The playback floor — why 73× is arithmetically infeasible
+
+This is the load-bearing new result, and it requires no participants at all.
+
+**The category error in §5.** The ratio divides *machine wall-clock time* by *human working time*.
+Those are not comparable quantities. An unattended 6-minute machine run is not "0 human minutes" —
+a person must hand it the source, must be interrupted when it finishes, and **must at minimum watch
+what it produced** before that production can be delivered. §5 charges the machine arm zero human
+minutes and compares the machine's runtime against the editor's labour. That is the single biggest
+weakness in the claim, and it is arithmetically exploitable.
+
+**The floor.** The delivered set for the reference source is **198.307 s = 3.305 min** of video
+(VERIFIED by `ffprobe` over all 12 files). An editor cannot accept a deliverable they have not
+seen. So Arm B human time ≥ 3.305 min **even in the limit of zero corrections, zero source review and
+zero ingest**. That is a hard, measured lower bound, and it caps any honest speedup:
+
+| Assumed baseline | Arm B human time if the editor only plays the set once | **Ceiling on the honest ratio** |
+| --- | --- | --- |
+| 2 h (120 min) | 3.305 min | **36.3×** |
+| 4 h (240 min) | 3.305 min | **72.6×** |
+| 8 h (480 min) | 3.305 min | **145.2×** |
+
+**Now invert it: how much correction time can each headline figure survive?**
+
+| Claimed ratio | Max Arm B human time @ 2 h baseline | Remaining budget after one playback | Verdict |
+| --- | --- | --- | --- |
+| 73× | 1.64 min | **−1.66 min** | **IMPOSSIBLE** — needs less time than playing the output once |
+| 36× | 3.33 min | +0.03 min | impossible in practice — allows literally zero correction |
+| 18× | 6.67 min | **+3.36 min** | survives only if review + every correction fits in 3.4 min |
+| 10× | 12.0 min | +8.69 min | plausible only if corrections are trims, not re-selections |
+| 5× | 24.0 min | +20.69 min | the range a realistic correction burden lands in |
+| 2× | 60.0 min | +56.69 min | what a "useful assistant" looks like |
+| 1.43× (the §7 30% bar) | 84.0 min | +80.69 min | the weakest claim that still counts as a saving |
+
+At the 8 h baseline the numbers scale up, and the top of the range fails there too: **73× at 8 h
+requires Arm B ≤ 6.58 min, i.e. 3.3 min of review and correction total.**
+
+**Conclusion, and it is a strong one:** the *top of the published range is not merely
+unmeasured — it is infeasible*. 73× cannot be achieved at the model's own lower baseline no matter
+how good the software is, because it requires the editor to finish the job in less time than the
+deliverables take to play. At that 2 h baseline every figure above 36× is ruled out, i.e. roughly
+the upper half of the quoted 18×–73× range. **The 73× figure must not be quoted again, and not only
+for the "unmeasured denominator" reason in §8 — it is ruled out by the measured duration of the
+output itself.** The defensible ceiling, under the most favourable assumption the model permits (a
+2-hour baseline, an editor who plays the set once and corrects nothing), is 36×.
+
+---
+
+## 10.6 The substitution trap — one discarded clip can destroy the claim
+
+Corrections are not equal. Trimming a cut point costs seconds. **Discarding a machine clip and
+choosing a replacement costs a trip back to the source tape** — and that is where all the baseline
+time lives.
+
+Quantified, for the reference source: a professional logging pass over a 24:30 tape at 2× speed is
+**12.25 min** (COMPUTED from the VERIFIED 1469.77 s duration). Compare:
+
+| Scenario | Arm B human time | Honest ratio @ 2 h baseline |
+| --- | --- | --- |
+| Accept everything, one playback | 3.31 min | 36.3× |
+| One playback + small trims (3 min) | 6.31 min | 19.0× |
+| **One clip discarded and substituted** (playback 3.31 + logging pass 12.25 + 3 trims) | **18.6 min** | **6.5×** |
+| Two substitutions + corrections | ~30 min | 4.0× |
+
+**A single substitution costs more than the entire 18× budget allows** (6.67 min) and nearly half
+the 36× ceiling. This is why selection quality is not a "quality" concern that sits separate from
+the time-savings claim — **selection quality IS the time-saving mechanism.** If the editor cannot
+trust the picks, they must do the watching themselves, and the machine arm degenerates into the
+baseline arm plus machine overhead — a *negative* saving.
+
+This is the argument for making the discard/substitute count a first-class clocked quantity
+(§10.8, K3/K4) rather than a footnote.
+
+---
+
+## 10.7 What the machine side does NOT tell you — wall-clock instability
+
+The same source, the same parameters, byte-identical selections, run twice:
+
+```
+# run 1 — the corpus run, wall clock INCLUDING a 92.6 MB network fetch
+#   corpus/results.jsonl  ->  ooi-vertical  elapsed_s = 140.1   (RTF 0.922)
+
+# run 2 — a deliberate re-run on the already-downloaded file, no fetch at all
+/usr/bin/time -v .venv/bin/python -m selekyt.cli \
+    corpus/media/OOI_Overview_CAPTIONS_Vertical.webm \
+    --out /tmp/ooi_rerun --limit 3 --model small --language en
+#   Elapsed (wall clock) time: 4:01.55 = 241.55 s
+#   User time 431.43 s + System 15.70 s = 447.13 s CPU
+#   Percent of CPU this job got: 185%  (on a 4-core box)
+```
+
+Determinism holds — selections are identical:
+
+```
+rerun   [(112.471, 139.13), (41.42, 56.58), (89.697, 101.843)]
+corpus  [(112.471, 139.13), (41.42, 56.58), (89.697, 101.843)]   identical: True
+```
+
+But the timing does not hold. **The fetch-free run (241.55 s) was 1.72× slower than the run that
+included a 92 MB download (140.1 s).** The cause is host contention: the 185% CPU figure on a
+4-core host means the run did not get the machine to itself (this host is shared), and
+`/proc/loadavg` during the measurement read 0.94 / 2.54 / 2.41.
+
+**Implication for the claim.** Any machine-time figure quoted as a single number carries a run-to-run
+spread of at least ~1.7× on this host from load alone. The "6.6 minutes" in §2 inherits that spread
+and more. The honest machine-side statement is a *range with its conditions*, not a figure.
+
+The same re-run also decomposes the cost, and it overturns §2's cost structure:
+
+| Component (source `ooi-vertical`, 152.008 s) | Time | RTF | Share of fetch-free wall |
+| --- | --- | --- | --- |
+| Cold model load (`WhisperModel("small", compute_type="int8", cpu_threads=4)`) | 1.60 s | 0.011 | 0.7% |
+| Warm transcription on the cached 16 kHz mono | 28.30 s | **0.186** | 11.7% |
+| Transcription **as the pipeline itself reports it in-run** | 40.9 s | **0.269** | 16.9% |
+| Decode + editorial + render (remainder) | ~200.6 s | — | **83.1%** |
+| **Fetch-free full pipeline, wall** | **241.55 s** | **1.589** | 100% |
+| Fetch-free full pipeline, CPU | 447.13 s | 2.941 | — |
+
+Two corrections to the published model, both material:
+
+1. **The published transcription RTF (0.1505) is optimistic by 1.24×–1.79× under real pipeline
+   conditions** (0.186 warm on this source, 0.269 in-run). §2 measured a *warmed* model on a clean
+   240 s English sample; the pipeline runs cold, chunked, on whatever the source is.
+2. **On a portrait 1080×1920 source the pipeline costs 5.93× the SD reference per source-minute**
+   (1.589 vs 0.2678 RTF), and the cost moves from transcription to rendering. §2's budget was built
+   on the cheapest geometry in the corpus. The machine side of the 18×–73× model is therefore a
+   *best case*, not a typical case — and `docs/BUSINESS_MODEL.md` §9's warning that 4K/H.265 ingest
+   is "3–10× unmeasured" is now anchored at the low end of that range by a real measurement.
+
+---
+
+## 10.8 The instrument — what a session must record
+
+**This section owns the clock.** The judgement instrument (rubric, T-gate, blinding, roles,
+falsifiers F1–F6) is specified in `docs/HUMAN_EDITORIAL_EVALUATION.md`; the two documents agree by
+construction on the five shared definitions listed in that document's §9, and this section does not
+restate its tables. What follows is only the time-and-activity instrument.
+
+**STATUS: PENDING EXTERNAL VALIDATION.** No participant has been contacted. Founder approval for
+external contact has not been given. Nothing below has been run.
+
+### Per-session header (both arms)
+
+`editor_id` · experience level (years as a professional editor, primary NLE, vertical short-form
+output per week) · `source_id` · **source duration** (ffprobe) · **genre** · **language** · `arm`
+· order position · counterbalancing key.
+
+### Clocks (both arms, identical instrument)
+
+| Clock | Definition |
+| --- | --- |
+| `t_brief_ack` | Editor acknowledges the written brief. **Clock start.** |
+| `t_source_log_start` / `_end` | Source familiarisation / logging pass, active intervals only. |
+| `t_assembly_start` / `_end` | Building the deliverable (manual cutting, or importing/finishing the machine package). |
+| `t_refine_start` / `_end` | Corrections, captions, reframes. Sub-coded K1–K6 below. |
+| `t_ready` | Editor declares **"ready to deliver"**. **Clock stop.** Same definition in both arms — an Arm B that is fast and then re-cut from scratch counts as slow (already fixed in §7 and in `docs/HUMAN_EDITORIAL_EVALUATION.md` §8). |
+| Idle gaps | Any gap > 60 s with no editor input is logged as `idle_min`, **excluded** from active minutes and **reported separately**. |
+
+**Two times are reported for every session, in both arms, never conflated:**
+
+- **Human active minutes** — the editor's hands-on time. This is the endpoint the saving claim is
+  about.
+- **Elapsed wall to deliver** — `t_ready − t_brief_ack`, including waiting and idle.
+
+### Machine-arm clocks, and the rule that fixes the category error
+
+| Clock | Definition and treatment |
+| --- | --- |
+| `t_submit` → `t_machine_done` | The unattended machine interval. **Never converted into human time saved.** |
+| `t_review_start` / `_end` | Reviewing the delivered set. **Must be ≥ delivered duration.** If it is shorter, the session is flagged as a partial review and reported as such — an acceptance without review is not a saving, it is an unaudited deliverable. |
+| `t_resume` | Editor's next action on this task after `t_machine_done`. The gap `t_resume − t_machine_done` is the **context-switch cost** — the price of an unattended run, which §5's model charged as zero. |
+| Blocked waiting | If the editor has no other task during the machine run, that interval is charged to **elapsed wall to deliver** in Arm B. A 6-minute machine run plus 20 minutes of review is a 26-minute time-to-deliver, not a 6-minute one. |
+
+**The rule, stated so it cannot be averaged away:** *the machine arm is credited only with the
+human minutes it actually removes from the editor's working day.* An unattended run costs the
+editor the submit minutes, the review minutes, the correction minutes and one context switch. If
+those exceed the baseline's active minutes, the machine arm's saving is negative, and that is a
+result the study must be able to return.
+
+### Correction taxonomy — clocked separately, first-class
+
+Every correction in `t_refine` is coded and timed:
+
+| Code | Correction | Why it is separate |
+| --- | --- | --- |
+| **K1** | Transcript/ASR error fixed | The corpus proved this is the failure mode mechanical audits cannot see (`docs/CORPUS_RESULTS.md`). Time it separately so a bad STT layer shows up as a cost. |
+| **K2** | Cut point trimmed | Cheap. The benign case. |
+| **K3** | Machine clip **discarded** | The signal that the selection layer failed on that clip. |
+| **K4** | Machine clip discarded **and replaced from the source** | **The claim-killer.** Triggers a source pass; see §10.6. The source-review minutes it causes are recorded under `t_source_log` and attributed to K4. |
+| **K5** | Caption/style correction | |
+| **K6** | Reframe / geometry correction | |
+
+### Counts and outcomes
+
+`candidate_count` and `rejected_by_context_guard` from `report.json`; **clips kept unmodified,
+clips trimmed, clips discarded, clips added by hand** from the timeline diff between the Arm B
+handover and what shipped (already fixed in §7); **final usable clips actually published** (an
+editor-would-post judgement, from E11 ≥ 4 in `docs/HUMAN_EDITORIAL_EVALUATION.md` §4.11 — *human
+judgement, not a mechanical threshold*); adoption rate; and editor experience level for the
+moderator analysis.
+
+### Primary endpoint
+
+**Baseline human active minutes − assisted human active minutes, paired within editor.** Not a
+machine-to-human ratio. The ratio may be *reported* as a derived figure but it is not the endpoint,
+and §10.5 shows why the derived figure must be presented against the playback floor.
+
+---
+
+## 10.9 Falsifier — declared in advance, and stricter than §7's
+
+`docs/HUMAN_EDITORIAL_EVALUATION.md` §10 declares F1–F6; §7's F4 (Arm B ≥ 30% faster at equal-or-better
+blind quality) is retained. **This section adds the two the machine-side measurements now make
+possible, and both are expressed in the §10.5 framework.**
+
+**F7 — Correction-budget falsifier (the new primary one).** The claim of a *large* speedup is FALSE
+if, in Arm B at equal-or-better blind quality, **total correction time (K1+K2+K3+K4+K5+K6) plus
+review time exceeds 10% of baseline active time on a majority of sources.** Rationale, computed from
+§10.5: at a 2 h baseline, 10% is 12 min, which is the budget at which the honest ratio falls to
+about 10×. A correction burden above that converts the product from an editor into a rendering
+service, and the honest claim becomes "renders captions and two aspect ratios cheaply", which is a
+different and much smaller claim.
+
+**F8 — Substitution falsifier.** The selection layer contributes no time saving, and the claim is
+FALSE as a *time-saving* claim, if **K4 (discard-and-replace-from-source) occurs on more than 25% of
+delivered clips across a majority of sources.** Each K4 forces a source pass (§10.6) and pushes the
+Arm B time toward the baseline plus machine overhead. Note this falsifies the *speed* claim while
+leaving `docs/HUMAN_EDITORIAL_EVALUATION.md`'s editorial-quality falsifiers (F1, F3) to speak
+separately — a tool can be editorially fine and still save no time, and both must be survivable
+independently for a positive claim.
+
+**F9 — Floor violation.** Arm B human active minutes below the playback floor (delivered duration,
+ffprobe) indicates the deliverables were not reviewed; the session is reported as an unaudited
+deliverable, not as a fast session.
+
+**The hierarchy, stated so no later analyst can shop among them.** F4 (30% faster) is the *weakest*
+bar — at a 2 h baseline it survives 80 minutes of corrections, which is a very low hurdle. F7 and
+F8 are the ones that actually discriminate between "this is an editor's tool" and "this is a
+renderer". **Any published speedup figure must state which falsifier it was tested against.**
+
+---
+
+## 10.10 Statistical shape, and the smallest study a pre-revenue project can actually run
+
+**Design and test.** Within-editor pairing (each editor does both arms, order counterbalanced) so
+editor-skill variance — which varies by an order of magnitude between working editors — cancels.
+Primary endpoint per §10.8. Wilcoxon signed-rank, one-sided, α = 0.05, on the paired differences in
+human active minutes; median and IQR reported alongside, never the mean alone. This follows
+`docs/HUMAN_EDITORIAL_EVALUATION.md` §11 and is not restated here.
+
+**The combinatorial floor (exact arithmetic, checkable).** With all-n pairs of one sign, the minimum
+one-sided exact p is 1/2ⁿ: n=4 → 0.0625, **cannot clear α=0.05 no matter how large the effect**;
+n=5 → 0.03125, clears it for a *perfectly consistent* effect only; n=6 → 0.0156.
+
+**No power calculation is asserted, and here is why none can be.** Power requires a variance
+estimate for the endpoint. **No within-editor session-time variance has ever been observed** — no
+editor has ever been timed on this task in either arm. Asserting a power figure would be inventing
+the very quantity the study exists to measure. What can be said exactly is the floor above and the
+effect size the claim implies: **an 18× claim asserts that Arm B human time is 5.6% of baseline.**
+That is an enormous effect, detectable at n=5–6 *only if it is nearly universal*, and it must be
+reported at exactly that strength.
+
+**The ladder — each tier is a different kind of statement:**
+
+| Tier | What it is | n | Cost (at $36.10/h) | What it can and cannot support |
+| --- | --- | --- | --- | --- |
+| **0** | **The playback-floor arithmetic (§10.5)** | 0 people | **$0 — already done** | Establishes the *ceiling* with no participants: 73× is infeasible, the defensible ceiling is 36×. Cannot establish any actual saving. |
+| **1** | One editor, two sources, both arms, fully clocked | 1 | ≈$110 + recruitment | **A demonstration, and must be called one.** Its real purpose: measure the correction burden K1–K6, which is the number that decides whether the larger study is worth running. Not generalisable. |
+| **2** | Three editors × two sources, both arms | 3 | ≈$330 + raters | Smallest design that can clear α=0.05, and only for a perfectly consistent large effect. Reports a large-effect-only claim. |
+| **3** | Full design — 6 editors × 3 sources, 18 sessions, 9/arm, 3 raters, 4 language checkers, separate coordinator and analyst | 6 | ≈$867 + recruitment (§7's table, still correct) | The design `docs/HUMAN_EDITORIAL_EVALUATION.md` is written for. Supports a generalisable claim for the studied conditions and no others. |
+
+**Recommendation, and it is deliberately the cheap one.** Run **Tier 1 first**, as a demonstration
+whose only job is to clock K1–K6 on a real 6-clip package. If total correction time lands above
+~10 min, F7 is already failed on that source, the 18× figure is dead, and the project should
+re-price the claim at the 2×–5× tier of the §10.5 table and design Tier 3 around that smaller but
+true claim. **A Tier 1 that costs $110 either saves the $867 study or makes it unnecessary.**
+
+**Realism.** A design requiring 30 editors is a design that never happens. Six is the design; one is
+what a pre-revenue project with no recruitment channel can actually obtain. The ladder above exists
+so that a shortfall is reported as a reduction in claim strength, not papered over — and so that the
+zero-cost tier is never skipped, because it is the only one that has already produced a result.
+
+---
+
+## 10.11 What may and may not be said today (supersedes §8)
+
+**Permitted — every one traceable to a command in this repo:**
+
+- "The pipeline's end-to-end wall clock has now been measured: on a 4-core CPU-only host it turned
+  **117.8 minutes of source video across 11 sources into 27 selected clips — 18.3 minutes of
+  delivered video in two aspect ratios — in 38.8 minutes of wall time including downloads**, a 0.33
+  real-time factor."
+- "On the 24.5-minute reference source the recorded wall clock is **5.6 minutes**, measured rather
+  than estimated."
+- "Machine cost varies **9.7× across the corpus**, and **on sources shorter than about four minutes
+  the pipeline runs slower than real time** because ≈225 s of each run is fixed overhead."
+- "The model's machine-side inputs were optimistic: transcription in real pipeline conditions is
+  **1.24×–1.79×** the published rate, and **a portrait HD source costs 5.93× the SD reference per
+  source-minute**, with the cost in rendering rather than transcription."
+- "The time-savings ratio is a **model whose denominator has never been measured** — no editor has
+  ever been timed on this task, with or without the tool."
+- "**The top of the published range is infeasible, not merely unmeasured**: 73× at the model's own
+  2-hour baseline would require the editor to finish in under two minutes, which is less time than
+  the delivered clips take to play once. The defensible ceiling under the model's most favourable
+  assumptions is 36×."
+
+**Forbidden — none of this is supported, and the first two are now ruled out by arithmetic, not
+just by absence of data:**
+
+- "SelekyT is **18× to 73× faster** than a human editor" — unmeasured denominator, **and 73× is
+  arithmetically impossible at the model's lower baseline** (§10.5).
+- "**73×**", or any figure above 36×, quoted as a speedup, in any document, deck or pricing page.
+- That SelekyT "saves N hours of editor time", "eliminates N minutes of editorial work", or any
+  statement of a **quantity of time saved**. No such quantity has been measured.
+- That an unattended machine run costs the editor **zero minutes**. It costs the submit, the review,
+  the corrections and one context switch (§10.8), and the review alone is floored at the delivered
+  duration.
+- That the machine time *is* the saving. **6.6 minutes of machine time is 6.6 minutes of machine
+  time**; it becomes a saving only if a human's working minutes fall by more than the review and
+  correction minutes the machine adds.
+- That any editor has reviewed, approved, adopted, imported or been timed against a SelekyT output.
+  **None has. Zero users, zero revenue, zero pilots.**
+- That the machine-side figure is stable. Two complete runs of the same source with byte-identical
+  selections differed by **1.72×** from host contention alone (§10.7).
+
+---
+
+## 10.12 Summary of this update
+
+- **Measured now (and it was not before):** an end-to-end wall clock per source over 11 sources;
+  0.330 RTF corpus-wide; ≈225 s fixed overhead per run; a 9.7× RTF spread; the 252 s real-time
+  crossover; a 5.93× SD-to-portrait-HD cost gap; a 1.72× run-to-run timing spread on identical work.
+- **Recomputed:** the reference source's machine time moves 6.60 → 5.62 min measured, and the
+  corpus-average rate for the same length is 8.08 min. The ratio moves with it, in both directions,
+  which is itself the finding. **MODEL, NOT MEASURED** either way.
+- **Bounded, with no participants needed:** the delivered set is 3.31 min of playback, which is a
+  hard floor on Arm B human time. That caps the honest ratio at 36× (2 h baseline) and makes **73×
+  impossible**. An 18× claim survives only if review plus every correction fits in 3.4 minutes.
+- **The mechanism that decides it:** one discard-and-substitute costs a source pass (12.25 min at 2×
+  on the reference tape) — more than the entire 18× budget. **Selection quality is the time-saving
+  mechanism**, not a separate quality concern.
+- **Still never measured, by anyone, ever:** how long a professional editor takes on this task.
+  Every ratio in this document divides by that number. Until §10.8 is run — which needs founder
+  approval that has not been given, and participants who have not been contacted — the claim remains
+  **an untested hypothesis**, and the only defensible speedup statement is the ceiling, not a
+  measurement.

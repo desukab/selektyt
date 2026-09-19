@@ -14,11 +14,18 @@ every line below was true on this host at that point.
   two defects it found (audio dropped by input seeking; the audit comparing
   the wrong span). Run `git log -1` for the current hash rather than trusting a
   hash printed here, since amending this file changes its own commit hash.
-* Test suite: **837 passed, 10 skipped in 76 s** (re-run 2026-09-19, after the
-  two new render tests landed). The 10 skips are optional backends absent from
-  this host (sherpa-onnx, silero, ollama) and tests that depend on them.
-  Re-run to confirm this number before trusting any claim in this file — see
-  the self-checkpoint note at the bottom.
+* Test suite: **837 passed, 10 skipped in 76 s** at the last clean commit. **The
+  10 skips are NOT optional backends.** An earlier version of this note said they
+  were sherpa-onnx/silero/ollama tests; that was wrong, and `pytest -rs` shows
+  what they actually are — **nine `tests/test_proxy_validation.py` skips** ("proxy
+  video not present" ×7, "WAV corpus not available" ×2) **plus one**
+  `tests/test_sidecar_parity.py:372` skip gated on an unset `SELEKYT_PARITY_MEDIA`
+  env var. These are real-media validation tests that no-op on **every** CI run,
+  which is a materially worse problem than absent optional backends: the suite
+  reports green while the validation it names does not happen. `pycmx`, for the
+  record, IS installed and IS in the CI install line. Re-run to confirm this
+  number before trusting any claim in this file — see the self-checkpoint note at
+  the bottom.
 * Five commits landed on `origin/main` from outside this session
   (`36bdff4`..`edf3b30`): a switch from MIT to a proprietary license plus
   project-positioning docs. They were integrated by rebase, not overwritten.
@@ -236,12 +243,29 @@ requiring a change. Recorded in `docs/NLE_INTERCHANGE.md`.
 
 Determinism was re-verified on a **fresh download** of the reference source:
 selections byte-identical between two independent runs weeks of commits apart
-(P13 holds on a real re-run, not only in a unit test). All seven OK sources
-pass `tools/nle_check.py` with 0 FAIL, with `pycmx` executing rather than the
-six checks that used to skip.
+(P13 holds on a real re-run, not only in a unit test).
 
-**The honest limit, unchanged:** no NLE has opened an artifact. This host has
-no NLE binary and no display. What is established is mechanical
+**A claim in this section was wrong and is corrected here.** An earlier version
+said all seven OK sources passed `tools/nle_check.py` with 0 FAIL. The tool
+could not have reported that: `tools/corpus_run.py` deletes the source media
+after each run, so every relink check was failing on a missing file the harness
+itself removed, and every frame-rate check reported "could not probe the
+source". `nle_check.py` now records probe facts the run itself cut on and marks
+those checks NOT RUN with the reason, rather than presenting them as passes or
+as export defects. Separately, `tools/editorial_audit.py` fails on **four of
+the seven** (`emwcon-panel-2018`, `ooi-vertical`, `pentagon-esper-briefing`,
+`royal-society-cloke`), every failure a selection bound landing inside a word —
+a real defect, fixed in `engine/edit_plan.py`, whose corpus artifacts predate
+the fix. There were never "six pycmx checks that used to skip": `pycmx` is in
+the `nle`, `dev` and `all` extras and is installed in CI, and the real skip
+population is 9 media-fixture skips in `tests/test_proxy_validation.py` plus 1
+in `tests/test_sidecar_parity.py`, which no-op on every CI run.
+
+**The honest limit, unchanged:** no NLE has opened an artifact. An NLE binary
+*does* now exist on this host (Blender 4.0.2), but it was tested and has no
+CMX 3600 EDL import operator at all — `bpy.ops.sequencer` exposes no import
+operator in 4.0.2, so that route is closed and recorded as a negative result
+rather than left as a possibility. What is established is mechanical
 self-consistency across containers, frame rates, aspect ratios and languages —
 which is necessary and is not sufficient.
 

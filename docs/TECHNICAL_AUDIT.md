@@ -476,10 +476,14 @@ prefix bypass and a passing test.
 
 ### CI does not run the tools that would catch the real classes of bug — VERIFIED
 
-`.github/workflows/ci.yml` installs `[dev,llm]`, ffmpeg and node, then runs
-`pytest tests/ -q -rs`. It never runs `tools/editorial_audit.py` or
-`tools/nle_check.py`, and `pycmx` is not in any extra, so the
-independent-parse check is structurally incapable of running in CI.
+`.github/workflows/ci.yml` installs `.[dev,llm,nle]`, ffmpeg and node, then runs
+`pytest tests/ -q -rs`. `pycmx` is in the `nle`, `dev` and `all` extras and is
+installed in CI, so the independent-parse check is *able* to run — an earlier
+version of this section said it was in no extra, which was wrong. What CI still
+does not do is run `tools/editorial_audit.py` or `tools/nle_check.py`
+themselves: they are invoked by hand or by `tools/corpus_run.py`, so a change
+that breaks the render/interchange agreement is only caught when a human audits
+a project directory.
 
 ---
 

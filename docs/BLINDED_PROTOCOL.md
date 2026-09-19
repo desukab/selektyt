@@ -1,5 +1,13 @@
 # Blinded editorial evaluation — the execution protocol
 
+> **SUPERSEDED by `docs/HUMAN_EDITORIAL_EVALUATION.md`.** That document carries
+> this one's blinding design and role separation forward unchanged, and adds
+> what the corpus run proved this one lacks: a story-selection axis, a
+> transcript-against-reality gate, and a structural rule that mechanical and
+> editorial scores can never be combined. Read `HUMAN_EDITORIAL_EVALUATION.md`
+> for the executable protocol; this file is kept as the earlier design of
+> record.
+
 This is P0 item 4 of the current phase. It exists because the rubric in
 `docs/EDITORIAL_EVALUATION.md` and the study design in `docs/TIME_SAVINGS.md`
 §7 are both incomplete in the same way: **neither specifies how the blind is
