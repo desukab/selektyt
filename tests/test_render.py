@@ -65,15 +65,21 @@ def test_render_horizontal_clip(tmp_path):
     import subprocess
     probe = subprocess.run(
         ["ffprobe", "-v", "error", "-select_streams", "v:0",
-         "-show_entries", "stream=width,height", "-of", "csv=p=0", str(out)],
+         "-show_entries", "stream=width,height,sample_aspect_ratio",
+         "-of", "csv=p=0", str(out)],
         capture_output=True, text=True, check=True,
     )
-    w, h = (int(x) for x in probe.stdout.strip().split(","))
-    # F12: a sub-1080p source must not be upscaled. The source is 320x320, so
-    # the render keeps 320 wide — enlarging it would add no detail, cost encode
-    # time and soften the image. A larger source is still scaled down to 1920.
-    assert w == 320, f"expected source-width passthrough, got {w}"
-    assert h / w == pytest.approx(1.0, abs=0.02)
+    w, h, sar = probe.stdout.strip().split(",")
+    w, h = int(w), int(h)
+    # The landscape deliverable's frame must display at 16:9. A square-pixel
+    # source gets pillarboxed rather than stretched or cropped.
+    sar_w, sar_h = (int(p) for p in sar.split(":"))
+    assert (w * sar_w) / (h * sar_h) == pytest.approx(16 / 9, abs=0.02)
+    # F12: a sub-1080p source must not be *upscaled*. The frame is wider than
+    # the source now — pillarbox bars, not a rescale — so the invariant is that
+    # the frame is never taller than the source: the picture fits inside the
+    # frame, so its height cannot exceed the source's own 320 lines.
+    assert h <= 320, f"the source picture was upscaled to a {h}px-tall frame"
     # no leftover part directories on the single-interval path
     assert not (tmp_path / "fb" / ".01_parts").exists()
 

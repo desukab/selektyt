@@ -150,6 +150,56 @@ def _x_expression(max_x: float, crop_w: float,
     return expr
 
 
+def _probe_dims(video: Path) -> tuple[int, int]:
+    """Pixel dimensions, or the 1080p default when ffprobe says nothing."""
+    w, h, _points = _probe_and_track(video, 0.0, 0.0)
+    if not w or not h:
+        return 1920, 1080
+    return w, h
+
+
+def _even(n: float) -> int:
+    return max(2, int(n / 2 + 0.5) * 2)
+
+
+def landscape_filter(video: Path, target: tuple[int, int] = (16, 9),
+                     max_width: int = 1920) -> str:
+    """The ffmpeg filter that fits a whole source into an exact ``target``
+    display aspect, padding rather than cropping.
+
+    Why pad: a 16:9 deliverable made from a 4:3 source has to lose content or
+    add bars, and cropping is an editorial decision the pipeline is not
+    entitled to make unsupervised — on a talking-head source it takes heads
+    off. Padding keeps every frame the source recorded and still delivers a
+    frame that measures exactly 16:9, which is the contract the render
+    promised. A wider-than-target source is letterboxed by the same rule.
+
+    The content is scaled to fit and never enlarged: a 720x486 NTSC source
+    becomes a 640x486 square-pixel picture inside an 864x486 frame, not an
+    upscaled 1080p one. Square pixels are forced (``setsar=1``) so the aspect
+    does not depend on the player honouring container metadata.
+    """
+    w, h = _probe_dims(video)
+    sar_w, sar_h = probe_sample_aspect(video)
+    tw, th = target
+
+    # The largest frame of this aspect whose height does not exceed the
+    # source's, capped at the delivery width. Height is derived from the
+    # rounded width so the two are exactly proportional.
+    frame_w = _even(min(h * tw / th, max_width))
+    frame_h = _even(frame_w * th / tw)
+
+    # Square-pixel extent of the source picture at its own pixel height.
+    content_w = w * sar_w / sar_h
+    scale = min(frame_w / content_w, frame_h / h, 1.0)
+    cw, ch = _even(content_w * scale), _even(h * scale)
+
+    return (
+        f"scale={cw}:{ch}:flags=lanczos,"
+        f"pad={frame_w}:{frame_h}:(ow-iw)/2:(oh-ih)/2:black,setsar=1"
+    )
+
+
 def vertical_crop_filter(video: Path, start: float, end: float) -> str:
     """The ffmpeg ``crop`` filter for the 9:16 reframe of one interval.
 

@@ -256,6 +256,75 @@ def test_an_anamorphic_source_renders_to_a_genuinely_9_16_frame(tmp_path):
     )
 
 
+def _rendered_dar(video: Path, filt: str, out: Path) -> tuple[float, int, int]:
+    """Run one filter and report the output's display aspect and pixel size."""
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(video), "-t", "1", "-vf", filt,
+         "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
+         "-pix_fmt", "yuv420p", str(out)],
+        check=True, capture_output=True,
+    )
+    w, h, sar_w, sar_h = _probe_geometry(out)
+    return w * sar_w / (h * sar_h), w, h
+
+
+def test_an_anamorphic_source_renders_to_a_genuinely_16_9_frame(tmp_path):
+    """The defect this pins: the landscape path used to be a plain downscale,
+    so this source — 720x486 SAR 8:9, which is 4:3 — shipped as a '16:9'
+    deliverable at DAR 320:243, and nothing in the pipeline checked."""
+    from engine.reframe import landscape_filter
+
+    video = _anamorphic_video(tmp_path / "ntsc.mp4")
+    out = tmp_path / "landscape.mp4"
+    dar, w, h = _rendered_dar(video, landscape_filter(video), out)
+    assert abs(dar - 16 / 9) < 0.005, (
+        f"the landscape output must display at 16:9, got {w}x{h} -> DAR {dar:.4f}"
+    )
+
+
+def test_a_16_9_source_is_left_alone(tmp_path):
+    """The common case must be a no-op: an already-16:9 square-pixel source is
+    neither padded nor needlessly rescaled."""
+    from engine.reframe import landscape_filter
+
+    video = _anamorphic_video(tmp_path / "wide.mp4", sar="1/1", size="1280x720")
+    out = tmp_path / "landscape.mp4"
+    dar, w, h = _rendered_dar(video, landscape_filter(video), out)
+    assert (w, h) == (1280, 720), f"an exact 16:9 source should be untouched, got {w}x{h}"
+    assert abs(dar - 16 / 9) < 0.005
+
+
+def test_a_source_wider_than_16_9_is_letterboxed_not_cropped(tmp_path):
+    """The padding is symmetric: a 2.35:1 source keeps its full width and is
+    letterboxed, because cropping is an editorial decision the pipeline does
+    not get to make unsupervised. The frame is 16:9 but the picture inside it
+    must still be 2.35:1 — measured from the rendered pixels, not the filter
+    string."""
+    import cv2
+    import numpy as np
+
+    from engine.reframe import landscape_filter
+
+    video = _anamorphic_video(tmp_path / "scope.mp4", sar="1/1", size="1920x816")
+    out = tmp_path / "landscape.mp4"
+    dar, w, h = _rendered_dar(video, landscape_filter(video), out)
+    assert abs(dar - 16 / 9) < 0.005
+
+    cap = cv2.VideoCapture(str(out))
+    ok, frame = cap.read()
+    cap.release()
+    assert ok, "could not read a frame back"
+    grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    rows = np.where(grey.max(axis=1) > 16)[0]
+    top, bottom = rows.min(), rows.max()
+    picture = (bottom - top + 1) / w
+    assert abs(picture - 816 / 1920) < 0.02, (
+        f"the 2.35:1 picture was rescaled or cropped to {picture:.3f}, "
+        f"expected {816 / 1920:.3f}"
+    )
+    assert top > 1, "there must be a bar above the picture, not a full frame"
+
+
 def test_a_square_pixel_source_is_unchanged_by_the_aspect_correction(tmp_path):
     """The fix has to be a no-op for the common case: a square-pixel source
     must still render to 9:16 with its pixels undistorted."""

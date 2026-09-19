@@ -3,7 +3,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from models.core import Candidate
-from engine.reframe import vertical_crop_filter
+from engine.reframe import landscape_filter, vertical_crop_filter
 from engine.edit_plan import retention_intervals
 from engine.captions import ass_for_candidate
 
@@ -26,9 +26,12 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
             r"scale=min(1080\,iw):-2:flags=lanczos",
         ]
     else:
-        # Same reasoning for landscape: never enlarge, only downscale to the
-        # 1920-wide delivery size.
-        vf.append(r"scale=min(1920\,iw):-2:flags=lanczos")
+        # Landscape fits the whole source into an exact 16:9 frame, padding
+        # rather than cropping: a 4:3 source becomes a 640x486 square-pixel
+        # picture inside an 864x486 frame. Without this the deliverable
+        # inherits the source's own ratio and a 4:3 NTSC tape ships labelled
+        # 16:9, and nothing in the pipeline would ever notice.
+        vf.append(landscape_filter(source))
     if ass:
         safe = ass.as_posix().replace("'", "\\'")
         vf.append(f"subtitles='{safe}'")

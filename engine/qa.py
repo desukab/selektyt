@@ -16,6 +16,25 @@ def probe(path: Path) -> dict:
     return json.loads(p.stdout)
 
 
+def _display_aspect(stream: dict) -> float | None:
+    """The stream's display aspect from the container's SAR and dimensions.
+
+    ``display_aspect_ratio`` is not always populated; deriving it from the
+    sample aspect ratio is what the encoder actually honoured.
+    """
+    w, h = int(stream.get("width", 0) or 0), int(stream.get("height", 0) or 0)
+    if not w or not h:
+        return None
+    sar = stream.get("sample_aspect_ratio") or "1:1"
+    try:
+        sar_w, sar_h = (int(p) for p in sar.split(":", 1))
+    except ValueError:
+        sar_w, sar_h = 1, 1
+    if not sar_w or not sar_h:
+        sar_w, sar_h = 1, 1
+    return w * sar_w / (h * sar_h)
+
+
 def validate_output(path: Path, vertical: bool) -> tuple[bool, list[str]]:
     errors: list[str] = []
     if not path.is_file() or path.stat().st_size < 1000:
@@ -37,6 +56,20 @@ def validate_output(path: Path, vertical: bool) -> tuple[bool, list[str]]:
             errors.append(f"expected vertical video, got {w}x{h}")
         if not vertical and not w > h:
             errors.append(f"expected landscape video, got {w}x{h}")
+        # The display aspect, not the pixel count, is the contract: a 9:16
+        # *pixel* count is only 9:16 for square pixels, and an anamorphic
+        # source inherits a sample aspect ratio that makes a correct-looking
+        # frame display at the wrong ratio. Measured on a real run, the
+        # landscape deliverable shipped at DAR 320:243 — 4:3 — labelled 16:9,
+        # and nothing else in the pipeline would have noticed.
+        dar = _display_aspect(video)
+        if dar:
+            want = 9 / 16 if vertical else 16 / 9
+            if abs(dar - want) / want > 0.01:
+                errors.append(
+                    f"expected a {9 if vertical else 16}:{16 if vertical else 9} "
+                    f"display aspect, got {w}x{h} at DAR {dar:.4f}"
+                )
     duration = float(data.get("format", {}).get("duration", 0) or 0)
     if duration < 1.0:
         errors.append("output duration is too short")
