@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 from pathlib import Path
 
+from providers.ffmpeg import probe_sample_aspect
+
 
 def _fallback_center(frame: np.ndarray, gray: np.ndarray | None = None) -> float:
     # ``gray`` is reused when the caller already converted for the Haar pass;
@@ -113,12 +115,29 @@ def track_subject_center(video: Path, start: float, end: float, samples: int = 2
     return centers
 
 
-def crop_x_expression(video: Path, start: float, end: float) -> str:
-    w, h, points = _probe_and_track(video, start, end)
-    if not w or not h:
-        w, h = 1920, 1080
-    crop_w = h * 9 / 16
-    max_x = max(0.0, w - crop_w)
+def vertical_crop_width(height: int, sar_w: int, sar_h: int) -> int:
+    """Pixel width of a 9:16 crop of ``height`` pixels at this sample aspect.
+
+    Display width is ``w * sar_w`` and display height ``h * sar_h`` in the same
+    units, so the pixel width that *displays* as 9:16 is
+    ``h * 9/16 * sar_h / sar_w`` -- wider in pixels than the square-pixel
+    answer when the pixels themselves are wide. Rounding to even keeps the
+    scaler and libx264 happy; the ratio is within a frame of exact either way,
+    which is as close as an integer pixel grid gets.
+    """
+    width = height * 9 * sar_h / (16 * sar_w)
+    return max(2, int(width / 2 + 0.5) * 2)
+
+
+def _x_expression(max_x: float, crop_w: float,
+                  points: list[tuple[float, float]]) -> str:
+    """Centre the tracked subject in a ``crop_w``-wide window, keyed to time.
+
+    With no track the window sits at the middle of the available range. The
+    expression interpolates between sampled centres, so it is built from the
+    last sample backwards: each earlier sample becomes an ``if(lt(t,...))``
+    that hands off to the segment after it.
+    """
     if not points:
         return str(int(max_x / 2))
     expr = str(max(0.0, min(max_x, max_x * points[-1][1] - crop_w / 2)))
@@ -129,3 +148,33 @@ def crop_x_expression(video: Path, start: float, end: float) -> str:
         x1 = max(0.0, min(max_x, max_x * c1 - crop_w / 2))
         expr = f"if(lt(t,{t1:.3f}),{x0:.1f}+({x1:.1f}-{x0:.1f})*(t-{t0:.3f})/{max(0.001,t1-t0):.3f},{expr})"
     return expr
+
+
+def vertical_crop_filter(video: Path, start: float, end: float) -> str:
+    """The ffmpeg ``crop`` filter for the 9:16 reframe of one interval.
+
+    Returns the whole filter, width and tracked x together, because the two
+    must agree: the width has to account for the source's sample aspect ratio
+    while the subject is centred against that same width, and recomposing it
+    at the call site leaves two places to get one geometry wrong. The width is
+    clamped to the source width so a source already narrower than 9:16 is
+    passed through at its own ratio instead of failing the filter.
+    """
+    w, h, points = _probe_and_track(video, start, end)
+    if not w or not h:
+        w, h = 1920, 1080
+    sar_w, sar_h = probe_sample_aspect(video)
+    crop_w = min(vertical_crop_width(h, sar_w, sar_h), w)
+    max_x = max(0.0, w - crop_w)
+    return f"crop={crop_w}:{h}:x='{_x_expression(max_x, crop_w, points)}':y=0"
+
+
+def crop_x_expression(video: Path, start: float, end: float) -> str:
+    """The ``x`` component alone, for callers that compose their own filter."""
+    w, h, points = _probe_and_track(video, start, end)
+    if not w or not h:
+        w, h = 1920, 1080
+    sar_w, sar_h = probe_sample_aspect(video)
+    crop_w = min(vertical_crop_width(h, sar_w, sar_h), w)
+    max_x = max(0.0, w - crop_w)
+    return _x_expression(max_x, crop_w, points)

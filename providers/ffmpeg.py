@@ -127,3 +127,36 @@ def probe_fps(media: Path) -> float:
     except (FfmpegError, ValueError, ZeroDivisionError):
         pass
     return 30.0
+
+
+def probe_sample_aspect(media: Path) -> tuple[int, int]:
+    """Return the video stream's sample (pixel) aspect ratio as ``(w, h)``.
+
+    Render geometry depends on this, not merely on the pixel dimensions: a crop
+    ``ih*9/16`` pixels wide is only 9:16 in *display* space when the pixels are
+    square. An anamorphic source (NTSC DV is 720x486 at SAR 8:9, so a 272-pixel
+    crop displays at 1088:2187, nearer 1:2 than 9:16) would otherwise be cut to
+    a vertical frame with the wrong proportions, content undistorted but the
+    ratio simply wrong.
+
+    Like the rate probe this is geometry metadata rather than something a run
+    depends on, so an unobtainable value falls back to square pixels rather
+    than aborting a run that would otherwise have succeeded. ``0:1`` and
+    ``N/A`` both mean "unspecified" and are treated as square.
+    """
+    try:
+        require_ffprobe()
+        proc = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=sample_aspect_ratio",
+             "-of", "default=noprint_wrappers=1:nokey=1", str(media)],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        )
+        raw = proc.stdout.strip() if proc.returncode == 0 else ""
+        num, _, den = raw.partition(":")
+        sar_w, sar_h = int(num), int(den)
+        if sar_w > 0 and sar_h > 0:
+            return sar_w, sar_h
+    except (FfmpegError, ValueError):
+        pass
+    return 1, 1

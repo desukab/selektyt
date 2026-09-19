@@ -115,6 +115,58 @@ def test_render_vertical_clip_is_9_16(tmp_path):
     assert h / w == pytest.approx(16 / 9, abs=0.02)
 
 
+def _anamorphic_video(out: Path, size: str = "720x486", sar: str = "8/9") -> Path:
+    """720x486 pixels at SAR 8:9, i.e. DAR 320:243 — real NTSC DV shape.
+
+    Written with ffmpeg, not cv2: OpenCV cannot record a sample aspect ratio,
+    and the whole point is that the pixels are not square. The ratio is spelled
+    with a slash because ffmpeg's setsar misreads the colon form of a
+    sub-unitary ratio and writes 8:1 instead.
+    """
+    import subprocess
+
+    subprocess.run(
+        ["ffmpeg", "-y", "-f", "lavfi",
+         "-i", f"testsrc=size={size}:rate=12:duration=2",
+         "-vf", f"setsar={sar}", "-c:v", "libx264", "-preset", "veryfast",
+         "-crf", "28", "-pix_fmt", "yuv420p", str(out)],
+        check=True, capture_output=True,
+    )
+    return out
+
+
+def test_render_vertical_clip_is_9_16_in_display_space_for_anamorphic(tmp_path):
+    """The real defect, end to end: an anamorphic source cropped at
+    ``ih*9/16`` *pixels* came out 272x486 SAR 8:9, which displays at
+    1088:2187 — nearer 1:2 than 9:16. The pixel count is only the right ratio
+    when the pixels are square; the crop width has to be scaled by the sample
+    aspect ratio so the *display* ratio lands on 9:16."""
+    import subprocess
+
+    source = _anamorphic_video(tmp_path / "ntsc.mp4")
+    out = render_clip(
+        source, _candidate_with_words(0.0, 1.3),
+        tmp_path / "sh" / "01.mp4", vertical=True,
+    )
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries",
+         "stream=width,height,sample_aspect_ratio,display_aspect_ratio",
+         "-of", "csv=p=0", str(out)],
+        capture_output=True, text=True, check=True,
+    )
+    w, h, sar, _dar = probe.stdout.strip().split(",")
+    sar_w, sar_h = (int(p) for p in sar.split(":"))
+    # The pixel dimensions are NOT 9:16 and must not be asserted to be: the
+    # frame stays anamorphic, so the ratio that has to be right is the one a
+    # player displays. 272x486 SAR 8:9 scores 0.497 here; 308x486 scores 0.563.
+    dar = int(w) * sar_w / (int(h) * sar_h)
+    assert dar == pytest.approx(9 / 16, abs=0.005), (
+        f"vertical output displays at {dar:.4f}, not 9:16 "
+        f"({w}x{h} SAR {sar})"
+    )
+
+
 def test_render_with_burned_captions(tmp_path):
     source = _video(tmp_path / "source.mp4")
     c = _candidate_with_words(0.0, 1.3)

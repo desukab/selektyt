@@ -3,7 +3,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from models.core import Candidate
-from engine.reframe import crop_x_expression
+from engine.reframe import vertical_crop_filter
 from engine.edit_plan import retention_intervals
 from engine.captions import ass_for_candidate
 
@@ -16,13 +16,13 @@ def require_ffmpeg() -> None:
 def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | None, vertical: bool) -> None:
     vf: list[str] = []
     if vertical:
-        x = crop_x_expression(source, start, end)
         # Cap at 1080 wide rather than always scaling to it: upscaling a
         # sub-1080p source adds no detail, costs encode time and softens the
-        # image. The crop already produced an exact 9:16 frame, so scaling by
-        # width with an even height keeps the aspect without enlarging.
+        # image. The crop already produced an exact 9:16 frame in display
+        # space, so scaling by width with an even height keeps the aspect
+        # without enlarging.
         vf += [
-            f"crop=ih*9/16:ih:x='{x}':y=0",
+            vertical_crop_filter(source, start, end),
             r"scale=min(1080\,iw):-2:flags=lanczos",
         ]
     else:
