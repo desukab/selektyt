@@ -39,9 +39,9 @@ ffprobe out/web/pipeline/project/source/NASA_360_program5_HD.mov
 - `tools/nle_check.py out/web/pipeline/project` → **86 PASS, 0 FAIL, 6 SKIP** (the 6 skips are
   "edl independent parse", skipped because `pycmx` is not installed), exit 0. VERIFIED.
 - `tools/editorial_audit.py out/web/pipeline/project` → **6/6 clips PASS, cross-clip PASS**. VERIFIED.
-- `.venv/bin/python -m pytest -q` → **834 passed, 10 skipped in 101.39 s**. VERIFIED.
+- `.venv/bin/python -m pytest -q` → **898 passed, 7 skipped in 112 s**. VERIFIED.
 
-**What that does and does not establish.** Six clips passing two audits and 834 unit tests passing
+**What that does and does not establish.** Six clips passing two audits and 898 unit tests passing
 is evidence that the *machinery* is sound and self-consistent. It is not evidence that a human
 editor would ship those cuts, and it is not evidence that any of it generalises beyond one tape.
 
@@ -355,7 +355,7 @@ A one-source evaluation cannot distinguish three possibilities:
    tautologically on any input — they measure self-consistency, not editorial value.
 
 Only a diverse corpus (possibility 2) plus independent human judgement (possibility 3) can separate
-these. **The 834 passing tests and the 86 passing NLE checks are evidence for neither 1 nor 2 —
+these. **The 898 passing tests and the 86 passing NLE checks are evidence for neither 1 nor 2 —
 they are evidence for machinery, and they would pass identically on a source whose every cut was
 editorially wrong.** P10 and P11 in §4 are the criteria that actually discriminate.
 

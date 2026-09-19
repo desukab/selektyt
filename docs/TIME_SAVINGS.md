@@ -303,8 +303,8 @@ Adversarial reading, because this is where the claim dies if it dies anywhere.
 4. **Machine time is not wall-clock time saved.** It excludes the source download (883 MB,
    unmeasured), queueing, and — critically — **the human review time to accept or reject the
    outputs**, which is unavoidable and is not in the budget at all.
-5. **834 passing tests measure nothing about time.** VERIFIED: `.venv/bin/python -m pytest -q` →
-   834 passed, 10 skipped in 101.39 s. Those tests assert correctness and determinism. They carry no
+5. **898 passing tests measure nothing about time.** VERIFIED: `.venv/bin/python -m pytest -q` →
+   898 passed, 7 skipped in 112 s. Those tests assert correctness and determinism. They carry no
    information about how long a person would take, or whether the output is worth keeping.
 
 ---

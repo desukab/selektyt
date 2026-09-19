@@ -465,7 +465,7 @@ capital. It has not been done.
 
 ## A5 — Pipeline and engineering health
 
-### A5.1 Test suite — 834 passed, 10 skipped in 110.89 s
+### A5.1 Test suite — 898 passed, 7 skipped in 112 s
 
 **Command:**
 
@@ -473,7 +473,7 @@ capital. It has not been done.
 cd /home/azureuser/selektyt && .venv/bin/python -m pytest -q
 ```
 
-**Current value: `834 passed, 10 skipped in 110.89s`, exit code 0.** VERIFIED.
+**Current value: `898 passed, 7 skipped in 112 s`, exit code 0.** VERIFIED.
 
 **How to read it:** the number is large and green and it is the *weakest* number
 in this document. `TECHNICAL_AUDIT.md` names specific tests that assert what the

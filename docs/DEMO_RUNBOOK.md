@@ -350,7 +350,7 @@ cd /home/azureuser/selektyt && .venv/bin/python -m pytest -q
 Real output, exit code 0:
 
 ```
-834 passed, 10 skipped in 110.89s
+898 passed, 7 skipped in 112 s
 ```
 
 What this proves: there is a large, green, fast suite. Say the number, then say
@@ -392,7 +392,7 @@ an expert asking "why this clip?"
 | `nle_check.py` fails a duration check by > 2 frames | A render was deleted or re-encoded after the timelines were written | The timelines are derived from the same interval list the render concatenated; re-rendering regenerates both. Delete the affected `facebook/NN.mp4` and re-run the pipeline, which checkpoints per clip and will only redo the missing one. |
 | `editorial_audit.py` fails a silence-share check | Source with a music bed, cutaway, or any word-free-but-loud audio | **Do not call it silence.** The metric is computed from transcript word timings and never decodes audio — it measures word *coverage*, not acoustic silence. If challenged on clip 05's 40.8%, the measured answer is: that window is a music bed at mean −31.4 dB with 0.00 s of true silence (`docs/METRICS.md` A2.4). Say the metric's name overstates what it measures and that renaming it is on the list — do not offer it as a measure of dead air |
 | `ffprobe` reports the shorts render as 308x486, someone calls it "not 9:16" | Anamorphic storage, SAR 8:9, DAR 1232:2187 | Show the `display_aspect_ratio` line. 0.5633 against a 0.5625 target. This is correct behaviour, documented in `product-gap-map.md`. |
-| A question about YouTube | `yt-dlp` bot-blocks this datacenter IP range; **no YouTube fetch has ever been observed on this host** | Say exactly that. The URL path is the same code YouTube uses and it is verified end-to-end against archive.org, but YouTube itself is unverified here. Do not claim it works. |
+| A question about YouTube | `yt-dlp` bot-blocks this datacenter IP range on most videos; **one fetch has ever been observed, and no artifact from it survives** | Say exactly that. The URL path is the same code YouTube uses and it is verified end-to-end against archive.org, but YouTube itself is only partially observed here. Do not claim it works. |
 | A question about the web shell | `web/server.mjs` has **no authentication, no origin check, and a prefix-based path jail that is bypassable** (`docs/TECHNICAL_AUDIT.md`, defects #1–#3) | Do not demo the web shell on a shared network. Say plainly that the web layer is a local single-user tool today and would fail an enterprise security review. This run's `pipeline_state.json` contains no cookies (VERIFIED), but the code path persists them in general. |
 | A request to show DaVinci Resolve or Premiere import | No NLE is installed | See the "what NOT to say" list. The honest answer is the experiment in `NLE_COMPATIBILITY.md` that has not been run. |
 

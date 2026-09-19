@@ -110,9 +110,11 @@ vertically through the fixed path: 308×486 SAR 8:9 → 0.5633.
 
 ## Test counts
 
-Full suite: **819 passed, 10 skipped** (64s). The 10 skips are optional
-backends absent from this host (sherpa-onnx, silero, ollama) and their
-dependent tests.
+Full suite: **898 passed, 7 skipped** (112 s). The 7 skips are none of the
+optional backends — they are all `tests/test_proxy_validation.py` gated on
+the `SELEKYT_PROXY_MEDIA` env var, i.e. opt-in real-media measurements that
+no-op on every run. (An earlier version of this note said the skips were
+sherpa/silero/ollama; that was wrong, and the count has moved 10 → 7 since.)
 
 New this pass: `tests/test_edl_record_advance.py` (4),
 `tests/test_youtube_download.py` (3), `tests/test_speechless_source.py` (3),
@@ -123,12 +125,17 @@ plus 1 new test in `tests/test_server.py`, 4 new tests in
 
 In rough order of how much it would actually cost a user:
 
-1. **YouTube is unfetchable from this host.** Every `yt-dlp` variant
-   (`--js-runtimes`, `--extractor-args player_client=android|ios|tv`, a Deno
-   runtime) returned "Sign in to confirm you're not a bot", while a plain
-   `curl` to youtube.com returned 200. This is a block on the datacenter IP
-   range, not a code defect. A residential user is probably unaffected; a cloud
-   user needs `--cookies`. **No YouTube fetch has ever been observed here**, so
+1. **YouTube is unreliable from this host, not unreachable.** Every `yt-dlp`
+   variant (`--js-runtimes`, `--extractor-args player_client=android|ios|tv`, a
+   Deno runtime) returned "Sign in to confirm you're not a bot" on the videos
+   tried, while a plain `curl` to youtube.com returned 200. This is a block on
+   the datacenter IP range, not a code defect. **One fetch has since been
+   observed** — an unauthenticated android client, 640×360, 213 s — while a
+   second video was blocked during the same session, so the block is per-video
+   and intermittent. **No artifact from that fetch survives**, so it cannot be
+   checked against anything committed: treat the URL path as verified against
+   archive.org and as *partially observed* against YouTube. A residential user
+   is probably unaffected; a cloud user needs `--cookies`. Either way,
    chapters, members-only and age-gated behaviour are entirely untested.
 2. **No NLE has opened an exported timeline.** The EDL/FCPXML are
    format-valid and self-consistent, but import compatibility (Premiere,

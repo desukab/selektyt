@@ -21,10 +21,11 @@ run 822 passed / 10 skipped in 78.33 s — the docs cite 819, slightly stale),
 pipeline and I wrote nothing outside this file.
 
 The audit is informed by the repo's own honesty. `docs/AI_EXECUTION_STATE.md`
-records that no YouTube fetch has ever been observed in this environment
-(datacenter IP bot-block) and that no NLE has ever opened an exported
-timeline. Several findings below are the code-level consequence of that
-attested gap between "the tests pass" and "a user can rely on the output".
+records that YouTube has been fetched **once** from this environment, with no
+artifact kept (the blocking is per-video and intermittent, not a hard IP ban),
+and that no NLE has ever opened an exported timeline. Several findings below
+are the code-level consequence of that attested gap between "the tests pass"
+and "a user can rely on the output".
 
 ---
 
@@ -438,7 +439,7 @@ to become a parameter before anything else.
 
 ## 5. Test quality
 
-The suite is green (824 passed / 10 skipped) and large. The interesting
+The suite is green and large (898 passed / 7 skipped at the last run). The interesting
 question is which of those tests would still pass if the output were wrong.
 
 ### Tests that assert what the code claims rather than what the output is

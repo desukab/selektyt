@@ -164,9 +164,9 @@ desktop webkit2gtk host is available (`docs/tauri-termux-blocker.md`).
   seven corpus sources place at least one clip out of source order, so this is
   a real re-order and not a trim. It does not write new claims, and its
   editorial reports are auditable rather than opaque. The claim holds at the
-  editorial layer; at the transcription layer it does not yet, because two of
-  the seven corpus sources produced transcripts that are fluent-looking
-  phonetic noise (`docs/CORPUS_RESULTS.md`).
+  editorial layer; at the transcription layer it does not yet, because one of
+  the seven corpus sources produced a transcript with a measurable coverage
+  collapse and a second cannot be verified at all (`docs/CORPUS_RESULTS.md`).
 - **Desktop shell.** The Tauri build compiles and its sidecar plumbing is
   tested, but no packaged binary has been produced on any platform. The web
   shell is the usable local interface today.

@@ -367,7 +367,9 @@ The summary a user reads cannot tell them `small` from `base`, or
 73×** or any figure above 36×, and §10.5 shows why: the playback floor makes 73×
 *arithmetically infeasible* (198.307 s of delivered content must be watched),
 setting a **36× ceiling**, with measured RTF spread of 0.180-1.746 (9.7×) and
-three of seven sources slower than real time. The regression
+two of seven sources slower than real time (1.140 and 1.746 — a third figure
+quoted in an earlier draft came from substituting a fetch-free re-run's RTF
+for the corpus's own). The regression
 `elapsed_s = 225.2 + 0.1067 × duration_s (R²=0.390)` also implies a fixed
 ~225 s per-run overhead that dominates short sources. A user is being asked to
 trust a headline figure the repository has repudiated.

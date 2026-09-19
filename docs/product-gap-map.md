@@ -108,10 +108,14 @@ captions, per-cut EDL/FCPXML, QA and the editorial audit in
 `tools/editorial_audit.py` were all green.
 
 **Not demonstrated for a YouTube URL specifically.** The URL code path is
-exercised end to end, but YouTube bot-blocks this host's IP range, so no
-YouTube fetch was ever observed. A user on a residential IP should be
-unaffected; a user on a cloud VM will need `--cookies`. That is the one input
-path this environment could not verify.
+exercised end to end, but YouTube bot-blocks most videos from this host's IP
+range. **One fetch has been observed** (an unauthenticated android client,
+640×360, 213 s), while a second video was blocked during the same session, so
+the block is per-video and intermittent rather than a hard IP ban — but **no
+artifact from that fetch survives anywhere in this repo**, so it is an
+un-artifacted session note, not evidence the path works. A user on a
+residential IP should be unaffected; a user on a cloud VM will need
+`--cookies`. That is the one input path this environment cannot verify.
 
 Two further honest limits. The editorial gate has one observed failure mode
 worth knowing about: a source with no detectable speech is rejected with

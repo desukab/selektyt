@@ -8,7 +8,7 @@ intention. Nothing is graded on what the code is "capable of"; that distinction
 is the whole point of [product-gap-map.md](product-gap-map.md) and it is applied
 here too.
 
-Verified on this host today: **834 tests passing, 10 skipped (71s), re-run 2026-09-19**; the 10
+Verified on this host today: **898 tests passing, 7 skipped (112 s), re-run 2026-09-19**; the 7
 skips are optional backends absent from this host (sherpa-onnx, silero,
 ollama). One real rights-permitted 24:29 source (NASA 360 Episode 5, US
 Government public domain) ran the full chain green through the web shell;
@@ -65,7 +65,7 @@ evidence, not the largest round the narrative can support.
 | Who is building it? | One person: Bharath Bheemreddy, copyright holder in `LICENSE`. No employees, no co-founders, no advisors of record. |
 | Is there a second engineer? | No. 154 commits across three committer identities, all traceable to the same individual plus this build host. |
 | How was it built? | Largely by AI coding agents in a multi-agent loop — five preserved agent worktrees are catalogued in [agent-worktrees.md](agent-worktrees.md). ~23,000 lines Python, ~3,900 lines Rust. |
-| Is that a capability or a risk? | Both. It is a real, unusual leverage: a full cross-language pipeline with 834 tests for one person's time. It also means no human has audited the machine-written core and no second person understands the system. |
+| Is that a capability or a risk? | Both. It is a real, unusual leverage: a full cross-language pipeline with 898 tests for one person's time. It also means no human has audited the machine-written core and no second person understands the system. |
 
 **Why this is the binding constraint:** every other gap in this document is
 mechanical and cheap. Only the team gap compounds. Specifically it blocks (a)

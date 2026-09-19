@@ -378,19 +378,22 @@ instability and time, have one shared explanation, and §6.5b tests it directly.
 
 Samples are included in each describe record. Two things they establish:
 
-1. **The hadhazy output is not phonetic noise.** The corpus summary called the
-   three outputs "fluent-looking phonetic noise". For hadhazy that
-   characterization does not survive the *shape* measurement, and this is a
-   claim about shape, not about Hungarian: 38 segments, 2021 characters and
-   109.7 s of claimed speech over a 126 s file (§5.3). Phonetic noise does not
-   fill 87% of a file with short, punctuated, 2.9 s segments. The samples
-   (`Azért csinálunk`, `szerintem biztos, hogy fogunk még ide jönni`) look like
-   Hungarian to a reader who does not speak it — and that look is exactly the
-   thing this document is not allowed to count as evidence. **What is
-   established is the coverage and segmentation; what is not established is any
-   word of it.** The difference from Telugu is that a near-total-coverage
-   transcript of a quiet recording is a *plausible imperfect transcript*, while
-   4 seconds out of 5.7 minutes is not plausible as anything but a failure.
+1. **The hadhazy output is not a measured failure.** An earlier draft of the
+   corpus summary called the outputs "fluent-looking phonetic noise" and
+   counted three; `docs/CORPUS_RESULTS.md` has since retracted both the count
+   and the characterization of this source, and this section's argument is why.
+   For hadhazy that characterization does not survive the *shape* measurement,
+   and this is a claim about shape, not about Hungarian: 38 segments, 2021
+   characters and 109.7 s of claimed speech over a 126 s file (§5.3). Phonetic
+   noise does not fill 87% of a file with short, punctuated, 2.9 s segments.
+   The samples (`Azért csinálunk`, `szerintem biztos, hogy fogunk még ide
+   jönni`) look like Hungarian to a reader who does not speak it — and that
+   look is exactly the thing this document is not allowed to count as
+   evidence. **What is established is the coverage and segmentation; what is
+   not established is any word of it.** The difference from Telugu is that a
+   near-total-coverage transcript of a quiet recording is a *plausible
+   imperfect transcript*, while 4 seconds out of 5.7 minutes is not plausible
+   as anything but a failure.
 2. **The telugu output has no such defence.** The measurable failure is
    coverage, and it needs no language knowledge to read: the file is 339.6 s
    long and 73% of it is speech-energy audio, but the transcript is **4

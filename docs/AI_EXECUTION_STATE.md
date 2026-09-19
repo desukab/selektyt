@@ -112,8 +112,8 @@ a reader who applied it would have made the repo worse.
   evidence; the input line now says the YouTube path is verified against
   archive.org and that the one YouTube observation left no artifact. The
   no-fabrication bullet concedes the claim holds at the editorial layer and
-  *not yet* at the transcription layer, where two of seven sources produced
-  fluent-looking phonetic noise.
+  *not yet* at the transcription layer, where one source has a measurable
+  coverage collapse and a second's transcript is simply unverified.
 * **The no-speech item was stale, and the staleness was the finding.** The
   outstanding-work list said the no-speech error was "open, diagnosed,
   unfixed". It is fixed and tested. What is *actually* open is narrower and
@@ -389,9 +389,12 @@ In rough order of how much it would cost a user (fuller list in
 5. **Optional backends untested here** — sherpa-onnx, silero, ollama are wired
    and degrade cleanly by design, but unit-tested only.
 6. **Editorial judgement is unmeasured at scale — and the corpus proved the
-   mechanical audits cannot substitute.** Two of the seven "OK" sources
-   (`hadhazy-protest`, `telugu-tutorial`) produced transcripts that are
-   fluent-looking phonetic noise and passed every audit, because the
+   mechanical audits cannot substitute.** Two of the seven "OK" sources have
+   transcripts this repo cannot stand behind, and they are different kinds of
+   claim: `telugu-tutorial` has a **measured** coverage collapse (4.5% of a
+   339.6 s file), while `hadhazy-protest` is **unverified** — grammatical
+   Hungarian over 87% of its audio, with no reference transcript or WER to say
+   whether the words are right. Both passed every audit, because the
    caption-transcript equality check compares captions to the transcript, not
    to the audio. `docs/BLINDED_PROTOCOL.md` is the design that would settle it;
    **it has not been run, and no editor has been contacted.**
@@ -652,14 +655,19 @@ check" (exceeded: two independent *downloads*, byte-identical selections).
   `_to_file_uri`. Fixing the wrong one has no effect on any shipped artifact —
   this session did exactly that, and proved it by re-running the pipeline and
   re-auditing. Trace the call site before touching either.
-* **A passing audit is not a correct result.** The corpus produced three
-  sources whose transcripts are phonetic noise and which pass every check in
+* **A passing audit is not a correct result.** The corpus produced sources whose
+  transcripts cannot be stood behind and which pass every check in
   `tools/nle_check.py` and `tools/editorial_audit.py`, because the
   caption-transcript equality check compares captions to the transcript, not
-  to the audio. Never describe the audit result as evidence that a transcript
-  is accurate; describe it as evidence that the artifacts agree with each
-  other. This is the single most important caveat in the repo and it is the
-  reason P8/P9 (WER, never measured) outrank every other open item.
+  to the audio. One of them is a measurement (`telugu-tutorial`, 4.5% coverage
+  of a 339.6 s file) and one is an admitted gap (`hadhazy-protest`,
+  grammatical Hungarian over 87% of its file with no reference to check it
+  against — an earlier note here called it "phonetic noise" and that
+  characterization had no evidence behind it). Never describe the audit result
+  as evidence that a transcript is accurate; describe it as evidence that the
+  artifacts agree with each other. This is the single most important caveat in
+  the repo and it is the reason P8/P9 (WER, never measured) outrank every other
+  open item.
 * **The corpus is re-runnable and append-only.** `tools/corpus_run.py
   corpus/manifest.json` skips sources already recorded OK and appends new
   records, so a later session can grow it without re-running it whole. Media

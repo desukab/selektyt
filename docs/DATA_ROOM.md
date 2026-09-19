@@ -55,14 +55,16 @@ Results, both real:
   `pycmx` (an independent CMX 3600 reader), every FCPXML parsed as XML, all six
   cuts' EDL/FCPXML/render durations agreeing within 0.00–1.63 frames. Full output
   in `docs/nle-audit-output.txt`. (VERIFIED — I ran it.)
-- Test suite: **834 passed, 10 skipped in 88.43 s**, exit code 0. (VERIFIED — I
+- Test suite: **898 passed, 7 skipped in 112 s**, exit code 0. (VERIFIED — I
   ran it.)
 
 **Drift warning, since it matters for diligence accuracy.** Three documents
 recorded three different test counts within the same hour today: `docs/AI_EXECUTION_STATE.md`
 originally recorded 819, `docs/RED_TEAM.md` recorded 824, and the real number
 when I ran the suite was **834**. `docs/AI_EXECUTION_STATE.md` has since been
-corrected to 834 at commit `22c8ab7`, which also carries its own self-checkpoint
+corrected, and the count has moved again to **898 passed / 7 skipped** as more
+regression tests landed — which is the point of the paragraph below. The state
+file carries its own self-checkpoint
 note about the drift — the correction is real, and the lesson is that any
 document quoting a test count must be refreshed at the time it is shared, or it
 will be wrong by the time a reviewer reads it. This is the project's own stated
@@ -80,7 +82,7 @@ This is the strongest section of the room, and it is genuinely strong.
 | One real end-to-end run on real input | EXISTS | `out/web/pipeline/project/` — NASA 360 Episode 5, US-government public domain, 1469.77 s, 29.97 fps, two-host unscripted speech, 6 clips, 16:9 + 9:16 renders, per-cut EDL + FCPXML, captions, QA |
 | Independent interchange audit | EXISTS | `tools/nle_check.py`, exit 0 today (VERIFIED); output archived at `docs/nle-audit-output.txt` |
 | Editorial audit tool | EXISTS | `tools/editorial_audit.py` (VERIFIED — `docs/release-validation.md`) |
-| Test suite | EXISTS | 834 passed / 10 skipped, 88.43 s (VERIFIED today) |
+| Test suite | EXISTS | 898 passed / 7 skipped, 112 s (VERIFIED today) |
 | Determinism across entry points | EXISTS | the web shell reproduced the CLI selection exactly — on one source (VERIFIED, `docs/product-gap-map.md` "The critical path") |
 | Architecture and technical audit | EXISTS | `docs/TECHNICAL_AUDIT.md` — 15 ranked defects, five of them security, written against the real code |
 

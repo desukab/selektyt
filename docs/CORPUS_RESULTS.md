@@ -143,9 +143,19 @@ need real re-runs**, and no claim in this document says otherwise.
 
 ## The finding that matters more than the pass rate
 
-**Two of the seven "OK" sources are not actually usable**, and the mechanical
-audits cannot see it. (This count was three in an earlier draft, which wrongly
-included `hindi-baiga-interview`; that source is one of the four *failures* —
+**Two of the seven "OK" sources have transcripts this repository cannot stand
+behind**, and the mechanical audits cannot see either one. The count needs
+reading carefully, because the two are not the same kind of claim:
+
+- **One is a measurement.** `telugu-tutorial` has a coverage collapse — 4.5% of
+  a 339.6 s file — and that is checkable by arithmetic alone.
+- **One is an admitted gap, not a defect.** `hadhazy-protest` has grammatical
+  Hungarian over 87% of its audio, and nothing here can say whether the words
+  are right. It is in this list because an *unverified* transcript cannot be
+  shipped as a usable one either, not because it has been shown to be wrong.
+
+(This count was three in an earlier draft, which wrongly included
+`hindi-baiga-interview`; that source is one of the four *failures* —
 NO_STORIES_PASSED with 0 clips — not one of the seven that delivered.)
 
 - `telugu-tutorial` produced exactly **1 clip** whose text is
@@ -164,11 +174,18 @@ NO_STORIES_PASSED with 0 clips — not one of the seven that delivered.)
   artifacts, the verdict is `coverage_collapse`. The remaining gap is that
   *this* source's media is needed to confirm it end to end — see the next
   actions.
-- `hadhazy-protest` transcribes Hungarian into short fragments
-  (`Azért akarjunk így, hogy nagyon jó.` — "That's why we want it this way,
-  that it's very good") that are individually plausible Hungarian but, read
-  in sequence, do not reconstruct what was said. 38 segments from 126 s of
-  outdoor interview.
+- `hadhazy-protest` transcribes 126 s of outdoor Hungarian interview into 38
+  short fragments that are **individually grammatical Hungarian** covering
+  109.7 s (87%) of the file. **Whether that transcript is accurate is not
+  established by anything in this repo.** An earlier version of this document
+  called it "fluent-looking phonetic noise" that "does not reconstruct what
+  was said"; that characterization was a reading judgment with no reference
+  transcript, no WER and no Hungarian speaker behind it, and it is retracted
+  here rather than left standing as though it were a measurement. What *is*
+  measurable is that this source does not have telugu's failure shape — there
+  is no coverage collapse to catch. See
+  `docs/TRANSCRIPTION_EVALUATION.md` §5.4, which reached this position first
+  and more carefully than this paragraph did.
 - `hindi-baiga-interview` belongs to the *failure* column, not this one: it got
   far enough to fail, with 3 segments of low-quality Devanagari and no complete
   standalone story passing the editorial gate. It is listed here because it is

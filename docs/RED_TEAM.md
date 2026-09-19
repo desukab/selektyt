@@ -313,13 +313,14 @@ of death.
   packaged on any platform and the webview has never rendered**
   (`docs/release-validation.md`, item 4). The web shell is an
   **unauthenticated local HTTP server on 127.0.0.1:4242** with a single project.
-- **The primary input path is broken on the primary deployment surface.**
-  YouTube has **never been successfully fetched from this host** — every yt-dlp
-  variant returns "Sign in to confirm you're not a bot." **VERIFIED** in
-  `docs/release-validation.md` and confirmed by the latest commit on main:
-  `fix(youtube): cycle player clients past the per-video sign-in wall` (2026-09-19).
-  The last commit on the repo is a workaround for a problem that is a *network
-  policy*, not a bug. A cloud-hosted version of this product would be
+- **The primary input path is unreliable on the primary deployment surface.**
+  YouTube has been **successfully fetched from this host exactly once** (640×360,
+  213 s, 11.8 MB, unauthenticated android client) — while a second video was
+  blocked during the same transfer. The blocking is **per-video and
+  intermittent**, not a hard IP ban and not a code defect. **No artifact from
+  that fetch survives**, so it cannot be checked against anything committed, and
+  it must not be quoted as evidence that the path works. A cloud-hosted version
+  of this product would be
   IP-blocked at scale.
 - **The web shell cannot accept a video upload.** A video must already be inside
   the project tree because `guardedPath` confines it (`docs/product-gap-map.md`,
@@ -852,7 +853,7 @@ No market figure in this document is asserted as fact.
 
 **Internal, verified on this host 2026-09-19 (VERIFIED):**
 
-- Test suite: `834 passed, 10 skipped in 71.27s`, re-run 2026-09-19 by the
+- Test suite: `898 passed, 7 skipped in 112 s`, re-run 2026-09-19 by the
   integrating operator after the count in this appendix was written. **The
   drift this appendix was built to expose is real and it repeated:** this
   document recorded 824, `docs/AI_EXECUTION_STATE.md` recorded 819, and the

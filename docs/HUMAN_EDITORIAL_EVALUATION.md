@@ -35,18 +35,24 @@ document. Its §"Falsifier" is retained; this document's §10 generalises it.
 
 `docs/CORPUS_RESULTS.md` (2026-09-19) reports 7 of 11 corpus sources producing
 deliverables, with `tools/nle_check.py` at **0 FAIL** and
-`tools/editorial_audit.py` passing on all seven. It also reports that **three of
-those seven "OK" sources are not usable**, and that no mechanical audit can see
-it:
+`tools/editorial_audit.py` passing on all seven. It also reports that **two of
+those seven "OK" sources have transcripts this repository cannot stand
+behind**, and that no mechanical audit can see either one. The two are not the
+same kind of claim, and the protocol has to survive the difference:
 
 - `telugu-tutorial` shipped one clip whose text is fluent-looking Telugu script
-  that is phonetic noise. It passes
+  covering 4.5% of a 339.6 s file. That is a **measurement** — the coverage
+  collapse is checkable by arithmetic — and it passes
   `editorial_audit.py:check_caption_text_is_transcript_text` because the
   captions faithfully reproduce a transcript that is itself wrong.
-- `hadhazy-protest` produced 38 individually-plausible Hungarian fragments that
-  do not reconstruct what was said.
-- `hindi-baiga-interview` produced 3 low-quality Devanagari segments and no
-  story passed the editorial gate.
+- `hadhazy-protest` produced 38 grammatical Hungarian fragments over 109.7 s of
+  a 126 s file. This one is **an admitted gap, not a measured defect**: nothing
+  here can say whether the words are right, because there is no reference
+  transcript and no WER. It belongs in the same list because an unverified
+  transcript is not a usable one either — not because it has been shown wrong.
+  (An earlier version of this section counted three and included
+  `hindi-baiga-interview`; that source is one of the four *failures* —
+  NO_STORIES_PASSED with 0 clips — not one of the seven that delivered.)
 
 The general failure is not a bug in any check. It is that **every mechanical
 audit is self-referential**: it compares the artifact against the transcript
@@ -779,13 +785,14 @@ owner and a state, and none is met.
    editor nor a rater. **PENDING EXTERNAL VALIDATION.**
 6. **Source eligibility.** Sources must be chosen only from those the corpus
    has **completed successfully**. As of 2026-09-19 that is seven sources, of
-   which three (`telugu-tutorial`, `hadhazy-protest`, and — for a different
-   reason — `hindi-baiga-interview`, which produced no stories) are the ones the
-   T-gate exists to catch. A study built on sources the pipeline has never
-   processed would be measuring pipeline behaviour on unseen input with no
-   baseline. Source selection is therefore coupled to the T-gate outcome, and
-   if the non-English sources return NOISE the study is **English-only and says
-   so** rather than substituting a third English tape.
+   which two are the ones the T-gate exists to catch — `telugu-tutorial`,
+   whose transcript has a measurable coverage collapse, and `hadhazy-protest`,
+   whose Hungarian transcript is unverified rather than shown to be wrong. A
+   study built on sources the pipeline has never processed would be measuring
+   pipeline behaviour on unseen input with no baseline. Source selection is
+   therefore coupled to the T-gate outcome, and if the non-English sources
+   return NOISE the study is **English-only and says so** rather than
+   substituting a third English tape.
 7. **Funding.** ≈$867 at the rates in `docs/TIME_SAVINGS.md` §7, plus
    recruitment. Not spent, not committed.
 8. **A round-trip re-import of an exported timeline.** **Not the `pycmx`
