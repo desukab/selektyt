@@ -170,10 +170,16 @@ ALL CHECKS PASS
 
 What this proves:
 
-- **The selections are watchable.** No clip is dominated by dead air. Note clip 05
-  at 40.8% silence share still passes — the audit tolerates a deliberate pause
-  inside a cut while still flagging it, which is the editorial point: the tool
-  measures pacing rather than enforcing a fixed cut rate.
+- **The selections are watchable.** Read the `silence share` column carefully:
+  it describes the *source window the candidate was found in*, not the
+  delivered clip. Clip 05's 40.8% looks alarming until you probe the render —
+  measured on this host with `ffmpeg -i shorts/05.mp4 -af
+  silencedetect=noise=-40dB:d=0.25 -f null -`, every one of the six rendered
+  clips contains **0.00 s** of silence at that threshold, because the dead-air
+  and pause removal has already run. The column is a pacing signal about where
+  the story unit came from; the deliverable itself is dense speech. That is
+  the editorial point — the tool measures pacing rather than enforcing a fixed
+  cut rate, and it does not ship the dead air it measured.
 - **No clip repeats another clip's sentence.** The cross-clip check is the one
   that catches the classic AI-clipper failure — five "clips" that are the same
   sentence re-cut. Six clips here are six distinct story units.
