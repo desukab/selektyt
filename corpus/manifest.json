@@ -1,0 +1,125 @@
+{
+  "purpose": "SelekyT evaluation corpus. Every entry must be a real, rights-clear, byte-served source. Results are written to results.jsonl by tools/corpus_run.py, including failures.",
+  "evidence_note": "Sourced 2026-09-19. Each entry's url was fetched with a ranged GET and its Content-Type/size confirmed before inclusion; licences are the uploader's own declaration on the hosting page. Frame rate is UNPROBED for every entry — ffprobe it at run time, do not assume.",
+  "axes_required": ["podcast", "interview", "news", "documentary", "creator", "longform-multi-speaker", "non-roman-script", "difficult-audio"],
+  "sources": [
+    {
+      "id": "nasa360-ep5",
+      "axis": "longform-multi-speaker",
+      "genre": "two-host unscripted magazine",
+      "language": "en",
+      "url": "https://archive.org/download/NASA_360_program5_HD/NASA_360_program5_HD.mov",
+      "rights": "NASA, US-government work, public domain; archive.org metadata shows creator=NASA, no explicit licence posted",
+      "role": "the existing reference source; the corpus's control",
+      "limit": 6
+    },
+    {
+      "id": "telugu-launch",
+      "axis": "non-roman-script",
+      "genre": "single-host presentation",
+      "language": "te",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/7c/DLI-Telugu-on-Archive-launch.ogv",
+      "rights": "CC BY-SA 4.0 (Wikimedia Commons file page)",
+      "role": "first non-Roman-script source: Telugu exercises transcription, sentence splitting, caption line-breaking and the EDL ASCII-name substitution together",
+      "limit": 4,
+      "known_issue_2026-09-19": "the .ogv container is structurally damaged (non-monotonic DTS, mis-marked keyframes); transcription produced 0 segments with --language te on the raw file. Under investigation: container damage vs. a real language-model failure."
+    },
+    {
+      "id": "ooi-vertical",
+      "axis": "documentary",
+      "genre": "narration over b-roll, portrait",
+      "language": "en",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/c4/OOI_Overview_CAPTIONS_Vertical.webm",
+      "rights": "public domain (NSF/OOI)",
+      "role": "native 9:16 documentary; filename implies embedded/burned captions, a candidate WER ground truth",
+      "limit": 3
+    },
+    {
+      "id": "roman-portrait-trailer",
+      "axis": "creator",
+      "genre": "vertical trailer / explainer",
+      "language": "en",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/47/Astrophysics_Holiday_Vertical_Video_%28SVS14800_-_Fermi_YuleLog_Rotate_Reel%29.webm",
+      "rights": "public domain (NASA SVS)",
+      "role": "second portrait source, different encoder and pace; probes the 9:16 reframe on clean synthetic footage",
+      "limit": 3
+    },
+    {
+      "id": "alice-1903",
+      "axis": "difficult-audio",
+      "genre": "silent film",
+      "language": "none",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Alice_in_Wonderland_%281903%29.ogv",
+      "rights": "public domain (1903 film)",
+      "role": "the deliberate negative: a source with no speech at all must be rejected cleanly by the pipeline rather than crash, per criterion P12",
+      "limit": 2,
+      "expected": "NO_SPEECH_DETECTED"
+    },
+    {
+      "id": "telugu-tutorial",
+      "axis": "non-roman-script",
+      "genre": "screencast tutorial, single narration",
+      "language": "te",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Introduction_to_Wikipedia_Telugu_Tutorial.webm",
+      "rights": "CC BY-SA 4.0, own work (User:Saiphani02), confirmed on the Commons file page",
+      "role": "genuine Telugu narration with Telugu script in the description and Telugu category membership; a cleaner container than telugu-launch so it separates language handling from container damage",
+      "limit": 4
+    },
+    {
+      "id": "hindi-baiga-interview",
+      "axis": "interview",
+      "genre": "outdoor single-subject interview",
+      "language": "hi",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/89/Interview_of_a_Baiga_tribe_named_Lakhan_Lal_in_Hindi_Language_by_Suyash_Dwivedi.webm",
+      "rights": "CC BY-SA 4.0, confirmed on the Commons file page; Hindi confirmed by title and description",
+      "role": "the interview axis AND a second non-Roman script (Devanagari); short, so it costs little to run",
+      "limit": 3
+    },
+    {
+      "id": "royal-society-cloke",
+      "axis": "podcast",
+      "genre": "two-host conversational interview",
+      "language": "en",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/99/Interview_on_extreme_weather_with_physical_geographer_Hannah_Cloke_%E2%80%93_The_Royal_Society.webm",
+      "rights": "CC BY (Royal Society; Commons YouTube CC-BY review — provenance is YouTube, hosted and confirmed on Commons)",
+      "role": "the closest available fit to a genuine back-and-forth podcast; two hosts, conversational, the register the product is sold into",
+      "limit": 4
+    },
+    {
+      "id": "pentagon-esper-briefing",
+      "axis": "news",
+      "genre": "press briefing with Q&A",
+      "language": "en",
+      "url": "https://archive.org/download/2019OCT29_Esper_Holds_A_Press_Briefing_On_Raid_That_Killed_ISIS_Leader/2019%20OCT%2029%20Esper%20Holds%20A%20Press%20Briefing%20On%20Raid%20That%20Killed%20ISIS%20Leader.mp4",
+      "rights": "CC Public Domain Mark 1.0, from the archive.org item's licenseurl metadata; US DoD",
+      "role": "the news axis — two principals plus press Q&A, formal register, low-cut single-camera. Long (16:54) so it also exercises a longer source than the reference",
+      "limit": 5
+    },
+    {
+      "id": "emwcon-panel-2018",
+      "axis": "longform-multi-speaker",
+      "genre": "five-speaker panel discussion",
+      "language": "en",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/15/Panel_Discussion-_MediaWiki_Best_Practices_-_EMWCon_2018.webm",
+      "rights": "CC BY (Next Day Video; Commons YouTube CC-BY review — YouTube provenance)",
+      "role": "4 panelists plus a moderator — speaker count well above the reference's two hosts, and 55:39, the long-form extreme of the corpus",
+      "limit": 5
+    },
+    {
+      "id": "hadhazy-protest",
+      "axis": "difficult-audio",
+      "genre": "outdoor handheld protest interview",
+      "language": "hu",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/49/First_Hatvanpuszta_Protest_Videos_%2821%29_-_%C3%81kos_Hadh%C3%A1zy_interview_part_1_%28partial%29.webm",
+      "rights": "CC BY-SA 4.0",
+      "role": "the difficult-audio axis; outdoor handheld recording where wind, ambient and traffic interference is expected. NOTE: the difficulty is inferred from the recording context, not verified by measurement — measure it at run time rather than assuming",
+      "limit": 3
+    }
+  ],
+  "axes_not_yet_sourced": [],
+  "note_on_gaps": "All eight required axes now have at least one verified rights-clear source. Two caveats carry forward honestly: (1) no source in this set is a true multi-host studio podcast recorded as such — royal-society-cloke is a two-host conversational interview, which is the closest rights-clear fit found; (2) hadhazy-protest's audio difficulty is inferred from its recording context, not measured. C-SPAN and NASA press briefings were investigated and rejected: C-SPAN items on archive.org carry licenseurl=null (rights unconfirmed), and NASA press conferences at ~634 MB exceed the host's storage headroom.",
+  "findings_before_corpus_ran": [
+    "telugu-launch: the raw .ogv is structurally damaged (non-monotonic DTS, mis-marked keyframes). Transcribing it directly produced 0 segments and the pipeline diagnosed 'no audible spoken content' — a misdiagnosis, since a clean remux of the same file transcribes to 11 segments. The pipeline's no-speech error therefore conflates two unrelated causes: genuinely speechless media and an unreadable container. This is the single most misleading failure mode in the product, because it tells a user their source has no speech when it has plenty.",
+    "ooi-vertical: AV1/Opus WebM. Input seeking past ~15 s dropped the audio stream from the rendered deliverable on 7 of 8 sampled positions, while the container provably holds 7601 audio packets across all 152 s. ffmpeg reported no error. The deliverable would have shipped silent; engine/qa.py caught it and failed the run. Fixed in engine/render.py by probing each part for audio and falling back to output seeking."
+  ]
+}

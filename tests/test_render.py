@@ -192,6 +192,110 @@ def test_render_rejects_empty_intervals(tmp_path):
         render_clip(source, c, tmp_path / "fb" / "01.mp4")
 
 
+def test_render_restores_audio_when_input_seeking_drops_it(monkeypatch, tmp_path):
+    """A part that comes out video-only is re-rendered with output seeking.
+
+    Input seeking (``-ss`` before ``-i``) is the fast path, and on some
+    containers it discards the audio stream entirely rather than seeking it —
+    reproduced on a real AV1/Opus WebM, where seeking past ~15 s produced a
+    video-only file from a container that provably holds audio for all 152 s.
+    ffmpeg reports no error, so the only detector is the output itself. This
+    test simulates that by making the first invocation write a video-only
+    file, which is exactly the observable symptom the guard keys on; the
+    synthetic AV1/Opus files this host can produce do not trigger the demuxer
+    bug, so reproducing the container itself here is not possible.
+
+    The second invocation re-renders with the seek moved after ``-i``, which
+    decodes and discards and so cannot drop a stream.
+    """
+    import subprocess
+
+    from engine import render as render_mod
+
+    # cv2's VideoWriter emits video-only, but the guard fires only when the
+    # source has an audio track to lose — add one, so the simulated drop is a
+    # real loss rather than the faithful rendering of a silent source.
+    silent_src = _video(tmp_path / "silent_src.mp4", frames=45, fps=15)
+    source = tmp_path / "source.mp4"
+    subprocess.run(
+        ["ffmpeg", "-y", "-v", "error", "-i", str(silent_src),
+         "-f", "lavfi", "-i", "sine=frequency=440:duration=3",
+         "-c:v", "copy", "-c:a", "aac", "-b:a", "64k", "-shortest", str(source)],
+        check=True,
+    )
+    c = _candidate_with_words(2.0, 3.5)
+
+    real = subprocess.run
+    calls: list[list[str]] = []
+
+    def fake_run(cmd, **kw):
+        calls.append(list(cmd))
+        # The input-seek form is identified by ``-ss`` preceding ``-i``. Make it
+        # emit a video-only file with ``-an``: merely dropping the ``-c:a``
+        # args does nothing, because ffmpeg maps a "best" audio stream and
+        # encodes it with the container's default encoder anyway.
+        if "-i" in cmd and cmd.index("-ss") < cmd.index("-i"):
+            out = cmd[-1]
+            return real([*cmd[:-1], "-an", out], **kw)
+        return real(cmd, **kw)
+
+    monkeypatch.setattr(render_mod.subprocess, "run", fake_run)
+    render_clip(source, c, tmp_path / "fb" / "01.mp4", fps=15)
+
+    # The fallback must actually have run, and its seek must be output-side.
+    def _is_input_seek(cmd: list[str]) -> bool:
+        return "-i" in cmd and cmd.index("-ss") < cmd.index("-i")
+
+    input_seek = [x for x in calls if _is_input_seek(x)]
+    output_seek = [x for x in calls if "-i" in x and not _is_input_seek(x)]
+    assert input_seek and output_seek, "the audio-loss fallback did not fire"
+
+    out = tmp_path / "fb" / "01.mp4"
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type",
+         "-of", "csv=p=0", str(out)],
+        capture_output=True, text=True, check=True,
+    )
+    assert "audio" in probe.stdout, "the shipped deliverable has no audio stream"
+
+
+def test_render_leaves_video_only_sources_alone(tmp_path, monkeypatch):
+    """A source with no audio track must not trigger the fallback forever.
+
+    The guard keys on 'output has no audio but the source does'; a video-only
+    source satisfies neither half and so renders in one pass. Without this the
+    retry would run on every video-only source for no reason.
+    """
+    import subprocess
+
+    from engine import render as render_mod
+
+    # Strip the audio track from a generated fixture.
+    with_audio = _video(tmp_path / "with_audio.mp4", frames=30, fps=15)
+    silent = tmp_path / "silent.mp4"
+    subprocess.run(
+        ["ffmpeg", "-y", "-v", "error", "-i", str(with_audio), "-an", "-c:v", "copy",
+         str(silent)], check=True,
+    )
+    c = _candidate_with_words(0.0, 1.2)
+
+    calls: list[list[str]] = []
+    real = render_mod.subprocess.run
+
+    def fake_run(cmd, **kw):
+        calls.append(list(cmd))
+        return real(cmd, **kw)
+
+    monkeypatch.setattr(render_mod.subprocess, "run", fake_run)
+    render_clip(silent, c, tmp_path / "fb" / "01.mp4", fps=15)
+
+    renders = [x for x in calls if "-i" in x and "libx264" in x]
+    assert len(renders) == 1, (
+        f"a video-only source triggered {len(renders)} render passes, "
+        f"but nothing to retry"
+    )
+
+
 def _probe_frames(path: Path) -> int:
     import subprocess
 

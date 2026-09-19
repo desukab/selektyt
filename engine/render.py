@@ -35,6 +35,25 @@ def _frame_count(start: float, end: float, fps: float) -> tuple[int, float]:
     return max(1, n), max(1, n) / fps
 
 
+def _has_audio(path: Path) -> bool:
+    """Whether a file carries an audio stream at all.
+
+    Used to decide whether a part that came out video-only is a defect or the
+    faithful rendering of a video-only source. The distinction is what keeps
+    the retry below from looping on a source that never had audio.
+    """
+    try:
+        out = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "a:0",
+             "-show_entries", "stream=index", "-of",
+             "default=noprint_wrappers=1:nokey=1", str(path)],
+            capture_output=True, text=True, check=True,
+        )
+        return bool(out.stdout.strip())
+    except (subprocess.CalledProcessError, OSError):
+        return False
+
+
 def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | None, vertical: bool, fps: float) -> None:
     vf: list[str] = []
     if vertical:
@@ -58,11 +77,25 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
     if ass:
         safe = ass.as_posix().replace("'", "\\'")
         vf.append(f"subtitles='{safe}'")
-    cmd = ["ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", str(source),
-           "-frames:v", str(frames), "-t", f"{span:.6f}",
-           "-vf", ",".join(vf), "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
-           "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(out)]
-    subprocess.run(cmd, check=True)
+    common = ["-frames:v", str(frames), "-t", f"{span:.6f}",
+              "-vf", ",".join(vf), "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+              "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(out)]
+
+    # Input seeking (``-ss`` before ``-i``) is the fast path: ffmpeg seeks
+    # straight to the keyframe instead of decoding up to it. On some containers
+    # that seek loses the audio stream outright — the demuxer discards every
+    # audio packet whose timestamp precedes the seek target and then has
+    # nothing left to emit, so the part is written video-only and no error is
+    # reported. Reproduced on an AV1/Opus WebM where seeking past ~15 s dropped
+    # the audio on 7 of 8 sampled positions while the container provably holds
+    # audio throughout. An output-side deliverable with no sound is not a
+    # warning-grade problem, so fall back to output seeking, which decodes and
+    # discards and therefore cannot drop a stream.
+    subprocess.run(["ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", str(source), *common],
+                   check=True)
+    if not _has_audio(out) and _has_audio(source):
+        subprocess.run(["ffmpeg", "-y", "-i", str(source), "-ss", f"{start:.3f}", *common],
+                       check=True)
 
 
 def _subcandidate(c: Candidate, start: float, end: float) -> Candidate:
