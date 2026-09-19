@@ -375,8 +375,10 @@ claim from ASSUMPTION to VERIFIED for those conditions, and only for those condi
   reproducible in §2.
 - Variable compute cost is ~$0.02 per job — a number so low it cannot be the binding constraint on
   the business (`docs/BUSINESS_MODEL.md` §10 reaches the same conclusion from the cost side).
-- Editorial quality is unmeasured and transcription accuracy has never been scored against a
-  reference transcript on any source (see `docs/EVALUATION.md` §1.1 and §3-D4).
+- Editorial quality is unmeasured, and transcription accuracy has now been scored against a
+  reference transcript for clean read English — 3.38% WER on 50 LibriSpeech test-clean clips with
+  the production decode parameters (`tools/wer_bench.py`) — but not on any video source in the
+  corpus and not on non-English or noisy audio (see `docs/EVALUATION.md` §1.1 and §3-D4).
 
 **May not be said, because none of it has been measured:**
 - That SelekyT "saves an editor N hours" or "is N× faster than a human" for any value of N.

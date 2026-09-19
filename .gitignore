@@ -25,9 +25,16 @@ corpus/media/
 
 # WER scratch (tools/wer_bench.py): ground-truth audio, downloaded corpus
 # tarballs, cached PCM, and model weights live here — several GB of regenerable
-# binary. The run records under corpus/wer/runs/ ARE the evidence and stay in.
+# binary. The run records under corpus/wer/runs/ ARE the evidence and stay in,
+# as does the manifest: it is 50 lines of text naming the exact utterances and
+# reference transcripts the measured WER was scored against, so the number can
+# be audited without a 346 MB download. `tools/wer_bench.py fetch` rebuilds it.
 corpus/wer/*
 !corpus/wer/runs/
+!corpus/wer/librispeech-clean/
+corpus/wer/librispeech-clean/*
+!corpus/wer/librispeech-clean/manifest.jsonl
+!corpus/wer/librispeech-clean/provenance.json
 
 corpus/*_run/project/facebook/
 corpus/*_run/project/shorts/

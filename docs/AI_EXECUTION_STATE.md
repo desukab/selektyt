@@ -295,8 +295,9 @@ caption-transcript equality check compares captions against the transcript,
 not against reality, so a wrong transcript is faithfully reproduced into wrong
 captions that pass. Geometry, timing, EDL/FCPXML agreement: all green, all
 meaningless. This is the direct, concrete justification for the blinded
-protocol, and it promotes the never-measured WER criteria (P8/P9) from an
-academic item to the highest-priority follow-up.
+protocol, and it promotes the WER criteria (P8/P9) from an
+academic item to a highest-priority follow-up. P8's English half has since been
+closed at 3.38% on LibriSpeech test-clean; P9, non-English, is still open.
 
 **Two: two real defects, found by running new sources rather than by reading
 code.** Both fixed, both pinned by a test that fails against the pre-fix code.
@@ -414,9 +415,14 @@ In rough order of how much it would cost a user (fuller list in
    container from a silent track on real media" is **still unvalidated** — it
    has only ever been shown on synthetic files.
 8. **Non-English transcription quality is unmeasured and probably inadequate.**
-   The `small` model produced garbage in Telugu, Hungarian and Hindi. This is
-   an *observation from reading transcripts*, not a score: WER (P8/P9) has
-   never been measured on any source, in any language.
+   The `small` model produced garbage in Telugu, Hungarian and Hindi. English is
+   now the exception: WER is measured for clean read English at **3.38%** on
+   LibriSpeech test-clean (`tools/wer_bench.py`, three runs, production decode
+   parameters) — P8's C9 half is closed. Non-English is still an *observation
+   from reading transcripts*, not a score: P9 has never been measured on any
+   source, in any language. The contrast is the point — the English number
+   proves the pipeline is capable of high accuracy and isolates the failure to
+   non-English decode, not to transcription in general.
 9. **Vertical reframing verified on one anamorphic + synthetic sources only** —
    the SAR fix is provably correct *geometry*, but whether the wider crop keeps
    a moving subject well framed is not measured. A 9:16 cut from SD footage is
@@ -497,10 +503,14 @@ check" (exceeded: two independent *downloads*, byte-identical selections).
 3. **Fix the no-speech misdiagnosis** (Outstanding work item 7): remux to a
    clean container and retry before reporting "no audible spoken content", so
    an unreadable container stops being described as a speechless source.
-4. **Score WER against `corpus/manifest.json`'s C9/C10 audio-only corpora**
-   (`docs/EVALUATION.md` §2.2) — the ground truth the video sources lack. P8/P9
-   have never been measured; the corpus's non-English findings are impressions
-   from reading transcripts, not scores.
+4. **Score WER against `corpus/manifest.json`'s C10 non-English audio-only
+   corpora** (`docs/EVALUATION.md` §2.2) — the ground truth the video sources
+   lack. The English half (C9, LibriSpeech test-clean) is **done**: 3.38% WER
+   on `small`, three runs, production decode parameters (`tools/wer_bench.py`,
+   `corpus/wer/runs/`). P9 — non-English — has never been measured, and the
+   corpus's non-English findings are still impressions from reading
+   transcripts, not scores. That is now the specific hole, not "WER in
+   general".
 5. **Get a *second* YouTube fetch observed** to establish whether the
    intermittent block is per-video, per-hour, or random. One success is not
    reliability. Use `--cookies` / a browser cookie file, a residential proxy,
@@ -666,8 +676,9 @@ check" (exceeded: two independent *downloads*, byte-identical selections).
   characterization had no evidence behind it). Never describe the audit result
   as evidence that a transcript is accurate; describe it as evidence that the
   artifacts agree with each other. This is the single most important caveat in
-  the repo and it is the reason P8/P9 (WER, never measured) outrank every other
-  open item.
+  the repo and it is the reason P9 (non-English WER, never measured) outranks
+  every other open item — P8's English half is closed at 3.38%, which is what
+  makes the remaining gap a decode problem rather than a transcription problem.
 * **The corpus is re-runnable and append-only.** `tools/corpus_run.py
   corpus/manifest.json` skips sources already recorded OK and appends new
   records, so a later session can grow it without re-running it whole. Media

@@ -1,16 +1,19 @@
 """Measure the transcription layer instead of auditing its output.
 
-Three things this tool does, and one it refuses to:
+Four things this tool does, and one it refuses to:
 
-1. ``prepare`` — build a *fixed, reproducible subsample* of a ground-truth
+1. ``fetch`` — download the ground-truth corpus from its one pinned source.
+   The audio is not committed, so reproducibility has to survive a clean
+   checkout.
+2. ``prepare`` — build a *fixed, reproducible subsample* of a ground-truth
    corpus (LibriSpeech test-clean) into a manifest. The manifest lists the
    exact files used, so a number can be re-derived.
-2. ``bench`` — transcribe that subsample with one model and report WER, CER,
+3. ``bench`` — transcribe that subsample with one model and report WER, CER,
    wall time, real-time factor and peak RSS. The decode parameters are the
    production ones (``providers.whisper._transcribe_chunk``): int8, greedy
    beam 1, ``vad_filter=True``, ``condition_on_previous_text=False``. What
    varies is on the command line, never hidden.
-3. ``describe`` — re-run a corpus source through the *production* transcription
+4. ``describe`` — re-run a corpus source through the *production* transcription
    entry point (``providers.whisper.transcribe``) and report what is measurable
    about the output: segment count, character count, mean segment duration,
    detected language and its confidence, and transcript samples. This is the
@@ -23,12 +26,19 @@ ground truth, which is worse than reporting "unmeasurable".
 
 Usage::
 
+    .venv/bin/python tools/wer_bench.py fetch \\
+        --out corpus/wer/test-clean.tar.gz
     .venv/bin/python tools/wer_bench.py prepare \\
-        --tar corpus/wer/test-clean.tar.gz --out corpus/wer/librispeech-clean --count 30
+        --tar corpus/wer/test-clean.tar.gz --out corpus/wer/librispeech-clean --count 50
     .venv/bin/python tools/wer_bench.py bench \\
         --manifest corpus/wer/librispeech-clean/manifest.jsonl --model small --tag c9-small
     .venv/bin/python tools/wer_bench.py describe \\
         --media corpus/wer/media_hadhazy-protest.webm --model medium --language hu
+
+``fetch`` exists because the manifest's audio is gitignored (ground-truth audio
+stays out of the repository), which means the WER number is only reproducible if
+the input can be re-obtained from exactly one place. OpenSLR's LibriSpeech is
+public and stable, so that one place is named in code rather than in a doc.
 """
 from __future__ import annotations
 
@@ -80,20 +90,25 @@ def _normalize(text: str) -> str:
 
 
 def _edit_distance(a: list, b: list) -> list[list[int]]:
-    """Standard Levenshtein matrix. O(len(a) * len(b)); clips are short."""
+    """Full standard Levenshtein matrix; the edit count is `[len(a)][len(b)]`.
+
+    O(len(a) * len(b)); clips are short. Keeping every row rather than only the
+    last costs a few KB and makes the returned value match its name — an
+    earlier version returned only the final row, which is correct but reads as
+    a bug to anyone comparing it against the textbook algorithm.
+    """
     rows, cols = len(a) + 1, len(b) + 1
-    prev = list(range(cols))
+    matrix = [list(range(cols))] + [[i] + [0] * (cols - 1) for i in range(1, rows)]
     for i in range(1, rows):
-        cur = [i] + [0] * (cols - 1)
         ai = a[i - 1]
+        prev, cur = matrix[i - 1], matrix[i]
         for j in range(1, cols):
             cur[j] = min(
                 prev[j] + 1,        # deletion
                 cur[j - 1] + 1,     # insertion
                 prev[j - 1] + (ai != b[j - 1]),  # substitution
             )
-        prev = cur
-    return prev
+    return matrix
 
 
 def _rates(reference: str, hypothesis: str) -> dict:
@@ -117,8 +132,7 @@ def _rates(reference: str, hypothesis: str) -> dict:
             n = 1
             out[key] = 1.0 if h else 0.0
         else:
-            row = _edit_distance(r, h)
-            err = row[len(h)]
+            err = _edit_distance(r, h)[len(r)][len(h)]
             n = len(r)
             out[key] = err / n
         out[f"{key}_ref_len"] = n
@@ -257,6 +271,47 @@ class _Model:
 
 # ── commands ─────────────────────────────────────────────────────────────────
 
+# OpenSLR's LibriSpeech test-clean. The URL is pinned here rather than looked up
+# per run: a WER figure that can only be reproduced from "whatever test-clean is
+# current" is not reproducible. LibriSpeech is distributed under CC BY 4.0;
+# attribution belongs alongside any number quoted from this corpus.
+LIBRISPEECH_TEST_CLEAN_URL = "https://www.openslr.org/resources/12/test-clean.tar.gz"
+LIBRISPEECH_LICENSE = ("LibriSpeech (Open Speech and Language Resources, "
+                       "https://www.openslr.org), CC BY 4.0")
+
+
+def cmd_fetch(argv: list[str]) -> int:
+    """Download the ground-truth corpus the manifest's audio comes from.
+
+    The audio is deliberately not committed; this command is what makes the WER
+    number reproducible from a clean checkout. It refuses to clobber an existing
+    file, because a half-downloaded tar.gz would silently corrupt a later
+    ``prepare``.
+    """
+    p = argparse.ArgumentParser(description="Download LibriSpeech test-clean from OpenSLR.")
+    p.add_argument("--out", required=True, help="destination .tar.gz path")
+    p.add_argument("--url", default=LIBRISPEECH_TEST_CLEAN_URL,
+                   help="override the pinned source URL")
+    args = p.parse_args(argv)
+
+    import subprocess
+
+    out = Path(args.out)
+    if out.is_file() and out.stat().st_size > 0:
+        print(f"[fetch] {out} already exists ({out.stat().st_size / 1e6:.0f} MB); "
+              f"delete it to re-download")
+        return 0
+    out.parent.mkdir(parents=True, exist_ok=True)
+    print(f"[fetch] {args.url} -> {out}", flush=True)
+    # curl rather than urllib: a 346 MB download through urllib gives no
+    # progress and no resumability, and a stuck transfer would look like work.
+    subprocess.run(["curl", "-fL", "--retry", "3", "-o", str(out), args.url], check=True)
+    print(f"[fetch] {out.stat().st_size / 1e6:.0f} MB. Source: {LIBRISPEECH_LICENSE}")
+    print(f"[fetch] next: tools/wer_bench.py prepare --tar {out} "
+          f"--out corpus/wer/librispeech-clean --count 50")
+    return 0
+
+
 def cmd_prepare(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description="Build a fixed subsample of a ground-truth corpus.")
     p.add_argument("--tar", required=True, help="tar.gz of the corpus (LibriSpeech layout)")
@@ -347,6 +402,22 @@ def cmd_prepare(argv: list[str]) -> int:
     with manifest_path.open("w", encoding="utf-8") as fh:
         for item in manifest:
             fh.write(json.dumps(item, ensure_ascii=False) + "\n")
+    # A WER figure is only as reproducible as the input it was scored on, so
+    # the manifest carries its own provenance next to it: where the audio came
+    # from, under what licence, and the exact invocation that selected these
+    # clips out of it. The tar is deleted after use, and this is what remains.
+    (out_dir / "provenance.json").write_text(json.dumps({
+        "corpus": "LibriSpeech test-clean",
+        "source_url": LIBRISPEECH_TEST_CLEAN_URL,
+        "licence": LIBRISPEECH_LICENSE + " — attribution for the reference "
+                   "transcripts this file lists.",
+        "tar_member_count": len(members),
+        "stride": stride,
+        "prepare_args": {"count": args.count, "max_minutes": args.max_minutes,
+                         "name": args.name},
+        "clips": len(manifest),
+        "audio_seconds": round(total, 2),
+    }, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"[prepare] {len(manifest)} clips, {total / 60:.2f} min audio "
           f"(of {len(members)} available, stride {stride})")
     print(f"[prepare] manifest: {manifest_path}")
@@ -418,6 +489,12 @@ def cmd_bench(argv: list[str]) -> int:
                      / max(1, sum(c["cer_ref_len"] for c in per_clip)), 4),
         "wer_ref_words": sum(c["wer_ref_len"] for c in per_clip),
         "cer_ref_chars": ref_chars,
+        # The two integers behind the rates above. A run record that asserts a
+        # percentage without its numerator and denominator cannot be checked by
+        # arithmetic; these are what make the figures auditable rather than
+        # quoted.
+        "wer_err_total": sum(c["wer_err"] for c in per_clip),
+        "cer_err_total": sum(c["cer_err"] for c in per_clip),
         "wall_seconds": round(wall_total, 2),
         "decode_seconds": round(sum(c["wall_seconds"] for c in per_clip), 2),
         "model_load_seconds": round(model.load_seconds, 2),
@@ -628,8 +705,8 @@ def cmd_detect(argv: list[str]) -> int:
 
 
 def main(argv: list[str]) -> int:
-    cmds = {"prepare": cmd_prepare, "bench": cmd_bench, "describe": cmd_describe,
-            "detect": cmd_detect, "report": cmd_report}
+    cmds = {"fetch": cmd_fetch, "prepare": cmd_prepare, "bench": cmd_bench,
+            "describe": cmd_describe, "detect": cmd_detect, "report": cmd_report}
     if not argv or argv[0] in ("-h", "--help"):
         print(__doc__)
         return 0

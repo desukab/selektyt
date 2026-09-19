@@ -150,9 +150,17 @@ desktop webkit2gtk host is available (`docs/tauri-termux-blocker.md`).
 ## Limitations
 
 - **Transcription fidelity.** faster-whisper on CPU with `--model small` is the
-  default for speed, not accuracy. Use `--model medium` for quality; word
-  timestamps from the sherpa fallback are character-proportional, not from
-  cross-attention, and that is recorded in provenance.
+  default for speed, not accuracy. Measured against 50 professionally
+  transcribed LibriSpeech test-clean clips (6.6 min, the production decode
+  parameters — `tools/wer_bench.py`): **WER 3.38%**, reproduced three times on
+  three independent runs, and `medium` buys 2.99% for 2.4× the wall time —
+  inside the noise on this sample, so **the accuracy argument for `--model
+  medium` does not exist on clean English**. What that benchmark does *not*
+  cover is the cases that actually break: non-English (Telugu produced a
+  transcript covering 4.5% of its file), crosstalk, compressed audio and field
+  noise. Use `--model medium` for those, not for English. Word timestamps from
+  the sherpa fallback are character-proportional, not from cross-attention, and
+  that is recorded in provenance.
 - **VAD backend.** `silero` and `sherpa-onnx` need wheels + a model file that
   are not present on every host. When they are unavailable the pipeline falls
   back to the energy backend and says so in `fallback_reason` — it never reports

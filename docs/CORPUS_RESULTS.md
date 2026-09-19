@@ -368,7 +368,9 @@ Criterion P13 holds on a real re-run, not only in the unit test.
 4. Re-run the three sources whose `selections.json` still holds pre-fix
    word-split bounds (`emwcon-panel-2018`, `ooi-vertical`,
    `pentagon-esper-briefing`), which a re-emit cannot repair.
-5. Score WER against `corpus/manifest.json`'s C9/C10 audio-only corpora
-   (`docs/EVALUATION.md` §2.2), which are the ground truth the video sources
-   lack.
+5. Score WER against `corpus/manifest.json`'s C10 non-English audio-only
+   corpora (`docs/EVALUATION.md` §2.2), which are the ground truth the video
+   sources lack. The C9 English half is done — 3.38% on `small`, three runs,
+   `corpus/wer/runs/` — so this item has narrowed from "WER in general" to
+   "WER on non-English".
 6. Add a 23.976, a 50 and a 59.94 source, and one 4K/H.265 source.

@@ -1,0 +1,15 @@
+{
+ "corpus": "LibriSpeech test-clean",
+ "source_url": "https://www.openslr.org/resources/12/test-clean.tar.gz",
+ "licence": "LibriSpeech (Open Speech and Language Resources, https://www.openslr.org), CC BY 4.0 — attribution for the reference transcripts this file lists.",
+ "tar_member_count": 2620,
+ "stride": 52,
+ "prepare_args": {
+  "count": 50,
+  "max_minutes": 8.0,
+  "name": null
+ },
+ "clips": 50,
+ "audio_seconds": 393.71,
+ "note": "This manifest predates provenance recording. It was verified to regenerate identically on 2026-09-19: a fresh download of the tar above, run through `tools/wer_bench.py prepare --count 50 --max-minutes 8` into a scratch directory, produced the same 50 utterances in the same order, with the same reference transcripts and the same durations as this file. Generate it with that command; `tools/wer_bench.py fetch` obtains the tar."
+}

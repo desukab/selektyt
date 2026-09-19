@@ -45,18 +45,32 @@ ffprobe out/web/pipeline/project/source/NASA_360_program5_HD.mov
 is evidence that the *machinery* is sound and self-consistent. It is not evidence that a human
 editor would ship those cuts, and it is not evidence that any of it generalises beyond one tape.
 
-### 1.1 The single most important gap: transcription accuracy is unmeasured *at all*
+### 1.1 The most important gap: transcription accuracy is measured for clean English and *nothing else*
 
-There is **no ground-truth transcript** for the reference source anywhere in the repository, and
-**no word-error-rate (WER) tooling or evaluation harness exists in the codebase**. VERIFIED — a
-repo-wide search for `wer` / `word error rate` / `jiwer` / `editdistance` across `*.py` and `*.md`
-returned nothing relevant, and a filesystem search for ground-truth transcript files returned nothing.
+This section originally read "transcription accuracy is unmeasured *at all*" and asserted that no
+WER tooling existed in the codebase. That was true when it was written and is **now false**: a
+repo-wide search today finds `tools/wer_bench.py`, 17 committed run records under
+`corpus/wer/runs/`, and the manifest they were scored against under `corpus/wer/librispeech-clean/`.
+The correction is recorded here rather than silently rewritten because the protocol below is what
+made the measurement possible.
 
-So even on the one source that has been run, the accuracy of the transcript that every downstream
-editorial decision depends on has never been scored against a reference. The statement "`small`
-handled the NASA names, numerals and humour correctly with no manual correction" in
-`docs/BUSINESS_MODEL.md` is an **impression**, not a measurement. It is labelled there as
-unmeasured; this protocol is what replaces it.
+**What is now measured.** 50 professionally transcribed LibriSpeech test-clean clips (6.6 min of
+audio, 1036 reference words, 5686 reference characters) decoded with the *production* parameters
+(`int8`, VAD on, `condition_on_previous_text` off, beam 1) scored **WER 3.38% / CER 1.35%** —
+35 edit operations over 1036 words. Reproduced three times on three independent runs
+(`c9-small`, `redteam-small-verify`, `verify-current-small`) with identical WER, CER, clip count,
+audio duration and reference-word count. The manifest regenerates byte-identically from a fresh
+download of the pinned OpenSLR tar, and the ratio behind the rate is now recorded in each run
+record alongside it, so the figure is checkable by arithmetic rather than quotable.
+
+**What that still does not establish.** LibriSpeech test-clean is clean, read, studio English. The
+gap that matters is unchanged by it: no video source in the corpus has a ground-truth transcript,
+so the accuracy of the transcript that every downstream *editorial* decision depends on is still
+unmeasured in-domain. The statement "`small` handled the NASA names, numerals and humour correctly
+with no manual correction" in `docs/BUSINESS_MODEL.md` is still an **impression**, not a
+measurement. The cases that actually break — non-English, crosstalk, compressed audio and field
+noise — are exactly what test-clean does not probe; the Telugu coverage collapse recorded in
+`docs/CORPUS_RESULTS.md` is the concrete evidence that they break.
 
 ---
 
@@ -256,8 +270,8 @@ the reference run immediately.
 | P5 | Per-clip `silence_share` after dead-air removal | ≤ **20%** on ≥ 90% of clips; no clip > 30% | **FAILS TODAY on clip 05 at 40.8%** — the reference run would not meet its own criterion |
 | P6 | `duplicate_overlap_rate` | 0.00 | CURRENT: 0.00 |
 | P7 | Caption text == transcript text (no invented words) | 100% of cues (`editorial_audit.py:check_caption_text_is_transcript_text`) | CURRENT, one source |
-| P8 | WER, English, `small` model | ≤ **15%** on C9 `test-clean`; ≤ **20%** on in-domain video with official captions | **NEVER MEASURED** |
-| P9 | WER, non-English, `small` | ≤ **25%** on at least 3 of the 6 C10 languages | **NEVER MEASURED** |
+| P8 | WER, English, `small` model | ≤ **15%** on C9 `test-clean`; ≤ **20%** on in-domain video with official captions | C9 `test-clean` **DONE: 3.38%** (well under the 15% threshold, three runs, `tools/wer_bench.py`); in-domain video half **STILL NEVER MEASURED** |
+| P9 | WER, non-English, `small` | ≤ **25%** on at least 3 of the 6 C10 languages | **NEVER MEASURED** — and the Telugu coverage collapse suggests it would fail |
 | P10 | Selection overlap with a professional editor (D6) | ≥ **0.30** on ≥ 60% of sources | **NEVER MEASURED — no editor has been asked** |
 | P11 | Blind ranking: SelekyT cuts ranked above the editor's own cuts | ≥ **25%** of the time, on ≥ 60% of sources | **NEVER MEASURED** |
 | P12 | Pipeline does not crash on a music-only / silent source | 100% (already covered by `test_speechless_source.py`) | CURRENT, unit-tested |
