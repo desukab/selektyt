@@ -22,7 +22,7 @@ demonstrably stale (see §0).
 | Item | Doc claim | What I measured | Status |
 | --- | --- | --- | --- |
 | Test suite | "819 passed, 10 skipped" (two docs) | **824 passed, 10 skipped** in 64s; 834 collected | **STALE** |
-| Commits / age | — | **140 commits, 2026-09-16 → 2026-09-19 (4 days)** | VERIFIED |
+| Commits / age | — | **154 commits, 2026-09-16 → 2026-09-19 (4 days)** | VERIFIED |
 | Authors | — | 3 names, **2 distinct emails**; `bharathb.chander@gmail.com` behind both "Devika Boddu" (60) and "desukab" (49); "Ubuntu" (31, the machine itself) | VERIFIED |
 | Real sources ever run end to end | one NASA archive.org URL | **1** | VERIFIED |
 | Users / revenue / pilots / investors | none claimed | none exists in repo — no billing, auth, tenant, or API-key code anywhere | VERIFIED |
@@ -558,7 +558,7 @@ work."
 human editor on staff. There is no editor in the loop anywhere in the development
 process. **The entire editorial model is one person's intuition encoded as 14
 weighting constants and a few keyword lists, validated against a single
-video.** VERIFIED — 140 commits, 4 days, one human email behind three author
+video.** VERIFIED — 154 commits, 4 days, one human email behind three author
 names (two personae plus the machine).
 
 The repo's own words make the point precisely, and credit to the founder for
@@ -572,9 +572,10 @@ core value is editorial taste, and no editor has ever rated a SelekyT cut.
 
 Additional team-risk facts:
 
-- **The company is an AI operator plus one founder.** 31 of 140 commits are
-  authored by "Ubuntu" (the machine itself, via agent sessions). VERIFIED from
-  `git log`. A single-person dependency is a key-person risk that investors
+- **The company is an AI operator plus one founder.** 45 of 154 commits are
+  authored by "Ubuntu" (the machine itself, via agent sessions) — 29%. VERIFIED
+  from `git log --format='%an' | grep -c Ubuntu`. A single-person dependency is
+  a key-person risk that investors price directly. A single-person dependency is a key-person risk that investors
   price directly.
 - **The license is proprietary but the business is not.** LICENSE reads
   "SELEKYT PROPRIETARY LICENSE, Copyright (c) 2026 Bharath Bheemreddy" — and the
@@ -851,10 +852,15 @@ No market figure in this document is asserted as fact.
 
 **Internal, verified on this host 2026-09-19 (VERIFIED):**
 
-- Test suite: `824 passed, 10 skipped in 64.29s`; 834 collected. Docs state
-  "819 passed, 10 skipped."
-- Git: 140 commits, 2026-09-16 → 2026-09-19; authors "Devika Boddu" (60) and
-  "desukab" (49) share `<bharathb.chander@gmail.com>`; "Ubuntu" (31).
+- Test suite: `834 passed, 10 skipped in 71.27s`, re-run 2026-09-19 by the
+  integrating operator after the count in this appendix was written. **The
+  drift this appendix was built to expose is real and it repeated:** this
+  document recorded 824, `docs/AI_EXECUTION_STATE.md` recorded 819, and the
+  integrating operator's independent re-run gives 834 — three different
+  numbers for the same suite within one day. Every consumer of a test count
+  must re-run it; quoting it forward is how it goes stale.
+- Git: 154 commits, 2026-09-16 → 2026-09-19; authors "Devika Boddu" (60) and
+  "desukab" (49) share `<bharathb.chander@gmail.com>`; "Ubuntu" (45).
 - `engine/editorial.py:287,292` — `coherence_factor = 0.35 + 0.65*coherence`,
   `completeness_factor = 0.45 + 0.55*completeness`; `coherence = 1.0 if None`.
 - `engine/editorial.py:300–317`, `models/core.py:45–52` — scoring weights.

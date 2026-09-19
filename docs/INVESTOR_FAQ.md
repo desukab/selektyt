@@ -6,7 +6,7 @@ labelled as a plan. Where the honest answer is "zero" or "none", that is what is
 written. No user, customer, revenue figure, investor, or valuation exists to be
 quoted, because none does.
 
-Ground truth used throughout: 822 tests passing, 10 skipped (re-run on this host
+Ground truth used throughout: 834 tests passing, 10 skipped (re-run on this host
 today, 65s); one real rights-permitted 24:29 source (NASA 360 Episode 5, US
 Government public domain) ran the full chain green; one YouTube download
 observed (640x360, 11.8 MB, via an unauthenticated android client) while other
@@ -57,7 +57,7 @@ advisors of record.
 built with AI coding agents operating in a multi-agent loop (see
 [agent-worktrees.md](agent-worktrees.md) — five preserved agent worktrees, each
 classified and dispositioned). That is a genuine and unusual capability: 140
-commits, ~23,000 lines of Python and ~3,900 lines of Rust, 822 passing tests,
+commits, ~23,000 lines of Python and ~3,900 lines of Rust, 834 passing tests,
 byte-identical cross-language export, for the cost of one person and AI
 operator time. It is also a genuine risk: there is no second engineer who
 understands the system, and no human review of the parts the agents wrote. The
@@ -340,7 +340,7 @@ pitch is global from day one.
 **Almost none, and pretending otherwise would be the most damaging thing in
 this document.** Today's assets, in descending order of strength:
 
-1. **A working, tested system where competitors have demos.** 822 passing
+1. **A working, tested system where competitors have demos.** 834 passing
    tests, byte-identical cross-language export, a repeatable editorial audit,
    and one real end-to-end run on genuine unscripted human speech. This is real
    but not a moat — it is a starting position.

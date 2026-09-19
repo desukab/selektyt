@@ -1,6 +1,10 @@
 # SelekyT — Data Room: honest inventory
 
-**Date of record:** 2026-09-19. Checked against repository state at `22c8ab7` on `main`.
+**Date of record:** 2026-09-19. Checked against repository state at `4cd542c` on `main`
+(154 commits). **Note on volatility:** this repository is being committed to by
+parallel workstreams as this page is written — HEAD moved from `8aab1b5` to
+`4cd542c` during its drafting. Counts and hashes below were accurate at the
+timestamp on each line and should be re-read, not inherited.
 
 ## What this document is
 
@@ -54,12 +58,15 @@ Results, both real:
 - Test suite: **834 passed, 10 skipped in 88.43 s**, exit code 0. (VERIFIED — I
   ran it.)
 
-**Drift warning, since it matters for diligence accuracy:** `docs/AI_EXECUTION_STATE.md`
-records "819 passed, 10 skipped" and instructs a reader to re-run before
-trusting it. `docs/RED_TEAM.md` records 824. The real number today is **834**.
-Any external document quoting a test count must be refreshed at the time it is
-shared, or it will be wrong by the time a reviewer reads it. This is the
-project's own stated discipline, and it applies to this page too.
+**Drift warning, since it matters for diligence accuracy.** Three documents
+recorded three different test counts within the same hour today: `docs/AI_EXECUTION_STATE.md`
+originally recorded 819, `docs/RED_TEAM.md` recorded 824, and the real number
+when I ran the suite was **834**. `docs/AI_EXECUTION_STATE.md` has since been
+corrected to 834 at commit `22c8ab7`, which also carries its own self-checkpoint
+note about the drift — the correction is real, and the lesson is that any
+document quoting a test count must be refreshed at the time it is shared, or it
+will be wrong by the time a reviewer reads it. This is the project's own stated
+discipline, and it applies to this page too.
 
 ---
 
@@ -69,7 +76,7 @@ This is the strongest section of the room, and it is genuinely strong.
 
 | Item | Status | Evidence |
 |---|---|---|
-| Source tree, runnable | EXISTS | `/home/azureuser/selektyt`; 147 commits, 2026-09-16 → 2026-09-19 (VERIFIED, `git log`) |
+| Source tree, runnable | EXISTS | `/home/azureuser/selektyt`; 154 commits at `4cd542c`, 2026-09-16 → 2026-09-19 (VERIFIED, `git log`) |
 | One real end-to-end run on real input | EXISTS | `out/web/pipeline/project/` — NASA 360 Episode 5, US-government public domain, 1469.77 s, 29.97 fps, two-host unscripted speech, 6 clips, 16:9 + 9:16 renders, per-cut EDL + FCPXML, captions, QA |
 | Independent interchange audit | EXISTS | `tools/nle_check.py`, exit 0 today (VERIFIED); output archived at `docs/nle-audit-output.txt` |
 | Editorial audit tool | EXISTS | `tools/editorial_audit.py` (VERIFIED — `docs/release-validation.md`) |
@@ -176,10 +183,10 @@ pricing page now advertises "Export to Adobe Premiere Pro & DaVinci Resolve" on
 Pro and Business plans (RESEARCHED — <https://www.opus.pro/pricing>). This
 differs from the record in `docs/CUSTOMER_DISCOVERY.md` and `docs/RED_TEAM.md`,
 both of which state OpusClip advertises no NLE/timeline export. The intersection
- SelekyT claims to occupy — autonomous selection *plus* editable timeline
-export — is closing from the other side. Any data-room claim about being the
-only product in that intersection must be re-checked against live competitor
-pages the week it is made.
+SelekyT claims to occupy — autonomous selection *plus* editable timeline export —
+is closing from the other side. Any data-room claim about being the only product
+in that intersection must be re-checked against live competitor pages the week it
+is made.
 
 ---
 
@@ -193,12 +200,13 @@ pages the week it is made.
 | A professional editor on the team or on retainer | **MISSING** | `docs/RED_TEAM.md` kill mode 4: no editor has ever rated a cut; "who is your editor?" is answered with an algorithm |
 | Advisors of record | **0** | VERIFIED — `docs/INVESTOR_READINESS.md` |
 
-One thing a reviewer will notice in the git history: 147 commits across three
-author identities — "Devika Boddu" (60), "desukab" (49), both sharing one email
-address, and "Ubuntu" (41) from the build host (VERIFIED — `git shortlog -sne --all`).
-This is one human founder plus machine-assisted authorship. It is not a team,
-and it should be presented as what it is rather than left for a reviewer to
-infer.
+One thing a reviewer will notice in the git history: 154 commits on `main` across
+three author identities — "Devika Boddu" (60), "desukab" (49), and "Ubuntu" (48)
+from the build host, summing to 157 across all refs including preserved agent
+worktrees (VERIFIED — `git shortlog -sne --all`, 2026-09-19). The two human
+identities share one email address. This is one human founder plus
+machine-assisted authorship. It is not a team, and it should be presented as what
+it is rather than left for a reviewer to infer.
 
 ---
 

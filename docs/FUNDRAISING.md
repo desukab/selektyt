@@ -114,7 +114,7 @@ an organization that has something to lose.
 
 Built and verified, not pitched:
 
-- **822 tests passing, 10 skipped** (re-run on this host today, 65 seconds).
+- **834 tests passing, 10 skipped** (re-run on this host today, 2026-09-19, 71 s).
   The 10 skips are optional backends absent from this host (sherpa-onnx,
   silero, ollama).
 - **A three-layer architecture**, each layer independently usable: the CLI;
@@ -133,7 +133,7 @@ Built and verified, not pitched:
   local Ollama instance — which on this host is not even installed, so the
   engine demonstrably degrades to deterministic scoring and says so.
 
-~23,000 lines of Python and ~3,900 lines of Rust, 140 commits, built largely by
+~23,000 lines of Python and ~3,900 lines of Rust, 154 commits, built largely by
 an AI multi-agent loop operated by one person. That is stated plainly because an
 investor should evaluate it as both a capability and a risk.
 
@@ -305,7 +305,7 @@ copied.
 
 What does exist, in descending order of durability:
 
-1. **A tested system where competitors have decks.** 822 tests, real-input
+1. **A tested system where competitors have decks.** 834 tests, real-input
    verification, byte-identical cross-language export. A starting position.
 2. **The audit + provenance contract.** Every decision scored, rejectable and
    reproducible; every run records which backends actually ran. A governance
