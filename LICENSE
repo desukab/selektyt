@@ -1,21 +1,45 @@
-MIT License
+# SelekyT Proprietary License
 
-Copyright (c) 2026 Bharath Bheemreddy
+Copyright © 2026 Bharath Bheemreddy. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+## 1. Ownership
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+SelekyT, including its source code, architecture, algorithms, editorial logic, documentation, configuration, and original assets, is proprietary software owned by the copyright holder, except for third-party components that are separately licensed.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+## 2. No General Permission
+
+No license or other permission is granted to any person to copy, modify, publish, distribute, sublicense, sell, lease, host, or create derivative works from SelekyT, except as expressly permitted in a separate written agreement with the copyright holder.
+
+Viewing or receiving access to the source code does not transfer ownership or grant commercial rights.
+
+## 3. Authorized Collaboration
+
+The copyright holder may provide selected individuals or organizations with access to the repository for evaluation, development, testing, or collaboration.
+
+Unless a separate written agreement says otherwise, such access:
+
+- does not transfer ownership;
+- does not grant permission to redistribute the source code;
+- does not grant permission to create or sell a competing product;
+- does not grant permission to publish the source code or substantial portions of it; and
+- is limited to the purpose for which access was provided.
+
+## 4. Commercial Use
+
+Commercial use, redistribution, public hosting, sublicensing, incorporation into another product, or creation of a competing product requires a separate written license or agreement from the copyright holder.
+
+## 5. Third-Party Components
+
+SelekyT may include or depend on third-party software distributed under their own licenses. Those licenses remain applicable to the relevant third-party components and are not changed by this license.
+
+## 6. No Warranty
+
+To the maximum extent permitted by applicable law, SelekyT is provided without warranty of any kind. The copyright holder is not liable for claims, damages, or other liability arising from use of the software.
+
+## 7. Contact
+
+For permission to use, redistribute, commercialize, or collaborate on SelekyT beyond an authorized evaluation or development purpose, contact the copyright holder.
+
+---
+
+This license is intended to describe the default permissions for the SelekyT repository. Specific written agreements may grant additional rights or impose additional obligations.
