@@ -192,6 +192,7 @@ def test_valid_cached_render_is_reused(tmp_path):
         "source": "https://example.com/v", "media_path": str(media),
         "media_info": {"title": "t"}, "fingerprint": fp,
         "renders": {"01": {"fingerprint": fp, "selection_digest": digest,
+                           "caption_style": "minimal",
                            "facebook": str(project_dir / "facebook" / "01.mp4"),
                            "shorts": str(project_dir / "shorts" / "01.mp4")}},
     }), encoding="utf-8")
@@ -228,6 +229,7 @@ def test_stub_cached_render_is_re_rendered(tmp_path):
         "source": "https://example.com/v", "media_path": str(media),
         "media_info": {"title": "t"}, "fingerprint": fp,
         "renders": {"01": {"fingerprint": fp, "selection_digest": digest,
+                           "caption_style": "minimal",
                            "facebook": str(project_dir / "facebook" / "01.mp4"),
                            "shorts": str(project_dir / "shorts" / "01.mp4")}},
     }), encoding="utf-8")

@@ -112,6 +112,7 @@ def test_pipeline_skips_render_when_clips_exist(tmp_path):
              "render_fingerprint": fp,
              "render_selection_digest": digest,
              "renders": {"01": {"fingerprint": fp, "selection_digest": digest,
+                                "caption_style": "minimal",
                                 "facebook": str(project / "facebook" / "01.mp4"),
                                 "shorts": str(project / "shorts" / "01.mp4")}}}
     (project / "pipeline_state.json").write_text(json.dumps(state), encoding="utf-8")

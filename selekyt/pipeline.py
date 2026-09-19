@@ -13,7 +13,7 @@ from providers.audio import peak_dbfs
 
 from engine.editorial import make_thoughts, rank
 from engine.captions import ass_for_candidate, srt_for_candidate
-from engine.caption_director import caption_metadata
+from engine.caption_director import caption_metadata, style_name
 from engine.content_pack import build_content_pack
 from engine.context_guard import validate
 from engine.coverage import check as check_coverage
@@ -543,6 +543,13 @@ def run(
     edit_report = []
     content_packs = []
     sel_digest = _selection_digest(selected)
+    # The captions are burned into the render, not composited by the player, so
+    # a style change changes the MP4 itself. The cache key has to carry it: two
+    # runs differing only in SELEKYT_CAPTION_STYLE produce the same fingerprint
+    # and the same selection digest, and without this entry the second one
+    # reuses the first's MP4 while rewriting the .ass beside it — a deliverable
+    # whose burned-in captions disagree with its own sidecar, with no warning.
+    caption_style = style_name()
     # Probed once and reused: the whole run cuts one source, and the frame
     # rate is what makes an EDL's timecodes land on whole frames.
     source_fps = probe_fps(media)
@@ -587,6 +594,7 @@ def run(
             cached
             and cached.get("fingerprint") == fingerprint
             and cached.get("selection_digest") == sel_digest
+            and cached.get("caption_style") == caption_style
             and _render_is_valid(fb, vertical=False, source=media)
             and _render_is_valid(sh, vertical=True, source=media)
         ):
@@ -597,6 +605,7 @@ def run(
             renders[f"{idx:02d}"] = {
                 "fingerprint": fingerprint,
                 "selection_digest": sel_digest,
+                "caption_style": caption_style,
                 "facebook": str(fb),
                 "shorts": str(sh),
             }
