@@ -202,11 +202,28 @@ def check_cues_fit_the_render(cues: list[dict], rendered_s: float) -> tuple[bool
     return not bad, bad
 
 
+SILENCE_SHARE_MAX = 0.30
+"""The hard bar of criterion P5 (`docs/EVALUATION.md`): no clip ships with more
+than 30% word-free timeline. The audit's threshold used to be 0.55, which is
+2.75× looser than the criterion it exists to enforce — every clip in the
+committed corpus passed it, including two that fail P5 outright (40.8% and
+46.3%), so the check could not fire on the one condition it was written for."""
+
+
 def check_silence_share(cand: dict, intervals: list[tuple[float, float]]) -> tuple[bool, float]:
     """Share of the kept timeline that is gap rather than speech.
 
-    Returns (ok, share). A high share is dead air the edit kept; a negative
-    value means word spans run outside the intervals, itself a bug.
+    Returns (ok, share). A negative value means word spans run outside the
+    intervals, itself a bug.
+
+    Read the name with care: this is *word-free* share, not measured silence.
+    It is computed from transcript word timings and never decodes audio, so a
+    high share can be dead air the edit kept **or** a non-speech bed the
+    transcript has no words for — on the committed NASA 360 clip 05 the 40.8%
+    window is a loud music bed (mean −31.4 dB, 0.00 s of true silence; see
+    `docs/METRICS.md` A2.4). A FAIL therefore means a human should listen to
+    the window, not that the cut is wrong; `engine.edit_plan.retention_intervals`
+    cannot make that distinction either, and deliberately does not act on it.
     """
     spans = _word_spans(cand)
     if not spans or not intervals:
@@ -219,7 +236,7 @@ def check_silence_share(cand: dict, intervals: list[tuple[float, float]]) -> tup
         for st, en, _t in spans:
             spoken += max(0.0, min(en, b) - max(st, a))
     share = 1.0 - spoken / kept
-    return share <= 0.55, share
+    return share <= SILENCE_SHARE_MAX, share
 
 
 def check_no_duplicate_sentences(cands: list[dict]) -> tuple[bool, list[str]]:

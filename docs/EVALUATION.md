@@ -164,7 +164,7 @@ corpus item scored the same way.
 
 | Metric | Definition | Source of the number |
 | --- | --- | --- |
-| `silence_share` per clip | fraction of the *kept* timeline that is pause, per `tools/editorial_audit.py:check_silence_share` | VERIFIED on reference: 14.7%, 10.3%, 3.6%, 7.6%, **40.8%**, 17.9% for clips 01–06 |
+| `silence_share` per clip | fraction of the *kept* timeline that is **word-free**, per `tools/editorial_audit.py:check_silence_share` — computed from transcript word timings, never from decoded audio | MEASURED on all 27 committed clips, recomputed by `tests/test_silence_share.py`: median 7.8%, 25/27 at or under 20%. Two over the 30% bar — `nasa360-ep5` clip 05 at 40.8% (a loud music bed, mean −31.4 dB, 0.00 s of true silence, not dead air) and `telugu-tutorial` clip 01 at 46.3% |
 | `hook_latency` | seconds from clip start to first complete standalone sentence | VERIFIED on reference: avg **0.45 s** (`pacing_report.json`) |
 | `payoff_presence_rate` | fraction of clips whose `payoff` field is non-empty | VERIFIED on reference: **1.00** |
 | `duplicate_overlap_rate` | fraction of selected clips re-using the same source sentence | VERIFIED on reference: **0.00** |
@@ -267,7 +267,7 @@ the reference run immediately.
 | P2 | `tools/editorial_audit.py` all clips pass | 100% of clips, on **100%** of corpus | 6/6 — CURRENT, one source |
 | P3 | Geometry: every 16:9 file DAR exactly 16:9; every 9:16 file displays 9:16 | 100% of files | CURRENT, one source |
 | P4 | Frame rate of output == frame rate of source | 100% of files, at every rate in §2.1 | CURRENT at 29.97 only; **untested at 23.976/25/50/59.94** |
-| P5 | Per-clip `silence_share` after dead-air removal | ≤ **20%** on ≥ 90% of clips; no clip > 30% | **FAILS TODAY on clip 05 at 40.8%** — the reference run would not meet its own criterion |
+| P5 | Per-clip `silence_share` after dead-air removal | ≤ **20%** on ≥ 90% of clips; no clip > 30% | **FAILS on 2 of 27 committed clips** — `nasa360-ep5` clip 05 at 40.8% and `telugu-tutorial` clip 01 at 46.3%, both now flagged by the audit (threshold corrected from 0.55). The 90% clause itself *passes*: 25/27 = 92.6% are at or under 20% |
 | P6 | `duplicate_overlap_rate` | 0.00 | CURRENT: 0.00 |
 | P7 | Caption text == transcript text (no invented words) | 100% of cues (`editorial_audit.py:check_caption_text_is_transcript_text`) | CURRENT, one source |
 | P8 | WER, English, `small` model | ≤ **15%** on C9 `test-clean`; ≤ **20%** on in-domain video with official captions | C9 `test-clean` **DONE: 3.38%** (well under the 15% threshold, three runs, `tools/wer_bench.py`); in-domain video half **STILL NEVER MEASURED** |
