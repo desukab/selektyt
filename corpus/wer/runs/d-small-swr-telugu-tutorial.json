@@ -1,0 +1,22 @@
+{
+ "tag": "d-small-swr-telugu-tutorial",
+ "media": "corpus/wer/hq_media_telugu-tutorial.wav",
+ "model_requested": "small",
+ "model_used": "small",
+ "downgrade_reason": null,
+ "language_forced": "te",
+ "language_detected": "te",
+ "beam_size": 1,
+ "chunk_minutes": 5,
+ "vad_filter": true,
+ "chunking": "5 min chunks (+15s overlap)",
+ "chunks": 2,
+ "segments": 0,
+ "transcript_chars": 0,
+ "speech_seconds": 0,
+ "mean_segment_seconds": 0.0,
+ "wall_seconds": 568.36,
+ "peak_rss_mb": 1262.3,
+ "samples": [],
+ "note": "No reference transcript exists for this source and no speaker of the language was available; no error rate is or can be computed. Counts and samples only."
+}

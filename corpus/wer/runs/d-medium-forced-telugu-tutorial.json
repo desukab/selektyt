@@ -1,0 +1,38 @@
+{
+ "tag": "d-medium-forced-telugu-tutorial",
+ "media": "corpus/wer/media_telugu-tutorial.webm",
+ "model_requested": "medium",
+ "model_used": "medium",
+ "downgrade_reason": null,
+ "language_forced": "te",
+ "language_detected": "te",
+ "beam_size": 1,
+ "chunk_minutes": 5,
+ "vad_filter": true,
+ "chunking": "5 min chunks (+15s overlap)",
+ "chunks": 2,
+ "segments": 3,
+ "transcript_chars": 225,
+ "speech_seconds": 40.74,
+ "mean_segment_seconds": 13.58,
+ "wall_seconds": 2419.44,
+ "peak_rss_mb": 2774.4,
+ "samples": [
+  {
+   "start": 35.66,
+   "end": 37.28,
+   "text": "పికుపరిమాడు విథిసికిండు."
+  },
+  {
+   "start": 37.52,
+   "end": 46.66,
+   "text": "ముండి ఉపిపిడి భారు విక్పుదంద్ల మాడి ప్రిడి మాడిలో ಈతరిది ముండి బండిక్జు అందాటిలితి"
+  },
+  {
+   "start": 196.66,
+   "end": 226.64,
+   "text": "ముపనిక్లలి మనున కారులీలి వికోప్టి పకాపలికర తకర్తి, మనుతి గమూనిక్కర నిను విక్ప్టి లాభిందిక్లకు, మావత్తులు నిరైడ్ల కిలిక�"
+  }
+ ],
+ "note": "No reference transcript exists for this source and no speaker of the language was available; no error rate is or can be computed. Counts and samples only."
+}

@@ -1,0 +1,30 @@
+{
+ "tag": "detect-small-telugu-tutorial",
+ "media": "corpus/wer/media_telugu-tutorial.webm",
+ "model": "small",
+ "identify_seconds": 60.0,
+ "detected_language": "te",
+ "language_probability": 0.8808,
+ "top5": [
+  [
+   "te",
+   0.8808
+  ],
+  [
+   "ta",
+   0.0862
+  ],
+  [
+   "en",
+   0.0084
+  ],
+  [
+   "ml",
+   0.0082
+  ],
+  [
+   "hi",
+   0.004
+  ]
+ ]
+}

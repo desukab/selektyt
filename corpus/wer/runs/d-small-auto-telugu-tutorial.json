@@ -1,0 +1,28 @@
+{
+ "tag": "d-small-auto-telugu-tutorial",
+ "media": "corpus/wer/media_telugu-tutorial.webm",
+ "model_requested": "small",
+ "model_used": "small",
+ "downgrade_reason": null,
+ "language_forced": null,
+ "language_detected": "te",
+ "beam_size": 1,
+ "chunk_minutes": 5,
+ "vad_filter": true,
+ "chunking": "5 min chunks (+15s overlap)",
+ "chunks": 2,
+ "segments": 1,
+ "transcript_chars": 120,
+ "speech_seconds": 5.02,
+ "mean_segment_seconds": 5.02,
+ "wall_seconds": 1098.76,
+ "peak_rss_mb": 1249.2,
+ "samples": [
+  {
+   "start": 327.68,
+   "end": 332.7,
+   "text": "చార్స కాడి మన్క్లిల్పసిన కావకర్ కంటికి ార్లెర్ందిరికివావర్యెప్మప్ని కోక్లులును.пол.తిమా. కోప్టికిలును.కార్టిల్లు.కిప్కి�"
+  }
+ ],
+ "note": "No reference transcript exists for this source and no speaker of the language was available; no error rate is or can be computed. Counts and samples only."
+}

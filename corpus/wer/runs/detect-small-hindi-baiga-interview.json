@@ -1,0 +1,30 @@
+{
+ "tag": "detect-small-hindi-baiga-interview",
+ "media": "corpus/wer/media_hindi-baiga-interview.webm",
+ "model": "small",
+ "identify_seconds": 53.77,
+ "detected_language": "ur",
+ "language_probability": 0.7691,
+ "top5": [
+  [
+   "ur",
+   0.7691
+  ],
+  [
+   "hi",
+   0.1688
+  ],
+  [
+   "pa",
+   0.0188
+  ],
+  [
+   "en",
+   0.0108
+  ],
+  [
+   "ar",
+   0.0072
+  ]
+ ]
+}

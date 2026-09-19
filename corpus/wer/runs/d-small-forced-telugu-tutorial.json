@@ -1,0 +1,38 @@
+{
+ "tag": "d-small-forced-telugu-tutorial",
+ "media": "corpus/wer/media_telugu-tutorial.webm",
+ "model_requested": "small",
+ "model_used": "small",
+ "downgrade_reason": null,
+ "language_forced": "te",
+ "language_detected": "te",
+ "beam_size": 1,
+ "chunk_minutes": 5,
+ "vad_filter": true,
+ "chunking": "5 min chunks (+15s overlap)",
+ "chunks": 2,
+ "segments": 3,
+ "transcript_chars": 34,
+ "speech_seconds": 3.54,
+ "mean_segment_seconds": 1.18,
+ "wall_seconds": 678.66,
+ "peak_rss_mb": 1262.8,
+ "samples": [
+  {
+   "start": 300.28,
+   "end": 301.68,
+   "text": "నికాంత్నిన్కు."
+  },
+  {
+   "start": 301.68,
+   "end": 302.42,
+   "text": "నికికికితికి."
+  },
+  {
+   "start": 306.98,
+   "end": 308.38,
+   "text": "నికిక్."
+  }
+ ],
+ "note": "No reference transcript exists for this source and no speaker of the language was available; no error rate is or can be computed. Counts and samples only."
+}

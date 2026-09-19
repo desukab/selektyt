@@ -1,0 +1,30 @@
+{
+ "tag": "detect-small-hadhazy-protest",
+ "media": "corpus/wer/media_hadhazy-protest.webm",
+ "model": "small",
+ "identify_seconds": 60.0,
+ "detected_language": "hu",
+ "language_probability": 0.872,
+ "top5": [
+  [
+   "hu",
+   0.872
+  ],
+  [
+   "en",
+   0.0561
+  ],
+  [
+   "nn",
+   0.0217
+  ],
+  [
+   "la",
+   0.0053
+  ],
+  [
+   "de",
+   0.0048
+  ]
+ ]
+}

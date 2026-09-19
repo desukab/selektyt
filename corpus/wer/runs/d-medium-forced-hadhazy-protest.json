@@ -1,0 +1,83 @@
+{
+ "tag": "d-medium-forced-hadhazy-protest",
+ "media": "corpus/wer/media_hadhazy-protest.webm",
+ "model_requested": "medium",
+ "model_used": "medium",
+ "downgrade_reason": null,
+ "language_forced": "hu",
+ "language_detected": "hu",
+ "beam_size": 1,
+ "chunk_minutes": 5,
+ "vad_filter": true,
+ "chunking": "5 min chunks (+15s overlap)",
+ "chunks": 1,
+ "segments": 35,
+ "transcript_chars": 1851,
+ "speech_seconds": 111.88,
+ "mean_segment_seconds": 3.197,
+ "wall_seconds": 76.28,
+ "peak_rss_mb": 1597.3,
+ "samples": [
+  {
+   "start": 0.53,
+   "end": 1.43,
+   "text": "Azt is hallottam."
+  },
+  {
+   "start": 1.89,
+   "end": 3.53,
+   "text": "Egyeteket indítom, hogy nagyon jó."
+  },
+  {
+   "start": 4.07,
+   "end": 4.95,
+   "text": "Azért csináljátok."
+  },
+  {
+   "start": 4.95,
+   "end": 6.33,
+   "text": "Az lesz, az le. Én is hallottam."
+  },
+  {
+   "start": 10.61,
+   "end": 12.11,
+   "text": "Ezt mondhatja, igen."
+  },
+  {
+   "start": 13.55,
+   "end": 16.15,
+   "text": "Itt sokan jeleszték, hogy"
+  },
+  {
+   "start": 16.15,
+   "end": 17.67,
+   "text": "szeretek mondani lenni egy nyárban,"
+  },
+  {
+   "start": 18.93,
+   "end": 20.83,
+   "text": "hogy szerintem biztos, hogy"
+  },
+  {
+   "start": 20.83,
+   "end": 21.83,
+   "text": "fogunk még ide jönni."
+  },
+  {
+   "start": 22.41,
+   "end": 24.05,
+   "text": "Meg van nagyon praktikus sokat is,"
+  },
+  {
+   "start": 24.11,
+   "end": 25.91,
+   "text": "hogy ősszel nem bígőket ennyira lom."
+  },
+  {
+   "start": 25.99,
+   "end": 27.75,
+   "text": "Tehát most magából az épületből"
+  }
+ ],
+ "note": "No reference transcript exists for this source and no speaker of the language was available; no error rate is or can be computed. Counts and samples only."
+}

@@ -1,0 +1,38 @@
+{
+ "tag": "d-small-novad-telugu-tutorial",
+ "media": "corpus/wer/media_telugu-tutorial.webm",
+ "model_requested": "small",
+ "model_used": "small",
+ "downgrade_reason": null,
+ "language_forced": "te",
+ "language_detected": "te",
+ "beam_size": 1,
+ "chunk_minutes": 5,
+ "vad_filter": false,
+ "chunking": "5 min chunks (+15s overlap)",
+ "chunks": 2,
+ "segments": 3,
+ "transcript_chars": 57,
+ "speech_seconds": 5.82,
+ "mean_segment_seconds": 1.94,
+ "wall_seconds": 1062.01,
+ "peak_rss_mb": 1188.1,
+ "samples": [
+  {
+   "start": 25.56,
+   "end": 28.2,
+   "text": "੢ੲ੅੍੍੍ੇੇ LEO"
+  },
+  {
+   "start": 298.2,
+   "end": 299.98,
+   "text": "మారిర్రం నివాదిందార్నింది."
+  },
+  {
+   "start": 301.04,
+   "end": 302.44,
+   "text": "పెనిశిక్నిట్నుళిని."
+  }
+ ],
+ "note": "No reference transcript exists for this source and no speaker of the language was available; no error rate is or can be computed. Counts and samples only."
+}

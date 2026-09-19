@@ -1,0 +1,78 @@
+{
+ "tag": "d-medium-forced-hindi-baiga-interview",
+ "media": "corpus/wer/media_hindi-baiga-interview.webm",
+ "model_requested": "medium",
+ "model_used": "medium",
+ "downgrade_reason": null,
+ "language_forced": "hi",
+ "language_detected": "hi",
+ "beam_size": 1,
+ "chunk_minutes": 5,
+ "vad_filter": true,
+ "chunking": "5 min chunks (+15s overlap)",
+ "chunks": 1,
+ "segments": 11,
+ "transcript_chars": 411,
+ "speech_seconds": 49.46,
+ "mean_segment_seconds": 4.496,
+ "wall_seconds": 108.28,
+ "peak_rss_mb": 2664.7,
+ "samples": [
+  {
+   "start": 0.98,
+   "end": 2.22,
+   "text": "अपका न?"
+  },
+  {
+   "start": 2.22,
+   "end": 12.12,
+   "text": "मेरा नाम लक्मनाल अगर्याइज जात्टी बैगा वन्म राम दृकुता पोट्ट शाना खान बजाक तैसिल वजिला डिंडोरी मद्र वदेस की मुल्निवाखी हैं।"
+  },
+  {
+   "start": 12.12,
+   "end": 16.44,
+   "text": "हम लोग बैगा कर्मा नरत करते हैं।"
+  },
+  {
+   "start": 16.44,
+   "end": 20.0,
+   "text": "उसमें इस्तिरी पूरुस दूर्भ बरावर पागिलेते हैं"
+  },
+  {
+   "start": 20.0,
+   "end": 24.44,
+   "text": "और उनका वाद्धे, उक्ये, मानदार चीञ्की और भूहसीवीव"
+  },
+  {
+   "start": 25.0,
+   "end": 28.54,
+   "text": "ये तीनो चीज पूर्गाम ने करते हैं"
+  },
+  {
+   "start": 29.02,
+   "end": 30.5,
+   "text": "कितने सालो से कर रहे हैं आप"
+  },
+  {
+   "start": 30.5,
+   "end": 46.42,
+   "text": "सरा हम लोक तो गौट साल हो गया हैं कपष विरम"
+  },
+  {
+   "start": 48.68,
+   "end": 50.42,
+   "text": "परम्परागर्तुप से।"
+  },
+  {
+   "start": 50.42,
+   "end": 52.42,
+   "text": "और यहां पर्फॉमेंट के आगे।"
+  },
+  {
+   "start": 52.42,
+   "end": 53.74,
+   "text": "धर्निवाद। धाइंगिए।"
+  }
+ ],
+ "note": "No reference transcript exists for this source and no speaker of the language was available; no error rate is or can be computed. Counts and samples only."
+}
