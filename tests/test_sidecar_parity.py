@@ -364,17 +364,19 @@ def test_error_envelope_shape_matches_the_python_sidecar():
     assert isinstance(resp["error"], str)
 
 
-# ── optional real-media cross-check (set SELEKYT_PARITY_MEDIA) ──
+# ── real-media cross-check (SELEKYT_PARITY_MEDIA, or a synthetic stand-in) ──
+#
+# The contract this asserts — identical score cadence over one file, and
+# identical segmentation of identical scores, across the two languages — holds
+# for any 16 kHz mono WAV. Real speech is still the harder case, so the
+# `parity_media` fixture honours SELEKYT_PARITY_MEDIA when it names a file and
+# otherwise generates a deterministic synthetic recording, which keeps this
+# check running in CI instead of skipping on every host without a corpus.
 
-_REAL = os.environ.get("SELEKYT_PARITY_MEDIA")
 
-
-@pytest.mark.skipif(
-    not (_REAL and Path(_REAL).is_file() and _mech_binary()),
-    reason="set SELEKYT_PARITY_MEDIA to a real 16kHz mono WAV to run this",
-)
-def test_parity_on_real_media():
-    media = Path(_REAL)
+@skip_no_mech
+def test_parity_on_real_media(parity_media):
+    media = parity_media
     py = EnergyVAD().analyze(media)
     with mech() as m:
         rs = m.call("score", path=str(media))

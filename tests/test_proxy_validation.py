@@ -4,10 +4,28 @@ Uses Es69N24I2Yo.mp4 (10min, 239MB) as PROXY source — clearly not
 representative of Z907 content; results must be labeled accordingly.
 Also exercises WAV corpus for VAD backend + segmentation correctness.
 
-NOT a unit test. Exercises the real audio stack end-to-end against
-actual media. Skips silently when proxy file is absent.
+NOT a unit test. Exercises the real audio stack end-to-end against actual
+media.
+
+These are measurements tied to one specific recording, not correctness
+contracts, and the recording is a 239 MB YouTube download that is not
+redistributable with the repo and that YouTube rate-limits CI runners on. So
+they are deliberately opt-in rather than fetched in CI, and each skip reason
+names exactly what would make it run (see ``PROXY_REASON`` and
+``CORPUS_REASON``). A skip that states its un-skip condition is honest; what
+would not be is a measurement that reports green without having touched media.
+To run them locally:
+
+    SELEKYT_PROXY_MEDIA=/path/to/Es69N24I2Yo.mp4 \
+    SELEKYT_WAV_CORPUS=/path/to/wav/dir \
+    .venv/bin/python -m pytest tests/test_proxy_validation.py
+
+``SELEKYT_WAV_CORPUS`` is optional: the WAV-corpus tests also pick up the
+extracted 16 kHz mono audio under ``corpus/*_run/project/transcription/`` left
+by ``tools/corpus_run.py``, so they run wherever a corpus run has happened.
 """
 import json
+import os
 import time
 from pathlib import Path
 
@@ -27,8 +45,20 @@ import sys
 _TELUGIFY = Path.home() / ".cache" / "telugify"
 _TITAN = Path.home() / "titan_engine" / "downloads"
 
-_proxy = _TITAN / "Es69N24I2Yo.mp4"
-_has_proxy = _proxy.exists()
+# The proxy recording: a 10-minute, 239 MB YouTube source that is not
+# redistributable with this repo. Its asserted ratios are measurements of this
+# specific file, so it is fetched out-of-band by whoever wants the numbers
+# rather than downloaded on every CI run.
+_PROXY_ENV = "SELEKYT_PROXY_MEDIA"
+_proxy = (Path(os.environ[_PROXY_ENV]) if os.environ.get(_PROXY_ENV)
+          else _TITAN / "Es69N24I2Yo.mp4")
+_has_proxy = _proxy.is_file()
+PROXY_REASON = (
+    f"opt-in measurement: set {_PROXY_ENV} to the proxy recording "
+    f"(a ~239 MB YouTube source, not redistributable with the repo; "
+    f"expected {_proxy})"
+)
+_PROXY_MARK = pytest.mark.skipif(not _has_proxy, reason=PROXY_REASON)
 
 
 def _is_audio_file(p: Path) -> bool:
@@ -36,15 +66,45 @@ def _is_audio_file(p: Path) -> bool:
 
 
 def _real_wavs():
-    """Return WAV files from corpus for VAD realism checks."""
-    if not _TELUGIFY.exists():
-        return []
-    return sorted(_TELUGIFY.glob("*.wav"))[:20]
+    """WAV files of real speech for the VAD realism checks.
+
+    Looked up in this order: SELEKYT_WAV_CORPUS, the 16 kHz mono audio a
+    ``tools/corpus_run.py`` run extracts under corpus/, then the telugify
+    cache the tests originally used. The corpus path matters because those
+    WAVs are real speech the repo already knows how to produce, so the checks
+    run wherever a corpus run has happened instead of only on a machine that
+    happens to have another project's cache directory.
+    """
+    env = os.environ.get("SELEKYT_WAV_CORPUS")
+    roots: list[Path] = []
+    if env:
+        roots.append(Path(env))
+    roots.append(Path(__file__).resolve().parent.parent / "corpus")
+    roots.append(_TELUGIFY)
+    found: list[Path] = []
+    for root in roots:
+        if root.is_dir():
+            found += [p for p in sorted(root.glob("**/*.wav"))
+                      if p.is_file() and p.stat().st_size > 0]
+    # Deduplicate while keeping corpus order, and cap at 20 as before.
+    seen, out = set(), []
+    for p in found:
+        if p not in seen:
+            seen.add(p)
+            out.append(p)
+    return out[:20]
+
+
+CORPUS_REASON = (
+    "opt-in measurement: needs real-speech WAVs — set SELEKYT_WAV_CORPUS to a "
+    "directory of 16 kHz mono WAVs, or run tools/corpus_run.py, which extracts "
+    "them under corpus/*_run/project/transcription/"
+)
 
 
 # ── VAD Backend on real audio ──
 
-@pytest.mark.skipif(not _has_proxy, reason="proxy video not present")
+@_PROXY_MARK
 def test_energy_vad_proxy_produces_speech_regions():
     backend = EnergyVAD()
     pcm = _TELUGIFY / "tmp_vad_proxy.wav"
@@ -74,7 +134,7 @@ def test_energy_vad_proxy_produces_speech_regions():
     assert result.duration > 300
 
 
-@pytest.mark.skipif(not _has_proxy, reason="proxy video not present")
+@_PROXY_MARK
 def test_ffmpeg_vad_proxy_matches_energy_regions():
     """Energy and FFmpeg VAD should find comparable speech ratio on same media."""
     pcm = _TELUGIFY / "tmp_vad_proxy.wav"
@@ -97,7 +157,7 @@ def test_ffmpeg_vad_proxy_matches_energy_regions():
     assert abs(e_ratio - f_ratio) < 0.55, "VAD backends disagree excessively"
 
 
-@pytest.mark.skipif(not _has_proxy, reason="proxy video not present")
+@_PROXY_MARK
 def test_pause_classification_proxy():
     """Classify silences on proxy video — expect mix of dead_air and breathing."""
     pcm = _TELUGIFY / "tmp_vad_proxy.wav"
@@ -117,7 +177,7 @@ def test_pause_classification_proxy():
     assert len(dead_air) + len(breathing) > 0
 
 
-@pytest.mark.skipif(not _has_proxy, reason="proxy video not present")
+@_PROXY_MARK
 def test_jumpcut_compression_proxy():
     """Jump-cut engine on proxy video: expect meaningful compression."""
     pcm = _TELUGIFY / "tmp_vad_proxy.wav"
@@ -138,7 +198,7 @@ def test_jumpcut_compression_proxy():
     assert cl.compression_ratio < 1.0
 
 
-@pytest.mark.skipif(not _has_proxy, reason="proxy video not present")
+@_PROXY_MARK
 def test_fcpxml_export_proxy():
     """FCPXML export from proxy cutlist: produces valid XML."""
     pcm = _TELUGIFY / "tmp_vad_proxy.wav"
@@ -167,7 +227,7 @@ def test_wav_corpus_vad_deterministic():
     """Same WAV + same params → same segmentation. Verify caching roundtrip."""
     wavs = _real_wavs()
     if not wavs:
-        pytest.skip("WAV corpus not available")
+        pytest.skip(CORPUS_REASON)
     wav = wavs[0]
     backend = EnergyVAD()
     r1 = backend.analyze(wav)
@@ -184,7 +244,7 @@ def test_wav_corpus_energy_speech_ratio_range():
     """Energy VAD on corpus WAVs: speech ratio in reasonable bounds."""
     wavs = _real_wavs()
     if not wavs:
-        pytest.skip("WAV corpus not available")
+        pytest.skip(CORPUS_REASON)
     backend = EnergyVAD()
     ratios = []
     for wav in wavs[:10]:
@@ -203,7 +263,7 @@ def test_wav_corpus_energy_speech_ratio_range():
 
 # ── Proxy report + multitrack on real data ──
 
-@pytest.mark.skipif(not _has_proxy, reason="proxy video not present")
+@_PROXY_MARK
 def test_report_provenance_on_proxy():
     """ReportBuilder captures proxy source fingerprint correctly."""
     from providers.audio import source_fingerprint
@@ -217,7 +277,7 @@ def test_report_provenance_on_proxy():
     assert d["provenance"]["source_path"] == str(_proxy)
 
 
-@pytest.mark.skipif(not _has_proxy, reason="proxy video not present")
+@_PROXY_MARK
 def test_multitrack_alignment_proxy():
     """Multi-track timeline aligns correctly on proxy cutlist."""
     pcm = _TELUGIFY / "tmp_vad_proxy.wav"
