@@ -11,6 +11,8 @@ from engine.qa import (
     probe,
     validate_output,
     validate_outputs,
+    audio_condition,
+    decode_sample,
     detect_silent_tail,
     black_frame_pct,
     visual_diversity_score,
@@ -74,6 +76,238 @@ def test_validate_outputs_gathers_missing():
         missing = Path(td) / "nope.mp4"
         errors = validate_outputs([missing])
         assert errors != []
+
+
+# ── audio condition: the defect this whole layer exists for ──
+#
+# The shipped bug was a deliverable with no audio stream, produced by a render
+# that exited 0 and reported nothing. That single symptom has two opposite
+# causes, and the QA layer has to say which:
+#
+#   (a) the source has no audio at all  → the output is correct as-is
+#   (b) the source has audio, the render lost it → broken render
+#
+# A test that only checks "validate_output fails on no audio" cannot tell them
+# apart and neither could the old code. Each fixture below is built with real
+# ffmpeg rather than a hand-crafted container, so the check is exercised
+# against files that really have (or really lack) the property.
+
+
+def _source_with_audio(out: Path, duration: float = 4.0) -> Path:
+    """A real file with a genuine audio track, for the broken-render fixtures."""
+    _lavfi_video(out, color="blue", duration=duration, size="640x360")
+    return out
+
+
+def _source_without_audio(out: Path, duration: float = 4.0) -> Path:
+    """A real file with no audio track at all — tone=None suppresses the stream."""
+    _lavfi_video(out, color="blue", duration=duration, size="640x360", tone=None)
+    return out
+
+
+def _video_only_of(source: Path, out: Path, duration: float = 4.0) -> Path:
+    """Re-encode a source with ``-an``: a real video-only file, as a broken render."""
+    out.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        ["ffmpeg", "-y", "-v", "error", "-i", str(source), "-an", "-t", str(duration),
+         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28", str(out)],
+        check=True, capture_output=True,
+    )
+    return out
+
+
+def test_audio_condition_absent_broken_is_an_error():
+    """(b) The source has audio, the output does not → broken render, hard error.
+
+    This is the regression guard for the original defect. If someone later
+    weakens the audio check to advisory, or re-adds a bare 'no audio stream'
+    that a video-only source also trips, this test fails on the wrong side.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        src = _source_with_audio(td / "src.mp4")
+        broken = _video_only_of(src, td / "facebook" / "broken.mp4")
+
+        cond = audio_condition(broken, src)
+        assert cond["state"] == "absent_broken", cond
+        assert "NO AUDIO RETAINED" in cond["message"], cond["message"]
+        # The message must name the distinguishing fact: the source *has* audio.
+        assert "source has an audio stream" in cond["message"], cond["message"]
+
+        ok, errors = validate_output(broken, vertical=False, source=src)
+        assert ok is False
+        assert any("NO AUDIO RETAINED" in e for e in errors), errors
+
+
+def test_audio_condition_absent_expected_is_not_an_error():
+    """(a) A video-only output of a video-only source is correct, not a defect.
+
+    This is the deliberate semantics change and it needs its own test: the old
+    code appended 'no audio stream' unconditionally, which would have failed
+    this file. If that error is ever re-added, this assertion is what breaks.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        src = _source_without_audio(td / "silent_src.mp4")
+        faithful = _video_only_of(src, td / "facebook" / "video_only.mp4")
+
+        cond = audio_condition(faithful, src)
+        assert cond["state"] == "absent_expected", cond
+        assert "video-only deliverable by design" in cond["message"], cond["message"]
+
+        ok, errors = validate_output(faithful, vertical=False, source=src)
+        assert ok is True, f"a video-only source must not fail QA: {errors}"
+        assert errors == [], errors
+
+
+def test_audio_condition_declared_but_empty_is_the_silent_failure():
+    """A declared audio stream carrying nothing is the shipped defect's shape.
+
+    The container provably held audio packets while the program had no sound;
+    a stream that exists on paper and decodes to nothing is that same class.
+    Built with ffmpeg (``anullsrc`` at ~0 duration) so the check is tested
+    against a real file that really has the defect, not a fabricated probe.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        out = td / "empty.mp4"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(
+            ["ffmpeg", "-y", "-v", "error",
+             "-f", "lavfi", "-i", "color=c=red:s=640x360:d=4:rate=30",
+             "-f", "lavfi", "-i", "anullsrc=r=44100:cl=mono:d=0.001",
+             "-map", "0:v", "-map", "1:a",
+             "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28",
+             "-c:a", "aac", str(out)],
+            check=True, capture_output=True,
+        )
+        # The audio stream is genuinely there in the container...
+        probe_data = probe(out)
+        assert any(s.get("codec_type") == "audio" for s in probe_data["streams"]), \
+            "fixture premise: an audio stream must be declared"
+
+        cond = audio_condition(out, None)
+        assert cond["state"] == "declared_but_empty", cond
+        assert "COULD NOT BE" in cond["message"], cond["message"]
+
+        ok, errors = validate_output(out, vertical=False)
+        assert ok is False
+        assert any("COULD NOT BE" in e for e in errors), errors
+
+
+def test_audio_condition_unprobeable_source_is_treated_as_broken():
+    """A source that cannot be probed must not license a video-only output.
+
+    If it did, pointing the pipeline at a path that does not exist would pass
+    a broken render as a faithful video-only delivery. The conservative
+    fall-through is the default when the evidence is missing.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        src_with_audio = _source_with_audio(td / "src.mp4")
+        broken = _video_only_of(src_with_audio, td / "facebook" / "broken.mp4")
+        nowhere = td / "does_not_exist.mp4"
+
+        cond = audio_condition(broken, nowhere)
+        assert cond["state"] == "absent_broken", cond
+        ok, errors = validate_output(broken, vertical=False, source=nowhere)
+        assert ok is False, "an unprobeable source must not pass a video-only render"
+        assert any("could not be probed" in e for e in errors), errors
+
+
+def test_audio_condition_present_on_a_good_render():
+    """The happy path must still classify as present, with the evidence named."""
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        out = td / "facebook" / "good.mp4"
+        _lavfi_video(out, color="blue", duration=3.0, size="640x360")
+        cond = audio_condition(out, out)
+        assert cond["state"] == "present", cond
+
+
+# ── decode sampling: headers can lie ──
+
+
+def test_decode_sample_decodes_real_frames_and_audio():
+    """The sampler must return nonzero counts for a real file, not just exit 0."""
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / "good.mp4"
+        _lavfi_video(out, duration=3.0)
+        sample = decode_sample(out, max_frames=8, audio_seconds=2.0)
+        assert sample["video_error"] is None, sample
+        assert sample["audio_error"] is None, sample
+        assert sample["video_frames"] > 0, "frames must actually be decoded"
+        assert sample["audio_samples"] > 0, "audio samples must actually be decoded"
+
+
+def test_decode_sample_reports_missing_audio_stream():
+    """A video-only file must report the audio half as an error, not zero samples.
+
+    Zero samples and 'no stream to decode' are different conditions; the
+    message has to say which, because one is a broken render and the other is
+    a render of a silent source.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / "videonoly.mp4"
+        _lavfi_video(out, duration=3.0, tone=None)
+        sample = decode_sample(out)
+        assert sample["audio_error"] is not None, sample
+        assert "no audio stream to decode" in sample["audio_error"], sample
+        assert sample["video_frames"] > 0, "the video half should still decode"
+
+
+# ── frame rate: the deliverable must match the grid its EDL was cut on ──
+
+
+def test_expected_fps_mismatch_is_an_error():
+    """A 25 fps render claimed as 30 fps has desynced from its own timeline."""
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / "fb.mp4"
+        _lavfi_video(out, duration=3.0, size="640x360")
+        ok, errors = validate_output(out, vertical=False, expected_fps=30.0)
+        assert ok is False
+        assert any("expected 30.000 fps" in e for e in errors), errors
+
+
+def test_expected_fps_within_tolerance_passes():
+    """29.97 against a claimed 30 is a 0.1% deviation, not a desync.
+
+    The 2% tolerance is wide enough for the fractional rates real sources use
+    (30000/1001, 24000/1001) and narrow enough that a genuine wrong-rate
+    render — one that would drift a full frame every ~2 s against its EDL —
+    is still caught.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / "fb.mp4"
+        # Render at an exact 29.97 by lavfi rate, then claim 30: inside 2%.
+        out.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(
+            ["ffmpeg", "-y", "-v", "error",
+             "-f", "lavfi", "-i", "color=c=blue:s=640x360:d=3:rate=30000/1001",
+             "-f", "lavfi", "-i", "sine=frequency=440:duration=3",
+             "-map", "0:v", "-map", "1:a", "-shortest",
+             "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28",
+             "-c:a", "aac", str(out)],
+            check=True, capture_output=True,
+        )
+        ok, errors = validate_output(out, vertical=False, expected_fps=30.0)
+        assert ok is True, f"29.97 vs 30 is inside tolerance: {errors}"
+
+
+def test_expected_fps_wrong_rate_is_caught_not_waved_through():
+    """25 vs 30 is a 17% deviation and must fail despite a tolerant threshold.
+
+    This is the discriminating counterpart to the test above: the 2% tolerance
+    is a property of fractional-rate sources, not a licence to ship any rate.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / "fb.mp4"
+        _lavfi_video(out, duration=3.0, size="640x360")
+        ok, errors = validate_output(out, vertical=False, expected_fps=25.0)
+        assert ok is True, "25 claimed as 25 is correct"
+        ok, errors = validate_output(out, vertical=False, expected_fps=50.0)
+        assert ok is False
+        assert any("50.000 fps" in e for e in errors), errors
 
 
 # ── silent tail ──

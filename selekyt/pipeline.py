@@ -120,20 +120,25 @@ def _fingerprint(media: Path, source: str, model: str, language: str | None) -> 
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def _render_is_valid(path: Path, *, vertical: bool) -> bool:
+def _render_is_valid(path: Path, *, vertical: bool, source: Path | None = None) -> bool:
     """Confirm a cached render is a complete, correctly-oriented video.
 
     A non-empty file is not evidence of a finished render: a run killed
     mid-encode leaves a truncated MP4 that is non-empty and unplayable, and
     ffprobe is the cheapest reliable check. Returns False for anything that
     cannot be probed, so the caller re-renders rather than shipping it.
+
+    ``source`` is passed so the audio check can tell a video-only source from a
+    render that dropped its audio. Without it a cached render is only rejected
+    for missing audio, never diagnosed, which is the right default for a cache
+    guard but would re-render a genuinely video-only source on every run.
     """
     from engine.qa import validate_output
 
     if not path.is_file() or path.stat().st_size < 1000:
         return False
     try:
-        ok, _errors = validate_output(path, vertical)
+        ok, _errors = validate_output(path, vertical, source=source)
     except Exception:
         return False
     return ok
@@ -431,8 +436,8 @@ def run(
             cached
             and cached.get("fingerprint") == fingerprint
             and cached.get("selection_digest") == sel_digest
-            and _render_is_valid(fb, vertical=False)
-            and _render_is_valid(sh, vertical=True)
+            and _render_is_valid(fb, vertical=False, source=media)
+            and _render_is_valid(sh, vertical=True, source=media)
         ):
             print(f"[cache] reusing rendered clip {idx:02d}", flush=True)
         else:
@@ -451,9 +456,9 @@ def run(
         # The editable interchange for this clip. The timeline is built from
         # the same retention_intervals the render just concatenated and stamped
         # on the same frame grid, so an NLE relinking these clips gets the cut
-        # that was shipped. tools/nle_check.py compares the two on every run —
-        # the render and the interchange are asserted to agree to within
-        # RENDER_FRAME_TOLERANCE rather than assumed to.
+        # that was shipped. tools/nle_check.py is the check that verifies this
+        # agreement to within RENDER_FRAME_TOLERANCE; it is not invoked here —
+        # run it over the project directory, or tools/corpus_run.py does.
         tl = timeline_for_candidate(media, c, fps=source_fps, duration=source_duration)
         exported = nle_export(tl, project / "timeline", stem=f"{idx:02d}")
         # CMX 3600 declares no frame rate, so the list is validated on the grid
