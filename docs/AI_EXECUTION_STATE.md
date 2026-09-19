@@ -8,24 +8,21 @@ every line below was true on this host at that point.
 * Repository: `/home/azureuser/selektyt`, on `main`, working tree **clean**.
 * Up to date with `origin/main` (`https://github.com/desukab/selektyt.git`).
   Nothing unpushed, nothing stashed, nothing in `git stash list`.
-* **Latest commit:** this file's own commit — *docs: persistent AI execution
-  state checkpoint*. It is a doc-only checkpoint with no code change. The last
-  *substantive* change is `ee4f53f` — the first multi-source corpus, plus the
-  two defects it found (audio dropped by input seeking; the audit comparing
-  the wrong span). Run `git log -1` for the current hash rather than trusting a
-  hash printed here, since amending this file changes its own commit hash.
-* Test suite: **837 passed, 10 skipped in 76 s** at the last clean commit. **The
-  10 skips are NOT optional backends.** An earlier version of this note said they
-  were sherpa-onnx/silero/ollama tests; that was wrong, and `pytest -rs` shows
-  what they actually are — **nine `tests/test_proxy_validation.py` skips** ("proxy
-  video not present" ×7, "WAV corpus not available" ×2) **plus one**
-  `tests/test_sidecar_parity.py:372` skip gated on an unset `SELEKYT_PARITY_MEDIA`
-  env var. These are real-media validation tests that no-op on **every** CI run,
-  which is a materially worse problem than absent optional backends: the suite
-  reports green while the validation it names does not happen. `pycmx`, for the
-  record, IS installed and IS in the CI install line. Re-run to confirm this
-  number before trusting any claim in this file — see the self-checkpoint note at
-  the bottom.
+* **Latest commit:** this file's own commit. The last *substantive* change is
+  `142b436` — the credential-read fix on both sides, `tools/microbench.py`, and
+  the document corrections those forced. Run `git log -1` for the current hash
+  rather than trusting a hash printed here, since amending this file changes its
+  own commit hash.
+* Test suite: **895 passed, 7 skipped in 112 s** at the last clean commit. The
+  7 skips are all in `tests/test_proxy_validation.py` and all gated on the
+  `SELEKYT_PROXY_MEDIA` env var, which expects a ~239 MB YouTube recording that
+  is not redistributable with the repo. **They are opt-in real-media
+  measurements, not missing optional backends** — the suite reports green on
+  every CI run while the proxy validation it names does not happen, and that is
+  a worse problem than an absent backend. The earlier count in this file was
+  837/10; the suite grows as defects get regression tests, and the skip count
+  moves when a gated test's media appears or disappears — re-run `pytest -q -rs`
+  before trusting any count here.
 * Five commits landed on `origin/main` from outside this session
   (`36bdff4`..`edf3b30`): a switch from MIT to a proprietary license plus
   project-positioning docs. They were integrated by rebase, not overwritten.
@@ -48,14 +45,91 @@ every line below was true on this host at that point.
   sidecar cannot resolve `yt-dlp`. Plain `nohup … &` dies with the shell.
 * No project server is listening right now. Scratch run scripts in `/tmp` were
   removed.
-* Disk: 5.7 G free of 29 G (`df -h /`, 2026-09-19). The corpus's downloaded
-  media is deliberately *not* kept — `corpus/media/` is gitignored and
-  regenerable from `corpus/manifest.json`, and it had to be removed mid-run
-  when the filesystem hit 118 MB free and started failing every Bash call.
-  The text artifacts (transcript, selections, edit plan, EDL/FCPXML) are the
-  evidence and they are committed. Check `df` before any long run.
+* Disk: **3.6 G free of 29 G, 88% used** (`df -h /`, 2026-09-19). This file
+  previously said both "5.7 G" and "14 G" in different places; both were stale,
+  and the disk is the binding constraint on what can be attempted next. The
+  corpus's downloaded media is deliberately *not* kept — `corpus/media/` is
+  gitignored and regenerable from `corpus/manifest.json`, and it had to be
+  removed mid-run when the filesystem hit 118 MB free and started failing every
+  Bash call. **Only one source's media survives locally:
+  `corpus/media/royal-society-cloke.webm` (85 MB).** The text artifacts
+  (transcript, selections, edit plan, EDL/FCPXML) are the evidence and they are
+  committed. Check `df` before any long run.
+* **The nasa360 source is NOT deleted, contrary to a note this file carried
+  implicitly.** `out/web/pipeline/project/source/NASA_360_program5_HD.mov` is
+  intact at 883,894,825 bytes, matching §2 of `docs/TIME_SAVINGS.md`'s verified
+  `ffprobe` line byte-for-byte, and `out/` is gitignored rather than removed.
+  That matters because it means §2's exact job *can* be re-run, and
+  `tools/microbench.py` now does (§2b). `corpus/media/` being nearly empty is a
+  git policy, not evidence the media is gone — check the path before concluding
+  a measurement is impossible.
 
 ## Completed work
+
+### This session — the audit was actioned, one finding was reversed, and the numbers became reproducible
+
+A red-team pass over the repo's own claims (`docs/RED_TEAM_FINDINGS.md`) was
+worked through item by item. Most findings were real; **one was wrong, and
+reversing it is the most important thing that happened this session**, because
+a reader who applied it would have made the repo worse.
+
+* **R9 reversed — the "no reordering" finding was false.** The audit claimed no
+  edit on disk reorders source speech, so the README's "SelekyT selects and
+  reorders" was unsupported. Re-verification against `edit_plan.json` — the
+  artifact that actually defines the delivered sequence, not `selections.json` —
+  shows **six of the seven sources place at least one clip out of source
+  order**. The audit's test compared each clip's `start` to the previous clip's
+  `end`, which fails on any gap. The finding is kept in the report above its
+  correction so the reversal is auditable, and the README sentence stands.
+* **R17 fixed on both sides.** `/api/file` was jailed to the repo root, which is
+  the wrong boundary for an unauthenticated localhost route — `pipeline_state.json`
+  sits inside it and carries the yt-dlp info dict verbatim, including
+  `http_headers` and its `Cookie` line. `guardedArtifact()` now scopes downloads
+  to `out/web`, and `_scrub_credentials()` strips the credential keys before
+  persistence. **No credentials were ever captured here**: the only URL source
+  ever run is the unauthenticated archive.org one, and a grep for `Cookie`
+  across `out/` and every corpus project returns zero hits. Latent defect, not
+  a leak.
+* **R13 closed with an instrument, not a caveat.** §2 of
+  `docs/TIME_SAVINGS.md` quoted per-stage machine times from a terminal session
+  whose output was never saved. `tools/microbench.py` re-derives them from
+  committed artifacts. **The instrument caught its own first error**: the
+  whisper backend caches chunk checkpoints in the audio file's parent, so every
+  measured run after the warm-up read a JSON off disk and reported **796 ms for
+  a transcription that takes 39 s** — a 49× understatement. Pointed at §2's own
+  surviving source and transcript, the table reproduces (transcription −1.9%,
+  render 16:9 +0.5%, render 9:16 −3.9%, exports within 6%; editorial to 19% with
+  a named workload difference). See §2a and §2b.
+* **Number corrections, each re-derived rather than argued.** "Three of seven
+  sources slower than real time" → **two** (1.140 and 1.746). The 252 s
+  real-time crossover relabelled as the *fit's* property, R² = 0.390 over n = 7,
+  with one of the only two sources below it faster than real time. The
+  cloud-compute row recomputed to $0.0195 from $0.021–$0.024, where $0.024
+  matched nothing at all. The "32% more machine time" for unusable sources
+  replaced with 4.15× (+315%), because the 32% understated by ~10×.
+* **README and gap-map honesty pass.** The NLE affordance now says plainly that
+  no editor has ever imported a timeline and names the cheapest route to real
+  evidence; the input line now says the YouTube path is verified against
+  archive.org and that the one YouTube observation left no artifact. The
+  no-fabrication bullet concedes the claim holds at the editorial layer and
+  *not yet* at the transcription layer, where two of seven sources produced
+  fluent-looking phonetic noise.
+* **The no-speech item was stale, and the staleness was the finding.** The
+  outstanding-work list said the no-speech error was "open, diagnosed,
+  unfixed". It is fixed and tested. What is *actually* open is narrower and
+  more interesting: no real run has ever gone through the recovery path, and
+  the three real `NO_SPEECH_DETECTED` corpus rows predate the fix, so their
+  media deleted and their `log_tail` carrying the old undistinguishing message,
+  they cannot now be classified. `tools/corpus_run.py` therefore records
+  `no_speech_cause` as a structured field, pinned by three tests that were
+  verified to fail without it.
+
+What did **not** change: no NLE has opened an artifact, no editor has been
+contacted, no participant has been recruited, and no revenue or user exists.
+This session moved evidence from "asserted" to "reproducible"; it did not move
+any of the four unproven things into the proven column.
+
+---
 
 A real-world release validation pass, run on real input through the web shell
 rather than by reading code. Five defects were found and fixed, each with a
@@ -278,14 +352,23 @@ which is necessary and is not sufficient.
 In rough order of how much it would cost a user (fuller list in
 `docs/release-validation.md`):
 
-1. **YouTube is intermittently fetchable, not reliably.** The blanket
+1. **YouTube is intermittently fetchable, not reliably — and the one positive
+   observation is unverifiable from this repo.** The blanket
    "Sign in to confirm you're not a bot" block of the previous session was
    *not* a permanent state: one full download through SelekyT's own CLI
-   succeeded this session (640×360, 213 s, 11.8 MB, unauthenticated android
+   succeeded (640×360, 213 s, 11.8 MB, unauthenticated android
    client). But a second video was blocked while the first transferred, so the
    blocking is **per-video and intermittent**, not a hard IP ban and not a
-   code defect. Treat YouTube as *partially* verified: one end-to-end fetch
-   has been observed, reliability has not. Chapters, members-only and age
+   code defect. **No artifact from that fetch survives**: the only URL-sourced
+   project in the repo is `out/web/pipeline/project`, whose `source` is the
+   archive.org URL, and no `youtube`/`youtu.be` reference appears in any
+   project's `report.json` or `pipeline_state.json`. A diligence reader cannot
+   check the claim against anything committed, so `docs/product-gap-map.md`
+   now carries it as an *un-artifacted session note* rather than as evidence,
+   and the two documents no longer contradict each other about it. Treat
+   YouTube as *partially* observed: one end-to-end fetch was seen, reliability
+   has not been measured, and the observation itself would need to be repeated
+   — and the artifact kept — before it counts. Chapters, members-only and age
    gates remain entirely untested.
 2. **No NLE has opened an exported timeline — still.** What changed is the
    evidence behind that "structurally valid": an independent CMX 3600 reader
@@ -306,18 +389,27 @@ In rough order of how much it would cost a user (fuller list in
 5. **Optional backends untested here** — sherpa-onnx, silero, ollama are wired
    and degrade cleanly by design, but unit-tested only.
 6. **Editorial judgement is unmeasured at scale — and the corpus proved the
-   mechanical audits cannot substitute.** Three of seven "OK" sources produced
-   transcripts that are fluent-looking phonetic noise and passed every audit,
-   because the caption-transcript equality check compares captions to the
-   transcript, not to the audio. `docs/BLINDED_PROTOCOL.md` is the design that
-   would settle it; **it has not been run, and no editor has been contacted.**
-7. **The no-speech error conflates two unrelated causes.** A structurally
-   damaged `.ogv` (non-monotonic DTS, mis-marked keyframes) is reported as "no
-   audible spoken content" when the source has speech — a clean remux of the
-   same file transcribes to 11 segments. This tells a user their media is
-   speechless when it is not, and it is the most misleading failure mode in the
-   product. Open, diagnosed, unfixed: remux to a clean container and retry
-   before reporting no speech.
+   mechanical audits cannot substitute.** Two of the seven "OK" sources
+   (`hadhazy-protest`, `telugu-tutorial`) produced transcripts that are
+   fluent-looking phonetic noise and passed every audit, because the
+   caption-transcript equality check compares captions to the transcript, not
+   to the audio. `docs/BLINDED_PROTOCOL.md` is the design that would settle it;
+   **it has not been run, and no editor has been contacted.**
+7. **The no-speech error is fixed in code but has never fired on real media.**
+   This item previously said "open, diagnosed, unfixed", and that is stale: the
+   pipeline now measures `peak_dbfs` on the extraction, *remuxes and retries*
+   when the audio has real level but no transcript, and the message names which
+   of the two causes applied (`_no_speech_diagnosis`), with
+   `tests/test_container_recovery.py` covering both branches. **What has not
+   happened is a real run through that path.** No committed transcript carries a
+   `container_recovery` marker, and the three real `NO_SPEECH_DETECTED` rows in
+   `corpus/results.jsonl` predate the fix — their `log_tail` shows the old
+   message that did not distinguish anything. Their media is gone, so they are
+   unclassifiable now, which is why `tools/corpus_run.py` records
+   `no_speech_cause` (`silent_track` / `damaged_container` / `unknown`) as a
+   structured field from this point on. The claim "this distinguishes a damaged
+   container from a silent track on real media" is **still unvalidated** — it
+   has only ever been shown on synthetic files.
 8. **Non-English transcription quality is unmeasured and probably inadequate.**
    The `small` model produced garbage in Telugu, Hungarian and Hindi. This is
    an *observation from reading transcripts*, not a score: WER (P8/P9) has
@@ -492,9 +584,12 @@ check" (exceeded: two independent *downloads*, byte-identical selections).
   comfortably; check `df` before any end-to-end run and never delete project
   data, git history, worktrees or caches blindly.
 * **The docs record is only as good as the last real run.** `docs/product-gap-
-  map.md` says "as of `2dd4ff1`"; any future change to a verified path must
-  update that row with what was actually exercised, not what the code now
-  claims to do.
+  map.md` carries an "as of `<hash>`" header, and that header had drifted: the
+  map was last substantively updated in `2dd4ff1` but still read "as of
+  `b1dcfa7`", so a reader following this very instruction found a doc whose
+  freshness marker pointed two updates back. The header is now `3fc11e1`; any
+  future change to a verified path must bump that header *and* update the row
+  with what was actually exercised, not what the code now claims to do.
 * **A probe that returns no output is a result about the probe.** `silencedetect`
   at `-v error` returns nothing and looks like "no silence found". Two doc
   errors in this repo came from exactly that. Filter *after* capturing, never
@@ -537,11 +632,14 @@ check" (exceeded: two independent *downloads*, byte-identical selections).
   fixed). All four distinguish "code exists and unit tests pass" from "a user
   can rely on this".
 * **Start any work by re-running the suite** (`.venv/bin/python -m pytest -q`)
-  and confirming 837/10. A number other than that means something has drifted.
-  The count was refreshed across the doc set after RED_TEAM,
-  AI_EXECUTION_STATE and an agent appendix disagreed within one day (824, 819,
-  834); it moved again to 837 when the two render tests landed. The same
-  applies to commit counts — the repo is at **165 commits, 56 of them
+  and confirming **898 passed / 7 skipped**. A number other than that means
+  something has drifted. The count was refreshed across the doc set after
+  RED_TEAM, AI_EXECUTION_STATE and an agent appendix disagreed within one day
+  (824, 819, 834); it has moved 819 → 824 → 834 → 837 → 890 → 895 → 898 as
+  regression tests landed, and the skip count moved 10 → 7 when a gated
+  real-media test's env changed. **A quoted count is stale the moment it is
+  written** — the "How to run things" note above carries the same caveat. The
+  same applies to commit counts — the repo is at **180 commits, 71 of them
   machine-authored under the "Ubuntu" identity** (`git log --format='%an' |
   grep -ci ubuntu`).
   This line is itself a self-checkpoint and it has to be edited whenever the
