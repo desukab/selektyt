@@ -19,7 +19,7 @@ Two independent, unrelated parsers accept every timeline SelekyT emits:
 | Reader | What it is | Result |
 |---|---|---|
 | `pycmx` 1.5.1 | Third-party CMX 3600 reader, run deliberately **outside** the project venv (`/tmp/nlelibs`) so SelekyT's own dependencies cannot influence it | Accepts all EDLs. On `royal-society-cloke`: `01.edl` → 3 events / 5 channel records, `02.edl` → 2/3, `03.edl` → 2/3 |
-| `selekyt.nle.edl` (this repo) | SelekyT's own emitter and reader | Round-trips the same files |
+| `engine.nle_export` (this repo) | SelekyT's own emitter and reader | Round-trips the same files |
 
 Both agree with the ffmpeg render to within `RENDER_FRAME_TOLERANCE` — asserted
 by `tools/nle_check.py`, which compares timeline spans against the rendered
@@ -78,6 +78,27 @@ are C++ plugins and are absent, so `read_from_file` on a `.edl` raises
 plugin toolchain and a source build; that was **not** attempted, because it
 would not yield NLE evidence anyway — a library is still a library.
 
+### melt (MLT 7.22) — no EDL or FCPXML producer
+
+`melt` is the one headless NLE *core* on this host (`/usr/bin/melt`, MLT
+7.22.0) — the engine Kdenlive and Shotcut are built on — so it is the nearest
+thing to a real NLE that can be driven without a display. It cannot read either
+format:
+
+```
+$ melt -query producers | grep -o '"[^"]*"' | head
+"xml" "xml-string" "xml-nogl" "kdenlivetitle" ...
+$ melt corpus/royal-society-cloke_run/project/timeline/01.edl
+Failed to load "…/01.edl"
+```
+
+Its producers are MLT/Westley XML and Kdenlive titles only; there is no CMX 3600
+or FCPXML entry point, and the same holds for the committed FCPXML. Worth
+recording because it is the route someone will reach for first: it looks like a
+headless NLE and it is one, it just has no importer for either interchange
+format. (The mirror image of this — *writing* MLT XML and letting melt play the
+cut — is item 3 of §5.)
+
 ---
 
 ## 3. The blocker, stated plainly
@@ -130,6 +151,14 @@ Said, because it is verifiable in the repo:
   accept, and whose timelines agree with the rendered output to within
   `RENDER_FRAME_TOLERANCE` — asserted on every corpus project by
   `tools/nle_check.py`.
+- Every one of the 27 committed EDL/FCPXML pairs is swept end to end by
+  `tests/test_corpus_interchange.py`: `pycmx` accepts each EDL, the emitter's
+  own validators are clean on each pair, and **each** `<asset-clip>` carries
+  the same offset/start/duration as its EDL event to within 1.5 frames (worst
+  measured deviation across the whole corpus: exactly 1.000 frame, the expected
+  grid-snapping artefact). This is stronger than `nle_check`, which compares
+  only aggregate spans and would miss a mis-timed clip in the middle of a
+  multi-event cut.
 - Frame-rate handling is correct on the grid the timelines were written on,
   including the case where the source media is gone (see §1 of
   `tools/nle_check.py` for the recorded-probe fallback).
