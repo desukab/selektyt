@@ -210,9 +210,13 @@ deliverables and 4 did not, and each of the four failures is diagnosed in
 
 Three things changed about what SelekyT can claim.
 
-**One: the strongest evidence in the repo is now a negative result.** Three of
-the seven "OK" sources — Telugu, Hungarian, Hindi — produced transcripts that
-are fluent-looking phonetic noise. Every mechanical audit passes on them. The
+**One: the strongest evidence in the repo is now a negative result.** Two of
+the seven "OK" sources — Telugu (`telugu-tutorial`) and Hungarian
+(`hadhazy-protest`) — produced transcripts that are fluent-looking phonetic
+noise. (An earlier draft of this sentence said three and named Hindi; that
+confused `hindi-baiga-interview`, which is one of the four *failures* —
+`NO_STORIES_PASSED`, zero clips — with the seven that delivered.) Every
+mechanical audit passes on those two. The
 caption-transcript equality check compares captions against the transcript,
 not against reality, so a wrong transcript is faithfully reproduced into wrong
 captions that pass. Geometry, timing, EDL/FCPXML agreement: all green, all
@@ -338,9 +342,16 @@ Where the objective stood before — "discover whether it actually produces good
 short-form edits from real-world human speech and real URL sources" — the
 answer is now *partially in and uncomfortably specific*: the machinery is
 sound across containers, frame rates, aspect ratios and languages (11 sources,
-7 clean through both audits, determinism byte-identical across independent
-downloads), **but three of those seven produced transcripts that are phonetic
-noise, and no mechanical check can see it.**
+7 delivering deliverables, determinism byte-identical across independent
+downloads), **but two of those seven produced transcripts that are phonetic
+noise, and no mechanical check can see it.** "Clean" is not the right word for
+the seven: **three of them** (`emwcon-panel-2018`, `ooi-vertical`,
+`pentagon-esper-briefing`) still fail `tools/editorial_audit.py`, every failure
+a selection bound landing inside a word, and **six of the seven** still carry
+relative EDL paths. Both are the same cause — the artifacts on disk were
+written by emitters that have since been fixed, and only `royal-society-cloke`
+has been re-emitted, which is why it is the one that passes both audits.
+Artifact debt, not new defects.
 
 So the objective splits into two things that must not be conflated:
 

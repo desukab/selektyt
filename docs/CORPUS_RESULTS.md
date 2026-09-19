@@ -143,8 +143,10 @@ need real re-runs**, and no claim in this document says otherwise.
 
 ## The finding that matters more than the pass rate
 
-**Three of the seven "OK" sources are not actually usable**, and the
-mechanical audits cannot see it.
+**Two of the seven "OK" sources are not actually usable**, and the mechanical
+audits cannot see it. (This count was three in an earlier draft, which wrongly
+included `hindi-baiga-interview`; that source is one of the four *failures* —
+NO_STORIES_PASSED with 0 clips — not one of the seven that delivered.)
 
 - `telugu-tutorial` produced exactly **1 clip** whose text is
   `నినాన్త్డందాన ంపెర్లిస్లిని. పాత్న్న్న్త్త్నవై సస్కకన్సి.` — fluent-looking
@@ -167,20 +169,22 @@ mechanical audits cannot see it.
   that it's very good") that are individually plausible Hungarian but, read
   in sequence, do not reconstruct what was said. 38 segments from 126 s of
   outdoor interview.
-- `hindi-baiga-interview` got far enough to *fail*: 3 segments of
-  low-quality Devanagari, and no complete standalone story passed the
-  editorial gate.
+- `hindi-baiga-interview` belongs to the *failure* column, not this one: it got
+  far enough to fail, with 3 segments of low-quality Devanagari and no complete
+  standalone story passing the editorial gate. It is listed here because it is
+  part of the same non-English finding, not because it counted among the
+  deliverables.
 
 This is the single most important result of the run, and it is the reason
 `docs/BLINDED_PROTOCOL.md` refuses to let mechanical metrics stand in for
 human judgment. **A machine audit of a bad transcript passes, because the
 audit has no ground truth to compare against.** The WER criteria P8/P9 in
-`docs/EVALUATION.md` — never measured, on either source — are the ones that
-would have caught this, and this run is the evidence that they are not
-academic.
+`docs/EVALUATION.md` are the ones that would have caught this. They have been
+run against English LibriSpeech but not against any of these sources, and
+this run is the evidence that the gap is not academic.
 
 The `small` model is inadequate for non-English at the quality the product
-implies. That is a model-choice finding, measurable by re-running these three
+implies. That is a model-choice finding, measurable by re-running these
 sources at `medium` and `large-v3`, and it is the cheapest follow-up in this
 document.
 
@@ -294,12 +298,19 @@ Criterion P13 holds on a real re-run, not only in the unit test.
   ratios and languages. It is zero evidence that a human editor would ship
   any of these cuts. `docs/BLINDED_PROTOCOL.md` is the design that would
   settle it, and it has not been run.
-- **WER is still unmeasured.** The non-English findings above are impressions
-  from reading transcripts, not scores. Until P8/P9 are run against a
-  ground-truth corpus, "the `small` model is inadequate" is an observation,
-  not a measurement.
-- **The Telugu container bug is unfixed.** The misdiagnosis described above
-  is recorded, not repaired.
+- **WER is measured for English and unmeasured for everything else.**
+  `docs/TRANSCRIPTION_EVALUATION.md` §3 reports 3.38% on a 50-clip /
+  1036-word LibriSpeech sample at the `small` model — so the English baseline
+  exists and is respectable. The non-English findings above are still
+  impressions from reading transcripts, not scores, and English WER on clean
+  read speech says nothing about an outdoor Hindi interview. Until P8/P9 are
+  run against a non-English ground-truth corpus, "the `small` model is
+  inadequate for non-English" is an observation, not a measurement.
+- **The Telugu container bug is fixed; the Telugu *coverage* bug is not.** The
+  misdiagnosis is repaired as described above. `telugu-tutorial` is a separate
+  and still-open failure: its transcript covers 6% of the energy-VAD speech
+  region, which the coverage check now catches and refuses, but the check
+  detects the symptom and the model choice is the probable cause.
 - **Frame rate coverage is still narrow.** The corpus added 25 fps
   (`royal-society-cloke`, `hindi-baiga-interview`, `emwcon-panel-2018`), 30 fps
   and 29.97 fps. 23.976, 50 and 59.94 remain untested, and no 4K/H.265 source

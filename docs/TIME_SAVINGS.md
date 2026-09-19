@@ -471,18 +471,47 @@ what it produced** before that production can be delivered. §5 charges the mach
 minutes and compares the machine's runtime against the editor's labour. That is the single biggest
 weakness in the claim, and it is arithmetically exploitable.
 
-**The floor.** The delivered set for the reference source is **198.307 s = 3.305 min** of video
-(VERIFIED by `ffprobe` over all 12 files). An editor cannot accept a deliverable they have not
-seen. So Arm B human time ≥ 3.305 min **even in the limit of zero corrections, zero source review and
-zero ingest**. That is a hard, measured lower bound, and it caps any honest speedup:
+**The floor, and the review protocol it silently assumes.** The delivered set for the reference
+source is **198.307 s = 3.305 min** of video (VERIFIED by `ffprobe` over all 12 files). An editor
+cannot accept a deliverable they have not seen. So Arm B human time ≥ 3.305 min **even in the limit
+of zero corrections, zero source review and zero ingest**, *if the editor plays both delivered
+aspect ratios end to end*. That is the protocol the 3.305 min floor assumes, and it is a choice, not
+a measurement — the artifacts do not support it as strongly as the number suggests:
 
-| Assumed baseline | Arm B human time if the editor only plays the set once | **Ceiling on the honest ratio** |
-| --- | --- | --- |
-| 2 h (120 min) | 3.305 min | **36.3×** |
-| 4 h (240 min) | 3.305 min | **72.6×** |
-| 8 h (480 min) | 3.305 min | **145.2×** |
+> **The two geometries are the same edit.** `ffprobe` on every clip in both trees of all seven
+> completed sources gives **duration deltas of 0.000 s** (checked per source over 27 clip pairs:
+> `emwcon-panel-2018` 5, `hadhazy-protest` 3, `nasa360-ep5` 6, `ooi-vertical` 3,
+> `pentagon-esper-briefing` 5, `royal-society-cloke` 4, `telugu-tutorial` 1). The 9:16 tree is a
+> re-crop of the same six selections at the same in/out points. It carries **no new selection, no
+> new timing, and no new caption text** — only the frame geometry differs.
+>
+> The editorial content of the reference source's deliverable set is therefore **99.154 s =
+> 1.653 min**, not 3.305 min. Reviewing one geometry in full discharges the *editorial* judgement;
+> the second geometry needs a crop and safe-area check, and nothing in this document measures how
+> long that takes.
+
+So the floor is a protocol-dependent range, and the ceiling moves with it:
+
+| Review protocol (reference source, zero corrections) | Floor on Arm B | Ceiling @ 2 h | Ceiling @ 4 h |
+| --- | --- | --- | --- |
+| Both aspect ratios played end to end at 1× (the 3.305 min floor) | 3.305 min | **36.3×** | 72.6× |
+| **One aspect ratio at 1× — what the artifacts support** | **1.653 min** | **72.6×** | 145.2× |
+| One aspect ratio at 2×, if output is reviewed as fast as source tape | 0.826 min | 145.2× | 290.5× |
+
+**The headline 73× is not arithmetically infeasible.** Under the one-preset protocol it is
+*feasible with a zero correction budget*, which is a different and weaker objection than
+impossibility — and the objection that actually matters, because zero correction budget is not a
+real workflow. An earlier version of this section stated the floor as a single measured number and
+the ceiling as a single figure, and then prohibited quoting anything above it. That prohibition was
+stronger than the evidence: it depended on an unstated protocol, and §10.6's own substitution table
+below shows that one discarded clip costs more than the whole 36× budget allows, which is the real
+constraint on any figure in this range.
 
 **Now invert it: how much correction time can each headline figure survive?**
+
+This inversion uses the 3.305 min both-geometries floor. Under the 1.653 min one-geometry floor the
+whole table doubles and 73× lands at +0.02 min — the point of the table is the *shape*, not the
+absolute numbers: every high figure buys no correction time, and §10.6 is what actually spends it.
 
 | Claimed ratio | Max Arm B human time @ 2 h baseline | Remaining budget after one playback | Verdict |
 | --- | --- | --- | --- |
@@ -497,14 +526,23 @@ zero ingest**. That is a hard, measured lower bound, and it caps any honest spee
 At the 8 h baseline the numbers scale up, and the top of the range fails there too: **73× at 8 h
 requires Arm B ≤ 6.58 min, i.e. 3.3 min of review and correction total.**
 
-**Conclusion, and it is a strong one:** the *top of the published range is not merely
-unmeasured — it is infeasible*. 73× cannot be achieved at the model's own lower baseline no matter
-how good the software is, because it requires the editor to finish the job in less time than the
-deliverables take to play. At that 2 h baseline every figure above 36× is ruled out, i.e. roughly
-the upper half of the quoted 18×–73× range. **The 73× figure must not be quoted again, and not only
-for the "unmeasured denominator" reason in §8 — it is ruled out by the measured duration of the
-output itself.** The defensible ceiling, under the most favourable assumption the model permits (a
-2-hour baseline, an editor who plays the set once and corrects nothing), is 36×.
+**Conclusion, and it is narrower than an earlier draft claimed.** The *top of the published range is
+not merely unmeasured — under a both-geometries protocol it is infeasible*: 73× at the model's own
+2-hour baseline would require the editor to finish in 1.64 min, less time than the delivered clips
+take to play once at 1×. But under a one-geometry protocol, which the artifacts support, 73× becomes
+*feasible with no correction budget at all* — and no correction budget is not a workflow, it is the
+limit of a model. So the honest statement is not "73× is impossible" but:
+
+> **Every figure in the upper half of the quoted 18×–73× range is conditional on an unmeasured
+> review protocol and assumes zero or near-zero correction.** Under the protocol that plays both
+> delivered geometries, the ceiling at a 2 h baseline is 36× and 36× itself leaves 0.03 min for
+> correction — i.e. it is not reachable either. Under the protocol the artifacts support, the
+> ceiling is 72.6× and the binding constraint is not the playback floor but §10.6's substitution
+> cost.
+
+**What must not be quoted is a single figure.** The range spans 4× to 145× depending on two
+unmeasured choices (baseline hours, review protocol) and one unmeasured quantity (correction
+burden). None of the three has a participant behind it. **All of them are bounds, not measurements.**
 
 ---
 
@@ -573,11 +611,19 @@ The same re-run also decomposes the cost, and it overturns §2's cost structure:
 | Component (source `ooi-vertical`, 152.008 s) | Time | RTF | Share of fetch-free wall |
 | --- | --- | --- | --- |
 | Cold model load (`WhisperModel("small", compute_type="int8", cpu_threads=4)`) | 1.60 s | 0.011 | 0.7% |
-| Warm transcription on the cached 16 kHz mono | 28.30 s | **0.186** | 11.7% |
-| Transcription **as the pipeline itself reports it in-run** | 40.9 s | **0.269** | 16.9% |
-| Decode + editorial + render (remainder) | ~200.6 s | — | **83.1%** |
+| In-run transcription less the load, as the pipeline itself reports it | 39.3 s | **0.259** | **16.3%** |
+| Decode + editorial + render (remainder) | 200.7 s | — | **83.1%** |
 | **Fetch-free full pipeline, wall** | **241.55 s** | **1.589** | 100% |
 | Fetch-free full pipeline, CPU | 447.13 s | 2.941 | — |
+
+The rows are disjoint and sum to the wall clock. The transcription row is the pipeline's own in-run
+figure (40.9 s) with the already-counted load removed, so it is 39.3 s at 0.259 RTF, not 0.269 —
+0.269 is the RTF against the full 152.008 s source for the whole 40.9 s including the load. For the
+comparison to §2's published RTF the warm-only pass is the right number and is reported separately
+here rather than as a peer row: **28.30 s / 0.186 RTF** on the cached 16 kHz mono, which is 11.7%
+of the same wall clock. An earlier version of this table listed the warm pass as a fourth row
+alongside the in-run figure, which made the shares total 112.4% — two of those rows described
+overlapping work, and the sum was not a meaningful number.
 
 Two corrections to the published model, both material:
 
@@ -727,7 +773,7 @@ reported at exactly that strength.
 
 | Tier | What it is | n | Cost (at $36.10/h) | What it can and cannot support |
 | --- | --- | --- | --- | --- |
-| **0** | **The playback-floor arithmetic (§10.5)** | 0 people | **$0 — already done** | Establishes the *ceiling* with no participants: 73× is infeasible, the defensible ceiling is 36×. Cannot establish any actual saving. |
+| **0** | **The playback-floor arithmetic (§10.5)** | 0 people | **$0 — already done** | Establishes a *protocol-dependent ceiling* with no participants: 36.3× at a 2 h baseline if both aspect ratios are played at 1×, 72.6× if one is. Cannot establish any actual saving, and cannot pick between the two protocols. |
 | **1** | One editor, two sources, both arms, fully clocked | 1 | ≈$110 + recruitment | **A demonstration, and must be called one.** Its real purpose: measure the correction burden K1–K6, which is the number that decides whether the larger study is worth running. Not generalisable. |
 | **2** | Three editors × two sources, both arms | 3 | ≈$330 + raters | Smallest design that can clear α=0.05, and only for a perfectly consistent large effect. Reports a large-effect-only claim. |
 | **3** | Full design — 6 editors × 3 sources, 18 sessions, 9/arm, 3 raters, 4 language checkers, separate coordinator and analyst | 6 | ≈$867 + recruitment (§7's table, still correct) | The design `docs/HUMAN_EDITORIAL_EVALUATION.md` is written for. Supports a generalisable claim for the studied conditions and no others. |
@@ -750,9 +796,12 @@ zero-cost tier is never skipped, because it is the only one that has already pro
 **Permitted — every one traceable to a command in this repo:**
 
 - "The pipeline's end-to-end wall clock has now been measured: on a 4-core CPU-only host it turned
-  **117.8 minutes of source video across 11 sources into 27 selected clips — 18.3 minutes of
-  delivered video in two aspect ratios — in 38.8 minutes of wall time including downloads**, a 0.33
-  real-time factor."
+  **117.8 minutes of source video into 27 selected clips — 18.3 minutes of delivered video in two
+  aspect ratios — in 38.8 minutes of wall time including downloads**, a 0.33 real-time factor."
+  **That figure covers only the 7 sources that delivered, not all 11.** The other 4 consumed 13.5
+  minutes of source and 3.4 minutes of wall time and produced nothing: a 36% source failure rate
+  that belongs in any claim made from this data, because a time-savings pitch computed over runs
+  that yielded no deliverables is a time-savings pitch computed over the wrong denominator.
 - "On the 24.5-minute reference source the recorded wall clock is **5.6 minutes**, measured rather
   than estimated."
 - "Machine cost varies **9.7× across the corpus**, and **on sources shorter than about four minutes
@@ -762,17 +811,22 @@ zero-cost tier is never skipped, because it is the only one that has already pro
   source-minute**, with the cost in rendering rather than transcription."
 - "The time-savings ratio is a **model whose denominator has never been measured** — no editor has
   ever been timed on this task, with or without the tool."
-- "**The top of the published range is infeasible, not merely unmeasured**: 73× at the model's own
-  2-hour baseline would require the editor to finish in under two minutes, which is less time than
-  the delivered clips take to play once. The defensible ceiling under the model's most favourable
-  assumptions is 36×."
+- "**The top of the published range is protocol-dependent, not merely unmeasured**: at the model's
+  own 2-hour baseline, 73× requires the editor to finish in 1.64 min if both delivered aspect ratios
+  are played at 1× — less time than the clips take to play once — and in 1.65 min, leaving no
+  correction budget, if only one is. Neither protocol has been observed. The ceiling is 36.3× under
+  the former and 72.6× under the latter, and both are computed from one source (`nasa360-ep5`) at
+  one baseline, so they are ceilings for *that* delivered set, not a property of the product."
 
-**Forbidden — none of this is supported, and the first two are now ruled out by arithmetic, not
-just by absence of data:**
+**Forbidden — none of this is supported:**
 
-- "SelekyT is **18× to 73× faster** than a human editor" — unmeasured denominator, **and 73× is
-  arithmetically impossible at the model's lower baseline** (§10.5).
-- "**73×**", or any figure above 36×, quoted as a speedup, in any document, deck or pricing page.
+- "SelekyT is **18× to 73× faster** than a human editor" — unmeasured denominator, and a range
+  whose top end assumes a review protocol that has never been observed (§10.5).
+- Any **single** speedup figure presented as a property of the product. The honest number is a range
+  that varies with the baseline hours, the review protocol and the correction burden — all three
+  unmeasured — and it must be recomputed for the delivered set being quoted, not copied. A bare
+  "73×" or "36×" on a deck or pricing page is unsupported either way: 73× assumes no correction at
+  all, and 36× assumes the editor watches both aspect ratios in full.
 - That SelekyT "saves N hours of editor time", "eliminates N minutes of editorial work", or any
   statement of a **quantity of time saved**. No such quantity has been measured.
 - That an unattended machine run costs the editor **zero minutes**. It costs the submit, the review,
@@ -790,15 +844,22 @@ just by absence of data:**
 
 ## 10.12 Summary of this update
 
-- **Measured now (and it was not before):** an end-to-end wall clock per source over 11 sources;
-  0.330 RTF corpus-wide; ≈225 s fixed overhead per run; a 9.7× RTF spread; the 252 s real-time
+- **Measured now (and it was not before):** an end-to-end wall clock per source, all 11 recorded
+  including the 4 failures; 0.330 RTF across the 7 that delivered (0.321 if the failed runs are
+  left in, which is the fairer number for a capacity-planning claim and the worse one for a
+  marketing claim); ≈225 s fixed overhead per run; a 9.7× RTF spread; the 252 s real-time
   crossover; a 5.93× SD-to-portrait-HD cost gap; a 1.72× run-to-run timing spread on identical work.
 - **Recomputed:** the reference source's machine time moves 6.60 → 5.62 min measured, and the
   corpus-average rate for the same length is 8.08 min. The ratio moves with it, in both directions,
   which is itself the finding. **MODEL, NOT MEASURED** either way.
-- **Bounded, with no participants needed:** the delivered set is 3.31 min of playback, which is a
-  hard floor on Arm B human time. That caps the honest ratio at 36× (2 h baseline) and makes **73×
-  impossible**. An 18× claim survives only if review plus every correction fits in 3.4 minutes.
+- **Bounded, with no participants needed:** the reference source's delivered set is 198.307 s of
+  video across both aspect ratios, of which **99.154 s is distinct editorial content** — the two
+  trees are per-clip duration-identical to 0.000 s on all seven completed sources, the second being
+  a re-crop of the first. The floor on Arm B human time is therefore 3.305 min under a
+  both-geometries review protocol and 1.653 min under a one-geometry one, capping the ratio at
+  **36.3× / 72.6×** at a 2 h baseline. Neither protocol has been observed, and **the binding
+  constraint on any real figure is not the playback floor but the substitution cost in §10.6**,
+  which already exceeds the whole 36× budget on a single discarded clip.
 - **The mechanism that decides it:** one discard-and-substitute costs a source pass (12.25 min at 2×
   on the reference tape) — more than the entire 18× budget. **Selection quality is the time-saving
   mechanism**, not a separate quality concern.
