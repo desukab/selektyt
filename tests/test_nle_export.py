@@ -117,6 +117,11 @@ def test_edl_reel_names_are_ascii_and_unique():
     text = render_edl(multitrack_timeline())
     reels = {ln.split()[1] for ln in text.splitlines() if re.match(r"^\d{3}\s", ln)}
     assert reels, "reels must be named"
+    # 8 characters is the CMX 3600 standard, not an arbitrary tidy limit.
+    # Premiere's 32-character reel names are a non-default extension that does
+    # not round-trip cleanly, and Resolve's conform "requires reel names and
+    # accurate timecode" — a longer name is not a superset here, it is a
+    # different format. See docs/NLE_INTERCHANGE.md.
     assert all(r.isascii() and len(r) <= 8 for r in reels)
 
 
