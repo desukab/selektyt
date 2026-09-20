@@ -507,16 +507,15 @@ fn selekyt_projects() -> Result<Vec<ProjectEntry>, String> {
     Ok(out)
 }
 
-/// Delete a project directory. The path is validated to be a real subdirectory
-/// *directly under* the projects root before anything is removed: this is the
-/// one destructive command the frontend can invoke, and a path it supplied that
-/// resolved outside `~/SelekyT` must never be honored.
-#[tauri::command]
-fn selekyt_delete_project(dir: String) -> Result<(), String> {
-    let root = projects_root()?;
-    let target = Path::new(&dir);
-    // Canonicalize both sides so `..`, symlinks and a differently-cased root
-    // cannot smuggle a path outside the projects directory.
+/// Resolve `dir` to a real directory sitting *directly under* `root`, or
+/// refuse. Both sides are canonicalized first, so `..`, a symlink and a
+/// differently-cased root cannot smuggle a path outside the projects
+/// directory. Extracted from the one destructive command so the rule it
+/// depends on can be tested without setting a process-wide `HOME` that the
+/// other tests in this crate race on — `dirs_or_err` reads it, and `cargo
+/// test` runs them concurrently in one process.
+fn project_dir_under_root(root: &Path, dir: &str) -> Result<PathBuf, String> {
+    let target = Path::new(dir);
     let canon_root = root
         .canonicalize()
         .map_err(|e| format!("the projects directory {} does not exist: {e}", root.display()))?;
@@ -534,8 +533,18 @@ fn selekyt_delete_project(dir: String) -> Result<(), String> {
     if !canon_target.is_dir() {
         return Err(format!("{} is not a directory", canon_target.display()));
     }
-    std::fs::remove_dir_all(&canon_target)
-        .map_err(|e| format!("could not delete {}: {e}", canon_target.display()))
+    Ok(canon_target)
+}
+
+/// Delete a project directory. The path is validated to be a real subdirectory
+/// *directly under* the projects root before anything is removed: this is the
+/// one destructive command the frontend can invoke, and a path it supplied that
+/// resolved outside `~/SelekyT` must never be honored.
+#[tauri::command]
+fn selekyt_delete_project(dir: String) -> Result<(), String> {
+    let target = project_dir_under_root(&projects_root()?, &dir)?;
+    std::fs::remove_dir_all(&target)
+        .map_err(|e| format!("could not delete {}: {e}", target.display()))
 }
 
 fn dirs_or_err() -> Result<std::path::PathBuf, String> {
@@ -888,5 +897,112 @@ mod tests {
     static COUNTER: AtomicUsize = AtomicUsize::new(0);
     fn super_count() -> usize {
         COUNTER.fetch_add(1, Ordering::SeqCst)
+    }
+
+    // ── the one destructive command ─────────────────────────────────────────
+
+    /// A projects root with one real project in it, and a sibling directory
+    /// that is not a project at all.
+    fn scratch_projects_root() -> std::path::PathBuf {
+        let root = tempfile_dir().join("SelekyT");
+        std::fs::create_dir_all(root.join("my-project")).unwrap();
+        std::fs::write(root.join("my-project").join("report.json"), "{}").unwrap();
+        // A directory directly under the same root that the listing would not
+        // call a project — it is what a plausible mis-target looks like.
+        std::fs::create_dir_all(root.join("not-a-project")).unwrap();
+        std::fs::create_dir_all(root.join("my-project").join("nested")).unwrap();
+        root
+    }
+
+    #[test]
+    fn delete_accepts_a_real_project_directly_under_the_root() {
+        let root = scratch_projects_root();
+        let target = project_dir_under_root(&root, &root.join("my-project").to_string_lossy())
+            .expect("a real project directly under the root resolves");
+        assert!(target.ends_with("my-project"));
+        assert!(target.is_dir());
+    }
+
+    #[test]
+    fn delete_refuses_a_parent_traversal() {
+        let root = scratch_projects_root();
+        // A real directory outside the projects root, reached by walking up
+        // out of a legitimate project and back down elsewhere. It has to exist
+        // so the path canonicalizes — the point is that a resolvable path
+        // outside the root is *still* refused, not merely an unresolvable one.
+        // Built from root's own parent rather than a second tempfile_dir()
+        // call, which hands out a different scratch directory each time.
+        let outside = root.parent().unwrap().join("outside-the-root");
+        std::fs::create_dir_all(&outside).unwrap();
+        let escape = root
+            .join("my-project")
+            .join("../../outside-the-root");
+        assert_eq!(
+            escape.canonicalize().unwrap(),
+            outside.canonicalize().unwrap(),
+            "the fixture must actually escape; if it does not, this test is vacuous"
+        );
+        let err = project_dir_under_root(&root, &escape.to_string_lossy())
+            .expect_err("a traversal must be refused, not resolved");
+        assert!(err.contains("refusing to delete"), "the error must say it refused: {err}");
+    }
+
+    #[test]
+    fn delete_refuses_a_symlink_pointing_outside_the_root() {
+        // Canonicalization resolves through a symlink, so a link *inside* the
+        // root that points outside must still be refused. Without this the
+        // check would be a string comparison a symlink defeats trivially.
+        let root = scratch_projects_root();
+        let elsewhere = tempfile_dir().join("elsewhere");
+        std::fs::create_dir_all(&elsewhere).unwrap();
+        let link = root.join("shortcut");
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&elsewhere, &link).unwrap();
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_dir(&elsewhere, &link).unwrap();
+        let err = project_dir_under_root(&root, &link.to_string_lossy())
+            .expect_err("a symlink out of the root must be refused");
+        assert!(err.contains("refusing to delete"), "{err}");
+    }
+
+    #[test]
+    fn delete_refuses_a_nested_directory() {
+        // "Directly under" is the requirement, so a project's own subdirectory
+        // is not deletable — the frontend's target is always a project root.
+        let root = scratch_projects_root();
+        let err = project_dir_under_root(
+            &root,
+            &root.join("my-project").join("nested").to_string_lossy(),
+        )
+        .expect_err("a nested directory is not a project directory");
+        assert!(err.contains("refusing to delete"), "{err}");
+    }
+
+    #[test]
+    fn delete_refuses_a_missing_path_and_a_file() {
+        let root = scratch_projects_root();
+        let err = project_dir_under_root(&root, &root.join("no-such-project").to_string_lossy())
+            .expect_err("a missing path is an error, not an empty success");
+        assert!(err.contains("does not exist"), "{err}");
+        // A file under the root resolves but is not a directory.
+        let file = root.join("notes.txt");
+        std::fs::write(&file, "important").unwrap();
+        let err = project_dir_under_root(&root, &file.to_string_lossy())
+            .expect_err("a file must not be treated as a project");
+        assert!(err.contains("not a directory"), "{err}");
+    }
+
+    #[test]
+    fn delete_actually_removes_the_directory_once_accepted() {
+        // The guard resolves and the command removes: proved separately because
+        // a check that refuses everything would pass every refusal test above.
+        let root = tempfile_dir().join("SelekyT");
+        std::fs::create_dir_all(root.join("doomed")).unwrap();
+        let target =
+            project_dir_under_root(&root, &root.join("doomed").to_string_lossy()).unwrap();
+        std::fs::remove_dir_all(&target).unwrap();
+        assert!(!target.exists(), "the directory must be gone");
+        // And the guard now refuses it, so the operation is not repeatable.
+        assert!(project_dir_under_root(&root, &target.to_string_lossy()).is_err());
     }
 }

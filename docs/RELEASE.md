@@ -141,19 +141,29 @@ claiming success.
   pytest at all (see `docs/AI_EXECUTION_STATE.md`), and 1240 is the count
   *after* the four labelling tests landed, not the one quoted in their own
   commit message.
-- **12 Rust unit tests** in `apps/desktop/src-tauri`, including
+- **18 Rust unit tests** in `apps/desktop/src-tauri`, including
   `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the pipe-buffer
   deadlock fix that this session found by hitting it for real,
-  `cancel_unblocks_a_call_in_flight`, which pins the cancellation fix, and
+  `cancel_unblocks_a_call_in_flight`, which pins the cancellation fix,
   `spawn_resolves_the_env_override_without_re_appending_the_triple`, which pins
   the `SELEKYT_PYTHON` override lookup: a bare name must resolve against the
   staged sidecar directory, and a path that already ends in the triple must not
-  get it appended a second time. All run in well under a second — the
-  cancellation test uses a shell builtin busy loop rather than `sleep`, because
-  SIGKILLing a shell leaves a forked `sleep` holding the write end of the pipe,
-  and the test then blocks until the sleep expires. That is a property of the
-  test double, not of the engine: every ffmpeg call in `providers/ffmpeg.py`
-  pipes its own stdout, so the real sidecar has no orphaned child.
+  get it appended a second time, and six tests for `selekyt_delete_project`
+  covering each escape route the validation guards — a parent traversal, a
+  symlink out of the root, a nested subdirectory, a missing path and a file.
+  Those last six were missing entirely until this session: delete is the one
+  destructive command the frontend can invoke and it was untested. The
+  validation was extracted into `project_dir_under_root` so it could be tested
+  without setting a process-wide `HOME`, which `cargo test` would race on.
+  Both mutations were verified against them: removing the parent check fails
+  three, skipping canonicalization fails two (the symlink case is what proves
+  canonicalization is load-bearing, not decoration).
+  All run in well under a second — the cancellation test uses a shell builtin
+  busy loop rather than `sleep`, because SIGKILLing a shell leaves a forked
+  `sleep` holding the write end of the pipe, and the test then blocks until the
+  sleep expires. That is a property of the test double, not of the engine:
+  every ffmpeg call in `providers/ffmpeg.py` pipes its own stdout, so the real
+  sidecar has no orphaned child.
 - `cargo clippy --all-targets -- -D warnings` is clean, and CI denies
   warnings on Linux before the Windows job pays for a build.
   **That Linux job has not always been able to say so.** It was added in

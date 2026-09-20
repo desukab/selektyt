@@ -34,15 +34,21 @@ every line below was true on this host at that point.
   prior baseline was 1215/13; the growth is the desktop packaging contract
   (`tests/test_desktop_packaging.py`, now 9), the `read_text` op's envelope and
   traversal surface, and engine-side growth. No regressions.
-  **12 Rust unit tests** in `apps/desktop/src-tauri` pass, including
+  **18 Rust unit tests** in `apps/desktop/src-tauri` pass, including
   `cancel_unblocks_a_call_in_flight` (0.15 s — see the note below about why its
   fake sidecar is a shell builtin loop, not `sleep`),
   `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the pipe-buffer
-  deadlock fix, and
+  deadlock fix,
   `spawn_resolves_the_env_override_without_re_appending_the_triple`, which pins
   the `SELEKYT_PYTHON` override lookup (a bare name resolves against the staged
   sidecar directory; a path already ending in the triple is not suffixed
-  twice). `cargo clippy --all-targets -- -D warnings` is clean, which now
+  twice), and six tests for `selekyt_delete_project` — the one destructive
+  command the frontend can invoke, which had **no** test until this session.
+  Its validation lives in `project_dir_under_root`, extracted so it can be
+  tested without setting a process-wide `HOME` (which `dirs_or_err` reads and
+  which concurrent tests would race on); both mutations were verified against
+  them, removing the parent check failing three and skipping canonicalization
+  failing two. `cargo clippy --all-targets -- -D warnings` is clean, which now
   matters because the new `shell` CI job denies warnings on Linux before the
   Windows job pays for a build. The skip count splits into three kinds, and the
   differences matter: **7** are in `tests/test_proxy_validation.py`, gated on the
