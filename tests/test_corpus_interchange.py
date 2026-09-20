@@ -41,6 +41,7 @@ from engine.nle_export import validate_edl, validate_fcpxml
 from tools.nle_check import _edl_events, _rational_seconds, _tc_seconds
 
 ROOT = Path(__file__).resolve().parent.parent
+DOCS = ROOT / "docs"
 
 # The inventory is spelled out rather than globbed blind: a sweep that finds no
 # files passes vacuously, and a corpus restructure would then silently delete
@@ -161,3 +162,51 @@ def test_every_fcpxml_clip_matches_its_edl_event(edl, fcpxml, pair_id):
                     f"{want:.3f}s ({delta_frames:.2f} frames)"
                 )
     assert not mismatches, f"{pair_id} at {fps:.4f} fps: " + "; ".join(mismatches)
+
+
+# ---------------------------------------------------------------------------
+# The honesty of the headline claim, pinned.
+#
+# The sweep above measures agreement between two formats that SelekyT itself
+# wrote. Only one of the two is ever read by software that does not share this
+# codebase, and for a while the docs said "two independent parsers accept" --
+# with the very next bullet naming `pycmx` and "the emitter's own validators",
+# which is one independent reader and one mirror. The correction below is not
+# cosmetic: an EDL↔FCPXML agreement figure means something different when both
+# halves are read by the same hand than when one is read by a third party, and
+# the number should not be able to travel without that qualification.
+# ---------------------------------------------------------------------------
+def test_the_independence_of_the_two_readers_is_stated_asymmetrically():
+    """One half has a third-party reader, the other does not, and the docs must
+    say so rather than averaging the two into 'two independent parsers'."""
+    validation = (DOCS / "NLE_VALIDATION.md").read_text(encoding="utf-8")
+    compatibility = (DOCS / "NLE_COMPATIBILITY.md").read_text(encoding="utf-8")
+    header = (ROOT / "engine" / "fcpxml.py").read_text(encoding="utf-8")
+
+    # The specific overstatement, and its close variants. Each was present
+    # before the correction; a gate that could not see them is decorative.
+    for phrase in (
+        "two independent parsers",
+        "two independent readers",
+        "independent CMX 3600/FCPXML reader",
+    ):
+        assert phrase not in validation, (
+            f"NLE_VALIDATION.md claims {phrase!r}, which averages one "
+            f"independent reader and one of SelekyT's own into a plural"
+        )
+        assert phrase not in header, (
+            f"engine/fcpxml.py claims {phrase!r} in the header that callers "
+            f"and readers trust for the verification status"
+        )
+
+    # The counterweight has to be present too, or removing the overstatement
+    # above could leave the FCPXML half described as independently read by
+    # omission rather than by correction.
+    assert "The independence is asymmetric" in validation, (
+        "NLE_VALIDATION.md no longer carries the asymmetric-independence "
+        "qualification next to the EDL/FCPXML claim"
+    )
+    assert "The FCPXML half is not validated by an independent reader" in compatibility, (
+        "NLE_COMPATIBILITY.md no longer states that the FCPXML half has no "
+        "independent reader"
+    )

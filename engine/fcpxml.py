@@ -6,11 +6,14 @@ AutoCut's src-tauri/src/export_fcpxml.rs, reused with the author's
 permission — see docs/autocut-provenance.md) so a cutlist rendered on either
 side of the hybrid produces the same XML.
 
-Verification status: the documents are structurally validated against an
-independent CMX 3600/FCPXML reader and against the rendered media (see
-tools/nle_check.py, docs/NLE_COMPATIBILITY.md), but no NLE has yet imported
-one in this project's history — do not state that FCP, Resolve or Premiere
-accept these files until that import has actually been observed.
+Verification status: the EDL half of each pair is structurally validated by
+`pycmx`, an independent CMX 3600 reader, and both halves are checked against the
+rendered media (see tools/nle_check.py, docs/NLE_COMPATIBILITY.md). The FCPXML
+half has no independent reader: the check on it is this project's own
+ElementTree parse against a vocabulary list, which is a self-consistency check
+and is labelled as one. No NLE has yet imported one of these documents in this
+project's history — do not state that FCP, Resolve or Premiere accept these
+files until that import has actually been observed.
 
 The critical detail, carried over from AutoCut: DaVinci binds an asset to its
 source media by THREE checks (path, source-media start TC, frame rate

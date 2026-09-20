@@ -193,8 +193,22 @@ Cut Pro. Record the NLE, the exact version, and the result for each in this
 file, and move the line from "RESEARCHED" to "VERIFIED" — or delete the claim.
 
 Until then, every external statement about NLE compatibility should say what
-this page says: structurally validated by an independent reader, duration
-verified against the render, **never opened in an NLE**.
+this page says: the EDL half structurally validated by an independent reader,
+both halves duration-verified against the render, **never opened in an NLE**.
+
+The FCPXML half is not validated by an independent reader, and the reason is
+not that nobody looked. Two candidates were checked and both are the wrong
+format despite the name: PyPI's `fcpxml` 0.0.2 and GitHub's
+`tin2tin/fcpxml_import` both parse Final Cut Pro 7 *xmeml* — they look for
+`clipitem`, `track`, `file/pathurl` and `rate/timebase`, none of which appears
+in any of the 27 committed documents. Run against an FCPXML 1.11 file, the
+Blender add-on matches the `sequence` tag, falls back to its defaults, finds
+zero tracks, and then reports *"FCPXML import successful."* That is a false
+positive rather than a validation, so it is not counted as one. Apple's
+published DTD for FCPXML 1.11 was the remaining independent grammar, and the
+two public URLs that carried it now return HTML and 404. Until a real reader
+appears, the FCPXML side is self-checked and that limitation travels with the
+number.
 
 ---
 

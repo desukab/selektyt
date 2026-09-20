@@ -147,10 +147,16 @@ In ascending order of cost. None of these has been done.
 
 Said, because it is verifiable in the repo:
 
-- SelekyT emits CMX 3600 EDL and FCPXML 1.11 that two independent parsers
-  accept, and whose timelines agree with the rendered output to within
-  `RENDER_FRAME_TOLERANCE` — asserted on every corpus project by
-  `tools/nle_check.py`.
+- SelekyT emits CMX 3600 EDL and FCPXML 1.11 whose timelines agree with the
+  rendered output to within `RENDER_FRAME_TOLERANCE` — asserted on every corpus
+  project by `tools/nle_check.py`. **The independence is asymmetric and travels
+  with the claim:** the EDL is accepted by `pycmx`, a third-party CMX 3600
+  reader; the FCPXML is parsed by SelekyT's own `ElementTree` reader against a
+  vocabulary list SelekyT wrote, which is a self-consistency check and not an
+  independent one. Both halves agree with each other and with the render, but
+  only one half has been read by software that does not share this codebase.
+  See `docs/NLE_COMPATIBILITY.md` for the two wrong-format readers that were
+  tried and rejected.
 - Every one of the 27 committed EDL/FCPXML pairs is swept end to end by
   `tests/test_corpus_interchange.py`: `pycmx` accepts each EDL, the emitter's
   own validators are clean on each pair, and **each** `<asset-clip>` carries
