@@ -50,11 +50,16 @@ FCPXML_ELEMENTS = {
     "metadata", "string", "float", "int", "bool", "date",
 }
 FRAME_TOLERANCE = 1.0
-# Render comparison tolerance. Measured on real runs, the exported timeline is
-# systematically 0-1 frame shorter than the rendered file (746 rendered frames
-# against a 745-frame timeline, 513 against 512, 493 against 493), and the MP4
-# container duration adds ~0.04s of muxer slop on top of frame-count arithmetic.
-# Two frames covers both without hiding a real editorial disagreement.
+# Render comparison tolerance. Measured across the committed corpus (11 sources,
+# 27 clips, every timeline checked against both its renders), the exported
+# timeline is systematically a fraction of a frame shorter than the rendered
+# file, and always in that direction: the largest gap is 0.69 frames
+# (pentagon-esper-briefing clip 04, timeline 28.762s vs render 28.785s at 30fps),
+# with 0.53 frames the worst at 25fps (royal-society-cloke clip 01, 52.400s vs
+# 52.421s), and several clips exact to 0.00. The gap is a consistent ~21 ms
+# regardless of fps, which is container overhead rather than a cut disagreement.
+# Two frames covers it with a full frame of headroom while still catching a
+# genuinely different cut — the tolerance is ~2.9x the largest measured gap.
 RENDER_FRAME_TOLERANCE = 2.0
 
 

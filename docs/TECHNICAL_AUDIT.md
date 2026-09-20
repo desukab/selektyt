@@ -318,9 +318,11 @@ This is an assumption, not a check. `:384` probes the source's frame rate and
 nothing else; the rendered MP4's own duration is never measured anywhere in
 the pipeline. The concat of N intervals plus per-interval `-t` clamping plus
 container muxer slop means the shipped file can differ from the timeline by a
-frame or two — which is exactly why `tools/nle_check.py:50-55` documents
-measured discrepancies of 0-1 frames (746 rendered vs a 745-frame timeline,
-513 vs 512) and carries a two-frame tolerance.
+frame or two — which is exactly why `tools/nle_check.py:52-63` documents a
+measured worst case of 0.69 frames (pentagon-esper-briefing clip 04, 28.762 s
+declared against 28.785 s rendered) and carries a two-frame tolerance. The
+finding stands, but it is a *post hoc* audit: it lives in `tools/nle_check.py`,
+not in the pipeline, and it is not run in CI (`docs/METRICS.md` A4.1).
 
 ### QA can pass while the output is wrong — VERIFIED
 

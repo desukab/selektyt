@@ -388,31 +388,62 @@ invoked by hand or by `tools/corpus_run.py` rather than by the pipeline, the web
 shell or CI, so the 6/6 figure is real on demand and is still not enforced
 anywhere automated (`TECHNICAL_AUDIT.md` §"CI does not run the tools").
 
-### A4.2 Timeline-vs-render duration agreement — worst case 1.63 frames
+### A4.2 Timeline-vs-render duration agreement — worst case 0.69 frames
 
 **Definition:** |declared timeline duration − measured MP4 duration| in frames,
 per preset. This is the only metric that proves the exported timeline describes
 the video that was actually shipped.
 
-**Current value (VERIFIED):** 12 measurements (6 clips × 2 presets), all PASS,
-worst case **1.63 frames** (clip 02). Four of six clips agree to **0.00 frames**.
-The tolerance is 2 frames, set by measuring this run rather than by taste.
+**Current value (VERIFIED on this machine):** 54 measurements (27 clips × 2
+presets, all 6 sources that rendered), all PASS, worst case **0.69 frames**
+(pentagon-esper-briefing clip 04: timeline 28.762 s vs render 28.785 s at
+30 fps). 32 of the 54 pairs agree to **0.00 frames**; the 22 that do not fall
+into three narrow bands — 0.53, 0.63 and 0.69 frames. The tolerance is 2 frames,
+set by measuring the committed corpus rather than by taste, which makes it ~2.9×
+the largest gap measured.
 
-Per-clip timeline vs render: 24.858/24.892 (1.00f), 17.084/17.138 (1.63f),
-16.450/16.450 (0.00f), 14.014/14.014 (0.00f), 17.651/17.684 (1.00f),
-9.076/9.076 (0.00f).
+> **Provenance.** The EDLs and FCPXMLs are committed (27 of each), but **the
+> rendered MP4s are not** — all 59 are gitignored, so this metric recomputes
+> only where the renders are present. `tests/test_nle_frame_deltas.py` pins it
+> when they are and skips with a stated reason when they are not; it does not
+> silently pass. Read "VERIFIED" above as *verified here*, not as a claim a
+> reader can re-run from a clean checkout. A4.3, by contrast, is reproducible
+> from committed artifacts alone.
 
-**Residual imprecision, stated rather than tuned away:** the export declares a
-whole frame count while the render carries ~0.04 s of container muxer slop, so a
-0–1 frame shortfall is systematic (`docs/NLE_COMPATIBILITY.md`).
+Per-clip timeline vs render, the sources that render: 0.00 f throughout on
+nasa360-ep5 (all six clips) and telugu-tutorial; 0.63 f on ooi-vertical clip 01;
+0.69 f on pentagon-esper-briefing clips 02/04/05 and emwcon-panel-2018 clip 05;
+0.53 f on royal-society-cloke (all four clips, 25 fps).
 
-### A4.3 EDL-vs-FCPXML agreement — 0.00 frames on all 6
+**Residual imprecision, stated rather than tuned away:** the 22 non-exact pairs
+are each ~21 ms short regardless of frame rate, which is container overhead
+rather than a cut disagreement — the timeline declares a whole frame count and
+the MP4 carries the muxer's own duration. A shortfall of 0–1 frame is therefore
+systematic (`docs/NLE_COMPATIBILITY.md`).
+
+<!-- stale-begin: the figures below are quoted only as the error being
+     corrected; tests/test_nle_frame_deltas.py excludes this block so a
+     correction note can record a wrong number without re-asserting it -->
+> **Correction, 2026-09-20.** An earlier version of this section reported a
+> worst case of 1.63 frames over "12 measurements (6 clips × 2 presets)" with a
+> per-clip table of 24.858/24.892 (1.00f), 17.084/17.138 (1.63f),
+> 16.450/16.450, 14.014/14.014, 17.651/17.684 (1.00f), 9.076/9.076. That table
+> was measured on nasa360-ep5 alone and is not reproducible from the committed
+> artifacts: re-running `tools/nle_check.py` on the same six clips now returns
+> 0.00 frames for all of them, and 24.858 s and 17.084 s match no committed
+> timeline at all. The numbers above are re-measured across all six sources
+> that render, and are recomputed by `tests/test_nle_frame_deltas.py` so they
+> cannot go stale again.
+<!-- stale-end -->
+
+### A4.3 EDL-vs-FCPXML agreement — 0.00 frames on all 27
 
 **Definition:** |EDL total record span − FCPXML spine total|. The two formats are
 emitted by separate code paths; their agreement is evidence both describe the same
 cut.
 
-**Current value: 0.00 frames on all 6 clips.** VERIFIED. The render is a third
+**Current value: 0.00 frames on all 27 clips.** VERIFIED, and recomputed by
+`tests/test_nle_frame_deltas.py`. The render is a third
 independent path (an ffmpeg filter chain), and its agreement with both is A4.2.
 
 ### A4.4 Source-interval fidelity — worst case 0.7 frames

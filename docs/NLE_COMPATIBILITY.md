@@ -44,7 +44,7 @@ measured by `ffprobe`.
 | No asset-clip reads past its asset's declared extent | **PASS** — 6/6 |
 | FCPXML spine advances; no clip precedes its predecessor | **PASS** |
 | EDL total span == FCPXML spine total | **PASS** — 0.00 frames on all six |
-| Timeline duration == rendered MP4 duration (both presets) | **PASS** — 0.00–1.63 frames |
+| Timeline duration == rendered MP4 duration (both presets) | **PASS** — 0.00–0.69 frames |
 | EDL source in/out == the selection the cut was made from | **PASS** — 0.0–0.7 frames |
 
 Full output is in `docs/nle-audit-output.txt`.
@@ -52,16 +52,22 @@ Full output is in `docs/nle-audit-output.txt`.
 ### The three formats agree with each other and with the render
 
 For each cut the EDL's total record span, the FCPXML's spine total, and both
-rendered MP4s agree to within 1.63 frames. This matters more than it sounds:
+rendered MP4s agree to within 0.69 frames, measured over all 27 clips across
+the six sources that render. This matters more than it sounds:
 the EDL and the FCPXML are emitted by separate code paths, and the render by a
 third (ffmpeg filter chains). Their agreement is the only evidence available
-here that all three describe the same cut.
+here that all three describe the same cut. The EDL and the FCPXML agree with
+each other exactly — 0.00 frames on all 27 — so the whole 0.69-frame spread
+comes from the render side.
 
-A systematic 0–1 frame shortfall remains: the export declares 493 frames where
-the render contains 493 frames plus ~0.04 s of container muxer slop. The
-tolerance is 2 frames, set by measuring this run rather than by taste — it
-covers both effects without hiding a real editorial disagreement. It is a
-known imprecision, not a bug, and it is recorded rather than tuned away.
+A systematic 0–1 frame shortfall remains: 22 of the 54 clip/render pairs are
+short by a fraction of a frame, each ~21 ms regardless of frame rate, which is
+container overhead rather than a cut disagreement. The tolerance is 2 frames,
+set by measuring the committed corpus rather than by taste — it is ~2.9× the
+largest gap measured, so it covers the effect without hiding a real editorial
+disagreement. It is a known imprecision, not a bug, and it is recorded rather
+than tuned away. Both figures are recomputed by
+`tests/test_nle_frame_deltas.py`.
 
 ---
 
