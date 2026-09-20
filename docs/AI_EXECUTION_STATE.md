@@ -9,12 +9,11 @@ every line below was true on this host at that point.
 * Up to date with `origin/main` (`https://github.com/desukab/selektyt.git`).
   Nothing unpushed, nothing stashed, nothing in `git stash list`.
 * **Latest commit:** this file's own commit. The last *substantive* change is
-  `142b436` — the credential-read fix on both sides, `tools/microbench.py`, and
-  the document corrections those forced. Run `git log -1` for the current hash
-  rather than trusting a hash printed here, since amending this file changes its
-  own commit hash.
-* Test suite: **1080 passed, 12 skipped** (2026-09-20; seven consecutive runs
-  stable at ~112 s). The 12 splits into two kinds, and the difference matters:
+  `4d83fed` — the frame-delta figures re-measured over the whole corpus and
+  gated per-document, after `7f0d9a8` corrected the Telugu script-share count.
+  Run `git log -1` for the current hash rather than trusting a hash printed
+  here, since amending this file changes its own commit hash.
+* Test suite: **1107 passed, 12 skipped** (2026-09-20, ~169 s). The 12 splits into two kinds, and the difference matters:
   **7** are in `tests/test_proxy_validation.py`, gated on the
   `SELEKYT_PROXY_MEDIA` env var, which expects a ~239 MB YouTube recording that
   is not redistributable with the repo. **They are opt-in real-media
@@ -63,7 +62,7 @@ every line below was true on this host at that point.
   sidecar cannot resolve `yt-dlp`. Plain `nohup … &` dies with the shell.
 * No project server is listening right now. Scratch run scripts in `/tmp` were
   removed.
-* Disk: **3.0 G free of 29 G, 90% used** (`df -h /`, 2026-09-20). This file
+* Disk: **2.8 G free of 29 G, 91% used** (`df -h /`, 2026-09-20). This file
   previously said both "5.7 G" and "14 G" in different places; both were stale,
   and the disk is the binding constraint on what can be attempted next. The
   corpus's downloaded media is deliberately *not* kept — `corpus/media/` is
@@ -88,6 +87,69 @@ every line below was true on this host at that point.
   a measurement is impossible.
 
 ## Completed work
+
+### This session — a second cluster of untraceable figures, and the gates that read the docs back
+
+The VAD retry's fabricated number turned out not to be an instance. Sweeping the
+repo's quoted constants turned up a second, independent cluster in the NLE
+frame-delta claims, which behaved the same way: specific measured figures cited
+in three documents and one tool, none of them traceable to any committed
+artifact.
+
+**What was wrong.** `docs/METRICS.md`, `docs/NLE_COMPATIBILITY.md`,
+`docs/TECHNICAL_AUDIT.md` and the tolerance comment in `tools/nle_check.py` all
+cited "1.63 frames" as the worst-case timeline-vs-render gap, with a per-clip
+table (24.858/24.892, 17.084/17.138) and frame counts (746 rendered against a
+745-frame timeline, 513 vs 512, 493 vs 493). **None of those numbers match any
+committed timeline or render.** The artifacts were fine; the prose had drifted
+off them.
+
+**Re-measured over the whole committed corpus** (11 sources, 27 clips, every
+timeline checked against both its renders — 54 clip/render pairs):
+
+* The exported timeline is systematically a fraction of a frame **shorter** than
+  the rendered file, and always in that direction. Worst case **0.69 frames**;
+  32 of 54 pairs exact; the 22 non-exact ones fall into three narrow bands
+  (0.53 / 0.63 / 0.69). The gap is ~21 ms regardless of frame rate, which is
+  container overhead rather than a cut disagreement.
+* EDL vs FCPXML agree to **0.00 frames on all 27 clips** — two emitters on
+  separate code paths describing the same cut.
+* The 2-frame tolerance is **~2.9×** the largest gap, not ~3×. That correction
+  was forced by a gate that caught my own overclaim while I was writing it.
+
+**Two provenance facts this surfaced, which the docs now state instead of
+hiding.** First, **no rendered MP4 is committed** — `git ls-files "*.mp4"`
+returns zero; all 59 renders are gitignored. So A4.2 (timeline vs render) is
+measurable on this machine only and is *not* reproducible from a clean
+checkout, while A4.3 (EDL vs FCPXML) is. The A4.2 test skips with a stated
+reason rather than passing vacuously, and the doc says "verified here" rather
+than "verified." Second, `tools/nle_check.py` and `tools/editorial_audit.py`
+are **post-hoc**: they live in a tool, not in the pipeline, and are not run in
+CI. That is now recorded in `docs/TECHNICAL_AUDIT.md`, where a reader would
+look for it.
+
+**The gates, and the one that was vacuous.** `tests/test_nle_frame_deltas.py`
+recomputes both figures from the corpus and reads the cited numbers back out of
+the prose. The first version of the doc gates searched the *concatenation* of
+both documents, and mutation-testing showed that was worthless: both files cite
+both figures, so changing one left the other still matching and the gate stayed
+green. Rewritten per-document — each figure pinned to the file that states it.
+**All four gates have been confirmed to fire by mutation** (27→26, 0.69→0.68 in
+each file, and a live 0.69→1.63 regression), and the restored control run is
+green. Recording the lesson: *a gate over a set of documents is not a gate over
+any of them.*
+
+**Also fixed:** the Telugu script-share argument in
+`tests/test_vad_empty_recovery.py` said "41 of 137 letters" — 137 is the whole
+string including spaces, the letter count is 75. The implied share read as ~30%
+when the decode actually gives 54.7%. Conclusion unchanged; the number used to
+reach it was not. Both counts are now derived from the fixture and pinned.
+
+**Four constants were verified clean** and are worth recording as clean:
+`SILENCE_SHARE_MAX` (0.30), `MIN_VAD_FRACTION` (0.10), `COLLAPSE_RATIO` (0.25),
+`EMPTY_RETRY_PEAK_DB`. Each reproduces exactly from the corpus. The repo's
+citation discipline is better than the VAD retry suggested — the failures are
+clusters, not the norm.
 
 ### This session — the VAD retry's own justification was a fabricated number, and the retry is removed
 
@@ -1033,7 +1095,7 @@ selections).
   just anamorphic ones — square-pixel sources now round to an even width
   (e.g. 274 px at 486 tall instead of 273). This is why the existing
   square-pixel 9:16 test still passes but on slightly different geometry.
-* **Disk is the binding constraint on real runs.** 3.0 G free, and one real
+* **Disk is the binding constraint on real runs.** 2.8 G free, and one real
   source is 883 MB. A second long source plus its renders will not fit
   comfortably; check `df` before any end-to-end run and never delete project
   data, git history, worktrees or caches blindly. Reclaimable caches come first:
