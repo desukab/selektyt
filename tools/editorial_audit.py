@@ -149,7 +149,7 @@ def check_cuts_respect_sentences(cand: dict, intervals: list[tuple[float, float]
     for a, b in intervals:
         lo, hi = adjacent(a)
         if lo != hi and sent_of[lo] != -1 and sent_of[lo] == sent_of[hi]:
-            bad.append(f"start {a:.2f}s splits '{spans[lo][2]}'/f'{spans[hi][2]}'")
+            bad.append(f"start {a:.2f}s splits '{spans[lo][2]}'/'{spans[hi][2]}'")
         lo, hi = adjacent(b)
         if lo != hi and sent_of[lo] != -1 and sent_of[lo] == sent_of[hi]:
             bad.append(f"end {b:.2f}s splits '{spans[lo][2]}'/'{spans[hi][2]}'")
