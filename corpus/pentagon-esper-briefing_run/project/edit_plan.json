@@ -62,40 +62,36 @@
   },
   {
     "index": 4,
-    "source_start": 364.84,
-    "source_end": 394.0,
-    "source_duration": 29.16,
+    "source_start": 364.5,
+    "source_end": 393.98,
+    "source_duration": 29.48,
     "intervals": [
       [
         364.5,
-        384.04
+        370.2
       ],
       [
-        384.6,
-        394.0
+        370.94,
+        393.98
       ]
     ],
-    "edited_duration": 28.94,
-    "removed_seconds": 0.22,
+    "edited_duration": 28.74,
+    "removed_seconds": 0.74,
     "story_type": "question"
   },
   {
     "index": 5,
-    "source_start": 910.0,
-    "source_end": 922.862,
-    "source_duration": 12.862,
+    "source_start": 403.08,
+    "source_end": 417.2,
+    "source_duration": 14.12,
     "intervals": [
       [
-        910.0,
-        916.02
-      ],
-      [
-        916.94,
-        922.12
+        403.08,
+        417.2
       ]
     ],
-    "edited_duration": 11.2,
-    "removed_seconds": 1.662,
-    "story_type": "revelation"
+    "edited_duration": 14.12,
+    "removed_seconds": 0.0,
+    "story_type": "question"
   }
 ]

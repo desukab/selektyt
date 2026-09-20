@@ -11,20 +11,20 @@ Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
 Dialogue: 0,0:00:00.00,0:00:00.31,Default,,0,0,0,,{\k34}{\c&H00D7FF&\b1}Syria.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:00.34,0:00:03.21,Default,,0,0,0,,{\k90}has {\k86}the {\k86}{\c&H00D7FF&\b1}deployment{\c&HFFFFFF&\b0} {\k28}of
-Dialogue: 0,0:00:03.24,0:00:04.55,Default,,0,0,0,,{\k74}{\c&H00D7FF&\b1}reinforcements{\c&HFFFFFF&\b0} {\k20}that {\k10}you {\k30}announced
-Dialogue: 0,0:00:04.58,0:00:07.21,Default,,0,0,0,,{\k28}last {\k24}week {\k40}{\c&H00D7FF&\b1}begun{\c&HFFFFFF&\b0} {\k132}and {\k34}{\c&H00D7FF&\b1}could{\c&HFFFFFF&\b0} {\k8}you
-Dialogue: 0,0:00:07.24,0:00:08.95,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}describe{\c&HFFFFFF&\b0} {\k24}more {\k32}fully {\k22}what {\k60}you
-Dialogue: 0,0:00:08.98,0:00:09.82,Default,,0,0,0,,{\k22}intend {\k18}to {\k12}do {\k20}{\c&H00D7FF&\b1}there?{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:10.22,0:00:11.57,Default,,0,0,0,,{\k16}We {\k20}have {\k46}begun {\k44}{\c&H00D7FF&\b1}deploying{\c&HFFFFFF&\b0} {\k12}and
-Dialogue: 0,0:00:11.60,0:00:12.99,Default,,0,0,0,,{\k68}{\c&H00D7FF&\b1}repositioning{\c&HFFFFFF&\b0} {\k26}additional {\k48}assets
-Dialogue: 0,0:00:13.02,0:00:15.46,Default,,0,0,0,,{\k34}into {\k24}the {\k50}{\c&H00D7FF&\b1}vicinity{\c&HFFFFFF&\b0} {\k40}of {\k40}Dar {\k44}{\c&H00D7FF&\b1}-Arzara.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:15.70,0:00:16.95,Default,,0,0,0,,{\k44}As {\k16}I {\k22}{\c&H00D7FF&\b1}said{\c&HFFFFFF&\b0} {\k16}the {\k10}{\c&H00D7FF&\b1}other{\c&HFFFFFF&\b0} {\k18}day,
-Dialogue: 0,0:00:16.98,0:00:18.49,Default,,0,0,0,,{\k34}includes {\k54}{\c&H00D7FF&\b1}mechanized{\c&HFFFFFF&\b0} {\k32}forces {\k34}and
-Dialogue: 0,0:00:18.52,0:00:19.48,Default,,0,0,0,,{\k16}other {\k22}types {\k18}of {\k28}{\c&H00D7FF&\b1}forces.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:19.60,0:00:21.27,Default,,0,0,0,,{\k30}That {\k16}will {\k48}{\c&H00D7FF&\b1}continue{\c&HFFFFFF&\b0} {\k46}until {\k30}we
-Dialogue: 0,0:00:21.30,0:00:22.53,Default,,0,0,0,,{\k80}believe {\k14}we {\k10}have {\k22}{\c&H00D7FF&\b1}sufficient{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:22.56,0:00:24.45,Default,,0,0,0,,{\k74}{\c&H00D7FF&\b1}capability{\c&HFFFFFF&\b0} {\k30}to {\k30}ensure {\k32}ISIS {\k26}and
-Dialogue: 0,0:00:24.48,0:00:26.87,Default,,0,0,0,,{\k22}other {\k76}{\c&H00D7FF&\b1}destabilizing{\c&HFFFFFF&\b0} {\k40}actors {\k104}are
-Dialogue: 0,0:00:26.90,0:00:28.45,Default,,0,0,0,,{\k26}denied {\k46}{\c&H00D7FF&\b1}access{\c&HFFFFFF&\b0} {\k26}to {\k20}that {\k40}oil
-Dialogue: 0,0:00:28.48,0:00:28.94,Default,,0,0,0,,{\k46}{\c&H00D7FF&\b1}facility.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.34,0:00:03.21,Default,,0,0,0,,{\k12}Korea, {\k80}has {\k32}the {\k84}{\c&H00D7FF&\b1}deployment{\c&HFFFFFF&\b0} {\k28}of
+Dialogue: 0,0:00:03.24,0:00:04.55,Default,,0,0,0,,{\k74}{\c&H00D7FF&\b1}reinforcements{\c&HFFFFFF&\b0} {\k20}that {\k12}you {\k28}announced
+Dialogue: 0,0:00:04.58,0:00:06.47,Default,,0,0,0,,{\k28}last {\k24}week {\k42}{\c&H00D7FF&\b1}begun,{\c&HFFFFFF&\b0} {\k34}and {\k30}{\c&H00D7FF&\b1}could{\c&HFFFFFF&\b0} {\k10}you
+Dialogue: 0,0:00:06.50,0:00:08.21,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}describe{\c&HFFFFFF&\b0} {\k24}more {\k32}fully {\k24}what {\k58}you
+Dialogue: 0,0:00:08.24,0:00:09.05,Default,,0,0,0,,{\k22}intend {\k20}to {\k10}do {\k18}{\c&H00D7FF&\b1}there?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:09.08,0:00:10.83,Default,,0,0,0,,{\k56}We {\k18}have {\k48}begun {\k44}{\c&H00D7FF&\b1}deploying{\c&HFFFFFF&\b0} {\k12}and
+Dialogue: 0,0:00:10.86,0:00:12.25,Default,,0,0,0,,{\k64}{\c&H00D7FF&\b1}repositioning{\c&HFFFFFF&\b0} {\k30}additional {\k48}assets
+Dialogue: 0,0:00:12.28,0:00:14.72,Default,,0,0,0,,{\k34}into {\k26}the {\k48}{\c&H00D7FF&\b1}vicinity{\c&HFFFFFF&\b0} {\k40}of {\k40}Dar {\k44}{\c&H00D7FF&\b1}-Arzara.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:14.96,0:00:16.25,Default,,0,0,0,,{\k44}As {\k16}I {\k22}{\c&H00D7FF&\b1}said{\c&HFFFFFF&\b0} {\k16}the {\k10}{\c&H00D7FF&\b1}other{\c&HFFFFFF&\b0} {\k18}day,
+Dialogue: 0,0:00:16.28,0:00:17.75,Default,,0,0,0,,{\k2}it {\k28}includes {\k54}{\c&H00D7FF&\b1}mechanized{\c&HFFFFFF&\b0} {\k32}forces {\k34}and
+Dialogue: 0,0:00:17.78,0:00:18.74,Default,,0,0,0,,{\k16}other {\k22}types {\k18}of {\k28}{\c&H00D7FF&\b1}forces.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:19.20,0:00:21.09,Default,,0,0,0,,{\k52}That {\k14}will {\k50}{\c&H00D7FF&\b1}continue{\c&HFFFFFF&\b0} {\k44}until {\k32}we
+Dialogue: 0,0:00:21.12,0:00:22.35,Default,,0,0,0,,{\k80}believe {\k14}we {\k10}have {\k22}{\c&H00D7FF&\b1}sufficient{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:22.38,0:00:24.27,Default,,0,0,0,,{\k72}{\c&H00D7FF&\b1}capability{\c&HFFFFFF&\b0} {\k32}to {\k30}ensure {\k32}ISIS {\k26}and
+Dialogue: 0,0:00:24.30,0:00:26.69,Default,,0,0,0,,{\k22}other {\k76}{\c&H00D7FF&\b1}destabilizing{\c&HFFFFFF&\b0} {\k42}actors {\k102}are
+Dialogue: 0,0:00:26.72,0:00:28.27,Default,,0,0,0,,{\k26}denied {\k46}{\c&H00D7FF&\b1}access{\c&HFFFFFF&\b0} {\k26}to {\k20}that {\k40}oil
+Dialogue: 0,0:00:28.30,0:00:28.74,Default,,0,0,0,,{\k44}{\c&H00D7FF&\b1}facility.{\c&HFFFFFF&\b0}

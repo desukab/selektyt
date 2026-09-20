@@ -2,88 +2,83 @@
   "style": "minimal",
   "blocks": [
     {
-      "start": 910.0,
-      "end": 911.0,
-      "text": "At the end of the day,",
+      "start": 403.08,
+      "end": 404.82,
+      "text": "Sir, do you have video of",
       "emphasis": [
-        " end",
-        " day,"
+        " have",
+        " video"
       ]
     },
     {
-      "start": 911.06,
-      "end": 913.76,
-      "text": "my expectation is that it'll be",
+      "start": 404.82,
+      "end": 406.18,
+      "text": "Baghdadi's final moments?",
       "emphasis": [
-        " expectation",
-        " it'll"
+        " moments?"
       ]
     },
     {
-      "start": 913.76,
-      "end": 914.76,
-      "text": "fewer than what we had before.",
+      "start": 406.52,
+      "end": 408.08,
+      "text": "And also, are you partnering with",
       "emphasis": [
-        " fewer",
-        " before."
+        " partnering",
+        " with"
       ]
     },
     {
-      "start": 914.76,
-      "end": 915.84,
-      "text": "and they will be going home.",
+      "start": 408.08,
+      "end": 409.52,
+      "text": "the Kurds again on the ground?",
       "emphasis": [
-        " going",
-        " home."
+        " again",
+        " ground?"
       ]
     },
     {
-      "start": 917.0,
-      "end": 918.22,
-      "text": "And help me remind me of",
+      "start": 410.0,
+      "end": 411.5,
+      "text": "Can you explain how difficult this",
       "emphasis": [
-        " help",
-        " remind"
+        " explain",
+        " difficult"
       ]
     },
     {
-      "start": 918.22,
-      "end": 918.72,
-      "text": "the first question.",
+      "start": 411.5,
+      "end": 412.98,
+      "text": "operation would have been if you",
       "emphasis": [
-        " question."
+        " operation",
+        " would"
       ]
     },
     {
-      "start": 918.88,
-      "end": 920.06,
-      "text": "The first question was about the",
+      "start": 412.98,
+      "end": 415.36,
+      "text": "didn't have troops or bases on",
       "emphasis": [
-        " question",
-        " about"
+        " troops",
+        " bases"
       ]
     },
     {
-      "start": 920.06,
-      "end": 921.02,
-      "text": "SDF commander saying that.",
+      "start": 415.36,
+      "end": 416.96,
+      "text": "the ground in Syria and in",
       "emphasis": [
-        " commander"
+        " ground",
+        " Syria"
       ]
     },
     {
-      "start": 921.02,
-      "end": 921.4,
-      "text": "Yeah, the SDF.",
+      "start": 416.96,
+      "end": 417.2,
+      "text": "Iraq?",
       "emphasis": [
-        " SDF."
+        " Iraq?"
       ]
-    },
-    {
-      "start": 921.42,
-      "end": 922.12,
-      "text": "So this was a",
-      "emphasis": []
     }
   ]
 }

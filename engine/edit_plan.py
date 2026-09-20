@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from models.core import Candidate
+from models.core import Candidate, Segment, Word
 
 
 _FILLER_TEXTS = frozenset({
@@ -35,6 +35,69 @@ def _word_aligned(t: float, words: list[Word]) -> float:
         if w.start < t < w.end:
             return w.start
     return t
+
+
+def align_span(start: float, end: float, words: list[Word], text: str) -> tuple[float, float, str]:
+    """Make a span's bounds, text and word list describe the same clip.
+
+    A candidate's bounds are estimated proportionally to character span (see
+    ``story_units._segment_sentences``), not read off word timing, so a bound
+    can land inside a word. The word list, by contrast, is real timing, and
+    ``retention_intervals`` snaps to it. A candidate built on an estimated
+    bound therefore ships a clip whose opening or closing word is absent from
+    its own ``text`` — the content pack's hook then describes a clip that is
+    not the rendered one, and ``editorial_audit``'s caption-vs-text check
+    fires on a real desync rather than a false positive.
+
+    Snapping both bounds here and rebuilding the text from the words kept
+    inside them makes the candidate identical to the interval that ships:
+    ``retention_intervals`` then sees already-aligned bounds and its snap is a
+    no-op rather than a repair.
+
+    Measured on the committed corpus, 3 of 27 candidates with word timing had
+    a text that did not agree with the words the shipped captions are built
+    from: one opened on a word its text omitted, one closed inside a word its
+    text included, and one carried a period merged into a word that the words
+    hold as its own token. ``align_span`` corrects those three and leaves the
+    other twenty-four byte-identical.
+    """
+    if not words or end <= start:
+        return start, end, text
+    a = _word_aligned(start, words)
+    b = _word_aligned(end, words)
+    if b <= a:
+        return start, end, text
+    kept = [w for w in words if w.start >= a - 1e-6 and w.end <= b + 1e-6]
+    if not kept:
+        return start, end, text
+    # faster-whisper emits ' has' rather than 'has', and the leading space is
+    # load-bearing: a hyphen token is '-lived', which has to glue onto the
+    # word before it ('short' + '-lived' -> 'short-lived'), and a number
+    # splits as '1' + ',024'. Concatenating raw tokens is therefore right for
+    # every token after the first, and wrong for exactly one — the first token
+    # of a segment carries no leading space, so when the snap pulls such a
+    # token in behind a word the two glue together ('Syria.' + 'has'). A
+    # separator is inserted only where a word actually starts: a token
+    # beginning with a letter or digit, following one that does not end in a
+    # space. Punctuation-initial tokens still glue.
+    parts: list[str] = []
+    for w in kept:
+        if parts and not parts[-1][-1:].isspace() and re.match(r"\w", w.text):
+            parts.append(" ")
+        parts.append(w.text)
+    rebuilt = " ".join("".join(parts).split())
+    if not rebuilt:
+        return start, end, text
+    # Rebuilding is only warranted when the kept words are not the words the
+    # text already carries. On the committed corpus that is three candidates
+    # in 27 — two that closed inside a word the text kept, and one that opened
+    # on a word the text omitted. A fourth differed only in where a lone
+    # punctuation token picked up its space, which is a gluing artefact rather
+    # than a content change, so its text is left as the segment produced it.
+    key = lambda s: [t.strip(",.!?;:\"'") for t in s.split()]
+    if key(rebuilt) == key(text):
+        return start, end, text
+    return a, b, rebuilt
 
 
 def retention_intervals(c: Candidate, min_pause: float = 0.70, keep_pause: float = 0.18, keep_edge: float = 0.06) -> list[tuple[float, float]]:

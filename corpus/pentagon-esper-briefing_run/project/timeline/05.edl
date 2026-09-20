@@ -1,13 +1,8 @@
-TITLE:   At the end of the day, my expectation is that it'll be fewer than what we had before.
+TITLE:   Sir, do you have video of Baghdadi's final moments?
 
 FCM: NON-DROP FRAME
 
-001  PENTAGON V     C        00:15:09:03 00:15:15:03 00:00:00:00 00:00:06:00
+001  PENTAGON V     C        00:06:42:20 00:06:56:23 00:00:00:00 00:00:14:03
      M2   pentagon-esper-briefing.mp4
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4
-001  PENTAGON A     C        00:15:09:03 00:15:15:03 00:00:00:00 00:00:06:00
-
-002  PENTAGON V     C        00:15:16:01 00:15:21:06 00:00:06:00 00:00:11:05
-     M2   pentagon-esper-briefing.mp4
-* FROM CLIP: /home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4
-002  PENTAGON A     C        00:15:16:01 00:15:21:06 00:00:06:00 00:00:11:05
+001  PENTAGON A     C        00:06:42:20 00:06:56:23 00:00:00:00 00:00:14:03

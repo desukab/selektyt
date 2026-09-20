@@ -3,6 +3,7 @@ import re
 from collections import Counter
 from models.core import Segment, Candidate
 from engine.context_guard import validate
+from engine.edit_plan import align_span
 from engine.story_units import (
     boilerplate_fraction,
     coherence_score,
@@ -355,17 +356,23 @@ def _clean_hook_payoff(text: str) -> tuple[str, str]:
 
 
 def score_candidate(s: Segment) -> Candidate:
-    editorial, virality, context, visual, story_type, detail, coherence, completeness = _score(s)
-    hook, payoff = _clean_hook_payoff(s.text.strip())
-    words = s.words or []
-    dead_air = _dead_air_fraction(words, s.duration) if words else None
+    # The span is aligned before it is scored, so the score, the hook, the
+    # text and the shipped interval all describe the same clip. Without this
+    # a candidate whose opening word is snapped into the cut is scored and
+    # hooked on a text that omits it. See edit_plan.align_span.
+    start, end, text = align_span(s.start, s.end, s.words or [], s.text.strip())
+    aligned = Segment(start, end, text, s.words, s.coherence, s.completeness)
+    editorial, virality, context, visual, story_type, detail, coherence, completeness = _score(aligned)
+    hook, payoff = _clean_hook_payoff(text)
+    words = aligned.words or []
+    dead_air = _dead_air_fraction(words, aligned.duration) if words else None
     if dead_air is not None:
         detail += f"; dead_air={dead_air:.2f}"
     return Candidate(
-        s.start, s.end, s.text.strip(), story_type, hook, payoff,
+        start, end, text, story_type, hook, payoff,
         editorial, virality, context, .90,
         f"Structural editorial score: {detail}.",
-        visual, s.words, coherence, getattr(s, "completeness", 1.0),
+        visual, words, coherence, getattr(s, "completeness", 1.0),
     )
 
 

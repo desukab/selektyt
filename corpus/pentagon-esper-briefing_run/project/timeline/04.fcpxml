@@ -8,12 +8,12 @@
     </asset>
   </resources>
   <library>
-    <event name="has the deployment of reinforcements that you announced last week begun and could you describe more fully what you intend to do there?">
-      <project name="has the deployment of reinforcements that you announced last week begun and could you describe more fully what you intend to do there?">
+    <event name="Syria.">
+      <project name="Syria.">
         <sequence format="f1" tcFormat="NDF">
           <spine>
-          <asset-clip ref="r1" offset="0s" start="10934924/30000s" duration="586586/30000s" tcFormat="NDF" />
-          <asset-clip ref="r1" offset="586586/30000s" start="11537526/30000s" duration="282282/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="0s" start="10934924/30000s" duration="171171/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="171171/30000s" start="11128117/30000s" duration="691691/30000s" tcFormat="NDF" />
           </spine>
         </sequence>
       </project>
