@@ -13,7 +13,7 @@ every line below was true on this host at that point.
   the document corrections those forced. Run `git log -1` for the current hash
   rather than trusting a hash printed here, since amending this file changes its
   own commit hash.
-* Test suite: **1036 passed, 12 skipped** (2026-09-20; seven consecutive runs
+* Test suite: **1080 passed, 12 skipped** (2026-09-20; seven consecutive runs
   stable at ~112 s). The 12 splits into two kinds, and the difference matters:
   **7** are in `tests/test_proxy_validation.py`, gated on the
   `SELEKYT_PROXY_MEDIA` env var, which expects a ~239 MB YouTube recording that
@@ -25,7 +25,7 @@ every line below was true on this host at that point.
   `c9-medium`, `c9-large-v3` and `redteam-small-verify` predate the
   `wer_err_total` field in their run records — old committed data that cannot be
   re-derived without re-running the models, not a missing environment. The
-  earlier count in this file was 895/7, then 1034/13, then 1036/12; the suite
+  earlier count in this file was 895/7, then 1034/13, then 1036/12, then 1080/12; the suite
   grows as defects get regression tests, and the skip count moves when a gated
   test's media appears or disappears — re-run `pytest -q -rs` before trusting any
   count here.
@@ -861,11 +861,11 @@ selections).
   fixed). All four distinguish "code exists and unit tests pass" from "a user
   can rely on this".
 * **Start any work by re-running the suite** (`.venv/bin/python -m pytest -q`)
-  and confirming **1036 passed / 12 skipped** (~112 s, 2026-09-20). A number other
+  and confirming **1080 passed / 12 skipped** (~145 s, 2026-09-20). A number other
   than that means something has drifted. The count was refreshed across the doc
   set after RED_TEAM, AI_EXECUTION_STATE and an agent appendix disagreed within
   one day (824, 819, 834); it has moved 819 → 824 → 834 → 837 → 890 → 895 → 898
-  → 1031 → 1034 → 1036 as regression tests landed, and the skip count moved
+  → 1031 → 1034 → 1036 → 1080 as regression tests landed, and the skip count moved
   10 → 7 → 12 → 13 → 12 as gated real-media tests, backend-gated checks and
   WER run records arrived and departed. **A quoted count is
   stale the moment it is written** — the "How to run things" note above carries
