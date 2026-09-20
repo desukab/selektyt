@@ -25,6 +25,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 TOOLS = Path(__file__).resolve().parent.parent / "tools"
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
@@ -321,3 +323,46 @@ def test_the_whole_corpus_is_auditable_without_keyerror():
         "the audit raised on a committed project instead of reporting it: "
         + "; ".join(unreachable)
     )
+
+
+# --- the caption parser the audit reads through ----------------------------
+
+
+def test_the_parser_reads_a_real_committed_caption_file():
+    """The audit's cue checks are only as good as its SRT parse, so the parser
+    is pinned against a committed artifact rather than a fixture: 20 cues on
+    nasa360-ep5 clip 01, with real timestamps."""
+    from tools.editorial_audit import _parse_srt_seconds
+
+    srt = TOOLS.parent / "corpus" / "nasa360-ep5_run" / "project" / "captions" / "01.srt"
+    if not srt.is_file():
+        pytest.skip("nasa360-ep5 captions not present in this checkout")
+    cues = _parse_srt_seconds(srt)
+    assert len(cues) >= 10, f"a real shipped caption file parsed to {len(cues)} cues"
+    # A timestamp that survived the parse has to be a real number, not 0.0 by
+    # default — a parse that silently zeroed every cue would pass a length check.
+    assert all(c["end"] > c["start"] for c in cues), "a cue does not end after it starts"
+
+
+@pytest.mark.parametrize("raw", [
+    "",
+    "1\nhello world\n",
+    "1\n00:00:00,000 --> 00:00:01,000\n",
+    "1\n00:00:00 --> 00:00:01,000\ntext\n",
+    "1\n\n",
+], ids=["empty", "no timestamp line", "no text line", "bad timestamp", "blank block"])
+def test_a_malformed_caption_file_parses_to_zero_cues_not_an_exception(tmp_path, raw):
+    """Every malformed shape degrades to zero cues.
+
+    This is the load-bearing property of the whole caption check family:
+    ``check_caption_text_is_transcript_text`` and ``check_cues_fit_the_render``
+    both short-circuit on an empty cue list, so a parse that raised — or worse,
+    one that invented cues from a malformed block — would turn a caption
+    regression into either a crash or a silent PASS. Zero is the honest reading
+    of a file with no usable cues in it.
+    """
+    from tools.editorial_audit import _parse_srt_seconds
+
+    srt = tmp_path / "01.srt"
+    srt.write_text(raw, encoding="utf-8")
+    assert _parse_srt_seconds(srt) == []
