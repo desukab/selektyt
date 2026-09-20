@@ -9,24 +9,27 @@ claims are separate and this report does not merge them.
 ## Current commit
 
 ```
+59e5327  desktop: real cancellation, contract-tested UI, and honest signing   ← tip
+91f3a39  fix(windows): NSIS wants a language name, not a locale code
 33e42f8  fix(windows): the portability bugs that would stop the app on Windows 11
 b5078e5  feat(desktop): the SelekyT Windows desktop shell and its build pipeline
-af0aa55  French WER: the fifth C10 language, and a doc-drift gate   ← prior tip
 ```
 
-Both pushed to `main` at `https://github.com/desukab/selektyt`.
+All pushed to `main` at `https://github.com/desukab/selektyt`. Run `git log -1`
+rather than trusting the hash printed here — this file's own commit changes it.
 
 ## Architecture
 
 A thin Tauri 2 webview over the existing engine. There is no second engine.
 
 ```
-webview (ui/index.html + ui/app.mjs)
-   │ invoke() — four commands only
+webview (ui/index.html + ui/app.mjs, importing ui/lib.mjs)
+   │ invoke() — seven commands
    ▼
 src-tauri/src/main.rs
    selekyt_rpc(target, op, params)  →  JSON-RPC over stdio
-   selekyt_health() / selekyt_out_dir() / reveal_path()
+   selekyt_cancel(target)          →  kills the child; the engine has no abort
+   selekyt_projects() / selekyt_delete_project() / selekyt_health() / selekyt_out_dir() / reveal_path()
    ├── selekyt-mech   (rust/ mechanical core)
    └── selekyt-python (bundled CPython 3.12 running `-m selekyt --server`)
         = the CLI's own intelligence layer, pip-installed from this repo
@@ -42,13 +45,17 @@ network permission at all; `src-tauri/capabilities/main.json` is the entire ACL.
 
 | Path | What |
 | --- | --- |
-| `apps/desktop/src-tauri/src/main.rs` | The shell: 4 commands, sidecar lifecycle, unconditional stderr drain |
-| `apps/desktop/src-tauri/tauri.conf.json` | NSIS + MSI targets, `externalBin`, resource map |
+| `apps/desktop/src-tauri/src/main.rs` | The shell: commands, sidecar lifecycle, unconditional stderr drain, process-boundary cancellation, project listing and deletion |
+| `apps/desktop/src-tauri/tauri.conf.json` | NSIS + MSI targets, `externalBin`, resource map, `signCommand` hook |
+| `apps/desktop/src-tauri/scripts/sign.ps1` | Conditional signing: signs when the Azure secrets exist, declines and exits 0 when they do not (**UNVERIFIED — never executed**) |
 | `apps/desktop/src-tauri/capabilities/main.json` | The ACL: fs on user dirs, file picker, no network |
 | `apps/desktop/src-tauri/{Cargo.toml,build.rs,Cargo.lock}` | Deps; codegen that tolerates an unstaged dev tree |
-| `apps/desktop/ui/{index.html,app.mjs,style.css}` | The first-user-flow UI |
+| `apps/desktop/ui/{index.html,app.mjs,style.css,lib.mjs}` | The first-user-flow UI, plus the pure helpers the contract tests import |
 | `apps/desktop/stage-windows.sh` | Stages sidecars, interpreter, ffmpeg, weights; pings before building |
-| `.github/workflows/build-windows.yml` | The Windows x64 build pipeline |
+| `.github/workflows/build-windows.yml` | The Windows x64 build pipeline, with honest signed/unsigned labelling |
+| `.github/workflows/ci.yml` | Adds the Linux `shell` job and the UI syntax/grammar checks |
+| `tests/ui_contract.mjs`, `tests/test_desktop_packaging.py` | The UI's contract with engine artifacts; the signing hook's contract with the build |
+| `providers/whisper.py` | Intra-chunk thread cap (measured: 2 threads is the saturation point on 4 cores) |
 | `selekyt/server.py` | `probe_media`/`read_artifact`/`stat_artifact`, UTF-8 stdio |
 | `engine/nle_export.py` | Windows file-URI fix (the offline-import bug) |
 | `providers/youtube.py`, `selekyt/cli.py`, `tools/*.py` | Windows portability fixes |
@@ -67,7 +74,11 @@ npx tauri build --bundles nsis,msi
 
 GitHub Actions runs exactly this on `windows-latest` on every push to `main`
 (`.github/workflows/build-windows.yml`), and uploads the NSIS `.exe` and MSI as
-the `selektyt-windows-x64` artifact.
+`selekyt-windows-x64-signed` or `selekyt-windows-x64-unsigned` depending on
+whether `scripts/sign.ps1` actually signed the binaries — the name is derived
+from the run, not asserted, so the artifact can never claim a trust state the
+build did not achieve. Today, with no `SELEKYT_AZURE_*` secrets configured,
+every artifact is `-unsigned` and the job posts a warning saying so.
 
 ## Windows artifact produced
 
@@ -79,7 +90,12 @@ faster-whisper `small` weights — so a first run transcribes with no network.
 **Physically in hand on this host: none.** The development host is Linux x64
 with no Windows SDK and no mingw target. The Linux shell binary was built and
 exercised instead (`/dev/shm/selekyt-target/debug/debug/SelekyT`, ~197 MB), and
-the desktop sidecar binary it spawns is the one the installer ships.
+the desktop sidecar binary it spawns is the one the installer ships. **No
+installer file survives on this host to measure** — the local copy under
+`/dev/shm/win-artifact/` was deleted when `/dev/shm` filled to 100% during a
+test run, so every size below is an estimate from the staged payloads, not a
+measurement. Re-derive the real figures from the Actions artifact before
+quoting a number anywhere user-facing.
 
 Approximate installer payload, by component: ffmpeg+ffprobe ≈ 210 MB, whisper
 `small` ≈ 484 MB, interpreter+deps ≈ 250 MB → near 1 GB before compression.
@@ -109,14 +125,29 @@ claiming success.
 
 ## Tests
 
-- **1215 passed, 13 skipped** (full Python suite, 3 min on this host), up from
-  a 1204 / 13 baseline. The 11 new tests are the desktop ops and the contract
-  coverage for them; nothing regressed.
-- **6 Rust unit tests** in `apps/desktop/src-tauri`, including
+- **1234 passed, 13 skipped** (full Python suite, ~3 min on this host), up from
+  a 1215 / 13 baseline. The 19 new tests are the desktop packaging contract (5)
+  and engine-side growth; nothing regressed.
+- **11 Rust unit tests** in `apps/desktop/src-tauri`, including
   `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the pipe-buffer
-  deadlock fix that this session found by hitting it for real.
-- Skips are pre-existing and environmental: corpus media not staged, optional
-  backends (sherpa-onnx, silero, ollama) not installed.
+  deadlock fix that this session found by hitting it for real, and
+  `cancel_unblocks_a_call_in_flight`, which pins the cancellation fix. Both run
+  in well under a second — the cancellation test uses a shell builtin busy loop
+  rather than `sleep`, because SIGKILLing a shell leaves a forked `sleep`
+  holding the write end of the pipe, and the test then blocks until the sleep
+  expires. That is a property of the test double, not of the engine: every
+  ffmpeg call in `providers/ffmpeg.py` pipes its own stdout, so the real
+  sidecar has no orphaned child.
+- `cargo clippy --all-targets -- -D warnings` is clean, and CI now denies
+  warnings on Linux before the Windows job pays for a build.
+- `tests/ui_contract.mjs` passes in both modes: against a real engine project
+  tree (captions, selections, edit-plan arithmetic, transcript overlap,
+  report/qa shape) and in its project-independent CI mode (formatters, the SRT
+  grammar, the path helpers).
+- Skips are pre-existing and each is labelled with its reason by `-rs`: 7 are
+  the opt-in `SELEKYT_PROXY_MEDIA` measurements, 5 are committed WER records
+  that predate the `wer_err_total` field, 1 is a language with no run record.
+  They are not "environment skips" and must not be described as one group.
 
 ## Was a real video processed?
 
@@ -156,7 +187,9 @@ hung at 55 minutes and the second completed in 61 seconds on the same input.
   renders a valid mp4.
 - The Windows build pipeline is live: the push to `main` triggered
   `build-windows` on `windows-latest`.
-- The full suite after every change: 1215 / 13, no regressions.
+- The full suite after every change: 1234 / 13, no regressions; 11 Rust unit
+  tests in the shell, clippy clean at `-D warnings`; the UI's pure logic passes
+  `tests/ui_contract.mjs` against a real engine project tree.
 
 ## What remains blocked specifically on Windows
 
@@ -183,9 +216,28 @@ code that could not be executed here.
 6. **The GUI itself.** Headless host, no X server or xvfb. The binary was
    verified through its RPC surface, not its window. The acceptance flow was
    driven end to end against the real engine over that same boundary, but a
-   reviewer must still click through it on Windows 11.
+   reviewer must still click through it on Windows 11. **What is now tested
+   without a window** is the pure rendering layer: `tests/ui_contract.mjs` runs
+   the formatters, the SRT reader and the timeline arithmetic against a project
+   tree the engine really wrote. That is how the single-digit-hours SRT bug was
+   caught — the engine emits `0:00:00,787`, and a strict two-digit grammar
+   silently rejects every cue in every caption file, which would have looked
+   exactly like a missing captions file in the running app.
 7. **WebView2 availability.** The config downloads the bootstrapper silently;
    untested on a machine without Edge.
+8. **The signing hook has never executed.** `bundle.windows.signCommand` points
+   at `scripts/sign.ps1`, which is correct-by-construction only: its argument
+   contract, its sha256 + RFC 3161 timestamping and its "decline and exit 0
+   without credentials" behaviour are pinned by `tests/test_desktop_packaging.py`,
+   but no PowerShell exists on this host and the script has never run once.
+   Until it has, the honest statement is **the build is unsigned**, which is
+   also what the artifact name says. Windows SmartScreen will warn on it; that
+   is expected and is not being hidden or worked around.
+9. **MSIX / Microsoft Store packaging does not exist.** Tauri 2's `BundleType`
+   has no `Appx` variant (verified in the vendored `tauri-utils` config source,
+   not assumed from docs), so the Store path needs a separate MakeAppx +
+   `AppxManifest.xml` stage that has not been written. The current NSIS + MSI
+   pair covers direct distribution only.
 
 ## Known leftover
 

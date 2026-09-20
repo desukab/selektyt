@@ -5,27 +5,35 @@ every line below was true on this host at that point.
 
 ## Current repository state
 
-* Repository: `/home/azureuser/selektyt`, on `main`, working tree **clean**
-  except two untracked artifacts (`corpus/wer/runs/nasa-c4-small.json`,
-  `tools/caption_ocr.py`) that predate the desktop work and are not part of it.
-* Up to date with `origin/main` (`https://github.com/desukab/selektyt.git`).
+* Repository: `/home/azureuser/selektyt`, on `main`, working tree **clean**.
+  Up to date with `origin/main` (`https://github.com/desukab/selektyt.git`).
   Nothing unpushed, nothing stashed, nothing in `git stash list`.
+  The two untracked leftovers noted by the previous checkpoint are resolved:
+  `tools/caption_ocr.py` was already tracked and clean, and the WER run record
+  `corpus/wer/runs/nasa-c4-small.json` was committed at `59e5327` alongside its
+  tracked siblings.
 * **The Windows desktop application is the current line of work.** See
   `docs/RELEASE.md` for the acceptance position, which keeps two claims
   strictly separate: the engine path is proven on a real file through the
   shipped sidecar binary, and the Windows installer has never run on Windows.
-  The last substantive commits are `61f9d7d` (desktop UI stage-evidence fix),
+  The last substantive commit is `59e5327` (cancellation, contract-tested UI,
+  honest signing). Earlier relevant commits: `91f3a39` (stage-evidence fix),
   `6aa5e83` (RELEASE report), `33e42f8` (Windows portability fixes),
   `b5078e5` (the Tauri 2 shell and its build pipeline).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1215 passed, 13 skipped** (2026-09-20, ~181 s) — the prior
-  baseline was 1204/13; the 11 new tests are the desktop shell ops and the
-  sidecar-contract coverage for them, with no regressions. **6 Rust unit
-  tests** in `apps/desktop/src-tauri` also pass, including
+* Test suite: **1234 passed, 13 skipped** (2026-09-20, ~183 s) — the prior
+  baseline was 1215/13; the 19 new tests are the desktop packaging contract
+  (`tests/test_desktop_packaging.py`, 5) and the UI syntax/grammar checks now
+  wired into CI, plus engine-side growth. No regressions.
+  **11 Rust unit tests** in `apps/desktop/src-tauri` pass, including
+  `cancel_unblocks_a_call_in_flight` (0.15 s — see the note below about why its
+  fake sidecar is a shell builtin loop, not `sleep`) and
   `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the pipe-buffer
-  deadlock fix. The skip count splits into three kinds, and the differences matter:
-  **7** are in `tests/test_proxy_validation.py`, gated on the
+  deadlock fix. `cargo clippy --all-targets -- -D warnings` is clean, which now
+  matters because the new `shell` CI job denies warnings on Linux before the
+  Windows job pays for a build. The skip count splits into three kinds, and the
+  differences matter: **7** are in `tests/test_proxy_validation.py`, gated on the
   `SELEKYT_PROXY_MEDIA` env var, which expects a ~239 MB YouTube recording that
   is not redistributable with the repo. **They are opt-in real-media
   measurements, not missing optional backends** — the suite reports green on
@@ -102,7 +110,89 @@ every line below was true on this host at that point.
 
 ## Completed work
 
-### This session — the first SelekyT Windows desktop application
+### This session — cancellation at the process boundary, a contract-tested UI, and signing that says what it is (`59e5327`)
+
+The desktop app gained the three things that separate a wrapper from a
+workstation: you can stop a run, the UI is proven against artifacts the engine
+really wrote, and the installer's trust state is labelled rather than implied.
+
+**Cancellation.** The engine has no abort primitive — `serve()` in
+`selekyt/server.py` is strictly sequential, and `_HANDLERS` has no cancel entry.
+So `selekyt_cancel` kills the process: `Sidecar` fields are individually wrapped
+in `Arc`/`Mutex` precisely so `cancel()` can reach `child` and `cancelled`
+without taking any lock `call()` holds. That is not an aesthetic concern; a
+single coarse lock makes Cancel freeze the window for as long as the run would
+have taken. Killing is safe rather than messy because **every ffmpeg call in
+`providers/ffmpeg.py` uses `stdout=subprocess.PIPE`** (all four sites), so the
+RPC reader gets an immediate EOF instead of blocking on an orphaned child still
+holding the write end. A cancelled run returns the distinct error string
+`"cancelled"`, which the UI renders as a Resume action rather than a failure
+banner; resume works because the engine already writes per-chunk atomic
+checkpoints (`chunk_NNNN.json`), so restarting `run_pipeline` on the same out
+dir picks up where it stopped.
+
+**The UI's pure logic became testable, and the test found a real bug.**
+Formatting, the timeline arithmetic and the SRT reader moved into
+`apps/desktop/ui/lib.mjs`, imported by both the app and
+`tests/ui_contract.mjs`. That test runs the parsers against a real project tree
+when given one and against synthetic input otherwise, so CI stays meaningful
+without a fixture. On its **first real run** it failed all three caption files:
+the engine writes single-digit hours (`0:00:00,787`), and my regex demanded
+`\d{2}`, so it rejected every cue in every real caption file. The Captions tab
+would have reported a missing file for media that had one — invisible until
+someone installed the app. Fixed to `\d{1,2}` in both the parser and the test.
+The timeline section also asserts `kept + omitted == span` and that the
+renderer's derived cut length matches `removed_seconds`, so a bar that
+disagrees with the number next to it fails here rather than in front of a user.
+
+**Signing is wired but does not fake anything.** `tauri.conf.json` sets
+`bundle.windows.signCommand` to run `scripts/sign.ps1` on every build. With no
+`SELEKYT_AZURE_*` secrets the script logs `##[warning]SELEKYT_UNSIGNED` and
+exits 0; the Windows workflow greps that marker and names the artifact
+`selekyt-windows-x64-unsigned` or `-signed`. Add the secrets and the same job
+signs and verifies — no config change, no second pipeline, no "signing step"
+that exists only on a slide. `tests/test_desktop_packaging.py` pins the hook's
+argument contract, asserts sha256 + RFC 3161 timestamping, asserts the config
+declares a real application identity, and **asserts no credential is
+committed** (no 40-hex thumbprint, no GUID, no `PRIVATE KEY` / `MII` bytes, no
+`-kvu $azure.VaultUri` expansion in committed text).
+
+**The Tauri shell compiles on Linux.** `webkit2gtk-4.1` and `gtk+-3.0` are on
+this box, so `cargo check`, `cargo test` and `cargo clippy` all run locally —
+and `tauri::generate_context!` runs the codegen that validates
+`tauri.conf.json` against `deny_unknown_fields`. That last part was verified to
+actually reject a bogus `azureTrustedSigning` key, so it is a real validator
+rather than a vacuous one. CI gained a `shell` job that does this on Linux
+before the Windows job spends ~25 minutes and a ~1 GB download.
+
+**Two things to carry forward:**
+
+* **MSIX is impossible in Tauri 2.** `BundleType` in the vendored
+  `tauri-utils-2.9.3/src/config.rs` is exactly `{Deb, Rpm, AppImage, Msi, Nsis,
+  App, Dmg}` — read from the crate source, not from docs that imply more. So the
+  Microsoft Store path needs a packaging stage outside Tauri (MakeAppx +
+  `AppxManifest.xml`). **That stage is UNVERIFIED and does not exist yet.**
+  `scripts/sign.ps1` is also **UNVERIFIED** — there is no PowerShell on this
+  Linux box, and it has never been executed. Its contract is pinned by a test
+  that reads it, which is the strongest statement that can honestly be made
+  here.
+* **The desktop artifact tree is the spec.** Every UI assumption —
+  `selections.json` fields, `edit_plan.json` arithmetic, the SRT grammar, the
+  two aspect buckets — was written from files a real run produced, and the one
+  time I assumed instead of reading, the parser silently rejected everything.
+  The lesson generalises: before writing a renderer for an engine artifact,
+  dump the artifact.
+
+**Not done, and said plainly:** the app has not been run end-to-end in this
+environment, and no Windows install has ever completed. The local installer
+copy at `/dev/shm/win-artifact/` was deleted to free disk when `/dev/shm`
+filled to 100% during a test run; the build is reproducible from `main` via
+`.github/workflows/build-windows.yml`, so this cost nothing but the convenience
+of a local copy. What *was* verified this session is the pure logic layer
+against a real project tree, the Rust shell's unit behaviour including
+cancellation, clippy at `-D warnings`, and the full Python suite.
+
+### Prior session — the first SelekyT Windows desktop application
 
 The mission was to build the first real desktop app for Windows 11, with the
 acceptance test being a real video through the real pipeline rather than "it
@@ -884,8 +974,17 @@ In rough order of how much it would cost a user (fuller list in
 3. **No video upload in the web shell** — a video must already be inside the
    project tree (`guardedPath` confines it), while the CLI has no such
    restriction, so the two entry points disagree about what a user can point at.
-4. **Desktop shell is unbuilt** — Tauri compiles and passes clippy, but no
-   binary is packaged and the webview has never rendered (no webkit2gtk).
+4. **Desktop shell is built, unit-tested and CI-gated — but has never rendered
+   a frame.** The Rust shell compiles and passes clippy on both Linux and
+   Windows CI, 11 unit tests including cancellation, and the UI's pure logic is
+   contract-tested against a real project tree. What has never happened is the
+   webview actually running: no webkit2gtk on this box, and **the Windows
+   installer has never completed on a Windows runner** — the one run that got
+   past staging and the sidecar ping was cancelled by my own push before the
+   concurrency fix. The `sign.ps1` signing hook and any MSIX/Appx packaging
+   stage are likewise **UNVERIFIED** (no PowerShell here, and Tauri 2 cannot
+   emit MSIX at all). The honest summary: the *logic* of the desktop app is
+   tested, the *application* is not.
 5. **Optional backends untested here** — sherpa-onnx, silero, ollama are wired
    and degrade cleanly by design, but unit-tested only.
 6. **Editorial judgement is unmeasured at scale — and the corpus proved the
@@ -1169,9 +1268,20 @@ selections).
    exposing a video upload route or documenting the project-root confinement —
    the previous session decided URL-first with no code change, which is why
    upload is still missing.
-9. **Package the Tauri shell once, on one platform** (G4), or record explicitly
-   that v1 ships CLI + web shell only. Do not spend main effort here until G1
-   and G2 are settled.
+9. **Complete one real Windows install.** This was previously ranked low
+   ("package the Tauri shell once, or record that v1 ships CLI + web shell
+   only"), and the founder's directive overrides that ranking: the Windows
+   desktop app *is* the current line of work. The packaging is built and the
+   pipeline is honest about its trust state, so the remaining work is the part
+   that cannot be done on this Linux host, in this order: (a) let
+   `build-windows.yml` complete on a `windows-latest` runner to produce a real
+   NSIS + MSI pair, (b) install the unsigned artifact on a clean Windows 11
+   machine, run a real local video through the real pipeline in the webview, and
+   inspect real artifacts, (c) write the MSIX/Appx packaging stage Tauri cannot
+   emit, (d) set the `SELEKYT_AZURE_*` secrets and confirm `scripts/sign.ps1`
+   actually signs and verifies — currently **UNVERIFIED**, never executed. Until
+   (b) happens, no claim about the running application is supportable; the
+   contract tests cover the logic, not the app.
 10. **Audit the preserved worktrees for now-merged or superseded work** and
     record the verdict in `docs/agent-worktrees.md`. **DONE** — and it paid off.
     The timeline worktree is confirmed fully superseded (`0328858` on `main`
