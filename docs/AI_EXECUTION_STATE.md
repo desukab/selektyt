@@ -779,21 +779,48 @@ In rough order of how much it would cost a user (fuller list in
    caption-transcript equality check compares captions to the transcript, not
    to the audio. `docs/BLINDED_PROTOCOL.md` is the design that would settle it;
    **it has not been run, and no editor has been contacted.**
-7. **The no-speech error is fixed in code but has never fired on real media.**
-   This item previously said "open, diagnosed, unfixed", and that is stale: the
-   pipeline now measures `peak_dbfs` on the extraction, *remuxes and retries*
-   when the audio has real level but no transcript, and the message names which
-   of the two causes applied (`_no_speech_diagnosis`), with
-   `tests/test_container_recovery.py` covering both branches. **What has not
-   happened is a real run through that path.** No committed transcript carries a
+7. **The no-speech diagnosis: the silent-track branch is now validated on real
+   media, and the damaged-container branch is still not.** The pipeline measures
+   `peak_dbfs` on the extraction, *remuxes and retries* when the audio has real
+   level but no transcript, and the message names which of the two causes
+   applied (`_no_speech_diagnosis`), with `tests/test_container_recovery.py`
+   covering both branches on synthetic files.
+
+   **The silent-track half moved to real media this session.**
+   `tests/test_no_speech_on_real_media.py` (opt-in, gated on
+   `corpus/media/royal-society-cloke.webm` being present, skipped with a stated
+   reason otherwise) takes the real recording, muxes its video against a genuine
+   digital-silence track, and runs it through the production extraction and
+   decoder. Peak measures `-inf`, the transcript is empty, and the diagnosis
+   names a missing audio track rather than blaming the container. It asserts a
+   control first — the unmodified excerpt must carry speech — so a media file
+   that cannot be decoded cannot make the test pass vacuously. Mutation-tested:
+   changing the silent-track message fails it.
+
+   **The damaged-container half did not, and the reason is recorded rather than
+   left as "still untested."** Three corruption strategies were tried against the
+   same real excerpt — zeroing 1 MiB of the muxed body, truncating to 45% of the
+   file, corrupting the region after the EBML head. None reproduced the trigger
+   condition (zero transcript with real peak): they yielded 10, 7 and 12
+   segments against the control's 12, with **byte-identical peak** (−0.525 dBFS
+   to 15 digits). WebM/Opus decodes around mid-body damage. The historical case
+   that motivated the recovery path was a structurally damaged `.ogv` — a
+   different and more fragile muxer — and reproducing it needs either that file
+   or a targeted corruption this host has not found. So the claim "a remux
+   recovers a damaged container" remains validated on synthetic files only, and
+   must keep being stated that way.
+
+   **What has never happened on either branch: a real run that exercised the
+   recovery path end to end.** No committed transcript carries a
    `container_recovery` marker, and the three real `NO_SPEECH_DETECTED` rows in
    `corpus/results.jsonl` predate the fix — their `log_tail` shows the old
    message that did not distinguish anything. Their media is gone, so they are
    unclassifiable now, which is why `tools/corpus_run.py` records
    `no_speech_cause` (`silent_track` / `damaged_container` / `unknown`) as a
-   structured field from this point on. The claim "this distinguishes a damaged
-   container from a silent track on real media" is **still unvalidated** — it
-   has only ever been shown on synthetic files.
+   structured field from this point on. The claim still standing is the narrow
+   one: **the diagnosis distinguishes a silent track from a damaged container,
+   and the silent-track half of that is now shown on real media while the
+   damaged-container half is not.**
 8. **Non-English transcription quality is now measured, and it is broken.**
    The `small` model produced garbage in Telugu, Hungarian and Hindi. English is
    the exception: WER is measured for clean read English at **3.38%** on
