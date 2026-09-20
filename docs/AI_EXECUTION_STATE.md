@@ -13,7 +13,7 @@ every line below was true on this host at that point.
   gated per-document, after `7f0d9a8` corrected the Telugu script-share count.
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1107 passed, 12 skipped** (2026-09-20, ~169 s). The 12 splits into two kinds, and the difference matters:
+* Test suite: **1186 passed, 12 skipped** (2026-09-20, ~183 s). The 12 splits into two kinds, and the difference matters:
   **7** are in `tests/test_proxy_validation.py`, gated on the
   `SELEKYT_PROXY_MEDIA` env var, which expects a ~239 MB YouTube recording that
   is not redistributable with the repo. **They are opt-in real-media
@@ -87,6 +87,54 @@ every line below was true on this host at that point.
   a measurement is impossible.
 
 ## Completed work
+
+### This session — ~4,200 lines of finished editorial work were sitting uncommitted in a worktree, and are now on main
+
+The worktree audit (next-tasks item 10) found that the previous classification
+of `agent-a0d0fba273d1b37e1` as "no unmerged work" was wrong in a specific way:
+it counted commits ahead of `main` and never listed untracked files. The
+worktree held nine untracked files — six `engine/` modules plus two tests and
+a design doc — that existed nowhere on `main`.
+
+**The work is real, and now integrated.** `engine/{lexical,rhythm,threads,
+topics,redundancy,corpus}.py` build a corpus-level editorial representation:
+topic spines (which subjects recur), story threads (where each is set up and
+pays off), redundancy groups (which repetition to keep), and conversational
+rhythm. Every derived artifact carries `start`/`end`, `confidence`, `reason`
+and bounded verbatim `evidence`, so a judgement can be jumped to in the source
+media and checked by a reader. `docs/corpus-model.md` documents the contract.
+
+**Integration touched no existing file.** All five shared dependencies
+(`context_guard`, `pause_classifier`, `story_units`, `vad`, `models.core`) are
+identical to `main`'s except `engine/vad.py`, where `main` has since added
+`_conforming_wav` — a function the layer does not use. Verified by copying the
+six modules in and running the suite: 1107 → **1186 passed**, 12 skipped, no
+regressions.
+
+**Measured across the committed corpus** (11 sources, 1,771 segments,
+18,748 word-timestamp entries): 314 units, 167 topics, 211 threads,
+9 redundancy groups. One judgement is checkable against the text: on
+`nasa360-ep5` the layer groups the show's three sign-off boilerplate passages
+and reasons *"keep unit 85 … the later passage is a recap of an earlier point —
+keep in a long edit, cut in a short one."*
+
+**The doc's own overclaim was corrected rather than carried over.** It asserted
+"Agents B (selection), C (long-form assembly) and D (short-form) build against
+the contract documented here" — false on `main`, where nothing reads the layer.
+It now states plainly that nothing consumes it, that the integration section is
+a proposal, and that the table establishes the analysis *runs*, not that acting
+on it *improves an edit*. `tests/test_corpus_model_measured.py` pins the table
+to the corpus; all three mutations tried (a table row, the totals line, the
+disclaimer) fail the gate.
+
+**Two other worktree findings.** `agent-aca62967bb6c0054b` holds an untracked
+`bench/` package whose own `RESULTS.md` states it is synthetic media and
+synthetic transcript — "NOT REAL FOOTAGE. NOT REAL ASR" — so if it is ever
+integrated its numbers must not be quoted as measurements; `tools/microbench.py`
+on `main` measures the real pipeline instead. It remains unmerged. The timeline
+worktree is confirmed fully superseded: `0328858` on `main` introduces exactly
+its seven files with matching line counts. `docs/agent-worktrees.md` carries all
+of this.
 
 ### This session — a second cluster of untraceable figures, and the gates that read the docs back
 
@@ -1054,8 +1102,17 @@ selections).
    that v1 ships CLI + web shell only. Do not spend main effort here until G1
    and G2 are settled.
 10. **Audit the preserved worktrees for now-merged or superseded work** and
-    record the verdict in `docs/agent-worktrees.md`. The timeline worktree in
-    particular may duplicate or conflict with live `engine/timeline*`.
+    record the verdict in `docs/agent-worktrees.md`. **DONE** — and it paid off.
+    The timeline worktree is confirmed fully superseded (`0328858` on `main`
+    introduces exactly its seven files with matching line counts). But two
+    worktrees the audit had filed as "no unmerged work" held untracked files
+    that existed nowhere on `main`, because the check counted commits and never
+    listed untracked files. One of them was ~4,200 lines of finished editorial
+    work, now integrated (see the Completed work section). The other
+    (`agent-aca62967bb6c0054b`, the synthetic `bench/` package) remains
+    unmerged, and its own `RESULTS.md` says plainly that its numbers are not
+    real measurements. The worktrees are all preserved under the standing
+    instruction; the verdicts are in `docs/agent-worktrees.md`.
 
 ## Important decisions
 
