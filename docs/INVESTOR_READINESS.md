@@ -8,9 +8,9 @@ intention. Nothing is graded on what the code is "capable of"; that distinction
 is the whole point of [product-gap-map.md](product-gap-map.md) and it is applied
 here too.
 
-Verified on this host today: **898 tests passing, 7 skipped (112 s), re-run 2026-09-19**; the 7
-skips are optional backends absent from this host (sherpa-onnx, silero,
-ollama). One real rights-permitted 24:29 source (NASA 360 Episode 5, US
+Verified on this host today: **1034 tests passing, 12 skipped (113 s), re-run 2026-09-20**; the 12
+skips are all `SELEKYT_PROXY_MEDIA`-gated optional backends absent from this host
+(sherpa-onnx, silero, ollama) — environment skips, not failures. One real rights-permitted 24:29 source (NASA 360 Episode 5, US
 Government public domain) ran the full chain green through the web shell;
 one YouTube download observed (640x360, 11.8 MB) while most videos returned the
 sign-in wall from this datacenter IP; EDL/FCPXML structurally valid but never
@@ -63,9 +63,9 @@ evidence, not the largest round the narrative can support.
 | Question | Evidence |
 | --- | --- |
 | Who is building it? | One person: Bharath Bheemreddy, copyright holder in `LICENSE`. No employees, no co-founders, no advisors of record. |
-| Is there a second engineer? | No. 154 commits across three committer identities, all traceable to the same individual plus this build host. |
+| Is there a second engineer? | No. 193 commits across three committer identities, all traceable to the same individual plus this build host. |
 | How was it built? | Largely by AI coding agents in a multi-agent loop — five preserved agent worktrees are catalogued in [agent-worktrees.md](agent-worktrees.md). ~23,000 lines Python, ~3,900 lines Rust. |
-| Is that a capability or a risk? | Both. It is a real, unusual leverage: a full cross-language pipeline with 898 tests for one person's time. It also means no human has audited the machine-written core and no second person understands the system. |
+| Is that a capability or a risk? | Both. It is a real, unusual leverage: a full cross-language pipeline with 1034 tests for one person's time. It also means no human has audited the machine-written core and no second person understands the system. |
 
 **Why this is the binding constraint:** every other gap in this document is
 mechanical and cheap. Only the team gap compounds. Specifically it blocks (a)
@@ -85,7 +85,7 @@ What is verified, not merely coded:
 | --- | --- |
 | Local file → full chain (download-free) | **Verified.** A real 535.5s local source ran the whole pipeline. |
 | URL source → full chain (web shell) | **Verified.** NASA 360 Episode 5, 24:29, genuine two-host unscripted speech, 25 artifacts, QA `ok: true`, 0 errors, through `POST /api/run_pipeline`. |
-| Transcription on real human speech | **Verified.** 425 segments; names, numerals and humour transcribed correctly; no manual correction needed; chunked decode (5 × 5 min) with no boundary artefacts. |
+| Transcription on real human speech | **Partly verified.** 425 segments and chunked decode (5 × 5 min) with no boundary artefacts are machine-checkable and verified. "Names, numerals and humour transcribed correctly; no manual correction needed" is **NOT verified** — the run completed green, but no human has compared the transcript to the audio, so per-segment accuracy on this source is unmeasured. `docs/EVALUATION.md` §3 calls this an impression, not a measurement, and that is the honest status. |
 | Editorial scoring, context guard, story units | **Verified** — per-candidate scores and rejection reasons in `report.json`; guard observed rejecting candidates. |
 | Dead-air removal, pause-aware retention | **Verified** in the real run's durations; pinned by `test_cue_times_account_for_removed_pauses`. |
 | 16:9 render | **Verified** by ffprobe read-back. |
@@ -400,7 +400,12 @@ $20M–$50M post-money band) is unlocked by **evidence**, in this order.
    in their own NLE.** This is the adoption claim the architecture exists to
    make, and no AI clip generator currently makes it.
 7. **Real non-English sources through the audit** (Telugu, Hindi). Closes the
-   India-as-testing-advantage claim with data instead of a flag.
+   India-as-testing-advantage claim with data instead of a flag. Partly measured
+   now, and the data overturned the claim it was meant to support: Telugu scores
+   WER 151.08% on `small` / 91.54% on `medium` against 3.38% for English, so
+   language coverage is table stakes and language *fit* is the gap. Polish passes
+   at 11.01%, which is what confines the failure to Indic. Hindi remains
+   unmeasured.
 
 **Tier 2 — the round-defining numbers (months 6–12)**
 

@@ -283,11 +283,18 @@ product works.**
 4. **SelekyT's current packaging is a fit, not a handicap — only here.** A CLI plus local web
    shell, provenance records and an editorial audit script read as professional tooling to an
    operator, while reading as friction to a creator.
-5. **The Telugu/India thesis survives this choice.** ~96 million Telugu speakers (83M native, 13M
-   L2, 2011 census), official in Andhra Pradesh and Telangana.
-   RESEARCHED: <https://en.wikipedia.org/wiki/Telugu_language>. Keep Telugu as the *proving
-   ground* for multilingual robustness — it is a real differentiator, since OpusClip advertises
-   ~25+ languages (**RESEARCHED**) and language coverage is table stakes. But do not build a
+5. **The Telugu/India thesis survives this choice — as a testing thesis, not a quality thesis.**
+   ~96 million Telugu speakers (83M native, 13M L2, 2011 census), official in Andhra Pradesh and
+   Telangana. RESEARCHED: <https://en.wikipedia.org/wiki/Telugu_language>. Keep Telugu as the
+   *proving ground* for multilingual robustness — language coverage is table stakes, since OpusClip
+   advertises ~25+ languages (**RESEARCHED**), and being forced to confront a hard language early
+   is worth more than a flag that lists it. But the differentiator claim that used to sit here is
+   now measured and it does not hold: on real Telugu audio (OpenSLR SLR66, 50 clips) the pipeline
+   scores **WER 151.08%** on `small` and **91.54%** on `medium`, with **0 of 50** and **1 of 50**
+   clips inside a 25% bar — against 3.38% for English on that same `small` model. Telugu is a
+   differentiator in the sense that SelekyT is measurably *worse* at it than incumbents are at
+   their own languages, not better. The testing-advantage framing is the one that survives, and
+   only because the failure is now quantified rather than assumed. Do not build a
    go-to-market on low-ARPU regional-language creators. India is a testing advantage, exactly as
    the brief states, not the boundary.
 

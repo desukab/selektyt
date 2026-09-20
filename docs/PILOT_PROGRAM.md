@@ -113,7 +113,7 @@ whether they block the pilot or merely limit it.
 | B2 | **Caption-style render-cache staleness** | TECHNICAL_AUDIT defect #5: `selekyt/pipeline.py:391-419` with a style-blind cache key at `:117-151`. A re-run with a different `SELEKYT_CAPTION_STYLE` rewrites the ASS and ships the *old* MP4. **Falsifies QA.** | A pilot editor iterating on caption style — which the four presets (`minimal,punch,spotlight,noir`) explicitly invite — will receive a video whose burned-in captions disagree with its sidecar file, with no error. This is a trust-destroying bug and it is invisible to the user. |
 | B3 | **Web shell is unauthenticated, origin-blind, and the path jail is bypassable** | TECHNICAL_AUDIT defects #1–#3: no bearer token, session, `Origin`/`Referer` or CORS check (`web/server.mjs:345-360`); `guardedPath` uses `String.prototype.startsWith` so `/selektyt-anything/secrets` escapes the jail (`:203-209`); yt-dlp's `media_info` blob — embedding the `Cookie` header — is persisted to `pipeline_state.json` and served by `/api/file` | If the pilot runs SelekyT's web shell on any network reachable from a browser, any page the editor visits can drive the pipeline via JSON CSRF, read arbitrary files under the repo root, and retrieve persisted cookie material. A studio on shared Wi-Fi is exactly that environment. |
 | B4 | **Default install cannot transcribe** | TECHNICAL_AUDIT defect #6 / `pyproject.toml`: `faster-whisper` is only in the `[transcription]` extra | A pilot editor who runs `pip install selekyt && selekyt source.mp4` hits a crash at transcription. First-run experience is the whole pilot. |
-| B5 | **The pilot's own QA cannot detect a wrong output** | TECHNICAL_AUDIT defect #7: `engine/qa.py:19-43` checks existence, size, streams, orientation and duration ≥ 1 s — never aspect ratio precisely, never duration vs the edit plan, never caption presence. `black_frame_pct` and `visual_diversity_score` swallow exceptions and report clean. | During a pilot, SelekyT must be able to tell *itself* that a run went wrong. The tools that would do it — `tools/nle_check.py`, `tools/editorial_audit.py` — exist, are falsifiable, and are wired into nothing (`TECHNICAL_AUDIT`, "built and never wired in"; `pycmx` is not a dependency, so the independent-parse check reports SKIP in every environment it has ever run in, including CI). |
+| B5 | **The pilot's own QA cannot detect a wrong output** | TECHNICAL_AUDIT defect #7: `engine/qa.py:19-43` checks existence, size, streams, orientation and duration ≥ 1 s — never aspect ratio precisely, never duration vs the edit plan, never caption presence. `black_frame_pct` and `visual_diversity_score` swallow exceptions and report clean. | During a pilot, SelekyT must be able to tell *itself* that a run went wrong. The tools that would do it — `tools/nle_check.py`, `tools/editorial_audit.py` — exist, are falsifiable, and are wired into nothing (`TECHNICAL_AUDIT`, "built and never wired in"; `pycmx` is now a declared dependency — `pycmx>=1.5` in the `nle`, `dev` and `all` extras — so the check *can* run, but nothing is scheduled to invoke it, which is the actual defect). |
 
 ### Limiting — pilot can start, but these cap its scale and credibility
 
@@ -211,8 +211,9 @@ supplies source material and judgement.
 - **Week 0 (internal, before any participant is contacted).** Close G2 (§0). Fix
   B2, B4 and the `guardedPath` prefix bypass in B3. Wire `nle_check.py` and
   `editorial_audit.py` into the run so every pilot project is audited
-  automatically, and add `pycmx` as a dependency so the independent parse actually
-  executes instead of reporting SKIP. Record the NLE, version and result of each
+  automatically. `pycmx` is already a declared dependency (`pycmx>=1.5` in the
+  `nle`, `dev` and `all` extras), so that half of the item is closed; the open half
+  is the invocation. Record the NLE, version and result of each
   import in `docs/NLE_COMPATIBILITY.md`. **If G2 fails here, the pilot does not
   start.**
 - **Week 1.** Onboarding: one episode from one client of one participant. SelekyT

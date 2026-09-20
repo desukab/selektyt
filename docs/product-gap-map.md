@@ -31,7 +31,7 @@ at once.
 | Chunked decode for long sources | complete and verified | the real URL source was decoded and transcribed in chunks (5 × 5 min of genuine two-host human speech), with `chunking`/`chunks` carried in provenance. No boundary artefacts appeared in the transcript or in any downstream cut |
 | sherpa-onnx fallback | not verified | no wheel + model on this host; the fallback is recorded in provenance when it runs, and it does not run here |
 | silero VAD | not verified | model file unavailable; `fallback_reason` reports the energy backend instead |
-| Forced language (`--language te`) | partially verified | language forcing is exercised through the transcription fixtures; no real non-English speech audio was available on this host |
+| Forced language (`--language te`) | partially verified | language forcing is exercised through the transcription fixtures, and real non-English audio has since been transcribed — Telugu (OpenSLR SLR66) and Polish (MLS test). The forcing works. The *quality* does not extend to every language: Telugu scores WER 151.08% on `small` / 91.54% on `medium` (0 and 1 of 50 clips inside a 25% bar) where Polish scores 11.01% on that same `small` model. So the gap is language fit, not the forcing path |
 
 The real source used for the final pass is genuine unscripted human speech —
 NASA 360 Episode 5, two hosts on camera, 25 minutes of it, fetched from a URL.

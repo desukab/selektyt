@@ -22,7 +22,7 @@ demonstrably stale (see §0).
 | Item | Doc claim | What I measured | Status |
 | --- | --- | --- | --- |
 | Test suite | "819 passed, 10 skipped" (two docs) | **824 passed, 10 skipped** in 64s; 834 collected | **STALE** |
-| Commits / age | — | **154 commits, 2026-09-16 → 2026-09-19 (4 days)** | VERIFIED |
+| Commits / age | — | **193 commits, 2026-09-16 → 2026-09-20 (5 days)** | VERIFIED |
 | Authors | — | 3 names, **2 distinct emails**; `bharathb.chander@gmail.com` behind both "Devika Boddu" (60) and "desukab" (49); "Ubuntu" (31, the machine itself) | VERIFIED |
 | Real sources ever run end to end | one NASA archive.org URL | **1** | VERIFIED |
 | Users / revenue / pilots / investors | none claimed | none exists in repo — no billing, auth, tenant, or API-key code anywhere | VERIFIED |
@@ -620,8 +620,10 @@ imposed.
   example in the README's *first* usage snippet, and the sherpa-onnx fallback
   caches models under `~/.cache/telugify/models/` — **the cache directory is
   still named `telugify`**, a prior project name. VERIFIED. That is a fine origin
-  story and a genuinely underserved market: Indic-language creators are
-  badly served by English-centric tooling.
+  story, and the market is genuinely underserved: Indic-language creators are
+  badly served by English-centric tooling. **The origin story is not the same as
+  a capability claim, and the capability claim is now measured and it fails** —
+  see the mitigation below.
 - **But it cuts both ways.** The README's flagship example is a NASA video. The
   content pack ships `#india` by default. The first thing a US enterprise
   evaluator sees is a tool whose own defaults place it in a regional category.
@@ -638,10 +640,24 @@ imposed.
 creators" and the founder has to correct them.
 
 **Mitigation that works:** pick one. Either **own Indic-language creator tooling
-outright** — a real, underserved, fast-growing market where Whisper's Telugu
-quality is a genuine differentiator and no incumbent has localized — or
-**strip the regional defaults** from the global product and name the beachhead
-explicitly. Doing both at once produces a product that is neither.
+outright** — a real, underserved, fast-growing market where no incumbent has
+localized — or **strip the regional defaults** from the global product and name
+the beachhead explicitly. Doing both at once produces a product that is neither.
+
+**The first branch now carries a measured cost, and it is the larger of the
+two.** The Telugu quality that would have to carry it is not a differentiator,
+it is a failure: on real Telugu audio (OpenSLR SLR66, 50 clips) the same `small`
+model that transcribes English at 3.38% WER scores **151.08%**, and stepping up
+to `medium` only reaches **91.54%** — **0 of 50** and **1 of 50** clips inside a
+25% bar. Capacity is a real lever and it does not reach the bar, so "own Indic
+tooling" currently means owning the language-fit problem rather than owning the
+market. The underserved-market claim survives; the quality claim does not, and
+an investor who hears the first while the second is unfixed is being sold the
+gap along with the opportunity. For contrast, Polish — one of the six languages
+this project's own evaluation criteria name — passes at **11.01%** WER on that
+same `small` model, which localises the failure to Indic rather than to
+"everything outside English" and is what keeps the choice honest rather than
+simply negative.
 
 **Hopium:** "we'll start in India and expand." Expansion requires distribution,
 which does not exist (§4).
@@ -718,7 +734,7 @@ owns the slice that pays.
 | 7 | **No data moat** — zero lines of ingestion code; local-first architecture forbids the loop | **MED** | **FATAL if thesis depends on it** | Six months on, "feedback loop" is still under `## Roadmap` |
 | 8 | **$100M question** — category clears at $24–29/mo; the number is market-creation, not market-size | **MED** | **Definitional** | Cannot name ten orgs that would pay $50k/yr |
 | 9 | **Compute economics** — CPU is cheap, but storage at 883 MB/source and YouTube datacenter blocking kill hosted margins | **LOW-MED** | **MED** | First month of hosting: storage GB per user vs the $20 |
-| 10 | **Market/geography** — regional categorization risk; beachhead undefined; `telugify` cache dir and `#india` defaults on NASA content | **MED** | **MED** | An external party categorizes it as "a tool for Indian creators" |
+| 10 | **Market/geography** — regional categorization risk; beachhead undefined; `telugify` cache dir and `#india` defaults on NASA content; **measured Telugu WER 151.08% (`small`) / 91.54% (`medium`)**, so the Indic leg cannot currently be served | **MED** | **MED** | An external party categorizes it as "a tool for Indian creators" |
 
 ---
 
@@ -787,8 +803,10 @@ that does not exist.
 **Blind editorial A/B against the commodity incumbent, on 10 sources.**
 
 1. Take **10 real long-form sources**, mixed by genre and language (podcast,
-   panel, lecture, interview; English and Telugu — this is where the Indic
-   differentiation claim can actually be tested).
+   panel, lecture, interview; English and Telugu — the Telugu leg is no longer
+   where an Indic *differentiation* claim gets tested, since the measured WER
+   settles that it does not hold; it is where the language-fit gap gets measured
+   against an incumbent that has the same problem).
 2. Run SelekyT (default settings).
 3. Run **OpusClip** on the same 10 — $29/mo, one month, no engineering.
 4. Give **3–5 working editors** (freelance, blinded to which tool produced which
@@ -854,7 +872,9 @@ No market figure in this document is asserted as fact.
 **Internal, verified on this host 2026-09-19 (VERIFIED):**
 
 - Test suite: `898 passed, 7 skipped in 112 s`, re-run 2026-09-19 by the
-  integrating operator after the count in this appendix was written. **The
+  integrating operator after the count in this appendix was written. The
+  present figure as of 2026-09-20 is `1034 passed / 12 skipped`; the drift
+  is the point of the paragraph, not the specific value. **The
   drift this appendix was built to expose is real and it repeated:** this
   document recorded 824, `docs/AI_EXECUTION_STATE.md` recorded 819, and the
   integrating operator's independent re-run gives 834 — three different

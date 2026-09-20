@@ -179,7 +179,7 @@ Governed by `docs/DATA_ROOM.md`. Two rules specific to this stage:
    investor who never sees them has been misled, and the round is built on sand.
 2. **Live re-verification before handover.** Test counts, audit output and
    competitor pricing are refreshed the day the room is opened. Today's numbers
-   (VERIFIED, 2026-09-19): 898 tests passing, 7 skipped; NLE audit
+   (VERIFIED, re-run 2026-09-20): 1034 tests passing, 12 skipped; NLE audit
    `ALL CHECKS PASS`, exit 0. Note that three documents in this set disagreed on
    the test count within the same hour (819, 824, 834) before the checkpoint was
    corrected — the room's own numbers must be re-run, never quoted forward.

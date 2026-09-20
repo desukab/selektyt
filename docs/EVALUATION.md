@@ -37,11 +37,13 @@ ffprobe out/web/pipeline/project/source/NASA_360_program5_HD.mov
 - The run produced **6 clips, each in 16:9 and 9:16**, i.e. 12 rendered files plus per-cut
   EDL, FCPXML 1.11, SRT, ASS and a content-pack JSON. VERIFIED (directory listing + audit runs below).
 - `tools/nle_check.py out/web/pipeline/project` → **86 PASS, 0 FAIL, 6 SKIP** (the 6 skips are
-  "edl independent parse", skipped because `pycmx` is not installed), exit 0. VERIFIED.
+  "edl independent parse", skipped on this run because `pycmx` was not then installed — it
+  is now a declared dependency, so those 6 execute today), exit 0. VERIFIED at the time.
 - `tools/editorial_audit.py out/web/pipeline/project` → **6/6 clips PASS, cross-clip PASS**. VERIFIED.
-- `.venv/bin/python -m pytest -q` → **898 passed, 7 skipped in 112 s**. VERIFIED.
+- `.venv/bin/python -m pytest -q` → **1034 passed, 12 skipped in 113 s** (re-run 2026-09-20;
+  every skip is an environment skip on absent optional backends). VERIFIED.
 
-**What that does and does not establish.** Six clips passing two audits and 898 unit tests passing
+**What that does and does not establish.** Six clips passing two audits and 1034 unit tests passing
 is evidence that the *machinery* is sound and self-consistent. It is not evidence that a human
 editor would ship those cuts, and it is not evidence that any of it generalises beyond one tape.
 
@@ -202,9 +204,9 @@ VERIFIED on the reference: `facebook/01.mp4` is 864×486, SAR 1:1, DAR 16:9, 29.
 `tools/nle_check.py` already implements this and is the contract. On the reference it returns
 **86 PASS / 0 FAIL / 6 SKIP** (VERIFIED). The corpus run must additionally:
 
-- install `pycmx` so the 6 currently-skipped "edl independent parse" checks actually run — **they
-  are the only checks in the suite that verify the EDL with a parser SelekyT did not write**, and
-  today they are silently skipped;
+- ~~install `pycmx`~~ — **DONE**: `pycmx>=1.5` is in the `nle`, `dev` and `all` extras and 1.5.1
+  is installed, so the "edl independent parse" checks are no longer skipped by default. They
+  are the only checks in the suite that verify the EDL with a parser SelekyT did not write;
 - add a **round-trip check**: re-import each exported EDL and FCPXML and confirm the imported
   timeline's record duration matches the render. `docs/BUSINESS_MODEL.md` §5 states plainly that
   **no NLE has ever imported an exported SelekyT timeline**; an independent parse is the cheapest
@@ -263,7 +265,9 @@ the reference run immediately.
 
 | # | Criterion | Threshold | Status today |
 | --- | --- | --- | --- |
-| P1 | `tools/nle_check.py` exit code 0, **with `pycmx` installed** so the 6 EDL-parse skips become real checks | 0 FAIL on **100%** of corpus | 86/0/6 without `pycmx` — **CURRENTLY INCOMPLETE BY DESIGN** |
+| P1 | `tools/nle_check.py` exit code 0, **with `pycmx` installed** so the 6 EDL-parse skips become real checks | 0 FAIL on **100%** of corpus | 86/0/6 when `pycmx` was absent — the dependency gap is closed
+  (`pycmx>=1.5` in `nle`/`dev`/`all`, 1.5.1 installed) but the corpus has not been re-audited
+  with it present, so 0-FAIL is still **UNMEASURED at corpus scale** |
 | P2 | `tools/editorial_audit.py` all clips pass | 100% of clips, on **100%** of corpus | 6/6 — CURRENT, one source |
 | P3 | Geometry: every 16:9 file DAR exactly 16:9; every 9:16 file displays 9:16 | 100% of files | CURRENT, one source |
 | P4 | Frame rate of output == frame rate of source | 100% of files, at every rate in §2.1 | CURRENT at 29.97 only; **untested at 23.976/25/50/59.94** |
@@ -369,7 +373,7 @@ A one-source evaluation cannot distinguish three possibilities:
    tautologically on any input — they measure self-consistency, not editorial value.
 
 Only a diverse corpus (possibility 2) plus independent human judgement (possibility 3) can separate
-these. **The 898 passing tests and the 86 passing NLE checks are evidence for neither 1 nor 2 —
+these. **The 1034 passing tests and the 86 passing NLE checks are evidence for neither 1 nor 2 —
 they are evidence for machinery, and they would pass identically on a source whose every cut was
 editorially wrong.** P10 and P11 in §4 are the criteria that actually discriminate.
 

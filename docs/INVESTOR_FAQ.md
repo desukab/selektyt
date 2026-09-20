@@ -6,7 +6,7 @@ labelled as a plan. Where the honest answer is "zero" or "none", that is what is
 written. No user, customer, revenue figure, investor, or valuation exists to be
 quoted, because none does.
 
-Ground truth used throughout: 898 tests passing, 7 skipped (re-run on this host
+Ground truth used throughout: 1034 tests passing, 12 skipped (re-run on this host
 today, 65s); one real rights-permitted 24:29 source (NASA 360 Episode 5, US
 Government public domain) ran the full chain green; one YouTube download
 observed (640x360, 11.8 MB, via an unauthenticated android client) while other
@@ -57,7 +57,7 @@ advisors of record.
 built with AI coding agents operating in a multi-agent loop (see
 [agent-worktrees.md](agent-worktrees.md) — five preserved agent worktrees, each
 classified and dispositioned). That is a genuine and unusual capability: 140
-commits, ~23,000 lines of Python and ~3,900 lines of Rust, 898 passing tests,
+commits, ~23,000 lines of Python and ~3,900 lines of Rust, 1034 passing tests,
 byte-identical cross-language export, for the cost of one person and AI
 operator time. It is also a genuine risk: there is no second engineer who
 understands the system, and no human review of the parts the agents wrote. The
@@ -308,13 +308,26 @@ exactly as positioned.
 - Telugu is a real, structural test case, not a marketing angle: the pipeline
   accepts `--language te` (and `hi`, `ta`, etc.), preserves the detected source
   language by default, and the caption renderer handles Indic Unicode. Language
-  forcing is exercised through fixtures; **no real non-English speech audio was
-  available on this host**, so real-accuracy-on-Indic-audio remains unmeasured
-  — that is a gap, and it is closed by running the audit on real Telugu and
-  Hindi sources, which is cheap.
+  forcing is exercised through fixtures, and **non-English accuracy on real
+  audio is now measured rather than assumed** — which is worse for the pitch and
+  better for the question. The measurement is not flattering: on real Telugu
+  audio (OpenSLR SLR66, 50 clips) the pipeline scores **WER 151.08%** on the
+  `small` model and **91.54%** on `medium`, with **0 of 50** and **1 of 50**
+  clips inside a 25% bar — against 3.38% WER for English on that same `small`
+  model. So the honest answer to "can you serve Indic creators today" is no, and
+  more compute does not change it: `medium` is 3.5× the bar, not under it. What
+  the measurement does settle is where the failure lives — Polish, one of the
+  six languages this project's own evaluation criteria name, passes at **11.01%
+  WER** on that same `small` model with diacritics intact, so the gap is
+  language fit, not "everything outside English". A Telugu-first product is a
+  thesis this measurement contradicts; a multilingual-tested product is one it
+  supports.
 - The reason India is a testing advantage rather than the market boundary:
   multilingual robustness is forced early instead of being deferred, and the
-  cost of being wrong is low.
+  cost of being wrong is low — which is now demonstrable rather than asserted,
+  because the wrong outcome arrived and was measured: Telugu at 151.08% WER on
+  `small`. A thesis that had never been tested could not have been corrected
+  this cheaply; this one was.
 - The market numbers are genuinely large and Indian, but they are a tail, not
   the plan. BCG's "From Content to Commerce" (May 3, 2025) counts "over 2–2.5
   million" monetized Indian creators influencing "$350–400 billion" in consumer
@@ -340,7 +353,7 @@ pitch is global from day one.
 **Almost none, and pretending otherwise would be the most damaging thing in
 this document.** Today's assets, in descending order of strength:
 
-1. **A working, tested system where competitors have demos.** 898 passing
+1. **A working, tested system where competitors have demos.** 1034 passing
    tests, byte-identical cross-language export, a repeatable editorial audit,
    and one real end-to-end run on genuine unscripted human speech. This is real
    but not a moat — it is a starting position.
@@ -531,7 +544,7 @@ would make that harder, not easier.
 This is the risk I think about most, and it cuts both ways.
 
 The repository was built by AI agents in a multi-agent loop — 140 commits,
-~27,000 lines, 898 tests, for one person's time. If I can do that, so can
+~27,000 lines, 1034 tests, for one person's time. If I can do that, so can
 anyone. The barrier to "build an AI clip generator" is approaching zero, and
 Flybridge's Dorothy Chang is already warning investors about companies that are
 "easy to vibe code" (TechCrunch, December 26, 2025,
@@ -610,8 +623,12 @@ defence.
   pricing page today) are the nearest public benchmark for what the market
   already pays for AI video processing.
 - **Editorial accuracy vs. a human editor:** unmeasured. See FAQ 7 and 16.
-- **Non-English transcription accuracy on real audio:** unmeasured; no real
-  non-English source was available on this host.
+- **Non-English transcription accuracy on real audio:** **measured, and it
+  fails for Indic.** Real Telugu audio (OpenSLR SLR66, 50 clips) gives WER
+  151.08% on `small` and 91.54% on `medium` — 0 of 50 and 1 of 50 clips inside a
+  25% bar — against 3.38% for English on the same `small` model. Polish, one of
+  the six languages this project's own criteria name, passes at 11.01% on that
+  same model. See FAQ 8.
 - **Which NLE will import the timelines:** unknown. Claimed only as
   format-valid. See FAQ 5.
 - **Whether the first 100 customers will be professionals or creators:** a

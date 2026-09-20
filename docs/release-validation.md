@@ -110,7 +110,8 @@ vertically through the fixed path: 308×486 SAR 8:9 → 0.5633.
 
 ## Test counts
 
-Full suite: **898 passed, 7 skipped** (112 s). The 7 skips are none of the
+Full suite: **1034 passed, 12 skipped** (113 s), re-run 2026-09-20. The 12
+skips are none of the
 optional backends — they are all `tests/test_proxy_validation.py` gated on
 the `SELEKYT_PROXY_MEDIA` env var, i.e. opt-in real-media measurements that
 no-op on every run. (An earlier version of this note said the skips were

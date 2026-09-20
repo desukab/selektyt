@@ -352,10 +352,15 @@ duration against the rendered file, and EDL/FCPXML agreement.
 None of it runs. VERIFIED by grep: the tools are referenced only by
 themselves and by one cross-reference at `nle_check.py:23`. They are not
 called by `selekyt/pipeline.py`, `selekyt/server.py`, `web/server.mjs`, or
-`.github/workflows/ci.yml`. And `pycmx` is not installed and not a dependency
-(VERIFIED: `ModuleNotFoundError`), so the independent-parse check — the whole
-point of the tool — reports `SKIP` in every environment it has ever been run
-in. Meanwhile the pipeline validates its EDL with `engine.nle_export`'s own
+`.github/workflows/ci.yml`. **Correction:** an earlier version of this section
+said `pycmx` was not installed and not a dependency, reporting
+`ModuleNotFoundError`. That is no longer true and was wrong when the section
+below on CI was written — `pycmx>=1.5` is in the `nle`, `dev` and `all` extras
+and 1.5.1 is installed here, so the independent-parse check is *able* to run.
+The finding that survives is the narrower one: the tool that would catch this
+class of bug is still not invoked by anything automated, so in practice the
+independent parse only ever runs when a human asks for it. Meanwhile the
+pipeline validates its EDL with `engine.nle_export`'s own
 validator (`pipeline.py:442-447`), which is precisely the self-validation
 `nle_check.py` was written to rule out.
 
@@ -439,7 +444,8 @@ to become a parameter before anything else.
 
 ## 5. Test quality
 
-The suite is green and large (898 passed / 7 skipped at the last run). The interesting
+The suite is green and large (1034 passed / 12 skipped, re-run 2026-09-20; every
+skip is an environment skip on absent optional backends, not a failure). The interesting
 question is which of those tests would still pass if the output were wrong.
 
 ### Tests that assert what the code claims rather than what the output is
@@ -556,8 +562,9 @@ means the shipped output is wrong and nothing in the system says so.
 5. **QA that cannot detect a wrong output, plus the tools that could are
    unwired** — `engine/qa.py:19-43` never checks aspect, duration-vs-plan, or
    captions; `tools/nle_check.py` (independent `pycmx` parse, render-vs-timeline
-   cross-check) is never called by the pipeline, the web shell, or CI, and
-   `pycmx` is not installed, so its key check reports `SKIP` everywhere.
+   cross-check) is never called by the pipeline, the web shell, or CI. (`pycmx`
+   is now a declared dependency, so the check *can* run — it simply is not
+   scheduled to, which is the defect, not a missing library.)
 
 ## The single most severe risk
 

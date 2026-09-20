@@ -1111,6 +1111,20 @@ incumbents' AI features are weakest, and SelekyT's Telugu/India testing
 advantage is a genuine head start — but see §8, because a funded competitor
 is already moving that way.
 
+**This assumption now has a measured floor, and the head start is narrower than
+"supports the language" implies.** SelekyT does accept `--language te` where
+FCP accepts nothing but US English, and that is a real surface advantage. But
+the quality behind the flag is measured and it fails: real Telugu audio
+(OpenSLR SLR66, 50 clips) transcribes at **151.08% WER** on the `small` model
+and **91.54%** on `medium` — **0 of 50** and **1 of 50** clips inside a 25% bar —
+against 3.38% WER for English on that same `small` model. So the gap to
+incumbents in Indic markets is a gap in *language fit*, not a lead, and an
+incumbent that ships mediocre Telugu is shipping roughly what SelekyT ships
+today. The advantage that survives is the testing discipline, not the output.
+Polish, one of the six languages this project's own criteria name, passes at
+**11.01%** on that same `small` model, which is what confines the failure to
+Indic rather than to "everything outside English".
+
 **5. The unoccupied learning axis (§4), if and only if it is ever built.**
 `docs/MOAT.md` documents that the feature half of the loop already exists and
 the label half does not. **ASSUMPTION:** whoever captures post-publish
@@ -1215,7 +1229,10 @@ most dangerous on native distribution (first-pass assembly inside the NLE the
 editor already owns, at no extra cost). One further note that bears directly
 on SelekyT's India/Telugu thesis: Mirage's March 2026 raise is explicitly
 earmarked to "expand in high-growth Asian markets," with only 25% of its
-revenue from the US — the regional-language advantage is not unopposed.
+revenue from the US — the regional-language advantage is not unopposed. And it
+is not currently an advantage in output terms either: SelekyT's measured Telugu
+WER is 151.08% (`small`) and 91.54% (`medium`), so a funded competitor moving
+into those markets is not catching up to a lead that exists.
 
 ## 9. The one thing SelekyT must prove
 

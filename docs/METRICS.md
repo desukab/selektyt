@@ -373,16 +373,20 @@ cd /home/azureuser/selektyt && PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python to
 ### A4.1 Independent-parse acceptance — 6/6 EDLs
 
 **Definition:** fraction of shipped EDLs accepted by `pycmx`, an independent CMX
-3600 reader loaded from `/tmp/nlelibs` (pycmx 1.5.1, VERIFIED present) precisely so
-SelekyT's own dependencies cannot influence the parse. Validating SelekyT's output
-with SelekyT's parser proves nothing.
+3600 reader, precisely so SelekyT's own dependencies cannot influence the parse.
+Validating SelekyT's output with SelekyT's parser proves nothing.
 
 **Current value: 6/6 EDLs parse cleanly**, with event and channel-record counts
 reported per file (1–2 events, 1–3 channel records). VERIFIED, exit code 0.
 
-**Note:** `pycmx` is not a project dependency and is not in any extra, so outside
-this one directory this check reports `SKIP` everywhere it has ever been run,
-including CI (`TECHNICAL_AUDIT.md`). The 6/6 figure is real **here** and only here.
+**Note:** `pycmx` is now a declared dependency — `pycmx>=1.5` is in the `nle`,
+`dev` and `all` extras in `pyproject.toml`, and 1.5.1 is installed in this venv.
+The 6/6 above was originally measured by loading the library from `/tmp/nlelibs`
+outside the project venv for isolation; it now resolves from the venv. That
+removes the dependency gap but **not** the wiring gap: `nle_check.py` is still
+invoked by hand or by `tools/corpus_run.py` rather than by the pipeline, the web
+shell or CI, so the 6/6 figure is real on demand and is still not enforced
+anywhere automated (`TECHNICAL_AUDIT.md` §"CI does not run the tools").
 
 ### A4.2 Timeline-vs-render duration agreement — worst case 1.63 frames
 
@@ -465,7 +469,7 @@ capital. It has not been done.
 
 ## A5 — Pipeline and engineering health
 
-### A5.1 Test suite — 898 passed, 7 skipped in 112 s
+### A5.1 Test suite — 1034 passed, 12 skipped in 113 s
 
 **Command:**
 
@@ -473,7 +477,9 @@ capital. It has not been done.
 cd /home/azureuser/selektyt && .venv/bin/python -m pytest -q
 ```
 
-**Current value: `898 passed, 7 skipped in 112 s`, exit code 0.** VERIFIED.
+**Current value: `1034 passed, 12 skipped in 113 s`, exit code 0.** VERIFIED,
+re-run 2026-09-20. All 12 skips are `SELEKYT_PROXY_MEDIA`-gated or
+optional-backend-gated environment skips, not failures.
 
 **How to read it:** the number is large and green and it is the *weakest* number
 in this document. `TECHNICAL_AUDIT.md` names specific tests that assert what the
@@ -497,8 +503,9 @@ VERIFIED by grep). The pipeline instead validates its own EDL with its own
 emitter's validator, which is exactly the self-validation `nle_check.py` was
 written to rule out.
 
-**Target:** both tools run on every shipped project and in CI, with `pycmx` as a
-dependency so A4.1 executes instead of skipping.
+**Target:** both tools run on every shipped project and in CI. The `pycmx`
+dependency half of this landed — `pycmx>=1.5` is in the `nle`, `dev` and `all`
+extras, so A4.1 executes instead of skipping — but the wiring half is still open.
 
 ### A5.3 Transcription provenance — 425 segments, 4,236 word-timed tokens
 

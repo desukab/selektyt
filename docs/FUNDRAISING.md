@@ -114,9 +114,9 @@ an organization that has something to lose.
 
 Built and verified, not pitched:
 
-- **898 tests passing, 7 skipped** (re-run on this host, 2026-09-19, 112 s).
-  The 10 skips are optional backends absent from this host (sherpa-onnx,
-  silero, ollama).
+- **1034 tests passing, 12 skipped** (re-run on this host, 2026-09-20, 110 s).
+  The 12 skips are all `SELEKYT_PROXY_MEDIA`-gated optional backends absent from
+  this host (sherpa-onnx, silero, ollama) — environment skips, not failures.
 - **A three-layer architecture**, each layer independently usable: the CLI;
   a Rust mechanical core (`selekyt-mech`, JSON-RPC over stdio) for cut algebra,
   energy VAD and FCPXML/ffconcat export; and a Python intelligence layer for
@@ -133,7 +133,7 @@ Built and verified, not pitched:
   local Ollama instance — which on this host is not even installed, so the
   engine demonstrably degrades to deterministic scoring and says so.
 
-~23,000 lines of Python and ~3,900 lines of Rust, 154 commits, built largely by
+~23,000 lines of Python and ~3,900 lines of Rust, 193 commits, built largely by
 an AI multi-agent loop operated by one person. That is stated plainly because an
 investor should evaluate it as both a capability and a risk.
 
@@ -174,7 +174,19 @@ matches transcript text, cues fit the render, silence share 3.6–14.7%. Pacing:
 average 19.91s per clip, 3.74 words/sec, hook latency 0.63s, payoff present in
 3/3. The hooks are real sentences a viewer can follow without prior context:
 *"Welcome to the world's largest clean room."* Transcript quality on real human
-speech: 425 segments, names and numerals correct, no manual correction needed.
+speech: 425 segments and a chunked decode with no boundary artefacts. Transcript
+accuracy on this source is *unmeasured* — no human has compared it to the audio,
+and `docs/EVALUATION.md` §3 calls the "no manual correction" impression, not
+measurement. What is verified is that the pipeline ran green end to end.
+
+**Every number in the paragraph above is self-measured.** SelekyT ran the source,
+SelekyT's own audit tools graded the output, and SelekyT wrote the numbers down.
+No second party has reproduced any of them. That is a real limitation on how much
+weight the "ALL CHECKS PASS" line can carry: the checks are mechanical — cue text
+matches transcript text, cuts land between words, durations agree — so they are
+good evidence the machinery is self-consistent and poor evidence that the edit is
+any good. The pacing figures (3.74 words/sec, 0.63 s hook latency) are computed,
+not observed, and no viewer has ever watched one of these cuts.
 
 **The honest limit, in the repo's own words:** three clips from one source
 passing the audit is evidence the machinery is sound, **not** that the choices
@@ -305,7 +317,7 @@ copied.
 
 What does exist, in descending order of durability:
 
-1. **A tested system where competitors have decks.** 898 tests, real-input
+1. **A tested system where competitors have decks.** 1034 tests, real-input
    verification, byte-identical cross-language export. A starting position.
 2. **The audit + provenance contract.** Every decision scored, rejectable and
    reproducible; every run records which backends actually ran. A governance
@@ -400,8 +412,15 @@ Sequenced so that each step is only reachable if the previous one succeeded.
 8. Three editors open and modify an exported timeline in their own NLE — the
    adoption claim the architecture exists to make.
 9. Real non-English sources (Telugu, Hindi) through the audit, replacing a claim
-   with a number. (Today: language forcing is fixture-tested only; no real
-   non-English speech audio was available on this host.)
+   with a number. (Today this is partly done, and the numbers changed the claim
+   rather than just filling it in: real Telugu audio — OpenSLR SLR66, 50 clips —
+   scores WER **151.08%** on `small` and **91.54%** on `medium`, with **0 of 50**
+   and **1 of 50** clips inside a 25% bar, while Polish — one of the six languages
+   this project's own criteria name — passes at **11.01%** on that same `small`
+   model against 3.38% for English. The failure is localised to Indic, not to
+   "everything outside English", and the wider-scope version of this item —
+   Hindi and the remaining five C10 languages — is still open, with P9 needing
+   3 of 6 measured to be claimed.)
 10. Second engineer hired; 2–3 advisors engaged.
 
 **Months 9–18 — the round-defining numbers**

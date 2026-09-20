@@ -1,7 +1,7 @@
 # SelekyT — Data Room: honest inventory
 
 **Date of record:** 2026-09-19. Checked against repository state at `4cd542c` on `main`
-(154 commits). **Note on volatility:** this repository is being committed to by
+(193 commits). **Note on volatility:** this repository is being committed to by
 parallel workstreams as this page is written — HEAD moved from `8aab1b5` to
 `4cd542c` during its drafting. Counts and hashes below were accurate at the
 timestamp on each line and should be re-read, not inherited.
@@ -55,15 +55,17 @@ Results, both real:
   `pycmx` (an independent CMX 3600 reader), every FCPXML parsed as XML, all six
   cuts' EDL/FCPXML/render durations agreeing within 0.00–1.63 frames. Full output
   in `docs/nle-audit-output.txt`. (VERIFIED — I ran it.)
-- Test suite: **898 passed, 7 skipped in 112 s**, exit code 0. (VERIFIED — I
-  ran it.)
+- Test suite: **1034 passed, 12 skipped in 113 s**, exit code 0, re-run
+  2026-09-20. (VERIFIED — I ran it; the 12 skips are environment skips on
+  absent optional backends, not failures.)
 
 **Drift warning, since it matters for diligence accuracy.** Three documents
 recorded three different test counts within the same hour today: `docs/AI_EXECUTION_STATE.md`
 originally recorded 819, `docs/RED_TEAM.md` recorded 824, and the real number
 when I ran the suite was **834**. `docs/AI_EXECUTION_STATE.md` has since been
-corrected, and the count has moved again to **898 passed / 7 skipped** as more
-regression tests landed — which is the point of the paragraph below. The state
+corrected, and the count has moved again to **1034 passed / 12 skipped**
+(2026-09-20) as more regression tests landed — which is the point of the
+paragraph below. The state
 file carries its own self-checkpoint
 note about the drift — the correction is real, and the lesson is that any
 document quoting a test count must be refreshed at the time it is shared, or it
@@ -78,11 +80,11 @@ This is the strongest section of the room, and it is genuinely strong.
 
 | Item | Status | Evidence |
 |---|---|---|
-| Source tree, runnable | EXISTS | `/home/azureuser/selektyt`; 154 commits at `4cd542c`, 2026-09-16 → 2026-09-19 (VERIFIED, `git log`) |
+| Source tree, runnable | EXISTS | `/home/azureuser/selektyt`; 193 commits at `013ce46`, 2026-09-16 → 2026-09-20 (VERIFIED, `git log`) |
 | One real end-to-end run on real input | EXISTS | `out/web/pipeline/project/` — NASA 360 Episode 5, US-government public domain, 1469.77 s, 29.97 fps, two-host unscripted speech, 6 clips, 16:9 + 9:16 renders, per-cut EDL + FCPXML, captions, QA |
 | Independent interchange audit | EXISTS | `tools/nle_check.py`, exit 0 today (VERIFIED); output archived at `docs/nle-audit-output.txt` |
 | Editorial audit tool | EXISTS | `tools/editorial_audit.py` (VERIFIED — `docs/release-validation.md`) |
-| Test suite | EXISTS | 898 passed / 7 skipped, 112 s (VERIFIED today) |
+| Test suite | EXISTS | 1034 passed / 12 skipped, 110 s (VERIFIED today) |
 | Determinism across entry points | EXISTS | the web shell reproduced the CLI selection exactly — on one source (VERIFIED, `docs/product-gap-map.md` "The critical path") |
 | Architecture and technical audit | EXISTS | `docs/TECHNICAL_AUDIT.md` — 15 ranked defects, five of them security, written against the real code |
 
@@ -101,9 +103,11 @@ This is the strongest section of the room, and it is genuinely strong.
   unauthenticated. These are documented, which is a credit; they are not fixed,
   which is a liability.
 - **CI does not run the tools that catch the real bug classes.**
-  `tools/nle_check.py` and `tools/editorial_audit.py` are not in the CI run, and
-  `pycmx` is not in any dependency extra, so the independent-parse check cannot
-  run in CI at all. (VERIFIED — `docs/TECHNICAL_AUDIT.md`.)
+  `tools/nle_check.py` and `tools/editorial_audit.py` are not in the CI run. The
+  dependency half of this was closed — `pycmx>=1.5` is in the `nle`, `dev` and
+  `all` extras, so the independent-parse check *can* run in CI now — but CI
+  still does not invoke either tool, so a broken render/interchange agreement is
+  only caught on a manual audit. (VERIFIED — `docs/TECHNICAL_AUDIT.md`.)
 
 ---
 
@@ -202,7 +206,7 @@ is made.
 | A professional editor on the team or on retainer | **MISSING** | `docs/RED_TEAM.md` kill mode 4: no editor has ever rated a cut; "who is your editor?" is answered with an algorithm |
 | Advisors of record | **0** | VERIFIED — `docs/INVESTOR_READINESS.md` |
 
-One thing a reviewer will notice in the git history: 154 commits on `main` across
+One thing a reviewer will notice in the git history: 193 commits on `main` across
 three author identities — "Devika Boddu" (60), "desukab" (49), and "Ubuntu" (48)
 from the build host, summing to 157 across all refs including preserved agent
 worktrees (VERIFIED — `git shortlog -sne --all`, 2026-09-19). The two human

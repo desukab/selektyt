@@ -246,8 +246,9 @@ ALL CHECKS PASS
 
 **What this proves, and it is real:** the EDL is accepted by `pycmx`, an
 *independent* CMX 3600 reader that is deliberately not SelekyT's own parser
-(`tools/nle_check.py` loads it from `/tmp/nlelibs`, outside the project venv, so
-SelekyT's dependencies cannot influence it — `pycmx` 1.5.1, VERIFIED present).
+(`pycmx` 1.5.1, declared in the `nle`, `dev` and `all` extras and VERIFIED
+present in the venv; historically it was loaded from `/tmp/nlelibs` outside the
+venv for the same isolation).
 The FCPXML is well-formed 1.11 XML using only 1.11-vocabulary elements. Every
 asset `src` is an absolute `file:///` URI to a file that exists. Three separate
 code paths — the EDL emitter, the FCPXML emitter and the ffmpeg render chain —
@@ -350,16 +351,20 @@ cd /home/azureuser/selektyt && .venv/bin/python -m pytest -q
 Real output, exit code 0:
 
 ```
-898 passed, 7 skipped in 112 s
+1034 passed, 12 skipped in 113 s
 ```
 
 What this proves: there is a large, green, fast suite. Say the number, then say
 immediately what it does not cover — because the honest version is stronger than
 the number:
 
-- **Ten tests skip.** The meaningful ones are `test_sidecar_parity.py` (the only
-  behavioural test of the Rust sidecar) and `test_web_harness.py` (the only
-  end-to-end test of the HTTP layer). VERIFIED from the suite output and
+- **Twelve tests skip, and every one of them is an environment skip, not a
+  failure.** They are gated on `SELEKYT_PROXY_MEDIA` or on optional backends
+  absent from this host (sherpa-onnx, silero, ollama). The meaningful ones are
+  `test_sidecar_parity.py` (the only behavioural test of the Rust sidecar) and
+  `test_web_harness.py` (the only end-to-end test of the HTTP layer) — both are
+  covered by that gate, so say plainly that the sidecar and the HTTP layer are
+  *not* exercised on this host at all. VERIFIED from the suite output and
   `docs/TECHNICAL_AUDIT.md`.
 - **No test in the suite verifies that a caption track is actually burned into
   the pixels.** `tests/test_render.py:170-176` asserts the file exists and is
@@ -388,7 +393,7 @@ an expert asking "why this clip?"
 | Failure | Cause | Recovery |
 | --- | --- | --- |
 | `--doctor` reports `faster-whisper` missing | Transcription extra not installed (`pip install -e '.[transcription]'`) | The artifact walk needs no model. Run it and say the live-transcription path is unavailable today. |
-| `nle_check.py` prints `SKIP` for the EDL parse | `pycmx` not on `PYTHONPATH` — it lives in `/tmp/nlelibs`, outside the venv, on purpose | Re-run with exactly `PYTHONPATH=/tmp/nlelibs:tools`. Without it the audit still runs; it just loses its most valuable check, which is the entire point of the tool. Do not present a `SKIP` as a pass. |
+| `nle_check.py` prints `SKIP` for the EDL parse | `pycmx` not installed in the active environment — it is declared in the `nle`, `dev` and `all` extras, so `pip install -e '.[nle]'` provides it; the historical workaround was to load it from `/tmp/nlelibs` outside the venv | Re-install the extra, or re-run with exactly `PYTHONPATH=/tmp/nlelibs:tools` if that directory is present. Without it the audit still runs; it just loses its most valuable check, which is the entire point of the tool. Do not present a `SKIP` as a pass. |
 | `nle_check.py` fails a duration check by > 2 frames | A render was deleted or re-encoded after the timelines were written | The timelines are derived from the same interval list the render concatenated; re-rendering regenerates both. Delete the affected `facebook/NN.mp4` and re-run the pipeline, which checkpoints per clip and will only redo the missing one. |
 | `editorial_audit.py` fails a silence-share check | Source with a music bed, cutaway, or any word-free-but-loud audio | **Do not call it silence.** The metric is computed from transcript word timings and never decodes audio — it measures word *coverage*, not acoustic silence. If challenged on clip 05's 40.8%, the measured answer is: that window is a music bed at mean −31.4 dB with 0.00 s of true silence (`docs/METRICS.md` A2.4). Say the metric's name overstates what it measures and that renaming it is on the list — do not offer it as a measure of dead air |
 | `ffprobe` reports the shorts render as 308x486, someone calls it "not 9:16" | Anamorphic storage, SAR 8:9, DAR 1232:2187 | Show the `display_aspect_ratio` line. 0.5633 against a 0.5625 target. This is correct behaviour, documented in `product-gap-map.md`. |
