@@ -17,11 +17,21 @@ Three separate things, each worth failing on its own:
 3. No credential is committed. A secret in the packaging config would ship
    inside every installer, which is the one defect here that cannot be undone by
    a later release.
+
+4. The release workflow's signed/unsigned label is derived from what the build
+   actually did. The artifact name is the only trust claim a downloaded file
+   carries before it is run, so a labelling step that cannot see the signing
+   hook's output is worse than no labelling at all: it publishes every unsigned
+   build as signed, with a green checkmark on the run. This pins the facts that
+   keep it honest — the marker is grepped out of the build step's own captured
+   log, and an absent marker with no configured credentials fails the job
+   instead of defaulting to "signed".
 """
 
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import re
 
@@ -30,6 +40,8 @@ import pytest
 SRC_TAURI = pathlib.Path(__file__).resolve().parent.parent / "apps" / "desktop" / "src-tauri"
 TAURI_CONF = SRC_TAURI / "tauri.conf.json"
 SIGN_SCRIPT = SRC_TAURI / "scripts" / "sign.ps1"
+WORKFLOWS = pathlib.Path(__file__).resolve().parent.parent / ".github" / "workflows"
+BUILD_WINDOWS = WORKFLOWS / "build-windows.yml"
 
 # The names the release workflow sets and the script reads. Both sides must
 # agree; a rename on one side is a silent unsigned release.
@@ -139,3 +151,160 @@ def test_digest_and_timestamp_are_sha256_and_rfc3161(conf: dict) -> None:
     assert win.get("tsp") is True, "tsp must be true for an RFC 3161 timestamp server"
     assert win.get("timestampUrl"), "a timestamp URL is required for a long-lived signature"
     assert win.get("timestampUrl", "").startswith("http"), "the timestamp endpoint must be a URL"
+
+
+# ── the release label ────────────────────────────────────────────────────────
+
+
+@pytest.fixture(scope="module")
+def build_workflow() -> dict:
+    import yaml
+
+    assert BUILD_WINDOWS.is_file(), f"the release workflow is missing: {BUILD_WINDOWS}"
+    return yaml.safe_load(BUILD_WINDOWS.read_text(encoding="utf-8"))
+
+
+def _steps(workflow: dict) -> dict[str, dict]:
+    """The build job's steps, keyed by name, so the wiring between two of them
+    can be asserted without depending on step order."""
+    steps = workflow["jobs"]["build"]["steps"]
+    named = {}
+    for step in steps:
+        if step.get("name"):
+            named[step["name"]] = step
+    return named
+
+
+def test_the_unsigned_marker_is_read_from_the_build_step_own_log(
+    build_workflow: dict, sign_text: str,
+) -> None:
+    """The artifact name is the trust claim. The step that sets it must read
+    the signing hook's output out of the build step's captured log; grepping
+    ``$GITHUB_STEP_LOG`` reads the labelling step's own log, where the marker
+    never appears, and every unsigned build then ships as "signed"."""
+    steps = _steps(build_workflow)
+    build = steps["Build the Windows installers"]
+    label = steps["Record whether the build was signed"]
+
+    # The build step captures its own output where the next step can find it.
+    build_env = build.get("env", {})
+    log_var = next(
+        (k for k, v in build_env.items() if isinstance(v, str) and "selekyt-build.log" in v),
+        None,
+    )
+    assert log_var, (
+        "the build step must publish its log path in an env var the labelling "
+        "step can read; without it the marker has nowhere to be found"
+    )
+    assert "tee" in build["run"], "the build must tee its output to that log"
+    assert "pipefail" in build["run"], (
+        "a tee over a failing build would otherwise mask the failure and ship "
+        "a broken installer"
+    )
+
+    label_script = label["run"]
+    assert "$GITHUB_STEP_LOG" not in label_script, (
+        "GITHUB_STEP_LOG is the labelling step's own log; the marker is in the "
+        "build step's. This was the bug that named every unsigned build signed."
+    )
+    assert f"${log_var}" in label_script, (
+        f"the labelling step must grep ${log_var}, the build step's captured log"
+    )
+    # The marker the workflow greps must be the one the hook actually emits —
+    # a rename on either side is a silently mislabelled release.
+    assert "SELEKYT_UNSIGNED" in label_script
+    assert "SELEKYT_UNSIGNED" in sign_text
+
+
+def test_an_unsigned_build_without_credentials_fails_the_job(build_workflow: dict) -> None:
+    """Fail closed. The labelling step is a shell script and this *runs it* in
+    the three states it can be reached in, rather than reimplementing its
+    branching — a reimplementation would pass while the real script named an
+    unsigned build "signed", which is the exact failure this guards.
+
+    state                          marker   credentials   expected
+    no credentials, hook declined   yes      false         unsigned, exit 0
+    credentials present, signed     no       true          signed, exit 0
+    marker missing, no credentials  no       false         FAIL — never "signed"
+    """
+    import subprocess
+    import tempfile
+
+    raw = _steps(build_workflow)["Record whether the build was signed"]["run"]
+    assert "exit 1" in raw, (
+        "the labelling step must exit non-zero rather than default to signed=true"
+    )
+
+    def run_label(marker_in_log: bool, creds_configured: bool) -> tuple[int, str]:
+        # GitHub substitutes the secrets expression before the step runs; do the
+        # same so the script under test is the one the runner will execute.
+        script = raw.replace(
+            "${{ secrets.SELEKYT_AZURE_TENANT_ID != '' }}",
+            "true" if creds_configured else "false",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            log = pathlib.Path(tmp) / "selekyt-build.log"
+            log.write_text(
+                "##[warning]SELEKYT_UNSIGNED\n" if marker_in_log else "build output\n",
+                encoding="utf-8",
+            )
+            out = pathlib.Path(tmp) / "github_output"
+            proc = subprocess.run(
+                ["bash", "-c", script],
+                capture_output=True,
+                text=True,
+                env={**os.environ, "SELEKYT_BUILD_LOG": str(log), "GITHUB_OUTPUT": str(out)},
+            )
+            emitted = out.read_text(encoding="utf-8") if out.exists() else ""
+        return proc.returncode, emitted
+
+    code, emitted = run_label(marker_in_log=True, creds_configured=False)
+    assert code == 0 and "signed=false" in emitted, (
+        "a build whose hook reported SELEKYT_UNSIGNED must be labelled unsigned, "
+        f"not fail or be relabelled (exit {code}: {emitted!r})"
+    )
+
+    code, emitted = run_label(marker_in_log=False, creds_configured=True)
+    assert code == 0 and "signed=true" in emitted, (
+        "a build with credentials and no decline marker is the only state that "
+        f"may be labelled signed (exit {code}: {emitted!r})"
+    )
+
+    code, emitted = run_label(marker_in_log=False, creds_configured=False)
+    assert code != 0, (
+        "a build that neither reported the marker nor had credentials cannot "
+        "have been signed; labelling it would publish an unsigned installer as "
+        "signed, so the run must fail instead"
+    )
+    assert "signed=true" not in emitted
+
+
+def test_the_artifact_name_branches_on_the_marker(build_workflow: dict) -> None:
+    """The upload step's name is the two-valued choice, so neither label can be
+    written by hand."""
+    upload = next(
+        s for s in build_workflow["jobs"]["build"]["steps"]
+        if s.get("uses", "").startswith("actions/upload-artifact")
+    )
+    name = upload["with"]["name"]
+    assert "selekyt-windows-x64-signed" in name and "selekyt-windows-x64-unsigned" in name, (
+        "the artifact name must be derived from the signing outcome rather than "
+        "hardcoded, or a labelling bug becomes invisible"
+    )
+    assert "steps.signed.outputs.signed" in name
+
+
+def test_the_release_workflow_sets_exactly_the_credentials_the_hook_reads(
+    build_workflow: dict, sign_text: str,
+) -> None:
+    """Every variable the hook reads must be set by the workflow, and the
+    workflow must not set a credential the hook never reads — that would be a
+    secret silently ignored at release time."""
+    build = _steps(build_workflow)["Build the Windows installers"]
+    set_vars = {k for k, v in build.get("env", {}).items() if k.startswith("SELEKYT_AZURE")}
+    read_vars = {n for n in CREDENTIAL_VARS if re.search(rf"\b{re.escape(n)}\b", sign_text)}
+    assert set_vars == read_vars, (
+        f"the credential contract drifted: workflow sets {sorted(set_vars - read_vars)} "
+        f"that the hook never reads, and the hook reads {sorted(read_vars - set_vars)} "
+        "that the workflow never sets"
+    )

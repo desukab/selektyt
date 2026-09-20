@@ -51,12 +51,12 @@ network permission at all; `src-tauri/capabilities/main.json` is the entire ACL.
 | --- | --- |
 | `apps/desktop/src-tauri/src/main.rs` | The shell: commands, sidecar lifecycle, unconditional stderr drain, process-boundary cancellation, project listing and deletion |
 | `apps/desktop/src-tauri/tauri.conf.json` | NSIS + MSI targets, `externalBin`, resource map, `signCommand` hook |
-| `apps/desktop/src-tauri/scripts/sign.ps1` | Conditional signing: signs when the Azure secrets exist, declines and exits 0 when they do not (**UNVERIFIED — never executed**) |
+| `apps/desktop/src-tauri/scripts/sign.ps1` | Conditional signing: signs when the Azure secrets exist, declines and exits 0 when they do not (**only the decline path has ever run** — 154 times, on the Windows runner) |
 | `apps/desktop/src-tauri/capabilities/main.json` | The ACL: fs on user dirs, file picker, no network |
 | `apps/desktop/src-tauri/{Cargo.toml,build.rs,Cargo.lock}` | Deps; codegen that tolerates an unstaged dev tree |
 | `apps/desktop/ui/{index.html,app.mjs,style.css,lib.mjs}` | The first-user-flow UI, plus the pure helpers the contract tests import |
 | `apps/desktop/stage-windows.sh` | Stages sidecars, interpreter, ffmpeg, weights; pings before building |
-| `.github/workflows/build-windows.yml` | The Windows x64 build pipeline, with honest signed/unsigned labelling |
+| `.github/workflows/build-windows.yml` | The Windows x64 build pipeline; signed/unsigned labelling derived from the signing hook's own output and fail-closed |
 | `.github/workflows/ci.yml` | Adds the Linux `shell` job and the UI syntax/grammar checks |
 | `tests/ui_contract.mjs`, `tests/test_desktop_packaging.py` | The UI's contract with engine artifacts; the signing hook's contract with the build |
 | `providers/whisper.py` | Intra-chunk thread cap (measured: 2 threads is the saturation point on 4 cores) |
@@ -278,14 +278,33 @@ code that could not be executed here.
    NSIS payload (item 5) is part of what that click-through will judge.
 7. **WebView2 availability.** The config downloads the bootstrapper silently;
    untested on a machine without Edge.
-8. **The signing hook has never executed.** `bundle.windows.signCommand` points
-   at `scripts/sign.ps1`, which is correct-by-construction only: its argument
-   contract, its sha256 + RFC 3161 timestamping and its "decline and exit 0
-   without credentials" behaviour are pinned by `tests/test_desktop_packaging.py`,
-   but no PowerShell exists on this host and the script has never run once.
-   Until it has, the honest statement is **the build is unsigned**, which is
-   also what the artifact name says. Windows SmartScreen will warn on it; that
-   is expected and is not being hidden or worked around.
+8. **The signing hook has now executed — and it exposed a labelling bug that
+   made this very report's claim false.** `sign.ps1` ran on the Windows
+   runner, once per bundle target, and declined to sign 154 times in the
+   build log (`SELEKYT_UNSIGNED`), exactly as designed. The workflow's
+   labelling step then named that artifact **`selekyt-windows-x64-signed`**,
+   because it grepped `$GITHUB_STEP_LOG` — which is the *labelling step's
+   own* log, not the build step's, where the marker lives. So every unsigned
+   build was being published as signed, with a green checkmark on the run,
+   while this report asserted "the artifact name says" the build is unsigned.
+   Both were wrong at the same time, and neither was wrong in a way a test
+   could see, because no test covered the workflow at all.
+   Fixed: the build step tees its output to a file the labelling step reads,
+   and the step now fails closed — an absent marker with no configured
+   credentials cannot be labelled signed, it fails the run. Four new tests in
+   `tests/test_desktop_packaging.py` cover it, one of which *executes the
+   real labelling script* in all three reachable states rather than
+   reimplementing its branching; both were verified to fail against the old
+   workflow and pass against the new one.
+   **The stale artifact from that mislabelled run is still downloadable**
+   (attempted deletion was denied as irreversible; see
+   `docs/AI_EXECUTION_STATE.md`). It is 1.22 GiB, named `signed`, and it is
+   **unsigned**. Do not trust the name of an artifact from run
+   `35538322486`; trust the one the fixed workflow produces.
+   What is still true: the hook has only ever *declined*. No Azure Trusted
+   Signing credentials exist, so **every build the pipeline can currently
+   produce is unsigned**, and Windows SmartScreen will warn on all of them.
+   That is expected and is not being hidden or worked around.
 9. **MSIX / Microsoft Store packaging does not exist.** Tauri 2's `BundleType`
    has no `Appx` variant (verified in the vendored `tauri-utils` config source,
    not assumed from docs), so the Store path needs a separate MakeAppx +

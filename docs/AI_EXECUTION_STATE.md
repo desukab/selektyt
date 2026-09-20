@@ -119,6 +119,55 @@ every line below was true on this host at that point.
 
 ## Completed work
 
+### This session — the Windows build ran, and it had been mislabelling every release
+
+Two CI defects, both silent, both found only by reading the runs rather than
+the code:
+
+**The Linux `shell` job had never passed.** It was added in `59e5327` and was
+red on its first three runs, because `tauri_build::build()` runs from
+`build.rs` on every `cargo check` and hard-errors when
+`tauri.conf.json`'s declared paths are absent — and those are produced by
+`stage-windows.sh`, which downloads an interpreter, ffmpeg and ~500 MB of
+weights. Requiring that in the cheap job defeated its purpose. Fixed with
+`TAURI_CONFIG='{"bundle":{"externalBin":null,"resources":null}}'` for that job
+only. **The values are `null`, not empty**, because tauri-build merges as an
+RFC 7386 patch and an empty object *recurses* and changes nothing — that was
+the first attempt, and it still failed on `resources/python`. Verified locally
+by hiding the staged tree and re-running check, clippy and the 12 unit tests,
+then confirmed green on the runner.
+
+**The Windows job was publishing every unsigned build as `signed`.**
+`sign.ps1` declines by writing `##[warning]SELEKYT_UNSIGNED` to the *build*
+step's log. The labelling step grepped `$GITHUB_STEP_LOG`, which is its *own*
+log, so the marker was never found and `signed=true` was unconditional. The
+run for `de0c151` shows the evidence plainly: **154 marker occurrences** in
+the build job, and an artifact named `selekyt-windows-x64-signed` (1.22 GiB).
+The artifact name is the only trust claim a downloaded file carries before it
+is run, so this is the one defect in the whole pipeline that actively
+misrepresents the trust state — and `docs/RELEASE.md` was asserting at the
+same time that the name could be trusted. Fixed by teeing the build log to a
+file the labelling step reads, plus a fail-closed branch: no marker and no
+credentials fails the run rather than being labelled. Four new tests in
+`tests/test_desktop_packaging.py` cover it — one **executes the real
+labelling script** in all three reachable states instead of reimplementing
+its branching, which is the trap the file's own docstring warns against. Both
+new tests were verified to fail against the old workflow and pass against the
+fixed one; a test that passes on both is not a regression test.
+
+**A stale, mislabelled artifact is still downloadable** and I could not
+delete it: `selekyt-windows-x64-signed`, 1.22 GiB, run `35538322486`. It is
+**unsigned**. The deletion was denied as irreversible, which is the right
+call — it is not mine to remove unilaterally. **A user should be asked before
+it is deleted**, or it can be superseded by a re-run of the fixed workflow.
+Until then, treat any artifact from that run as unsigned regardless of its
+name, and re-check `gh api repos/desukab/selektyt/actions/runs/35538322486/artifacts`
+before citing it.
+
+What is still true and unchanged: `sign.ps1` has only ever *declined*. No
+Azure Trusted Signing credentials exist, so every build the pipeline can
+currently produce is unsigned, and SmartScreen will warn on all of them.
+
 ### This session — the window ran, and it found what the contract could not
 
 The shell had been verified only through its JSON-RPC surface. That changed:

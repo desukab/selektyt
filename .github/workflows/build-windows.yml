@@ -84,17 +84,28 @@ jobs:
         run: npm install
 
       - name: Build the Windows installers
+        id: build
         working-directory: apps/desktop
         # The signing hook reads these. They are empty until the repository
         # secrets exist, which is what keeps this job able to ship an honestly
         # labelled unsigned build today.
+        #
+        # The log is teed to a file because the next step has to know whether
+        # sign.ps1 declined to sign, and $GITHUB_STEP_LOG points at *its own*
+        # step log, not this one. When that was the grep target the marker was
+        # never found and every unsigned build uploaded as "signed" — the exact
+        # drift this workflow exists to prevent.
         env:
           SELEKYT_AZURE_TENANT_ID: ${{ secrets.SELEKYT_AZURE_TENANT_ID }}
           SELEKYT_AZURE_CLIENT_ID: ${{ secrets.SELEKYT_AZURE_CLIENT_ID }}
           SELEKYT_AZURE_CLIENT_SECRET: ${{ secrets.SELEKYT_AZURE_CLIENT_SECRET }}
           SELEKYT_AZURE_KEY_VAULT_URI: ${{ secrets.SELEKYT_AZURE_KEY_VAULT_URI }}
           SELEKYT_AZURE_CERT_NAME: ${{ secrets.SELEKYT_AZURE_CERT_NAME }}
-        run: npx tauri build --bundles nsis,msi
+          SELEKYT_BUILD_LOG: ${{ runner.temp }}/selekyt-build.log
+        shell: bash
+        run: |
+          set -o pipefail
+          npx tauri build --bundles nsis,msi 2>&1 | tee "$SELEKYT_BUILD_LOG"
 
       - name: Record whether the build was signed
         id: signed
@@ -102,12 +113,23 @@ jobs:
         # sign.ps1 emits the greppable marker when it declines to sign. A build
         # that intended to sign but could not fails the job instead, so the only
         # way to reach this step unsigned is "no credentials configured".
+        #
+        # Fail closed. The marker and the presence of the credentials must agree:
+        # a missing marker with no credentials would mean the hook never ran at
+        # all, and naming that build "signed" is the one thing this workflow
+        # must not do.
         run: |
-          if grep -q "SELEKYT_UNSIGNED" "$GITHUB_STEP_LOG" 2>/dev/null; then
+          marker="$(grep -c 'SELEKYT_UNSIGNED' "$SELEKYT_BUILD_LOG" || true)"
+          creds="${{ secrets.SELEKYT_AZURE_TENANT_ID != '' }}"
+          echo "marker hits: $marker; credentials configured: $creds"
+          if [ "$marker" -gt 0 ]; then
             echo "signed=false" >> "$GITHUB_OUTPUT"
             echo "::warning::this build is UNSIGNED; Windows SmartScreen will warn"
-          else
+          elif [ "$creds" = "true" ]; then
             echo "signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::sign.ps1 did not report SELEKYT_UNSIGNED and no Azure credentials are configured, so signing cannot have happened. Refusing to name this build signed."
+            exit 1
           fi
 
       - name: Upload the installers
