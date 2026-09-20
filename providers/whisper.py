@@ -12,6 +12,31 @@ from providers.atomic import read_json, write_json_atomic
 
 FALLBACK_CHAIN = ["small", "base", "tiny"]
 
+# Intra-chunk decode saturates well below the core count. Measured on a 4-core
+# machine with the small model over a 5-minute chunk: 1 thread 68.7 s, 2 threads
+# 40.3 s, 4 threads 40.8 s — flat past two. Chunks are decoded strictly in
+# sequence, so the cores above two are idle during the whole transcription stage
+# regardless, while 8 threads on a 4-core/8-thread CPU (what os.cpu_count()
+# reports there) oversubscribes and loses time. A caller that disagrees sets
+# --cpu-threads or SELEKYT_CPU_THREADS, both of which take precedence.
+MAX_INTRA_CHUNK_THREADS = 2
+
+
+def default_cpu_threads() -> int:
+    """Threads for one chunk's decode: the available core count, capped.
+
+    ``len(os.sched_getaffinity)`` is the CPU set the process may actually run
+    on, so a run pinned or cgroup-limited to a slice of a bigger host does not
+    ask for the host's cores. ``os.cpu_count()`` is the fallback where the
+    affinity call does not exist (Windows) and reports logical processors, which
+    is why the cap rather than the raw count is what ships.
+    """
+    try:
+        available = len(os.sched_getaffinity(0))  # type: ignore[attr-defined]
+    except AttributeError:
+        available = os.cpu_count() or 4
+    return max(1, min(available, MAX_INTRA_CHUNK_THREADS))
+
 EMPTY_RETRY_PEAK_DB = -45.0
 """Peak level above which a chunk that decoded to zero segments is not silence.
 
@@ -274,7 +299,8 @@ def transcribe(
         flush=True,
     )
 
-    _threads = cpu_threads or int(os.environ.get("SELEKYT_CPU_THREADS", str(os.cpu_count() or 4)))
+    _threads = cpu_threads or int(os.environ.get("SELEKYT_CPU_THREADS", str(default_cpu_threads())))
+    print(f"[transcribe] cpu_threads={_threads}", flush=True)
     fallback_rt = float(os.environ.get("SELEKYT_FALLBACK_RT", "10.0"))
     fallback_consecutive = int(os.environ.get("SELEKYT_FALLBACK_CONSECUTIVE", "3"))
     chunk_timeout = int(os.environ.get("SELEKYT_CHUNK_TIMEOUT_MIN", "20")) * 60

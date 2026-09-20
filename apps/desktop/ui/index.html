@@ -8,32 +8,59 @@
 </head>
 <body>
 <div id="app">
+  <!-- ╭─ top bar ───────────────────────────────────────────────────────╮ -->
   <header>
-    <div class="brand">
-      <h1>SelekyT</h1>
-      <span class="tagline">AI-assisted video editing</span>
-    </div>
-    <span id="engine" class="engine muted">checking engine…</span>
+    <button class="brand" id="brand" title="All projects">
+      <span class="mark">◇</span>
+      <span class="word">SelekyT</span>
+    </button>
+    <span class="sep"></span>
+    <nav id="crumbs" class="crumbs"></nav>
+    <span class="grow"></span>
+    <span id="engine" class="engine chip muted">checking engine…</span>
+    <button id="new-project" class="ghost">New Project</button>
   </header>
 
   <main>
-    <!-- ╭─ Home ────────────────────────────────────────────────────────╮ -->
-    <section id="view-home" class="view">
+    <!-- ╭─ Projects ─────────────────────────────────────────────────────╮ -->
+    <section id="view-projects" class="view">
+      <div class="page-head">
+        <h2>Projects</h2>
+        <p class="sub">
+          Every run is kept here, on this machine. A stopped run keeps the work
+          it finished — opening it and running again resumes from the last
+          completed chunk rather than starting over.
+        </p>
+      </div>
+      <div id="project-list" class="project-list"></div>
+      <div id="project-empty" class="empty" hidden>
+        <h3>No projects yet</h3>
+        <p class="sub">Choose a video and SelekyT builds the first one.</p>
+        <button class="primary big" data-act="new-project">Select Video…</button>
+      </div>
+    </section>
+
+    <!-- ╭─ Import ───────────────────────────────────────────────────────╮ -->
+    <section id="view-import" class="view" hidden>
       <div class="hero">
-        <h2>Choose a video to begin.</h2>
+        <h2 id="import-title">Choose a video to begin.</h2>
         <p class="sub">
           SelekyT transcribes your video locally, finds the complete thoughts
           worth keeping, removes dead air, and renders social cuts with
           word-timed captions — plus an editable timeline you can take into
-          your NLE.
+          your NLE. Nothing leaves this machine.
         </p>
         <button id="pick" class="primary big">Select Video…</button>
+        <p class="hint" id="resume-hint" hidden></p>
         <div id="chosen" class="chosen" hidden>
-          <div class="chosen-name" id="chosen-name"></div>
+          <div class="chosen-head">
+            <div class="chosen-name" id="chosen-name"></div>
+            <button id="chosen-change" class="ghost small">change</button>
+          </div>
           <dl class="chosen-meta" id="chosen-meta"></dl>
           <div class="chosen-opts">
             <label class="field">
-              <span>clips</span>
+              <span>clips to ship</span>
               <input type="number" id="opt-limit" min="1" max="20" step="1" value="6" />
             </label>
             <label class="field">
@@ -54,58 +81,112 @@
                 <option value="noir">noir</option>
               </select>
             </label>
+              <label class="field">
+                <span>dead-air handling</span>
+                <select id="opt-keep-pauses">
+                  <option value="1" selected>trim silence, keep pauses</option>
+                  <option value="0">trim silence and pauses</option>
+                </select>
+              </label>
+            </div>
+            <div class="chosen-opts">
+              <label class="field">
+                <span>VAD (speech detection)</span>
+                <select id="opt-vad">
+                  <option value="whisper">whisper — best, if installed</option>
+                  <option value="silero">silero</option>
+                  <option value="ffmpeg">ffmpeg</option>
+                  <option value="energy" selected>energy — always available</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>timeline export</span>
+                <select id="opt-fcpxml">
+                  <option value="1" selected>FCPXML + EDL + SRT/ASS</option>
+                  <option value="0">captions only</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>audio analysis</span>
+                <select id="opt-audio">
+                  <option value="1" selected>run</option>
+                  <option value="0">skip</option>
+                </select>
+              </label>
+            </div>
+            <button id="analyze" class="primary big" disabled>Analyze with SelekyT</button>
+            <p class="hint" id="analyze-hint"></p>
           </div>
-          <button id="analyze" class="primary" disabled>Analyze with SelekyT</button>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ╭─ Processing ──────────────────────────────────────────────────╮ -->
-    <section id="view-processing" class="view" hidden>
-      <h2>Processing</h2>
-      <div id="stages" class="stages"></div>
-      <div class="log-wrap">
-        <div class="log-head">
-          <span>engine output</span>
-          <button id="toggle-log" class="ghost">hide</button>
+      <!-- ╭─ Processing ──────────────────────────────────────────────────╮ -->
+      <section id="view-processing" class="view" hidden>
+        <div class="page-head">
+          <h2 id="processing-title">Processing</h2>
+          <div class="processing-actions">
+            <button id="cancel-run" class="danger">Stop</button>
+          </div>
         </div>
-        <pre id="log" class="log"></pre>
-      </div>
-      <p id="processing-note" class="sub">
-        Transcription and rendering happen on this machine. A long video takes
-        several minutes; the log below is the engine's own output.
-      </p>
-    </section>
-
-    <!-- ╭─ Results ─────────────────────────────────────────────────────╮ -->
-    <section id="view-results" class="view" hidden>
-      <div class="results-head">
-        <h2>Results</h2>
-        <div class="results-actions">
-          <button id="open-output" class="primary">Open Output Folder</button>
-          <button id="start-over" class="ghost">New Video</button>
+        <div id="stages" class="stages"></div>
+        <div class="log-wrap">
+          <div class="log-head">
+            <span>engine output</span>
+            <button id="toggle-log" class="ghost small">hide</button>
+          </div>
+          <pre id="log" class="log"></pre>
         </div>
+        <p id="processing-note" class="sub">
+          Transcription and rendering happen on this machine. A long video takes
+          several minutes; the log below is the engine's own output, and a stop
+          keeps whatever was already finished.
+        </p>
+      </section>
+
+      <!-- ╭─ Review ──────────────────────────────────────────────────────╮ -->
+      <section id="view-review" class="view" hidden>
+        <div class="review">
+          <aside class="clip-rail">
+            <div class="rail-head">
+              <h3>Clips</h3>
+              <span id="rail-count" class="chip muted"></span>
+            </div>
+            <div id="clip-rail-list" class="rail-list"></div>
+          </aside>
+          <div class="review-main">
+            <div id="review-head" class="review-head"></div>
+            <div id="review-body" class="review-body"></div>
+          </div>
+        </div>
+
+        <div class="tabs" id="result-tabs">
+          <button class="tab active" data-tab="story">Story</button>
+          <button class="tab" data-tab="timeline">Timeline</button>
+          <button class="tab" data-tab="captions">Captions</button>
+          <button class="tab" data-tab="transcript">Transcript</button>
+          <button class="tab" data-tab="qa">Quality</button>
+          <button class="tab" data-tab="artifacts">Artifacts</button>
+        </div>
+
+        <div id="tab-story" class="tab-panel active"></div>
+        <div id="tab-timeline" class="tab-panel" hidden></div>
+        <div id="tab-captions" class="tab-panel" hidden></div>
+        <div id="tab-transcript" class="tab-panel" hidden></div>
+        <div id="tab-qa" class="tab-panel" hidden></div>
+        <div id="tab-artifacts" class="tab-panel" hidden></div>
+      </section>
+    </main>
+
+    <!-- ╭─ error surface ───────────────────────────────────────────────╮ -->
+    <div id="error" class="error-banner" hidden>
+      <strong id="error-title">The run did not complete.</strong>
+      <pre id="error-detail"></pre>
+      <div class="error-actions">
+        <button id="error-dismiss" class="ghost small">dismiss</button>
+        <button id="error-retry" class="primary small" hidden>Resume run</button>
       </div>
-      <div id="results-summary" class="results-summary"></div>
-
-      <div class="tabs" id="result-tabs" hidden>
-        <button class="tab active" data-tab="clips">Clips</button>
-        <button class="tab" data-tab="transcript">Transcript</button>
-        <button class="tab" data-tab="artifacts">Artifacts</button>
-      </div>
-
-      <div id="tab-clips" class="tab-panel active"></div>
-      <div id="tab-transcript" class="tab-panel" hidden></div>
-      <div id="tab-artifacts" class="tab-panel" hidden></div>
-    </section>
-  </main>
-
-  <div id="error" class="error-banner" hidden>
-    <strong>The run did not complete.</strong>
-    <pre id="error-detail"></pre>
-    <button id="error-dismiss" class="ghost">dismiss</button>
+    </div>
   </div>
-</div>
-<script type="module" src="/app.mjs"></script>
-</body>
+  <script type="module" src="/app.mjs"></script>
+  </body>
 </html>

@@ -74,7 +74,19 @@
         "language": ["en-US"],
         "template": null
       },
-      "certificateThumbprint": null
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.acs.microsoft.com",
+      "tsp": true,
+      "signCommand": {
+        "cmd": "powershell.exe",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy", "Bypass",
+          "-File", "scripts/sign.ps1",
+          "%1"
+        ]
+      }
     }
   },
   "plugins": {}
