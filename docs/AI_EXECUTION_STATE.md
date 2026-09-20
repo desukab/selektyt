@@ -89,6 +89,70 @@ every line below was true on this host at that point.
 
 ## Completed work
 
+### This session — three of eleven sources have no transcript because the VAD gate ate them
+
+This is a defect on the RELIABLE TRANSCRIPT step, found by measuring rather
+than by reading, and it changes what the corpus is.
+
+`editorial_audit.py` could not run on four sources at all — no
+`selections.json`, because nothing was ever selected. Three of the four
+(`alice-1903`, `roman-portrait-trailer`, `telugu-launch`) transcribed to
+**zero segments**, and each chunk was checkpointed with `status: "ok"`. A
+suppressed decode and genuine silence produce byte-identical records, so the
+failure hardened permanently into the transcript and the run proceeded as
+though there were nothing to transcribe.
+
+The two are separable by measuring the audio the chunk was decoded from:
+
+| source | peak | committed segments | correct reading |
+|---|---|---|---|
+| `alice-1903` | −120 dB (the silence floor) | 0 | silence — the empty result is right |
+| `roman-portrait-trailer` | 0.0 dB | 0 | loud, 91.5% of energy below 500 Hz — a bed, not speech |
+| `telugu-launch` | −1.8 dB | 0 | loud, speech-shaped spectrum — **the gate lost real audio** |
+
+`telugu-launch` is the one that is a real failure. Its band-energy profile
+matches `hindi-baiga-interview`, which *did* transcribe. Decoding it without
+the VAD, with the same model, language and beam width, returns segments where
+the committed run returned nothing. The mechanism is confirmed by direct
+reproduction: `vad_filter=True` → **0 segments / 0.0 s covered**;
+`vad_filter=False` → **16 segments / 105.9 s** of the 173.7 s.
+
+The fix in `providers/whisper.py` measures each chunk's peak before it is
+deleted and, above a −45 dB bar, decodes again without the gate. Both outcomes
+are written to the checkpoint as a `note` and carried into the transcript's
+provenance as `vad_recovered_chunks`, because a recovered chunk is a weaker
+result than one the gate let through and a reader of the transcript needs to
+see which chunks those were. Verified end to end on the retained audio: the
+retry fired on the real chunk — *"vad suppressed the whole chunk over −1.8 dB
+of audio; decoded again without the VAD and recovered 9 segments"* — where the
+committed checkpoint has 0.
+
+**The quality of what was recovered is poor, and this is not a fix for the
+source.** 9 segments cover 24.8 s of the 173.7 s, the script is Devanagari
+rather than Telugu, and stray English fragments are hallucinated into it. The
+defect fixed is that the failure was invisible and total; the source remains a
+hard one. `roman-portrait-trailer` is the open risk in the other direction: it
+is loud, so the retry will fire on it too, and decoding music without a VAD is
+exactly how whisper hallucinates. An empty transcript and a hallucinated one
+are both useless, and the `note` is what keeps the second from being mistaken
+for a clean decode. No speech/music classifier was added — that would be
+another heuristic that can be wrong, and the recovery is flagged rather than
+trusted.
+
+Two ordering bugs the end-to-end run caught, both pinned by tests. The first
+version measured the chunk audio *after* `wav.unlink()` had deleted it, so
+every chunk hit the unreadable-file fallback, read as silent, and the retry
+never fired at all. The second moved the measurement but left the retry reading
+the deleted path, raising `FileNotFoundError`. **Both passed the unit tests.**
+The peak is now measured and the retry completed before the file is unlinked,
+and the ordering has its own test — this is the second time in this repo that
+a "passed" change was dead on arrival because the test never exercised the
+real path (the first was the `silencedetect` filter invoked with `-v error`,
+§Outstanding work), so the lesson is to run the thing.
+
+**The committed corpus is untouched.** This changes what a *fresh* transcription
+records, not any shipped transcript. The three sources were not re-run.
+
 ### This session — the audit was actioned, one finding was reversed, and the numbers became reproducible
 
 A red-team pass over the repo's own claims (`docs/RED_TEAM_FINDINGS.md`) was
@@ -690,7 +754,12 @@ selections).
   lying about the pixel shape and would stretch content ~12.5 % horizontally.
   If a platform is later found to ignore container SAR, revisit this.
 * **The speech-free guard is placed outside the transcription branch** so a
-  *cached* empty transcript is also caught, not just a fresh one.
+  *cached* empty transcript is also caught, not just a fresh one. That guard
+  catches an empty transcript reaching selection; it does not ask *why* the
+  transcript is empty, and the VAD finding above is the answer for three of the
+  eleven sources — an empty result over loud audio is not the same condition as
+  an empty result over silence, and conflating them is how suppressed speech
+  gets recorded as a successful `status: "ok"`.
 * **`tools/editorial_audit.py` reads only artifacts a normal run already
   writes** and prints failing checks, so it is the repeatable benchmark the
   phase asked for rather than a one-off script. Prefer extending it over
