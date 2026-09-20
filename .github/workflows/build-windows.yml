@@ -19,9 +19,13 @@ on:
 # the weights and ffmpeg are GBs of Windows-only binaries: nothing here is
 # worth caching across machines as an artifact.
 
+# A push to main while this is running would cancel a build that is minutes
+# into a Windows compile and a ~1 GB download, and the run that replaced it
+# would then pay both costs again. Only a manual re-run of the same ref should
+# supersede one that is already in flight.
 concurrency:
-  group: build-windows-${{ github.ref }}
-  cancel-in-progress: true
+  group: build-windows-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   build:

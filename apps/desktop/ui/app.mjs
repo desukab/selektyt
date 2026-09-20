@@ -94,9 +94,12 @@ const STAGES = [
   {
     key: "audio",
     label: "Audio / dead air",
-    // Only present with the audio-analysis stage, which the desktop flow
-    // enables. Absent evidence is not a failure; see renderStages.
-    started: (l) => /\[audio\]|dead air|speech region/i.test(l),
+    // engine/audio_analysis prints these when it extracts PCM and runs the
+    // VAD. Only present with the audio-analysis stage, which the desktop flow
+    // enables; absent evidence is not a failure, see renderStages.
+    started: (l) =>
+      /\[cache\] (reusing extracted PCM|reusing VAD scores)/.test(l) ||
+      /^\[vad\] backend=/.test(l),
     finished: null,
     optional: true,
   },
