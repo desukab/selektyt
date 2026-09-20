@@ -217,7 +217,19 @@ hung at 55 minutes and the second completed in 61 seconds on the same input.
   a real `:`-in-path render: unescaped fails with `Invalid argument`, escaped
   renders a valid mp4.
 - The Windows build pipeline is live: the push to `main` triggered
-  `build-windows` on `windows-latest`.
+  `build-windows` on `windows-latest`, which completes in ~22 minutes.
+- **Two CI defects that the run badges were hiding.** Both were found by
+  reading the runs rather than the workflow files, and both had been silently
+  wrong while this report described them as working:
+  the Linux `shell` job added in `59e5327` was red on its first three runs
+  (`tauri_build` hard-errors on paths only `stage-windows.sh` produces), and
+  the Windows job was naming **every** unsigned build `...-signed` because its
+  labelling step grepped `$GITHUB_STEP_LOG` — its own step log, not the build
+  step's, which is where the marker is. The second is the more serious: the
+  artifact name is the only trust claim a downloaded file carries before it is
+  run. Fixed on both, with the labelling step now fail-closed and four new
+  tests, one of which executes the real labelling script in all three
+  reachable states and was verified to fail against the pre-fix workflow.
 - **The GUI rendered.** Not on Windows — on this headless host, under
   `Xvfb :99` at 1440×2400, driven with `xdotool` and read with `tesseract`.
   The window opened, the project card loaded, and all six review tabs
@@ -274,12 +286,13 @@ code that could not be executed here.
    list populates, clicking a card loads the run, and all six review tabs
    render real engine output read by OCR. What was *not* verified: **nothing
    about Windows.** webkit2gtk is not WebView2, `xdotool` clicks are not a
-   pointer on Windows 11, and no Windows installer has ever completed on a
-   Windows runner — the one CI run that got past staging was cancelled by my
-   own push before the concurrency fix landed. Every item above and below
-   this one still applies in full. A reviewer must still click through the
-   real installed app on Windows 11, and the size and install UX of a ~1 GB
-   NSIS payload (item 5) is part of what that click-through will judge.
+   pointer on Windows 11, and the installer has never been *installed* — the
+   distinction matters, because the pipeline does now produce one: `build-windows`
+   completes on `windows-latest` in ~22 minutes and uploads NSIS + MSI
+   artifacts. Being built by a runner is not being run by a user. No Windows
+   desktop has ever seen the installer's UI, its Start Menu entry, its uninstall
+   behaviour, or its sidecar resolution from the installed layout (items 1 and
+   2). Every item above and below this one still applies in full.
 7. **WebView2 availability.** The config downloads the bootstrapper silently;
    untested on a machine without Edge.
 8. **The signing hook has now executed — and it exposed a labelling bug that

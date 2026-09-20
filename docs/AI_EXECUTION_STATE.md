@@ -16,9 +16,12 @@ every line below was true on this host at that point.
   `corpus/wer/runs/nasa-c4-small.json` was committed at `59e5327` alongside its
   tracked siblings.
 * **The Windows desktop application is the current line of work.** See
-  `docs/RELEASE.md` for the acceptance position, which keeps two claims
+  `docs/RELEASE.md` for the acceptance position, which keeps three claims
   strictly separate: the engine path is proven on a real file through the
-  shipped sidecar binary, and the Windows installer has never run on Windows.
+  shipped sidecar binary; the Windows build pipeline now *produces* installers
+  on `windows-latest` in ~22 minutes; and **no installer has ever been
+  installed or run on a Windows desktop.** Built is not run, and a green
+  `build-windows` badge is not a Windows validation.
   The last substantive commit is `59e5327` (cancellation, contract-tested UI,
   honest signing). Earlier relevant commits: `91f3a39` (stage-evidence fix),
   `6aa5e83` (RELEASE report), `33e42f8` (Windows portability fixes),
@@ -333,7 +336,10 @@ What actually happened, in an order worth knowing:
    — then **my own push cancelled it**, because `concurrency` was keyed on the
    ref alone with `cancel-in-progress: true`. The group is now keyed on the run
    id as well, which was verified by the next push not cancelling the build it
-   superseded. The installer has never completed.
+   superseded. **The installer has since completed** — `build-windows` for
+   `de0c151` finished in 22m27s and uploaded NSIS + MSI artifacts. What has
+   never happened is anyone installing one. That distinction is load-bearing
+   for everything in `docs/RELEASE.md`'s blocked list, so do not collapse it.
 
 Two findings that are easy to get wrong next time:
 
@@ -1097,11 +1103,13 @@ In rough order of how much it would cost a user (fuller list in
    tab coordinates derived from row-darkness profiling plus `tesseract --psm 7
    tsv` bounding boxes, and OCR-confirmed real content in all six review tabs
    (15 SRT cues with text and in/out times, the transcript's opening line, the
-   QA row, 5 landscape + 2 vertical render entries). What was not: **anything
-   Windows.** webkit2gtk is not WebView2, and the Windows installer has still
-   never completed on a Windows runner — the one run that got past staging was
-   cancelled by my own push before the concurrency fix. The `sign.ps1` hook and
-   any MSIX/Appx stage remain **UNVERIFIED** (no PowerShell here, Tauri 2
+   QA row, 5 landscape + 2 vertical render entries). What was not: **a Windows
+   installation.** The build pipeline has produced installers on
+   `windows-latest` since (22m27s for `de0c151`), but built is not installed —
+   webkit2gtk is not WebView2, and no Windows desktop has run the installer, its
+   Start Menu entry or its uninstall path. The `sign.ps1` hook has run 154 times
+   on that same runner, and every one of them was a decline; the *signing* path
+   and any MSIX/Appx stage remain **UNVERIFIED** (no PowerShell here, Tauri 2
    cannot emit MSIX at all). Revised honest summary: the app's *logic* is
    tested and its *Linux rendering* is now observed; its *Windows installation*
    is not, and running the window once is exactly what proves that gap is worth
