@@ -1,0 +1,14 @@
+{
+ "corpus": "Multilingual LibriSpeech Italian (test split)",
+ "source_url": "https://dl.fbaipublicfiles.com/mls/mls_italian.tar.gz",
+ "licence": "Multilingual LibriSpeech (Facebook AI Research), CC BY 4.0 — attribution for the reference transcripts this file lists.",
+ "archive_member_count": 1262,
+ "stride": 31,
+ "prepare_args": {
+  "count": 40,
+  "max_minutes": 12.0,
+  "corpus": "mls-italian"
+ },
+ "clips": 40,
+ "audio_seconds": 588.09
+}

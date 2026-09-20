@@ -1,0 +1,20 @@
+=== PREPARE italian test ===
+[prepare] listing https://dl.fbaipublicfiles.com/mls/mls_italian.tar.gz (test split)
+[prepare] 1262 utterances in test, stride 31, keeping 40
+[prepare] 40 clips, 9.80 min audio (of 1262 available, stride 31)
+[prepare] manifest: corpus/wer/mls-italian-test/manifest.jsonl
+PREPARE EXIT=0
+=== BENCH italian small ===
+[bench] 7458_6589_000024 dur=17.3s wer=32.1% cer=6.6% rt=0.25x lang=it(1.00)
+[bench] 7458_6589_000055 dur=13.3s wer=11.1% cer=2.0% rt=0.29x lang=it(1.00)
+[bench] 7458_6589_000086 dur=14.2s wer=21.7% cer=4.8% rt=0.28x lang=it(1.00)
+[bench] 7458_6589_000117 dur=10.4s wer=26.3% cer=7.5% rt=0.34x lang=it(1.00)
+[bench] 8582_7877_000012 dur=14.1s wer=38.1% cer=5.8% rt=0.30x lang=it(1.00)
+[bench] 8582_7877_000043 dur=17.1s wer=6.7% cer=0.8% rt=0.28x lang=it(1.00)
+[bench] 8582_7877_000074 dur=12.8s wer=17.4% cer=2.7% rt=0.32x lang=it(1.00)
+[bench] 8582_8842_000026 dur=11.8s wer=3.7% cer=2.2% rt=0.33x lang=it(1.00)
+
+[bench] italian-small: WER=20.11% CER=4.53% on 40 clips / 9.80 min
+[bench] RTF=0.278x (decode) / 0.279x (incl load); peak RSS=655.0 MB; wall=163.8s
+[bench] wrote /home/azureuser/selektyt/corpus/wer/runs/italian-small.json
+BENCH EXIT=0
