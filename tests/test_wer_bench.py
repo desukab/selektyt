@@ -218,6 +218,12 @@ RUNS = Path(__file__).resolve().parent.parent / "corpus" / "wer" / "runs"
     # scores 11% here with diacritics intact. This is the number that localises
     # the Telugu failure to Indic rather than to "everything outside English".
     ("polish-small", 0.1101),
+    # The second C10 language. Its expected value is deliberately NOT pinned
+    # here: the run is in flight and writing a figure before the record exists
+    # would be guessing in a place built to forbid it. When the run lands, pin
+    # it in this list exactly as the others are pinned, and at the same time
+    # delete test_italian_is_measured_though_not_yet_pinned below, which exists
+    # only to hold the run to its own record in the meantime.
 ])
 def test_the_committed_wer_figures_are_what_the_records_say(name, expected_wer):
     path = RUNS / f"{name}.json"
@@ -320,6 +326,35 @@ def test_the_telugu_corpus_manifest_is_committed_alongside_its_score():
     assert prov["archive_member_count"] > prov["clips"], (
         "the sample must be smaller than what it was drawn from, or the stride "
         "is meaningless")
+
+
+def test_italian_is_measured_though_not_yet_pinned():
+    """A placeholder for the second C10 language while its run is in flight.
+
+    The pinned list above holds a committed figure to its record to four
+    decimals, which is exactly why no number may be written there before the
+    record exists — the expected value would be a guess in the one place the
+    suite exists to forbid guessing. This holds what is already true instead:
+    that once the run lands it is self-consistent, it reports a clip count, and
+    its manifest is auditable. When the real figure is pinned above, this test
+    is redundant and should be deleted alongside the comment that names it."""
+    rec_path = RUNS / "italian-small.json"
+    if not rec_path.is_file():
+        pytest.skip("italian-small run not present yet")
+    rec = json.loads(rec_path.read_text(encoding="utf-8"))
+    assert rec["clip_count"] >= 30, "the Italian sample is smaller than Polish's"
+    assert rec["wer"] == pytest.approx(rec["wer_err_total"] / rec["wer_ref_words"],
+                                       abs=5e-5), \
+        "the reported rate is not the ratio the record's own totals give"
+    assert rec["cer"] == pytest.approx(rec["cer_err_total"] / rec["cer_ref_chars"],
+                                       abs=5e-5)
+    # Whichever side of the bar it lands on, the docs have to say which.
+    inside = sum(1 for c in (rec.get("per_clip") or [])
+                 if c["wer"] <= 0.25)
+    assert "per_clip" in rec and len(rec["per_clip"]) == rec["clip_count"], \
+        "per-clip rows are what the 'N of M inside the bar' claim is built on"
+    print(f"italian-small: WER {rec['wer'] * 100:.2f}%, "
+          f"{inside} of {rec['clip_count']} inside the 25% bar — pin this above")
 
 
 def test_the_evidence_files_are_not_gitignored():
