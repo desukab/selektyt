@@ -66,10 +66,6 @@
         { "name": "audio", "extensions": ["mp3", "wav", "aac", "flac", "m4a", "ogg", "opus"] },
         { "name": "any" }
       ]
-    },
-    "dialog:allow-save",
-    "dialog:allow-message",
-    "dialog:allow-confirm",
-    "dialog:allow-error"
+    }
   ]
 }
