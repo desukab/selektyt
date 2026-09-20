@@ -561,9 +561,28 @@ different kinds that must not be bundled — three sources fail on
 `check_cuts_respect_sentences` (six cut edges; analysed as ASR under-punctuation
 and comma-clause cuts in the OPEN note above, i.e. audit noise), while
 `nasa360-ep5` clip 05 and `telugu-tutorial` clip 01 fail on *silence share*
-(40.8% and 46.3% dead air in the rendered clip), which is a real pacing property
-of those two clips and not an emitter bug. Only `royal-society-cloke` and
-`hadhazy-protest` pass everything.
+(40.8% and 46.3%). Neither is an emitter bug, but the two are not the same
+finding and must not be bundled as "dead air":
+
+- **nasa360-ep5 clip 05 is a measured music bed, not silence.** The 6.26 s
+  window at 101.56→107.82 s measures mean −31.4 dB, 0.00 s of silence at
+  `-40dB:d=0.25`, and spectral flatness 0.0066–0.0123 — loud and tonal
+  throughout (`docs/METRICS.md` A2.4, `ffmpeg volumedetect` / `silencedetect`
+  / per-second FFT). A standalone re-transcription of that window with the
+  same model returns only "Ever.", so the transcript dropped nothing.
+  `retention_intervals` is **right** to keep the clip intact here, and a
+  version that split on the gap would have cut music out of the shipped cut —
+  the guard's 0.72 wall-clock retention floor exists for exactly this case,
+  and this was checked before changing it. The defect is the metric's name,
+  not the cut.
+- **telugu-tutorial clip 01 is unmeasurable from this repository.** Its source
+  media is not retained, so the 46.3% has no acoustic verification either way,
+  and the source is one of the two whose transcript is phonetic noise — so a
+  word-coverage deficit there is consistent with a transcription failure rather
+  than with either silence or music. It is recorded as unresolved, not as dead
+  air.
+
+Only `royal-society-cloke` and `hadhazy-protest` pass everything.
 
 Separately, **five of the seven** still carry relative EDL asset paths
 (`emwcon-panel-2018`, `hadhazy-protest`, `nasa360-ep5`, `ooi-vertical`,
