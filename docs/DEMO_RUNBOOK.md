@@ -351,11 +351,14 @@ cd /home/azureuser/selektyt && .venv/bin/python -m pytest -q
 Real output, exit code 0:
 
 ```
-1034 passed, 12 skipped in 113 s
+1240 passed, 13 skipped in 183.9 s
 ```
 
-What this proves: there is a large, green, fast suite. Say the number, then say
-immediately what it does not cover — because the honest version is stronger than
+What this proves: there is a large, green suite. **Say the number as a number
+you just ran, not as one quoted from this file** — it moved 1034 → 1080 → 1215
+→ 1236 → 1240 as regression tests landed, and every one of those was correct on
+the day it was written and stale by the next commit. Say immediately
+what it does not cover — because the honest version is stronger than
 the number:
 
 - **Twelve tests skip, and every one of them is an environment skip, not a

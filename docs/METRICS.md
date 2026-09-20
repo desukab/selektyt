@@ -500,7 +500,7 @@ capital. It has not been done.
 
 ## A5 — Pipeline and engineering health
 
-### A5.1 Test suite — 1034 passed, 12 skipped in 113 s
+### A5.1 Test suite — 1240 passed, 13 skipped in 183.9 s
 
 **Command:**
 
@@ -508,17 +508,25 @@ capital. It has not been done.
 cd /home/azureuser/selektyt && .venv/bin/python -m pytest -q
 ```
 
-**Current value: `1034 passed, 12 skipped in 113 s`, exit code 0.** VERIFIED,
-re-run 2026-09-20. All 12 skips are `SELEKYT_PROXY_MEDIA`-gated or
-optional-backend-gated environment skips, not failures.
+**Current value: `1240 passed, 13 skipped in 183.9 s`, exit code 0.** VERIFIED,
+re-run 2026-09-20. The 13 skips are not one group, and treating them as one
+hides the most important of them: **7** are `SELEKYT_PROXY_MEDIA`-gated
+measurements that expect a ~239 MB recording that is not redistributable with
+the repo — opt-in real-media measurements, so the suite reports green on every
+CI run while the validation it names does not happen. **5** are WER records
+that predate the `wer_err_total` field, and **1** is a language with no run
+record. Only the last of those is arguably "environment".
 
 **How to read it:** the number is large and green and it is the *weakest* number
 in this document. `TECHNICAL_AUDIT.md` names specific tests that assert what the
 code claims rather than what the output is: the burned-captions test asserts a
 non-empty file, four tests assert a literal `True` constant, one reproducibility
 test asserts only that two values are non-negative, and `test_editorial_rank.py:51`
-disables its own assertion with `or True`. Ten tests skip, including the only
-end-to-end HTTP test and the only Rust-sidecar parity test. **Count the suite as
+disables its own assertion with `or True`. Thirteen tests skip, including the only
+end-to-end HTTP test and the only Rust-sidecar parity test, and that count is
+not stable — it moved 10 → 7 → 12 → 13 → 12 → 13 as gated real-media tests and
+WER records arrived and departed, so a skip count is a snapshot of one run, not
+a property of the commit. **Count the suite as
 engineering hygiene, not as product quality.**
 
 ### A5.2 Audit coverage — 2 tools, 90+ checks, 0 wired into CI

@@ -55,17 +55,24 @@ Results, both real:
   `pycmx` (an independent CMX 3600 reader), every FCPXML parsed as XML, all six
   cuts' EDL/FCPXML/render durations agreeing within 0.00–1.63 frames. Full output
   in `docs/nle-audit-output.txt`. (VERIFIED — I ran it.)
-- Test suite: **1080 passed, 12 skipped in 145 s**, exit code 0, re-run
-  2026-09-20. (VERIFIED — I ran it; the 12 skips are environment skips on
-  absent optional backends, not failures.)
+- Test suite: **1240 passed, 13 skipped in 183.9 s**, exit code 0, re-run
+  2026-09-20. (VERIFIED — I ran it. The skips are not one group: 7 are opt-in
+  `SELEKYT_PROXY_MEDIA` measurements needing a non-redistributable recording,
+  5 are WER records that predate the `wer_err_total` field, 1 is a language
+  with no run record. None is a missing optional backend.)
 
 **Drift warning, since it matters for diligence accuracy.** Three documents
 recorded three different test counts within the same hour today: `docs/AI_EXECUTION_STATE.md`
 originally recorded 819, `docs/RED_TEAM.md` recorded 824, and the real number
 when I ran the suite was **834**. `docs/AI_EXECUTION_STATE.md` has since been
-corrected, and the count has moved again to **1080 passed / 12 skipped**
+corrected, and the count has moved again to **1240 passed / 13 skipped**
 (2026-09-20) as more regression tests landed — which is the point of the
-paragraph below. The state
+paragraph below. It moved 1080 → 1215 → 1236 → 1240 during the desktop work
+alone: 1215 was the baseline before the packaging contract existed, 1236 was
+quoted in a commit message, and 1240 is the count after the four release-label
+tests landed — those tests shipped citing the count from *before* they
+existed, which is the drift this paragraph is about, happening again in real
+time. The state
 file carries its own self-checkpoint
 note about the drift — the correction is real, and the lesson is that any
 document quoting a test count must be refreshed at the time it is shared, or it
@@ -84,7 +91,7 @@ This is the strongest section of the room, and it is genuinely strong.
 | One real end-to-end run on real input | EXISTS | `out/web/pipeline/project/` — NASA 360 Episode 5, US-government public domain, 1469.77 s, 29.97 fps, two-host unscripted speech, 6 clips, 16:9 + 9:16 renders, per-cut EDL + FCPXML, captions, QA |
 | Independent interchange audit | EXISTS | `tools/nle_check.py`, exit 0 today (VERIFIED); output archived at `docs/nle-audit-output.txt` |
 | Editorial audit tool | EXISTS | `tools/editorial_audit.py` (VERIFIED — `docs/release-validation.md`) |
-| Test suite | EXISTS | 1080 passed / 12 skipped, 145 s (VERIFIED today) |
+| Test suite | EXISTS | 1240 passed / 13 skipped, 183.9 s (VERIFIED 2026-09-20) |
 | Determinism across entry points | EXISTS | the web shell reproduced the CLI selection exactly — on one source (VERIFIED, `docs/product-gap-map.md` "The critical path") |
 | Architecture and technical audit | EXISTS | `docs/TECHNICAL_AUDIT.md` — 15 ranked defects, five of them security, written against the real code |
 

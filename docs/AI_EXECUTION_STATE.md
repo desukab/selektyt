@@ -1536,14 +1536,18 @@ selections).
   fixed). All four distinguish "code exists and unit tests pass" from "a user
   can rely on this".
 * **Start any work by re-running the suite** (`.venv/bin/python -m pytest -q`)
-  and confirming **1080 passed / 12 skipped** (~145 s, 2026-09-20). A number other
-  than that means something has drifted. The count was refreshed across the doc
+  and confirming the count in "Current repository state" above (**1240 passed /
+  13 skipped**, 183.9 s, 2026-09-20). A number other than that means something
+  has drifted. The count was refreshed across the doc
   set after RED_TEAM, AI_EXECUTION_STATE and an agent appendix disagreed within
   one day (824, 819, 834); it has moved 819 → 824 → 834 → 837 → 890 → 895 → 898
-  → 1031 → 1034 → 1036 → 1080 as regression tests landed, and the skip count moved
-  10 → 7 → 12 → 13 → 12 as gated real-media tests, backend-gated checks and
+  → 1031 → 1034 → 1036 → 1080 → 1215 → 1236 → 1240 as regression tests landed, and the skip count moved
+  10 → 7 → 12 → 13 → 12 → 13 as gated real-media tests, backend-gated checks and
   WER run records arrived and departed. **A quoted count is
-  stale the moment it is written** — the "How to run things" note above carries
+  stale the moment it is written** — this session quoted 1234, then 1236, then
+  1240, each correct at the time of writing and each wrong by the next commit,
+  and the four labelling tests were shipped with a commit message quoting the
+  count from before they existed. — the "How to run things" note above carries
   the same caveat, and the note there explains why the count moved twice during
   this session alone. The same applies to commit counts — the repo is at **194
   commits, 85 of them machine-authored under the "Ubuntu" identity**
