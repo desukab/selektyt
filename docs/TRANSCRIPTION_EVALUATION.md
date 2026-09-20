@@ -774,6 +774,74 @@ corpus actually raised. See `corpus/wer/runs/telugu-small.json` for the
 per-clip detail and `docs/CORPUS_RESULTS.md` for the in-corpus entry it
 supersedes.
 
+**Does a bigger model fix it? Measured: it helps by a lot and not enough.** The
+same manifest re-run on `medium` (record in `corpus/wer/runs/telugu-medium.json`):
+
+| | `small` | `medium` |
+| --- | --- | --- |
+| WER | 151.08% | **91.54%** |
+| CER | 127.40% | **69.24%** |
+| best single clip | 71.4% | **25.0%** |
+| median clip | 106.7% | **92.3%** |
+| worst clip | 440.0% | **226.7%** |
+| clips inside the 25% bar | **0 of 50** | **1 of 50** |
+| RTF | 11.12× | 17.08× |
+| peak RSS | 1172.7 MB | 2705.5 MB |
+
+Doubling the model removes 40 points of WER and 58 points of CER, and moves the
+number of passing clips from zero to one — at 2.3× the wall time and 2.3× the
+memory. The honest summary is the one §6.5 hedged toward before the corpus-wide
+figure existed: **capacity is a real lever and it is not sufficient.** A
+language that sits at 91.5% on `medium` is not a size problem; §7.2 is what
+makes that a measured statement rather than an inference, because Polish on the
+same model size shows what this model *can* do in a language it fits.
+
+---
+
+### 7.2 Polish: the first C10 language measured, and it passes
+
+`mls_polish.tar.gz` is the smallest of the six at 6.2 GiB and still does not fit
+the disk, so the archive is streamed with `curl | tar` and only the strided
+sample is written: the test split's 520 utterances at stride 10, stopping at 35
+clips because `--max-minutes` defaults to 8.0. The whole prepare costs ~15 MB of
+disk rather than 6.2 GB, and the manifest and provenance it leaves behind are
+committed so the number is auditable without a re-download.
+
+| Metric | Value |
+| --- | --- |
+| Corpus | Multilingual LibriSpeech Polish, test split (CC BY 4.0) |
+| Clips | 35 |
+| Audio | 7.79 min |
+| Reference words | 1054 |
+| Model | `small` (the English default) |
+| **WER** | **11.01%** (116 word errors) |
+| **CER** | **2.45%** (169 char errors of 6885) |
+| Clips inside the 25% bar | **34 of 35** (best 0.0%, median 9.4%, worst 40.0%) |
+| Empty decodes | 0 |
+| RTF | 0.37× |
+| Peak RSS | 654.9 MB |
+
+The decode preserves the diacritics that make the reference Polish rather than
+a transliteration — `wyciętych`, `fantastyczną`, `obywatelską`, `zaskoczyć` —
+which matters because a lossy normalisation would show up as CER before it shows
+up as WER, and CER is 2.45%.
+
+**Read §7.1 and §7.2 together.** The same `small` model that scores 3.38%
+English scores 11.01% Polish and 151.08% Telugu. The failure is not "everything
+outside English"; it has a boundary, and the boundary is drawn where the data
+draws it. That is a stronger and more actionable finding than the pre-measurement
+version, because a per-language gate is a routing decision with no hardware
+consequence — and because Telugu still fails at `medium`, the gap is language fit
+rather than model size, so buying compute does not close it.
+
+**What this does not settle.** P9 requires **3 of the 6** C10 languages. One is
+measured and passes; five (German, Spanish, French, Dutch, Italian) are
+registered in `tools/wer_bench.py` and remain **UNMEASURED**, and none is assumed
+by this result. Polish is also read audiobook prose in one accent region, which
+is the easiest possible condition — the same clean-read bias that makes LibriSpeech
+English 3.38%. Noisy, crosstalk or compressed real-world audio in any of the six
+is a different measurement that has not been made.
+
 ---
 
 ## 8. Recommendation

@@ -1,0 +1,14 @@
+{
+ "corpus": "Multilingual LibriSpeech Polish (test split)",
+ "source_url": "https://dl.fbaipublicfiles.com/mls/mls_polish.tar.gz",
+ "licence": "Multilingual LibriSpeech (Facebook AI Research), CC BY 4.0 — attribution for the reference transcripts this file lists.",
+ "archive_member_count": 520,
+ "stride": 10,
+ "prepare_args": {
+  "count": 50,
+  "max_minutes": 8.0,
+  "corpus": "mls-polish"
+ },
+ "clips": 35,
+ "audio_seconds": 467.23
+}

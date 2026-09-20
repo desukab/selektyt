@@ -208,6 +208,16 @@ RUNS = Path(__file__).resolve().parent.parent / "corpus" / "wer" / "runs"
     # above 1.0 means the hypothesis carries more error words than the
     # reference has words. If this moves, P9's row moves with it.
     ("telugu-small", 1.5108),
+    # The same Telugu manifest on a medium model: WER 151.08% -> 91.54%, CER
+    # 127.40% -> 69.24%, and clips inside the 25% bar 0 -> 1 of 50. Capacity is a
+    # real lever and it does not reach the bar. Pinned so a doc can quote the
+    # improvement without quoting the distance still left.
+    ("telugu-medium", 0.9154),
+    # The first C10 language measured on its own criterion corpus. Polish is one
+    # of the six P9 names, and the same small model that scores 3.38% English
+    # scores 11% here with diacritics intact. This is the number that localises
+    # the Telugu failure to Indic rather than to "everything outside English".
+    ("polish-small", 0.1101),
 ])
 def test_the_committed_wer_figures_are_what_the_records_say(name, expected_wer):
     path = RUNS / f"{name}.json"
@@ -266,6 +276,29 @@ def test_no_telugu_clip_meets_the_p9_bar():
         f"{len(passing)} of {len(per_clip)} Telugu clips now meet the 25% bar: "
         f"{passing[:5]}. P9's row must be re-written."
     )
+
+
+def test_a_larger_model_helps_telugu_but_does_not_reach_the_bar():
+    """The medium model on the same Telugu manifest is substantially better than
+    small — WER 151.08% to 91.54% — and 49 of 50 clips still miss the 25% bar.
+    That is the honest shape of the finding: capacity is a real lever, and it is
+    not sufficient. Without this the improvement reads as progress toward P9
+    when the criterion is still failed by a factor of almost four."""
+    small = RUNS / "telugu-small.json"
+    medium = RUNS / "telugu-medium.json"
+    if not (small.is_file() and medium.is_file()):
+        pytest.skip("both Telugu runs must be present to compare")
+    s = json.loads(small.read_text(encoding="utf-8"))
+    m = json.loads(medium.read_text(encoding="utf-8"))
+    assert m["wer"] < s["wer"], \
+        "the medium model no longer beats small on Telugu — re-read both rows"
+    assert m["wer"] > 0.25, "Telugu reached the 25% bar — P9's row must move"
+    pc = m.get("per_clip") or []
+    if len(pc) >= 50:
+        missing = sum(1 for c in pc if c["wer"] > 0.25)
+        assert missing >= len(pc) // 2, \
+            "most Telugu clips now meet the bar — this is no longer a " \
+            "whole-corpus failure, and the docs say it is"
 
 
 def test_the_telugu_corpus_manifest_is_committed_alongside_its_score():
