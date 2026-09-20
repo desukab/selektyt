@@ -290,9 +290,9 @@ bar** (`corpus/wer/runs/spanish-small.json`, manifest at
 twice and never touched disk, which is the only way it fit against ~3 GB free.
 
 P9 asks for ≤25% WER on at least 3 of the 6 C10 languages. Polish (11.01%),
-Italian (20.11%) and this are all inside the bar, so **the criterion is met as
-written** — the first of the eight P-criteria to close on measured
-non-English data.
+Italian (20.11%), Spanish (8.58%) and German (10.66%) are all inside the bar, so
+**the criterion is met with one to spare** — the first of the eight P-criteria
+to close on measured non-English data.
 
 What the claim is deliberately *not* promoted to. Three of six is the count, but
 the three are the clean-read audiobook half of C10: German, French and Dutch stay

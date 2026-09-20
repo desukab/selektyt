@@ -235,6 +235,14 @@ RUNS = Path(__file__).resolve().parent.parent / "corpus" / "wer" / "runs"
     # 3.38% but a spread, and the spread is what makes "one easy audiobook" the
     # wrong reading of any single one of them.
     ("spanish-small", 0.0858),
+    # The fourth C10 language, and the one that moves P9 from "met on the
+    # minimum" to "met with one to spare". German on MLS test is 40 clips /
+    # 10.04 min / 1388 reference words, WER 10.66%, CER 3.20%, 36 of 40 clips
+    # inside the 25% bar. Its worst clip is 42.9% — the same tail Polish and
+    # Italian show — so it is a corpus-level pass, not a uniformly easy one.
+    # Four of the six C10 names are now measured and inside the bar; French and
+    # Dutch remain unmeasured, and Telugu remains the counterexample outside C10.
+    ("german-small", 0.1066),
 ])
 def test_the_committed_wer_figures_are_what_the_records_say(name, expected_wer):
     path = RUNS / f"{name}.json"
@@ -295,34 +303,38 @@ def test_no_telugu_clip_meets_the_p9_bar():
     )
 
 
-def test_three_c10_languages_are_measured_and_all_pass():
-    """P9 asks for <=25% WER on at least 3 of the 6 C10 languages, and three are
+def test_four_c10_languages_are_measured_and_all_pass():
+    """P9 asks for <=25% WER on at least 3 of the 6 C10 languages, and four are
     now measured and inside the bar: Polish 11.01%, Italian 20.11%, Spanish
-    8.58%. This is the point where the criterion is *met*, not merely
-    reachable — but read what "met" covers. Three of six says nothing about
-    French, Dutch or German, which stay unmeasured, and it says nothing about
-    Indic (Telugu fails at 151.08%, outside C10 entirely). The honest sentence
-    is "P9 holds on the three measured C10 languages", not "transcription is
+    8.58%, German 10.66%. The criterion was met at three and is now met with
+    one to spare — but read what "met" covers. Four of six says nothing about
+    French or Dutch, which stay unmeasured, and it says nothing about Indic
+    (Telugu fails at 151.08%, outside C10 entirely). The honest sentence is
+    "P9 holds on the four measured C10 languages", not "transcription is
     multilingual".
 
     This test exists so the count of passing languages cannot drift up in prose
     without a run record to back each increment. It was raised from two to three
-    when spanish-small landed; raising it again needs a fourth file.
+    when spanish-small landed and from three to four when german-small landed;
+    raising it again needs a fifth file.
     """
     polish = RUNS / "polish-small.json"
     italian = RUNS / "italian-small.json"
     spanish = RUNS / "spanish-small.json"
-    if not (polish.is_file() and italian.is_file() and spanish.is_file()):
-        pytest.skip("all three C10 runs must be present to compare")
+    german = RUNS / "german-small.json"
+    if not (polish.is_file() and italian.is_file() and spanish.is_file()
+            and german.is_file()):
+        pytest.skip("all four C10 runs must be present to compare")
     passing = []
-    for path, name in ((polish, "Polish"), (italian, "Italian"), (spanish, "Spanish")):
+    for path, name in ((polish, "Polish"), (italian, "Italian"),
+                       (spanish, "Spanish"), (german, "German")):
         rec = json.loads(path.read_text(encoding="utf-8"))
         assert rec["wer"] <= 0.25, \
             f"{name} moved above the 25% bar ({rec['wer']}) — P9's row and " \
             f"every doc quoting it must be re-written"
         passing.append(name)
     # What the docs may say is bounded by what has actually been run.
-    assert len(passing) == 3
+    assert len(passing) == 4
 
 
 def test_a_larger_model_helps_telugu_but_does_not_reach_the_bar():
@@ -940,29 +952,59 @@ def test_the_docs_measured_c10_count_matches_the_run_records():
         pytest.skip("no C10 run records in this checkout")
     text = _doc_text()
     stated = set()
-    for m in re.finditer(
-            r"(?i)\b(one|two|three|four|five|six|\d)\s+of\s+the\s+(?:six|6)",
-            text):
-        # A count claim is phrased with "measured" or "pass" nearby; the other
-        # occurrences of the same shape are not claims at all. "Telugu is not
-        # one of the six" is membership, and "scoring one of the six costs
-        # ~15 MB" is a cost statement. Requiring one of those two words is what
-        # keeps them out, and the window is wide enough to see the verb even
-        # when the sentence runs on past the number.
-        start = max(0, m.start() - 90)
-        window = text[start:m.end() + 90]
-        if not re.search(r"(?i)\b(measured|passes|pass)\b", window):
-            continue
-        # "unmeasured" contains "measured"; the boundary above handles that, and
-        # this handles an explicit negation of the count itself.
-        if re.search(r"(?i)\bnot\b\s+(\*\*)?one\s+of\s+the\s+(?:six|6)",
-                     text[max(0, m.start() - 20):m.start()]):
-            continue
-        word = m.group(1).lower()
-        # Not dict.get(word, int(word)): the default is evaluated eagerly, so
-        # int("three") would raise even though "three" is in the map.
-        count = _WORDS.get(word)
-        stated.add(count if count is not None else int(word))
+
+    # Two phrasings carry the count. The explicit one names the set — "four of
+    # the six" — and the elliptical one drops it because the sentence already
+    # established which six it is about: "Four are measured and all four pass".
+    # The second is how the drifting paragraphs have actually been written, so a
+    # gate over the first alone would have stayed green while the count in the
+    # next sentence said something else.
+    patterns = (
+        r"(?i)\b(one|two|three|four|five|six|\d)\s+of\s+the\s+(?:six|6)",
+        # The lookbehind stops this reading the "six" in "of the six are
+        # measured" as the count: that sentence has already named the count in
+        # full, and "six" there is the size of the set, not how many were run.
+        r"(?i)(?<!of the )\b(one|two|three|four|five|six)\s+(?:are|were|is)\s+"
+        r"(?:all\s+)?measured",
+        r"(?i)all\s+(one|two|three|four|five|six)\s+(?:pass|passed)",
+    )
+    for pattern in patterns:
+        for m in re.finditer(pattern, text):
+            # A count claim is phrased with "measured" or "pass" nearby; the other
+            # occurrences of the same shape are not claims at all. "Telugu is not
+            # one of the six" is membership, and "scoring one of the six costs
+            # ~15 MB" is a cost statement. Requiring one of those two words is what
+            # keeps them out, and the window is wide enough to see the verb even
+            # when the sentence runs on past the number.
+            start = max(0, m.start() - 90)
+            window = text[start:m.end() + 90]
+            if not re.search(r"(?i)\b(measured|passes|pass)\b", window):
+                continue
+            # "unmeasured" contains "measured"; the boundary above handles that, and
+            # this handles an explicit negation of the count itself.
+            if re.search(r"(?i)\bnot\b\s+(\*\*)?one\s+of\s+the\s+(?:six|6)",
+                         text[max(0, m.start() - 20):m.start()]):
+                continue
+            # The criterion's own threshold, not a result: "at least 3 of the 6",
+            # "requires 3 of the 6", "asks for 3 of the 6". That number is the bar a
+            # measurement has to clear, so it stays at 3 while the measured count
+            # climbs — without this exclusion the gate could never pass once a
+            # fourth language landed, which is the opposite of what it is for.
+            #
+            # The marker has to govern the number directly, with nothing between
+            # them but emphasis: the pre-window is deliberately short, so a claim
+            # elsewhere in the sentence is still read as a claim. "P9 requires 3 of
+            # the 6. Four are measured and all four pass" is a threshold followed by
+            # a separate statement of four, and only the second is a count.
+            pre = text[max(0, m.start() - 40):m.start()]
+            if re.search(r"(?i)(at\s+least|requires?|asks?\s+for)\s*(\*\*)?$",
+                         pre):
+                continue
+            word = m.group(1).lower()
+            # Not dict.get(word, int(word)): the default is evaluated eagerly, so
+            # int("three") would raise even though "three" is in the map.
+            count = _WORDS.get(word)
+            stated.add(count if count is not None else int(word))
     assert stated, (
         "no 'N of the six C10' claim found; the phrasing has moved and the "
         "pattern needs updating so the claim stays checked"

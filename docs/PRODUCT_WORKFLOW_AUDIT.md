@@ -348,11 +348,11 @@ captions to *the transcript*, not to the audio. English WER was measured for the
 first time in this workstream (`docs/TRANSCRIPTION_EVALUATION.md`): **3.38% at
 `small`, 2.99% at `medium`, 3.38% at `large-v3`** on a 50-clip / 1036-word
 LibriSpeech sample — statistically indistinguishable, and passing the ≤15% bar
-with large margin. Non-English WER is now measured on three of the six C10
+with large margin. Non-English WER is now measured on four of the six C10
 languages, all passing: Polish scores **11.01% WER / 2.45% CER** (34 of 35 inside
 the bar), Italian **20.11% WER / 4.53% CER** (26 of 40 inside it, on Dante's
-archaic Italian), and Spanish **8.58% WER / 2.64% CER** (38 of 40 inside it), the
-best of the three, while Telugu on reference ground truth scores **151.08%
+archaic Italian), Spanish **8.58% WER / 2.64% CER** (38 of 40 inside it), and
+German **10.66% WER / 3.20% CER** (36 of 40 inside it), while Telugu on reference ground truth scores **151.08%
 at `small` and 91.54% at `medium`** — 0 and 1 of 50 utterances inside it. The
 three remaining C10 languages are still unmeasured and the criterion needs 3 of
 6; three (Polish, Italian, Spanish) now meet it, so P9 is claimable as written, though on the clean-read half of the corpus only. The MLS tarballs that would enable the rest are
