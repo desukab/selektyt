@@ -35,11 +35,12 @@ a claim about a language no speaker of that language verified.
    rate, but it is not a score for `telugu-tutorial`, whose transcript is still
    unmeasured.
 2. **Non-English WER at the C10 languages (criterion P9).** §7.1 measures
-   Telugu, which is **not** one of the six C10 languages, and §7.2 scores
-   Polish, which is. The remaining five (German, Spanish, French, Dutch,
-   Italian) are still **UNMEASURED**. The Multilingual LibriSpeech tarballs are
-   6.2 GB (Polish) to 114.5 GB (German), which cannot be materialised here;
-   §7.2 streams them instead of downloading. See §7.
+   Telugu, which is **not** one of the six C10 languages; §7.2 and §7.3 score
+   Polish and Italian, which are. Two of the six now pass the 25% bar. The
+   remaining four (German, Spanish, French, Dutch) are still **UNMEASURED** —
+   German's archive is being streamed as this is written. The Multilingual
+   LibriSpeech tarballs are 6.2 GB (Polish) to 114.5 GB (German), which cannot be
+   materialised here; §7.2 streams them instead of downloading. See §7.
 3. **Whether a transcript is semantically correct in a language nobody here
    reads.** §5 reports counts and samples. A sample that *looks* plausible is
    not evidence of accuracy — it is evidence that the output is well-formed.
@@ -737,8 +738,9 @@ than a change.
 | `mls_italian.tar.gz` | 15,395,281,399 B (14.3 GiB) |
 | `mls_polish.tar.gz` | 6,609,569,551 B (6.2 GiB) |
 
-Free disk during this workstream ranged from 5.7 GB down to 1.5 GB and sits at
-2.8 GB now. **No C10 tarball fits**, including the smallest. None was
+Free disk during this workstream ranged from 5.7 GB down to 1.5 GB and sat at
+2.8 GB when §7.2 was written (it is ~2.9 G now, 2026-09-20, with a German
+prepare running). **No C10 tarball fits**, including the smallest. None was
 downloaded in full, and no partial corpus was scored as though it were
 complete. §7.2 shows how the size constraint was routed around rather than
 accepted: the archive is streamed and only the strided sample is written, so

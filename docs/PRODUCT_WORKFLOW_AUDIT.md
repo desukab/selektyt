@@ -326,7 +326,7 @@ escalate**, each with the reason it does not meet the blocker bar.
 | A second YouTube fetch strategy | `providers/youtube.py` already rotates three player clients and reports bot markers; the state doc records fetchability as per-video, not a hard ban. A retry is a marginal gain. |
 | Web video upload (findings J6) | Consistency defect between two entry points, not an unusable product — the CLI path is documented and works. |
 | Reference transcripts for Hindi (`docs/TRANSCRIPTION_EVALUATION.md` §8 rec 5) | Would raise confidence in non-English quality; the blocker (B1) is the missing *check*, not the missing *reference*. Add the check first. |
-| Non-English WER measurement (P9, 1 of 6 C10 languages measured) | Polish passes (11.01%); German, Spanish, French, Dutch and Italian are still unmeasured. Worth completing, but B1 does not depend on it — a coverage check catches the failure class without a ground truth. |
+| Non-English WER measurement (P9, 2 of 6 C10 languages measured) | Polish passes (11.01%) and Italian passes (20.11%, on archaic Italian); German, Spanish, French and Dutch are still unmeasured, and the criterion needs 3 of 6. Worth completing, but B1 does not depend on it — a coverage check catches the failure class without a ground truth. |
 
 ---
 
@@ -348,15 +348,18 @@ captions to *the transcript*, not to the audio. English WER was measured for the
 first time in this workstream (`docs/TRANSCRIPTION_EVALUATION.md`): **3.38% at
 `small`, 2.99% at `medium`, 3.38% at `large-v3`** on a 50-clip / 1036-word
 LibriSpeech sample — statistically indistinguishable, and passing the ≤15% bar
-with large margin. Non-English WER is now partly measured: Polish, one of the six
-C10 languages, scores **11.01% WER / 2.45% CER** with 34 of 35 utterances inside
-the bar, while Telugu on reference ground truth scores **151.08% at `small` and
-91.54% at `medium`** — 0 and 1 of 50 utterances inside it. The five remaining C10
-languages are still unmeasured; the MLS tarballs that would enable them are
+with large margin. Non-English WER is now partly measured: Polish and Italian,
+two of the six C10 languages, score **11.01% WER / 2.45% CER** (34 of 35 inside
+the bar) and **20.11% WER / 4.53% CER** (26 of 40 inside it, on Dante's archaic
+Italian) respectively, while Telugu on reference ground truth scores **151.08%
+at `small` and 91.54% at `medium`** — 0 and 1 of 50 utterances inside it. The
+four remaining C10 languages are still unmeasured and the criterion needs 3 of
+6, so P9 cannot be claimed yet; the MLS tarballs that would enable them are
 6.2-114.5 GiB against ~3.0 GB of free disk, which §7.2 of that document routes
 around by streaming a strided sample rather than downloading. So: English
-captions are backed by a number, Polish is backed by a passing number, and the
-Telugu caption that shipped in B1 is backed by a measured failure.
+captions are backed by a number, two European languages are backed by passing
+numbers, and the Telugu caption that shipped in B1 is backed by a measured
+failure.
 
 **T3 — That an NLE will open the output.** See B3. The repo states this plainly
 and I add nothing to it: no NLE has opened an artifact.
@@ -393,7 +396,8 @@ does not measure what its name says.
 **The honest summary of the gap:** of the six things a user must trust, three
 (T1, T3, T5) are explicitly and responsibly flagged as unverified in the repo's
 own docs, one (T2) is verified for English, partly verified for non-English
-(Polish passes, Telugu fails on ground truth, five C10 languages unmeasured), and
+(Polish and Italian pass, Telugu fails on ground truth, four C10 languages
+unmeasured), and
 two (T4, T6) are artifacts of the report format that could be closed by writing
 existing data into the summary.
 

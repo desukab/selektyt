@@ -13,8 +13,8 @@ every line below was true on this host at that point.
   the document corrections those forced. Run `git log -1` for the current hash
   rather than trusting a hash printed here, since amending this file changes its
   own commit hash.
-* Test suite: **1034 passed, 12 skipped in 114 s** at the last clean commit
-  (2026-09-20). The 12 splits into two kinds, and the difference matters:
+* Test suite: **1036 passed, 12 skipped** (2026-09-20; seven consecutive runs
+  stable at ~112 s). The 12 splits into two kinds, and the difference matters:
   **7** are in `tests/test_proxy_validation.py`, gated on the
   `SELEKYT_PROXY_MEDIA` env var, which expects a ~239 MB YouTube recording that
   is not redistributable with the repo. **They are opt-in real-media
@@ -25,9 +25,19 @@ every line below was true on this host at that point.
   `c9-medium`, `c9-large-v3` and `redteam-small-verify` predate the
   `wer_err_total` field in their run records — old committed data that cannot be
   re-derived without re-running the models, not a missing environment. The
-  earlier count in this file was 895/7; the suite grows as defects get regression
-  tests, and the skip count moves when a gated test's media appears or disappears
-  — re-run `pytest -q -rs` before trusting any count here.
+  earlier count in this file was 895/7, then 1034/13, then 1036/12; the suite
+  grows as defects get regression tests, and the skip count moves when a gated
+  test's media appears or disappears — re-run `pytest -q -rs` before trusting any
+  count here.
+  **The count moved mid-session and the reason is worth knowing.**
+  `corpus/wer/runs/italian-small.json` was written at 02:37 by a background
+  process while the suite was being measured, so that parametrized case went
+  from SKIPPED ("record not present") to PASSED between two runs of the same
+  command against the same tree. `tests/test_wer_bench.py` pins committed WER
+  figures against their records and skips when a record is absent, so **any
+  count taken while a WER run is in flight is a snapshot, not a property of the
+  commit.** A German MLS run is in flight as this is written; expect the count
+  to move again when its record lands.
   **Do not describe the 12 as one homogeneous group of "environment skips"** —
   the doc set has already done that once, and it hides the 7 that are opt-in
   measurements a reader might assume are covered.
@@ -321,9 +331,11 @@ under the same harness — 0 of 50 utterances inside the 25% bar, best 71.4%.
 The reading judgment above is confirmed by a reference transcript, which is
 worth stating plainly because the same paragraph also admits that reading
 judgments are not evidence. Of the six C10 languages the criterion actually
-names, one is now measured and passes — Polish at WER 11.01% with 34 of 35 clips
-inside the bar — and five remain unmeasured; Telugu is a language outside that
-set, chosen because it is the one the pipeline demonstrably cannot handle.
+names, two are now measured and both pass — Polish at WER 11.01% with 34 of 35
+clips inside the bar, and Italian at WER 20.11% with 26 of 40 inside it, the
+latter on Dante's archaic Italian, a harder condition — and four remain
+unmeasured; Telugu is a language outside that set, chosen because it is the one
+the pipeline demonstrably cannot handle.
 
 **Two: two real defects, found by running new sources rather than by reading
 code.** Both fixed, both pinned by a test that fails against the pre-fix code.
@@ -752,14 +764,16 @@ selections).
   fixed). All four distinguish "code exists and unit tests pass" from "a user
   can rely on this".
 * **Start any work by re-running the suite** (`.venv/bin/python -m pytest -q`)
-  and confirming **1034 passed / 12 skipped** (113 s, 2026-09-20). A number other
+  and confirming **1036 passed / 12 skipped** (~112 s, 2026-09-20). A number other
   than that means something has drifted. The count was refreshed across the doc
   set after RED_TEAM, AI_EXECUTION_STATE and an agent appendix disagreed within
   one day (824, 819, 834); it has moved 819 → 824 → 834 → 837 → 890 → 895 → 898
-  → 1031 → 1034 as regression tests landed, and the skip count moved 10 → 7 → 12
-  as gated real-media tests and backend-gated checks arrived. **A quoted count is
+  → 1031 → 1034 → 1036 as regression tests landed, and the skip count moved
+  10 → 7 → 12 → 13 → 12 as gated real-media tests, backend-gated checks and
+  WER run records arrived and departed. **A quoted count is
   stale the moment it is written** — the "How to run things" note above carries
-  the same caveat. The same applies to commit counts — the repo is at **194
+  the same caveat, and the note there explains why the count moved twice during
+  this session alone. The same applies to commit counts — the repo is at **194
   commits, 85 of them machine-authored under the "Ubuntu" identity**
   (`git log --format='%an' | grep -ci ubuntu`).
   This line is itself a self-checkpoint and it has to be edited whenever the
