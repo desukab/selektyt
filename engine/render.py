@@ -47,7 +47,7 @@ def _has_audio(path: Path) -> bool:
             ["ffprobe", "-v", "error", "-select_streams", "a:0",
              "-show_entries", "stream=index", "-of",
              "default=noprint_wrappers=1:nokey=1", str(path)],
-            capture_output=True, text=True, check=True,
+            capture_output=True, text=True, check=True, encoding="utf-8",
         )
         return bool(out.stdout.strip())
     except (subprocess.CalledProcessError, OSError):
@@ -76,6 +76,11 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
     frames, span = _frame_count(start, end, fps)
     if ass:
         safe = ass.as_posix().replace("'", "\\'")
+        # A Windows drive letter ("C:/...") puts a bare ":" in the filtergraph,
+        # which ffmpeg parses as the option separator and then fails with
+        # "Invalid argument". Escaping it as "\:" is the documented way to pass
+        # a literal colon inside a filter value.
+        safe = safe.replace(":", "\\:")
         vf.append(f"subtitles='{safe}'")
     common = ["-frames:v", str(frames), "-t", f"{span:.6f}",
               "-vf", ",".join(vf), "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",

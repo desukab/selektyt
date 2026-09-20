@@ -67,6 +67,7 @@ def run_capture(
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        encoding="utf-8",
         timeout=timeout,
     )
     if proc.returncode != 0:
@@ -89,6 +90,7 @@ def probe_duration(media: Path) -> float:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        encoding="utf-8",
     )
     if proc.returncode != 0 or not proc.stdout.strip():
         raise FfmpegError(
@@ -118,6 +120,7 @@ def probe_fps(media: Path) -> float:
              "-show_entries", "stream=r_frame_rate",
              "-of", "default=noprint_wrappers=1:nokey=1", str(media)],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            encoding="utf-8",
         )
         raw = proc.stdout.strip() if proc.returncode == 0 else ""
         num, _, den = raw.partition("/")
@@ -151,6 +154,7 @@ def probe_sample_aspect(media: Path) -> tuple[int, int]:
              "-show_entries", "stream=sample_aspect_ratio",
              "-of", "default=noprint_wrappers=1:nokey=1", str(media)],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            encoding="utf-8",
         )
         raw = proc.stdout.strip() if proc.returncode == 0 else ""
         num, _, den = raw.partition(":")

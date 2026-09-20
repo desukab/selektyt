@@ -1,0 +1,86 @@
+name: build-windows
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Produces the real Windows x64 installer: an NSIS setup and an MSI, both
+# carrying the Tauri shell, the `selekyt-mech` Rust sidecar, a bundled
+# python-build-standalone interpreter with the SelekyT package installed into
+# it, LGPL ffmpeg/ffprobe and the staged faster-whisper `small` weights, so a
+# first run transcribes with no network.
+#
+# Everything the installer needs besides the shell itself is staged by
+# apps/desktop/stage-windows.sh, which exits non-zero on any missing piece — a
+# tauri build with a half-staged tree would otherwise ship a broken app.
+#
+# The whole job is a single windows-latest runner because the interpreter tree,
+# the weights and ffmpeg are GBs of Windows-only binaries: nothing here is
+# worth caching across machines as an artifact.
+
+concurrency:
+  group: build-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Host tooling for the staging script: archive handling, the GitHub API
+      # query that resolves the python-build-standalone release, and the
+      # end-to-end sidecar ping.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache the mech workspace
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "rust -> target"
+
+      - name: Cache the Tauri shell workspace
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "apps/desktop/src-tauri -> target"
+
+      - name: Stage sidecars and bundled resources
+        shell: bash
+        env:
+          # Lifts the unauthenticated GitHub API rate limit while the script
+          # resolves the python-build-standalone release to download.
+          GH_TOKEN: ${{ github.token }}
+        run: bash apps/desktop/stage-windows.sh
+
+      - name: Install the Tauri CLI
+        working-directory: apps/desktop
+        run: npm install
+
+      - name: Build the Windows installers
+        working-directory: apps/desktop
+        run: npx tauri build --bundles nsis,msi
+
+      - name: Upload the installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: selektyt-windows-x64
+          path: |
+            apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
+            apps/desktop/src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: error
+          # They are already compressed; recompressing them costs minutes and
+          # bytes for nothing.
+          compression-level: 0
+          retention-days: 30

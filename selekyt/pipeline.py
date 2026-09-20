@@ -452,9 +452,8 @@ def run(
                         # Named so a reader can tell this transcript came from
                         # a repaired container, not the file they handed in.
                         "container_recovery": note,
-                    },
-                    encoding="utf-8",
-                )
+                },
+            )
                 print(f"[transcribe] recovered {len(transcript)} segment(s) via {note}",
                       flush=True)
 
@@ -523,7 +522,8 @@ def run(
     if ollama_url:
         selected = [attach_metadata(c, ollama_url) for c in selected]
     (project / "selections.json").write_text(
-        json.dumps([c.to_dict() for c in selected], ensure_ascii=False, indent=2)
+        json.dumps([c.to_dict() for c in selected], ensure_ascii=False, indent=2),
+        encoding="utf-8",
     )
 
     editorial_report = []
@@ -693,7 +693,7 @@ def run(
                 # live in report.json, which is not deterministic by design.
             }
         )
-    (project / "edit_plan.json").write_text(json.dumps(edit_report, indent=2))
+    (project / "edit_plan.json").write_text(json.dumps(edit_report, indent=2), encoding="utf-8")
     (project / "content_pack.json").write_text(
         json.dumps(content_packs, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -728,7 +728,7 @@ def run(
     # or an explicit `enabled: False` so a B2B consumer can distinguish
     # "not run" from "failed silently".
     report["audio"] = audio_summary if audio_summary else {"enabled": False}
-    (project / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
+    (project / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "render_selection_digest": sel_digest, "selected_count": len(selected), "qa": str(qa_path), "complete": True})
     _save_state(state_path, state)
     return project

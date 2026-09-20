@@ -44,12 +44,18 @@ from __future__ import annotations
 
 import argparse
 import json
-import resource
 import subprocess
 import sys
 import tarfile
 import time
 from pathlib import Path
+
+try:
+    import resource
+except ImportError:
+    # `resource` is Unix-only; the module is unimportable on Windows. Peak RSS
+    # is reported as None there rather than breaking import.
+    resource = None
 
 import numpy as np
 
@@ -173,8 +179,14 @@ def _to_pcm_wav(src: Path, cache_dir: Path, sample_rate: int = 16000) -> Path:
     return out
 
 
-def _peak_rss_mb() -> float:
-    """Peak RSS of this process in MiB (Linux reports kilobytes)."""
+def _peak_rss_mb() -> float | None:
+    """Peak RSS of this process in MiB (Linux reports kilobytes).
+
+    ``None`` on Windows: ``resource`` is Unix-only and the getrusage call has
+    no equivalent there without a win32-specific API.
+    """
+    if resource is None:
+        return None
     return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
 
 
@@ -863,7 +875,7 @@ def cmd_bench(argv: list[str]) -> int:
         # for the cost of being loaded once.
         "rtf": round(sum(c["wall_seconds"] for c in per_clip) / max(audio_total, 0.1), 3),
         "rtf_including_load": round(wall_total / max(audio_total, 0.1), 3),
-        "peak_rss_mb": round(_peak_rss_mb(), 1),
+        "peak_rss_mb": _peak_rss_mb(),
         "cpu_threads": model.cpu_threads or _cpu_count(),
         "cpu_count": _cpu_count(),
         "segments_total": sum(c["segment_count"] for c in per_clip),
@@ -943,7 +955,7 @@ def cmd_describe(argv: list[str]) -> int:
         "speech_seconds": round(speech_dur, 2),
         "mean_segment_seconds": round(speech_dur / len(segments), 3) if segments else 0.0,
         "wall_seconds": round(wall, 2),
-        "peak_rss_mb": round(_peak_rss_mb(), 1),
+        "peak_rss_mb": _peak_rss_mb(),
         # The samples are here so a reader can see the output and judge it
         # themselves. They are NOT evidence of correctness — judging
         # phonetic plausibility in a language nobody here speaks is how
@@ -988,7 +1000,7 @@ def cmd_report(argv: list[str]) -> int:
         if "wer" in r:
             print(f"{name:<52}{r['wer'] * 100:>7.2f}%{r['cer'] * 100:>7.2f}%"
                   f"{r['clip_count']:>7}{r['audio_minutes']:>7.2f}"
-                  f"{r['rtf']:>7.2f}{r['peak_rss_mb']:>8.0f}")
+                  f"{r['rtf']:>7.2f}{r.get('peak_rss_mb') or 0:>8.0f}")
         elif "segments" in r:
             # A describe row carries no error rate and never will: it is the
             # instrument for sources with no reference transcript. Its RTF is

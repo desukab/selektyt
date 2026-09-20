@@ -143,9 +143,9 @@ def run_audio_analysis(
             "min_silence_ms": min_silence_ms,
             "silence_padding": silence_padding,
         },
-    }, ensure_ascii=False, indent=2))
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
     (audio_dir / "pause_analysis.json").write_text(json.dumps(
-        [asdict(p) for p in pauses], ensure_ascii=False, indent=2))
+        [asdict(p) for p in pauses], ensure_ascii=False, indent=2), encoding="utf-8")
     (audio_dir / "audio_truth.json").write_text(json.dumps({
         "duration": round(truth.duration, 3),
         "vad_backend": truth.vad_backend,
@@ -159,7 +159,7 @@ def run_audio_analysis(
         "vad_speech": len(truth.vad_speech),
         "vad_silence": len(truth.vad_silence),
         "pauses": len(truth.pauses),
-    }, ensure_ascii=False, indent=2))
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
     (audio_dir / "cutlist.json").write_text(json.dumps({
         "original_duration": cut.original_duration,
         "total_keep_duration": cut.total_keep_duration,
@@ -173,7 +173,7 @@ def run_audio_analysis(
              "reason": s.reason}
             for s in cut.segments
         ],
-    }, ensure_ascii=False, indent=2))
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
 
     fcpxml_path = None
     if export_fcpxml:

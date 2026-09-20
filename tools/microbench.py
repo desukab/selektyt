@@ -60,10 +60,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import resource
 import sys
 import time
 from pathlib import Path
+
+try:
+    import resource
+except ImportError:
+    # `resource` is Unix-only; the module is unimportable on Windows. The
+    # CPU-time column degrades to None there rather than breaking import.
+    resource = None
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -134,11 +140,15 @@ def _bench(fn, repeat: int) -> tuple[float, float]:
     best = float("inf")
     best_cpu = 0.0
     for i in range(1, max(1, repeat) + 1):
-        ru0 = resource.getrusage(resource.RUSAGE_SELF).ru_utime
+        ru0 = resource.getrusage(resource.RUSAGE_SELF).ru_utime if resource else 0.0
         t0 = time.perf_counter()
         fn(i)
         wall = time.perf_counter() - t0
-        cpu = resource.getrusage(resource.RUSAGE_SELF).ru_utime - ru0
+        cpu = (
+            resource.getrusage(resource.RUSAGE_SELF).ru_utime - ru0
+            if resource
+            else 0.0
+        )
         if wall < best:
             best, best_cpu = wall, cpu
     return best, best_cpu

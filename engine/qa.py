@@ -11,7 +11,7 @@ def probe(path: Path) -> dict:
         raise RuntimeError("ffprobe is required and must be on PATH")
     p = subprocess.run(
         ["ffprobe", "-v", "error", "-show_streams", "-show_format", "-of", "json", str(path)],
-        check=True, text=True, stdout=subprocess.PIPE,
+        check=True, text=True, encoding="utf-8", stdout=subprocess.PIPE,
     )
     return json.loads(p.stdout)
 
@@ -81,7 +81,8 @@ def decode_sample(path: Path, *, max_frames: int = 8, audio_seconds: float = 2.0
             "-map", "0:v:0", "-frames:v", str(max_frames),
             "-progress", "pipe:1", "-f", "null", "-"]
     try:
-        res = subprocess.run(vcmd, capture_output=True, text=True, timeout=timeout)
+        res = subprocess.run(vcmd, capture_output=True, text=True, encoding="utf-8",
+                                timeout=timeout)
     except (subprocess.TimeoutExpired, OSError) as exc:
         out["video_error"] = f"video decode did not run: {exc}"
         return out
@@ -383,7 +384,8 @@ def detect_silent_tail(
         "-f", "null", "-",
     ]
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                                   timeout=60)
     except subprocess.TimeoutExpired:
         return False, 0.0, "silencedetect timed out"
     except OSError as exc:

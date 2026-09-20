@@ -117,7 +117,7 @@ class ReportBuilder:
         try:
             out = subprocess.run(
                 ["git", "rev-parse", "--short", "HEAD"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True, text=True, timeout=5, encoding="utf-8",
             )
             return out.stdout.strip() if out.returncode == 0 else ""
         except Exception:

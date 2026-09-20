@@ -36,6 +36,79 @@ PROTOCOL_RUST_COMPAT = True  # same envelope as rust/sidecar/src/main.rs
 
 # ── op handlers ──
 
+def op_probe_media(params: dict) -> dict:
+    """Container-level metadata for a file the UI just pointed at.
+
+    This is a probe of the file as it sits on disk — duration, frame rate,
+    coded dimensions and whether an audio track exists — and it is deliberately
+    not a transcript or a guess about content. The desktop shell calls it so the
+    "you chose X" screen can show real properties before any model is loaded,
+    and a failure here is reported to the user rather than blocking analysis:
+    the pipeline probes what it needs itself.
+    """
+    from providers.ffmpeg import probe_duration, probe_fps
+
+    path = _regular_file_or_error(params.get("path"), "path")
+    from subprocess import run as _run
+    probe = _run(
+        ["ffprobe", "-v", "error", "-select_streams", "a:0",
+         "-show_entries", "stream=codec_type",
+         "-of", "csv=p=0", str(path)],
+        capture_output=True, text=True, encoding="utf-8")
+    has_audio = "audio" in probe.stdout
+    # Coded pixel dimensions. This is deliberately NOT probe_sample_aspect,
+    # which reports the pixel *aspect ratio* (1:1 for most sources) and would
+    # show every file as "1x1" to a user who asked for the resolution.
+    dims = _run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=width,height",
+         "-of", "csv=p=0", str(path)],
+        capture_output=True, text=True, encoding="utf-8")
+    try:
+        # csv=p=0 prints one "width,height" line for the first video stream.
+        # A file with no video stream prints nothing, which is the None case.
+        parts = dims.stdout.strip().replace(" ", "").split(",")
+        width, height = int(parts[0]), int(parts[1])
+    except Exception:
+        # A container ffprobe cannot decode for dimensions is not fatal: the
+        # pipeline may still read it, and the UI shows "—" rather than refusing.
+        width = height = None
+    return {
+        "duration": round(probe_duration(path), 3),
+        "fps": round(probe_fps(path), 3),
+        "width": width,
+        "height": height,
+        "has_audio": has_audio,
+    }
+
+
+def op_read_artifact(params: dict) -> dict:
+    """Read one JSON artifact the pipeline wrote, by name.
+
+    The desktop UI has no filesystem permission of its own; this is how it shows
+    the transcript and the report without the webview touching disk. ``project``
+    is a directory this very sidecar produced on a previous ``run_pipeline``
+    call, and ``name`` is a bare filename — never an arbitrary path, so the
+    command cannot be aimed at a file outside the project tree.
+    """
+    project = params.get("project")
+    name = str(params.get("name") or "")
+    if not project:
+        raise ValueError("'project' is required")
+    if not name or "/" in name or "\\" in name or name.startswith("."):
+        raise ValueError(f"'name' must be a bare filename, got {name!r}")
+    path = Path(str(project)) / name
+    if not path.is_file():
+        raise FileNotFoundError(f"no such artifact: {path}")
+    return {"path": str(path), "json": json.loads(path.read_text(encoding="utf-8"))}
+
+
+def op_stat_artifact(params: dict) -> dict:
+    """Size and existence of one artifact, for the results listing."""
+    path = _regular_file_or_error(params.get("path"), "path")
+    return {"path": str(path), "size": path.stat().st_size}
+
+
 def op_ping(params: dict) -> dict:
     backend = vad_mod.get_vad_backend()
     return {
@@ -409,6 +482,9 @@ def op_run_pipeline(params: dict) -> dict:
 
 _HANDLERS = {
     "ping": op_ping,
+    "probe_media": op_probe_media,
+    "read_artifact": op_read_artifact,
+    "stat_artifact": op_stat_artifact,
     "segment": op_segment,
     "cutlist_from_segments": op_cutlist_from_segments,
     "vad_analyze": op_vad_analyze,
@@ -500,6 +576,13 @@ def serve(stream: TextIO, out: TextIO) -> int:
 
 def serve_stdio() -> int:
     """Run the sidecar loop against this process's stdin/stdout."""
+    # Windows defaults stdio to the system code page (cp1252 on an en-US
+    # install), and any non-ASCII character in a transcript, filename or
+    # error message then raises UnicodeEncodeError inside serve() and kills
+    # the sidecar mid-request. The wire is JSON, which is UTF-8 by definition.
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     return serve(sys.stdin, sys.stdout)
 
 

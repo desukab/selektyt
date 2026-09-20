@@ -20,6 +20,7 @@ def _duration(path: Path) -> float:
             ["ffprobe", "-v", "error", "-show_entries", "format=duration",
              "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
             text=True,
+            encoding="utf-8",
         ).strip()
     )
 

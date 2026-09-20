@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import shutil
+import sys
 from pathlib import Path
 
 from engine.captions import caption_presets
@@ -18,9 +19,17 @@ def _doctor() -> int:
     # `python3`. Requiring the unversioned name reported a hard MISSING while
     # SelekyT was running under a perfectly good interpreter, sending users to
     # install a package they did not need.
+    # The mirror-image gap is Windows: a python.org install puts `python.exe`
+    # on PATH and usually no `python3` at all, so the versioned check fails
+    # there for the same reason. Require whichever name the platform actually
+    # uses and keep the other advisory.
+    if sys.platform == "win32":
+        primary, alternate = "python", "python3"
+    else:
+        primary, alternate = "python3", "python"
     checks = [
-        ("python3", True, shutil.which("python3") is not None),
-        ("python", False, shutil.which("python") is not None),
+        (primary, True, shutil.which(primary) is not None),
+        (alternate, False, shutil.which(alternate) is not None),
         ("ffmpeg", True, shutil.which("ffmpeg") is not None),
         ("ffprobe", True, shutil.which("ffprobe") is not None),
         ("yt-dlp", False, shutil.which("yt-dlp") is not None),

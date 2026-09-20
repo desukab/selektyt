@@ -178,7 +178,7 @@ def _duration(path: Path) -> float:
         "ffprobe", "-v", "error", "-show_entries", "format=duration",
         "-of", "default=noprint_wrappers=1:nokey=1", str(path),
     ]
-    return float(subprocess.check_output(cmd, text=True).strip())
+    return float(subprocess.check_output(cmd, text=True, encoding="utf-8").strip())
 
 
 def _extract_audio(media: Path, audio: Path) -> None:

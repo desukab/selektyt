@@ -16,6 +16,18 @@ rust/target/
 .coverage*
 htmlcov/
 
+# Windows desktop staging: apps/desktop/stage-windows.sh downloads an
+# interpreter, ffmpeg and the whisper weights (~1 GB total) into these trees.
+# None of it is source, and committing it would make the repo unclonable.
+apps/desktop/src-tauri/resources/python/
+apps/desktop/src-tauri/resources/bin/
+apps/desktop/src-tauri/resources/models/
+apps/desktop/src-tauri/.stage-downloads/
+apps/desktop/src-tauri/.launcher-build/
+# Host-specific dev sidecar wrappers (`selekyt-python-<host-triple>`); a packaged
+# build replaces them with staged binaries, so nothing here is portable.
+apps/desktop/src-tauri/binaries/
+
 # Corpus: the evidence is the text artifacts (transcript, selections, edit
 # plan, captions, timelines, QA). The rendered MP4s, extracted WAVs and the
 # downloaded source media are regenerable from corpus/manifest.json by

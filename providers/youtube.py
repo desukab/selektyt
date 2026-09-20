@@ -92,7 +92,8 @@ def _run_metadata(base_cmd: list[str], clients: list[str]) -> tuple[dict, str]:
         cmd = [*base_cmd, *_player_client_args([client])]
         try:
             proc = subprocess.run(
-                cmd, check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                cmd, check=True, text=True, encoding="utf-8",
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             )
             return json.loads(proc.stdout), client
         except subprocess.CalledProcessError as exc:
@@ -115,7 +116,8 @@ def _run_download(base_cmd: list[str], clients: list[str]) -> None:
     for client in clients:
         cmd = [*base_cmd, *_player_client_args([client])]
         try:
-            subprocess.run(cmd, check=True, stdout=2, stderr=subprocess.PIPE, text=True)
+            subprocess.run(cmd, check=True, stdout=2, stderr=subprocess.PIPE, text=True,
+                           encoding="utf-8", errors="replace")
             return
         except subprocess.CalledProcessError as exc:
             last_err = (exc.stderr or "").strip()

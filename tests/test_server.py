@@ -390,3 +390,59 @@ def test_subprocess_progress_never_corrupts_the_json_stream(tmp_path):
     assert len(lines) == 1, f"a child must not put non-JSON on the wire: {lines}"
     resp = json.loads(lines[0])
     assert resp["ok"] is True
+
+# ── desktop shell ops ──
+# These three are what the Tauri frontend calls; they must answer over the same
+# envelope as every other op and must not reach outside the project tree.
+
+def test_read_artifact_refuses_a_path_outside_the_project(tmp_path):
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "secret.txt").write_text("nope", encoding="utf-8")
+
+    def rejected(name):
+        resp = json.loads(process_line(json.dumps({
+            "op": "read_artifact", "params": {"project": str(project), "name": name}})))
+        assert resp["ok"] is False, f"{name!r} should have been refused: {resp}"
+        return resp["error"]
+
+    for name in ("../secret.txt", ".env", "sub/dir/x.json"):
+        assert "must be a bare filename" in rejected(name), name
+
+
+def test_read_artifact_returns_the_json_the_pipeline_wrote(tmp_path):
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "transcript.json").write_text(
+        json.dumps({"language": "en", "segments": []}), encoding="utf-8")
+    data = _handle("read_artifact", {"project": str(project), "name": "transcript.json"})
+    assert data["json"]["language"] == "en"
+    assert data["path"].endswith("transcript.json")
+
+
+def test_stat_artifact_reports_a_real_size(tmp_path):
+    f = tmp_path / "clip.mp4"
+    f.write_bytes(b"x" * 4096)
+    data = _handle("stat_artifact", {"path": str(f)})
+    assert data["size"] == 4096
+
+
+def test_stat_artifact_rejects_a_path_that_is_not_a_file(tmp_path):
+    resp = json.loads(process_line(json.dumps(
+        {"op": "stat_artifact", "params": {"path": str(tmp_path / "nope.mp4")}})))
+    assert resp["ok"] is False
+    assert "is not a readable file" in resp["error"]
+
+
+def test_probe_media_reports_coded_dimensions_not_the_pixel_aspect_ratio(tmp_path):
+    # The probe must report the coded frame size (e.g. 1280x720), not the
+    # *pixel* aspect ratio, which is 1:1 on most sources and would render every
+    # file as "1x1" in the desktop UI.
+    media = Path("corpus/media/pentagon-esper-briefing.mp4")
+    if not media.is_file():
+        pytest.skip("corpus media is not staged in this checkout")
+    data = _handle("probe_media", {"path": str(media)})
+    assert data["duration"] > 0
+    assert data["fps"] > 0
+    assert data["width"] > 1 and data["height"] > 1, data
+    assert data["has_audio"] is True

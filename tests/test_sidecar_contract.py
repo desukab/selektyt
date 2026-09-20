@@ -103,6 +103,20 @@ def _cutlist() -> dict:
 
 
 def _valid_params(op: str, tone_wav: str, project_dir: str) -> dict:
+    if op == "read_artifact":
+        # read_artifact reads a JSON the pipeline wrote, by bare filename. No
+        # earlier op has run in this test, so the artifact has to be staged:
+        # the op must answer in the documented envelope for a real file, not
+        # only for a missing one.
+        import json as _json
+        from pathlib import Path
+
+        project = Path(project_dir)
+        project.mkdir(parents=True, exist_ok=True)
+        (project / "artifact.json").write_text(
+            _json.dumps({"staged": "by the contract test"}), encoding="utf-8")
+        return {"project": str(project), "name": "artifact.json"}
+
     return {
         "ping": {},
         "segment": {"scores": [0.9] * 10 + [0.0] * 2 + [0.9] * 10, "frame_ms": 32},
@@ -133,6 +147,12 @@ def _valid_params(op: str, tone_wav: str, project_dir: str) -> dict:
         "skip_target_for": {"omitted": [[4.0, 10.0]], "time": 0.0, "lookahead": 2.0},
         "previous_keep_target": {"keeps": _keeps(), "time": 5.0},
         "next_keep_target": {"keeps": _keeps(), "time": 5.0, "duration": 20.0},
+        # The desktop shell's three ops. probe_media/stat_artifact take any
+        # readable file — the tone is one — and read_artifact takes a bare
+        # filename inside a project directory, which the fixture cannot supply
+        # without the fixture itself writing one, so the call writes it here.
+        "probe_media": {"path": tone_wav},
+        "stat_artifact": {"path": tone_wav},
     }[op]
 
 
@@ -168,6 +188,18 @@ BAD_PARAMS: dict[str, list[dict]] = {
     "skip_target_for": [{}, {"omitted": "x", "time": 0.0, "lookahead": 1.0}],
     "previous_keep_target": [{}, {"keeps": "x", "time": 0.0}],
     "next_keep_target": [{}, {"keeps": "x", "time": 0.0, "duration": 1.0}],
+    # The desktop shell's ops. probe_media and stat_artifact take a path to a
+    # real file, and read_artifact takes a bare filename inside a project
+    # directory: a traversal or a hidden file is refused, not resolved.
+    "probe_media": [{}, {"path": ""}, {"path": "/definitely/not/here.mp4"}],
+    "stat_artifact": [{}, {"path": ""}, {"path": "/definitely/not/here.mp4"}],
+    "read_artifact": [
+        {}, {"project": "/tmp", "name": ""},
+        {"project": "/tmp", "name": "../etc/passwd"},
+        {"project": "/tmp", "name": ".env"},
+        {"project": "/tmp", "name": "sub/dir/x.json"},
+        {"project": "/tmp", "name": "no-such-artifact.json"},
+    ],
 }
 
 

@@ -100,12 +100,23 @@ def _to_file_uri(path: str) -> str:
     if path.startswith(("file://", "http://", "https://")):
         return path
     try:
-        abs_path = str(Path(path).resolve())
+        resolved = Path(path).resolve()
+        abs_path = str(resolved)
     except (OSError, ValueError) as exc:
         raise RuntimeError(
             "cannot turn the source path into an absolute file URI, so the "
             f"export would reference media an NLE cannot relink: {path!r}"
         ) from exc
+    # A Windows path carries a drive letter ("C:\\...") or a UNC root
+    # ("\\\\server\\share\\..."). The generic encoder below would emit
+    # "file://C:%5Cdir%5Cclip.mp4": the drive letter becomes the URI host and
+    # every separator is percent-encoded, so an NLE resolves each clip against
+    # a nonexistent server and the whole sequence comes up offline. pathlib's
+    # as_uri() places the drive after a third slash with an empty host
+    # ("file:///C:/dir/clip.mp4") and renders a UNC root as
+    # "file://server/share/clip.mp4", which are the forms NLEs relink.
+    if PurePath(abs_path).drive:
+        return resolved.as_uri()
     encoded = ["file://"]
     for byte in abs_path.encode("utf-8", errors="surrogateescape"):
         if byte in b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~/:":
