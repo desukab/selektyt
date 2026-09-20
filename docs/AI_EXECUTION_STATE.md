@@ -563,12 +563,21 @@ and comma-clause cuts in the OPEN note above, i.e. audit noise), while
 `nasa360-ep5` clip 05 and `telugu-tutorial` clip 01 fail on *silence share*
 (40.8% and 46.3% dead air in the rendered clip), which is a real pacing property
 of those two clips and not an emitter bug. Only `royal-society-cloke` and
-`hadhazy-protest` pass everything. Separately, **six of the seven** still carry
-relative EDL asset paths; only `royal-society-cloke` is absolute, because it is
-the only one re-emitted after the URI fix. The sentence-split and EDL-path items
-are artifact debt — the files on disk were written by emitters that have since
-been fixed — but the dead-air figures are properties of the selections
-themselves and would survive a re-run.
+`hadhazy-protest` pass everything.
+
+Separately, **five of the seven** still carry relative EDL asset paths
+(`emwcon-panel-2018`, `hadhazy-protest`, `nasa360-ep5`, `ooi-vertical`,
+`telugu-tutorial` — 25 edges in total, each resolving only from the repository
+root). `royal-society-cloke` was already absolute, and the pentagon re-run
+carried out to confirm the text fix also re-emitted its timelines through the
+fixed emitter, so all **ten** of its edges are now absolute URIs and
+`tools/nle_check.py` reports `fcpxml media relinkable` PASS on all five clips
+where it previously skipped. The remaining five cannot be repaired this way:
+`tools/regenerate_timelines.py` refuses to run without the source media, and
+only pentagon and royal-society retain theirs. The sentence-split and
+EDL-path items are artifact debt — the files on disk were written by emitters
+that have since been fixed — but the dead-air figures are properties of the
+selections themselves and would survive a re-run.
 
 So the objective splits into two things that must not be conflated:
 
