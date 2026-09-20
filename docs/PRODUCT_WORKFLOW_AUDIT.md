@@ -326,7 +326,7 @@ escalate**, each with the reason it does not meet the blocker bar.
 | A second YouTube fetch strategy | `providers/youtube.py` already rotates three player clients and reports bot markers; the state doc records fetchability as per-video, not a hard ban. A retry is a marginal gain. |
 | Web video upload (findings J6) | Consistency defect between two entry points, not an unusable product — the CLI path is documented and works. |
 | Reference transcripts for Hindi (`docs/TRANSCRIPTION_EVALUATION.md` §8 rec 5) | Would raise confidence in non-English quality; the blocker (B1) is the missing *check*, not the missing *reference*. Add the check first. |
-| Non-English WER measurement (P9, never measured) | Worth doing, but B1 does not depend on it — a coverage check catches the failure class without a ground truth. |
+| Non-English WER measurement (P9, 1 of 6 C10 languages measured) | Polish passes (11.01%); German, Spanish, French, Dutch and Italian are still unmeasured. Worth completing, but B1 does not depend on it — a coverage check catches the failure class without a ground truth. |
 
 ---
 
@@ -348,10 +348,15 @@ captions to *the transcript*, not to the audio. English WER was measured for the
 first time in this workstream (`docs/TRANSCRIPTION_EVALUATION.md`): **3.38% at
 `small`, 2.99% at `medium`, 3.38% at `large-v3`** on a 50-clip / 1036-word
 LibriSpeech sample — statistically indistinguishable, and passing the ≤15% bar
-with large margin. **Non-English WER (P9) has never been measured at all**, and
-the tarballs that would enable it are 6.2-114.5 GiB against 1.5-5.7 GB of free
-disk. So: English captions are now backed by a number; the Telugu caption that
-shipped in B1 is backed by nothing.
+with large margin. Non-English WER is now partly measured: Polish, one of the six
+C10 languages, scores **11.01% WER / 2.45% CER** with 34 of 35 utterances inside
+the bar, while Telugu on reference ground truth scores **151.08% at `small` and
+91.54% at `medium`** — 0 and 1 of 50 utterances inside it. The five remaining C10
+languages are still unmeasured; the MLS tarballs that would enable them are
+6.2-114.5 GiB against ~3.0 GB of free disk, which §7.2 of that document routes
+around by streaming a strided sample rather than downloading. So: English
+captions are backed by a number, Polish is backed by a passing number, and the
+Telugu caption that shipped in B1 is backed by a measured failure.
 
 **T3 — That an NLE will open the output.** See B3. The repo states this plainly
 and I add nothing to it: no NLE has opened an artifact.
@@ -363,16 +368,23 @@ The summary a user reads cannot tell them `small` from `base`, or
 `per-token` from `character-proportional` word timestamps
 (`providers/transcribe.py:56, 84`) — a difference that changes caption timing.
 
-**T5 — The time-savings number.** `docs/TIME_SAVINGS.md` §10.11 **forbids quoting
-73×** or any figure above 36×, and §10.5 shows why: the playback floor makes 73×
-*arithmetically infeasible* (198.307 s of delivered content must be watched),
-setting a **36× ceiling**, with measured RTF spread of 0.180-1.746 (9.7×) and
-two of seven sources slower than real time (1.140 and 1.746 — a third figure
-quoted in an earlier draft came from substituting a fetch-free re-run's RTF
-for the corpus's own). The regression
-`elapsed_s = 225.2 + 0.1067 × duration_s (R²=0.390)` also implies a fixed
-~225 s per-run overhead that dominates short sources. A user is being asked to
-trust a headline figure the repository has repudiated.
+**T5 — The time-savings number.** `docs/TIME_SAVINGS.md` §10.11 **forbids
+quoting any single speedup figure** — not 73× and not 36× either — because the
+denominator has never been measured: no editor has ever been timed on this
+task. §10.5 is more careful than an earlier draft of it was, and this page
+should not overstate what it settled. It does not call 73× impossible; it calls
+it *protocol-dependent*: 198.307 s of delivered content must be watched, so
+under a both-aspect-ratios review the ceiling at a 2 h baseline is 36.3×, while
+under the one-geometry protocol the artifacts actually support (the 9:16 tree
+is a re-crop of the same 27 selections, duration deltas of 0.000 s across all
+clip pairs) it is 72.6×. Either way the figure assumes zero correction budget,
+and §10.6 shows one discarded clip costs more than the whole budget allows.
+What *is* measured is the machine side: RTF spread 0.180–1.746 (9.7×), two of
+seven sources slower than real time (1.140 and 1.746), and a regression
+`elapsed_s = 225.2 + 0.1067 × duration_s (R²=0.390)` implying ~225 s of fixed
+per-run overhead that dominates short sources. A user is being asked to trust
+a headline ratio the repository has itself reduced to a bound with no measured
+denominator.
 
 **T6 — The reported silence figure.** `silence_pct` descends from a metric that
 never decodes audio (finding J7). Low-stakes, but it is a published number that
@@ -380,8 +392,9 @@ does not measure what its name says.
 
 **The honest summary of the gap:** of the six things a user must trust, three
 (T1, T3, T5) are explicitly and responsibly flagged as unverified in the repo's
-own docs, one (T2) is verified for English and unmeasured elsewhere, and two
-(T4, T6) are artifacts of the report format that could be closed by writing
+own docs, one (T2) is verified for English, partly verified for non-English
+(Polish passes, Telugu fails on ground truth, five C10 languages unmeasured), and
+two (T4, T6) are artifacts of the report format that could be closed by writing
 existing data into the summary.
 
 ---
@@ -419,7 +432,8 @@ Separated into what needs code and what needs a person.
    display-capable host. Blocked on hardware, not engineering.
 3. **The Tier-1 timing session.** `docs/TIME_SAVINGS.md` §10.10 recommends Tier 1
    (≈$110, one editor) as the first real measurement of the time-saving claim.
-   Until then T5 stays open and the ceiling stays 36×.
+   Until then T5 stays open and no figure of any size may be quoted — the
+   ceiling is protocol-dependent (36.3× or 72.6×), not a settled number.
 4. **Founder approval to contact anyone at all.** `docs/HUMAN_EDITORIAL_EVALUATION.md`
    §13 makes this the hard gate, and `docs/NLE_VALIDATION.md` §4 records that
    *"the mission forbids contacting anyone without explicit founder approval."*

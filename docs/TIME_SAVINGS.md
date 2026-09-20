@@ -595,7 +595,7 @@ by 1.4×; nothing here is evidence about an editor.
 
 ---
 
-## 10.5 The playback floor — why 73× is arithmetically infeasible
+## 10.5 The playback floor — why the top of the range is protocol-dependent
 
 This is the load-bearing new result, and it requires no participants at all.
 

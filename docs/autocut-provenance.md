@@ -10,6 +10,25 @@ message) for AutoCut to be freely used, built upon, or copied, including for
 this project. The private messages are not committed to this repository; this
 document is the record of provenance and attribution.
 
+> **UNVERIFIED FROM THIS REPOSITORY.** The permission above is the one claim in
+> this document that nothing in the repo can confirm: the messages are private
+> and uncommitted, and no contributor to this repository is in a position to
+> produce them. `docs/INVESTOR_READINESS.md` already lists this as the clearest
+> IP exposure and names the remediation — obtain written confirmation, commit it
+> with the author's consent, and have counsel review the dependency — and that
+> framing is the one to quote externally. Do not cite this section as evidence;
+> cite it as a disclosure.
+>
+> **Also contradicted, in one direction only.** A design spec in this repo
+> (`docs/superpowers/specs/2026-09-16-professional-editing-subsystem-design.md`)
+> describes the relationship as "reproduces AutoCut's *functionality and
+> architecture* using original code; **no source is copied**." That is false as
+> a description of the code on disk: nine Rust files are verbatim copies (one of
+> them, `vad.rs`, copied and adapted) with attribution headers, and five further
+> mappings are ports into Rust or Python — see the table below and the headers
+> in the files themselves. The spec predates the copies and was not updated when
+> they arrived. This document is the accurate record; the spec is stale.
+
 ## License status
 
 AutoCut does **not** carry an OSI-approved open-source license. Reuse is by

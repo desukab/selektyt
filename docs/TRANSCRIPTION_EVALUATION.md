@@ -50,7 +50,9 @@ a claim about a language no speaker of that language verified.
 5. **The video-container decode chain.** LibriSpeech ships 16 kHz mono FLAC, so
    the production extraction step (`providers/audio.extract_pcm_wav`) is a
    no-op resample on it. C9 therefore measures the ASR, not the demux. §6.4
-   tests the resampler separately on a real container.
+   tests the resampler separately on a real container, and that A/B has landed
+   (§6.4): two different resamplers both collapse on the Telugu source, so this
+   is no longer an open question.
 6. **`large-v3` on the three failing sources.** The English `large-v3`
    measurement in §3 ran against a byte-verified model, but its 3.1 GB weight
    was later reclaimed from the cache by disk pressure and re-downloading is
@@ -289,7 +291,7 @@ audio the transcript claims, and how it is segmented.
 | | `small` re-run (describe) | 3 | 34 | 3.5 s (1.0%) | 1.18 s | near-empty, *different* |
 | | `small`, detection enabled | 1 | 120 | 5.0 s (1.5%) | 5.02 s | near-empty |
 | | `small`, `vad_filter=False` | 3 | 57 | 5.8 s (1.7%) | 1.94 s | near-empty |
-| | `medium` | *in flight* | — | — | — | see below |
+| | `medium` | 3 | 225 | 40.7 s (12.0%) | 13.58 s | **more output, still bad (§7.1)** |
 
 Three conclusions, one per source, and they are *not* the same conclusion:
 
@@ -328,6 +330,18 @@ gate disabled — all return between 1.5% and 4.5% of a 340 s file that is 73%
 speech-energy audio. The character counts differ (80 / 34 / 120 / 57) and the
 windows differ (311–332 s / 300–308 s / 327–332 s), but the *shape* is
 invariant: a few seconds of text out of 5.7 minutes.
+
+The `medium` row is the one exception to that invariance, and it is not an
+improvement. It lifts claimed coverage from ~3 s to 40.7 s (12.0% of the file)
+and lengthens the mean segment to 13.58 s — a materially different shape from
+any `small` configuration. But §7.1 scores `medium` on Telugu reference ground
+truth (OpenSLR SLR66, 50 utterances) and it returns **91.54% WER / 69.24% CER,
+with 1 of 50 utterances inside the 25% bar**. `small` scores 151.08% on the same
+corpus. The bigger model produces more characters and fewer of them are right:
+the failure is capacity in the ASR, not coverage in the front-end, and no
+pipeline change on this axis repairs it. That is why §8 keeps `small` as the
+default and puts a reference transcript (recommendation 5) ahead of any model
+upgrade, rather than treating `medium` as the fix for this source.
 
 **`large-v3` was not run on the three failing sources, and here is why that is
 a disk limitation rather than a skipped measurement.** The English
@@ -575,7 +589,7 @@ evidence of a decoder out of its depth, not of a filtering problem.
 This is the cleanest single measurement in the root-cause section: one
 command-line toggle, opposite result to the hypothesis.
 
-### 6.4 H4 — 16 kHz resampling loses high-frequency content. **Structurally eliminated; A/B recorded when it lands.**
+### 6.4 H4 — 16 kHz resampling loses high-frequency content. **Structurally eliminated; A/B landed and shows no effect.**
 
 Both extraction paths end at 16 kHz mono, which is what the model consumes, so
 the question is whether the *resampler* matters. Two extractions of the same
@@ -594,7 +608,13 @@ identical parameters:
 
 
 The result is recorded in `corpus/wer/runs/d-small-{swr,soxr}-telugu-tutorial.json`
-when the run lands. Two things are already established and do not depend on it:
+and it has landed: **`swr` returns 0 segments and 0 characters; `soxr` returns
+1 segment, 12 characters, 1.4 s of claimed speech** (a single token,
+`సమాలింనిక౰ి.`, at 306.8–308.2 s). Both are effectively empty against a 340 s
+file that is 73% speech-energy audio. Two genuinely different audio streams
+produce the same collapse, which is the outcome the structural argument below
+predicted. Two things are established independently of the numbers and still
+hold:
 
 - The hypothesis as stated cannot be the cause of the *Telugu* failure on
   structural grounds, for the same reason H1 cannot. The failure is 5 minutes
@@ -725,13 +745,17 @@ accepted: the archive is streamed and only the strided sample is written, so
 scoring one of the six costs ~15 MB of disk instead of 6.2 GB.
 
 **The more important limitation is not the disk.** C10 covers de/es/fr/nl/it/pl.
-It does not cover **Telugu, Hindi or Hungarian** — the three languages that
+One of the six is now measured and passes — Polish, 11.01% WER / 2.45% CER on a
+35-clip MLS sample, 34 of 35 utterances inside the 25% bar (§7.2). The remaining
+five are still unmeasured, and each costs the same ~15 MB streamed sample, so
+the constraint is compute time on a 4-core host, not disk. But note what the C10
+list does not cover: **Telugu, Hindi or Hungarian** — the three languages that
 actually produced suspicious transcripts. Even a full C10 run would not have
 scored a single one of them. Hindi in particular is absent from C10 while being
-one of the three failures. P9 as written is measurable in principle and
-unmeasurable in practice here, and measuring it would not have answered the
-question the corpus actually raised. §7.1 answers that question on a corpus
-that does have Telugu ground truth.
+one of the three failures. P9 as written is measurable in principle and only
+partially measurable in practice here, and measuring all six of it would not
+have answered the question the corpus actually raised. §7.1 answers that
+question on a corpus that does have Telugu ground truth.
 
 ### 7.1 Telugu: measured, and it is a failure
 
@@ -869,18 +893,22 @@ after transcription and cannot have shaped any transcript, and toggling the
 in-path gate off recovered nothing (§6.3); language forcing is not suppressing
 a better answer, because the model *detects* Telugu at 0.881 and Hungarian at
 0.872 in agreement with the manifest, and letting it choose freely produced the
-same collapse (§6.2). The resampler A/B (§6.4) is the one hypothesis whose
-measurement is still in flight, and it is also the one with a structural
-argument against it: no resampler difference makes five consecutive minutes
-inaudible to a decoder that identified the language at 0.881. What is left
+same collapse (§6.2). The resampler A/B (§6.4) has landed and eliminates the
+last one: two genuinely different extractions of the same source both collapse
+(0 segments versus 1 segment and 12 characters), exactly as the structural
+argument said they would — no resampler difference makes five consecutive
+minutes inaudible to a decoder that identified the language at 0.881. What is
+left
 standing is that the model identifies the language and then cannot decode it —
 a capacity problem in the ASR, which no pipeline change addresses. The model
 axis measured in §5.3 is consistent with this and adds nuance: `medium` leaves
 Hungarian unchanged (38→35 segments, 109.7→111.9 s of claimed speech) and
-changes Hindi materially (3→11 segments) while leaving Telugu's coverage
-collapsed. So "upgrade the model" is not one decision with one answer — it is a
-per-language question that only reference transcripts can settle, which is why
-recommendation 5 leads on Hindi rather than on the most dramatic failure.
+changes Hindi materially (3→11 segments) while changing Telugu's coverage a
+lot without changing its accuracy (§5.3: 3.5 s → 40.7 s of claimed speech, still
+91.54% WER on reference ground truth in §7.1). So "upgrade the model" is not one
+decision with one answer — it is a per-language question that only reference
+transcripts can settle, which is why recommendation 5 leads on Hindi rather than
+on the most dramatic failure.
 
 **3. Add a coverage check to the pipeline — IMPLEMENTED.** The one measurement
 that surfaced every failure in this exercise without needing a human speaker is

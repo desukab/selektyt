@@ -37,13 +37,13 @@ measured by `ffprobe`.
 
 | Check | Result |
 |---|---|
-| `pycmx` (independent CMX 3600 reader) accepts every EDL | **PASS** — 3/3, events and channel records counted |
+| `pycmx` (independent CMX 3600 reader) accepts every EDL | **PASS** — 6/6, events and channel records counted |
 | EDL is well-formed CMX 3600 with advancing record spans | **PASS** |
-| FCPXML is well-formed XML, version 1.11, elements inside the 1.11 vocabulary | **PASS** — 3/3 |
-| Every asset `src` is an absolute `file:///` URI to an existing file | **PASS** — 3/3 |
-| No asset-clip reads past its asset's declared extent | **PASS** — 3/3 |
+| FCPXML is well-formed XML, version 1.11, elements inside the 1.11 vocabulary | **PASS** — 6/6 |
+| Every asset `src` is an absolute `file:///` URI to an existing file | **PASS** — 6/6 |
+| No asset-clip reads past its asset's declared extent | **PASS** — 6/6 |
 | FCPXML spine advances; no clip precedes its predecessor | **PASS** |
-| EDL total span == FCPXML spine total | **PASS** — 0.00 frames on all three |
+| EDL total span == FCPXML spine total | **PASS** — 0.00 frames on all six |
 | Timeline duration == rendered MP4 duration (both presets) | **PASS** — 0.00–1.63 frames |
 | EDL source in/out == the selection the cut was made from | **PASS** — 0.0–0.7 frames |
 
@@ -195,9 +195,12 @@ verified against the render, **never opened in an NLE**.
 ## Reproducing
 
 ```sh
-# The audit. pycmx lives outside the project venv so SelekyT's own
-# dependencies cannot influence it; without it that check reports SKIP and
-# the rest still run.
+# The audit. pycmx is an independent CMX 3600 reader, declared as an optional
+# extra (`nle = ["pycmx>=1.5"]` in pyproject.toml) rather than a core
+# dependency, so it does not travel with every install. If it is absent the
+# EDL check FAILS rather than skipping — an unvalidated EDL is not a pass —
+# and the remaining checks still run. Prepending /tmp/nlelibs is optional; it
+# pins a reader outside the venv when you want the isolation explicit.
 PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py \
     out/web/pipeline/project
 

@@ -744,7 +744,12 @@ honest about the disagreement:
   cannot run the independent check at all" — **false**, and corrected 70 lines
   later at `:259-260`, but the false sentence is left standing in the
   "Completed work" section. `pyproject.toml` lists pycmx in `nle`, `dev` and
-  `all`; it is installed in `/tmp/nlelibs` and present in the venv.
+  `all`; it is installed in `/tmp/nlelibs` and present in the venv. *Later note:
+  both the standing sentence and the correction were superseded in a later
+  revision of `AI_EXECUTION_STATE.md`, which now matches
+  `docs/TECHNICAL_AUDIT.md` §CI — pycmx is in three extras and CI installs
+  `.[dev,llm,nle]`, so the check can run; the real gap is that CI never invokes
+  the audit tools at all.*
 - `docs/CORPUS_RESULTS.md:197-200` "WER is still unmeasured" — **stale**;
   `docs/TRANSCRIPTION_EVALUATION.md` §3 measures English WER (which I
   reproduced, S2). `CORPUS_RESULTS.md` is 19:23, *newer* than
@@ -785,20 +790,70 @@ unmeasured" while `docs/TRANSCRIPTION_EVALUATION.md` §3 already reports 3.38%
 — and `CORPUS_RESULTS.md` is the *newer* file. That is the one place the repo
 should be bolder, and it is notable that the error runs the other way here.
 
-The direction of every substantive error I found is the same: the product
-looks slightly more verified than it is. A "7 clean through both audits" that
-is really 4-of-7-on-one-audit-and-relink-untested-on-six; a "three of the
-seven OK sources" that is really two; a "0 FAIL" that is really NOT RUN on six
-of seven; an "across 11 sources" that is really 7 with a 36% failure rate
-hidden; a "73× is arithmetically infeasible" that is really conditional on
-double-counting a reframe. None of these are fabricated — they are
-aggregations and summaries that drifted favourable, in a repo whose entire
-stated purpose is to stop exactly that substitution.
+---
 
-What is genuinely strong, and what I would keep: the actual pixels on disk
-(S1), the measured English WER (S2, reproduced), the non-English failure being
-found and stated rather than hidden (S3), the two-parser interchange check
-(S4), determinism on a real re-run (S5), exact geometry (S6), and the
-arithmetically clean machine-side table (S7). The mechanical layer is in
-better shape than the claims about it, which is the inverse of the usual
-failure mode and is the single most useful thing this red team found.
+## STATUS AGAINST THE REPO AT 2026-09-20
+
+This section is not part of the red team's audit. It is a later reconciliation,
+added so that a reader can tell which findings above were accepted and which
+still stand. Every line was re-checked by re-running the named tool, not by
+reading the doc.
+
+- **R1's "7 clean through both audits" — the claim it criticised is gone from
+  `AI_EXECUTION_STATE.md`, but the underlying audit result has moved and not in
+  one direction.** Re-running `tools/editorial_audit.py` over all seven OK
+  sources today gives **2 ALL CHECKS PASS** (`royal-society-cloke`,
+  `hadhazy-protest`) and **5 FAILURES PRESENT**. The failing sources split by
+  check: `emwcon-panel-2018`, `pentagon-esper-briefing` and `ooi-vertical` fail
+  on `check_cuts_respect_sentences` (six cut edges — three are ASR
+  under-punctuation, three are comma-clause cuts; analysed in
+  `AI_EXECUTION_STATE.md` as audit noise), while `nasa360-ep5` clip 05 and
+  `telugu-tutorial` clip 01 fail on **silence share** — 40.8% and 46.3% dead air
+  in the rendered clips, which is a real property of those selections and not
+  artifact debt. R1's demand is still unmet in the direction that matters:
+  record the per-source result, and do not call the set "clean".
+- **R5 was accepted.** `TIME_SAVINGS.md` §10.5 was rewritten after this audit
+  and now states the protocol dependence itself — its heading reads "why the
+  top of the range is protocol-dependent" and its body says plainly that "the
+  headline 73× is not arithmetically infeasible" and that the earlier blanket
+  prohibition "was stronger than the evidence". §10.11 now forbids quoting *any
+  single* speedup figure, 73× or 36×. R5's recommendation is quoted nearly
+  verbatim in the corrected §10.5 conclusion.
+- **R2's 36% failure-rate caveat was accepted** and now appears in §10.11's own
+  permitted statement, which says the 38.8-minute figure "covers only the 7
+  sources that delivered, not all 11" and names the 36% rate.
+- **R8 was accepted.** §10.7's component table is now disjoint and sums to the
+  wall clock (1.60 + 39.3 + 200.7 = 241.55 s), the warm-only pass is reported
+  separately from the in-run figure rather than as a peer row, and the document
+  records in place that an earlier version of the table listed it as a fourth
+  row, "which made the shares total 112.4%". The 83.1% headline share was always
+  correct and is unchanged.
+- **R7 was accepted in full.** §10.3 now says **"two of the seven sources ran
+  slower than real time"** and names them (`hadhazy-protest` 1.140,
+  `telugu-tutorial` 1.746), with a parenthetical recording that an earlier draft
+  said three and exactly how it reached that count. R7(b) is also corrected:
+  §10.3 now states **"the two unusable sources ran at 6.70 s of machine time per
+  delivered second — 4.15× the usable rate, +315%"** and records in place that
+  the earlier "32%" figure was the all-7 vs usable-5 pooled-average gap, not a
+  property of those two sources, and that labelling it as one understated them
+  by ~10×. Both corrections are R7's recommendation verbatim.
+- **R6 was accepted in the direction that matters.** §10.3's fit and crossover
+  are unchanged at 252 s, but §10.11's permitted phrasing softens the assertion
+  to "on sources *shorter than about four minutes* the pipeline runs slower than
+  real time". R6's specific objection — that `ooi-vertical`, one of only two
+  sources below the crossover, ran at RTF 0.922 and was *faster* than real time —
+  is now recorded in §10.3's own parenthetical, though the crossover number
+  itself still stands.
+- **The "STALE RATHER THAN FALSE" list above is itself now stale, by design.**
+  The disk figures (3.9 G / 87%), the test count (854/7) and the commit count
+  (174 / 65) were true on 2026-09-19 and have all moved since: 3.0 G / 90%,
+  1034 passed / 12 skipped, 194 commits / 85 Ubuntu-authored. They are left
+  standing as the audit's own timestamp, not corrected in place.
+- **One finding this audit made that later work turned into a fix.** The
+  caption-vs-text desync visible in R1's `check_caption_text_is_transcript_text`
+  was traced to `_segment_sentences`' proportional timing estimate and fixed at
+  the seam (`engine/edit_plan.align_span`, called from
+  `engine/editorial.score_candidate`); three of 27 candidates with word timing
+  had a text disagreeing with the words their shipped captions are built from,
+  and the fix corrects exactly those three. See
+  `docs/AI_EXECUTION_STATE.md` item 10.

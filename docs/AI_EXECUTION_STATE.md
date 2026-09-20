@@ -13,16 +13,24 @@ every line below was true on this host at that point.
   the document corrections those forced. Run `git log -1` for the current hash
   rather than trusting a hash printed here, since amending this file changes its
   own commit hash.
-* Test suite: **895 passed, 7 skipped in 112 s** at the last clean commit. The
-  7 skips are all in `tests/test_proxy_validation.py` and all gated on the
+* Test suite: **1034 passed, 12 skipped in 114 s** at the last clean commit
+  (2026-09-20). The 12 splits into two kinds, and the difference matters:
+  **7** are in `tests/test_proxy_validation.py`, gated on the
   `SELEKYT_PROXY_MEDIA` env var, which expects a ~239 MB YouTube recording that
   is not redistributable with the repo. **They are opt-in real-media
   measurements, not missing optional backends** — the suite reports green on
   every CI run while the proxy validation it names does not happen, and that is
-  a worse problem than an absent backend. The earlier count in this file was
-  837/10; the suite grows as defects get regression tests, and the skip count
-  moves when a gated test's media appears or disappears — re-run `pytest -q -rs`
-  before trusting any count here.
+  a worse problem than an absent backend. The other **5** are in
+  `tests/test_wer_bench.py`, skipped because `c9-small`, `c9-small-beam5`,
+  `c9-medium`, `c9-large-v3` and `redteam-small-verify` predate the
+  `wer_err_total` field in their run records — old committed data that cannot be
+  re-derived without re-running the models, not a missing environment. The
+  earlier count in this file was 895/7; the suite grows as defects get regression
+  tests, and the skip count moves when a gated test's media appears or disappears
+  — re-run `pytest -q -rs` before trusting any count here.
+  **Do not describe the 12 as one homogeneous group of "environment skips"** —
+  the doc set has already done that once, and it hides the 7 that are opt-in
+  measurements a reader might assume are covered.
 * Five commits landed on `origin/main` from outside this session
   (`36bdff4`..`edf3b30`): a switch from MIT to a proprietary license plus
   project-positioning docs. They were integrated by rebase, not overwritten.
@@ -45,16 +53,21 @@ every line below was true on this host at that point.
   sidecar cannot resolve `yt-dlp`. Plain `nohup … &` dies with the shell.
 * No project server is listening right now. Scratch run scripts in `/tmp` were
   removed.
-* Disk: **3.6 G free of 29 G, 88% used** (`df -h /`, 2026-09-19). This file
+* Disk: **3.0 G free of 29 G, 90% used** (`df -h /`, 2026-09-20). This file
   previously said both "5.7 G" and "14 G" in different places; both were stale,
   and the disk is the binding constraint on what can be attempted next. The
   corpus's downloaded media is deliberately *not* kept — `corpus/media/` is
   gitignored and regenerable from `corpus/manifest.json`, and it had to be
   removed mid-run when the filesystem hit 118 MB free and started failing every
-  Bash call. **Only one source's media survives locally:
-  `corpus/media/royal-society-cloke.webm` (85 MB).** The text artifacts
+  Bash call. **Two sources' media survives locally:
+  `corpus/media/royal-society-cloke.webm` (85 MB) and
+  `corpus/media/pentagon-esper-briefing.mp4` (158 MB, kept for the re-run that
+  confirmed the word-boundary fix and the text desync).** The text artifacts
   (transcript, selections, edit plan, EDL/FCPXML) are the evidence and they are
-  committed. Check `df` before any long run.
+  committed. Check `df` before any long run. Note that 483 MB was reclaimed this
+  session by deleting `corpus/wer/downloads/te_in_female.zip`, an untracked and
+  regenerable MLS archive cache — the WER corpus's own downloads directory is
+  the first place to look when a long run is blocked on disk.
 * **The nasa360 source is NOT deleted, contrary to a note this file carried
   implicitly.** `out/web/pipeline/project/source/NASA_360_program5_HD.mov` is
   intact at 883,894,825 bytes, matching §2 of `docs/TIME_SAVINGS.md`'s verified
@@ -260,10 +273,15 @@ the measured figure is **45 of 154**. Both corrected, with the command to
 reproduce them.
 
 **What the verification also confirmed:** the `pycmx` finding is real — without
-it on `PYTHONPATH`, six independent-parse checks silently SKIP rather than pass,
-so the audit reads 86/0/6 instead of 92/0/0. `pycmx` is in no dependency extra,
-so CI cannot run the independent check at all. That is a genuine circularity in
-a check the Pro tier's value proposition rests on.
+it installed, six independent-parse checks fail hard rather than pass, so the
+audit reads 86/0/6 instead of 92/0/0. `pycmx` is declared in `pyproject.toml`'s
+`nle`, `dev` and `all` extras, and `.github/workflows/ci.yml` installs
+`.[dev,llm,nle]`, so the independent-parse check is *able* to run in CI. An
+earlier note here said it was in no extra at all — wrong; see
+`docs/TECHNICAL_AUDIT.md` §CI for the correction. The gap that remains is not
+the dependency: CI runs the suite but never invokes `tools/editorial_audit.py`
+or `tools/nle_check.py`, so a change that breaks the render/interchange
+agreement is caught only when a human audits a project directory.
 
 The five new documents are `EVALUATION.md`, `TIME_SAVINGS.md`,
 `TRACTION_DASHBOARD.md`, `USE_OF_FUNDS.md` and `INVESTOR_PIPELINE.md`. Each was
@@ -302,9 +320,10 @@ rather than merely observed: Telugu scores WER **151.08%** on OpenSLR SLR66
 under the same harness — 0 of 50 utterances inside the 25% bar, best 71.4%.
 The reading judgment above is confirmed by a reference transcript, which is
 worth stating plainly because the same paragraph also admits that reading
-judgments are not evidence. The six C10 languages the criterion actually names
-are still unmeasured; Telugu is a language outside that set, chosen because it
-is the one the pipeline demonstrably cannot handle.
+judgments are not evidence. Of the six C10 languages the criterion actually
+names, one is now measured and passes — Polish at WER 11.01% with 34 of 35 clips
+inside the bar — and five remain unmeasured; Telugu is a language outside that
+set, chosen because it is the one the pipeline demonstrably cannot handle.
 
 **Two: two real defects, found by running new sources rather than by reading
 code.** Both fixed, both pinned by a test that fails against the pre-fix code.
@@ -438,16 +457,70 @@ In rough order of how much it would cost a user (fuller list in
    P9's six C10 languages, so the criterion is still formally unmeasured on its
    own corpus; what this does establish is that the failure is a decode failure
    at this model size and not a transcription-pipeline failure, because the
-   English path on the same harness scores 3.38%. A `medium` run on the same
-   Telugu corpus is in flight to bound how much of this is model size.
-9. **Vertical reframing verified on one anamorphic + synthetic sources only** —
+   English path on the same harness scores 3.38%. The `medium` run on the same
+   Telugu corpus has finished, and it bounds the question in the worse direction:
+   **WER 91.54% / CER 69.24%, with 1 of 50** utterances inside the 25% bar
+   (`corpus/wer/runs/telugu-medium.json`). Capacity is a real lever — 151.08% to
+   91.54% — and it does not reach the bar, so this is a *language-fit* gap rather
+   than a size gap. Buying compute does not close it, which is what keeps the
+   CPU-only cost story coherent on both sides of the language boundary.
+9. **P9's own criterion is one-sixth measured, and that sixth passes.** Polish —
+   one of the six C10 languages the criterion names — scores **WER 11.01% /
+   CER 2.45%** on the same `small` model, with **34 of 35** clips inside the 25%
+   bar and diacritics intact (Multilingual LibriSpeech test, 35 clips, 7.79 min,
+   1054 reference words; `corpus/wer/runs/polish-small.json`). Telugu is *not* a
+   C10 language, so the two results read together rather than as one finding: the
+   failure is localised to Indic, not to "everything outside English". The
+   criterion needs **3 of 6**, so German, Spanish, French, Dutch and Italian
+   remain unmeasured and P9 cannot be claimed. The Polish number does not assume
+   any of them, and clean read audiobook prose is the easiest condition the bar
+   will be faced with — so it is evidence the bar is reachable, not evidence it
+   is met.
+10. **A candidate's text described a different clip from the one that ships.**
+    Selection bounds are estimated proportionally to character span, so a bound
+    can land inside a word; the word list is real timing and the cut snaps to it,
+    which left the *text* built on the pre-snap bound. On the pentagon re-run,
+    clip 04 shipped opening on "Syria." (the snap had pulled the bound back
+    364.84 → 364.50 s to keep the word whole) while its own `text` field began at
+    "has" — so the content pack's hook described a clip that was not the rendered
+    one, and `tools/editorial_audit.py`'s caption-vs-text check fired on a real
+    desync rather than a false positive. Fixed in `align_span`, which snaps both
+    bounds and rebuilds the text from the words kept inside them. Measured on the
+    committed corpus, 3 of 27 candidates with word timing were corrected and the
+    other 24 are byte-identical — a repair, not a rewrite. Verified by re-running
+    the source: clip 04's text now opens "Syria.", matching its first caption cue.
+11. **Vertical reframing verified on one anamorphic + synthetic sources only** —
    the SAR fix is provably correct *geometry*, but whether the wider crop keeps
    a moving subject well framed is not measured. A 9:16 cut from SD footage is
    sub-SD (308×486), a property of the input.
-10. **Frame-rate and codec coverage is narrow.** The corpus added 25, 30 and
+12. **Frame-rate and codec coverage is narrow.** The corpus added 25, 30 and
     29.97 fps. 23.976, 50 and 59.94 remain untested, and no 4K/H.265 source was
     attempted — still the largest unquantified risk in `docs/BUSINESS_MODEL.md`
     §9.
+
+**One OPEN finding that is noise, recorded so it is not mistaken for a defect
+later.** `tools/editorial_audit.py`'s `check_cuts_respect_sentences` flags six
+committed cut edges across five clips (emwcon 01 and 05, pentagon 02 and 04,
+ooi 01) whose adjacent words the sentence splitter holds in one sentence. They
+are not one cause, and the split matters:
+
+- **Three are ASR under-punctuation.** The splitter merges what should be two
+  sentences and the cut lands at a boundary the transcript does not mark:
+  "...continuous contact with them What was used to destroy the compound"
+  (pentagon 02, both edges) and "...once everybody comes I wanted to add..."
+  (emwcon 05). A real turn boundary is being cut at, and the audit is right
+  that the transcript does not show it.
+- **Three are commas inside one long question or clause:** "begun, and" and
+  "was, at" and "arrays, traveling" (pentagon 04, emwcon 01, ooi 01). Here the
+  transcript's *own* punctuation says one sentence, so the check is enforcing a
+  stricter rule than the transcript supports. Cutting at a comma between clauses
+  is a defensible edit, though not a sentence edge.
+
+The largest removal in the group (a 5.76 s gap in pentagon clip 02) is a real
+turn boundary and the cut is right either way; the others trim inside a clause.
+The signal is too noisy to tune a threshold against — fixing it would mean
+trusting sentence boundaries from a transcript that demonstrably omits some and
+over-joins others — so it stays as an audit caveat, not a bug to close.
 
 ## Current strategic objective
 
@@ -463,13 +536,21 @@ sound across containers, frame rates, aspect ratios and languages (11 sources,
 7 delivering deliverables, determinism byte-identical across independent
 downloads), **but two of those seven produced transcripts that are phonetic
 noise, and no mechanical check can see it.** "Clean" is not the right word for
-the seven: **three of them** (`emwcon-panel-2018`, `ooi-vertical`,
-`pentagon-esper-briefing`) still fail `tools/editorial_audit.py`, every failure
-a selection bound landing inside a word, and **six of the seven** still carry
-relative EDL paths. Both are the same cause — the artifacts on disk were
-written by emitters that have since been fixed, and only `royal-society-cloke`
-has been re-emitted, which is why it is the one that passes both audits.
-Artifact debt, not new defects.
+the seven: **five of them** (`nasa360-ep5`, `emwcon-panel-2018`,
+`pentagon-esper-briefing`, `ooi-vertical`, `telugu-tutorial`) still fail
+`tools/editorial_audit.py` as of 2026-09-20, and the failures are of two
+different kinds that must not be bundled — three sources fail on
+`check_cuts_respect_sentences` (six cut edges; analysed as ASR under-punctuation
+and comma-clause cuts in the OPEN note above, i.e. audit noise), while
+`nasa360-ep5` clip 05 and `telugu-tutorial` clip 01 fail on *silence share*
+(40.8% and 46.3% dead air in the rendered clip), which is a real pacing property
+of those two clips and not an emitter bug. Only `royal-society-cloke` and
+`hadhazy-protest` pass everything. Separately, **six of the seven** still carry
+relative EDL asset paths; only `royal-society-cloke` is absolute, because it is
+the only one re-emitted after the URI fix. The sentence-split and EDL-path items
+are artifact debt — the files on disk were written by emitters that have since
+been fixed — but the dead-air figures are properties of the selections
+themselves and would survive a re-run.
 
 So the objective splits into two things that must not be conflated:
 
@@ -492,8 +573,10 @@ the cheapest tests that would move it.
 Ordered by evidence gained per unit of work, not by lines of code.
 
 *Closed this session:* "run the editorial audit across 3–5 more real sources"
-(exceeded: 11 sources, 7 clean) and "add a second source to the determinism
-check" (exceeded: two independent *downloads*, byte-identical selections).
+(exceeded: 11 sources audited — 2 pass every check, 5 fail on sentence-split or
+dead-air checks, see the note above) and "add a second source to the
+determinism check" (exceeded: two independent *downloads*, byte-identical
+selections).
 
 1. **Import a timeline into a real NLE. This is the single highest-leverage
    action available and it is still open.** It is zero capital and one
@@ -609,10 +692,11 @@ check" (exceeded: two independent *downloads*, byte-identical selections).
   just anamorphic ones — square-pixel sources now round to an even width
   (e.g. 274 px at 486 tall instead of 273). This is why the existing
   square-pixel 9:16 test still passes but on slightly different geometry.
-* **Disk is the binding constraint on real runs.** 14 G free, and one real
+* **Disk is the binding constraint on real runs.** 3.0 G free, and one real
   source is 883 MB. A second long source plus its renders will not fit
   comfortably; check `df` before any end-to-end run and never delete project
-  data, git history, worktrees or caches blindly.
+  data, git history, worktrees or caches blindly. Reclaimable caches come first:
+  `corpus/wer/downloads/` holds regenerable archive zips and is gitignored.
 * **The docs record is only as good as the last real run.** `docs/product-gap-
   map.md` carries an "as of `<hash>`" header, and that header had drifted: the
   map was last substantively updated in `2dd4ff1` but still read "as of
@@ -662,16 +746,16 @@ check" (exceeded: two independent *downloads*, byte-identical selections).
   fixed). All four distinguish "code exists and unit tests pass" from "a user
   can rely on this".
 * **Start any work by re-running the suite** (`.venv/bin/python -m pytest -q`)
-  and confirming **898 passed / 7 skipped**. A number other than that means
-  something has drifted. The count was refreshed across the doc set after
-  RED_TEAM, AI_EXECUTION_STATE and an agent appendix disagreed within one day
-  (824, 819, 834); it has moved 819 → 824 → 834 → 837 → 890 → 895 → 898 as
-  regression tests landed, and the skip count moved 10 → 7 when a gated
-  real-media test's env changed. **A quoted count is stale the moment it is
-  written** — the "How to run things" note above carries the same caveat. The
-  same applies to commit counts — the repo is at **180 commits, 71 of them
-  machine-authored under the "Ubuntu" identity** (`git log --format='%an' |
-  grep -ci ubuntu`).
+  and confirming **1034 passed / 12 skipped** (113 s, 2026-09-20). A number other
+  than that means something has drifted. The count was refreshed across the doc
+  set after RED_TEAM, AI_EXECUTION_STATE and an agent appendix disagreed within
+  one day (824, 819, 834); it has moved 819 → 824 → 834 → 837 → 890 → 895 → 898
+  → 1031 → 1034 as regression tests landed, and the skip count moved 10 → 7 → 12
+  as gated real-media tests and backend-gated checks arrived. **A quoted count is
+  stale the moment it is written** — the "How to run things" note above carries
+  the same caveat. The same applies to commit counts — the repo is at **194
+  commits, 85 of them machine-authored under the "Ubuntu" identity**
+  (`git log --format='%an' | grep -ci ubuntu`).
   This line is itself a self-checkpoint and it has to be edited whenever the
   count changes — a previous session let it sit at 819 through fifteen new
   tests, and the drift was found only because a red-team agent audited it.
