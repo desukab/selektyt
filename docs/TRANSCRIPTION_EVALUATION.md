@@ -748,22 +748,32 @@ accepted: the archive is streamed and only the strided sample is written, so
 scoring one of the six costs ~15 MB of disk instead of 6.2 GB.
 
 **The more important limitation is not the disk.** C10 covers de/es/fr/nl/it/pl.
-Two of the six are now measured and both pass — Polish, 11.01% WER / 2.45% CER on
-a 35-clip MLS sample with 34 of 35 utterances inside the 25% bar (§7.2), and
+Three of the six are measured and all three pass — Polish, 11.01% WER / 2.45%
+CER on a 35-clip MLS sample with 34 of 35 utterances inside the 25% bar (§7.2),
 Italian, 20.11% WER / 4.53% CER on a 40-clip MLS sample with 26 of 40 inside the
-bar (§7.3). The Italian corpus is Dante, so the reference is archaic Italian
-against a modern ASR — a harder condition than Polish's modern prose, and still
-a pass at the corpus level. Two languages passing on independent corpora is what
-shows the first was not one easy audiobook. The remaining four are still
-unmeasured, and each costs the same ~15 MB streamed sample, so the constraint is
-compute time on a 4-core host, not disk. But note what the C10
-list does not cover: **Telugu, Hindi or Hungarian** — the three languages that
-actually produced suspicious transcripts. Even a full C10 run would not have
-scored a single one of them. Hindi in particular is absent from C10 while being
-one of the three failures. P9 as written is measurable in principle and only
-partially measurable in practice here, and measuring all six of it would not
-have answered the question the corpus actually raised. §7.1 answers that
-question on a corpus that does have Telugu ground truth.
+bar (§7.3), and Spanish, 8.58% WER / 2.64% CER on a 40-clip MLS sample with 38 of
+40 inside the bar (§7.4). The Italian corpus is Dante, so the reference is
+archaic Italian against a modern ASR — a harder condition than Polish's modern
+prose, and still a pass at the corpus level. Three languages passing on
+independent corpora is what shows the first was not one easy audiobook, and it
+is what satisfies P9 as written, which asks for 3 of the 6.
+
+**Read the satisfied criterion narrowly.** The three measured are the
+clean-read audiobook half of C10; German, French and Dutch are still unmeasured,
+and a bar met only on its easiest half is weaker than the same bar met on six.
+The four English-and-non-English results are also a spread — 3.38 / 8.58 / 11.01
+/ 20.11 — whose position tracks corpus and register (Spanish is modern prose,
+Italian is Dante) rather than a graded descent from English, so no single one of
+them is a "how good is the multilingual model" number. Each costs the same ~15
+MB streamed sample, so the constraint is compute time on a 4-core host, not
+disk. But note what the C10 list does not cover: **Telugu, Hindi or Hungarian** —
+the three languages that actually produced suspicious transcripts. Even a full
+C10 run would not have scored a single one of them. Hindi in particular is
+absent from C10 while being one of the three failures. P9 as written is
+measurable in principle and only partially measurable in practice here, and
+measuring all six of it would not have answered the question the corpus actually
+raised. §7.1 answers that question on a corpus that does have Telugu ground
+truth.
 
 ### 7.1 Telugu: measured, and it is a failure
 
