@@ -95,6 +95,22 @@ jobs:
     # added for the desktop app is type- and borrow-checked before the Windows
     # job spends 25 minutes and a ~1 GB download on it.
     runs-on: ubuntu-latest
+    env:
+      # tauri_build::build() runs from build.rs on every `cargo check`, and it
+      # hard-errors if the paths tauri.conf.json declares are absent —
+      # `resource path 'binaries/selekyt-mech-x86_64-unknown-linux-gnu' doesn't
+      # exist`. Those paths are produced by apps/desktop/stage-windows.sh,
+      # which downloads a python-build-standalone interpreter, ffmpeg and ~500 MB
+      # of whisper weights. Requiring that here would defeat the point of the
+      # job, so TAURI_CONFIG patches the two staging-dependent keys out for this
+      # job only. tauri-build merges it as an RFC 7386 patch, which is why the
+      # values are null and not empty: an empty object *recurses* and leaves the
+      # target untouched (verified — that was the first attempt, and it still
+      # errored on resources/python), whereas null deletes the key.
+      # Everything this job gives up is still covered: the Windows job stages
+      # for real and then bundles against the unpatched config, so a path that
+      # cannot resolve fails there.
+      TAURI_CONFIG: '{"bundle":{"externalBin":null,"resources":null}}'
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -106,7 +122,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "apps/desktop/src-tauri -> target"
-      - name: Check (also validates tauri.conf.json through codegen)
+      - name: Check (validates the patched config through codegen)
         working-directory: apps/desktop/src-tauri
         run: cargo check --locked
       - name: Clippy (warnings denied)

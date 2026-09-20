@@ -150,8 +150,23 @@ claiming success.
   and the test then blocks until the sleep expires. That is a property of the
   test double, not of the engine: every ffmpeg call in `providers/ffmpeg.py`
   pipes its own stdout, so the real sidecar has no orphaned child.
-- `cargo clippy --all-targets -- -D warnings` is clean, and CI now denies
+- `cargo clippy --all-targets -- -D warnings` is clean, and CI denies
   warnings on Linux before the Windows job pays for a build.
+  **That Linux job has not always been able to say so.** It was added in
+  `59e5327` and was red on its first three runs, because
+  `tauri_build::build()` runs from `build.rs` on every `cargo check` and
+  hard-errors when the paths `tauri.conf.json` declares are not on disk —
+  and those paths are produced by `stage-windows.sh`, which downloads an
+  interpreter, ffmpeg and ~500 MB of weights. The job's whole purpose was to
+  be cheap, so it now sets
+  `TAURI_CONFIG='{"bundle":{"externalBin":null,"resources":null}}'` to patch
+  those two keys out for that job only. The values are `null` rather than
+  empty because tauri-build merges as an RFC 7386 patch and an empty object
+  *recurses*, changing nothing — that was the first attempt, and it still
+  failed on `resources/python`. Verified locally by hiding the staged tree
+  and re-running check, clippy and the 12 unit tests against the patched
+  config. What the job gives up is still covered by the Windows job, which
+  stages for real and then bundles against the unpatched config.
 - `tests/ui_contract.mjs` passes in both modes: against a real engine project
   tree (captions, selections, edit-plan arithmetic, transcript overlap,
   report/qa shape) and in its project-independent CI mode (formatters, the SRT
