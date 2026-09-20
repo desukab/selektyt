@@ -305,37 +305,40 @@ def test_the_corpus_has_never_produced_a_drop_frame_timeline() -> None:
 
 def test_neither_probeable_source_carries_a_timecode_track() -> None:
     """The half of the DaVinci relink check that is about the media, not the
-    document. Neither source on this host has a TMCD stream or a nonzero
+    document. Neither source on this host has a timecode track or a nonzero
     container start, so ``asset start="0s"`` has only ever been correct by
     being trivial. Stated here because it bounds the ffprobe check above: the
     resource block agrees with the container, and the container has no
-    timecode opinion to disagree with."""
+    timecode opinion to disagree with.
+
+    Detection is by the handler ffprobe actually reports. A timecode track is
+    not a codec: ffmpeg muxes it as ``codec_type=data`` with
+    ``codec_name=unknown``, so looking for a ``tmcd`` codec name or an ``srt``
+    stream finds nothing -- confirmed by building a file with
+    ``-timecode 00:10:00:00`` and reading it back. What identifies it is
+    ``TAG:handler_name=TimeCodeHandler`` and the ``TAG:timecode`` it carries.
+    """
     for source in (MEDIA / s for s in SOURCES):
         probe = _probe(source)
         start = probe.get("start_time")
-        if start is None:
-            # ffprobe reports no container start_time for this muxer, which is
-            # itself the absence of an opinion; the stream-level check below is
-            # what settles it.
-            pass
-        else:
+        if start is not None:
             assert abs(float(start)) < 0.05, (
                 f"{source.name} reports a nonzero container start_time of "
                 f"{start}s; asset start=\"0s\" is then wrong on this media, not "
                 f"merely unexercised"
             )
-        kinds = {k for k in probe if k == "codec_type"}
-        # A TMCD stream would appear as a third codec_type alongside video and
-        # audio. _probe only asks for video/audio rates, so a timecode track is
-        # detected by asking for it explicitly rather than by counting.
         check = subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", "stream=codec_name",
+            ["ffprobe", "-v", "error", "-show_streams",
              "-of", "default=noprint_wrappers=1", str(source)],
             check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         )
-        names = {ln.partition("=")[2].strip()
-                 for ln in check.stdout.decode().splitlines() if "=" in ln}
-        assert "srt" not in names and not any(
-            n.startswith("tmcd") for n in names
-        ), f"{source.name} carries a timecode track ({sorted(names)}); the " \
-           f"embedded-TC offset path is exercised by this media"
+        out = check.stdout.decode()
+        assert "TimeCodeHandler" not in out, (
+            f"{source.name} carries a timecode track; the embedded-TC offset "
+            f"path is exercised by this media and the caveat in "
+            f"engine/fcpxml.py is out of date"
+        )
+        assert "TAG:timecode=" not in out, (
+            f"{source.name} carries a timecode tag without a TimeCodeHandler, "
+            f"which the engine does not account for"
+        )
