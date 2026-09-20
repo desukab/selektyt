@@ -1,0 +1,38 @@
+[package]
+name = "selekyt-desktop-shell"
+version = "0.3.0"
+description = "SelekyT desktop webview shell — local-first video editorial engine"
+authors = ["SelekyT Project"]
+edition = "2021"
+rust-version = "1.77"
+
+# The binary is the desktop app proper; the intelligence layer is a bundled
+# Python sidecar and the mechanical core is the `selekyt-mech` Rust sidecar.
+# Both are staged under resources/ as `externalBin` entries in
+# tauri.conf.json and resolved at runtime by `sidecar_path` in src/main.rs,
+# so the webview never executes anything: it only invokes the custom commands,
+# and the shell does the spawning itself with no plugin ACL.
+[[bin]]
+name = "SelekyT"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+tauri-utils = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[features]
+# `custom-protocol` makes Tauri embed the frontend into the release binary via
+# generate_context!, i.e. the shipped app needs no dev server and no network.
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1

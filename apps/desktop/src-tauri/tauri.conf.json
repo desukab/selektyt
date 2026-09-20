@@ -1,0 +1,81 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SelekyT",
+  "version": "0.3.0",
+  "identifier": "com.selekyt.desktop",
+  "mainBinaryName": "SelekyT",
+  "build": {
+    "frontendDist": "../ui",
+    "features": []
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost; frame-src 'none'; object-src 'none'"
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "SelekyT — AI-assisted video editing",
+        "width": 1180,
+        "height": 760,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "nsis", "msi"],
+    "publisher": "SelekyT Project",
+    "category": "Video",
+    "copyright": "SelekyT Project",
+    "shortDescription": "Local-first long-form to social video editorial engine",
+    "longDescription": "SelekyT turns long-form video into structured, editable stories and publishable social cuts. All transcription, analysis and rendering happen locally; no media leaves the machine.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/selekyt-mech",
+      "binaries/selekyt-python"
+    ],
+    "resources": {
+      "resources/python": "python/",
+      "resources/bin": "bin/",
+      "resources/models": "models/",
+      "resources/share": "share/"
+    },
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "frameworks": [],
+      "exceptionDomain": "",
+      "signingIdentity": null
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "headerImage": null,
+        "sidebarImage": null,
+        "installMode": "currentUser",
+        "languages": ["en-US"]
+      },
+      "wix": {
+        "language": ["en-US"],
+        "template": null
+      },
+      "certificateThumbprint": null
+    }
+  },
+  "plugins": {}
+}

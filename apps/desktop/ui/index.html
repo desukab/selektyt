@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SelekyT — AI-assisted video editing</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <h1>SelekyT</h1>
+      <span class="tagline">AI-assisted video editing</span>
+    </div>
+    <span id="engine" class="engine muted">checking engine…</span>
+  </header>
+
+  <main>
+    <!-- ╭─ Home ────────────────────────────────────────────────────────╮ -->
+    <section id="view-home" class="view">
+      <div class="hero">
+        <h2>Choose a video to begin.</h2>
+        <p class="sub">
+          SelekyT transcribes your video locally, finds the complete thoughts
+          worth keeping, removes dead air, and renders social cuts with
+          word-timed captions — plus an editable timeline you can take into
+          your NLE.
+        </p>
+        <button id="pick" class="primary big">Select Video…</button>
+        <div id="chosen" class="chosen" hidden>
+          <div class="chosen-name" id="chosen-name"></div>
+          <dl class="chosen-meta" id="chosen-meta"></dl>
+          <div class="chosen-opts">
+            <label class="field">
+              <span>clips</span>
+              <input type="number" id="opt-limit" min="1" max="20" step="1" value="6" />
+            </label>
+            <label class="field">
+              <span>transcription model</span>
+              <select id="opt-model">
+                <option value="tiny">tiny — fastest</option>
+                <option value="base">base</option>
+                <option value="small" selected>small — recommended</option>
+                <option value="medium">medium — most accurate, slowest</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>captions</span>
+              <select id="opt-caption-style">
+                <option value="minimal" selected>minimal</option>
+                <option value="punch">punch</option>
+                <option value="spotlight">spotlight</option>
+                <option value="noir">noir</option>
+              </select>
+            </label>
+          </div>
+          <button id="analyze" class="primary" disabled>Analyze with SelekyT</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ╭─ Processing ──────────────────────────────────────────────────╮ -->
+    <section id="view-processing" class="view" hidden>
+      <h2>Processing</h2>
+      <div id="stages" class="stages"></div>
+      <div class="log-wrap">
+        <div class="log-head">
+          <span>engine output</span>
+          <button id="toggle-log" class="ghost">hide</button>
+        </div>
+        <pre id="log" class="log"></pre>
+      </div>
+      <p id="processing-note" class="sub">
+        Transcription and rendering happen on this machine. A long video takes
+        several minutes; the log below is the engine's own output.
+      </p>
+    </section>
+
+    <!-- ╭─ Results ─────────────────────────────────────────────────────╮ -->
+    <section id="view-results" class="view" hidden>
+      <div class="results-head">
+        <h2>Results</h2>
+        <div class="results-actions">
+          <button id="open-output" class="primary">Open Output Folder</button>
+          <button id="start-over" class="ghost">New Video</button>
+        </div>
+      </div>
+      <div id="results-summary" class="results-summary"></div>
+
+      <div class="tabs" id="result-tabs" hidden>
+        <button class="tab active" data-tab="clips">Clips</button>
+        <button class="tab" data-tab="transcript">Transcript</button>
+        <button class="tab" data-tab="artifacts">Artifacts</button>
+      </div>
+
+      <div id="tab-clips" class="tab-panel active"></div>
+      <div id="tab-transcript" class="tab-panel" hidden></div>
+      <div id="tab-artifacts" class="tab-panel" hidden></div>
+    </section>
+  </main>
+
+  <div id="error" class="error-banner" hidden>
+    <strong>The run did not complete.</strong>
+    <pre id="error-detail"></pre>
+    <button id="error-dismiss" class="ghost">dismiss</button>
+  </div>
+</div>
+<script type="module" src="/app.mjs"></script>
+</body>
+</html>
