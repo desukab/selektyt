@@ -170,6 +170,33 @@ def test_the_rest_of_the_corpus_meets_the_bar():
     assert not over, "clips outside the two known failures also exceed 30%: " + "; ".join(over)
 
 
+def test_share_is_bounded_so_no_out_of_range_value_can_be_read_as_a_bug():
+    """The docstring used to say a negative share 'means word spans run outside
+    the intervals, itself a bug'. That signal is unreachable: each overlap term
+    is clamped against its interval, so ``spoken`` cannot exceed ``kept`` and
+    share is always in [0, 1]. A span outside every interval reads as 1.0.
+
+    Pinning the range matters because an unclamped computation — summing raw
+    word durations instead of the clamped overlap — would make the metric
+    negative on exactly that case, and a negative share passes the 0.30 bar
+    while looking like a diagnostic. That is a wrong PASS dressed as a signal.
+    """
+    cases = [
+        ("span entirely after the interval", [(10.0, 20.0)], [(0.0, 1.0)]),
+        ("span straddling the interval end", [(0.5, 5.0)], [(0.0, 1.0)]),
+        ("interval inside a single span", [(0.0, 10.0)], [(2.0, 3.0)]),
+        ("span straddling the interval start", [(0.0, 5.0)], [(3.0, 4.0)]),
+    ]
+    for name, words, intervals in cases:
+        ok, share = check_silence_share(_cand("w " * len(words), words), intervals)
+        assert 0.0 <= share <= 1.0, f"{name}: share {share} left [0, 1]"
+    # The fully-outside case is the one a raw-duration sum would make negative.
+    ok, share = check_silence_share(_cand("w", [(10.0, 20.0)]), [(0.0, 1.0)])
+    assert share == 1.0 and not ok, (
+        f"a span outside every interval should read as all word-free, got {share}"
+    )
+
+
 def test_a_failure_is_reported_as_unmeasured_not_as_dead_air():
     """The word "silence" in this metric's name is the defect, not the reading.
 

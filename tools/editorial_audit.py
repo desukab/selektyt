@@ -220,8 +220,12 @@ needs to be listened to before it is characterised as anything."""
 def check_silence_share(cand: dict, intervals: list[tuple[float, float]]) -> tuple[bool, float]:
     """Share of the kept timeline that is gap rather than speech.
 
-    Returns (ok, share). A negative value means word spans run outside the
-    intervals, itself a bug.
+    Returns (ok, share). Share is always in [0, 1]: each overlap term is clamped
+    against its interval, so ``spoken`` cannot exceed ``kept`` no matter where
+    the word spans fall. A span outside every interval reads as 1.0 (all
+    word-free), not as a negative number, so there is no out-of-range value to
+    interpret as a bug — that case has to be caught by the checks that look at
+    the spans directly.
 
     Read the name with care: this is *word-free* share, not measured silence.
     It is computed from transcript word timings and never decodes audio, so a
