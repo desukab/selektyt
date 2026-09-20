@@ -294,15 +294,16 @@ Italian (20.11%), Spanish (8.58%) and German (10.66%) are all inside the bar, so
 **the criterion is met with one to spare** — the first of the eight P-criteria
 to close on measured non-English data.
 
-What the claim is deliberately *not* promoted to. Three of six is the count, but
-the three are the clean-read audiobook half of C10: German, French and Dutch stay
+What the claim is deliberately *not* promoted to. Four of six is the count, but
+the four are the clean-read audiobook half of C10: French and Dutch stay
 unmeasured, and a bar satisfied only on its easiest half is weaker than the same
-bar met on six. Spanish's 8.58% is also the *best* of the three and the closest
-to English's 3.38%, so the four results are a spread (3.38 / 8.58 / 11.01 /
-20.11) whose position tracks corpus and register — Italian is Dante, Spanish is
-modern prose — rather than a graded descent from English. Nothing here says
-"transcription is multilingual"; it says adequate on three European audiobook
-languages at this model size, and §7.1's Telugu failure at 151.08% is still the
+bar met on six. Spanish's 8.58% is also the *best* of the four and the closest
+to English's 3.38%, so the five results are a spread (3.38 / 8.58 / 10.66 /
+11.01 / 20.11) whose position tracks corpus and register — Italian is Dante,
+Spanish is modern prose — rather than a graded descent from English. Nothing
+here says "transcription is multilingual"; it says adequate on four European
+audiobook languages at this model size, and §7.1's Telugu failure at 151.08% is
+still the
 counterexample that bounds it.
 
 Pinned in `tests/test_wer_bench.py`: `spanish-small` joins the parametrized list
@@ -708,13 +709,14 @@ under the same harness — 0 of 50 utterances inside the 25% bar, best 71.4%.
 The reading judgment above is confirmed by a reference transcript, which is
 worth stating plainly because the same paragraph also admits that reading
 judgments are not evidence. Of the six C10 languages the criterion actually
-names, three are now measured and all three pass — Polish at WER 11.01% with 34 of 35
+names, four are now measured and all four pass — Polish at WER 11.01% with 34 of 35
 clips inside the bar, Italian at WER 20.11% with 26 of 40 inside it (the latter
-on Dante's archaic Italian, a harder condition), and Spanish at WER 8.58% with
-38 of 40 inside it, the best of the three. Three is the count P9 asks for, so
-the criterion is met as written; three remain unmeasured, and the three that
-pass are all clean-read audiobook prose, so this is the criterion satisfied on
-its easiest half, not transcription shown to be multilingual. Telugu is a language outside that set, chosen because it is the one
+on Dante's archaic Italian, a harder condition), Spanish at WER 8.58% with
+38 of 40 inside it, the best of the four, and German at WER 10.66% with 36 of 40
+inside it. P9 asks for three, so four is the criterion met with one to spare;
+French and Dutch remain unmeasured, and the four that pass are all
+clean-read audiobook prose, so this is the criterion satisfied on its easiest
+half, not transcription shown to be multilingual. Telugu is a language outside that set, chosen because it is the one
 the pipeline demonstrably cannot handle.
 
 **Two: two real defects, found by running new sources rather than by reading
@@ -908,14 +910,14 @@ In rough order of how much it would cost a user (fuller list in
    pass at the corpus level. **Spanish — a third one of the six — scores WER
    8.58% / CER 2.64% with 38 of 40 clips inside the bar** (MLS test, 40 clips,
    10.08 min, 1503 reference words; `corpus/wer/runs/spanish-small.json`), the
-   best of the three and the closest to English's 3.38%. Two independent
+   best of the four and the closest to English's 3.38%. Two independent
    European languages passing is what
    shows the first was not one easy audiobook. Telugu is *not* a C10 language, so
    these read against it as a set: the failure is localised to Indic, not to
    "everything outside English". **The criterion needs 3 of 6, so with Polish,
-   Italian and Spanish all inside the bar, P9 is met as written.** The claim is
-   deliberately bounded in both directions: German, French and Dutch remain
-   unmeasured, and all three passing measurements are clean-read audiobook prose
+   Italian, Spanish and German all inside the bar, P9 is met with one to spare.** The claim is
+   deliberately bounded in both directions: French and Dutch remain
+   unmeasured, and all four passing measurements are clean-read audiobook prose
    — the easiest condition the bar will be faced with — so this is "P9 holds on
    the three measured C10 languages", not "transcription is multilingual". A bar
    met only on its easiest half is weaker than the same bar met on six, and
