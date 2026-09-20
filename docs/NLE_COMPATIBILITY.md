@@ -46,6 +46,7 @@ measured by `ffprobe`.
 | EDL total span == FCPXML spine total | **PASS** — 0.00 frames on all six |
 | Timeline duration == rendered MP4 duration (both presets) | **PASS** — 0.00–0.69 frames |
 | EDL source in/out == the selection the cut was made from | **PASS** — 0.0–0.7 frames |
+| FCPXML asset duration and frame rate == the real container, read by `ffprobe` | **PASS** — 9 timelines over 2 sources; worst disagreement 0.425 frame (`royal-society-cloke`, the other source reads 0.168), within the 0.95-frame tolerance |
 
 Full output is in `docs/nle-audit-output.txt`.
 
@@ -196,9 +197,9 @@ Until then, every external statement about NLE compatibility should say what
 this page says: the EDL half structurally validated by an independent reader,
 both halves duration-verified against the render, **never opened in an NLE**.
 
-The FCPXML half is not validated by an independent reader, and the reason is
-not that nobody looked. Two candidates were checked and both are the wrong
-format despite the name: PyPI's `fcpxml` 0.0.2 and GitHub's
+The FCPXML half is not validated by an independent reader for its *spine*, and
+the reason is not that nobody looked. Two candidates were checked and both are
+the wrong format despite the name: PyPI's `fcpxml` 0.0.2 and GitHub's
 `tin2tin/fcpxml_import` both parse Final Cut Pro 7 *xmeml* — they look for
 `clipitem`, `track`, `file/pathurl` and `rate/timebase`, none of which appears
 in any of the 27 committed documents. Run against an FCPXML 1.11 file, the
@@ -206,9 +207,20 @@ Blender add-on matches the `sequence` tag, falls back to its defaults, finds
 zero tracks, and then reports *"FCPXML import successful."* That is a false
 positive rather than a validation, so it is not counted as one. Apple's
 published DTD for FCPXML 1.11 was the remaining independent grammar, and the
-two public URLs that carried it now return HTML and 404. Until a real reader
-appears, the FCPXML side is self-checked and that limitation travels with the
-number.
+two public URLs that carried it now return HTML and 404.
+
+What *is* independently read on the FCPXML half is its resource block, which is
+the part an NLE argues with before it ever looks at a cut: `ffprobe` reads the
+actual container and its duration and frame rate are compared against every
+committed `<asset>` and `<format>` for the two sources whose media happen to be
+on this host (`tests/test_fcpxml_vs_real_container.py`). That is the check
+`nle_check.py` cannot make, because it measures clip extent against the
+duration the document itself declares — a writer that derives its asset
+duration from its own clips agrees with itself and disagrees with the media,
+and nothing in that loop notices. `ffprobe` is not SelekyT's reader, so the
+disagreement cannot hide there. This covers the resource block and nothing
+else: the spine, the cut positions, and everything an editor would call the
+edit remain self-checked.
 
 ---
 
