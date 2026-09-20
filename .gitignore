@@ -58,3 +58,10 @@ corpus/*_run/project/transcription/chunks/*.wav
 corpus/*_run/project/transcription/microbench.wav
 corpus/*_run/project/transcription/transcription/
 corpus/*_run/project/microbench_*/
+
+# MLS/WER progress logs: transient stdout from the streaming prepare and bench.
+# The evidence is the run record (corpus/wer/runs/<tag>.json) and the manifest
+# beside it, which together reproduce the number; the log is just the terminal
+# scrollback of producing it.
+corpus/wer_*.log
+corpus/rerun_*.log
