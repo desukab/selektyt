@@ -7,12 +7,23 @@ figure while every other test in the suite stayed green. These pin the
 arithmetic itself — they do not re-run the model, which is what
 `tools/wer_bench.py bench` is for.
 """
+import io
 import json
+import subprocess
+import tarfile
+import tempfile
+import zipfile
 from pathlib import Path
 
 import pytest
 
-from tools.wer_bench import _edit_distance, _normalize, _rates
+from tools.wer_bench import (
+    _edit_distance,
+    _normalize,
+    _prepare_tar,
+    _prepare_zip,
+    _rates,
+)
 
 
 # ── normalization ────────────────────────────────────────────────────────────
@@ -191,6 +202,11 @@ RUNS = Path(__file__).resolve().parent.parent / "corpus" / "wer" / "runs"
     ("c9-small-beam5", 0.0405),
     ("c9-medium", 0.0299),
     ("c9-large-v3", 0.0338),
+    # The non-English measurement (P9). Pinned for the same reason, but note
+    # what it pins: this is a *failure*, not a number to quote as progress. WER
+    # above 1.0 means the hypothesis carries more error words than the
+    # reference has words. If this moves, P9's row moves with it.
+    ("telugu-small", 1.5108),
 ])
 def test_the_committed_wer_figures_are_what_the_records_say(name, expected_wer):
     path = RUNS / f"{name}.json"
@@ -213,6 +229,97 @@ def test_the_committed_wer_figures_are_what_the_records_say(name, expected_wer):
                                        abs=5e-5)
 
 
+# ── the non-English measurement, and what it actually says ───────────────────
+
+# P9 asked for ≤25% WER on at least 3 of 6 languages. Telugu is one language,
+# measured, and it is not close. These hold the measurement to its record so a
+# doc can soften the finding without re-running the bench.
+
+TELUGU = RUNS / "telugu-small.json"
+
+
+def test_telugu_is_a_measured_failure_not_an_unmeasured_risk():
+    """P9's row used to say 'never measured, and suggests it would fail'.
+    It is measured now: this asserts the measured number and the direction."""
+    if not TELUGU.is_file():
+        pytest.skip("telugu-small run not present")
+    rec = json.loads(TELUGU.read_text(encoding="utf-8"))
+    assert rec["wer"] > 1.0, "Telugu WER is no longer above 1.0 — update P9's row"
+    assert rec["clip_count"] >= 50
+    # The record names the corpus it was scored on, so an English reader cannot
+    # mistake this for an English figure.
+    assert "Telugu" in rec["corpus"], rec["corpus"]
+
+
+def test_no_telugu_clip_meets_the_p9_bar():
+    """Not one clip reaches 25%, so this is a whole-corpus failure rather than
+    a few hard utterances dragging an otherwise-fine average down."""
+    if not TELUGU.is_file():
+        pytest.skip("telugu-small run not present")
+    rec = json.loads(TELUGU.read_text(encoding="utf-8"))
+    per_clip = rec.get("per_clip") or []
+    if len(per_clip) < 50:
+        pytest.skip("run record has no per-clip detail")
+    passing = [c["utterance"] for c in per_clip if c["wer"] <= 0.25]
+    assert not passing, (
+        f"{len(passing)} of {len(per_clip)} Telugu clips now meet the 25% bar: "
+        f"{passing[:5]}. P9's row must be re-written."
+    )
+
+
+def test_the_telugu_corpus_manifest_is_committed_alongside_its_score():
+    """A WER number scored against a manifest nobody can read is not auditable,
+    so the manifest and its provenance live in the repo rather than on this host."""
+    corpus = Path(__file__).resolve().parent.parent / "corpus" / "wer"
+    manifest = corpus / "telugu-slr66-female" / "manifest.jsonl"
+    provenance = corpus / "telugu-slr66-female" / "provenance.json"
+    if not manifest.is_file():
+        pytest.skip("Telugu corpus not present")
+    items = [json.loads(l) for l in manifest.read_text(encoding="utf-8").splitlines()
+             if l.strip()]
+    assert len(items) >= 50
+    # Every clip carries the reference the score was computed against, and a
+    # missing reference would have been silently scored as a perfect match.
+    assert all(i.get("reference") is not None for i in items), items[:2]
+    prov = json.loads(provenance.read_text(encoding="utf-8"))
+    assert prov["licence"], "the corpus's licence must travel with its transcripts"
+    assert prov["archive_member_count"] > prov["clips"], (
+        "the sample must be smaller than what it was drawn from, or the stride "
+        "is meaningless")
+
+
+def test_the_evidence_files_are_not_gitignored():
+    """``.gitignore`` excludes the WER audio, which is right — it is hundreds of
+    MB. It must not exclude the *evidence* alongside it: the run record a quoted
+    number is scored from, and the manifest and provenance that make it
+    auditable. A rule general enough to cover a second corpus silently matched
+    ``corpus/wer/runs/*`` once, and the only symptom was that ``git add``
+    refused the new record while the already-tracked ones stayed put — a failure
+    that looks like success until a new corpus lands."""
+    root = Path(__file__).resolve().parent.parent
+    corpus = root / "corpus" / "wer"
+    if not (corpus / "telugu-slr66-female" / "manifest.jsonl").is_file():
+        pytest.skip("Telugu corpus not present")
+    evidence = [
+        corpus / "runs" / "telugu-small.json",
+        corpus / "telugu-slr66-female" / "manifest.jsonl",
+        corpus / "telugu-slr66-female" / "provenance.json",
+        corpus / "librispeech-clean" / "manifest.jsonl",
+    ]
+    ignored = []
+    for path in evidence:
+        # --no-index would answer for a path git has never seen; the point is
+        # what a checkout would actually track, so ask the working tree.
+        proc = subprocess.run(["git", "-C", str(root), "check-ignore", "--quiet",
+                               str(path.relative_to(root))])
+        if proc.returncode == 0:
+            ignored.append(str(path.relative_to(root)))
+    assert not ignored, (
+        "these evidence files are gitignored, so a number quoted from them "
+        "cannot be audited from a checkout: " + ", ".join(ignored)
+    )
+
+
 def test_every_committed_bench_run_records_the_production_decode_parameters():
     # A benchmark that silently used different settings from the pipeline
     # measures nothing the pipeline can act on. The run record is the evidence
@@ -228,3 +335,100 @@ def test_every_committed_bench_run_records_the_production_decode_parameters():
         assert params.get("compute_type") == "int8", rec["tag"]
         assert params.get("vad_filter") is True, rec["tag"]
         assert params.get("condition_on_previous_text") is False, rec["tag"]
+
+
+# ── manifest construction: the input behind a WER figure ──────────────────────
+
+# `prepare` was refactored from one LibriSpeech-only path into a registry with
+# two layouts, and the manifest it emits is the artifact every quoted number is
+# scored against. These build both layouts from synthetic archives so the
+# refactor is tested without a 346 MB or 505 MB download.
+
+def _indic_zip(directory: Path, n: int = 7) -> tuple[Path, Path]:
+    """The OpenSLR Indic shape: flat .wav members plus a TSV of references."""
+    archive = directory / "indic.zip"
+    refs = "".join(f"te_{i:04d}\tనమస్కారం {i}\n" for i in range(n))
+    with zipfile.ZipFile(archive, "w") as zf:
+        for i in range(n):
+            zf.writestr(f"te_{i:04d}.wav", b"not really audio")
+    index = directory / "line_index.tsv"
+    index.write_text(refs, encoding="utf-8")
+    return archive, index
+
+
+def test_the_zip_layout_pairs_each_wav_with_its_tsv_reference():
+    with tempfile.TemporaryDirectory() as raw:
+        directory = Path(raw)
+        archive, index = _indic_zip(directory)
+        manifest, members, stride = _prepare_zip(archive, index, directory, 3)
+    # stride is members // count, so 7 members at count 3 strides by 2.
+    assert (members, stride) == (7, 2)
+    assert len(manifest) == 3
+    # The reference is looked up by FileID, not by filename or position, and
+    # non-ASCII script must survive the round trip into JSON.
+    assert manifest[0]["utterance"] == "te_0000"
+    assert manifest[0]["reference"] == "నమస్కారం 0"
+    assert manifest[0]["audio"].endswith(".wav")
+
+
+def test_the_zip_layout_refuses_to_run_without_the_index():
+    """Without the TSV there is no reference at all, so the WER would be scored
+    against nothing — a number that looks like a measurement and is not."""
+    with tempfile.TemporaryDirectory() as raw:
+        directory = Path(raw)
+        archive, _index = _indic_zip(directory)
+        assert _prepare_zip(archive, None, directory, 3) is None
+
+
+def test_an_archive_with_no_utterances_reports_nothing():
+    """An empty archive is a fetch failure, not a zero-WER run."""
+    with tempfile.TemporaryDirectory() as raw:
+        directory = Path(raw)
+        archive = directory / "empty.zip"
+        with zipfile.ZipFile(archive, "w") as zf:
+            zf.writestr("readme.txt", "no audio here")
+        index = directory / "line_index.tsv"
+        index.write_text("", encoding="utf-8")
+        assert _prepare_zip(archive, index, directory, 3) is None
+
+
+def test_a_mistyped_index_path_reports_the_argument_not_a_traceback():
+    """``--index`` pointing at nothing is a wrong argument; the tool says so
+    instead of letting ``read_text`` raise, which reads as a bug in it."""
+    with tempfile.TemporaryDirectory() as raw:
+        directory = Path(raw)
+        archive, _index = _indic_zip(directory)
+        assert _prepare_zip(archive, directory / "not-there.tsv", directory, 3) is None
+
+
+def _librispeech_tar(directory: Path, n: int = 7) -> Path:
+    """The LibriSpeech shape: one ``.trans.txt`` per chapter holds a line per
+    utterance, keyed by the utterance id."""
+    archive = directory / "libri.tar.gz"
+    with tarfile.open(archive, "w:gz") as tf:
+        for i in range(n):
+            name = f"6930-75918-{i:04d}"
+            info = tarfile.TarInfo(f"{name}.flac")
+            payload = b"not really audio"
+            info.size = len(payload)
+            tf.addfile(info, io.BytesIO(payload))
+        transcript = "".join(f"6930-75918-{i:04d} he said thing {i}\n"
+                             for i in range(n))
+        info = tarfile.TarInfo("6930-75918.trans.txt")
+        info.size = len(transcript)
+        tf.addfile(info, io.BytesIO(transcript.encode("utf-8")))
+    return archive
+
+
+def test_the_tar_layout_reads_the_chapter_transcript():
+    """LibriSpeech keeps one transcript file per chapter, so the reference is
+    found by utterance id inside it — not by a sibling named for the clip."""
+    with tempfile.TemporaryDirectory() as raw:
+        directory = Path(raw)
+        manifest, members, stride = _prepare_tar(_librispeech_tar(directory),
+                                                directory, 3)
+    assert (members, stride) == (7, 2)
+    assert len(manifest) == 3
+    # The line is "utt reference...", so the id prefix is stripped on the way in.
+    assert manifest[0]["reference"] == "he said thing 0"
+    assert manifest[0]["utterance"] == "6930-75918-0000"

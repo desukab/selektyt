@@ -271,7 +271,7 @@ the reference run immediately.
 | P6 | `duplicate_overlap_rate` | 0.00 | CURRENT: 0.00 |
 | P7 | Caption text == transcript text (no invented words) | 100% of cues (`editorial_audit.py:check_caption_text_is_transcript_text`) | CURRENT, one source |
 | P8 | WER, English, `small` model | ≤ **15%** on C9 `test-clean`; ≤ **20%** on in-domain video with official captions | C9 `test-clean` **DONE: 3.38%** (well under the 15% threshold, three runs, `tools/wer_bench.py`); in-domain video half **STILL NEVER MEASURED** |
-| P9 | WER, non-English, `small` | ≤ **25%** on at least 3 of the 6 C10 languages | **NEVER MEASURED** — and the Telugu coverage collapse suggests it would fail |
+| P9 | WER, non-English, `small` | ≤ **25%** on at least 3 of the 6 C10 languages | **FAILS ON THE ONE LANGUAGE MEASURED** — Telugu (OpenSLR SLR66, 50 clips, 3.46 min) scores **WER 151.08% / CER 127.40%**, and **0 of 50** clips reach the 25% bar (best clip 71.4%). Telugu is *not* one of the six C10 languages, so this does not formally score the criterion — but WER above 100% means the hypothesis carries more error words than the reference has words, and a model that cannot transcribe one non-English language at all is not going to clear 25% on three of them at this size. The six C10 languages themselves remain **UNMEASURED** |
 | P10 | Selection overlap with a professional editor (D6) | ≥ **0.30** on ≥ 60% of sources | **NEVER MEASURED — no editor has been asked** |
 | P11 | Blind ranking: SelekyT cuts ranked above the editor's own cuts | ≥ **25%** of the time, on ≥ 60% of sources | **NEVER MEASURED** |
 | P12 | Pipeline does not crash on a music-only / silent source | 100% (already covered by `test_speechless_source.py`) | CURRENT, unit-tested |

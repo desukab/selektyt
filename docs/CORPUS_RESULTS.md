@@ -165,6 +165,19 @@ NO_STORIES_PASSED with 0 clips — not one of the seven that delivered.)
   not against reality*. The transcript is wrong, so the captions faithfully
   reproduce a wrong transcript. Geometry, timing, EDL/FCPXML agreement: all
   pass. The clip is garbage.
+  **"Phonetic noise" is now a measurement, not a reading.** The claim above was
+  an editorial judgment by someone who does not speak Telugu. It has been
+  replaced by a score against a reference corpus: OpenSLR SLR66 (Telugu, `te_in`,
+  female speakers), 50 utterances / 3.46 min, transcribed with the same model
+  and the same decode parameters the pipeline uses — **WER 151.08%, CER
+  127.40%**, and **0 of 50** utterances within the 25% bar (best single
+  utterance 71.4%). WER above 100% means the output carries *more* error words
+  than the reference contains, so the model is not transcribing Telugu at all;
+  it is emitting plausible-looking script. The reading judgment happened to be
+  right, but a right guess is still a guess, and this is what replaces it
+  (`corpus/wer/runs/telugu-small.json`, manifest and provenance committed at
+  `corpus/wer/telugu-slr66-female/`). A `medium` run on the same corpus is in
+  flight to measure how much of this is model size.
   **This specific failure is now caught.** The source's transcript covers 4.5%
   of a 339.6 s file that is 72.6% speech-energy audio; `engine/coverage.py`
   compares those two numbers and aborts the run before selection or render,

@@ -31,10 +31,19 @@ corpus/media/
 # be audited without a 346 MB download. `tools/wer_bench.py fetch` rebuilds it.
 corpus/wer/*
 !corpus/wer/runs/
-!corpus/wer/librispeech-clean/
-corpus/wer/librispeech-clean/*
-!corpus/wer/librispeech-clean/manifest.jsonl
-!corpus/wer/librispeech-clean/provenance.json
+# Every WER corpus directory contributes the same two text files, and a number
+# scored against a manifest that is not committed is not auditable. Naming each
+# corpus here was already the wrong shape once the second corpus landed.
+!corpus/wer/*/
+corpus/wer/*/*
+!corpus/wer/*/manifest.jsonl
+!corpus/wer/*/provenance.json
+# The run records are the evidence. `corpus/wer/*/*` above reaches into runs/
+# too, so this has to come after it at file level or a new record cannot be
+# added while the ones already in the index stay tracked — a trap that only
+# shows up on a new corpus's first commit.
+!corpus/wer/runs/
+!corpus/wer/runs/*
 
 corpus/*_run/project/facebook/
 corpus/*_run/project/shorts/

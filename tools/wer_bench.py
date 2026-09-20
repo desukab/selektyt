@@ -279,92 +279,180 @@ LIBRISPEECH_TEST_CLEAN_URL = "https://www.openslr.org/resources/12/test-clean.ta
 LIBRISPEECH_LICENSE = ("LibriSpeech (Open Speech and Language Resources, "
                        "https://www.openslr.org), CC BY 4.0")
 
+# Every ground-truth corpus the harness knows how to re-obtain. A WER figure is
+# only reproducible if the input behind it is pinned to exact URLs, so these are
+# constants rather than "the current corpus"; both are OpenSLR-hosted, public,
+# and licensed for attribution alongside any number quoted from them.
+CORPORA = {
+    "librispeech-clean": {
+        "name": "LibriSpeech test-clean",
+        "format": "tar",
+        "files": [(LIBRISPEECH_TEST_CLEAN_URL, "test-clean.tar.gz")],
+        "licence": LIBRISPEECH_LICENSE,
+    },
+    "telugu-slr66": {
+        # SLR66 is the corpus that covers the language the pipeline is
+        # documented to fail on. Telugu is the one non-English case with a real
+        # measurement available at this size, so P9 can be scored rather than
+        # inferred from reading transcripts.
+        "name": "OpenSLR SLR66 Telugu (te_in, female speakers)",
+        "format": "zip",
+        "files": [
+            ("https://openslr.trmal.net/resources/66/te_in_female.zip", "te_in_female.zip"),
+            ("https://openslr.trmal.net/resources/66/line_index_female.tsv",
+             "line_index_female.tsv"),
+        ],
+        "licence": ("OpenSLR SLR66 Telugu (Google, Inc.), "
+                    "CC BY-SA 4.0"),
+    },
+}
+
 
 def cmd_fetch(argv: list[str]) -> int:
     """Download the ground-truth corpus the manifest's audio comes from.
 
     The audio is deliberately not committed; this command is what makes the WER
     number reproducible from a clean checkout. It refuses to clobber an existing
-    file, because a half-downloaded tar.gz would silently corrupt a later
+    file, because a half-downloaded archive would silently corrupt a later
     ``prepare``.
     """
-    p = argparse.ArgumentParser(description="Download LibriSpeech test-clean from OpenSLR.")
-    p.add_argument("--out", required=True, help="destination .tar.gz path")
-    p.add_argument("--url", default=LIBRISPEECH_TEST_CLEAN_URL,
-                   help="override the pinned source URL")
+    p = argparse.ArgumentParser(description="Download a ground-truth corpus from its pinned URL.")
+    p.add_argument("--corpus", choices=sorted(CORPORA), required=True,
+                   help="which corpus to fetch")
+    p.add_argument("--out", required=True, help="destination directory")
     args = p.parse_args(argv)
 
     import subprocess
 
-    out = Path(args.out)
-    if out.is_file() and out.stat().st_size > 0:
-        print(f"[fetch] {out} already exists ({out.stat().st_size / 1e6:.0f} MB); "
-              f"delete it to re-download")
-        return 0
-    out.parent.mkdir(parents=True, exist_ok=True)
-    print(f"[fetch] {args.url} -> {out}", flush=True)
-    # curl rather than urllib: a 346 MB download through urllib gives no
-    # progress and no resumability, and a stuck transfer would look like work.
-    subprocess.run(["curl", "-fL", "--retry", "3", "-o", str(out), args.url], check=True)
-    print(f"[fetch] {out.stat().st_size / 1e6:.0f} MB. Source: {LIBRISPEECH_LICENSE}")
-    print(f"[fetch] next: tools/wer_bench.py prepare --tar {out} "
-          f"--out corpus/wer/librispeech-clean --count 50")
+    meta = CORPORA[args.corpus]
+    out_dir = Path(args.out)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for url, filename in meta["files"]:
+        dest = out_dir / filename
+        if dest.is_file() and dest.stat().st_size > 0:
+            print(f"[fetch] {dest} already exists ({dest.stat().st_size / 1e6:.0f} MB); "
+                  f"delete it to re-download")
+            continue
+        print(f"[fetch] {url} -> {dest}", flush=True)
+        # curl rather than urllib: a 505 MB download through urllib gives no
+        # progress and no resumability, and a stuck transfer would look like
+        # work.
+        subprocess.run(["curl", "-fL", "--retry", "3", "-o", str(dest), url], check=True)
+        print(f"[fetch] {dest.stat().st_size / 1e6:.0f} MB")
+    print(f"[fetch] source: {meta['licence']}")
+    print(f"[fetch] next: tools/wer_bench.py prepare --corpus {args.corpus} "
+          f"--archive {out_dir / meta['files'][0][1]} "
+          f"--out corpus/wer/<name> --count 50")
     return 0
 
 
 def cmd_prepare(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description="Build a fixed subsample of a ground-truth corpus.")
-    p.add_argument("--tar", required=True, help="tar.gz of the corpus (LibriSpeech layout)")
+    p.add_argument("--archive", required=True,
+                   help="corpus archive (.tar.gz LibriSpeech layout, or .zip SLR layout)")
+    p.add_argument("--index", default=None,
+                   help="TSV of 'FileID<TAB>reference' (required for the zip layout)")
     p.add_argument("--out", required=True, help="output dir for the subsample + manifest")
     p.add_argument("--count", type=int, default=30, help="number of clips to sample")
     p.add_argument("--max-minutes", type=float, default=8.0,
                    help="stop adding clips once this much audio is sampled")
-    p.add_argument("--name", default=None, help="dataset name recorded in the manifest")
+    p.add_argument("--corpus", choices=sorted(CORPORA), default="librispeech-clean",
+                   help="which corpus the archive is from (drives provenance)")
     args = p.parse_args(argv)
 
-    tar_path = Path(args.tar)
+    archive = Path(args.archive)
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    # The two corpora keep their references differently, but the sampling rule
+    # is shared: a deterministic stride over the sorted member list, so the same
+    # archive always yields the same clip set and a WER figure names the audio
+    # behind it. A stride also spreads the sample across speakers instead of
+    # clustering it in one speaker's directory.
+    if archive.suffix == ".zip":
+        meta = _prepare_zip(archive, args.index, out_dir, args.count)
+    else:
+        meta = _prepare_tar(archive, out_dir, args.count)
+    if meta is None:
+        return 2
+    manifest, archive_member_count, stride = meta
+
+    # Trim by total duration, longest clips first removed, so the reported
+    # audio budget is honoured rather than overshot.
+    for item in manifest:
+        wav = _to_pcm_wav(out_dir / item["audio"], out_dir / "pcm")
+        item["duration"] = round(_wav_duration(wav), 3)
+    total = sum(i["duration"] for i in manifest)
+    if total > args.max_minutes * 60:
+        # Drop the longest clips until within budget — keeps the sample spread.
+        for idx in sorted(range(len(manifest)), key=lambda i: -manifest[i]["duration"]):
+            if total <= args.max_minutes * 60:
+                break
+            total -= manifest[idx]["duration"]
+            manifest[idx] = None
+        manifest = [i for i in manifest if i is not None]
+
+    total = sum(i["duration"] for i in manifest)
+    manifest_path = out_dir / "manifest.jsonl"
+    with manifest_path.open("w", encoding="utf-8") as fh:
+        for item in manifest:
+            fh.write(json.dumps(item, ensure_ascii=False) + "\n")
+    # A WER figure is only as reproducible as the input it was scored on, so
+    # the manifest carries its own provenance next to it: where the audio came
+    # from, under what licence, and the exact invocation that selected these
+    # clips out of it. The archive is deleted after use, and this is what
+    # remains.
+    corpus = CORPORA[args.corpus]
+    (out_dir / "provenance.json").write_text(json.dumps({
+        "corpus": corpus["name"],
+        "source_url": corpus["files"][0][0],
+        "licence": corpus["licence"] + " — attribution for the reference "
+                   "transcripts this file lists.",
+        "archive_member_count": archive_member_count,
+        "stride": stride,
+        "prepare_args": {"count": args.count, "max_minutes": args.max_minutes,
+                         "corpus": args.corpus},
+        "clips": len(manifest),
+        "audio_seconds": round(total, 2),
+    }, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    print(f"[prepare] {len(manifest)} clips, {total / 60:.2f} min audio "
+          f"(of {archive_member_count} available, stride {stride})")
+    print(f"[prepare] manifest: {manifest_path}")
+    return 0
+
+
+def _prepare_tar(tar_path: Path, out_dir: Path, count: int):
+    """LibriSpeech layout: .flac utterances plus one .trans.txt per chapter."""
     with tarfile.open(tar_path, "r:gz") as tf:
         members = sorted(m.name for m in tf.getmembers()
-                          if m.name.endswith(".flac") and m.isfile())
+                         if m.name.endswith(".flac") and m.isfile())
         if not members:
             print(f"[prepare] no .flac members in {tar_path}", file=sys.stderr)
-            return 2
-        # Deterministic stride, not randomness: the same tar always yields the
-        # same clip set, so a WER figure names the audio behind it. A stride
-        # also spreads the sample across speakers and books instead of
-        # clustering it in one speaker's directory.
-        stride = max(1, len(members) // args.count)
+            return None
+        stride = max(1, len(members) // count)
         picked: list[str] = []
-        total = 0.0
         for name in members[::stride]:
-            if len(picked) >= args.count:
+            if len(picked) >= count:
                 break
             picked.append(name)
             # Extract only what the sample needs. The full corpus is multiple
             # GB and this host has single-digit GB free; extracting everything
             # would fill the disk for no measurement gain.
-            tf.extract(name, out_dir)
-            # Duration from the FLAC header: the last 4 bytes of the STREAMINFO
-            # block carry total samples; ffprobe is the reliable fallback.
+            tf.extract(name, out_dir, filter="data")
         # Transcripts: every .txt is tiny, so take them all — the reference for
         # a sampled clip must exist even when its neighbours were not sampled.
-        txt_members = [m.name for m in tf.getmembers()
-                       if m.name.endswith(".txt") and m.isfile()]
-        for name in txt_members:
-            tf.extract(name, out_dir)
+        for name in (m.name for m in tf.getmembers()
+                     if m.name.endswith(".txt") and m.isfile()):
+            tf.extract(name, out_dir, filter="data")
 
     manifest = []
     for name in picked:
         flac = out_dir / name
         utt = flac.stem  # LibriSpeech utterance id, e.g. 6930-75918-0000
-        chapter_dir = flac.parent
         # LibriSpeech keeps one transcript per *chapter*, named for the
         # speaker-chapter pair (e.g. 6829-68771.trans.txt), holding one line
         # per utterance.
-        ref_txt = chapter_dir / f"{utt.rsplit('-', 1)[0]}.trans.txt"
+        ref_txt = flac.parent / f"{utt.rsplit('-', 1)[0]}.trans.txt"
         if not ref_txt.is_file():
             print(f"[prepare] WARNING: no transcript for {utt} ({ref_txt})")
             continue
@@ -378,50 +466,66 @@ def cmd_prepare(argv: list[str]) -> int:
             "audio": str(flac.relative_to(out_dir)),
             "reference": line[len(utt) + 1:],
         })
+    return manifest, len(members), stride
 
-    # Trim by total duration, longest clips first removed, so the reported
-    # audio budget is honoured rather than overshot.
-    wavs = []
-    for item in manifest:
-        wav = _to_pcm_wav(out_dir / item["audio"], out_dir / "pcm")
-        wavs.append(wav)
-        item["duration"] = round(_wav_duration(wav), 3)
-    total = sum(i["duration"] for i in manifest)
-    if total > args.max_minutes * 60:
-        # Drop the longest clips until within budget — keeps the sample spread.
-        for idx in sorted(range(len(manifest)), key=lambda i: -manifest[i]["duration"]):
-            if total <= args.max_minutes * 60:
+
+def _prepare_zip(zip_path: Path, index_path: Path | None, out_dir: Path, count: int):
+    """OpenSLR Indic layout: flat .wav utterances plus a TSV of references.
+
+    ``line_index.tsv`` pairs a FileID with its transcript in two tab-separated
+    fields. There is no train/test split — SLR66 is a single set — so the
+    harness's stride samples it the same way it samples test-clean, and the
+    absence of a split is recorded in the provenance rather than glossed over.
+    """
+    if index_path is None:
+        print("[prepare] the zip layout needs --index (the line_index TSV)",
+              file=sys.stderr)
+        return None
+    if not Path(index_path).is_file():
+        # A mistyped path otherwise surfaces as a traceback from read_text,
+        # which looks like a bug in the tool rather than a wrong argument.
+        print(f"[prepare] index not found: {index_path}", file=sys.stderr)
+        return None
+    references = {}
+    for line in Path(index_path).read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("\t")
+        if len(parts) < 2:
+            continue
+        references[parts[0]] = parts[1]
+
+    import zipfile
+
+    with zipfile.ZipFile(zip_path) as zf:
+        members = sorted(n for n in zf.namelist() if n.endswith(".wav"))
+        if not members:
+            print(f"[prepare] no .wav members in {zip_path}", file=sys.stderr)
+            return None
+        stride = max(1, len(members) // count)
+        picked = []
+        for name in members[::stride]:
+            if len(picked) >= count:
                 break
-            total -= manifest[idx]["duration"]
-            manifest[idx] = None
-        manifest = [i for i in manifest if i is not None]
-        picked = [i["audio"] for i in manifest]
+            # Extract only what the sample needs: this archive is 943 MB
+            # uncompressed against single-digit GB free.
+            zf.extract(name, out_dir)
+            picked.append(name)
 
-    total = sum(i["duration"] for i in manifest)
-    manifest_path = out_dir / "manifest.jsonl"
-    with manifest_path.open("w", encoding="utf-8") as fh:
-        for item in manifest:
-            fh.write(json.dumps(item, ensure_ascii=False) + "\n")
-    # A WER figure is only as reproducible as the input it was scored on, so
-    # the manifest carries its own provenance next to it: where the audio came
-    # from, under what licence, and the exact invocation that selected these
-    # clips out of it. The tar is deleted after use, and this is what remains.
-    (out_dir / "provenance.json").write_text(json.dumps({
-        "corpus": "LibriSpeech test-clean",
-        "source_url": LIBRISPEECH_TEST_CLEAN_URL,
-        "licence": LIBRISPEECH_LICENSE + " — attribution for the reference "
-                   "transcripts this file lists.",
-        "tar_member_count": len(members),
-        "stride": stride,
-        "prepare_args": {"count": args.count, "max_minutes": args.max_minutes,
-                         "name": args.name},
-        "clips": len(manifest),
-        "audio_seconds": round(total, 2),
-    }, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    print(f"[prepare] {len(manifest)} clips, {total / 60:.2f} min audio "
-          f"(of {len(members)} available, stride {stride})")
-    print(f"[prepare] manifest: {manifest_path}")
-    return 0
+    manifest = []
+    for name in picked:
+        wav = out_dir / name
+        utt = wav.stem
+        ref = references.get(utt)
+        if ref is None:
+            print(f"[prepare] WARNING: no transcript for {utt} in {index_path}")
+            continue
+        manifest.append({
+            "utterance": utt,
+            "audio": str(wav.relative_to(out_dir)),
+            "reference": ref,
+        })
+    return manifest, len(members), stride
 
 
 def cmd_bench(argv: list[str]) -> int:
@@ -440,6 +544,15 @@ def cmd_bench(argv: list[str]) -> int:
 
     _assert_decode_params_match_production()
     manifest_dir = Path(args.manifest).parent
+    # The run record names the corpus it was scored on, so a Telugu figure can
+    # never be read as an English one. It follows the manifest rather than the
+    # command line, because the manifest is the artifact the record is checked
+    # against.
+    prov_path = manifest_dir / "provenance.json"
+    corpus_name = "unknown"
+    if prov_path.is_file():
+        corpus_name = json.loads(prov_path.read_text(encoding="utf-8")).get(
+            "corpus", "unknown")
     items = [json.loads(l) for l in Path(args.manifest).read_text(encoding="utf-8").splitlines() if l.strip()]
     tag = args.tag or f"{args.model}-beam{args.beam_size}-vad{args.vad_filter}"
     runs_dir = Path(args.scratch) / "runs"
@@ -469,7 +582,7 @@ def cmd_bench(argv: list[str]) -> int:
     ref_chars = sum(c["cer_ref_len"] for c in per_clip)
     summary = {
         "tag": tag,
-        "corpus": "librispeech-test-clean",
+        "corpus": corpus_name,
         "model": args.model,
         "language": args.language,
         "beam_size": args.beam_size,

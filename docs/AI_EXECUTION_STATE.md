@@ -286,7 +286,7 @@ Three things changed about what SelekyT can claim.
 
 **One: the strongest evidence in the repo is now a negative result.** Two of
 the seven "OK" sources — Telugu (`telugu-tutorial`) and Hungarian
-(`hadhazy-protest`) — produced transcripts that are fluent-looking phonetic
+(`hadhazy-protest`) — produced transcripts that read as fluent-looking phonetic
 noise. (An earlier draft of this sentence said three and named Hindi; that
 confused `hindi-baiga-interview`, which is one of the four *failures* —
 `NO_STORIES_PASSED`, zero clips — with the seven that delivered.) Every
@@ -297,7 +297,14 @@ captions that pass. Geometry, timing, EDL/FCPXML agreement: all green, all
 meaningless. This is the direct, concrete justification for the blinded
 protocol, and it promotes the WER criteria (P8/P9) from an
 academic item to a highest-priority follow-up. P8's English half has since been
-closed at 3.38% on LibriSpeech test-clean; P9, non-English, is still open.
+closed at 3.38% on LibriSpeech test-clean. P9, non-English, is now *measured*
+rather than merely observed: Telugu scores WER **151.08%** on OpenSLR SLR66
+under the same harness — 0 of 50 utterances inside the 25% bar, best 71.4%.
+The reading judgment above is confirmed by a reference transcript, which is
+worth stating plainly because the same paragraph also admits that reading
+judgments are not evidence. The six C10 languages the criterion actually names
+are still unmeasured; Telugu is a language outside that set, chosen because it
+is the one the pipeline demonstrably cannot handle.
 
 **Two: two real defects, found by running new sources rather than by reading
 code.** Both fixed, both pinned by a test that fails against the pre-fix code.
@@ -414,15 +421,25 @@ In rough order of how much it would cost a user (fuller list in
    structured field from this point on. The claim "this distinguishes a damaged
    container from a silent track on real media" is **still unvalidated** — it
    has only ever been shown on synthetic files.
-8. **Non-English transcription quality is unmeasured and probably inadequate.**
+8. **Non-English transcription quality is now measured, and it is broken.**
    The `small` model produced garbage in Telugu, Hungarian and Hindi. English is
-   now the exception: WER is measured for clean read English at **3.38%** on
+   the exception: WER is measured for clean read English at **3.38%** on
    LibriSpeech test-clean (`tools/wer_bench.py`, three runs, production decode
-   parameters) — P8's C9 half is closed. Non-English is still an *observation
-   from reading transcripts*, not a score: P9 has never been measured on any
-   source, in any language. The contrast is the point — the English number
-   proves the pipeline is capable of high accuracy and isolates the failure to
-   non-English decode, not to transcription in general.
+   parameters) — P8's C9 half is closed. Non-English was, until this session,
+   an *observation from reading transcripts*; it is now a score. Telugu (OpenSLR
+   SLR66, 50 utterances, 3.46 min, same model and decode parameters) measures
+   **WER 151.08% / CER 127.40%**, with **0 of 50** utterances inside the 25% bar
+   and a best single utterance of 71.4% (`corpus/wer/runs/telugu-small.json`,
+   manifest and provenance committed at `corpus/wer/telugu-slr66-female/`).
+   WER above 100% means the output carries more error words than the reference
+   contains — the model is not transcribing Telugu, it is emitting plausible
+   script. The observation from reading was correct, but a correct guess is not
+   a measurement, and the two are now recorded separately. Telugu is not one of
+   P9's six C10 languages, so the criterion is still formally unmeasured on its
+   own corpus; what this does establish is that the failure is a decode failure
+   at this model size and not a transcription-pipeline failure, because the
+   English path on the same harness scores 3.38%. A `medium` run on the same
+   Telugu corpus is in flight to bound how much of this is model size.
 9. **Vertical reframing verified on one anamorphic + synthetic sources only** —
    the SAR fix is provably correct *geometry*, but whether the wider crop keeps
    a moving subject well framed is not measured. A 9:16 cut from SD footage is
@@ -676,8 +693,9 @@ check" (exceeded: two independent *downloads*, byte-identical selections).
   characterization had no evidence behind it). Never describe the audit result
   as evidence that a transcript is accurate; describe it as evidence that the
   artifacts agree with each other. This is the single most important caveat in
-  the repo and it is the reason P9 (non-English WER, never measured) outranks
-  every other open item — P8's English half is closed at 3.38%, which is what
+  the repo and it is the reason P9 (non-English WER) outranks
+  every other open item — P8's English half is closed at 3.38%, and Telugu is
+  now measured at 151.08%, which is what
   makes the remaining gap a decode problem rather than a transcription problem.
 * **The corpus is re-runnable and append-only.** `tools/corpus_run.py
   corpus/manifest.json` skips sources already recorded OK and appends new

@@ -1,0 +1,14 @@
+{
+ "corpus": "OpenSLR SLR66 Telugu (te_in, female speakers)",
+ "source_url": "https://openslr.trmal.net/resources/66/te_in_female.zip",
+ "licence": "OpenSLR SLR66 Telugu (Google, Inc.), CC BY-SA 4.0 — attribution for the reference transcripts this file lists.",
+ "archive_member_count": 2294,
+ "stride": 45,
+ "prepare_args": {
+  "count": 50,
+  "max_minutes": 7.0,
+  "corpus": "telugu-slr66"
+ },
+ "clips": 50,
+ "audio_seconds": 207.44
+}
