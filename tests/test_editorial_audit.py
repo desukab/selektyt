@@ -232,3 +232,55 @@ def test_two_different_sentences_are_not_duplicates():
         [{"text": "we were handing out wikis to everyone who walked past the table"},
          {"text": "later that evening the table was empty and we went home"}])
     assert ok and not bad
+
+
+# --- the audit over a whole project ----------------------------------------
+
+
+def test_a_project_with_nothing_to_audit_fails_with_a_reason(tmp_path):
+    """Four of the eleven committed sources have no selections.json — the VAD
+    gate suppressed their transcripts — and ``audit`` used to raise KeyError
+    on them. A sweep across the corpus has to keep going past the first
+    incomplete project, so this is a reported failure, not an exception."""
+    from tools.editorial_audit import audit
+
+    ok, rep = audit(tmp_path)
+    assert not ok
+    findings = rep["findings"]
+    assert findings, "the missing artifact must be a finding, not an empty report"
+    assert any("no selections.json" in detail for _n, _o, detail in findings)
+
+
+def test_a_project_with_no_clips_reports_why_not_just_that_it_failed(tmp_path):
+    """Selections exist but are empty: a run that rejected everything. The
+    rejection reasons are the useful part, so they travel with the finding."""
+    from tools.editorial_audit import audit
+
+    (tmp_path / "selections.json").write_text("[]", encoding="utf-8")
+    (tmp_path / "report.json").write_text(
+        '{"rejection_reasons": {"no hook": 3, "too short": 2}}', encoding="utf-8"
+    )
+    ok, rep = audit(tmp_path)
+    assert not ok
+    assert any("no clips selected" in d for _n, _o, d in rep["findings"])
+    assert any("no hook" in d for _n, _o, d in rep["findings"])
+
+
+def test_the_whole_corpus_is_auditable_without_keyerror():
+    """Every committed source, including the four with no transcript. This is
+    the sweep the audit exists to support, and it is what used to stop at
+    alice-1903 with a traceback."""
+    from tools.editorial_audit import audit
+
+    runs = sorted((TOOLS.parent / "corpus").glob("*_run/project"))
+    assert runs, "no corpus runs found; the test below would pass vacuously"
+    unreachable = []
+    for project in runs:
+        try:
+            audit(project)
+        except Exception as exc:
+            unreachable.append(f"{project.parent.name}: {type(exc).__name__}: {exc}")
+    assert not unreachable, (
+        "the audit raised on a committed project instead of reporting it: "
+        + "; ".join(unreachable)
+    )

@@ -285,19 +285,31 @@ def _parse_srt_seconds(path: Path) -> list[dict]:
 
 
 def audit(project: Path) -> tuple[bool, dict]:
-    """Run every check. Returns (all_ok, report)."""
+    """Run every check. Returns (all_ok, report).
+
+    A project with no ``selections.json`` is a failure with a reason, not an
+    error: the run produced nothing to audit, which is a finding in itself, so
+    it is returned as one. Four of the eleven committed sources land here — the
+    VAD gate suppressed their transcripts entirely
+    (``providers/whisper.py``, §Completed work in
+    ``docs/AI_EXECUTION_STATE.md``).
+    """
     selections = _load(project / "selections.json")
     report = _load(project / "report.json")
+    findings: list[tuple[str, bool, str]] = []
     if selections is None:
-        print(f"no selections.json in {project}", file=sys.stderr)
-        return False, {}
+        findings.append((
+            "project", False,
+            f"no selections.json — the run produced nothing to audit. "
+            f"report.json present: {report is not None}",
+        ))
+        return False, {"findings": findings}
     # selections.json is a bare list of candidates; report.json wraps its own
     # copy under "selected". Accept either so the audit runs on any project dir.
     if isinstance(selections, list):
         cands = selections
     else:
         cands = selections.get("selected") or []
-    findings: list[tuple[str, bool, str]] = []
 
     if not cands:
         reasons = (report or {}).get("rejection_reasons") or {}
@@ -385,7 +397,16 @@ def main(argv: list[str]) -> int:
         print(f"not a directory: {project}", file=sys.stderr)
         return 2
     ok, rep = audit(project)
-    width = max((len(n) for n, _o, _d in rep.get("findings", [("x", True, "")])), default=8)
+    # audit() returns no report when the project has no selections.json, which
+    # is itself the finding: the run never produced anything to audit. Report
+    # it as a failure rather than dying with a KeyError, so a sweep across the
+    # corpus keeps going instead of stopping at the first incomplete project.
+    if not rep.get("findings"):
+        print(f"{project}: no auditable artifacts (no selections.json)")
+        print()
+        print("FAILURES PRESENT")
+        return 1
+    width = max((len(n) for n, _o, _d in rep["findings"]), default=8)
     for name, cok, detail in rep["findings"]:
         mark = "PASS" if cok else "FAIL"
         print(f"{name:<{width}}  {mark}  {detail}")
