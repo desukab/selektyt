@@ -251,6 +251,43 @@ def test_a_project_with_nothing_to_audit_fails_with_a_reason(tmp_path):
     assert any("no selections.json" in detail for _n, _o, detail in findings)
 
 
+def test_the_finding_names_the_stage_that_stopped_the_run(tmp_path, ):
+    """'No selections' is the symptom, not the cause.
+
+    All four committed sources that land here have a transcript.json with zero
+    segments — transcription came back empty, so selection never ran. Telling
+    an editor only that selections.json is missing sends them to the wrong
+    stage: the fix for an empty transcript (the VAD gate ate the audio) is not
+    the fix for a selection stage that rejected everything it saw.
+    """
+    from tools.editorial_audit import audit
+
+    (tmp_path / "transcript.json").write_text(
+        '{"language": "te", "asr": {"engine": "faster-whisper"}, "segments": []}',
+        encoding="utf-8",
+    )
+    ok, rep = audit(tmp_path)
+    assert not ok
+    detail = rep["findings"][0][2]
+    assert "transcription returned no segments" in detail
+    assert "te" in detail, "the language the model decoded as belongs in the reason"
+
+
+def test_a_transcript_that_returned_segments_points_at_selection_not_transcription(tmp_path):
+    """The other shape: transcription worked, selection produced nothing. The
+    finding must distinguish it, because this one is an editor's tuning problem
+    and the empty-transcript one is a transcription bug."""
+    from tools.editorial_audit import audit
+
+    (tmp_path / "transcript.json").write_text(
+        '{"language": "en", "segments": [{"text": "hello", "start": 0.0, "end": 1.0}]}',
+        encoding="utf-8",
+    )
+    ok, rep = audit(tmp_path)
+    assert not ok
+    assert "transcription returned 1 segments" in rep["findings"][0][2]
+
+
 def test_a_project_with_no_clips_reports_why_not_just_that_it_failed(tmp_path):
     """Selections exist but are empty: a run that rejected everything. The
     rejection reasons are the useful part, so they travel with the finding."""

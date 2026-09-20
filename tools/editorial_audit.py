@@ -302,11 +302,31 @@ def audit(project: Path) -> tuple[bool, dict]:
     report = _load(project / "report.json")
     findings: list[tuple[str, bool, str]] = []
     if selections is None:
-        findings.append((
-            "project", False,
-            f"no selections.json — the run produced nothing to audit. "
-            f"report.json present: {report is not None}",
-        ))
+        # Say which stage stopped the run. "No selections" is true but it is
+        # the symptom, and it sends an editor to look at the selection step
+        # when the transcript above it is what came back empty. All four of the
+        # committed sources that land here have a transcript.json with zero
+        # segments — the VAD gate suppressed the audio (providers/whisper.py,
+        # §Completed work in docs/AI_EXECUTION_STATE.md) — which is a different
+        # fix than a selection stage that rejected everything it saw.
+        transcript = _load(project / "transcript.json")
+        if transcript is not None:
+            n = len(transcript.get("segments") or [])
+            lang = transcript.get("language", "?")
+            where = "transcription returned no segments"
+            if n:
+                where = f"transcription returned {n} segments"
+            findings.append((
+                "project", False,
+                f"no selections.json — {where} ({lang}); selection never ran. "
+                f"report.json present: {report is not None}",
+            ))
+        else:
+            findings.append((
+                "project", False,
+                f"no selections.json and no transcript.json — the run stopped "
+                f"before transcription completed. report.json present: {report is not None}",
+            ))
         return False, {"findings": findings}
     # selections.json is a bare list of candidates; report.json wraps its own
     # copy under "selected". Accept either so the audit runs on any project dir.
