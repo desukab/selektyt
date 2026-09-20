@@ -16,6 +16,13 @@ venv. ~15 GB free disk held two real sources at once.
 | `https://archive.org/details/SVS-1335` | URL, 2:04, Mars visualization | **correctly rejected** — audio is digital silence (-91 dB), transcript empty |
 | `out/web/uploads/source.mp4` | local file, 535.5s | used by the earlier web-shell passes that surfaced the EDL defect |
 | `youtube.com/watch?v=…` | URL | **blocked at the network** — see below |
+| `corpus/media/pentagon-esper-briefing.mp4` | **local file**, 1013.9 s, 1280×720, 29.97 fps, audio present | **complete success** — driven through the *staged desktop sidecar binary* over the same JSON-RPC `selekyt_rpc` uses, not the CLI or the web shell: 32 artifacts, 8 renders, QA `ok: true`, 0 errors |
+
+The local-file run is the one that matters for the desktop app: it is the
+first-user-flow input shape (a file the user picked), it went through the
+binary the installer ships rather than a `python -m` invocation, and it
+exercised `probe_media` and `run_pipeline` in the same envelope the webview
+uses.
 
 The URL runs went through the web shell (`POST /api/run_pipeline`), not just
 the CLI, because the web shell is the path the three defects were found on.
@@ -145,11 +152,20 @@ In rough order of how much it would actually cost a user:
    project tree, because `guardedPath` deliberately confines local media to the
    project root. The CLI has no such restriction, so the two entry points
    disagree about what a user can point at.
-4. **Desktop shell is unbuilt.** Tauri compiles and passes clippy, but no
-   binary has been packaged on any platform and the webview has never rendered
-   (no webkit2gtk). Architecturally sound: a thin webview over two sidecars,
-   with ffmpeg found via PATH, so the webview's process-permission surface is
-   zero.
+4. **The desktop shell's engine path is verified, the packaged installer is
+   not.** The staged `selekyt-python` sidecar binary drove a real 1013.9 s,
+   1280×720, 29.97 fps source end to end over the exact JSON-RPC the Tauri
+   `selekyt_rpc` command uses: `run_pipeline` returned `ok: true` with 32
+   artifacts — 8 h264/aac renders (4 landscape 1280×720, 4 vertical 406×720),
+   8 EDL + 8 FCPXML timelines, 12 caption files, QA `ok: true` with zero
+   errors, and `candidate_count: 3211` narrowed to `selected_count: 4`. QA
+   reports audio present on every render, no silent tails, no black frames.
+   No Windows machine was involved: the host is headless Linux, so the binary
+   was exercised through its RPC surface and not its window. See
+   `docs/packaging.md` for what that means for the Windows claim.
+   The stderr-pipe deadlock that this run surfaced is fixed and pinned by a
+   Rust unit test — an undrained sidecar stderr blocks ffmpeg in
+   `anon_pipe_write` before its reply can be written.
 5. **Optional backends untested here.** sherpa-onnx, silero and ollama are
    wired and degrade cleanly by design, but none was installed, so their paths
    are unit-tested only.
