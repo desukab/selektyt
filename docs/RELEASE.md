@@ -9,11 +9,15 @@ claims are separate and this report does not merge them.
 ## Current commit
 
 ```
-59e5327  desktop: real cancellation, contract-tested UI, and honest signing   ← tip
+de0c151  docs: release report and state for the cancellation + signing session   ← tip as written
+59e5327  desktop: real cancellation, contract-tested UI, and honest signing
 91f3a39  fix(windows): NSIS wants a language name, not a locale code
 33e42f8  fix(windows): the portability bugs that would stop the app on Windows 11
 b5078e5  feat(desktop): the SelekyT Windows desktop shell and its build pipeline
 ```
+
+The captions fix described under "What worked" lands as the commit directly above
+`de0c151`; this file is part of it, so the hash above is already one behind.
 
 All pushed to `main` at `https://github.com/desukab/selektyt`. Run `git log -1`
 rather than trusting the hash printed here — this file's own commit changes it.
@@ -56,7 +60,8 @@ network permission at all; `src-tauri/capabilities/main.json` is the entire ACL.
 | `.github/workflows/ci.yml` | Adds the Linux `shell` job and the UI syntax/grammar checks |
 | `tests/ui_contract.mjs`, `tests/test_desktop_packaging.py` | The UI's contract with engine artifacts; the signing hook's contract with the build |
 | `providers/whisper.py` | Intra-chunk thread cap (measured: 2 threads is the saturation point on 4 cores) |
-| `selekyt/server.py` | `probe_media`/`read_artifact`/`stat_artifact`, UTF-8 stdio |
+| `selekyt/server.py` | `probe_media`/`read_artifact`/`stat_artifact`/`read_text`, UTF-8 stdio |
+| `selekyt/pipeline.py` | Resolves the project directory before recording it in `report.json`, so the paths it quotes are absolute for every reader |
 | `engine/nle_export.py` | Windows file-URI fix (the offline-import bug) |
 | `providers/youtube.py`, `selekyt/cli.py`, `tools/*.py` | Windows portability fixes |
 | 12 files under `selekyt/` `engine/` `providers/` | UTF-8 encoding sweep |
@@ -125,19 +130,26 @@ claiming success.
 
 ## Tests
 
-- **1234 passed, 13 skipped** (full Python suite, ~3 min on this host), up from
-  a 1215 / 13 baseline. The 19 new tests are the desktop packaging contract (5)
-  and engine-side growth; nothing regressed.
-- **11 Rust unit tests** in `apps/desktop/src-tauri`, including
+- **1236 passed, 13 skipped** (full Python suite, 183.9 s on this host), up from
+  a 1215 / 13 baseline. The 21 new tests are the desktop packaging contract (5),
+  the `read_text` op's envelope and traversal surface, and engine-side growth;
+  nothing regressed. The count was measured by re-running the whole suite after
+  the fix — a background run earlier in the session reported exit 0 without
+  having executed pytest at all (see `docs/AI_EXECUTION_STATE.md`), so the
+  number here is from a run whose summary line was actually read.
+- **12 Rust unit tests** in `apps/desktop/src-tauri`, including
   `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the pipe-buffer
-  deadlock fix that this session found by hitting it for real, and
-  `cancel_unblocks_a_call_in_flight`, which pins the cancellation fix. Both run
-  in well under a second — the cancellation test uses a shell builtin busy loop
-  rather than `sleep`, because SIGKILLing a shell leaves a forked `sleep`
-  holding the write end of the pipe, and the test then blocks until the sleep
-  expires. That is a property of the test double, not of the engine: every
-  ffmpeg call in `providers/ffmpeg.py` pipes its own stdout, so the real
-  sidecar has no orphaned child.
+  deadlock fix that this session found by hitting it for real,
+  `cancel_unblocks_a_call_in_flight`, which pins the cancellation fix, and
+  `spawn_resolves_the_env_override_without_re_appending_the_triple`, which pins
+  the `SELEKYT_PYTHON` override lookup: a bare name must resolve against the
+  staged sidecar directory, and a path that already ends in the triple must not
+  get it appended a second time. All run in well under a second — the
+  cancellation test uses a shell builtin busy loop rather than `sleep`, because
+  SIGKILLing a shell leaves a forked `sleep` holding the write end of the pipe,
+  and the test then blocks until the sleep expires. That is a property of the
+  test double, not of the engine: every ffmpeg call in `providers/ffmpeg.py`
+  pipes its own stdout, so the real sidecar has no orphaned child.
 - `cargo clippy --all-targets -- -D warnings` is clean, and CI now denies
   warnings on Linux before the Windows job pays for a build.
 - `tests/ui_contract.mjs` passes in both modes: against a real engine project
@@ -187,9 +199,30 @@ hung at 55 minutes and the second completed in 61 seconds on the same input.
   renders a valid mp4.
 - The Windows build pipeline is live: the push to `main` triggered
   `build-windows` on `windows-latest`.
-- The full suite after every change: 1234 / 13, no regressions; 11 Rust unit
-  tests in the shell, clippy clean at `-D warnings`; the UI's pure logic passes
-  `tests/ui_contract.mjs` against a real engine project tree.
+- **The GUI rendered.** Not on Windows — on this headless host, under
+  `Xvfb :99` at 1440×2400, driven with `xdotool` and read with `tesseract`.
+  The window opened, the project card loaded, and all six review tabs
+  (Story, Timeline, Captions, Transcript, Quality, Artifacts) rendered real
+  content from the project the engine had actually written: 15 SRT cues with
+  cue text and in/out times, the transcript's first line, the QA row, and the
+  artifact listing for 5 landscape and 2 vertical renders. Before this the
+  shell had only ever been exercised through its RPC surface.
+- **The captions bug, which was invisible from the RPC surface.** The Captions
+  tab said "No captions were written for this clip" for a file that existed.
+  Two defects, each sufficient on its own:
+  `selekyt/pipeline.py` recorded `report.json` paths as
+  `str(project / sub)` *without resolving* `project`, so a CLI run from the
+  repo root wrote repo-root-relative paths; and separately the UI preferred
+  that recorded string over the directory the Rust shell had already
+  resolved, which is absolute. The sidecar's working directory is the app's
+  own, so the relative path pointed somewhere that did not exist. Both are
+  fixed — the engine resolves before recording, and the four UI sites that
+  need a project subpath now build it from `state.project`. The lesson is in
+  `docs/AI_EXECUTION_STATE.md`: **the RPC contract was green the whole time,
+  because the failure was in which path the UI chose to ask about.**
+- The full suite after every change (counts below), no regressions; the Rust
+  unit tests in the shell, clippy clean at `-D warnings`; the UI's pure logic
+  passes `tests/ui_contract.mjs` against a real engine project tree.
 
 ## What remains blocked specifically on Windows
 
@@ -213,16 +246,21 @@ code that could not be executed here.
    real transcription has not confirmed faster-whisper's fallback to its
    built-in 16 kHz defaults.
 5. **Installer size and install UX.** ~1 GB payload; NSIS LZMA will be slow.
-6. **The GUI itself.** Headless host, no X server or xvfb. The binary was
-   verified through its RPC surface, not its window. The acceptance flow was
-   driven end to end against the real engine over that same boundary, but a
-   reviewer must still click through it on Windows 11. **What is now tested
-   without a window** is the pure rendering layer: `tests/ui_contract.mjs` runs
-   the formatters, the SRT reader and the timeline arithmetic against a project
-   tree the engine really wrote. That is how the single-digit-hours SRT bug was
-   caught — the engine emits `0:00:00,787`, and a strict two-digit grammar
-   silently rejects every cue in every caption file, which would have looked
-   exactly like a missing captions file in the running app.
+6. **The GUI has now rendered — but on Linux under xvfb, never on Windows.**
+   This is the item that moved this session, and it moved in a way that
+   strengthens the case for the rest of the list: running the window is what
+   surfaced the captions bug under "What worked", which no amount of RPC-level
+   testing had found, because the RPC answered every request correctly. What
+   was verified: the binary launches a window under `Xvfb :99`, the project
+   list populates, clicking a card loads the run, and all six review tabs
+   render real engine output read by OCR. What was *not* verified: **nothing
+   about Windows.** webkit2gtk is not WebView2, `xdotool` clicks are not a
+   pointer on Windows 11, and no Windows installer has ever completed on a
+   Windows runner — the one CI run that got past staging was cancelled by my
+   own push before the concurrency fix landed. Every item above and below
+   this one still applies in full. A reviewer must still click through the
+   real installed app on Windows 11, and the size and install UX of a ~1 GB
+   NSIS payload (item 5) is part of what that click-through will judge.
 7. **WebView2 availability.** The config downloads the bootstrapper silently;
    untested on a machine without Edge.
 8. **The signing hook has never executed.** `bundle.windows.signCommand` points

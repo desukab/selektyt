@@ -5,9 +5,12 @@ every line below was true on this host at that point.
 
 ## Current repository state
 
-* Repository: `/home/azureuser/selektyt`, on `main`, working tree **clean**.
+* Repository: `/home/azureuser/selektyt`, on `main`. Working tree state
+  **changes within a session by design** — this checkpoint is written while the
+  captions fix and its docs are staged for commit, so expect one commit above
+  `de0c151`; verify with `git status` rather than trusting "clean" here.
   Up to date with `origin/main` (`https://github.com/desukab/selektyt.git`).
-  Nothing unpushed, nothing stashed, nothing in `git stash list`.
+  Nothing stashed, nothing in `git stash list`.
   The two untracked leftovers noted by the previous checkpoint are resolved:
   `tools/caption_ocr.py` was already tracked and clean, and the WER run record
   `corpus/wer/runs/nasa-c4-small.json` was committed at `59e5327` alongside its
@@ -22,15 +25,21 @@ every line below was true on this host at that point.
   `b5078e5` (the Tauri 2 shell and its build pipeline).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1234 passed, 13 skipped** (2026-09-20, ~183 s) — the prior
-  baseline was 1215/13; the 19 new tests are the desktop packaging contract
-  (`tests/test_desktop_packaging.py`, 5) and the UI syntax/grammar checks now
-  wired into CI, plus engine-side growth. No regressions.
-  **11 Rust unit tests** in `apps/desktop/src-tauri` pass, including
+* Test suite: **1236 passed, 13 skipped** (2026-09-20, 183.9 s) — measured by
+  re-running the whole suite and reading its summary line, not by trusting a
+  background task's exit code (see the trap note in "Completed work"). The
+  prior baseline was 1215/13; the growth is the desktop packaging contract
+  (`tests/test_desktop_packaging.py`, 5), the `read_text` op's envelope and
+  traversal surface, and engine-side growth. No regressions.
+  **12 Rust unit tests** in `apps/desktop/src-tauri` pass, including
   `cancel_unblocks_a_call_in_flight` (0.15 s — see the note below about why its
-  fake sidecar is a shell builtin loop, not `sleep`) and
+  fake sidecar is a shell builtin loop, not `sleep`),
   `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the pipe-buffer
-  deadlock fix. `cargo clippy --all-targets -- -D warnings` is clean, which now
+  deadlock fix, and
+  `spawn_resolves_the_env_override_without_re_appending_the_triple`, which pins
+  the `SELEKYT_PYTHON` override lookup (a bare name resolves against the staged
+  sidecar directory; a path already ending in the triple is not suffixed
+  twice). `cargo clippy --all-targets -- -D warnings` is clean, which now
   matters because the new `shell` CI job denies warnings on Linux before the
   Windows job pays for a build. The skip count splits into three kinds, and the
   differences matter: **7** are in `tests/test_proxy_validation.py`, gated on the
@@ -84,7 +93,7 @@ every line below was true on this host at that point.
   sidecar cannot resolve `yt-dlp`. Plain `nohup … &` dies with the shell.
 * No project server is listening right now. Scratch run scripts in `/tmp` were
   removed.
-* Disk: **2.8 G free of 29 G, 91% used** (`df -h /`, 2026-09-20). This file
+* Disk: **2.0 G free of 29 G, 94% used** (`df -h /`, 2026-09-20). This file
   previously said both "5.7 G" and "14 G" in different places; both were stale,
   and the disk is the binding constraint on what can be attempted next. The
   corpus's downloaded media is deliberately *not* kept — `corpus/media/` is
@@ -109,6 +118,51 @@ every line below was true on this host at that point.
   a measurement is impossible.
 
 ## Completed work
+
+### This session — the window ran, and it found what the contract could not
+
+The shell had been verified only through its JSON-RPC surface. That changed:
+the binary was launched under `Xvfb :99` at 1440×2400 and driven with
+`xdotool`, reading the rendered result back with `tesseract`. All six review
+tabs rendered real content from a project the engine had written — 15 SRT cues
+with cue text and in/out times, the transcript's opening line, the QA row, and
+the artifact listing. This is still a **Linux** statement; see Outstanding item
+4 for what it does and does not license.
+
+**Running the window found a bug the contract was structurally incapable of
+finding.** The Captions tab said "No captions were written for this clip" for
+a file that existed. Every request on the wire was being answered correctly —
+`read_text` resolved a real path and returned real text — so no envelope test
+could fail. The defect was in *which path the UI chose to ask about*, and it
+had two independent halves, either of which was sufficient:
+
+1. `selekyt/pipeline.py` recorded `report.json` paths as
+   `str(project / sub)` where `project = out_root / "project"` was **never
+   resolved**. A CLI run from the repo root therefore wrote repo-root-relative
+   paths into the report. The sidecar's cwd is the app's own directory, where
+   no `corpus/` exists, so those paths silently pointed at nothing.
+2. The UI preferred that recorded string over the directory the Rust shell had
+   *itself resolved* — `state.project`, which is absolute. Four sites did
+   `r.captions || ${state.project}/captions` and similar, an inverted
+   precedence: the authoritative value was the fallback.
+
+Fixed on both sides, and the two-sided fix is the point — either alone would
+have left the other waiting to bite. The engine now resolves `project` before
+recording anything; `listArtifacts`, `renderStory` and `renderCaptions` build
+every project subpath from `state.project`; `readProjectText`'s parameter was
+renamed to `projectDir` to make the contract legible at the call site. The
+standing rule for any future UI site that needs a project subpath is in the
+agent memory as `report-paths-are-cwd-relative`.
+
+**A verification trap worth remembering.** A background "full suite" run
+earlier in this work reported `[exited with code 0]` and I recorded it as
+green. It had not run the suite at all: the command carried `--timeout=900`,
+`pytest-timeout` is not installed, and pytest printed its usage error to
+stderr — which the tail of the output file did not show — while the shell's
+own exit code was 0. **An exit code and a rootdir line are not a pass
+count.** The suite was re-run properly and the number below re-measured. This
+is the same class of mistake as [[passed-unit-tests-do-not-mean-the-change-works]]:
+green *evidence* is not green *behavior*.
 
 ### This session — cancellation at the process boundary, a contract-tested UI, and signing that says what it is (`59e5327`)
 
@@ -974,17 +1028,35 @@ In rough order of how much it would cost a user (fuller list in
 3. **No video upload in the web shell** — a video must already be inside the
    project tree (`guardedPath` confines it), while the CLI has no such
    restriction, so the two entry points disagree about what a user can point at.
-4. **Desktop shell is built, unit-tested and CI-gated — but has never rendered
-   a frame.** The Rust shell compiles and passes clippy on both Linux and
-   Windows CI, 11 unit tests including cancellation, and the UI's pure logic is
-   contract-tested against a real project tree. What has never happened is the
-   webview actually running: no webkit2gtk on this box, and **the Windows
-   installer has never completed on a Windows runner** — the one run that got
-   past staging and the sidecar ping was cancelled by my own push before the
-   concurrency fix. The `sign.ps1` signing hook and any MSIX/Appx packaging
-   stage are likewise **UNVERIFIED** (no PowerShell here, and Tauri 2 cannot
-   emit MSIX at all). The honest summary: the *logic* of the desktop app is
-   tested, the *application* is not.
+4. **Desktop shell has now rendered — under Linux xvfb, still never on
+   Windows.** The "never rendered a frame" line that stood here is now false,
+   and the reason it changed is the more useful fact: running the window found
+   a bug that the entire RPC contract had missed. The Captions tab reported "No
+   captions were written for this clip" for a file that existed on disk, and
+   every `read_text` call on the wire was answering correctly. The cause was
+   path *precedence*, not a missing file: `selekyt/pipeline.py` wrote
+   `report.json` paths as `str(project / sub)` without resolving `project`, so
+   a CLI run from the repo root recorded repo-root-relative paths; the sidecar's
+   cwd is the app's own directory, so those paths pointed at nothing; and the
+   UI was preferring that recorded string over `state.project`, the absolute
+   directory the Rust shell had resolved itself. Fixed on both sides — the
+   engine resolves before recording, and `listArtifacts` / `renderStory` /
+   `renderCaptions` build subpaths from `state.project`. See
+   [[report-paths-are-cwd-relative]] in the agent memory and
+   `docs/RELEASE.md` "What worked".
+   What was actually verified: `Xvfb :99` at 1440×2400, `xdotool` clicks at
+   tab coordinates derived from row-darkness profiling plus `tesseract --psm 7
+   tsv` bounding boxes, and OCR-confirmed real content in all six review tabs
+   (15 SRT cues with text and in/out times, the transcript's opening line, the
+   QA row, 5 landscape + 2 vertical render entries). What was not: **anything
+   Windows.** webkit2gtk is not WebView2, and the Windows installer has still
+   never completed on a Windows runner — the one run that got past staging was
+   cancelled by my own push before the concurrency fix. The `sign.ps1` hook and
+   any MSIX/Appx stage remain **UNVERIFIED** (no PowerShell here, Tauri 2
+   cannot emit MSIX at all). Revised honest summary: the app's *logic* is
+   tested and its *Linux rendering* is now observed; its *Windows installation*
+   is not, and running the window once is exactly what proves that gap is worth
+   closing.
 5. **Optional backends untested here** — sherpa-onnx, silero, ollama are wired
    and degrade cleanly by design, but unit-tested only.
 6. **Editorial judgement is unmeasured at scale — and the corpus proved the
@@ -1360,7 +1432,8 @@ selections).
   just anamorphic ones — square-pixel sources now round to an even width
   (e.g. 274 px at 486 tall instead of 273). This is why the existing
   square-pixel 9:16 test still passes but on slightly different geometry.
-* **Disk is the binding constraint on real runs.** 2.8 G free, and one real
+* **Disk is the binding constraint on real runs.** 2.0 G free as of
+  2026-09-20, and one real
   source is 883 MB. A second long source plus its renders will not fit
   comfortably; check `df` before any end-to-end run and never delete project
   data, git history, worktrees or caches blindly. Reclaimable caches come first:
