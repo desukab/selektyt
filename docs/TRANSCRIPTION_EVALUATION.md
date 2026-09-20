@@ -36,9 +36,9 @@ a claim about a language no speaker of that language verified.
    unmeasured.
 2. **Non-English WER at the C10 languages (criterion P9).** §7.1 measures
    Telugu, which is **not** one of the six C10 languages; §7.2 and §7.3 score
-   Polish and Italian, §7.4 scores Spanish and §7.5 scores German, which are.
-   Four of the six now pass the 25% bar, one more than the criterion asks for.
-   The remaining two (French, Dutch) are still **UNMEASURED**. The Multilingual
+   Polish and Italian, §7.4 scores Spanish, §7.5 scores German and §7.6 scores
+   French, which are. Five of the six now pass the 25% bar, two more than the
+   criterion asks for. Dutch alone is still **UNMEASURED**. The Multilingual
    LibriSpeech tarballs are 6.2 GB (Polish) to 114.5 GB (German), which cannot be
    materialised here; §7.2 streams them instead of downloading. See §7.
 3. **Whether a transcript is semantically correct in a language nobody here
@@ -747,22 +747,23 @@ accepted: the archive is streamed and only the strided sample is written, so
 scoring one of the six costs ~15 MB of disk instead of 6.2 GB.
 
 **The more important limitation is not the disk.** C10 covers de/es/fr/nl/it/pl.
-Four of the six are measured and all four pass — Polish, 11.01% WER / 2.45%
+Five of the six are measured and all five pass — Polish, 11.01% WER / 2.45%
 CER on a 35-clip MLS sample with 34 of 35 utterances inside the 25% bar (§7.2),
 Italian, 20.11% WER / 4.53% CER on a 40-clip MLS sample with 26 of 40 inside the
 bar (§7.3), Spanish, 8.58% WER / 2.64% CER on a 40-clip MLS sample with 38 of
-40 inside the bar (§7.4), and German, 10.66% WER / 3.20% CER on a 40-clip MLS
-sample with 36 of 40 inside the bar (§7.5). The Italian corpus is Dante, so the
-reference is archaic Italian against a modern ASR — a harder condition than
-Polish's modern prose, and still a pass at the corpus level. Four languages
-passing on independent corpora is what shows the first was not one easy
-audiobook, and it is one more than P9 asks for, which requires 3 of the 6.
+40 inside the bar (§7.4), German, 10.66% WER / 3.20% CER on a 40-clip MLS
+sample with 36 of 40 inside the bar (§7.5), and French, 13.59% WER / 5.30% CER
+on a 33-clip MLS sample with 29 of 33 inside the bar (§7.6). The Italian corpus
+is Dante, so the reference is archaic Italian against a modern ASR — a harder
+condition than Polish's modern prose, and still a pass at the corpus level. Five
+languages passing on independent corpora is what shows the first was not one
+easy audiobook, and it is two more than P9 asks for, which requires 3 of the 6.
 
-**Read the satisfied criterion narrowly.** Four of the six are measured, and all
-four are the clean-read audiobook half of C10; French and Dutch are still
-unmeasured, and a bar met only on its easiest half is weaker than the same bar met
-on six. The five English-and-non-English results are also a spread — 3.38 / 8.58 /
-10.66 / 11.01 / 20.11 — whose position tracks corpus and register (Spanish is
+**Read the satisfied criterion narrowly.** Five of the six are measured, and all
+five are the clean-read audiobook half of C10; Dutch is still unmeasured, and a
+bar met only on its easiest half is weaker than the same bar met on six. The six
+English-and-non-English results are also a spread — 3.38 / 8.58 / 10.66 / 11.01
+/ 13.59 / 20.11 — whose position tracks corpus and register (Spanish is
 modern prose, Italian is Dante) rather than a graded descent from English, so no
 single one of them is a "how good is the multilingual model" number. Each costs the same ~15
 MB streamed sample, so the constraint is compute time on a 4-core host, not
@@ -877,21 +878,21 @@ decision with no hardware consequence — and because Telugu still fails at `med
 the gap is language fit rather than model size, so buying compute does not close it.
 
 **What this does and does not settle.** P9 requires **3 of the 6** C10 languages.
-Four are measured and all four pass — Spanish 8.58%, Polish 11.01%, German
-10.66%, Italian 20.11% — so **the criterion as written is met, with one to spare**.
-Two (French, Dutch) are registered in `tools/wer_bench.py` and remain
-**UNMEASURED**, and none is assumed by the four that pass. That is the limit on
-the claim: "P9 holds on the four measured C10 languages" is supported,
-"transcription is multilingual" is not — four clean-read audiobook results say
-nothing about the remaining third of the criterion, and a 3-of-6 bar that has only
-ever seen the easy half is not the same evidence as six measurements. All four
-are read audiobook prose, the easiest possible condition — the same clean-read bias
-that makes LibriSpeech English 3.38%, and in Italian's case the reference is
+Five are measured and all five pass — Spanish 8.58%, Polish 11.01%, German
+10.66%, French 13.59%, Italian 20.11% — so **the criterion as written is met,
+with two to spare**. One (Dutch) is registered in `tools/wer_bench.py` and
+remains **UNMEASURED**, and none is assumed by the five that pass. That is the
+limit on the claim: "P9 holds on the five measured C10 languages" is supported,
+"transcription is multilingual" is not — five clean-read audiobook results say
+nothing about the last sixth of the criterion, and a 3-of-6 bar that has only
+ever seen the easy half is not the same evidence as six measurements. All five
+are read audiobook prose, the easiest possible condition — the same clean-read
+bias that makes LibriSpeech English 3.38%, and in Italian's case the reference is
 *Divine Comedy* verse, so the prose being read is archaic while the ASR is modern.
-German is the one measured language whose worst clip (42.9%) sits above the bar
-while the corpus passes, which is the shape of a tail risk rather than a uniform
-margin. Noisy, crosstalk or compressed real-world audio in any of the six is a
-different measurement that has not been made.
+French and German are the two measured languages whose worst clips (44.4% and
+42.9%) sit above the bar while the corpus passes, which is the shape of a tail
+risk rather than a uniform margin. Noisy, crosstalk or compressed real-world
+audio in any of the six is a different measurement that has not been made.
 
 ### 7.3 Italian: the second C10 language, and a harder bar than Polish's
 
@@ -922,11 +923,13 @@ concentrated in the archaic vocabulary rather than spread across the sample.
 That is the point of scoring a second language at all. Polish's 11.01% could have
 been one easy corpus; Italian's 20.11% is a different corpus, a different
 language family, a harder register, and still inside the bar. Two independent
-passing measurements are what localise the Telugu failure to Indic on evidence
-rather than on inference — and Spanish's 8.58% in §7.4 supplies the third, which
-is the count P9 asks for. They do not establish the remaining three — German,
-French and Dutch are each their own measurement, and a criterion met on the
-easiest half of its languages is not the same evidence as six measurements.
+passing measurements were what localised the Telugu failure to Indic on evidence
+rather than on inference, and Spanish's 8.58% in §7.4 then supplied the third,
+which is the count P9 asks for. Those two did not establish the rest — German,
+French and Dutch were each their own measurement at that point, and §7.5 and §7.6
+are the runs that have since closed two of the three. The limit the paragraph
+describes is still the limit on §7.6's five, only narrower: a criterion met on
+the easiest half of its languages is not the same evidence as six measurements.
 
 ### 7.4 Spanish: the third C10 language, and the criterion's count is met
 
@@ -957,14 +960,16 @@ alone. Spanish here is modern prose, Italian is fourteenth-century verse; the
 8.58%-to-20.11% gap between them is better explained by that than by Spanish
 being intrinsically easier.
 
-**What satisfying the count does not do.** Three of six is the number in the
-criterion, so P9 is met as written — but the three are the clean-read audiobook
-half of C10, and German, French and Dutch remain unmeasured. A bar met only on
-its easiest half is a weaker claim than the same bar met on six, and no doc
-should read this as "transcription is multilingual": it is "transcription is
-adequate on three European audiobook languages at this model size", which is a
-different and narrower thing. §7.1's Telugu failure at 151.08% is still the
-counterexample that bounds every one of these numbers.
+**What satisfying the count did not do.** Three of six was the number in the
+criterion, so P9 was met as written at this point — but the three were the
+clean-read audiobook half of C10, and German, French and Dutch were then
+unmeasured. A bar met only on its easiest half is a weaker claim than the same
+bar met on six, and no doc should read this as "transcription is multilingual":
+it is "transcription is adequate on three European audiobook languages at this
+model size", which is a different and narrower thing. §7.5 and §7.6 have since
+measured two of those three, so the narrowing described here now rests on Dutch
+alone; §7.6 carries the current form of it. §7.1's Telugu failure at 151.08% is
+still the counterexample that bounds every one of these numbers.
 
 ### 7.5 German: the fourth C10 language, and the count is met with one to spare
 
@@ -993,16 +998,64 @@ corpus-level pass rather than a uniformly easy one. That tail is worth keeping
 in view because a single-number WER invites the reading that every clip is near
 the mean, and none of these four are.
 
-**What a fourth measurement changes.** It does not strengthen the *kind* of
-claim — the four are still the clean-read audiobook half of C10, and French and
-Dutch remain unmeasured — but it weakens the "one easy audiobook" reading past
-the point where it is worth raising. Four independent corpora, four languages,
-three of them inside a 3-point band, all with the same `small` model that scores
-3.38% English. The honest sentence remains bounded: "P9 holds on the four
-measured C10 languages, with French and Dutch unmeasured", not "transcription is
-multilingual". §7.1's Telugu failure at 151.08% is still the counterexample that
-bounds every one of these numbers, and a noisy or compressed German source would
-be a different measurement from this one.
+**What a fourth measurement changed.** It did not strengthen the *kind* of
+claim — the four were still the clean-read audiobook half of C10, and French and
+Dutch were then unmeasured — but it weakened the "one easy audiobook" reading
+past the point where it was worth raising. Four independent corpora, four
+languages, three of them inside a 3-point band, all with the same `small` model
+that scores 3.38% English. The honest sentence at this point read: "P9 holds on
+the four measured C10 languages, with French and Dutch unmeasured" — §7.6 has
+since measured one of the two, so the sentence to quote now is §7.6's. §7.1's
+Telugu failure at 151.08% is still the counterexample that bounds every one of
+these numbers, and a noisy or compressed German source would be a different
+measurement from this one.
+
+### 7.6 French: the fifth C10 language, and only Dutch is left
+
+French is the run that leaves one language unmeasured rather than two: the
+criterion asks for 3 of the 6, and this is the fifth.
+
+| | |
+| --- | --- |
+| Corpus | Multilingual LibriSpeech, `mls_french` test split |
+| Source archive | `mls_french.tar.gz` (streamed, never on disk) |
+| Sample | 33 clips, stride 60 of 2426 test utterances |
+| Audio | 7.95 min; 1163 reference words, 6777 reference characters |
+| WER | **13.59%** (158 word errors) |
+| CER | **5.30%** |
+| Clips inside the 25% bar | **29 of 33** (best 2.1%, median 10.3%, worst 44.4%) |
+| Empty decodes | 0 |
+| RTF | 0.237× (0.238× including model load) |
+| Peak RSS | 654.1 MB |
+
+At 13.59% French is the second-hardest of the five, ahead of only Italian's
+20.11%. Its CER of 5.30% is the highest of the five, which is the same ordering
+spoken another way: French is where the model's character-level mistakes
+accumulate fastest relative to its word-level ones. The WER-minus-CER gap is
+8.29 points for French against 5.94 for Spanish, 7.46 for German and 8.56 for
+Polish, with Italian the widest at 15.58 — so French sits mid-band on that
+measure rather than at an extreme, and its higher CER is mostly carried by a
+higher WER rather than by a distinct character-level failure mode. The spread
+across the five is now 8.58 / 10.66 / 11.01 / 13.59 / 20.11 — four of them
+inside a 5-point band and one outlier at 20.11%, which is the Dante register
+rather than anything about Italian as a language.
+
+French's tail is the widest of the five measured. 29 of 33 clips sit inside the
+bar but the worst clip is 44.4%, so 4 of 33 are above it — the same 12% share
+as German's 4 of 40, and far better than Italian's 14 of 40, but with a worst
+clip at 44.4% it is the same shape every measured language has shown: a
+corpus-level pass with individual clips well outside it. A single-number WER
+invites the reading that every clip is near the mean, and none of the five
+support it.
+
+**What a fifth measurement changes.** Dutch is the only language left, and the
+limit on the claim is now a single unmeasured sixth rather than a gap. The five
+are still clean-read audiobook prose, so nothing here addresses noisy,
+crosstalk or compressed French — a real-world French interview would be a
+different measurement from this one, and this number does not speak to it. The
+honest sentence is still bounded: "P9 holds on the five measured C10 languages,
+with Dutch unmeasured", not "transcription is multilingual". §7.1's Telugu
+failure at 151.08% remains the counterexample that bounds all five.
 
 ---
 

@@ -243,6 +243,13 @@ RUNS = Path(__file__).resolve().parent.parent / "corpus" / "wer" / "runs"
     # Four of the six C10 names are now measured and inside the bar; French and
     # Dutch remain unmeasured, and Telugu remains the counterexample outside C10.
     ("german-small", 0.1066),
+    # The fifth C10 language, and the one that leaves one rather than two
+    # unmeasured. French on MLS test is 33 clips / 7.95 min / 1163 reference
+    # words, WER 13.59%, CER 5.30% — the highest CER of the five — with 29 of
+    # 33 clips inside the 25% bar and a worst clip of 44.4%. It is the
+    # second-hardest of the five after Italian's Dante. Dutch is now the only
+    # C10 name without a measurement.
+    ("french-small", 0.1359),
 ])
 def test_the_committed_wer_figures_are_what_the_records_say(name, expected_wer):
     path = RUNS / f"{name}.json"
@@ -303,38 +310,41 @@ def test_no_telugu_clip_meets_the_p9_bar():
     )
 
 
-def test_four_c10_languages_are_measured_and_all_pass():
-    """P9 asks for <=25% WER on at least 3 of the 6 C10 languages, and four are
+def test_five_c10_languages_are_measured_and_all_pass():
+    """P9 asks for <=25% WER on at least 3 of the 6 C10 languages, and five are
     now measured and inside the bar: Polish 11.01%, Italian 20.11%, Spanish
-    8.58%, German 10.66%. The criterion was met at three and is now met with
-    one to spare — but read what "met" covers. Four of six says nothing about
-    French or Dutch, which stay unmeasured, and it says nothing about Indic
-    (Telugu fails at 151.08%, outside C10 entirely). The honest sentence is
-    "P9 holds on the four measured C10 languages", not "transcription is
-    multilingual".
+    8.58%, German 10.66%, French 13.59%. The criterion was met at three and is
+    now met with two to spare — but read what "met" covers. Five of six says
+    nothing about Dutch, the one language still unmeasured, and it says nothing
+    about Indic (Telugu fails at 151.08%, outside C10 entirely). The honest
+    sentence is "P9 holds on the five measured C10 languages", not
+    "transcription is multilingual".
 
     This test exists so the count of passing languages cannot drift up in prose
     without a run record to back each increment. It was raised from two to three
-    when spanish-small landed and from three to four when german-small landed;
-    raising it again needs a fifth file.
+    when spanish-small landed, from three to four when german-small landed, and
+    from four to five when french-small landed; raising it again needs a sixth
+    file.
     """
     polish = RUNS / "polish-small.json"
     italian = RUNS / "italian-small.json"
     spanish = RUNS / "spanish-small.json"
     german = RUNS / "german-small.json"
+    french = RUNS / "french-small.json"
     if not (polish.is_file() and italian.is_file() and spanish.is_file()
-            and german.is_file()):
-        pytest.skip("all four C10 runs must be present to compare")
+            and german.is_file() and french.is_file()):
+        pytest.skip("all five C10 runs must be present to compare")
     passing = []
     for path, name in ((polish, "Polish"), (italian, "Italian"),
-                       (spanish, "Spanish"), (german, "German")):
+                       (spanish, "Spanish"), (german, "German"),
+                       (french, "French")):
         rec = json.loads(path.read_text(encoding="utf-8"))
         assert rec["wer"] <= 0.25, \
             f"{name} moved above the 25% bar ({rec['wer']}) — P9's row and " \
             f"every doc quoting it must be re-written"
         passing.append(name)
     # What the docs may say is bounded by what has actually been run.
-    assert len(passing) == 4
+    assert len(passing) == 5
 
 
 def test_a_larger_model_helps_telugu_but_does_not_reach_the_bar():
@@ -1038,16 +1048,92 @@ def test_no_c10_language_is_claimed_measured_without_a_run_record():
         record = RUNS / f"{lang}-small.json"
         if record.is_file():
             continue
-        # A measured language is always quoted with a WER figure next to its
-        # name. Look for the name followed by a percentage within the same
-        # sentence, which is how a measured claim is phrased in both docs.
         name = C10_NAMES[lang]
         for sentence in re.split(r"(?<=[.!?])\s+", text):
             if name not in sentence:
                 continue
-            if re.search(r"\d+\.\d+\s*%", sentence):
-                pytest.fail(
-                    f"{name} is quoted with a measured figure — "
-                    f"{sentence.strip()[:110]!r} — but {record.name} is not "
-                    f"committed. A measurement and its evidence have to arrive "
-                    f"together.")
+            # A percentage in the same *sentence* is not enough on its own.
+            # "Dutch" is an English word as well as a language name, and a
+            # sentence about the Dutch cluster of C10 can legitimately carry a
+            # percentage about something else in the same row. The claim that
+            # needs a run record is "Dutch scores WER N%" — the figure has to
+            # be attributed to the language, not merely share a sentence.
+            attributed = re.search(
+                rf"{name}\b[^.!?]{{0,60}}(\d+\.\d+)\s*%", sentence)
+            if not attributed:
+                continue
+            pytest.fail(
+                f"{name} is quoted with a measured figure "
+                f"({attributed.group(1)}%) — "
+                f"{sentence.strip()[:110]!r} — but {record.name} is not "
+                f"committed. A measurement and its evidence have to arrive "
+                f"together.")
+
+
+# The per-language sections of TRANSCRIPTION_EVALUATION.md each close with a
+# "what this measurement changes" paragraph that names the languages still
+# unmeasured *at that point in the narrative*. Those paragraphs are historical,
+# and they go stale the moment a later section measures one of the names they
+# list — the failure is not hypothetical, it is how §7.3, §7.4 and §7.5 read
+# before this gate existed, each still declaring German or French unmeasured
+# after a later run had measured it.
+#
+# The gate only fires on the present tense ("remains unmeasured" / "remain
+# unmeasured"): a paragraph written in the past tense ("were then unmeasured")
+# is describing the state of the world at the time of that run, which is still
+# true and is the correct repair.
+#
+# Whose names are checked is the subtle part. An earlier version matched any
+# language name within 80 characters of the verb, which is correct on the
+# sentences that drift but is a false positive on a sentence that is right:
+# "Spanish, Polish, German, French and Italian all pass, and only Dutch
+# remains unmeasured" declares only Dutch unmeasured, and the 80-character
+# window fired on all five of the languages it names as passing. So instead the
+# gate reads the verb's subject — the coordination of capitalized names that
+# the verb agrees with — and checks exactly those. "Only Dutch" is not a name
+# coordination, so nothing is checked and the sentence passes; "French and
+# Dutch remain" is, and both are checked.
+#
+# The coordination is comma-joined as well as "and"-joined, so the separator
+# admits both; the chain still cannot cross a lowercase word, which is what
+# keeps "all pass, and only Dutch remains" from reading its subject as the
+# five languages named earlier in the sentence. The one shape this does not
+# reach is a name separated from the verb by an appositive ("French, being a
+# clean-read audiobook language, remains unmeasured") — the subject scan finds
+# no capitalized word adjacent to the verb and skips the sentence. That is a
+# narrow enough gap that widening for it is not worth the false positives.
+_SUBJECT = re.compile(
+    r"(?P<names>(?:[A-Z][\w’'-]*(?:\s*(?:,|and|or)\s*)?)+)\s*$",
+    re.UNICODE)
+
+
+def _unmeasured_subjects(text):
+    """Every language the docs presently call unmeasured, as the subject of the
+    verb."""
+    for verb in re.finditer(r"(?i)\bremain(?:s)?\s+unmeasured\b", text):
+        before = text[:verb.start()]
+        subject = _SUBJECT.search(before)
+        if subject is None:
+            continue
+        for word in re.findall(r"[A-Z][\w’'-]*", subject.group("names")):
+            yield word, subject.group("names") + verb.group(0)
+
+
+@pytest.mark.parametrize("lang", sorted(C10_LANGUAGES))
+def test_no_measured_language_is_declared_still_unmeasured(lang):
+    """The other mirror: a language with a committed run record cannot also be
+    described as unmeasured. Overclaiming is caught above; this catches the
+    subtler drift, where a summary is correct and a per-language section a few
+    pages earlier contradicts it."""
+    record = RUNS / f"{lang}-small.json"
+    if not record.is_file():
+        pytest.skip(f"no run record for {lang}")
+    name = C10_NAMES[lang]
+    for subject, clause in _unmeasured_subjects(_doc_text()):
+        if subject != name:
+            continue
+        pytest.fail(
+            f"{name} is declared unmeasured — {clause.strip()[:110]!r} — but "
+            f"{record.name} is committed. A per-language section's 'still "
+            f"unmeasured' list is a snapshot; it has to move to the past tense "
+            f"when a later run supersedes it.")
