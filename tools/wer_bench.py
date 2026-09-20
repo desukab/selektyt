@@ -357,14 +357,35 @@ def _open_tar_stream(url: str):
     The local branch is what makes the MLS path testable at miniature scale and
     debuggable against a partially-downloaded archive; the network branch is
     what production uses, because the archive is larger than the free disk.
+
+    The network branch has to detect a *stall*, not just an error. An
+    established connection that stops sending data raises nothing: curl sits in
+    poll forever, the reader blocks on the pipe, and a 115 GiB prepare hangs
+    indefinitely with no exit code to retry on. That was observed on the german
+    archive — two hours into pass 2, all 40 clips extracted, zero bytes received
+    in a 30 s window, the socket ESTABLISHED with an empty receive queue.
+    ``--speed-limit``/``--speed-time`` turns that into an error, and
+    ``--retry-all-errors`` lets ``--retry`` act on it.
     """
     if "/" in url and Path(url).is_file():
         return tarfile.open(url, "r:gz")
     curl = subprocess.Popen(
-        # --no-progress-meter: on a 6 GB stream the carriage-return progress
-        # table is megabytes of noise in the run log and tells nobody anything
-        # they can act on. Errors still go to stderr, which is captured.
-        ["curl", "-fL", "--retry", "3", "--no-progress-meter", url],
+        [
+            "curl", "-fL", "--no-progress-meter",
+            # --no-progress-meter: on a 6 GB stream the carriage-return progress
+            # table is megabytes of noise in the run log and tells nobody
+            # anything they can act on. Errors still go to stderr, which is
+            # captured.
+            "--retry", "6",
+            # Below 1 MiB/s for 60 s the stream is effectively dead. The lowest
+            # rate legitimately observed was 2.9 MiB/s under server throttling,
+            # so this bar is below any real transfer and above a stall.
+            "--speed-limit", "1048576", "--speed-time", "60",
+            # Without this, --retry only retries connection failures, and a
+            # mid-transfer abort is not one.
+            "--retry-all-errors",
+            url,
+        ],
         stdout=subprocess.PIPE)
     tf = tarfile.open(fileobj=curl.stdout, mode="r|gz")
     # Keep curl alive as long as the reader is: the pipe is the only thing
@@ -374,14 +395,44 @@ def _open_tar_stream(url: str):
     return tf
 
 
-def _mls_members(url: str, split: str) -> tuple[list[str], list[str]]:
+def _mls_members(url: str, split: str, cache_dir: Path | None = None):
     """Pass 1 over the stream: the full sorted audio list, plus the transcripts.
 
-    Reads the whole archive over the network and writes nothing to disk. The
-    stride needs the *total* member count to be reproducible, and that only
-    exists at the end of the stream, so the archive is read twice rather than
-    guessed at.
+    Reads the whole archive over the network. The stride needs the *total*
+    member count to be reproducible, and that only exists at the end of the
+    stream, so the archive is read twice rather than guessed at. The listing is
+    then cached beside the output, because it is the expensive half of a
+    restart: a prepare that dies in pass 2 should not pay for the listing again,
+    and an archive at a fixed URL does not change between runs.
     """
+    cache = None
+    if cache_dir is not None:
+        cache = cache_dir / ".mls_index.json"
+        if cache.is_file():
+            try:
+                data = json.loads(cache.read_text(encoding="utf-8"))
+                # The shape is checked explicitly because it is what the caller
+                # is about to iterate as a list of names. The log line below
+                # happens to reject a malformed cache too — it indexes
+                # data[1] — but that is accidental, and would stop protecting
+                # anything the moment the logging changed. This check is the
+                # one that is meant to be here.
+                ok = (isinstance(data, list) and len(data) == 2
+                      and all(isinstance(x, list) for x in data))
+                if ok:
+                    audio_names, transcript_names = data
+                    print(f"[prepare] reusing cached member index "
+                          f"({len(audio_names)} flacs, "
+                          f"{len(transcript_names)} transcript files)",
+                          flush=True)
+                    return data
+                print(f"[prepare] ignoring an index cache with the wrong shape",
+                      file=sys.stderr)
+            except Exception:
+                # An unreadable or partial cache is not worth failing a run
+                # over; the listing is regenerable and the archive is the source
+                # of truth. Silence it and re-read.
+                print(f"[prepare] ignoring an unreadable index cache", file=sys.stderr)
     print(f"[prepare] listing {url} ({split} split)", flush=True)
     audio: list[str] = []
     transcripts: list[str] = []
@@ -393,7 +444,16 @@ def _mls_members(url: str, split: str) -> tuple[list[str], list[str]]:
                 audio.append(member.name)
             elif member.name.endswith("transcripts.txt"):
                 transcripts.append(member.name)
-    return sorted(audio), sorted(transcripts)
+    audio, transcripts = sorted(audio), sorted(transcripts)
+    if cache is not None:
+        # Written only after the listing succeeded, and written whole, so a
+        # crash partway cannot leave a truncated index for the next run to trust.
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            cache.write_text(json.dumps([audio, transcripts]), encoding="utf-8")
+        except OSError:
+            pass
+    return audio, transcripts
 
 
 def _prepare_mls_stream(meta: dict, split: str, out_dir: Path, count: int):
@@ -407,7 +467,7 @@ def _prepare_mls_stream(meta: dict, split: str, out_dir: Path, count: int):
     ``test`` cannot pull train audio into the sample.
     """
     url = meta["url"]
-    members, transcript_files = _mls_members(url, split)
+    members, transcript_files = _mls_members(url, split, cache_dir=out_dir)
     # MLS nests under an archive root, so the split is the second path component
     # (mls_polish/test/audio/...). Matched on components, not by substring, so a
     # speaker or book named "test" cannot pull the train split into the sample.
@@ -418,18 +478,21 @@ def _prepare_mls_stream(meta: dict, split: str, out_dir: Path, count: int):
     stride = max(1, len(in_split) // count)
     picked = in_split[::stride][:count]
     want = set(picked)
+    wanted_utts = {Path(p).stem for p in picked}
     print(f"[prepare] {len(in_split)} utterances in {split}, stride {stride}, "
           f"keeping {len(picked)}", flush=True)
 
     # Pass 2: re-read the stream and extract only the sample plus the one
     # transcripts.txt that covers it.
     references: dict[str, str] = {}
+    still_want = set(want)
     with _open_tar_stream(url) as tf:
         for member in tf:
             if not member.isfile():
                 continue
-            if member.name in want:
+            if member.name in still_want:
                 tf.extract(member, out_dir, filter="data")
+                still_want.discard(member.name)
             elif member.name in transcript_files and member.name.split("/")[1:2] == [split]:
                 # Small enough to hold in memory, and the reference must exist
                 # before the manifest is built.
@@ -439,6 +502,15 @@ def _prepare_mls_stream(meta: dict, split: str, out_dir: Path, count: int):
                         parts = line.split("\t")
                         if len(parts) >= 2:
                             references[parts[0]] = parts[1]
+            # The sample and its references are everything this pass produces,
+            # so once both are complete the remaining members are being read for
+            # nothing. On a 115 GiB archive that is hours of throttled
+            # streaming after the work is done; without this the german prepare
+            # had all 40 clips extracted and kept reading anyway.
+            if not still_want and wanted_utts <= references.keys():
+                print(f"[prepare] sample and references complete; stopped reading "
+                      f"the archive early", flush=True)
+                break
 
     manifest = []
     for name in picked:

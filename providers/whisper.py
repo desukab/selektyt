@@ -23,19 +23,33 @@ into the transcript and the run proceeds as though it had nothing to transcribe.
 
 The two are separable by measuring the audio. Committed corpus, 2026-09-20:
 alice-1903 is exactly digital zero (peak −120 dB, the silence floor) and an
-empty result is correct; telugu-launch peaks at −1.8 dB, and decoding it
-without the VAD recovers 16 segments / 105.9 s of the 173.7 s — speech the
-committed run lost entirely. −45 dB sits between the two with room either side.
+empty result is correct; telugu-launch peaks at −1.8 dB, so its empty result
+is suppression rather than silence. −45 dB sits between the two with room
+either side.
+
+What the retry found on telugu-launch is why no second decode is merged on the
+strength of being non-empty. Measured on the 173.7 s source with the small
+model: forcing Telugu with the VAD *on* returns 0 segments over the whole clip;
+with the VAD *off* it returns 5 segments / 24.88 s of which 54.7% of letters are
+Telugu script and the rest is romanized noise plus one Chinese character. A
+repeat run of the same file gave 23 segments, so the unguarded decode is not
+even stable run to run. Merging it would have written fabricated text into a
+transcript whose correct content is empty. See the note in ``transcribe``.
 """
 
 
 def _vad_retry_needed(peak_db: float) -> bool:
     """Whether an empty decode over this level is silence or suppression.
 
-    The VAD gate is a heuristic inside the decode path, and where it is wrong
-    it is wrong in one direction: it discards speech. An empty result over
-    audible audio is therefore worth a second decode without the gate; an empty
-    result over silence is correct as it stands.
+    The VAD gate is a heuristic inside the decode path, and where it is wrong it
+    is wrong in one direction: it discards speech. An empty result over audible
+    audio is therefore recorded as suppression rather than as silence, so the
+    transcript's emptiness is not misread as "nothing was said"; an empty result
+    over silence is correct as it stands.
+
+    The level alone says the audio is there, not that it is speech, and it does
+    not license a second decode — see ``transcribe`` for what the unguarded
+    decode actually produces on the one source where this fires.
     """
     return peak_db > EMPTY_RETRY_PEAK_DB
 
@@ -275,9 +289,11 @@ def transcribe(
     # failure, not as an empty result, so it is retried on the next run; if it
     # fails again the transcript must not be shipped as though it were whole.
     failed_chunks: list[int] = []
-    # Chunks the VAD gate emptied and the unguarded decode recovered, or tried
-    # to. Carried into the transcript's provenance so the outcome is visible
-    # beside the model and language it was produced with.
+    # Chunks that came back empty, with the measurement that says whether that
+    # was silence or suppression. Carried into the transcript's provenance so
+    # the outcome is visible beside the model and language it was produced
+    # with — an empty transcript over loud audio is a weaker result than one
+    # over silence, and the two must not read the same.
     vad_recoveries: list[tuple[int, str]] = []
 
     for index in range(count):
@@ -351,33 +367,37 @@ def transcribe(
             if failed is None and not chunk_segments:
                 # A clean decode that produced nothing. That is correct for a
                 # silent chunk and wrong for a loud one, and the checkpoint
-                # cannot tell them apart, so measure the audio to decide.
+                # cannot tell them apart, so measure the audio to decide which
+                # happened and record it.
+                #
+                # The earlier version of this branch decoded a second time
+                # without the VAD gate and merged whatever came back. That
+                # merge is gone, and it is gone on measurement rather than on
+                # caution. The unguarded decode of telugu-launch — the one
+                # committed source where this branch provably fires — returns
+                # 5 segments / 24.88 s of nonsense in the correct script (54.7%
+                # Telugu letters, the rest romanized noise plus one Chinese
+                # character), and 23 segments on a repeat run of the same file.
+                # It is unstable, and it is nonsense in the right script, so no
+                # cheap local check separates it from real speech: a
+                # script-consistency guard was tried and passes the garbage, and
+                # a confidence threshold would reject precisely on the hard
+                # audio this branch exists for. Merging it would have written
+                # fabricated text into a transcript whose correct content is
+                # empty, byte-identical to a real transcript.
+                #
+                # Nothing is lost by dropping it: no committed chunk checkpoint
+                # in the corpus carries a recovery note, so the retry has never
+                # fired on a real run and never merged anything. What is kept is
+                # the part that is verifiable — the measurement that separates
+                # suppression from silence, written to the checkpoint so an
+                # empty transcript over loud audio no longer reads as silence.
                 if _vad_retry_needed(peak):
-                    # The VAD gate suppressed the whole chunk. Decode again
-                    # without it; the gate is a heuristic, and where it
-                    # discards real speech the unguarded decode recovers it.
-                    t_retry = time.time()
-                    retry_segments, _retry_lang = _transcribe_chunk(
-                        model, wav, decode_start, language, beam_size,
-                        vad_filter=False,
+                    note = (
+                        f"no segments over non-silent audio (peak {peak:.1f} dB); "
+                        f"the VAD gate may have suppressed the chunk, and this "
+                        f"model could not transcribe it with or without the gate"
                     )
-                    retry_segments = [
-                        s for s in retry_segments
-                        if index == 0 or s.start >= start - 0.05
-                    ]
-                    wall += time.time() - t_retry
-                    if retry_segments:
-                        chunk_segments = retry_segments
-                        note = (
-                            f"vad suppressed the whole chunk over {peak:.1f} dB of "
-                            f"audio; decoded again without the VAD and recovered "
-                            f"{len(retry_segments)} segments"
-                        )
-                    else:
-                        note = (
-                            f"no segments over non-silent audio (peak {peak:.1f} dB) "
-                            f"with or without the VAD gate"
-                        )
                 else:
                     note = f"no segments; chunk is silent (peak {peak:.1f} dB)"
             try:
@@ -487,10 +507,10 @@ def transcribe(
         "num_threads": _threads,
     }
     if vad_recoveries:
-        # Recorded rather than repaired silently: a chunk the VAD emptied and an
-        # unguarded decode filled in is a weaker result than one the gate let
-        # through, and a reader of the transcript needs to see which chunks.
-        provenance["vad_recovered_chunks"] = [
+        # Recorded rather than repaired silently: a chunk that decoded to
+        # nothing over audible audio is a weaker result than one over silence,
+        # and a reader of the transcript needs to see which chunks and why.
+        provenance["vad_empty_chunks"] = [
             {"chunk": n, "note": text} for n, text in vad_recoveries
         ]
     return merged, detected, provenance

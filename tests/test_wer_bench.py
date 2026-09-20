@@ -661,3 +661,231 @@ def test_the_tar_layout_reads_the_chapter_transcript():
     # The line is "utt reference...", so the id prefix is stripped on the way in.
     assert manifest[0]["reference"] == "he said thing 0"
     assert manifest[0]["utterance"] == "6930-75918-0000"
+
+
+# ── the streaming prepare does not read past what it needs ───────────────────
+
+
+class _CountingTar:
+    """Wraps a ``TarFile`` so a test can see how many members were consumed.
+
+    The prepare's early break is only observable from outside by what it did
+    *not* read: nothing it returns says whether the loop ran to the end of the
+    archive, and the bug it fixes is precisely that it used to.
+    """
+
+    def __init__(self, tf, read: list[str] | None = None):
+        self._tf = tf
+        # A random-access TarFile is not its own iterator, and a streaming one
+        # is; iter() covers both, so the wrapper works either way.
+        self._it = iter(tf)
+        self.read = read if read is not None else []
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        member = next(self._it)
+        self.read.append(member.name)
+        return member
+
+    def extract(self, *args, **kwargs):
+        return self._tf.extract(*args, **kwargs)
+
+    def extractfile(self, *args, **kwargs):
+        return self._tf.extractfile(*args, **kwargs)
+
+    def __enter__(self):
+        self._tf.__enter__()
+        return self
+
+    def __exit__(self, *exc):
+        return self._tf.__exit__(*exc)
+
+
+def _mls_archive_with_a_tail(directory: Path, n_audio: int = 6) -> Path:
+    """An MLS-shaped archive whose final members are padding the prepare has no
+    reason to read: the wanted sample and its transcript both appear first.
+
+    Returns the archive. The last member is named so a test can assert it was
+    never reached."""
+    root = directory / "mls_polish"
+    audio = root / "test" / "audio" / "11295" / "11059"
+    audio.mkdir(parents=True)
+    for i in range(n_audio):
+        audio.joinpath(f"11295_11059_{i:06d}.flac").write_bytes(b"not really audio")
+    root.joinpath("test", "transcripts.txt").write_text(
+        "".join(f"11295_11059_{i:06d}\tpo polsku {i}\n" for i in range(n_audio)),
+        encoding="utf-8")
+    archive = directory / "mls.tar.gz"
+    with tarfile.open(archive, "w:gz") as tf:
+        for path in sorted(root.rglob("*")):
+            if path.is_file():
+                tf.add(path, arcname=str(path.relative_to(directory)))
+        # Deliberately last, and deliberately large enough that reading it would
+        # dominate the runtime of a real prepare on a real archive.
+        payload = b"x" * (2 << 20)
+        info = tarfile.TarInfo("mls_polish/PADDING_AFTER_COMPLETION.bin")
+        info.size = len(payload)
+        tf.addfile(info, io.BytesIO(payload))
+    return archive
+
+
+def test_pass_2_stops_once_the_sample_and_its_references_are_complete(
+        tmp_path, monkeypatch):
+    """The sample is strided across the whole split, so every wanted clip and
+    the transcript land at scattered points in the archive. Once the last one
+    and the transcript are in hand, the rest of a 115 GiB stream is read for
+    nothing — hours of it, on the throttled connection the german prepare hit
+    after it had already extracted all 40 clips."""
+    archive = _mls_archive_with_a_tail(tmp_path)
+    # One log per stream: pass 1 must read the whole archive to learn the total
+    # the stride needs, so the padding is expected to appear there. The claim is
+    # about pass 2 only.
+    streams: list[list[str]] = []
+
+    def counting(url):
+        log: list[str] = []
+        streams.append(log)
+        return _CountingTar(tarfile.open(url, "r:gz"), log)
+    monkeypatch.setattr(wer_bench, "_open_tar_stream", counting)
+
+    meta = {"url": str(archive), "format": "mls-stream"}
+    manifest, total, stride = wer_bench._prepare_mls_stream(
+        meta, "test", tmp_path / "out", 3)
+
+    assert len(manifest) == 3 and total == 6 and stride == 2
+    assert len(streams) == 2, "listing and extraction are two separate streams"
+    listing, extraction = streams
+    assert "mls_polish/PADDING_AFTER_COMPLETION.bin" in listing, (
+        "the listing reads the whole archive by design; a test that denied that "
+        "would be asserting the total it needs is knowable some other way"
+    )
+    assert "mls_polish/PADDING_AFTER_COMPLETION.bin" not in extraction, (
+        "the padding member is after everything the prepare needs; reaching it "
+        "means the early break is gone"
+    )
+
+
+def test_the_early_break_does_not_drop_a_sample_member(tmp_path, monkeypatch):
+    """The break has to be safe as well as fast: stopping early must not cost a
+    clip. Every member the stride selected is checked for on disk, and the
+    manifest has to carry a reference for each."""
+    archive = _mls_archive_with_a_tail(tmp_path, n_audio=8)
+    read: list[str] = []
+    monkeypatch.setattr(wer_bench, "_open_tar_stream",
+                        lambda url: _CountingTar(tarfile.open(url, "r:gz"), read))
+
+    meta = {"url": str(archive), "format": "mls-stream"}
+    manifest, total, _stride = wer_bench._prepare_mls_stream(
+        meta, "test", tmp_path / "out", 4)
+
+    assert total == 8
+    assert len(manifest) == 4, "a break that costs a clip is not a safe break"
+    assert all(m["reference"].startswith("po polsku") for m in manifest)
+    assert all((tmp_path / "out" / m["audio"]).is_file() for m in manifest)
+
+
+def test_a_missing_transcript_still_reads_to_the_end(tmp_path, monkeypatch):
+    """The break requires the references as well as the audio, so an archive
+    whose transcript genuinely lacks a wanted utterance degrades to reading the
+    whole thing rather than emitting a manifest with a silent hole in it."""
+    archive = _mls_archive_with_a_tail(tmp_path, n_audio=6)
+    streams: list[list[str]] = []
+
+    def counting(url):
+        log: list[str] = []
+        streams.append(log)
+        return _CountingTar(tarfile.open(url, "r:gz"), log)
+    monkeypatch.setattr(wer_bench, "_open_tar_stream", counting)
+    # Break the reference for the last wanted utterance, which the stride
+    # selects, without touching the archive on disk.
+    meta = {"url": str(archive), "format": "mls-stream"}
+    real_sorted = wer_bench._mls_members
+
+    def broken_listing(url, split, cache_dir=None):
+        audio_names, transcripts = real_sorted(url, split)
+        return audio_names, []  # no transcript is ever readable
+
+    monkeypatch.setattr(wer_bench, "_mls_members", broken_listing)
+    manifest, _total, _stride = wer_bench._prepare_mls_stream(
+        meta, "test", tmp_path / "out", 3)
+
+    assert manifest == [], "an unreadable transcript must surface as zero refs"
+    extraction = streams[-1]
+    assert "mls_polish/PADDING_AFTER_COMPLETION.bin" in extraction, (
+        "with the references unobtainable the loop must not stop early and "
+        "must not fabricate a manifest"
+    )
+
+
+def test_the_member_index_is_cached_so_a_restart_skips_the_listing(
+        tmp_path, monkeypatch):
+    """Pass 1 reads the whole archive to learn the total the stride needs, so a
+    prepare that dies in pass 2 would otherwise repay the expensive half. The
+    listing for a fixed URL does not change between runs, so it is cached beside
+    the output and reused."""
+    archive = _mls_archive_with_a_tail(tmp_path, n_audio=6)
+    meta = {"url": str(archive), "format": "mls-stream"}
+    streams: list[list[str]] = []
+
+    def counting(url):
+        log: list[str] = []
+        streams.append(log)
+        return _CountingTar(tarfile.open(url, "r:gz"), log)
+
+    monkeypatch.setattr(wer_bench, "_open_tar_stream", counting)
+    out = tmp_path / "out"
+
+    wer_bench._prepare_mls_stream(meta, "test", out, 3)
+    after_first = len(streams)
+    assert after_first == 2, "the first run lists and then extracts"
+
+    wer_bench._prepare_mls_stream(meta, "test", out, 3)
+    assert len(streams) == after_first + 1, (
+        "the second run should open exactly one stream: the extraction. A second "
+        "listing means the cache did not take effect and a restart still pays "
+        "for the expensive half"
+    )
+
+    cache = out / ".mls_index.json"
+    assert cache.is_file(), "the cache has to be written for a reuse to happen"
+    listing = json.loads(cache.read_text(encoding="utf-8"))
+    assert len(listing) == 2 and isinstance(listing[0], list)
+    assert len(listing[0]) == 6, "the cached listing must hold the audio names"
+
+
+def test_a_corrupt_index_cache_is_relisted_not_trusted(tmp_path):
+    """A truncated cache would silently change the stride and therefore the
+    sample, which is worse than paying for the listing again."""
+    archive = _mls_archive_with_a_tail(tmp_path, n_audio=6)
+    out = tmp_path / "out"
+    out.mkdir()
+    out.joinpath(".mls_index.json").write_text("[this is not a listing",
+                                               encoding="utf-8")
+    meta = {"url": str(archive), "format": "mls-stream"}
+    manifest, total, _stride = wer_bench._prepare_mls_stream(
+        meta, "test", out, 3)
+    assert total == 6 and len(manifest) == 3, (
+        "a corrupt cache must fall back to a real listing"
+    )
+
+
+def test_a_wrong_shaped_index_cache_is_relisted_not_trusted(tmp_path):
+    """Unparseable text is caught by the exception handler; valid JSON with the
+    wrong shape is the case the type check exists for, and a cache like this
+    would silently change the stride if it were trusted."""
+    archive = _mls_archive_with_a_tail(tmp_path, n_audio=6)
+    out = tmp_path / "out"
+    out.mkdir()
+    out.joinpath(".mls_index.json").write_text(
+        # Parses, and is even a two-element list, but the elements are not the
+        # lists of member names the caller expects.
+        '["mls_polish/test/audio/one.flac", 7]',
+        encoding="utf-8")
+    meta = {"url": str(archive), "format": "mls-stream"}
+    manifest, total, _stride = wer_bench._prepare_mls_stream(
+        meta, "test", out, 3)
+    assert total == 6 and len(manifest) == 3, (
+        "a wrong-shaped cache must fall back to a real listing, not be used"
+    )

@@ -11,16 +11,28 @@ This is how three of the eleven committed sources came to have no transcript at
 all. Measured on the committed corpus, 2026-09-20:
 
     alice-1903            peak -120.0 dB   0 segments   -> silence, correct
-    telugu-launch         peak   -1.8 dB   0 segments   -> suppressed, wrong
+    telugu-launch         peak   -1.8 dB   0 segments   -> suppressed
     roman-portrait-trailer peak    0.0 dB  0 segments   -> low-frequency bed
 
-Decoding telugu-launch without the VAD recovers 16 segments / 105.9 s of the
-173.7 s, with the same model, language and beam width.
-
 The fix separates the two by measuring the audio the chunk was decoded from,
-then decoding again without the gate when a loud chunk comes back empty. These
-tests pin the separation — the measurement, the retry decision, and the fact
-that the outcome is recorded rather than silent.
+then decoding again without the gate when a loud chunk comes back empty.
+
+What that second decode returns is why it is not merged unconditionally. Measured
+on telugu-launch with the small model, 2026-09-20: forcing Telugu with the VAD
+*on* returns 0 segments over all 173.7 s; with the VAD *off* it returns 5
+segments / 24.88 s, of which 41 of 137 letters are Telugu script and the rest is
+romanized noise plus one Chinese character. A repeat run of the same file gave
+23 segments, so the unguarded decode is not stable run to run either. An earlier
+version of this file and of the docstring claimed "16 segments / 105.9 s of
+speech the committed run lost"; that number was never measured, and it had the
+retry's cost/benefit the wrong way round — on this source the retry injects
+fabricated text into a transcript whose correct content is empty. Every
+committed chunk checkpoint predates the retry and carries no note, so no
+recovery has ever been merged in practice.
+
+These tests pin the separation — the measurement, the retry decision, the guard
+on what the retry returns, and the fact that each outcome is recorded rather
+than silent.
 """
 from __future__ import annotations
 
@@ -52,8 +64,8 @@ def test_silence_does_not_trigger_a_retry():
 
 
 def test_audible_audio_does_trigger_a_retry():
-    """telugu-launch peaks at −1.8 dB and the committed run lost all 105.9 s of
-    its speech. The empty result over that level is not to be trusted."""
+    """telugu-launch peaks at −1.8 dB and its committed transcript is empty. The
+    empty result over that level is not to be trusted as silence."""
     assert _vad_retry_needed(-1.8)
     assert _vad_retry_needed(0.0)
 
@@ -97,10 +109,10 @@ def test_a_full_scale_tone_reads_above_the_bar(tmp_path):
 
 
 def test_the_bar_is_between_the_two_measured_corpus_peaks():
-    """-45 dB sits between alice-1903's -180 dB and telugu-launch's -8.6 dB.
+    """-45 dB sits between alice-1903's -120 dB and telugu-launch's -1.8 dB.
     Both corpus values are re-read from the committed chunk audio below, so a
     change to the bar has to confront the numbers it moves."""
-    assert -180.0 < EMPTY_RETRY_PEAK_DB < -8.6
+    assert -120.0 < EMPTY_RETRY_PEAK_DB < -1.8
 
 
 def test_a_quiet_but_real_signal_still_reads_above_the_bar(tmp_path):
@@ -150,7 +162,7 @@ CORPUS_AUDIO = [
     # measured on. The committed run produced zero segments for all three.
     ("alice-1903", -120.0, "silence — an empty result is correct"),
     ("roman-portrait-trailer", 0.0, "loud, low-frequency bed"),
-    ("telugu-launch", -1.8, "loud, speech-shaped — the gate lost real audio"),
+    ("telugu-launch", -1.8, "loud — speech-shaped, but the model cannot transcribe it"),
 ]
 
 
@@ -178,6 +190,56 @@ def test_the_committed_audio_measures_where_the_bar_needs_it(project, recorded_p
         assert measured > EMPTY_RETRY_PEAK_DB
 
 
+# --- nothing unverified is merged into the transcript ----------------------
+
+
+# The actual unguarded decode of telugu-launch, forced Telugu, VAD off, small
+# model, 2026-09-20: 5 segments / 24.88 s, 54.7% Telugu letters, one Chinese
+# character. A repeat run of the same file gave 23 segments.
+TELEGU_UNGUARDED_DECODE = (
+    "familiarity with Terabiriని పర్స, ఈభరిర్సఅి . క హైఖరి 有 తురి, హైరి.లై "
+    "అౌం మరో  suced పి రిసి, వాడిక.మి లాస్లancer�ణ ంహమం , మి కిఔఆంంలంలు."
+)
+
+
+def test_the_measured_unguarded_decode_is_majority_correct_script():
+    """The guard that was tried and discarded, pinned so the reason it cannot
+    work stays visible: this decode is nonsense in the *correct* script, so a
+    script-consistency check reads it as legitimate Telugu speech and would
+    have merged it. Telugu is a majority of its letters."""
+    import unicodedata
+
+    letters = [ch for ch in TELEGU_UNGUARDED_DECODE if ch.isalpha()]
+    telugu = sum(
+        1 for ch in letters if unicodedata.name(ch, "").split()[0] == "TELUGU"
+    )
+    assert letters, "the decode must contain letters for the share to mean anything"
+    share = telugu / len(letters)
+    assert share > 0.5, (
+        f"the measured decode is {share:.0%} Telugu; a majority-script guard at "
+        f"0.5 does not reject it, which is why that guard was removed"
+    )
+
+
+def test_a_loud_empty_chunk_records_suppression_and_merges_nothing(tmp_path):
+    """The outcome that replaced the retry: a loud chunk that decoded to nothing
+    is written down as suppression, not as silence, and its transcript stays
+    empty rather than carrying an unverified decode."""
+    _write_chunk_checkpoint(
+        tmp_path / "chunk_0000.json",
+        index=0, start=0.0, end=300.0, decode_start=0.0,
+        language="te", segments=[],
+        status="ok",
+        note="no segments over non-silent audio (peak -1.8 dB); the VAD gate "
+             "may have suppressed the chunk, and this model could not "
+             "transcribe it with or without the gate",
+    )
+    segs, _lang, usable, note = _load_chunk_checkpoint(tmp_path / "chunk_0000.json")
+    assert usable
+    assert segs == [], "an untranscribable chunk must not gain invented segments"
+    assert note and "non-silent" in note and "silent" in note
+
+
 # --- the outcome is recorded, not silent -----------------------------------
 
 
@@ -189,12 +251,12 @@ def test_a_recovered_chunk_records_its_note(tmp_path):
         index=0, start=0.0, end=300.0, decode_start=0.0,
         language="te", segments=[],
         status="ok",
-        note="vad suppressed the whole chunk over -8.6 dB of audio; decoded "
-             "again without the VAD and recovered 16 segments",
+        note="no segments over non-silent audio (peak -1.8 dB); the VAD gate "
+             "may have suppressed the chunk",
     )
     _seg, _lang, usable, note = _load_chunk_checkpoint(tmp_path / "chunk_0000.json")
-    assert usable, "a recovered chunk is a completed decode and must stay cached"
-    assert note and "vad suppressed" in note
+    assert usable, "a loud empty chunk is a completed decode and must stay cached"
+    assert note and "non-silent" in note
 
 
 def test_a_silently_empty_chunk_records_that_instead(tmp_path):

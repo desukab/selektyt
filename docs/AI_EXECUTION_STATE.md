@@ -89,6 +89,88 @@ every line below was true on this host at that point.
 
 ## Completed work
 
+### This session — the VAD retry's own justification was a fabricated number, and the retry is removed
+
+The retry decoded a chunk a second time without the VAD gate and merged whatever
+came back, justified by a docstring claiming it recovered "16 segments / 105.9 s
+of speech the committed run lost" on telugu-launch. **That number was never
+measured.** Re-measuring it on the retained 16 kHz audio with the production
+model and decode parameters:
+
+| decode | segments | speech | letters in Telugu script |
+|---|---|---|---|
+| `vad_filter=True`, forced `te` | **0** | 0.0 s | — |
+| `vad_filter=False`, forced `te` | **5** | 24.88 s | 41 of 75 (**54.7%**) |
+| `vad_filter=False`, auto-detect | 5 | 24.46 s | 0 — all Latin, detected as Sindhi |
+| repeat of row 2, same file | **23** | 59.88 s | varies |
+
+So the retry does not recover speech: it returns nonsense that is *majority
+Telugu script*, is unstable run to run on the same input, and injecting it would
+have written fabricated text into a transcript whose correct content is empty.
+And **every committed chunk checkpoint in the corpus has no `note` field at
+all** — they all predate the retry — so it had never fired on a real run, never
+recovered anything, and never merged anything.
+
+**The merge is gone; the measurement stays.** An empty decode over loud audio is
+still distinguished from silence on disk (the part that is verifiable and
+useful), and carried into the transcript's provenance as `vad_empty_chunks`
+(renamed from `vad_recovered_chunks`, which never appeared in a committed
+transcript). What is not done is any second decode.
+
+Two guards were tried and rejected on measurement, and both rejections are
+recorded in the code so they are not re-attempted:
+
+- *Script consistency fails.* Requiring the requested language's script to be a
+  majority of the recovered letters **passes** the measured garbage, because the
+  garbage is 54.7% Telugu. It is nonsense in the *correct* script, which is what
+  no local check can detect.
+- *Token confidence would reject the wrong cases.* Low average probability
+  correlates with hard audio, and hard audio is the only place a recovery could
+  ever matter; that bar suppresses recoveries precisely where they are needed.
+
+`roman-portrait-trailer`, the risk that motivated the guard in the first place,
+is **closed**: the VAD returns 0 segments and the unguarded decode also returns
+0, in 7.3 s. The retry is inert there.
+
+What this does *not* claim: telugu-launch still has no transcript, and this
+change does not give it one. It removes a path that would have filled it with
+fabricated text. The source remains untranscribable at this model size —
+`telugu-medium` at WER 91.54% is the measured distance to the bar.
+
+### This session — three defects in the streaming WER prepare, one of which hung a run for hours
+
+The MLS prepare streams archives of 50–115 GiB because they cannot fit on the
+3 GB of free disk. Three defects found by running it against the german archive:
+
+1. **Pass 2 had no early break.** It re-read the entire archive even after the
+   40-clip sample and its transcript were complete. The german prepare had all
+   40 clips extracted and kept streaming for hours. Fixed: the loop stops once
+   the wanted members and their references are in hand, which is provably
+   everything the pass produces.
+2. **Pass 1's listing was never cached.** A prepare that dies in pass 2 repays
+   the expensive half — a full re-read just to rebuild a list. The listing for a
+   fixed URL does not change between runs, so it is now written beside the
+   output and reused, with shape validation that does not depend on a log line
+   that happens to enforce it.
+3. **The network stream had no stall detection** — the one that actually hung
+   the run. An established connection that stops sending data raises nothing:
+   curl sits in `poll` forever and a 115 GiB prepare hangs with no exit code to
+   retry on. Observed: two hours into pass 2, zero bytes received in a 30 s
+   window, socket ESTABLISHED with an empty receive queue. `--retry` does not
+   help, because a stall is not a connection failure. Fixed with
+   `--speed-limit`/`--speed-time` below the lowest legitimate rate measured
+   (2.9 MiB/s under throttling) plus `--retry-all-errors`.
+
+The german prepare was restarted with all three. A fresh connection resumed at
+17.2 MiB/s, confirming the stall was a dead connection rather than a throttled
+server, and the stall detection now turns that case into a retry instead of an
+infinite hang.
+
+Each fix is mutation-tested: the early break (both directions — removing it, and
+breaking unconditionally), the cache hit, and the fallback on a malformed cache.
+One mutation revealed the shape check was being enforced *accidentally* by the
+log line indexing `data[1]`; the check is now explicit and the comment says so.
+
 ### This session — criterion P9 was satisfied: Spanish is the third C10 language
 
 **WER 8.58% / CER 2.64% on Multilingual LibriSpeech Spanish test — 40 clips,
@@ -198,36 +280,59 @@ The two are separable by measuring the audio the chunk was decoded from:
 |---|---|---|---|
 | `alice-1903` | −120 dB (the silence floor) | 0 | silence — the empty result is right |
 | `roman-portrait-trailer` | 0.0 dB | 0 | loud, 91.5% of energy below 500 Hz — a bed, not speech |
-| `telugu-launch` | −1.8 dB | 0 | loud, speech-shaped spectrum — **the gate lost real audio** |
+| `telugu-launch` | −1.8 dB | 0 | loud, speech-shaped spectrum — **suppressed, and this model cannot transcribe it with or without the gate** |
 
-`telugu-launch` is the one that is a real failure. Its band-energy profile
-matches `hindi-baiga-interview`, which *did* transcribe. Decoding it without
-the VAD, with the same model, language and beam width, returns segments where
-the committed run returned nothing. The mechanism is confirmed by direct
-reproduction: `vad_filter=True` → **0 segments / 0.0 s covered**;
-`vad_filter=False` → **16 segments / 105.9 s** of the 173.7 s.
+`telugu-launch` is the one that is a real failure: it is loud and its
+band-energy profile matches `hindi-baiga-interview`, which *did* transcribe,
+yet it transcribed to nothing. Decoding it without the VAD does not fix it.
 
-The fix in `providers/whisper.py` measures each chunk's peak before it is
-deleted and, above a −45 dB bar, decodes again without the gate. Both outcomes
-are written to the checkpoint as a `note` and carried into the transcript's
-provenance as `vad_recovered_chunks`, because a recovered chunk is a weaker
-result than one the gate let through and a reader of the transcript needs to
-see which chunks those were. Verified end to end on the retained audio: the
-retry fired on the real chunk — *"vad suppressed the whole chunk over −1.8 dB
-of audio; decoded again without the VAD and recovered 9 segments"* — where the
-committed checkpoint has 0.
+**What the unguarded decode actually returns, measured 2026-09-20** on the
+173.7 s source with the small model, forced Telugu, beam 1:
 
-**The quality of what was recovered is poor, and this is not a fix for the
-source.** 9 segments cover 24.8 s of the 173.7 s, the script is Devanagari
-rather than Telugu, and stray English fragments are hallucinated into it. The
-defect fixed is that the failure was invisible and total; the source remains a
-hard one. `roman-portrait-trailer` is the open risk in the other direction: it
-is loud, so the retry will fire on it too, and decoding music without a VAD is
-exactly how whisper hallucinates. An empty transcript and a hallucinated one
-are both useless, and the `note` is what keeps the second from being mistaken
-for a clean decode. No speech/music classifier was added — that would be
-another heuristic that can be wrong, and the recovery is flagged rather than
-trusted.
+| decode | segments | speech covered | letters in Telugu script |
+|---|---|---|---|
+| `vad_filter=True`, forced `te` | **0** | 0.0 s | — |
+| `vad_filter=False`, forced `te` | **5** | 24.88 s | 41 of 75 (**54.7%**) |
+| `vad_filter=False`, auto-detect | 5 | 24.46 s | 0 — all Latin, detected as Sindhi |
+| repeat of the second row | **23** | 59.88 s | varies |
+
+The earlier text here claimed "16 segments / 105.9 s of speech the committed
+run lost". **That number was never measured** — it is the same class of defect
+this whole audit exists to catch, a plausible figure standing in for evidence.
+The real decode is 5 segments of nonsense that is *majority Telugu script*
+(54.7%), the rest romanized noise plus one Chinese character, and it is not
+even reproducible: 5 segments on one run, 23 on the next, of the same file.
+
+**The fix therefore does not merge a second decode at all.** An earlier version
+measured the peak, and above a −45 dB bar decoded again without the gate and
+merged whatever came back. That merge is removed, on measurement rather than on
+caution:
+
+- *A script-consistency guard was tried and does not work.* Requiring the
+  requested language's script to be a majority of the recovered letters passes
+  the measured garbage, because the garbage is 54.7% Telugu. It is nonsense in
+  the correct script, which is exactly what a local check cannot detect.
+- *A confidence threshold would reject the wrong cases.* Low average token
+  probability correlates with hard audio, and hard audio is the only place a
+  recovery could ever matter; that bar would suppress recoveries precisely
+  where they are needed.
+- *Nothing measured is lost by removing the merge.* Every committed chunk
+  checkpoint in the corpus carries **no `note` field at all** — all predate the
+  retry — so the retry has never fired on a real run, never recovered anything,
+  and never merged anything. Removing it deletes a fabrication path, not a
+  recovery.
+
+What is kept is the part that is verifiable: the peak measurement, taken before
+the chunk WAV is deleted, and the `note` that separates suppression from
+silence on disk. An empty transcript over loud audio now reads *"no segments
+over non-silent audio (peak −1.8 dB); the VAD gate may have suppressed the
+chunk, and this model could not transcribe it with or without the gate"* rather
+than reading as silence, and is carried into the transcript's provenance as
+`vad_empty_chunks`.
+
+`roman-portrait-trailer`, the feared risk in the other direction, is **closed**:
+`vad_filter=True` → 0 segments and `vad_filter=False` → also 0 segments, in
+7.3 s. The retry is inert on it, so no music is hallucinated there.
 
 Two ordering bugs the end-to-end run caught, both pinned by tests. The first
 version measured the chunk audio *after* `wav.unlink()` had deleted it, so
