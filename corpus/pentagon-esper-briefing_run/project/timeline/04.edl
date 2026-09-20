@@ -1,13 +1,13 @@
-TITLE:   At the end of the day, my expectation is that it'll be fewer than what we had before.
+TITLE:   has the deployment of reinforcements that you announced last week begun and could you describe more fully what you intend to do there?
 
 FCM: NON-DROP FRAME
 
-001  PENTAGON V     C        00:15:09:03 00:15:15:03 00:00:00:00 00:00:06:00
+001  PENTAGON V     C        00:06:04:04 00:06:23:20 00:00:00:00 00:00:19:16
      M2   pentagon-esper-briefing.mp4
-* FROM CLIP: corpus/media/pentagon-esper-briefing.mp4
-001  PENTAGON A     C        00:15:09:03 00:15:15:03 00:00:00:00 00:00:06:00
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4
+001  PENTAGON A     C        00:06:04:04 00:06:23:20 00:00:00:00 00:00:19:16
 
-002  PENTAGON V     C        00:15:16:01 00:15:21:28 00:00:06:00 00:00:11:27
+002  PENTAGON V     C        00:06:24:06 00:06:33:18 00:00:19:16 00:00:28:28
      M2   pentagon-esper-briefing.mp4
-* FROM CLIP: corpus/media/pentagon-esper-briefing.mp4
-002  PENTAGON A     C        00:15:16:01 00:15:21:28 00:00:06:00 00:00:11:27
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4
+002  PENTAGON A     C        00:06:24:06 00:06:33:18 00:00:19:16 00:00:28:28

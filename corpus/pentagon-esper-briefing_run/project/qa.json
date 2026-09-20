@@ -5,6 +5,8 @@
   "per_file": {
     "corpus/pentagon-esper-briefing_run/project/facebook/01.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
@@ -13,6 +15,8 @@
     },
     "corpus/pentagon-esper-briefing_run/project/shorts/01.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
@@ -21,6 +25,8 @@
     },
     "corpus/pentagon-esper-briefing_run/project/facebook/02.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
@@ -29,6 +35,8 @@
     },
     "corpus/pentagon-esper-briefing_run/project/shorts/02.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
@@ -37,6 +45,8 @@
     },
     "corpus/pentagon-esper-briefing_run/project/facebook/03.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
@@ -45,6 +55,8 @@
     },
     "corpus/pentagon-esper-briefing_run/project/shorts/03.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
@@ -53,41 +65,49 @@
     },
     "corpus/pentagon-esper-briefing_run/project/facebook/04.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 2274315,
+      "size": 5095186,
       "warnings": []
     },
     "corpus/pentagon-esper-briefing_run/project/shorts/04.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 1021813,
+      "size": 2347222,
       "warnings": []
     },
     "corpus/pentagon-esper-briefing_run/project/facebook/05.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 2318767,
+      "size": 2149955,
       "warnings": []
     },
     "corpus/pentagon-esper-briefing_run/project/shorts/05.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 1135966,
+      "size": 970896,
       "warnings": []
     }
   },
-  "diversity": 0.258,
+  "diversity": 0.264,
   "source_coverage": {
-    "coverage_pct": 10.7,
-    "total_covered_sec": 108.3,
+    "coverage_pct": 12.2,
+    "total_covered_sec": 123.34,
     "overlaps": [],
     "overlap_count": 0
   },
@@ -97,17 +117,17 @@
     "rejected_count": 0,
     "context_guard_rejections": 0,
     "truncated_by_limit": 7,
-    "avg_duration": 21.66,
+    "avg_duration": 24.67,
     "duration_distribution": {
-      "<15s": 2,
-      "15-30s": 2,
+      "<15s": 1,
+      "15-30s": 3,
       "30-45s": 1,
       "45-55s": 0
     },
-    "silence_pct": 8.8,
+    "silence_pct": 9.3,
     "filler_pct": 0.0,
-    "avg_words_per_second": 3.35,
-    "avg_hook_latency": 1.72,
+    "avg_words_per_second": 3.18,
+    "avg_hook_latency": 0.9,
     "payoff_presence_rate": 1.0,
     "duplicate_overlap_rate": 0.0
   }

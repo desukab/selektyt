@@ -4,15 +4,15 @@ FCM: NON-DROP FRAME
 
 001  PENTAGON V     C        00:07:31:24 00:07:41:01 00:00:00:00 00:00:09:07
      M2   pentagon-esper-briefing.mp4
-* FROM CLIP: corpus/media/pentagon-esper-briefing.mp4
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4
 001  PENTAGON A     C        00:07:31:24 00:07:41:01 00:00:00:00 00:00:09:07
 
 002  PENTAGON V     C        00:07:46:24 00:07:52:11 00:00:09:07 00:00:14:24
      M2   pentagon-esper-briefing.mp4
-* FROM CLIP: corpus/media/pentagon-esper-briefing.mp4
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4
 002  PENTAGON A     C        00:07:46:24 00:07:52:11 00:00:09:07 00:00:14:24
 
 003  PENTAGON V     C        00:07:52:24 00:08:03:06 00:00:14:24 00:00:25:06
      M2   pentagon-esper-briefing.mp4
-* FROM CLIP: corpus/media/pentagon-esper-briefing.mp4
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4
 003  PENTAGON A     C        00:07:52:24 00:08:03:06 00:00:14:24 00:00:25:06

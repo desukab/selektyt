@@ -1,0 +1,15 @@
+[run ] pentagon-esper-briefing (news) ...
+[OK] pentagon-esper-briefing in 317.7s
+
+7 OK / 4 not-OK / 11 total (1 run this pass)
+  alice-1903                   NO_SPEECH_DETECTED segs=0 clips=— en
+  emwcon-panel-2018            OK                 segs=842 clips=5 en
+  hadhazy-protest              OK                 segs=38 clips=3 hu
+  hindi-baiga-interview        NO_STORIES_PASSED  segs=3 clips=— hi
+  nasa360-ep5                  OK                 segs=425 clips=6 en
+  ooi-vertical                 OK                 segs=26 clips=3 en
+  pentagon-esper-briefing      OK                 segs=— clips=— en
+  roman-portrait-trailer       NO_SPEECH_DETECTED segs=0 clips=— en
+  royal-society-cloke          OK                 segs=156 clips=4 en
+  telugu-launch                NO_SPEECH_DETECTED segs=0 clips=— te
+  telugu-tutorial              OK                 segs=4 clips=1 te

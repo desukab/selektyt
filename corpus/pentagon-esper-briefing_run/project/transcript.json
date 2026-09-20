@@ -9,7 +9,8 @@
     "fallback_reason": null,
     "chunks": 4,
     "chunking": "5 min chunks (+15s overlap)",
-    "num_threads": 4
+    "num_threads": 4,
+    "vad_filter": true
   },
   "segments": [
     {
@@ -5278,32 +5279,20 @@
     },
     {
       "start": 299.73,
-      "end": 299.83,
-      "text": "Thank you for watching.",
+      "end": 299.97,
+      "text": "Thank you.",
       "words": [
         {
           "text": " Thank",
           "start": 299.73,
-          "end": 299.73,
-          "confidence": 0.057164110243320465
+          "end": 299.97,
+          "confidence": 0.05051031336188316
         },
         {
-          "text": " you",
-          "start": 299.73,
-          "end": 299.73,
-          "confidence": 0.9770421981811523
-        },
-        {
-          "text": " for",
-          "start": 299.73,
-          "end": 299.81,
-          "confidence": 0.1860160082578659
-        },
-        {
-          "text": " watching.",
-          "start": 299.81,
-          "end": 299.83,
-          "confidence": 0.5852086544036865
+          "text": " you.",
+          "start": 299.97,
+          "end": 299.97,
+          "confidence": 0.9762499332427979
         }
       ]
     },
@@ -6536,366 +6525,335 @@
     },
     {
       "start": 364.84000000000003,
-      "end": 370.0,
-      "text": "Korea, has the deployment of reinforcements that you announced last week begun?",
+      "end": 372.1,
+      "text": "has the deployment of reinforcements that you announced last week begun and could you describe",
       "words": [
         {
-          "text": " Korea,",
-          "start": 364.84000000000003,
-          "end": 364.96,
-          "confidence": 0.011697985231876373
-        },
-        {
           "text": " has",
-          "start": 365.5,
-          "end": 366.3,
-          "confidence": 0.9612268209457397
+          "start": 364.84000000000003,
+          "end": 365.74,
+          "confidence": 0.06553929299116135
         },
         {
           "text": " the",
-          "start": 366.3,
-          "end": 366.62,
-          "confidence": 0.9968234300613403
+          "start": 365.74,
+          "end": 366.6,
+          "confidence": 0.9809522032737732
         },
         {
           "text": " deployment",
-          "start": 366.62,
+          "start": 366.6,
           "end": 367.46,
-          "confidence": 0.9907078742980957
+          "confidence": 0.9739332795143127
         },
         {
           "text": " of",
           "start": 367.46,
           "end": 367.74,
-          "confidence": 0.855049192905426
+          "confidence": 0.8619387149810791
         },
         {
           "text": " reinforcements",
           "start": 367.74,
           "end": 368.48,
-          "confidence": 0.9889693856239319
+          "confidence": 0.9834777116775513
         },
         {
           "text": " that",
           "start": 368.48,
           "end": 368.68,
-          "confidence": 0.9651942253112793
+          "confidence": 0.9606563448905945
         },
         {
           "text": " you",
           "start": 368.68,
-          "end": 368.8,
-          "confidence": 0.9980408549308777
+          "end": 368.78,
+          "confidence": 0.9965722560882568
         },
         {
           "text": " announced",
-          "start": 368.8,
+          "start": 368.78,
           "end": 369.08,
-          "confidence": 0.9959990978240967
+          "confidence": 0.9931461811065674
         },
         {
           "text": " last",
           "start": 369.08,
           "end": 369.36,
-          "confidence": 0.9932069182395935
+          "confidence": 0.9917894601821899
         },
         {
           "text": " week",
           "start": 369.36,
           "end": 369.6,
-          "confidence": 0.9921420812606812
+          "confidence": 0.9921090006828308
         },
         {
-          "text": " begun?",
+          "text": " begun",
           "start": 369.6,
           "end": 370.0,
-          "confidence": 0.8687061667442322
-        }
-      ]
-    },
-    {
-      "start": 371.14,
-      "end": 374.18,
-      "text": "And could you describe more fully what you intend to do there?",
-      "words": [
+          "confidence": 0.7644830346107483
+        },
         {
-          "text": " And",
-          "start": 371.14,
-          "end": 371.34000000000003,
-          "confidence": 0.9654823541641235
+          "text": " and",
+          "start": 370.0,
+          "end": 371.32,
+          "confidence": 0.4465000033378601
         },
         {
           "text": " could",
-          "start": 371.34000000000003,
-          "end": 371.64,
-          "confidence": 0.7666274905204773
+          "start": 371.32,
+          "end": 371.65999999999997,
+          "confidence": 0.5395646691322327
         },
         {
           "text": " you",
-          "start": 371.64,
+          "start": 371.65999999999997,
           "end": 371.74,
-          "confidence": 0.999519944190979
+          "confidence": 0.9938610792160034
         },
         {
           "text": " describe",
           "start": 371.74,
           "end": 372.1,
-          "confidence": 0.9957858920097351
-        },
+          "confidence": 0.9919052124023438
+        }
+      ]
+    },
+    {
+      "start": 372.1,
+      "end": 374.2,
+      "text": "more fully what you intend to do there?",
+      "words": [
         {
           "text": " more",
           "start": 372.1,
           "end": 372.34000000000003,
-          "confidence": 0.9822893738746643
+          "confidence": 0.9918584227561951
         },
         {
           "text": " fully",
           "start": 372.34000000000003,
-          "end": 372.64,
-          "confidence": 0.9868033528327942
+          "end": 372.65999999999997,
+          "confidence": 0.9822894930839539
         },
         {
           "text": " what",
-          "start": 372.64,
-          "end": 372.9,
-          "confidence": 0.9874889254570007
+          "start": 372.65999999999997,
+          "end": 372.88,
+          "confidence": 0.9652197360992432
         },
         {
           "text": " you",
-          "start": 372.9,
+          "start": 372.88,
           "end": 373.48,
-          "confidence": 0.8511797785758972
+          "confidence": 0.496017724275589
         },
         {
           "text": " intend",
           "start": 373.48,
           "end": 373.7,
-          "confidence": 0.7705183029174805
+          "confidence": 0.6260155439376831
         },
         {
           "text": " to",
           "start": 373.7,
           "end": 373.88,
-          "confidence": 0.9987033605575562
+          "confidence": 0.997848391532898
         },
         {
           "text": " do",
           "start": 373.88,
           "end": 374.0,
-          "confidence": 0.9982742071151733
+          "confidence": 0.9972696900367737
         },
         {
           "text": " there?",
           "start": 374.0,
-          "end": 374.18,
-          "confidence": 0.9193311333656311
+          "end": 374.2,
+          "confidence": 0.8401620984077454
         }
       ]
     },
     {
-      "start": 374.34000000000003,
-      "end": 374.74,
-      "text": "Mr. Chairman.",
-      "words": [
-        {
-          "text": " Mr.",
-          "start": 374.34000000000003,
-          "end": 374.74,
-          "confidence": 0.04932272434234619
-        },
-        {
-          "text": " Chairman.",
-          "start": 374.74,
-          "end": 374.74,
-          "confidence": 0.08428063988685608
-        }
-      ]
-    },
-    {
-      "start": 374.74,
+      "start": 374.72,
       "end": 379.84000000000003,
       "text": "We have begun deploying and repositioning additional assets into the vicinity of Dar-Arzara.",
       "words": [
         {
           "text": " We",
-          "start": 374.74,
-          "end": 374.86,
-          "confidence": 0.9529264569282532
+          "start": 374.72,
+          "end": 374.88,
+          "confidence": 0.7782620191574097
         },
         {
           "text": " have",
-          "start": 374.86,
-          "end": 375.06,
-          "confidence": 0.9925808906555176
+          "start": 374.88,
+          "end": 375.08,
+          "confidence": 0.9900152087211609
         },
         {
           "text": " begun",
-          "start": 375.06,
+          "start": 375.08,
           "end": 375.54,
-          "confidence": 0.9958725571632385
+          "confidence": 0.9850356578826904
         },
         {
           "text": " deploying",
           "start": 375.54,
           "end": 375.98,
-          "confidence": 0.9962052702903748
+          "confidence": 0.995581328868866
         },
         {
           "text": " and",
           "start": 375.98,
           "end": 376.1,
-          "confidence": 0.7466868162155151
+          "confidence": 0.620878279209137
         },
         {
           "text": " repositioning",
           "start": 376.1,
           "end": 376.78,
-          "confidence": 0.97640993197759
+          "confidence": 0.9767289757728577
         },
         {
           "text": " additional",
           "start": 376.78,
           "end": 377.04,
-          "confidence": 0.9967862367630005
+          "confidence": 0.9920305013656616
         },
         {
           "text": " assets",
           "start": 377.04,
           "end": 377.52,
-          "confidence": 0.9890314936637878
+          "confidence": 0.9849344491958618
         },
         {
           "text": " into",
           "start": 377.52,
           "end": 377.86,
-          "confidence": 0.9904215335845947
+          "confidence": 0.981695294380188
         },
         {
           "text": " the",
           "start": 377.86,
-          "end": 378.12,
-          "confidence": 0.9971879124641418
+          "end": 378.1,
+          "confidence": 0.9950143694877625
         },
         {
           "text": " vicinity",
-          "start": 378.12,
-          "end": 378.62,
-          "confidence": 0.9960740804672241
+          "start": 378.1,
+          "end": 378.6,
+          "confidence": 0.9956647753715515
         },
         {
           "text": " of",
-          "start": 378.62,
+          "start": 378.6,
           "end": 379.0,
-          "confidence": 0.9945898056030273
+          "confidence": 0.9931489825248718
         },
         {
           "text": " Dar",
           "start": 379.0,
           "end": 379.4,
-          "confidence": 0.9104466438293457
+          "confidence": 0.8992414474487305
         },
         {
           "text": "-Arzara.",
           "start": 379.4,
           "end": 379.84000000000003,
-          "confidence": 0.6683844476938248
+          "confidence": 0.690829873085022
         }
       ]
     },
     {
       "start": 380.2,
       "end": 383.86,
-      "text": "As I said the other day, it includes mechanized forces and other types of forces.",
+      "text": "As I said the other day, includes mechanized forces and other types of forces.",
       "words": [
         {
           "text": " As",
           "start": 380.2,
           "end": 380.64,
-          "confidence": 0.9935265779495239
+          "confidence": 0.9905609488487244
         },
         {
           "text": " I",
           "start": 380.64,
           "end": 380.8,
-          "confidence": 0.9990262985229492
+          "confidence": 0.998134195804596
         },
         {
           "text": " said",
           "start": 380.8,
           "end": 381.02,
-          "confidence": 0.994802713394165
+          "confidence": 0.9935599565505981
         },
         {
           "text": " the",
           "start": 381.02,
           "end": 381.18,
-          "confidence": 0.9832390546798706
+          "confidence": 0.9665646553039551
         },
         {
           "text": " other",
           "start": 381.18,
           "end": 381.28,
-          "confidence": 0.9992672801017761
+          "confidence": 0.9991969466209412
         },
         {
           "text": " day,",
           "start": 381.28,
           "end": 381.46,
-          "confidence": 0.9947488903999329
-        },
-        {
-          "text": " it",
-          "start": 381.52,
-          "end": 381.54,
-          "confidence": 0.5960664749145508
+          "confidence": 0.9936667084693909
         },
         {
           "text": " includes",
-          "start": 381.54,
-          "end": 381.84000000000003,
-          "confidence": 0.9974258542060852
+          "start": 381.48,
+          "end": 381.82,
+          "confidence": 0.3097960352897644
         },
         {
           "text": " mechanized",
-          "start": 381.84000000000003,
+          "start": 381.82,
           "end": 382.36,
-          "confidence": 0.9948948919773102
+          "confidence": 0.9919140040874481
         },
         {
           "text": " forces",
           "start": 382.36,
           "end": 382.68,
-          "confidence": 0.9969584941864014
+          "confidence": 0.9970002770423889
         },
         {
           "text": " and",
           "start": 382.68,
           "end": 383.02,
-          "confidence": 0.9858992099761963
+          "confidence": 0.9850273132324219
         },
         {
           "text": " other",
           "start": 383.02,
           "end": 383.18,
-          "confidence": 0.9984155893325806
+          "confidence": 0.9986751675605774
         },
         {
           "text": " types",
           "start": 383.18,
           "end": 383.4,
-          "confidence": 0.9943472743034363
+          "confidence": 0.9940973520278931
         },
         {
           "text": " of",
           "start": 383.4,
           "end": 383.58,
-          "confidence": 0.9997122883796692
+          "confidence": 0.9995169639587402
         },
         {
           "text": " forces.",
           "start": 383.58,
           "end": 383.86,
-          "confidence": 0.9982240796089172
+          "confidence": 0.9982116222381592
         }
       ]
     },
@@ -6908,231 +6866,231 @@
           "text": " That",
           "start": 384.65999999999997,
           "end": 384.96,
-          "confidence": 0.9944807291030884
+          "confidence": 0.9912891387939453
         },
         {
           "text": " will",
           "start": 384.96,
-          "end": 385.1,
-          "confidence": 0.9982030391693115
+          "end": 385.12,
+          "confidence": 0.9966514706611633
         },
         {
           "text": " continue",
-          "start": 385.1,
+          "start": 385.12,
           "end": 385.6,
-          "confidence": 0.9993833303451538
+          "confidence": 0.9993799924850464
         },
         {
           "text": " until",
           "start": 385.6,
           "end": 386.06,
-          "confidence": 0.9272508025169373
+          "confidence": 0.9658753275871277
         },
         {
           "text": " we",
           "start": 386.06,
           "end": 386.36,
-          "confidence": 0.9749780893325806
+          "confidence": 0.9808814525604248
         },
         {
           "text": " believe",
           "start": 386.36,
           "end": 387.15999999999997,
-          "confidence": 0.9678279161453247
+          "confidence": 0.9670434594154358
         },
         {
           "text": " we",
           "start": 387.15999999999997,
           "end": 387.3,
-          "confidence": 0.9818437695503235
+          "confidence": 0.9752282500267029
         },
         {
           "text": " have",
           "start": 387.3,
           "end": 387.4,
-          "confidence": 0.9981023669242859
+          "confidence": 0.9975112676620483
         },
         {
           "text": " sufficient",
           "start": 387.4,
           "end": 387.62,
-          "confidence": 0.9970989227294922
+          "confidence": 0.9966081380844116
         },
         {
           "text": " capability",
           "start": 387.62,
           "end": 388.36,
-          "confidence": 0.9860594868659973
+          "confidence": 0.9835726618766785
         },
         {
           "text": " to",
           "start": 388.36,
           "end": 388.65999999999997,
-          "confidence": 0.9987986087799072
+          "confidence": 0.9980862140655518
         },
         {
           "text": " ensure",
           "start": 388.65999999999997,
           "end": 388.96,
-          "confidence": 0.9804165959358215
+          "confidence": 0.9727281332015991
         },
         {
           "text": " ISIS",
           "start": 388.96,
           "end": 389.28,
-          "confidence": 0.9474408626556396
+          "confidence": 0.9293121695518494
         },
         {
           "text": " and",
           "start": 389.28,
           "end": 389.54,
-          "confidence": 0.9960625767707825
+          "confidence": 0.993320107460022
         }
       ]
     },
     {
       "start": 389.54,
-      "end": 393.98,
+      "end": 394.0,
       "text": "other destabilizing actors are denied access to that oil facility.",
       "words": [
         {
           "text": " other",
           "start": 389.54,
           "end": 389.76,
-          "confidence": 0.9966973066329956
+          "confidence": 0.9963518381118774
         },
         {
           "text": " destabilizing",
           "start": 389.76,
           "end": 390.52,
-          "confidence": 0.9871850808461508
+          "confidence": 0.9856400489807129
         },
         {
           "text": " actors",
           "start": 390.52,
-          "end": 390.94,
-          "confidence": 0.9919552206993103
+          "end": 390.92,
+          "confidence": 0.9908061623573303
         },
         {
           "text": " are",
-          "start": 390.94,
+          "start": 390.92,
           "end": 391.96,
-          "confidence": 0.9797590970993042
+          "confidence": 0.9804980754852295
         },
         {
           "text": " denied",
           "start": 391.96,
-          "end": 392.24,
-          "confidence": 0.9916765689849854
+          "end": 392.22,
+          "confidence": 0.9938681721687317
         },
         {
           "text": " access",
-          "start": 392.24,
+          "start": 392.22,
           "end": 392.68,
-          "confidence": 0.9988522529602051
+          "confidence": 0.9986168146133423
         },
         {
           "text": " to",
           "start": 392.68,
           "end": 392.94,
-          "confidence": 0.9991065859794617
+          "confidence": 0.9990224838256836
         },
         {
           "text": " that",
           "start": 392.94,
           "end": 393.14,
-          "confidence": 0.9985829591751099
+          "confidence": 0.9980073571205139
         },
         {
           "text": " oil",
           "start": 393.14,
           "end": 393.54,
-          "confidence": 0.9926542043685913
+          "confidence": 0.9848998785018921
         },
         {
           "text": " facility.",
           "start": 393.54,
-          "end": 393.98,
-          "confidence": 0.9980985522270203
+          "end": 394.0,
+          "confidence": 0.9972706437110901
         }
       ]
     },
     {
-      "start": 393.98,
+      "start": 394.0,
       "end": 399.88,
       "text": "Have you had any indications of any challenges to your presence there?",
       "words": [
         {
           "text": " Have",
-          "start": 393.98,
+          "start": 394.0,
           "end": 394.62,
-          "confidence": 0.03745006024837494
+          "confidence": 0.03387763723731041
         },
         {
           "text": " you",
           "start": 394.62,
           "end": 394.78,
-          "confidence": 0.9833752512931824
+          "confidence": 0.98392254114151
         },
         {
           "text": " had",
           "start": 394.78,
           "end": 396.04,
-          "confidence": 0.6437679529190063
+          "confidence": 0.5862154960632324
         },
         {
           "text": " any",
           "start": 396.04,
           "end": 396.24,
-          "confidence": 0.9800605773925781
+          "confidence": 0.9794201254844666
         },
         {
           "text": " indications",
           "start": 396.24,
           "end": 396.8,
-          "confidence": 0.8226038217544556
+          "confidence": 0.7863085865974426
         },
         {
           "text": " of",
           "start": 396.8,
           "end": 397.38,
-          "confidence": 0.9573611617088318
+          "confidence": 0.9605372548103333
         },
         {
           "text": " any",
           "start": 397.38,
           "end": 397.62,
-          "confidence": 0.9060428738594055
+          "confidence": 0.9086983799934387
         },
         {
           "text": " challenges",
           "start": 397.62,
-          "end": 398.72,
-          "confidence": 0.9739881157875061
+          "end": 398.74,
+          "confidence": 0.969312310218811
         },
         {
           "text": " to",
-          "start": 398.72,
+          "start": 398.74,
           "end": 399.14,
-          "confidence": 0.980129063129425
+          "confidence": 0.9805529713630676
         },
         {
           "text": " your",
           "start": 399.14,
-          "end": 399.26,
-          "confidence": 0.9877049922943115
+          "end": 399.24,
+          "confidence": 0.986818790435791
         },
         {
           "text": " presence",
-          "start": 399.26,
+          "start": 399.24,
           "end": 399.54,
-          "confidence": 0.9945372939109802
+          "confidence": 0.9946092367172241
         },
         {
           "text": " there?",
           "start": 399.54,
           "end": 399.88,
-          "confidence": 0.9187037944793701
+          "confidence": 0.9142512083053589
         }
       ]
     },
@@ -7145,86 +7103,86 @@
           "text": " Not",
           "start": 400.08,
           "end": 400.26,
-          "confidence": 0.32553982734680176
+          "confidence": 0.38697493076324463
         },
         {
           "text": " at",
           "start": 400.26,
           "end": 400.38,
-          "confidence": 0.7848262786865234
+          "confidence": 0.8429597616195679
         },
         {
           "text": " this",
           "start": 400.38,
           "end": 400.5,
-          "confidence": 0.9929088354110718
+          "confidence": 0.992807149887085
         },
         {
           "text": " time.",
           "start": 400.5,
           "end": 400.7,
-          "confidence": 0.9985816478729248
+          "confidence": 0.9986839890480042
         }
       ]
     },
     {
-      "start": 403.08,
+      "start": 403.04,
       "end": 406.18,
       "text": "Sir, do you have video of Baghdadi's final moments?",
       "words": [
         {
           "text": " Sir,",
-          "start": 403.08,
+          "start": 403.04,
           "end": 403.52,
-          "confidence": 0.8188509345054626
+          "confidence": 0.7901947498321533
         },
         {
           "text": " do",
           "start": 403.6,
           "end": 403.7,
-          "confidence": 0.9921093583106995
+          "confidence": 0.9910665154457092
         },
         {
           "text": " you",
           "start": 403.7,
           "end": 403.82,
-          "confidence": 0.9957516193389893
+          "confidence": 0.9957950115203857
         },
         {
           "text": " have",
           "start": 403.82,
-          "end": 403.98,
-          "confidence": 0.9919446110725403
+          "end": 404.0,
+          "confidence": 0.992152750492096
         },
         {
           "text": " video",
-          "start": 403.98,
+          "start": 404.0,
           "end": 404.4,
-          "confidence": 0.8529240489006042
+          "confidence": 0.8783016204833984
         },
         {
           "text": " of",
           "start": 404.4,
           "end": 404.82,
-          "confidence": 0.9939466118812561
+          "confidence": 0.9952225089073181
         },
         {
           "text": " Baghdadi's",
           "start": 404.82,
           "end": 405.46,
-          "confidence": 0.9614742994308472
+          "confidence": 0.963417649269104
         },
         {
           "text": " final",
           "start": 405.46,
           "end": 405.72,
-          "confidence": 0.994743824005127
+          "confidence": 0.9948182702064514
         },
         {
           "text": " moments?",
           "start": 405.72,
           "end": 406.18,
-          "confidence": 0.9960989952087402
+          "confidence": 0.9955364465713501
         }
       ]
     },
@@ -7237,73 +7195,73 @@
           "text": " And",
           "start": 406.52,
           "end": 406.52,
-          "confidence": 0.960494339466095
+          "confidence": 0.9607892632484436
         },
         {
           "text": " also,",
           "start": 406.52,
-          "end": 406.9,
-          "confidence": 0.9570406675338745
+          "end": 406.88,
+          "confidence": 0.9446390271186829
         },
         {
           "text": " are",
           "start": 406.98,
           "end": 407.12,
-          "confidence": 0.9988141059875488
+          "confidence": 0.9985451698303223
         },
         {
           "text": " you",
           "start": 407.12,
           "end": 407.32,
-          "confidence": 0.9976199269294739
+          "confidence": 0.998127281665802
         },
         {
           "text": " partnering",
           "start": 407.32,
-          "end": 407.72,
-          "confidence": 0.9990386962890625
+          "end": 407.74,
+          "confidence": 0.9990237951278687
         },
         {
           "text": " with",
-          "start": 407.72,
+          "start": 407.74,
           "end": 408.08,
-          "confidence": 0.9988428354263306
+          "confidence": 0.9988901019096375
         },
         {
           "text": " the",
           "start": 408.08,
           "end": 408.28,
-          "confidence": 0.9955930113792419
+          "confidence": 0.9957691431045532
         },
         {
           "text": " Kurds",
           "start": 408.28,
           "end": 408.6,
-          "confidence": 0.9973423779010773
+          "confidence": 0.997409462928772
         },
         {
           "text": " again",
           "start": 408.6,
           "end": 408.78,
-          "confidence": 0.6778655052185059
+          "confidence": 0.7628566026687622
         },
         {
           "text": " on",
           "start": 408.78,
           "end": 409.06,
-          "confidence": 0.9394774436950684
+          "confidence": 0.9557175040245056
         },
         {
           "text": " the",
           "start": 409.06,
           "end": 409.22,
-          "confidence": 0.9973883032798767
+          "confidence": 0.9973918199539185
         },
         {
           "text": " ground?",
           "start": 409.22,
           "end": 409.52,
-          "confidence": 0.9993688464164734
+          "confidence": 0.9993389248847961
         }
       ]
     },
@@ -7316,91 +7274,91 @@
           "text": " Can",
           "start": 410.0,
           "end": 410.14,
-          "confidence": 0.9943522214889526
+          "confidence": 0.9938179850578308
         },
         {
           "text": " you",
           "start": 410.14,
           "end": 410.22,
-          "confidence": 0.9994527697563171
+          "confidence": 0.9994489550590515
         },
         {
           "text": " explain",
           "start": 410.22,
-          "end": 410.52,
-          "confidence": 0.9960136413574219
+          "end": 410.5,
+          "confidence": 0.996485710144043
         },
         {
           "text": " how",
-          "start": 410.52,
+          "start": 410.5,
           "end": 410.68,
-          "confidence": 0.9981671571731567
+          "confidence": 0.9972900152206421
         },
         {
           "text": " difficult",
           "start": 410.68,
           "end": 411.12,
-          "confidence": 0.9986555576324463
+          "confidence": 0.9986300468444824
         },
         {
           "text": " this",
           "start": 411.12,
           "end": 411.5,
-          "confidence": 0.9965144991874695
+          "confidence": 0.9966304898262024
         },
         {
           "text": " operation",
           "start": 411.5,
           "end": 412.14,
-          "confidence": 0.9961870312690735
+          "confidence": 0.9957894682884216
         },
         {
           "text": " would",
           "start": 412.14,
           "end": 412.4,
-          "confidence": 0.9977959394454956
+          "confidence": 0.9968875050544739
         },
         {
           "text": " have",
           "start": 412.4,
           "end": 412.54,
-          "confidence": 0.9481905102729797
+          "confidence": 0.956344485282898
         },
         {
           "text": " been",
           "start": 412.54,
           "end": 412.72,
-          "confidence": 0.99908447265625
+          "confidence": 0.9994058609008789
         },
         {
           "text": " if",
           "start": 412.72,
-          "end": 412.86,
-          "confidence": 0.9838887453079224
+          "end": 412.88,
+          "confidence": 0.9801991581916809
         },
         {
           "text": " you",
-          "start": 412.86,
+          "start": 412.88,
           "end": 412.98,
-          "confidence": 0.9972406625747681
+          "confidence": 0.9969221949577332
         },
         {
           "text": " didn't",
           "start": 412.98,
           "end": 413.24,
-          "confidence": 0.9971091151237488
+          "confidence": 0.996592104434967
         },
         {
           "text": " have",
           "start": 413.24,
           "end": 413.4,
-          "confidence": 0.9986129999160767
+          "confidence": 0.9986836314201355
         },
         {
           "text": " troops",
           "start": 413.4,
           "end": 413.65999999999997,
-          "confidence": 0.9963155388832092
+          "confidence": 0.9968878626823425
         }
       ]
     },
@@ -7413,209 +7371,202 @@
           "text": " or",
           "start": 413.65999999999997,
           "end": 413.9,
-          "confidence": 0.9979064464569092
+          "confidence": 0.9970747232437134
         },
         {
           "text": " bases",
           "start": 413.9,
           "end": 414.24,
-          "confidence": 0.9971868395805359
+          "confidence": 0.9973648190498352
         },
         {
           "text": " on",
           "start": 414.24,
           "end": 415.36,
-          "confidence": 0.9961186647415161
+          "confidence": 0.9955052137374878
         },
         {
           "text": " the",
           "start": 415.36,
           "end": 415.5,
-          "confidence": 0.9940658807754517
+          "confidence": 0.9922878742218018
         },
         {
           "text": " ground",
           "start": 415.5,
           "end": 415.74,
-          "confidence": 0.9996640682220459
+          "confidence": 0.9996217489242554
         },
         {
           "text": " in",
           "start": 415.74,
           "end": 416.1,
-          "confidence": 0.9505549073219299
+          "confidence": 0.9340959787368774
         },
         {
           "text": " Syria",
           "start": 416.1,
           "end": 416.48,
-          "confidence": 0.9995390176773071
+          "confidence": 0.9995236396789551
         },
         {
           "text": " and",
           "start": 416.48,
           "end": 416.8,
-          "confidence": 0.9946596026420593
+          "confidence": 0.9932833909988403
         },
         {
           "text": " in",
           "start": 416.8,
           "end": 416.96000000000004,
-          "confidence": 0.968471884727478
+          "confidence": 0.9336450099945068
         },
         {
           "text": " Iraq?",
           "start": 416.96000000000004,
           "end": 417.2,
-          "confidence": 0.9987034797668457
+          "confidence": 0.9987298846244812
         }
       ]
     },
     {
       "start": 417.72,
-      "end": 418.02,
-      "text": "All right.",
+      "end": 418.74,
+      "text": "I'll look – go ahead, Hampst.",
       "words": [
         {
-          "text": " All",
+          "text": " I'll",
           "start": 417.72,
           "end": 417.88,
-          "confidence": 0.20287714898586273
+          "confidence": 0.5980493873357773
         },
         {
-          "text": " right.",
+          "text": " look",
           "start": 417.88,
           "end": 418.02,
-          "confidence": 0.5903651118278503
-        }
-      ]
-    },
-    {
-      "start": 418.24,
-      "end": 418.72,
-      "text": "Go ahead, Hamst.",
-      "words": [
+          "confidence": 0.7967138290405273
+        },
         {
-          "text": " Go",
-          "start": 418.24,
+          "text": " –",
+          "start": 418.02,
+          "end": 418.22,
+          "confidence": 0.1338811218738556
+        },
+        {
+          "text": " go",
+          "start": 418.22,
           "end": 418.38,
-          "confidence": 0.7317779660224915
+          "confidence": 0.8411666750907898
         },
         {
           "text": " ahead,",
           "start": 418.38,
           "end": 418.46000000000004,
-          "confidence": 0.9988521337509155
+          "confidence": 0.9953768253326416
         },
         {
-          "text": " Hamst.",
+          "text": " Hampst.",
           "start": 418.52,
-          "end": 418.72,
-          "confidence": 0.1671646684408188
+          "end": 418.74,
+          "confidence": 0.5488653033971786
         }
       ]
     },
     {
-      "start": 418.91999999999996,
-      "end": 420.34000000000003,
-      "text": "Well, we do have video photos.",
+      "start": 418.88,
+      "end": 420.32,
+      "text": "We do have video photos.",
       "words": [
         {
-          "text": " Well,",
-          "start": 418.91999999999996,
-          "end": 419.1,
-          "confidence": 0.5694554448127747
-        },
-        {
-          "text": " we",
-          "start": 419.14,
-          "end": 419.3,
-          "confidence": 0.9944654107093811
+          "text": " We",
+          "start": 418.88,
+          "end": 419.24,
+          "confidence": 0.22662124037742615
         },
         {
           "text": " do",
-          "start": 419.3,
+          "start": 419.24,
           "end": 419.41999999999996,
-          "confidence": 0.998340368270874
+          "confidence": 0.9958776235580444
         },
         {
           "text": " have",
           "start": 419.41999999999996,
-          "end": 419.56,
-          "confidence": 0.9966341853141785
+          "end": 419.58000000000004,
+          "confidence": 0.9974536299705505
         },
         {
           "text": " video",
-          "start": 419.56,
+          "start": 419.58000000000004,
           "end": 419.84000000000003,
-          "confidence": 0.9876314997673035
+          "confidence": 0.9848093390464783
         },
         {
           "text": " photos.",
           "start": 419.84000000000003,
-          "end": 420.34000000000003,
-          "confidence": 0.9008529186248779
+          "end": 420.32,
+          "confidence": 0.9207912683486938
         }
       ]
     },
     {
-      "start": 420.62,
+      "start": 420.6,
       "end": 422.24,
       "text": "We're not prepared at this time to release those.",
       "words": [
         {
           "text": " We're",
-          "start": 420.62,
+          "start": 420.6,
           "end": 420.74,
-          "confidence": 0.9939404428005219
+          "confidence": 0.9939664006233215
         },
         {
           "text": " not",
           "start": 420.74,
           "end": 420.82,
-          "confidence": 0.9988566637039185
+          "confidence": 0.9992877840995789
         },
         {
           "text": " prepared",
           "start": 420.82,
           "end": 421.03999999999996,
-          "confidence": 0.9953911304473877
+          "confidence": 0.9958256483078003
         },
         {
           "text": " at",
           "start": 421.03999999999996,
           "end": 421.2,
-          "confidence": 0.9370858669281006
+          "confidence": 0.9258724451065063
         },
         {
           "text": " this",
           "start": 421.2,
           "end": 421.36,
-          "confidence": 0.99846351146698
+          "confidence": 0.9980595707893372
         },
         {
           "text": " time",
           "start": 421.36,
           "end": 421.52,
-          "confidence": 0.9991002082824707
+          "confidence": 0.998842179775238
         },
         {
           "text": " to",
           "start": 421.52,
           "end": 421.64,
-          "confidence": 0.9980046153068542
+          "confidence": 0.9988833069801331
         },
         {
           "text": " release",
           "start": 421.64,
           "end": 421.96000000000004,
-          "confidence": 0.9983299374580383
+          "confidence": 0.9985663294792175
         },
         {
           "text": " those.",
           "start": 421.96000000000004,
           "end": 422.24,
-          "confidence": 0.9945088028907776
+          "confidence": 0.9950892329216003
         }
       ]
     },
@@ -7628,37 +7579,37 @@
           "text": " They're",
           "start": 422.72,
           "end": 423.03999999999996,
-          "confidence": 0.9905366003513336
+          "confidence": 0.9925355613231659
         },
         {
           "text": " going",
           "start": 423.03999999999996,
           "end": 423.2,
-          "confidence": 0.9962003827095032
+          "confidence": 0.9951058626174927
         },
         {
           "text": " through",
           "start": 423.2,
           "end": 423.38,
-          "confidence": 0.9965776801109314
+          "confidence": 0.9969087243080139
         },
         {
           "text": " a",
           "start": 423.38,
           "end": 423.5,
-          "confidence": 0.9883920550346375
+          "confidence": 0.98087078332901
         },
         {
           "text": " declassification",
           "start": 423.5,
-          "end": 424.12,
-          "confidence": 0.9896916747093201
+          "end": 424.1,
+          "confidence": 0.9875403443972269
         },
         {
           "text": " process.",
-          "start": 424.12,
+          "start": 424.1,
           "end": 424.68,
-          "confidence": 0.99918133020401
+          "confidence": 0.9991870522499084
         }
       ]
     },

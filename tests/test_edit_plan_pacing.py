@@ -136,3 +136,59 @@ def test_retention_intervals_leave_a_word_aligned_selection_alone():
     # 0.9 lies between two words, so it must be left exactly where it is.
     assert intervals[-1][1] == 0.9
 
+
+# ── the fix on real media, not on a hand-built candidate ─────────────────────
+
+# The unit tests above prove the arithmetic on candidates made up for the
+# purpose. This one scores the fix where it actually shipped: the committed
+# pentagon-esper-briefing re-run, whose pre-fix selections had an end bound
+# 742 ms inside a word. The deliverable is the interval, not the candidate's raw
+# bound — the EDL, the render and the captions are all built from
+# retention_intervals — so this is the layer a shave would survive into.
+#
+# SKIPs when the corpus is absent (corpus/wer is regenerated per host), and
+# loads selections.json through the constructor the pipeline uses.
+
+def _candidate_from_record(raw: dict) -> Candidate:
+    words = [Word(w["text"], w["start"], w["end"])
+             for w in (raw.get("words") or [])]
+    return Candidate(raw["start"], raw["end"], raw.get("text") or "",
+                     raw.get("story_type") or "", raw.get("hook") or "",
+                     raw.get("payoff") or "", raw.get("editorial_score") or 0.0,
+                     raw.get("virality_score") or 0.0,
+                     raw.get("context_score") or 0.0,
+                     raw.get("confidence") or 0.0, raw.get("reason") or "",
+                     raw.get("visual_potential") or 0.0, words or None,
+                     raw.get("coherence_score") or 1.0,
+                     raw.get("completeness") or 1.0,
+                     raw.get("llm_metadata"))
+
+
+def test_no_interval_bound_on_real_media_lands_inside_a_word():
+    import json
+    from pathlib import Path
+
+    sel = (Path(__file__).resolve().parent.parent
+           / "corpus" / "pentagon-esper-briefing_run" / "project" / "selections.json")
+    if not sel.is_file():
+        import pytest
+        pytest.skip("pentagon re-run not present on this host")
+    cands = json.loads(sel.read_text(encoding="utf-8"))
+    if isinstance(cands, dict):
+        cands = cands.get("selected") or []
+
+    bounds = 0
+    for raw in cands:
+        if not (raw.get("words")):
+            continue
+        for a, b in retention_intervals(_candidate_from_record(raw)):
+            bounds += 1
+            for w in _candidate_from_record(raw).words:
+                assert not (w.start < a < w.end), \
+                    f"interval opens {a}s inside {w.text!r} — a mid-word cut " \
+                    f"shipped into the EDL and the render"
+                assert not (w.start < b < w.end), \
+                    f"interval closes {b}s inside {w.text!r} — a mid-word cut " \
+                    f"shipped into the EDL and the render"
+    assert bounds >= 5, "no candidate carried word timing, so nothing was tested"
+

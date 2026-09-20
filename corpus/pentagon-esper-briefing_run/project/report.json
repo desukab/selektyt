@@ -2,7 +2,7 @@
   "source": "corpus/media/pentagon-esper-briefing.mp4",
   "title": null,
   "language": "en",
-  "candidate_count": 3172,
+  "candidate_count": 3067,
   "selected_count": 5,
   "rejected_by_context_guard": 0,
   "truncated_by_limit": 7,
@@ -18,6 +18,16 @@
   "pacing_report": "corpus/pentagon-esper-briefing_run/project/pacing_report.json",
   "qa": "corpus/pentagon-esper-briefing_run/project/qa.json",
   "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
+  "coverage": {
+    "duration_s": 1013.853,
+    "vad_speech_s": 4.448,
+    "vad_speech_frac": 0.0044,
+    "asr_speech_s": 832.92,
+    "asr_speech_frac": 0.8215,
+    "verdict": "not_computable",
+    "detail": "the energy VAD found 0.4% speech, below the 10% floor, so the ratio has no trustworthy denominator — the VAD is likely blind to a quiet source, not the transcript empty",
+    "coverage_ratio": 187.2572
+  },
   "audio": {
     "enabled": false
   }
