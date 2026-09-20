@@ -22,7 +22,12 @@ llm = ["requests>=2.31"]
 # Without it the check fails loudly rather than skipping, so this extra is
 # installed in CI.
 nle = ["pycmx>=1.5"]
-dev = ["pytest>=8", "pycmx>=1.5"]
+# pyyaml reads the release workflows in tests/test_desktop_packaging.py, which
+# pins the signed/unsigned label against the YAML that actually ships the
+# installer. Without it those tests error at collection on a clean checkout
+# rather than silently not running, which is worse than a skip but still a red
+# CI for a dependency reason.
+dev = ["pytest>=8", "pycmx>=1.5", "pyyaml>=6"]
 all = ["faster-whisper>=1.1", "sherpa-onnx>=1.10", "requests>=2.31", "pycmx>=1.5"]
 
 [project.scripts]
