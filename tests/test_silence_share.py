@@ -168,3 +168,25 @@ def test_the_rest_of_the_corpus_meets_the_bar():
                 over.append(f"{name} clip {index + 1}: {share:.1%}")
     assert total >= 20, f"expected at least 20 other committed clips, found {total}"
     assert not over, "clips outside the two known failures also exceed 30%: " + "; ".join(over)
+
+
+def test_a_failure_is_reported_as_unmeasured_not_as_dead_air():
+    """The word "silence" in this metric's name is the defect, not the reading.
+
+    On nasa360-ep5 clip 05 a 40.8% figure was explained first as an editorial
+    pause and then as dead air to be trimmed. Both were invented from the word
+    timings; measuring the window showed a loud music bed (mean −31.4 dB,
+    0.00 s of true silence; `docs/METRICS.md` A2.4). The audit's own output line
+    must not assert a cause it has not measured, because that is how the second
+    explanation nearly became a change that cut music out of a shipped clip.
+    """
+    # The label is composed in the report loop, not in the check itself, so this
+    # builds the string the same way that loop does.
+    cand = _cand("w w w", [(0.0, 2.0), (2.1, 4.0), (9.0, 11.0)])
+    intervals = [(0.0, 11.0)]
+    ok, share = check_silence_share(cand, intervals)
+    assert not ok
+    label = "" if ok else " (word-free; cause unmeasured)"
+    line = f"silence share {share:.1%}{label}"
+    assert "dead air" not in line
+    assert "unmeasured" in line

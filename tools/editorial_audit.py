@@ -206,8 +206,15 @@ SILENCE_SHARE_MAX = 0.30
 """The hard bar of criterion P5 (`docs/EVALUATION.md`): no clip ships with more
 than 30% word-free timeline. The audit's threshold used to be 0.55, which is
 2.75× looser than the criterion it exists to enforce — every clip in the
-committed corpus passed it, including two that fail P5 outright (40.8% and
-46.3%), so the check could not fire on the one condition it was written for."""
+committed corpus passed it, including two that exceed this bar (40.8% and
+46.3%), so the check could not fire on the one condition it was written for.
+
+Read the name with care. This is a *word-coverage* bar, not an audio
+measurement: it is computed from transcript word timings and never decodes the
+window it flags. The 40.8% clip above was measured acoustically and is a loud
+music bed with 0.00 s of true silence in it (`docs/METRICS.md` A2.4), so the
+number was right and the word "silence" was wrong. A FAIL here means the window
+needs to be listened to before it is characterised as anything."""
 
 
 def check_silence_share(cand: dict, intervals: list[tuple[float, float]]) -> tuple[bool, float]:
@@ -328,7 +335,12 @@ def audit(project: Path) -> tuple[bool, dict]:
         detail += d
         o, share = check_silence_share(cand, intervals)
         ok &= o
-        detail.append(f"silence share {share:.1%}" + ("" if o else " (dead air)"))
+        # The label deliberately does not say "dead air". This number counts
+        # word-free timeline, and on nasa360-ep5 clip 05 a 40.8% reading turned
+        # out to be a loud music bed (mean -31.4 dB, 0.00 s of true silence;
+        # docs/METRICS.md A2.4), not silence. A FAIL means the window must be
+        # listened to before it is called anything.
+        detail.append(f"silence share {share:.1%}" + ("" if o else " (word-free; cause unmeasured)"))
 
         # Captions shipped beside this clip, if any.
         srt = project / "captions" / f"{i:02d}.srt"
