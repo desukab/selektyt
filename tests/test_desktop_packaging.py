@@ -175,28 +175,62 @@ def _steps(workflow: dict) -> dict[str, dict]:
     return named
 
 
+def _job_env(workflow: dict) -> dict:
+    """Env declared on the job is visible to every step; env on a step is not."""
+    return workflow["jobs"]["build"].get("env", {})
+
+
+def _visible_env(workflow: dict, *steps: dict) -> dict:
+    """Everything a given step can actually read: the job's env, then the step's
+    own, with the step taking precedence as it does on the runner."""
+    visible = dict(_job_env(workflow))
+    for step in steps:
+        visible.update(step.get("env", {}))
+    return visible
+
+
 def test_the_unsigned_marker_is_read_from_the_build_step_own_log(
     build_workflow: dict, sign_text: str,
 ) -> None:
-    """The artifact name is the trust claim. The step that sets it must read
-    the signing hook's output out of the build step's captured log; grepping
+    """The artifact name is the trust claim. The step that sets it must read the
+    signing hook's output out of the build step's captured log; grepping
     ``$GITHUB_STEP_LOG`` reads the labelling step's own log, where the marker
-    never appears, and every unsigned build then ships as "signed"."""
+    never appears, and every unsigned build then ships as "signed".
+
+    The path may be declared on the job or on a step. The requirement is that
+    *both* the step that tees and the step that grep can see the same name — a
+    variable visible to only one of them is what failed run 35543527611, where
+    the labelling step expanded it to an empty string and ``[ "" -gt 0 ]`` was
+    a bash type error rather than a comparison."""
     steps = _steps(build_workflow)
     build = steps["Build the Windows installers"]
     label = steps["Record whether the build was signed"]
 
     # The build step captures its own output where the next step can find it.
-    build_env = build.get("env", {})
     log_var = next(
-        (k for k, v in build_env.items() if isinstance(v, str) and "selekyt-build.log" in v),
+        (k for k, v in _visible_env(build_workflow, build, label).items()
+         if isinstance(v, str) and "selekyt-build.log" in v),
         None,
     )
     assert log_var, (
-        "the build step must publish its log path in an env var the labelling "
-        "step can read; without it the marker has nowhere to be found"
+        "the build log path must be published in an env var both the build and "
+        "the labelling step can read; without it the marker has nowhere to be found"
     )
-    assert "tee" in build["run"], "the build must tee its output to that log"
+    # The variable must be visible to *each* step without the other's env —
+    # GitHub step env does not cross steps. Declaring it on the build step alone
+    # is what failed run 35543527611: the path expanded to an empty string in the
+    # labelling step, grep errored on the missing filename, and `[ "" -gt 0 ]`
+    # was a bash type error rather than a comparison. Declaring it on the
+    # labelling step alone is the mirror image: `tee` would write nowhere. Either
+    # is a broken contract, so check each step's view in isolation.
+    for step in (build, label):
+        assert log_var in _visible_env(build_workflow, step), (
+            f"{log_var} is not visible to the '{step['name']}' step from the job "
+            "env or its own; step-scoped env does not cross steps"
+        )
+    # And each step must actually reach it by that name — a variable only one of
+    # them names is a variable only one of them has.
+    assert f"${log_var}" in build["run"], "the build must tee its output to that log"
     assert "pipefail" in build["run"], (
         "a tee over a failing build would otherwise mask the failure and ship "
         "a broken installer"
@@ -209,6 +243,14 @@ def test_the_unsigned_marker_is_read_from_the_build_step_own_log(
     )
     assert f"${log_var}" in label_script, (
         f"the labelling step must grep ${log_var}, the build step's captured log"
+    )
+    # An unset or empty path must fail the job rather than fall through to a
+    # type error. grep on a missing filename prints nothing to stdout, so an
+    # unguarded `[ "$marker" -gt 0 ]` is not a comparison at all — it is what
+    # turned a wiring bug into a silent pass at "signed".
+    assert re.search(r"\[\s*! -s", label_script), (
+        "the labelling step must refuse when the build log is missing or empty; "
+        "an unreadable marker must fail the run, not default it"
     )
     # The marker the workflow greps must be the one the hook actually emits —
     # a rename on either side is a silently mislabelled release.
@@ -226,6 +268,7 @@ def test_an_unsigned_build_without_credentials_fails_the_job(build_workflow: dic
     no credentials, hook declined   yes      false         unsigned, exit 0
     credentials present, signed     no       true          signed, exit 0
     marker missing, no credentials  no       false         FAIL — never "signed"
+    log path unset, no credentials  n/a      false         FAIL — never "signed"
     """
     import subprocess
     import tempfile
@@ -235,7 +278,9 @@ def test_an_unsigned_build_without_credentials_fails_the_job(build_workflow: dic
         "the labelling step must exit non-zero rather than default to signed=true"
     )
 
-    def run_label(marker_in_log: bool, creds_configured: bool) -> tuple[int, str]:
+    def run_label(
+        marker_in_log: bool, creds_configured: bool, *, log_path: str | None = "set",
+    ) -> tuple[int, str]:
         # GitHub substitutes the secrets expression before the step runs; do the
         # same so the script under test is the one the runner will execute.
         script = raw.replace(
@@ -243,17 +288,30 @@ def test_an_unsigned_build_without_credentials_fails_the_job(build_workflow: dic
             "true" if creds_configured else "false",
         )
         with tempfile.TemporaryDirectory() as tmp:
-            log = pathlib.Path(tmp) / "selekyt-build.log"
-            log.write_text(
-                "##[warning]SELEKYT_UNSIGNED\n" if marker_in_log else "build output\n",
-                encoding="utf-8",
-            )
+            if log_path == "set":
+                log = pathlib.Path(tmp) / "selekyt-build.log"
+                log.write_text(
+                    "##[warning]SELEKYT_UNSIGNED\n" if marker_in_log else "build output\n",
+                    encoding="utf-8",
+                )
+                path = str(log)
+            elif log_path == "empty":
+                # Declared but points at nothing — the state an unset variable
+                # expands to once the shell has had it.
+                path = str(pathlib.Path(tmp) / "no-such-log")
+            else:
+                # Unset entirely. This is the shape of run 35543527611: the
+                # variable lived on the build step and this step never saw it.
+                path = None
             out = pathlib.Path(tmp) / "github_output"
+            env = {**os.environ, "GITHUB_OUTPUT": str(out)}
+            if path is not None:
+                env["SELEKYT_BUILD_LOG"] = path
             proc = subprocess.run(
                 ["bash", "-c", script],
                 capture_output=True,
                 text=True,
-                env={**os.environ, "SELEKYT_BUILD_LOG": str(log), "GITHUB_OUTPUT": str(out)},
+                env=env,
             )
             emitted = out.read_text(encoding="utf-8") if out.exists() else ""
         return proc.returncode, emitted
@@ -277,6 +335,16 @@ def test_an_unsigned_build_without_credentials_fails_the_job(build_workflow: dic
         "signed, so the run must fail instead"
     )
     assert "signed=true" not in emitted
+
+    for bad in ("empty", "unset"):
+        code, emitted = run_label(
+            marker_in_log=False, creds_configured=False, log_path=bad,
+        )
+        assert code != 0 and "signed=true" not in emitted, (
+            f"an {bad} build log must fail the job rather than be labelling from "
+            "an unreadable marker — this is the state that misnamed every "
+            f"unsigned build before the guard existed (exit {code}: {emitted!r})"
+        )
 
 
 def test_the_artifact_name_branches_on_the_marker(build_workflow: dict) -> None:
