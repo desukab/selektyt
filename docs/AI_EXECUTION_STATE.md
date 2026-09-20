@@ -89,6 +89,66 @@ every line below was true on this host at that point.
 
 ## Completed work
 
+### This session — the audit became a sweep, and two of its own claims were wrong
+
+`editorial_audit.py` is the benchmark the release validation phase asked for, but
+until this session six of its seven checks had no test at all and the sweep it
+exists to support could not finish. Four defects, all found by running the audit
+across the whole corpus rather than by reading the code:
+
+**1. The sweep stopped at the first incomplete project.** `audit()` returned
+`(False, {})` when a project had no `selections.json`, and `main()` then raised
+`KeyError: 'findings'`. Four of the eleven committed sources have no
+`selections.json` — the VAD gate suppressed their transcripts (see the section
+below) — so `editorial_audit.py corpus/<id>_run/project` traced back on
+`alice-1903` and never reached the other ten. A run that produced nothing to
+audit is a finding, not an exception, so it is returned as one, and the sweep now
+completes: **2 of 11 projects pass every check** (`hadhazy-protest`,
+`royal-society-cloke`), the other 9 report and exit nonzero, and the exit code
+composes with CI as the module docstring claims. The four with no transcript now
+say which stage stopped the run — `transcription returned no segments (te);
+selection never ran` — because "no selections" is the symptom and sends an editor
+to the wrong stage. Six checks that had no test are pinned on semantics rather
+than implementation, plus a corpus sweep test asserting the audit raises on none
+of the eleven projects.
+
+**2. A finding that looked like a false positive was correct.**
+`check_cuts_respect_sentences` reported emwcon clip 01 splitting `' was,'`/`' at'`
+across a gap of 1.68 s — 0.18 s past one word's end, 1.50 s before the next
+began. Both words belong to one under-punctuated transcript sentence ("…we had
+earlier was, at first, we were handing out wikis…"), so a cut between them is
+mid-sentence by the criterion the check exists to enforce. The gap is large, not
+the words' relationship, and `check_cuts_land_between_words` correctly stays
+silent on the same boundary because it is inside neither word. Pinned as a test
+rather than tuned away. Clip 05 is the same shape ("once everybody comes" [1.66 s
+pause] "I wanted to add"), so all six flagged cut edges are ASR under-punctuation,
+not audit error.
+
+**3. The f-string prefix was real.** Chasing the suspected false positive turned
+up an actual typo: the start-boundary message printed `'was'/f'at'` — a literal
+`f` from a misquoted f-string field. The end-boundary message never had it, so
+the first test written for this only exercised the clean line and passed while
+the typo lived. Both boundaries are now covered.
+
+**4. A docstring claim that could not be true.** `check_silence_share` said a
+negative share "means word spans run outside the intervals, itself a bug". That
+value is unreachable: every overlap term is clamped against its own interval, so
+`spoken` cannot exceed `kept` and share is bounded in [0, 1]. Worse than dead
+text — an unclamped computation is the one edit that makes the sentence true, and
+on that input a negative share *passes* the 0.30 bar while looking like a
+diagnostic. The sentence was pointing at a failure mode whose fix would have
+introduced a wrong PASS. Corrected, and the range is pinned by a test that
+mutation-testing with the unclamped sum fails. This is the same class of defect
+as the silence-share naming problem: a number and a description that had not been
+checked against each other.
+
+Also: the six documents quoting "1036 tests" as ground truth were refreshed to
+the measured **1080 passed / 12 skipped (145 s)** — `docs/DATA_ROOM.md`'s own
+drift warning was itself stale, which is the failure mode it describes. Only
+test-count references changed; `1036` is also the LibriSpeech sample's
+*reference-word* length in five places, where it is a property of a committed
+manifest and must not move. The drift history is extended, not rewritten.
+
 ### This session — three of eleven sources have no transcript because the VAD gate ate them
 
 This is a defect on the RELIABLE TRANSCRIPT step, found by measuring rather
@@ -355,7 +415,15 @@ earlier note here said it was in no extra at all — wrong; see
 `docs/TECHNICAL_AUDIT.md` §CI for the correction. The gap that remains is not
 the dependency: CI runs the suite but never invokes `tools/editorial_audit.py`
 or `tools/nle_check.py`, so a change that breaks the render/interchange
-agreement is caught only when a human audits a project directory.
+agreement is caught only when a human audits a project directory. (The audit's
+*checks* are now pinned by `tests/test_editorial_audit.py`, and a corpus sweep
+test asserts it raises on none of the eleven projects, so a regression in the
+audit itself is caught in CI — but a change that loosens a check silently is
+still only caught by a human reading a project's output. Wiring the tools into
+CI as a gate is deliberately not done: 9 of 11 committed projects fail the audit
+for documented editorial reasons, so the gate would be permanently red. The
+honest wiring would be a `--since` mode that audits only what a given commit
+touched, which is not written.)
 
 The five new documents are `EVALUATION.md`, `TIME_SAVINGS.md`,
 `TRACTION_DASHBOARD.md`, `USE_OF_FUNDS.md` and `INVESTOR_PIPELINE.md`. Each was
@@ -433,11 +501,21 @@ after each run, so every relink check was failing on a missing file the harness
 itself removed, and every frame-rate check reported "could not probe the
 source". `nle_check.py` now records probe facts the run itself cut on and marks
 those checks NOT RUN with the reason, rather than presenting them as passes or
-as export defects. Separately, `tools/editorial_audit.py` fails on **four of
-the seven** (`emwcon-panel-2018`, `ooi-vertical`, `pentagon-esper-briefing`,
+as export defects. Separately, `tools/editorial_audit.py` was failing on **four
+of the seven** (`emwcon-panel-2018`, `ooi-vertical`, `pentagon-esper-briefing`,
 `royal-society-cloke`), every failure a selection bound landing inside a word —
-a real defect, fixed in `engine/edit_plan.py`, whose corpus artifacts predate
-the fix. There were never "six pycmx checks that used to skip": `pycmx` is in
+a real defect, fixed in `engine/edit_plan.py`. **That fix took effect:** the
+sweep as of 2026-09-20 reports `royal-society-cloke` passing every check, and
+`hadhazy-protest` with it — 2 of the 11 committed projects are clean. The three
+still-failing sources fail on *editorial* findings, not on mid-word cuts:
+`emwcon-panel-2018` splits sentences at six cut edges (all six are the same ASR
+under-punctuation shape — "…we had earlier was, at first, we were handing out
+wikis…" written as one sentence, so a cut in the 1.68 s pause inside it is
+mid-sentence by the transcript's own account), `nasa360-ep5` and
+`telugu-tutorial` each carry one clip over the 30% word-free bar (40.8% and
+46.3%), and the four sources with no transcript at all are reported as
+findings rather than raising. Mid-word cuts are gone from the corpus. There were
+never "six pycmx checks that used to skip": `pycmx` is in
 the `nle`, `dev` and `all` extras and is installed in CI, and the real skip
 population is 9 media-fixture skips in `tests/test_proxy_validation.py` plus 1
 in `tests/test_sidecar_parity.py`, which no-op on every CI run.
