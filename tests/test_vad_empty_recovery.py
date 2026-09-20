@@ -20,7 +20,8 @@ then decoding again without the gate when a loud chunk comes back empty.
 What that second decode returns is why it is not merged unconditionally. Measured
 on telugu-launch with the small model, 2026-09-20: forcing Telugu with the VAD
 *on* returns 0 segments over all 173.7 s; with the VAD *off* it returns 5
-segments / 24.88 s, of which 41 of 137 letters are Telugu script and the rest is
+segments / 24.88 s, of which 41 of 75 letters are Telugu script (54.7%) and the
+rest is
 romanized noise plus one Chinese character. A repeat run of the same file gave
 23 segments, so the unguarded decode is not stable run to run either. An earlier
 version of this file and of the docstring claimed "16 segments / 105.9 s of
@@ -202,23 +203,43 @@ TELEGU_UNGUARDED_DECODE = (
 )
 
 
+def _script_counts(text: str) -> tuple[int, int]:
+    """(letters, how many of them are Telugu) — the two counts the removal
+    argument depends on. Letters only, so the string's spaces and punctuation
+    are not silently counted as letters."""
+    import unicodedata
+
+    letters = [ch for ch in text if ch.isalpha()]
+    telugu = sum(1 for ch in letters if unicodedata.name(ch, "").split()[0] == "TELUGU")
+    return len(letters), telugu
+
+
 def test_the_measured_unguarded_decode_is_majority_correct_script():
     """The guard that was tried and discarded, pinned so the reason it cannot
     work stays visible: this decode is nonsense in the *correct* script, so a
     script-consistency check reads it as legitimate Telugu speech and would
     have merged it. Telugu is a majority of its letters."""
-    import unicodedata
-
-    letters = [ch for ch in TELEGU_UNGUARDED_DECODE if ch.isalpha()]
-    telugu = sum(
-        1 for ch in letters if unicodedata.name(ch, "").split()[0] == "TELUGU"
-    )
+    letters, telugu = _script_counts(TELEGU_UNGUARDED_DECODE)
     assert letters, "the decode must contain letters for the share to mean anything"
-    share = telugu / len(letters)
+    share = telugu / letters
     assert share > 0.5, (
         f"the measured decode is {share:.0%} Telugu; a majority-script guard at "
         f"0.5 does not reject it, which is why that guard was removed"
     )
+
+
+def test_the_pinned_decode_counts_are_the_measured_ones():
+    """The counts the docstrings argue from, pinned against the fixture above.
+
+    An earlier version of this argument said "41 of 137 letters": 41 was right
+    but 137 was the whole string including spaces and punctuation, not the
+    letter count, so the share it implied (30%) was not the one the decode
+    actually gives. The counts are re-derived here from the fixture so a future
+    edit to either the string or the prose has to confront the real number.
+    """
+    letters, telugu = _script_counts(TELEGU_UNGUARDED_DECODE)
+    assert letters == 75, f"letters={letters}, not the measured 75"
+    assert telugu == 41, f"telugu={telugu}, not the measured 41"
 
 
 def test_a_loud_empty_chunk_records_suppression_and_merges_nothing(tmp_path):
