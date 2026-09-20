@@ -117,6 +117,19 @@ def _valid_params(op: str, tone_wav: str, project_dir: str) -> dict:
             _json.dumps({"staged": "by the contract test"}), encoding="utf-8")
         return {"project": str(project), "name": "artifact.json"}
 
+    if op == "read_text":
+        # read_text serves the text artifacts the UI must show verbatim —
+        # captions and timelines — which live in subdirectories. The happy path
+        # has to exercise that subpath, not only the rejection cases.
+        from pathlib import Path
+
+        project = Path(project_dir)
+        (project / "captions").mkdir(parents=True, exist_ok=True)
+        (project / "captions" / "01.srt").write_text(
+            "1\n00:00:00,000 --> 00:00:01,000\nstaged by the contract test\n",
+            encoding="utf-8")
+        return {"project": str(project), "name": "captions/01.srt"}
+
     return {
         "ping": {},
         "segment": {"scores": [0.9] * 10 + [0.0] * 2 + [0.9] * 10, "frame_ms": 32},
@@ -199,6 +212,18 @@ BAD_PARAMS: dict[str, list[dict]] = {
         {"project": "/tmp", "name": ".env"},
         {"project": "/tmp", "name": "sub/dir/x.json"},
         {"project": "/tmp", "name": "no-such-artifact.json"},
+    ],
+    # read_text may take a subpath, so the traversal surface is larger than
+    # read_artifact's: an escape, an absolute path, and a Windows-style path
+    # are all refused rather than resolved elsewhere on disk.
+    "read_text": [
+        {}, {"project": "/tmp", "name": ""},
+        {"project": "/tmp", "name": "../../etc/passwd"},
+        {"project": "/tmp", "name": "sub/../../etc/passwd"},
+        {"project": "/tmp", "name": "/etc/passwd"},
+        {"project": "/tmp", "name": "C:\\windows\\win.ini"},
+        {"project": "/tmp", "name": ".env"},
+        {"project": "/tmp", "name": "captions/no-such.srt"},
     ],
 }
 

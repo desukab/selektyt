@@ -56,11 +56,13 @@ async function readProjectDoc(project, name) {
   return data.json;
 }
 
-/** Absolute-path text read (captions/, timeline/), permitted on $HOME/**. */
-async function readAbs(path) {
-  if (tauriFs) return tauriFs.readTextFile(path);
-  const data = await rpc("python", "read_artifact", { project: path, name: "" }).catch(() => null);
-  return data ? JSON.stringify(data.json) : null;
+/** A text artifact inside the project tree (captions/, timeline/). `dir` is
+ * the project directory the shell resolved — the report also records these
+ * paths, but relative to the engine's working directory at run time, which is
+ * not where the sidecar stands, so the live directory wins. */
+async function readProjectText(projectDir, name) {
+  const data = await rpc("python", "read_text", { project: projectDir, name });
+  return data.text;
 }
 
 async function fileSize(path) {
@@ -336,17 +338,20 @@ async function openProject(dir) {
     state.report = await readProjectDoc(state.project, "report.json");
   } catch (err) {
     // A directory with no readable report is not a project the UI can review.
-    setError(`This project has no report yet — ${err.message}`, { retry: false });
+    // show() clears the banner for any view but "processing", so the error
+    // must be posted after the navigation — setting it first would be erased
+    // on arrival and the user would land here with no explanation.
     show("import");
+    setError(`This project has no report yet — ${err.message}`, { retry: false });
     return;
   }
   const incomplete = !state.report || !(state.report.selected_count > 0);
   if (incomplete) {
+    show("import");
     setError(
       "This project did not finish selecting stories. Run it again to resume from the last completed chunk.",
       { retry: true, title: "Incomplete project." },
     );
-    show("import");
     return;
   }
   await loadReviewData();
@@ -564,12 +569,14 @@ async function loadReviewData() {
 /** Every file the run produced, derived from the tree the engine writes. */
 async function listArtifacts() {
   const p = state.project;
-  const r = state.report || {};
+  // The directory the shell resolved is authoritative; the report's own record
+  // of these paths is relative to the engine's working directory at run time,
+  // which is not where the sidecar stands, so it can point somewhere else.
   const dirs = {
-    "16:9 renders": r.outputs?.facebook || `${p}/facebook`,
-    "9:16 renders": r.outputs?.shorts || `${p}/shorts`,
-    captions: r.captions || `${p}/captions`,
-    timeline: r.timeline || `${p}/timeline`,
+    "16:9 renders": `${p}/facebook`,
+    "9:16 renders": `${p}/shorts`,
+    captions: `${p}/captions`,
+    timeline: `${p}/timeline`,
   };
   const out = [];
   for (const [kind, dir] of Object.entries(dirs)) {
@@ -692,11 +699,13 @@ function renderStory() {
     box.innerHTML = `<p class="hint">Select a clip.</p>`;
     return;
   }
-  const r = state.report || {};
   const i = state.clipIndex + 1;
-  const dirs = r.outputs || {};
-  const vertical = `${dirs.shorts || `${state.project}/shorts`}/${String(i).padStart(2, "0")}.mp4`;
-  const landscape = `${dirs.facebook || `${state.project}/facebook`}/${String(i).padStart(2, "0")}.mp4`;
+  const n = String(i).padStart(2, "0");
+  // state.project, not the report's `outputs`: the report records those paths
+  // relative to the engine's cwd, which the preview's fs scope reads from
+  // wherever the shell opened the project.
+  const vertical = `${state.project}/shorts/${n}.mp4`;
+  const landscape = `${state.project}/facebook/${n}.mp4`;
 
   box.innerHTML = `
     <div class="preview-frame">
@@ -844,19 +853,19 @@ function renderTimeline() {
 async function renderCaptions() {
   const box = $("tab-captions");
   const i = state.clipIndex + 1;
-  const r = state.report || {};
-  const dir = r.captions || `${state.project}/captions`;
-  const path = `${dir}/${String(i).padStart(2, "0")}.srt`;
+  const file = `captions/${String(i).padStart(2, "0")}.srt`;
   box.innerHTML = `<p class="hint">loading captions…</p>`;
   let text;
   try {
-    text = await readAbs(path);
+    text = await readProjectText(state.project, file);
   } catch (err) {
-    box.innerHTML = `<p class="hint">captions unavailable (${esc(err.message || err)})</p>`;
-    return;
-  }
-  if (!text) {
-    box.innerHTML = `<p class="hint">No captions were written for this clip.</p>`;
+    const why = String(err.message || err);
+    // A missing file is a normal outcome for a clip the run did not caption;
+    // a permission or shape error is not, and is reported as such.
+    const missing = why.startsWith("no such artifact");
+    box.innerHTML = missing
+      ? `<p class="hint">No captions were written for this clip.</p>`
+      : `<p class="hint">captions unavailable (${esc(why)})</p>`;
     return;
   }
   const cues = parseSrt(text);

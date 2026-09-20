@@ -155,25 +155,25 @@
           </aside>
           <div class="review-main">
             <div id="review-head" class="review-head"></div>
-            <div id="review-body" class="review-body"></div>
+            <div id="review-body" class="review-body">
+              <div class="tabs" id="result-tabs">
+                <button class="tab active" data-tab="story">Story</button>
+                <button class="tab" data-tab="timeline">Timeline</button>
+                <button class="tab" data-tab="captions">Captions</button>
+                <button class="tab" data-tab="transcript">Transcript</button>
+                <button class="tab" data-tab="qa">Quality</button>
+                <button class="tab" data-tab="artifacts">Artifacts</button>
+              </div>
+
+              <div id="tab-story" class="tab-panel active"></div>
+              <div id="tab-timeline" class="tab-panel" hidden></div>
+              <div id="tab-captions" class="tab-panel" hidden></div>
+              <div id="tab-transcript" class="tab-panel" hidden></div>
+              <div id="tab-qa" class="tab-panel" hidden></div>
+              <div id="tab-artifacts" class="tab-panel" hidden></div>
+            </div>
           </div>
         </div>
-
-        <div class="tabs" id="result-tabs">
-          <button class="tab active" data-tab="story">Story</button>
-          <button class="tab" data-tab="timeline">Timeline</button>
-          <button class="tab" data-tab="captions">Captions</button>
-          <button class="tab" data-tab="transcript">Transcript</button>
-          <button class="tab" data-tab="qa">Quality</button>
-          <button class="tab" data-tab="artifacts">Artifacts</button>
-        </div>
-
-        <div id="tab-story" class="tab-panel active"></div>
-        <div id="tab-timeline" class="tab-panel" hidden></div>
-        <div id="tab-captions" class="tab-panel" hidden></div>
-        <div id="tab-transcript" class="tab-panel" hidden></div>
-        <div id="tab-qa" class="tab-panel" hidden></div>
-        <div id="tab-artifacts" class="tab-panel" hidden></div>
       </section>
     </main>
 

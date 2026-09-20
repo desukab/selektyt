@@ -103,6 +103,36 @@ def op_read_artifact(params: dict) -> dict:
     return {"path": str(path), "json": json.loads(path.read_text(encoding="utf-8"))}
 
 
+def op_read_text(params: dict) -> dict:
+    """Read one *text* artifact the pipeline wrote, by name inside a project.
+
+    ``read_artifact`` parses JSON and takes a bare filename, which suits the
+    reports but not the captions and timelines: those are text the UI must show
+    verbatim, and they sit in subdirectories (``captions/01.srt``). This op
+    serves them — ``name`` may carry ``/`` separators, but it is resolved
+    against ``project`` and confined there, so a traversal is refused rather
+    than followed.
+    """
+    project = params.get("project")
+    name = str(params.get("name") or "")
+    if not project:
+        raise ValueError("'project' is required")
+    if not name or name.startswith("."):
+        raise ValueError(f"'name' must name a file inside the project, got {name!r}")
+    if Path(name).is_absolute() or "\\" in name:
+        raise ValueError(f"'name' must be a path inside the project, got {name!r}")
+    root = Path(str(project))
+    # Confine to the project directory: a ".." component must not escape it.
+    resolved = (root / name).resolve()
+    try:
+        resolved.relative_to(root.resolve())
+    except ValueError:
+        raise ValueError(f"'name' must be inside the project directory: {name!r}")
+    if not resolved.is_file():
+        raise FileNotFoundError(f"no such artifact: {resolved}")
+    return {"path": str(resolved), "text": resolved.read_text(encoding="utf-8")}
+
+
 def op_stat_artifact(params: dict) -> dict:
     """Size and existence of one artifact, for the results listing."""
     path = _regular_file_or_error(params.get("path"), "path")
@@ -484,6 +514,7 @@ _HANDLERS = {
     "ping": op_ping,
     "probe_media": op_probe_media,
     "read_artifact": op_read_artifact,
+    "read_text": op_read_text,
     "stat_artifact": op_stat_artifact,
     "segment": op_segment,
     "cutlist_from_segments": op_cutlist_from_segments,

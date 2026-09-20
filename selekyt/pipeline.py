@@ -314,6 +314,11 @@ def run(
         raise ValueError("min_speech_ms and min_silence_ms must be >= 0")
     project = out_root / "project"
     project.mkdir(parents=True, exist_ok=True)
+    # Resolved before anything is recorded: report.json quotes these paths to
+    # readers that are not standing where the CLI was invoked — the desktop
+    # app's sidecar among them, whose working directory is the app's own. A
+    # relative path points somewhere else for them, silently.
+    project = project.resolve()
     state_path = project / STATE_NAME
     state = _load_state(state_path)
     if source.startswith(("http://", "https://")):

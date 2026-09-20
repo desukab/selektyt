@@ -132,13 +132,16 @@ impl SidecarLogs {
 }
 
 impl Sidecar {
+    /// Spawn a sidecar at the *resolved executable path*. Callers that have a
+    /// directory (the tests stage a fake next to a temp dir) build it with
+    /// [`sidecar_binary`] first; [`Sidecar::spawn`] goes through
+    /// [`sidecar_path`], which already names the triple.
     fn spawn_in(
-        base: &std::path::Path,
+        exe: &std::path::Path,
         name: &str,
         args: &[&str],
     ) -> Result<(Self, SidecarLogs), String> {
-        let path = sidecar_binary(base, name);
-        let mut cmd = Command::new(&path);
+        let mut cmd = Command::new(exe);
         cmd.args(args.iter());
         cmd.stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -147,7 +150,7 @@ impl Sidecar {
             .stderr(Stdio::piped());
         let mut child = cmd
             .spawn()
-            .map_err(|e| format!("failed to spawn {} ({}) : {e}", path.display(), name))?;
+            .map_err(|e| format!("failed to spawn {} ({}) : {e}", exe.display(), name))?;
         // Take the pipes out of the Child so repeated calls reuse them rather
         // than consuming child.stdout once and losing it for every later call.
         let stdin = child.stdin.take().ok_or("sidecar has no stdin")?;
@@ -186,8 +189,8 @@ impl Sidecar {
     }
 
     fn spawn(name: &str, args: &[&str]) -> Result<(Self, SidecarLogs), String> {
-        let base = sidecar_path(name)?;
-        Self::spawn_in(&base, name, args)
+        let exe = sidecar_path(name)?;
+        Self::spawn_in(&exe, name, args)
     }
 
     /// Ask the sidecar to stop and return whether it was running. Called from
@@ -674,7 +677,7 @@ mod tests {
             "n=0\nwhile IFS= read -r line; do\n  n=$((n + 1))\n  \
              echo \"{\\\"ok\\\": true, \\\"op\\\": \\\"ping\\\", \\\"data\\\": {\\\"calls\\\": $n}}\"\ndone\n",
         );
-        let (sidecar, _logs) = Sidecar::spawn_in(&dir, name, &[]).expect("fake sidecar spawns");
+        let (sidecar, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("fake sidecar spawns");
         for expected in 1..=3 {
             let reply = sidecar.call("ping", &serde_json::json!({})).expect("reply");
             assert_eq!(reply["data"]["calls"], expected, "call {expected} lost its pipe");
@@ -685,15 +688,55 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
+    fn spawn_resolves_the_env_override_without_re_appending_the_triple() {
+        // Regression: Sidecar::spawn used to hand sidecar_path()'s result to
+        // spawn_in as a directory *base*, and spawn_in applied the target
+        // triple a second time. The resolved path became
+        // <dir>/selekyt-python-<triple>/selekyt-python-<triple> — which does
+        // not exist — so every real sidecar spawn failed with "no such file or
+        // directory" and the app reported "engine unavailable" on a machine
+        // where the sidecar answered a ping from the shell. Every other test
+        // here calls spawn_in directly with a directory, so none of them
+        // exercised the composition; this one goes through the same env
+        // override production and development both use.
+        let dir = tempfile_dir();
+        let name = SIDECAR_PYTHON;
+        let exe = fake_sidecar(
+            &dir,
+            name,
+            "while IFS= read -r line; do \
+             echo '{\"ok\": true, \"op\": \"ping\", \"data\": {}}'; done\n",
+        );
+        std::env::set_var("SELEKYT_PYTHON", &exe);
+        // A panic must not leave the override set for any test that follows.
+        struct EnvGuard(&'static str);
+        impl Drop for EnvGuard {
+            fn drop(&mut self) {
+                std::env::remove_var(self.0);
+            }
+        }
+        let _guard = EnvGuard("SELEKYT_PYTHON");
+        let (sidecar, _logs) = Sidecar::spawn(name, &[]).expect("spawn resolves the override");
+        let reply = sidecar.call("ping", &serde_json::json!({})).expect("ping reply");
+        assert_eq!(reply["ok"], true);
+    }
+
+    #[cfg(unix)]
+    #[test]
     fn rpc_reports_a_sidecar_that_dies_before_answering() {
+        // A sidecar that exits at once can die before `call` writes its request
+        // line (the write fails with EPIPE) or after it (the read hits EOF).
+        // Both are "the sidecar is gone", and which one happens depends on
+        // scheduling, so the assertion has to accept either rather than
+        // flapping on a loaded CI runner.
         let dir = tempfile_dir();
         let name = "selekyt-fake";
         fake_sidecar(&dir, name, "exit 0\n");
-        let (sidecar, _logs) = Sidecar::spawn_in(&dir, name, &[]).expect("fake sidecar spawns");
+        let (sidecar, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("fake sidecar spawns");
         let err = sidecar.call("ping", &serde_json::json!({})).unwrap_err();
         assert!(
-            err.contains("closed the pipe before answering"),
-            "expected a pipe-closed error, got {err}"
+            err.contains("closed the pipe before answering") || err.contains("Broken pipe"),
+            "expected an error about a dead sidecar, got {err}"
         );
     }
 
@@ -703,7 +746,7 @@ mod tests {
         let dir = tempfile_dir();
         let name = "selekyt-fake";
         fake_sidecar(&dir, name, "read line\necho 'this is not json'\n");
-        let (sidecar, _logs) = Sidecar::spawn_in(&dir, name, &[]).expect("fake sidecar spawns");
+        let (sidecar, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("fake sidecar spawns");
         let err = sidecar.call("ping", &serde_json::json!({})).unwrap_err();
         assert!(err.contains("non-JSON line"), "expected a parse error, got {err}");
     }
@@ -723,7 +766,7 @@ mod tests {
             "yes 'progress: still working' | head -c 262144 >&2\n\
              echo '{\"ok\": true, \"op\": \"ping\", \"data\": {}}'\n",
         );
-        let (sidecar, _logs) = Sidecar::spawn_in(&dir, name, &[]).expect("fake sidecar spawns");
+        let (sidecar, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("fake sidecar spawns");
         // Not reading stderr here would block on the write end; the caller
         // succeeds because the engine's stderr is drained elsewhere.
         let reply = sidecar.call("ping", &serde_json::json!({})).expect("reply");
@@ -760,7 +803,7 @@ mod tests {
         let dir = tempfile_dir();
         let name = "selekyt-fake";
         fake_sidecar(&dir, name, "while :; do :; done\n");
-        let (sidecar, _logs) = Sidecar::spawn_in(&dir, name, &[]).expect("fake sidecar spawns");
+        let (sidecar, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("fake sidecar spawns");
         let sidecar: SharedSidecar = std::sync::Arc::new(sidecar);
 
         let cancel_handle: SharedSidecar = std::sync::Arc::clone(&sidecar);
@@ -787,14 +830,15 @@ mod tests {
     fn a_sidecar_spawned_after_a_cancel_still_answers() {
         let dir = tempfile_dir();
         let name = "selekyt-fake";
-        // Hold on a builtin loop (see the test above for why not `sleep`), then
-        // answer: the hold proves the *new* process is the one replying.
-        fake_sidecar(&dir, name, "n=0\nwhile [ $n -lt 30 ]; do n=$((n+1)); done\necho '{\"ok\": true, \"op\": \"ping\"}'\n");
-        let (sidecar, _logs) = Sidecar::spawn_in(&dir, name, &[]).expect("spawns");
+        // The reply waits for a request line rather than answering on a timer:
+        // a fixed-count busy loop races the caller's write and can exit before
+        // it arrives, which surfaces as a spurious EPIPE instead of a reply.
+        fake_sidecar(&dir, name, "while IFS= read -r line; do echo '{\"ok\": true, \"op\": \"ping\"}'; done\n");
+        let (sidecar, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("spawns");
         assert!(sidecar.cancel());
         assert!(sidecar.call("ping", &serde_json::json!({})).is_err());
         // The dropped child is gone; a new spawn is a new process.
-        let (again, _logs) = Sidecar::spawn_in(&dir, name, &[]).expect("respawns");
+        let (again, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("respawns");
         let reply = again.call("ping", &serde_json::json!({}));
         assert!(reply.is_ok(), "a fresh sidecar must answer: {:?}", reply.err());
     }
