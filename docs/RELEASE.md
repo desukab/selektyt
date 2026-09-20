@@ -9,15 +9,17 @@ claims are separate and this report does not merge them.
 ## Current commit
 
 ```
-de0c151  docs: release report and state for the cancellation + signing session   ← tip as written
+30ace62  ci: pyyaml is a test dependency — the packaging tests read the workflows   ← tip as written
+9e53836  ci: every unsigned build was being published as "signed"
+5977a92  ci: the Linux shell job can actually run — patch out the staging-dependent keys
+288bcd0  desktop: the captions tab actually renders now — a path-precedence fix on both sides
+de0c151  docs: release report and state for the cancellation + signing session
 59e5327  desktop: real cancellation, contract-tested UI, and honest signing
-91f3a39  fix(windows): NSIS wants a language name, not a locale code
-33e42f8  fix(windows): the portability bugs that would stop the app on Windows 11
 b5078e5  feat(desktop): the SelekyT Windows desktop shell and its build pipeline
 ```
 
-The captions fix described under "What worked" lands as the commit directly above
-`de0c151`; this file is part of it, so the hash above is already one behind.
+This file's own commit sits above `30ace62`, so the hash marked ← is already one
+behind. Run `git log --oneline -8` rather than copying from here.
 
 All pushed to `main` at `https://github.com/desukab/selektyt`. Run `git log -1`
 rather than trusting the hash printed here — this file's own commit changes it.
@@ -130,13 +132,15 @@ claiming success.
 
 ## Tests
 
-- **1236 passed, 13 skipped** (full Python suite, 183.9 s on this host), up from
-  a 1215 / 13 baseline. The 21 new tests are the desktop packaging contract (5),
-  the `read_text` op's envelope and traversal surface, and engine-side growth;
-  nothing regressed. The count was measured by re-running the whole suite after
-  the fix — a background run earlier in the session reported exit 0 without
-  having executed pytest at all (see `docs/AI_EXECUTION_STATE.md`), so the
-  number here is from a run whose summary line was actually read.
+- **1240 passed, 13 skipped** (full Python suite, 183.9 s on this host), up from
+  a 1215 / 13 baseline. The 25 new tests are the desktop packaging contract (9,
+  including the four that pin the release label), the `read_text` op's envelope
+  and traversal surface, and engine-side growth; nothing regressed. The count
+  was measured by re-running the whole suite and reading its summary line — a
+  background run earlier in the session reported exit 0 without having executed
+  pytest at all (see `docs/AI_EXECUTION_STATE.md`), and 1240 is the count
+  *after* the four labelling tests landed, not the one quoted in their own
+  commit message.
 - **12 Rust unit tests** in `apps/desktop/src-tauri`, including
   `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the pipe-buffer
   deadlock fix that this session found by hitting it for real,

@@ -25,11 +25,11 @@ every line below was true on this host at that point.
   `b5078e5` (the Tauri 2 shell and its build pipeline).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1236 passed, 13 skipped** (2026-09-20, 183.9 s) — measured by
+* Test suite: **1240 passed, 13 skipped** (2026-09-20, 183.9 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work"). The
   prior baseline was 1215/13; the growth is the desktop packaging contract
-  (`tests/test_desktop_packaging.py`, 5), the `read_text` op's envelope and
+  (`tests/test_desktop_packaging.py`, now 9), the `read_text` op's envelope and
   traversal surface, and engine-side growth. No regressions.
   **12 Rust unit tests** in `apps/desktop/src-tauri` pass, including
   `cancel_unblocks_a_call_in_flight` (0.15 s — see the note below about why its
