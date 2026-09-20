@@ -386,6 +386,55 @@ def test_the_registry_declares_what_each_format_reads():
             assert "url" in meta and meta["url"].startswith("https://"), key
 
 
+def test_every_registered_corpus_can_write_its_own_provenance(tmp_path, monkeypatch):
+    # Provenance is written last in cmd_prepare, after the sample is already on
+    # disk. A corpus whose shape the writer could not handle failed there and
+    # left a manifest with no provenance — the directory looks prepared and the
+    # number it produced is uncitable. This drove a real failure on mls-polish:
+    # the writer read ["files"][0][0] and a streaming corpus has "url" instead,
+    # so it raised KeyError twelve minutes into a 6 GB stream.
+    #
+    # The test builds a two-utterance MLS archive and runs cmd_prepare against
+    # it through the registered-corpus path, so the provenance writer itself is
+    # what fails on a shape mismatch rather than a restatement of its lookup.
+    # The audio has to be genuinely decodable: cmd_prepare measures every clip's
+    # duration through ffmpeg, so bytes that are not audio fail later than the
+    # code path under test and obscure the result.
+    root = tmp_path / "mls_polish"
+    (root / "test" / "audio" / "1889" / "1447").mkdir(parents=True)
+    payload = _silence_flac(1.0)
+    for name in ("1889_1447_000010", "1889_1447_000020"):
+        (root / "test" / "audio" / "1889" / "1447").joinpath(
+            f"{name}.flac").write_bytes(payload)
+    (root / "test").joinpath("transcripts.txt").write_text(
+        "1889_1447_000010\tpo polsku 0\n1889_1447_000020\tpo polsku 1\n",
+        encoding="utf-8")
+    archive = tmp_path / "mls.tar.gz"
+    with tarfile.open(archive, "w:gz") as tf:
+        tf.add(root / "test", arcname="mls_polish/test")
+
+    monkeypatch.setitem(wer_bench.CORPORA, "mls-polish", {
+        "name": "Multilingual LibriSpeech Polish (test split)",
+        "format": "mls-stream",
+        "url": str(archive),
+        "licence": "Multilingual LibriSpeech (Facebook AI Research), CC BY 4.0",
+    })
+    out = tmp_path / "out"
+    out.mkdir()
+    assert wer_bench.cmd_prepare([
+        "--corpus", "mls-polish", "--split", "test",
+        "--out", str(out), "--count", "2",
+    ]) == 0
+    prov = json.loads((out / "provenance.json").read_text(encoding="utf-8"))
+    assert prov["source_url"] == str(archive), \
+        "provenance must name the stream it actually read"
+    assert prov["clips"] == 2
+    assert "licence" in prov and "CC BY 4.0" in prov["licence"]
+    # The manifest the run will be scored against is committed alongside it.
+    assert len((out / "manifest.jsonl").read_text(
+        encoding="utf-8").strip().splitlines()) == 2
+
+
 def test_every_c10_language_is_registered_as_a_streaming_corpus():
     # P9 names six languages. A registry that covered five of them would make
     # the criterion look addressable when one of the six had no path to a score.
@@ -418,6 +467,32 @@ def test_every_committed_bench_run_records_the_production_decode_parameters():
 # two layouts, and the manifest it emits is the artifact every quoted number is
 # scored against. These build both layouts from synthetic archives so the
 # refactor is tested without a 346 MB or 505 MB download.
+
+def _silence_flac(seconds: float, rate: int = 16000) -> bytes:
+    """Silence as real FLAC, so the duration pass in cmd_prepare can decode it.
+
+    The MLS members are .flac and cmd_prepare measures each clip through
+    ffmpeg; placeholder bytes fail in the decoder rather than in the code under
+    test, which reports a misleading error.
+    """
+    import wave
+
+    raw = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
+    try:
+        with wave.open(raw, "wb") as f:
+            f.setnchannels(1)
+            f.setsampwidth(2)
+            f.setframerate(rate)
+            f.writeframes(b"\x00\x00" * int(seconds * rate))
+        raw.close()
+        out = subprocess.run(["ffmpeg", "-y", "-i", raw.name, "-c:a", "flac",
+                              "-f", "flac", "pipe:1"],
+                             check=True, stdout=subprocess.PIPE,
+                             stderr=subprocess.DEVNULL)
+        return out.stdout
+    finally:
+        Path(raw.name).unlink(missing_ok=True)
+
 
 def _indic_zip(directory: Path, n: int = 7) -> tuple[Path, Path]:
     """The OpenSLR Indic shape: flat .wav members plus a TSV of references."""

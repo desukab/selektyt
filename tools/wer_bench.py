@@ -572,9 +572,16 @@ def cmd_prepare(argv: list[str]) -> int:
     # clips out of it. The archive is deleted after use, and this is what
     # remains.
     corpus = CORPORA[args.corpus]
+    # ``files`` is the download list for a materialised archive; a streaming
+    # corpus has one ``url`` and no list. Writing this unconditionally raised
+    # KeyError halfway through an MLS prepare — after the sample was extracted
+    # but before provenance landed, leaving a manifest with no provenance and a
+    # run that cannot be cited. The fallback has to spell out the URL the same
+    # way, or the file says less than it does for the other corpora.
+    source_url = corpus["files"][0][0] if "files" in corpus else corpus["url"]
     (out_dir / "provenance.json").write_text(json.dumps({
         "corpus": corpus["name"],
-        "source_url": corpus["files"][0][0],
+        "source_url": source_url,
         "licence": corpus["licence"] + " — attribution for the reference "
                    "transcripts this file lists.",
         "archive_member_count": archive_member_count,
