@@ -464,18 +464,24 @@ In rough order of how much it would cost a user (fuller list in
    91.54% — and it does not reach the bar, so this is a *language-fit* gap rather
    than a size gap. Buying compute does not close it, which is what keeps the
    CPU-only cost story coherent on both sides of the language boundary.
-9. **P9's own criterion is one-sixth measured, and that sixth passes.** Polish —
+9. **P9's own criterion is two-sixths measured, and both sixths pass.** Polish —
    one of the six C10 languages the criterion names — scores **WER 11.01% /
    CER 2.45%** on the same `small` model, with **34 of 35** clips inside the 25%
    bar and diacritics intact (Multilingual LibriSpeech test, 35 clips, 7.79 min,
-   1054 reference words; `corpus/wer/runs/polish-small.json`). Telugu is *not* a
-   C10 language, so the two results read together rather than as one finding: the
-   failure is localised to Indic, not to "everything outside English". The
-   criterion needs **3 of 6**, so German, Spanish, French, Dutch and Italian
-   remain unmeasured and P9 cannot be claimed. The Polish number does not assume
-   any of them, and clean read audiobook prose is the easiest condition the bar
-   will be faced with — so it is evidence the bar is reachable, not evidence it
-   is met.
+   1054 reference words; `corpus/wer/runs/polish-small.json`). Italian — a second
+   one of the six — scores **WER 20.11% / CER 4.53%** with **26 of 40** clips
+   inside the bar (MLS test, 40 clips, 9.80 min, 1258 reference words;
+   `corpus/wer/runs/italian-small.json`). The Italian corpus is Dante, so the
+   reference is archaic Italian against a modern ASR and the worst clips reach
+   46% — a materially harder condition than Polish's modern prose, and still a
+   pass at the corpus level. Two independent European languages passing is what
+   shows the first was not one easy audiobook. Telugu is *not* a C10 language, so
+   these read against it as a set: the failure is localised to Indic, not to
+   "everything outside English". The criterion needs **3 of 6**, so German,
+   Spanish, French and Dutch remain unmeasured and P9 cannot be claimed. One
+   more passing language is all the criterion lacks, and clean read audiobook
+   prose is the easiest condition the bar will be faced with — so these are
+   evidence the bar is reachable, not evidence it is met.
 10. **A candidate's text described a different clip from the one that ships.**
     Selection bounds are estimated proportionally to character span, so a bound
     can land inside a word; the word list is real timing and the cut snaps to it,

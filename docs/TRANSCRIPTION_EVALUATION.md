@@ -745,10 +745,15 @@ accepted: the archive is streamed and only the strided sample is written, so
 scoring one of the six costs ~15 MB of disk instead of 6.2 GB.
 
 **The more important limitation is not the disk.** C10 covers de/es/fr/nl/it/pl.
-One of the six is now measured and passes — Polish, 11.01% WER / 2.45% CER on a
-35-clip MLS sample, 34 of 35 utterances inside the 25% bar (§7.2). The remaining
-five are still unmeasured, and each costs the same ~15 MB streamed sample, so
-the constraint is compute time on a 4-core host, not disk. But note what the C10
+Two of the six are now measured and both pass — Polish, 11.01% WER / 2.45% CER on
+a 35-clip MLS sample with 34 of 35 utterances inside the 25% bar (§7.2), and
+Italian, 20.11% WER / 4.53% CER on a 40-clip MLS sample with 26 of 40 inside the
+bar (§7.3). The Italian corpus is Dante, so the reference is archaic Italian
+against a modern ASR — a harder condition than Polish's modern prose, and still
+a pass at the corpus level. Two languages passing on independent corpora is what
+shows the first was not one easy audiobook. The remaining four are still
+unmeasured, and each costs the same ~15 MB streamed sample, so the constraint is
+compute time on a 4-core host, not disk. But note what the C10
 list does not cover: **Telugu, Hindi or Hungarian** — the three languages that
 actually produced suspicious transcripts. Even a full C10 run would not have
 scored a single one of them. Hindi in particular is absent from C10 while being
@@ -850,21 +855,57 @@ a transliteration — `wyciętych`, `fantastyczną`, `obywatelską`, `zaskoczyć
 which matters because a lossy normalisation would show up as CER before it shows
 up as WER, and CER is 2.45%.
 
-**Read §7.1 and §7.2 together.** The same `small` model that scores 3.38%
-English scores 11.01% Polish and 151.08% Telugu. The failure is not "everything
-outside English"; it has a boundary, and the boundary is drawn where the data
-draws it. That is a stronger and more actionable finding than the pre-measurement
-version, because a per-language gate is a routing decision with no hardware
-consequence — and because Telugu still fails at `medium`, the gap is language fit
-rather than model size, so buying compute does not close it.
+**Read §7.1, §7.2 and §7.3 together.** The same `small` model that scores 3.38%
+English scores 11.01% Polish, 20.11% Italian and 151.08% Telugu. The failure is
+not "everything outside English"; it has a boundary, and the boundary is drawn
+where the data draws it. That is a stronger and more actionable finding than the
+pre-measurement version, because a per-language gate is a routing decision with
+no hardware consequence — and because Telugu still fails at `medium`, the gap is
+language fit rather than model size, so buying compute does not close it.
 
-**What this does not settle.** P9 requires **3 of the 6** C10 languages. One is
-measured and passes; five (German, Spanish, French, Dutch, Italian) are
-registered in `tools/wer_bench.py` and remain **UNMEASURED**, and none is assumed
-by this result. Polish is also read audiobook prose in one accent region, which
-is the easiest possible condition — the same clean-read bias that makes LibriSpeech
-English 3.38%. Noisy, crosstalk or compressed real-world audio in any of the six
+**What this does not settle.** P9 requires **3 of the 6** C10 languages. Two are
+measured and pass; four (German, Spanish, French, Dutch) are registered in
+`tools/wer_bench.py` and remain **UNMEASURED**, and none is assumed by these
+results — one more passing language is all the criterion lacks. Both measurements
+are also read audiobook prose, which is the easiest possible condition — the same
+clean-read bias that makes LibriSpeech English 3.38%, and in Italian's case the
+reference is *Divine Comedy* verse, so the prose being read is archaic while the
+ASR is modern. Noisy, crosstalk or compressed real-world audio in any of the six
 is a different measurement that has not been made.
+
+### 7.3 Italian: the second C10 language, and a harder bar than Polish's
+
+Italian is the run that decides whether §7.2 was one easy audiobook or a
+property of European languages at this model size.
+
+| | |
+| --- | --- |
+| Corpus | Multilingual LibriSpeech, `mls_italian` test split |
+| Source archive | `mls_italian.tar.gz` (14.7 GiB total; streamed, never on disk) |
+| Sample | 40 clips, stride 31 of 1262 test utterances |
+| Audio | 9.80 min; 1258 reference words, 6997 reference characters |
+| WER | **20.11%** |
+| CER | **4.53%** |
+| Clips inside the 25% bar | **26 of 40** (worst 46.2%) |
+| Language detection | `it` at probability 1.00, no `--language` ambiguity |
+| Empty decodes | 0 |
+| RTF | 0.278× |
+| Peak RSS | 655.0 MB |
+
+The reference text is Dante's *Divine Comedy* — `Indi, tra l'altre luci, mota e
+mista`, `Quasi falcone e casce del cappello` — so the transcript being scored is
+fourteenth-century verse, not modern prose. A model trained on contemporary
+Italian is being asked to transcribe a register its training data barely covers,
+and 20.11% is what that costs. The worst clips reach 46.2%, and the errors are
+concentrated in the archaic vocabulary rather than spread across the sample.
+
+That is the point of scoring a second language at all. Polish's 11.01% could have
+been one easy corpus; Italian's 20.11% is a different corpus, a different
+language family, a harder register, and still inside the bar. Two independent
+passing measurements are what localise the Telugu failure to Indic on evidence
+rather than on inference. They do not establish the remaining four — German,
+Spanish, French and Dutch are each their own measurement, and P9 needs one more
+pass before it can be claimed.
 
 ---
 
