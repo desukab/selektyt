@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from tools import wer_bench
 from tools.wer_bench import (
     _edit_distance,
     _normalize,
@@ -318,6 +319,80 @@ def test_the_evidence_files_are_not_gitignored():
         "these evidence files are gitignored, so a number quoted from them "
         "cannot be audited from a checkout: " + ", ".join(ignored)
     )
+
+
+def test_the_mls_layout_streams_and_matches_only_the_named_split(tmp_path):
+    """MLS archives are 6-114 GB, so ``prepare`` reads them as a stream and
+    writes only the sample. This builds the MLS shape at miniature scale: a
+    nested audio tree, one ``transcripts.txt`` per split, and a *train* utterance
+    that must not leak into a test sample."""
+    root = tmp_path / "mls_polish"
+    (root / "test" / "audio" / "11295" / "11059").mkdir(parents=True)
+    (root / "train" / "audio" / "20000" / "20001").mkdir(parents=True)
+    for i in range(5):
+        (root / "test" / "audio" / "11295" / "11059").joinpath(
+            f"11295_11059_{i:06d}.flac").write_bytes(b"not really audio")
+    (root / "train" / "audio" / "20000" / "20001").joinpath(
+        "20000_20001_000000.flac").write_bytes(b"train audio")
+    (root / "test").joinpath("transcripts.txt").write_text(
+        "".join(f"11295_11059_{i:06d}\tpo polsku {i}\n" for i in range(5)),
+        encoding="utf-8")
+    (root / "train").joinpath("transcripts.txt").write_text(
+        "20000_20001_000000\tthis must not appear\n", encoding="utf-8")
+
+    archive = tmp_path / "mls.tar.gz"
+    with tarfile.open(archive, "w:gz") as tf:
+        for path in sorted(root.rglob("*")):
+            if path.is_file():
+                tf.add(path, arcname=str(path.relative_to(tmp_path)))
+
+    # The streamer opens a local path directly when it is given one, which is
+    # what makes this testable without a 6 GB download.
+    meta = {"url": str(archive), "format": "mls-stream"}
+    manifest, total, stride = wer_bench._prepare_mls_stream(
+        meta, "test", tmp_path / "sub", 2)
+
+    assert total == 5, "the train utterance must not be counted in the test split"
+    assert stride == 2
+    assert len(manifest) == 2
+    assert manifest[0]["reference"] == "po polsku 0"
+    assert all("train" not in m["audio"] for m in manifest)
+    assert all("this must not appear" not in m["reference"] for m in manifest)
+
+
+def test_an_mls_corpus_reports_a_missing_split_rather_than_sampling_nothing(tmp_path):
+    """An empty split is a wrong argument, not a zero-sample run."""
+    root = tmp_path / "mls_polish"
+    (root / "train" / "audio").mkdir(parents=True)
+    (root / "train" / "audio").joinpath("a.flac").write_bytes(b"audio")
+    (root / "train").joinpath("transcripts.txt").write_text("a\ttext\n",
+                                                            encoding="utf-8")
+    archive = tmp_path / "mls.tar.gz"
+    with tarfile.open(archive, "w:gz") as tf:
+        tf.add(root / "train" / "audio" / "a.flac",
+               arcname="mls_polish/train/audio/a.flac")
+        tf.add(root / "train" / "transcripts.txt",
+               arcname="mls_polish/train/transcripts.txt")
+    meta = {"url": str(archive), "format": "mls-stream"}
+    assert wer_bench._prepare_mls_stream(meta, "test", tmp_path / "sub", 2) is None
+
+
+def test_the_registry_declares_what_each_format_reads():
+    # A corpus missing its url or its licence is a runtime failure in the middle
+    # of a multi-GB stream, or a provenance file that cannot cite its own terms.
+    for key, meta in wer_bench.CORPORA.items():
+        assert set(("name", "format", "licence")) <= set(meta), key
+        if meta["format"] == "mls-stream":
+            assert "url" in meta and meta["url"].startswith("https://"), key
+
+
+def test_every_c10_language_is_registered_as_a_streaming_corpus():
+    # P9 names six languages. A registry that covered five of them would make
+    # the criterion look addressable when one of the six had no path to a score.
+    c10 = {"german", "spanish", "french", "dutch", "italian", "polish"}
+    registered = {k[len("mls-"):] for k in wer_bench.CORPORA
+                  if wer_bench.CORPORA[k]["format"] == "mls-stream"}
+    assert registered == c10, f"C10 is {sorted(c10)}, registry is {sorted(registered)}"
 
 
 def test_every_committed_bench_run_records_the_production_decode_parameters():

@@ -45,6 +45,7 @@ from __future__ import annotations
 import argparse
 import json
 import resource
+import subprocess
 import sys
 import tarfile
 import time
@@ -161,7 +162,6 @@ def _to_pcm_wav(src: Path, cache_dir: Path, sample_rate: int = 16000) -> Path:
     out = cache_dir / (src.stem + ".wav")
     if out.is_file() and out.stat().st_size > 0:
         return out
-    import subprocess
 
     tmp = out.with_suffix(".wav.tmp")
     subprocess.run(
@@ -305,7 +305,158 @@ CORPORA = {
         "licence": ("OpenSLR SLR66 Telugu (Google, Inc.), "
                     "CC BY-SA 4.0"),
     },
+    # P9's criterion names the six MLS languages specifically, and MLS is what
+    # scores it. The archives are 6-114 GB, so none is ever materialised: each
+    # is streamed and only the strided sample is written (see format
+    # "mls-stream"). All six URLs were HEAD-checked (200) before they were
+    # registered; the splits share MLS's one layout, so `--split test` works for
+    # all of them. Only Polish has been scored — the other five are registered
+    # so scoring a second C10 language is a command, not a code change.
+    "mls-polish": {
+        "name": "Multilingual LibriSpeech Polish (test split)",
+        "format": "mls-stream",
+        "url": "https://dl.fbaipublicfiles.com/mls/mls_polish.tar.gz",
+        "licence": "Multilingual LibriSpeech (Facebook AI Research), CC BY 4.0",
+    },
+    "mls-german": {
+        "name": "Multilingual LibriSpeech German (test split)",
+        "format": "mls-stream",
+        "url": "https://dl.fbaipublicfiles.com/mls/mls_german.tar.gz",
+        "licence": "Multilingual LibriSpeech (Facebook AI Research), CC BY 4.0",
+    },
+    "mls-spanish": {
+        "name": "Multilingual LibriSpeech Spanish (test split)",
+        "format": "mls-stream",
+        "url": "https://dl.fbaipublicfiles.com/mls/mls_spanish.tar.gz",
+        "licence": "Multilingual LibriSpeech (Facebook AI Research), CC BY 4.0",
+    },
+    "mls-french": {
+        "name": "Multilingual LibriSpeech French (test split)",
+        "format": "mls-stream",
+        "url": "https://dl.fbaipublicfiles.com/mls/mls_french.tar.gz",
+        "licence": "Multilingual LibriSpeech (Facebook AI Research), CC BY 4.0",
+    },
+    "mls-dutch": {
+        "name": "Multilingual LibriSpeech Dutch (test split)",
+        "format": "mls-stream",
+        "url": "https://dl.fbaipublicfiles.com/mls/mls_dutch.tar.gz",
+        "licence": "Multilingual LibriSpeech (Facebook AI Research), CC BY 4.0",
+    },
+    "mls-italian": {
+        "name": "Multilingual LibriSpeech Italian (test split)",
+        "format": "mls-stream",
+        "url": "https://dl.fbaipublicfiles.com/mls/mls_italian.tar.gz",
+        "licence": "Multilingual LibriSpeech (Facebook AI Research), CC BY 4.0",
+    },
 }
+
+
+def _open_tar_stream(url: str):
+    """A tar.gz stream from ``url``, or from a local file if it is a path.
+
+    The local branch is what makes the MLS path testable at miniature scale and
+    debuggable against a partially-downloaded archive; the network branch is
+    what production uses, because the archive is larger than the free disk.
+    """
+    if "/" in url and Path(url).is_file():
+        return tarfile.open(url, "r:gz")
+    curl = subprocess.Popen(
+        # --no-progress-meter: on a 6 GB stream the carriage-return progress
+        # table is megabytes of noise in the run log and tells nobody anything
+        # they can act on. Errors still go to stderr, which is captured.
+        ["curl", "-fL", "--retry", "3", "--no-progress-meter", url],
+        stdout=subprocess.PIPE)
+    tf = tarfile.open(fileobj=curl.stdout, mode="r|gz")
+    # Keep curl alive as long as the reader is: the pipe is the only thing
+    # holding the stream open, and a Popen with no reference can be collected
+    # partway through a multi-GB read.
+    tf._feeder = curl
+    return tf
+
+
+def _mls_members(url: str, split: str) -> tuple[list[str], list[str]]:
+    """Pass 1 over the stream: the full sorted audio list, plus the transcripts.
+
+    Reads the whole archive over the network and writes nothing to disk. The
+    stride needs the *total* member count to be reproducible, and that only
+    exists at the end of the stream, so the archive is read twice rather than
+    guessed at.
+    """
+    print(f"[prepare] listing {url} ({split} split)", flush=True)
+    audio: list[str] = []
+    transcripts: list[str] = []
+    with _open_tar_stream(url) as tf:
+        for member in tf:
+            if not member.isfile():
+                continue
+            if member.name.endswith(".flac"):
+                audio.append(member.name)
+            elif member.name.endswith("transcripts.txt"):
+                transcripts.append(member.name)
+    return sorted(audio), sorted(transcripts)
+
+
+def _prepare_mls_stream(meta: dict, split: str, out_dir: Path, count: int):
+    """The MLS layout, read as a stream so a 6+ GB archive never touches disk.
+
+    MLS keeps one ``transcripts.txt`` per split holding
+    ``utterance_id<TAB>reference`` lines, and nests audio as
+    ``<split>/audio/<speaker>/<reader>/<speaker>_<reader>_<utt>.flac``. A member
+    belongs to the chosen split when its path starts with the split directory,
+    which is matched on components rather than by substring so a speaker named
+    ``test`` cannot pull train audio into the sample.
+    """
+    url = meta["url"]
+    members, transcript_files = _mls_members(url, split)
+    # MLS nests under an archive root, so the split is the second path component
+    # (mls_polish/test/audio/...). Matched on components, not by substring, so a
+    # speaker or book named "test" cannot pull the train split into the sample.
+    in_split = [m for m in members if m.split("/")[1:2] == [split]]
+    if not in_split:
+        print(f"[prepare] no .flac members under the '{split}' split", file=sys.stderr)
+        return None
+    stride = max(1, len(in_split) // count)
+    picked = in_split[::stride][:count]
+    want = set(picked)
+    print(f"[prepare] {len(in_split)} utterances in {split}, stride {stride}, "
+          f"keeping {len(picked)}", flush=True)
+
+    # Pass 2: re-read the stream and extract only the sample plus the one
+    # transcripts.txt that covers it.
+    references: dict[str, str] = {}
+    with _open_tar_stream(url) as tf:
+        for member in tf:
+            if not member.isfile():
+                continue
+            if member.name in want:
+                tf.extract(member, out_dir, filter="data")
+            elif member.name in transcript_files and member.name.split("/")[1:2] == [split]:
+                # Small enough to hold in memory, and the reference must exist
+                # before the manifest is built.
+                text = tf.extractfile(member)
+                if text is not None:
+                    for line in text.read().decode("utf-8").splitlines():
+                        parts = line.split("\t")
+                        if len(parts) >= 2:
+                            references[parts[0]] = parts[1]
+
+    manifest = []
+    for name in picked:
+        flac = out_dir / name
+        if not flac.is_file():
+            print(f"[prepare] WARNING: {name} was not extracted")
+            continue
+        utt = flac.stem
+        ref = references.get(utt)
+        if ref is None:
+            print(f"[prepare] WARNING: no transcript for {utt}")
+            continue
+        manifest.append({
+            "utterance": utt,
+            "audio": str(flac.relative_to(out_dir)),
+            "reference": ref,
+        })
+    return manifest, len(in_split), stride
 
 
 def cmd_fetch(argv: list[str]) -> int:
@@ -322,9 +473,14 @@ def cmd_fetch(argv: list[str]) -> int:
     p.add_argument("--out", required=True, help="destination directory")
     args = p.parse_args(argv)
 
-    import subprocess
 
     meta = CORPORA[args.corpus]
+    if meta.get("format") == "mls-stream":
+        # Nothing to fetch: this corpus is streamed at prepare time because its
+        # archive is larger than the free disk on any machine this tool runs on.
+        print(f"[fetch] {args.corpus} is never materialised — run "
+              f"'prepare --corpus {args.corpus}' directly, which streams it")
+        return 0
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     for url, filename in meta["files"]:
@@ -348,31 +504,44 @@ def cmd_fetch(argv: list[str]) -> int:
 
 def cmd_prepare(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description="Build a fixed subsample of a ground-truth corpus.")
-    p.add_argument("--archive", required=True,
-                   help="corpus archive (.tar.gz LibriSpeech layout, or .zip SLR layout)")
+    p.add_argument("--archive", default=None,
+                   help="corpus archive (.tar.gz LibriSpeech layout, or .zip SLR layout); "
+                        "omitted for an mls-stream corpus, which is read over the network")
     p.add_argument("--index", default=None,
                    help="TSV of 'FileID<TAB>reference' (required for the zip layout)")
     p.add_argument("--out", required=True, help="output dir for the subsample + manifest")
     p.add_argument("--count", type=int, default=30, help="number of clips to sample")
     p.add_argument("--max-minutes", type=float, default=8.0,
                    help="stop adding clips once this much audio is sampled")
+    p.add_argument("--split", default="test",
+                   help="for corpora with splits, which one to sample from")
     p.add_argument("--corpus", choices=sorted(CORPORA), default="librispeech-clean",
                    help="which corpus the archive is from (drives provenance)")
     args = p.parse_args(argv)
 
-    archive = Path(args.archive)
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
+    corpus = CORPORA[args.corpus]
 
-    # The two corpora keep their references differently, but the sampling rule
-    # is shared: a deterministic stride over the sorted member list, so the same
-    # archive always yields the same clip set and a WER figure names the audio
-    # behind it. A stride also spreads the sample across speakers instead of
-    # clustering it in one speaker's directory.
-    if archive.suffix == ".zip":
-        meta = _prepare_zip(archive, args.index, out_dir, args.count)
+    # The sampling rule is shared across every layout: a deterministic stride
+    # over the sorted member list, so the same archive always yields the same
+    # clip set and a WER figure names the audio behind it. A stride also spreads
+    # the sample across speakers instead of clustering it in one speaker's
+    # directory.
+    if corpus["format"] == "mls-stream":
+        if args.archive is not None:
+            print("[prepare] an mls-stream corpus takes no --archive (it reads "
+                  "the pinned URL over the network)", file=sys.stderr)
+            return 2
+        meta = _prepare_mls_stream(corpus, args.split, out_dir, args.count)
+    elif args.archive is None:
+        print("[prepare] this corpus needs --archive (or --corpus for a "
+              "streaming one)", file=sys.stderr)
+        return 2
+    elif Path(args.archive).suffix == ".zip":
+        meta = _prepare_zip(Path(args.archive), args.index, out_dir, args.count)
     else:
-        meta = _prepare_tar(archive, out_dir, args.count)
+        meta = _prepare_tar(Path(args.archive), out_dir, args.count)
     if meta is None:
         return 2
     manifest, archive_member_count, stride = meta

@@ -28,15 +28,18 @@ a claim about a language no speaker of that language verified.
 
 ### NOT measured, and why
 
-1. **WER on Telugu, Hindi and Hungarian.** There is no reference transcript for
-   `telugu-tutorial`, `hadhazy-protest` or `hindi-baiga-interview`, and no
-   speaker of any of those languages was available in this session. No error
-   rate is computed for them anywhere in this document or in the tool. Writing
-   one would mean inventing the reference, which is fabricating ground truth.
-2. **Non-English WER at all (criterion P9).** The C10 Multilingual LibriSpeech
-   tarballs were size-checked and **not downloaded**: 6.6 GB (Polish) to
-   122.9 GB (German) against a host with ~1.5–5 GB free. See §7. This criterion
-   remains **NEVER MEASURED**.
+1. **WER on the three in-corpus sources.** `telugu-tutorial`, `hadhazy-protest`
+   and `hindi-baiga-interview` still have no reference transcript, and no speaker
+   of any of those languages was available. §7.1 measures Telugu on a *different*
+   corpus that has one (OpenSLR SLR66) — that bounds the model's Telugu error
+   rate, but it is not a score for `telugu-tutorial`, whose transcript is still
+   unmeasured.
+2. **Non-English WER at the C10 languages (criterion P9).** §7.1 measures
+   Telugu, which is **not** one of the six C10 languages, and §7.2 scores
+   Polish, which is. The remaining five (German, Spanish, French, Dutch,
+   Italian) are still **UNMEASURED**. The Multilingual LibriSpeech tarballs are
+   6.2 GB (Polish) to 114.5 GB (German), which cannot be materialised here;
+   §7.2 streams them instead of downloading. See §7.
 3. **Whether a transcript is semantically correct in a language nobody here
    reads.** §5 reports counts and samples. A sample that *looks* plausible is
    not evidence of accuracy — it is evidence that the output is well-formed.
@@ -653,16 +656,24 @@ language is the only ground truth for *correctness*; coverage is the
 machine-checkable proxy for *completeness*.
 
 **What this hypothesis does not prove.** It does not establish that `medium` or
-`large-v3` would fix Telugu — that needs a Telugu reference transcript, which
-does not exist in this session (§8, recommendation 5). The measured model axis
-(§5.3) does show `medium` materially changing Hindi, which is evidence that
-capacity is *part* of the picture, but Telugu is unchanged across every
-configuration tried, so capacity alone does not explain the worst failure.
-And this hypothesis does not distinguish "too little Telugu training data" from
-"the greedy decoder cannot recover on a low-probability language"; the
-beam-width test in §4 speaks to the second half on English, where raising the
-beam to 5 changes nothing measurable (3.38% → 4.05%, inside the noise band).
-§6.5b below is the direct test of the first half on the actual failing audio.
+`large-v3` would fix Telugu. §7.1 supplies what was missing when this was
+written: a Telugu corpus with reference transcripts (OpenSLR SLR66), on which
+`small` scores **151.08% WER with 0 of 50 clips inside 25%**. That converts this
+section's central claim from inference to measurement — the model is not
+approximating Telugu on clean, read speech either, so the cause is in the model,
+not in the corpus recording or the chunking.
+
+The model-size axis is now being tested directly on that same corpus, because
+§5.3's observation that `medium` materially changes Hindi does not transfer: an
+observed `medium` clip on Telugu scored **47.1% WER against `small`'s 100%+**,
+which is a large movement but still nearly double the 25% bar, on a single clip.
+If that holds across the 50, the honest summary is that capacity helps and does
+not suffice. This hypothesis also does not distinguish "too little Telugu
+training data" from "the greedy decoder cannot recover on a low-probability
+language"; the beam-width test in §4 speaks to the second half on English, where
+raising the beam to 5 changes nothing measurable (3.38% → 4.05%, inside the noise
+band). §6.5b below is the direct test of the first half on the actual failing
+audio.
 
 ### 6.5b The direct test: what the decode loop did on the empty chunk
 
@@ -706,9 +717,12 @@ than a change.
 | `mls_italian.tar.gz` | 15,395,281,399 B (14.3 GiB) |
 | `mls_polish.tar.gz` | 6,609,569,551 B (6.2 GiB) |
 
-Free disk during this session ranged from 5.7 GB down to 1.5 GB. **No C10
-tarball fits**, including the smallest. Nothing was downloaded, and no partial
-corpus was scored as though it were complete.
+Free disk during this workstream ranged from 5.7 GB down to 1.5 GB and sits at
+2.8 GB now. **No C10 tarball fits**, including the smallest. None was
+downloaded in full, and no partial corpus was scored as though it were
+complete. §7.2 shows how the size constraint was routed around rather than
+accepted: the archive is streamed and only the strided sample is written, so
+scoring one of the six costs ~15 MB of disk instead of 6.2 GB.
 
 **The more important limitation is not the disk.** C10 covers de/es/fr/nl/it/pl.
 It does not cover **Telugu, Hindi or Hungarian** — the three languages that
@@ -716,7 +730,49 @@ actually produced suspicious transcripts. Even a full C10 run would not have
 scored a single one of them. Hindi in particular is absent from C10 while being
 one of the three failures. P9 as written is measurable in principle and
 unmeasurable in practice here, and measuring it would not have answered the
-question the corpus actually raised.
+question the corpus actually raised. §7.1 answers that question on a corpus
+that does have Telugu ground truth.
+
+### 7.1 Telugu: measured, and it is a failure
+
+The corpus that raised the question had no reference transcript, so the question
+was answered on one that does: **OpenSLR SLR66** (`te_in_female`), 50 utterances
+of Indian Telugu, female speakers, CC BY-SA 4.0. Strided 50 of 2294 archive
+members so the sample is reproducible.
+
+| Metric | Value |
+| --- | --- |
+| WER | **151.08%** |
+| CER | **127.40%** |
+| Reference words | 650 |
+| Word errors | 982 |
+| Character errors | 1818 |
+| Clips at or under the 25% bar | **0 of 50** |
+| Best clip WER | 71.4% |
+| Median clip WER | 106.7% |
+| Audio | 207.44 s over 50 clips |
+| Empty decodes | 2 |
+
+WER above 100% is not a formatting artifact — it means the hypothesis carries
+**more error words than the reference has words at all**. The decoder is not
+approximating Telugu; on two clips it produced nothing, and on the rest it
+produced the wrong quantity of wrong-language-looking material.
+
+The 3.38% English WER from §3 was measured on the same harness and the same
+model. That contrast is what localises the failure: transcription works, Telugu
+transcription does not.
+
+**What this does and does not settle.** The §5 reading of `telugu-tutorial` —
+"fluent-looking phonetic noise" — was an editorial judgment by someone who does
+not speak Telugu. This measurement converts it into a number, and the judgment
+happened to be right. But a right guess is still a guess, and the two are kept
+separate here: 151.08% is evidence, the reading was a hunch that predated it.
+
+Telugu is **not** one of the six C10 languages, so this does not formally score
+P9. It scores the property the corpus actually cared about, on the language the
+corpus actually raised. See `corpus/wer/runs/telugu-small.json` for the
+per-clip detail and `docs/CORPUS_RESULTS.md` for the in-corpus entry it
+supersedes.
 
 ---
 
