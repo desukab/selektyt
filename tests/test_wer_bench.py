@@ -8,6 +8,7 @@ arithmetic itself — they do not re-run the model, which is what
 `tools/wer_bench.py bench` is for.
 """
 import io
+import re
 import json
 import subprocess
 import tarfile
@@ -889,3 +890,122 @@ def test_a_wrong_shaped_index_cache_is_relisted_not_trusted(tmp_path):
     assert total == 6 and len(manifest) == 3, (
         "a wrong-shaped cache must fall back to a real listing, not be used"
     )
+
+
+# ── the docs' summary claims are checked against the run records ─────────────
+
+# Run records are named for the language in full — polish-small.json, not
+# pl-small.json — which keeps the two lists below aligned by construction.
+C10_LANGUAGES = ["german", "spanish", "french", "dutch", "italian", "polish"]
+C10_NAMES = {"german": "German", "spanish": "Spanish", "french": "French",
+             "dutch": "Dutch", "italian": "Italian", "polish": "Polish"}
+_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6}
+DOCS = Path(__file__).resolve().parent.parent / "docs"
+
+
+def _doc_text() -> str:
+    """The two documents that state the P9 headline, concatenated.
+
+    A claim can live in either: EVALUATION.md carries the criterion table, and
+    TRANSCRIPTION_EVALUATION.md carries the narrative sections. A drift between
+    them is the defect, so both are read by the same check.
+    """
+    parts = []
+    for name in ("EVALUATION.md", "TRANSCRIPTION_EVALUATION.md"):
+        path = DOCS / name
+        if path.is_file():
+            parts.append(path.read_text(encoding="utf-8"))
+    return "\n".join(parts)
+
+
+def _measured_c10_languages() -> list[str]:
+    """The C10 languages with a committed run record."""
+    return sorted(lang for lang in C10_LANGUAGES
+                  if (RUNS / f"{lang}-small.json").is_file())
+
+
+def test_the_docs_measured_c10_count_matches_the_run_records():
+    """The third time this drifted in this workstream a new measurement landed
+    and the summary paragraph still said 'two of the six'. The run records are
+    the evidence and the docs are the claim; this makes the two impossible to
+    disagree without a test failing.
+
+    Reads every statement of the form 'N of the six/6 C10 languages' and
+    requires each to equal the number of committed run records. A new phrasing
+    that the pattern does not match fails the *other* test below rather than
+    passing silently.
+    """
+    measured = _measured_c10_languages()
+    if not measured:
+        pytest.skip("no C10 run records in this checkout")
+    text = _doc_text()
+    stated = set()
+    for m in re.finditer(
+            r"(?i)\b(one|two|three|four|five|six|\d)\s+of\s+the\s+(?:six|6)",
+            text):
+        # A count claim is phrased with "measured" or "pass" nearby; the other
+        # occurrences of the same shape are not claims at all. "Telugu is not
+        # one of the six" is membership, and "scoring one of the six costs
+        # ~15 MB" is a cost statement. Requiring one of those two words is what
+        # keeps them out, and the window is wide enough to see the verb even
+        # when the sentence runs on past the number.
+        start = max(0, m.start() - 90)
+        window = text[start:m.end() + 90]
+        if not re.search(r"(?i)\b(measured|passes|pass)\b", window):
+            continue
+        # "unmeasured" contains "measured"; the boundary above handles that, and
+        # this handles an explicit negation of the count itself.
+        if re.search(r"(?i)\bnot\b\s+(\*\*)?one\s+of\s+the\s+(?:six|6)",
+                     text[max(0, m.start() - 20):m.start()]):
+            continue
+        word = m.group(1).lower()
+        # Not dict.get(word, int(word)): the default is evaluated eagerly, so
+        # int("three") would raise even though "three" is in the map.
+        count = _WORDS.get(word)
+        stated.add(count if count is not None else int(word))
+    assert stated, (
+        "no 'N of the six C10' claim found; the phrasing has moved and the "
+        "pattern needs updating so the claim stays checked"
+    )
+    assert stated == {len(measured)}, (
+        f"the docs claim {sorted(stated)} of the six C10 languages are "
+        f"measured, but {len(measured)} run records are committed: "
+        f"{', '.join(C10_NAMES[l] for l in measured)}"
+    )
+
+
+def test_every_measured_c10_language_is_named_in_the_docs():
+    """A run record that never reaches the docs is evidence nobody can see. Each
+    measured language has to appear by name, or the measurement is effectively
+    unpublished."""
+    text = _doc_text()
+    missing = [C10_NAMES[l] for l in _measured_c10_languages()
+               if C10_NAMES[l] not in text]
+    assert not missing, (
+        f"run records exist for {', '.join(missing)} but the docs never name "
+        f"them"
+    )
+
+
+def test_no_c10_language_is_claimed_measured_without_a_run_record():
+    """The mirror failure: a doc that claims a language is measured when no
+    record backs it. Read alongside the count above, this is what keeps a
+    summary from drifting upwards as well as down."""
+    text = _doc_text()
+    for lang in C10_LANGUAGES:
+        record = RUNS / f"{lang}-small.json"
+        if record.is_file():
+            continue
+        # A measured language is always quoted with a WER figure next to its
+        # name. Look for the name followed by a percentage within the same
+        # sentence, which is how a measured claim is phrased in both docs.
+        name = C10_NAMES[lang]
+        for sentence in re.split(r"(?<=[.!?])\s+", text):
+            if name not in sentence:
+                continue
+            if re.search(r"\d+\.\d+\s*%", sentence):
+                pytest.fail(
+                    f"{name} is quoted with a measured figure — "
+                    f"{sentence.strip()[:110]!r} — but {record.name} is not "
+                    f"committed. A measurement and its evidence have to arrive "
+                    f"together.")
