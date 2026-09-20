@@ -268,6 +268,8 @@ def main(argv: list[str]) -> int:
     p.add_argument("--out", default=None, help="results jsonl (default: <workdir>/results.jsonl)")
     p.add_argument("--only", default=None, help="comma-separated entry ids to run")
     p.add_argument("--keep-media", action="store_true", help="keep downloaded sources")
+    p.add_argument("--force", action="store_true",
+                   help="re-run entries even if a prior run recorded OK")
     args = p.parse_args(argv)
 
     manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
@@ -298,7 +300,13 @@ def main(argv: list[str]) -> int:
     n_new = 0
     for entry in entries:
         prior = done.get(entry["id"])
-        if prior and prior.get("status") == "OK":
+        # A source that already produced an OK record has artifacts on disk, and
+        # re-running it costs an hour of transcription for no new information —
+        # unless the pipeline changed since. An upstream fix (word-boundary
+        # snapping, say) makes a previously-OK run's selections stale even though
+        # nothing about the source did, so --force is how a fix gets confirmed on
+        # real media instead of on the artifacts predating it.
+        if prior and prior.get("status") == "OK" and not args.force:
             print(f"[skip] {entry['id']} already OK")
             continue
         print(f"[run ] {entry['id']} ({entry.get('axis')}) ...", flush=True)

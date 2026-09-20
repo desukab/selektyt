@@ -15,6 +15,7 @@ the one corpus source that had actually been re-run.
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -24,7 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.corpus_run import run_one  # noqa: E402
+from tools.corpus_run import main, run_one  # noqa: E402
 
 _ENTRY = {
     "id": "probe-regression",
@@ -142,6 +143,35 @@ def test_a_no_speech_failure_records_which_of_the_two_causes_it_was(
     rec = run_one(dict(_ENTRY), harness, keep_media=True)
     assert rec["status"] == "NO_SPEECH_DETECTED"
     assert rec["no_speech_cause"] == expected
+
+
+def test_a_prior_ok_run_is_skipped_unless_forced(harness, monkeypatch, tmp_path):
+    """``main`` appends rather than rewriting, so a source that already has an
+    OK record would otherwise be transcribed again on every invocation — an
+    hour of decode per source for artifacts that are already on disk. The skip
+    has to be defeatable, though: an upstream fix makes a previously-OK run's
+    selections stale without anything about the source changing, and that is
+    how a fix gets confirmed on real media."""
+    calls = []
+    monkeypatch.setattr(
+        "tools.corpus_run.run_one",
+        lambda entry, workdir, keep: calls.append(entry["id"]) or
+        {"id": entry["id"], "status": "OK", "elapsed_s": 1.0},
+    )
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({"sources": [dict(_ENTRY)]}), encoding="utf-8")
+    out = tmp_path / "results.jsonl"
+
+    assert main([str(manifest), "--workdir", str(tmp_path)]) == 0
+    assert calls == ["probe-regression"]
+    assert main([str(manifest), "--workdir", str(tmp_path)]) == 0
+    assert calls == ["probe-regression"], "an OK record must not be re-transcribed"
+
+    assert main([str(manifest), "--workdir", str(tmp_path), "--force"]) == 0
+    assert calls == ["probe-regression", "probe-regression"], \
+        "--force is how an upstream fix gets re-validated on a source that passed"
+    # The record is appended, not rewritten: the superseded run stays readable.
+    assert len(out.read_text(encoding="utf-8").strip().splitlines()) == 2
 
 
 def test_an_unrecognised_no_speech_message_is_labelled_not_guessed(harness, monkeypatch):
