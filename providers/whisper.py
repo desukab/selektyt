@@ -12,6 +12,63 @@ from providers.atomic import read_json, write_json_atomic
 
 FALLBACK_CHAIN = ["small", "base", "tiny"]
 
+EMPTY_RETRY_PEAK_DB = -45.0
+"""Peak level above which a chunk that decoded to zero segments is not silence.
+
+The VAD gate is part of the decode path, so it can suppress an entire chunk
+without raising any exception — the decode simply returns no segments. That
+outcome is written down as ``status: "ok"`` with an empty ``segments`` list,
+which is byte-identical to a genuinely silent chunk, so the failure hardens
+into the transcript and the run proceeds as though it had nothing to transcribe.
+
+The two are separable by measuring the audio. Committed corpus, 2026-09-20:
+alice-1903 is exactly digital zero (peak −120 dB, the silence floor) and an
+empty result is correct; telugu-launch peaks at −1.8 dB, and decoding it
+without the VAD recovers 16 segments / 105.9 s of the 173.7 s — speech the
+committed run lost entirely. −45 dB sits between the two with room either side.
+"""
+
+
+def _vad_retry_needed(peak_db: float) -> bool:
+    """Whether an empty decode over this level is silence or suppression.
+
+    The VAD gate is a heuristic inside the decode path, and where it is wrong
+    it is wrong in one direction: it discards speech. An empty result over
+    audible audio is therefore worth a second decode without the gate; an empty
+    result over silence is correct as it stands.
+    """
+    return peak_db > EMPTY_RETRY_PEAK_DB
+
+
+def _peak_db(path: Path) -> float:
+    """Peak level of a 16 kHz mono WAV in dBFS, floored at silence.
+
+    Reads the audio the chunk was decoded from, which still exists at the call
+    site — the file is deleted once the outcome is written.
+    """
+    import wave
+
+    import numpy as np
+
+    try:
+        with wave.open(str(path), "rb") as w:
+            n = w.getnframes()
+            raw = w.readframes(n)
+    except Exception:
+        # Unreadable audio cannot be measured, so do not let it block the
+        # decode: report the silence side of the bar and let the empty result
+        # stand as before.
+        return EMPTY_RETRY_PEAK_DB - 1.0
+    if not raw:
+        return -120.0
+    x = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+    peak = float(np.abs(x).max())
+    # Exactly digital silence has no magnitude; floor it so the value stays
+    # finite in the checkpoint.
+    if peak <= 0.0:
+        return -120.0
+    return 20.0 * np.log10(peak)
+
 
 def _write_chunk_checkpoint(
     path: Path,
@@ -24,6 +81,7 @@ def _write_chunk_checkpoint(
     segments: list[Segment],
     status: str = "ok",
     error: str | None = None,
+    note: str | None = None,
 ) -> None:
     """Record one chunk's outcome atomically.
 
@@ -31,6 +89,11 @@ def _write_chunk_checkpoint(
     failure is still visible on disk after the run dies. ``_load_chunk_checkpoint``
     refuses to serve a failed record as a result, which is what makes a failed
     chunk retry instead of hardening into a permanently empty one.
+
+    ``note`` carries an outcome that is neither a clean decode nor a failure:
+    a chunk that returned no segments over non-silent audio. It stays ``ok``
+    because the decode did complete, but the note keeps it distinguishable from
+    genuine silence on disk, where the two would otherwise be identical.
     """
     payload: dict = {
         "index": index,
@@ -39,6 +102,8 @@ def _write_chunk_checkpoint(
         "decode_start": decode_start,
         "status": status,
     }
+    if note:
+        payload["note"] = note
     if status == "ok":
         payload["language"] = language
         payload["segments"] = [
@@ -56,19 +121,20 @@ def _write_chunk_checkpoint(
     write_json_atomic(path, payload)
 
 
-def _load_chunk_checkpoint(path: Path) -> tuple[list[Segment], str, bool]:
+def _load_chunk_checkpoint(path: Path) -> tuple[list[Segment], str, bool, str | None]:
     """Load a chunk checkpoint.
 
-    Returns ``(segments, language, usable)``. Only a record with
+    Returns ``(segments, language, usable, note)``. Only a record with
     ``status == "ok"`` is usable, so a chunk that failed (or was truncated
     mid-write, or holds a schema we no longer understand) is re-decoded rather
     than silently standing in for an empty one. A genuinely silent chunk is an
     ``ok`` record with an empty ``segments`` list and stays cached — real
-    silence and failed transcription stay distinguishable.
+    silence and failed transcription stay distinguishable, and ``note`` says
+    which one a given empty record is.
     """
     data = read_json(path)
     if not isinstance(data, dict) or data.get("status") != "ok":
-        return [], "unknown", False
+        return [], "unknown", False, None
     try:
         segments = [
             Segment(
@@ -80,8 +146,11 @@ def _load_chunk_checkpoint(path: Path) -> tuple[list[Segment], str, bool]:
             for s in data.get("segments", [])
         ]
     except (TypeError, KeyError, ValueError):
-        return [], "unknown", False
-    return segments, str(data.get("language") or "unknown"), True
+        return [], "unknown", False, None
+    note = data.get("note")
+    return segments, str(data.get("language") or "unknown"), True, (
+        note if isinstance(note, str) and note else None
+    )
 
 
 def _require(name: str) -> None:
@@ -206,6 +275,10 @@ def transcribe(
     # failure, not as an empty result, so it is retried on the next run; if it
     # fails again the transcript must not be shipped as though it were whole.
     failed_chunks: list[int] = []
+    # Chunks the VAD gate emptied and the unguarded decode recovered, or tried
+    # to. Carried into the transcript's provenance so the outcome is visible
+    # beside the model and language it was produced with.
+    vad_recoveries: list[tuple[int, str]] = []
 
     for index in range(count):
         start = index * step
@@ -217,9 +290,14 @@ def transcribe(
         wall = 0.0
 
         if chunk_path.exists():
-            chunk_segments, detected, was_cached = _load_chunk_checkpoint(chunk_path)
+            chunk_segments, detected, was_cached, cached_note = _load_chunk_checkpoint(chunk_path)
             if was_cached:
                 print(f"[transcribe] chunk {index + 1}/{count}: cached", flush=True)
+                # A recovered chunk loaded from disk on a later run: the note is
+                # the only record of what happened, so carry it into this run's
+                # provenance too.
+                if cached_note:
+                    vad_recoveries.append((index + 1, cached_note))
             else:
                 # A record that is not a completed decode: a previous failure,
                 # a truncated write, or an unreadable schema. It is re-decoded
@@ -257,16 +335,55 @@ def transcribe(
                 chunk_segments = []
                 detected = "unknown"
             wall = time.time() - t0
-            try:
-                wav.unlink()
-            except OSError:
-                pass
+            # Both the measurement and, if it is needed, the retry read this
+            # file, so it is deleted only once the outcome is settled. Deleting
+            # sooner makes an unreadable path of it, and an unreadable path
+            # falls on the silence side of the bar — which quietly disables the
+            # retry for every chunk.
+            peak = _peak_db(wav) if failed is None else EMPTY_RETRY_PEAK_DB - 1.0
 
             if failed is None:
                 chunk_segments = [
                     s for s in chunk_segments
                     if index == 0 or s.start >= start - 0.05
                 ]
+            note: str | None = None
+            if failed is None and not chunk_segments:
+                # A clean decode that produced nothing. That is correct for a
+                # silent chunk and wrong for a loud one, and the checkpoint
+                # cannot tell them apart, so measure the audio to decide.
+                if _vad_retry_needed(peak):
+                    # The VAD gate suppressed the whole chunk. Decode again
+                    # without it; the gate is a heuristic, and where it
+                    # discards real speech the unguarded decode recovers it.
+                    t_retry = time.time()
+                    retry_segments, _retry_lang = _transcribe_chunk(
+                        model, wav, decode_start, language, beam_size,
+                        vad_filter=False,
+                    )
+                    retry_segments = [
+                        s for s in retry_segments
+                        if index == 0 or s.start >= start - 0.05
+                    ]
+                    wall += time.time() - t_retry
+                    if retry_segments:
+                        chunk_segments = retry_segments
+                        note = (
+                            f"vad suppressed the whole chunk over {peak:.1f} dB of "
+                            f"audio; decoded again without the VAD and recovered "
+                            f"{len(retry_segments)} segments"
+                        )
+                    else:
+                        note = (
+                            f"no segments over non-silent audio (peak {peak:.1f} dB) "
+                            f"with or without the VAD gate"
+                        )
+                else:
+                    note = f"no segments; chunk is silent (peak {peak:.1f} dB)"
+            try:
+                wav.unlink()
+            except OSError:
+                pass
             _write_chunk_checkpoint(
                 chunk_path,
                 index=index,
@@ -277,7 +394,11 @@ def transcribe(
                 segments=chunk_segments,
                 status="ok" if failed is None else "failed",
                 error=failed,
+                note=note,
             )
+            if note:
+                vad_recoveries.append((index + 1, note))
+                print(f"    chunk {index + 1}/{count}: {note}", flush=True)
             if failed is not None:
                 failed_chunks.append(index + 1)
 
@@ -357,7 +478,7 @@ def transcribe(
             f"{fallback_rt:.1f}x realtime"
         )
     print(f"[transcribe] complete: {len(merged)} segments; language={detected}", flush=True)
-    return merged, detected, {
+    provenance = {
         "requested_model": initial_model_name,
         "model": model_name,
         "downgrade_reason": downgrade_reason,
@@ -365,3 +486,11 @@ def transcribe(
         "chunks": count,
         "num_threads": _threads,
     }
+    if vad_recoveries:
+        # Recorded rather than repaired silently: a chunk the VAD emptied and an
+        # unguarded decode filled in is a weaker result than one the gate let
+        # through, and a reader of the transcript needs to see which chunks.
+        provenance["vad_recovered_chunks"] = [
+            {"chunk": n, "note": text} for n, text in vad_recoveries
+        ]
+    return merged, detected, provenance
