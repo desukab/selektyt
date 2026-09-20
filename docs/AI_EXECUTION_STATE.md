@@ -5,26 +5,40 @@ every line below was true on this host at that point.
 
 ## Current repository state
 
-* Repository: `/home/azureuser/selektyt`, on `main`, working tree **clean**.
+* Repository: `/home/azureuser/selektyt`, on `main`, working tree **clean**
+  except two untracked artifacts (`corpus/wer/runs/nasa-c4-small.json`,
+  `tools/caption_ocr.py`) that predate the desktop work and are not part of it.
 * Up to date with `origin/main` (`https://github.com/desukab/selektyt.git`).
   Nothing unpushed, nothing stashed, nothing in `git stash list`.
-* **Latest commit:** this file's own commit. The last *substantive* change is
-  `4d83fed` — the frame-delta figures re-measured over the whole corpus and
-  gated per-document, after `7f0d9a8` corrected the Telugu script-share count.
+* **The Windows desktop application is the current line of work.** See
+  `docs/RELEASE.md` for the acceptance position, which keeps two claims
+  strictly separate: the engine path is proven on a real file through the
+  shipped sidecar binary, and the Windows installer has never run on Windows.
+  The last substantive commits are `61f9d7d` (desktop UI stage-evidence fix),
+  `6aa5e83` (RELEASE report), `33e42f8` (Windows portability fixes),
+  `b5078e5` (the Tauri 2 shell and its build pipeline).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1186 passed, 12 skipped** (2026-09-20, ~183 s). The 12 splits into two kinds, and the difference matters:
+* Test suite: **1215 passed, 13 skipped** (2026-09-20, ~181 s) — the prior
+  baseline was 1204/13; the 11 new tests are the desktop shell ops and the
+  sidecar-contract coverage for them, with no regressions. **6 Rust unit
+  tests** in `apps/desktop/src-tauri` also pass, including
+  `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the pipe-buffer
+  deadlock fix. The skip count splits into three kinds, and the differences matter:
   **7** are in `tests/test_proxy_validation.py`, gated on the
   `SELEKYT_PROXY_MEDIA` env var, which expects a ~239 MB YouTube recording that
   is not redistributable with the repo. **They are opt-in real-media
   measurements, not missing optional backends** — the suite reports green on
   every CI run while the proxy validation it names does not happen, and that is
-  a worse problem than an absent backend. The other **5** are in
+  a worse problem than an absent backend. **5** are in
   `tests/test_wer_bench.py`, skipped because `c9-small`, `c9-small-beam5`,
   `c9-medium`, `c9-large-v3` and `redteam-small-verify` predate the
   `wer_err_total` field in their run records — old committed data that cannot be
-  re-derived without re-running the models, not a missing environment. The
-  earlier count in this file was 895/7, then 1034/13, then 1036/12, then 1080/12; the suite
+  re-derived without re-running the models, not a missing environment. The last
+  **1** is `tests/test_wer_bench.py` "no run record for dutch" — a language the
+  corpus simply has no measurement for yet, so it is a gap in the evidence, not
+  a gap in the code.
+  The earlier count in this file was 895/7, then 1034/13, then 1036/12, then 1080/12; the suite
   grows as defects get regression tests, and the skip count moves when a gated
   test's media appears or disappears — re-run `pytest -q -rs` before trusting any
   count here.
@@ -88,7 +102,62 @@ every line below was true on this host at that point.
 
 ## Completed work
 
-### This session — ~4,200 lines of finished editorial work were sitting uncommitted in a worktree, and are now on main
+### This session — the first SelekyT Windows desktop application
+
+The mission was to build the first real desktop app for Windows 11, with the
+acceptance test being a real video through the real pipeline rather than "it
+compiles." The outcome is in `docs/RELEASE.md`; the short version is that the
+**engine path is proven and the Windows binary is not**.
+
+What actually happened, in an order worth knowing:
+
+1. The Tauri 2 shell (`apps/desktop/`) was written: four commands over two
+   sidecars, the same JSON-RPC envelope the CLI's `selekyt --server` speaks.
+2. It compiled, and `cargo test` then **hung** on a test that wrote to stderr.
+   That was not a flaky test: `relay_logs` was the only stderr drainer and it
+   was wired from the UI path, so the deadlock guarantee depended on the UI
+   being set up. `Sidecar::spawn_in` now drains stderr unconditionally into an
+   mpsc channel. This was found by a test, not by inspection.
+3. A real end-to-end run against `corpus/media/pentagon-esper-briefing.mp4`
+   (1013.9 s, 1280×720) **hung for 55 minutes** at 0% CPU. `cat /proc/<pid>/wchan`
+   said `anon_pipe_write` on fd 2: the verification harness had
+   `stderr=subprocess.PIPE` and no reader, so ffmpeg's progress filled the 64 KiB
+   pipe buffer and blocked before its reply could be written — the same deadlock
+   class as step 2, reproduced independently. Draining stderr took the identical
+   run to **61.3 s**. The engine was never at fault; the harness was. Any future
+   driver of the sidecar must drain stderr continuously or it will hang the same
+   way once a render is long enough.
+4. That run returned `ok: true` with **32 artifacts**: 8 h264+aac renders
+   (4 landscape 1280×720, 4 vertical 406×720), 8 EDL + 8 FCPXML, 12 caption
+   files, a 283-segment `en` transcript, `candidate_count: 3211` narrowed to
+   `selected_count: 4`, and `qa.json` `ok: true` with 0 errors.
+5. Three real Windows portability bugs, each silent on Linux: the NLE
+   file-URI encoder emitted `file://C:%5C...` (drive letter became the URI host,
+   so the whole sequence imported offline), yt-dlp JSON decoded as cp1252, and
+   `--doctor` required a `python3` that a python.org Windows install never has.
+6. The `build-windows` workflow ran on a real `windows-latest` runner: staging
+   succeeded, both sidecars answered `ping`, and the Rust compile was minutes in
+   — then **my own push cancelled it**, because `concurrency` was keyed on the
+   ref alone with `cancel-in-progress: true`. The group is now keyed on the run
+   id as well, which was verified by the next push not cancelling the build it
+   superseded. The installer has never completed.
+
+Two findings that are easy to get wrong next time:
+
+* **`origin/worktree-agent-a8b3e2de76a11eaa1` is an old fork, not unmerged
+  work.** Merging it would delete `engine/rhythm.py`, `engine/threads.py` and
+  ~4500 lines that are on `main`. Its two useful pieces — the Tauri capability
+  file and the packaging scripts — were reviewed and the capability file was
+  brought over by hand, with `dialog:allow-open` added, which the branch's copy
+  omitted and the UI requires. The branch should be deleted or archived.
+* **The UI's stage indicators must be verified against real stderr.** The
+  "Audio / dead air" stage's `started` rule matched 0 of 1260 real lines because
+  it tested for markers the engine never prints; the rules are now derived from
+  what `engine/audio_analysis.py` actually emits. If you add a stage, grep the
+  captured log at `/home/azureuser/.claude_tmp/realrun.stderr.log` (1260 lines)
+  rather than assuming a marker exists.
+
+### Prior session — ~4,200 lines of finished editorial work were sitting uncommitted in a worktree, and are now on main
 
 The worktree audit (next-tasks item 10) found that the previous classification
 of `agent-a0d0fba273d1b37e1` as "no unmerged work" was wrong in a specific way:
