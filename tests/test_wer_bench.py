@@ -225,6 +225,15 @@ RUNS = Path(__file__).resolve().parent.parent / "corpus" / "wer" / "runs"
     # modern prose. P9 needs 3 of 6, so this is the result that makes the
     # criterion reachable rather than merely not-yet-contradicted.
     ("italian-small", 0.2011),
+    # The third C10 language, and the one that satisfies P9: the criterion asks
+    # for <=25% on at least 3 of the 6, and Polish (11.01%), Italian (20.11%)
+    # and this are all inside the bar. Spanish on MLS test is 40 clips /
+    # 10.08 min / 1503 reference words, 129 word errors, 38 of 40 clips under
+    # the bar. It is the *best* of the three, which is worth noting rather than
+    # burying: the non-English results are not a graded descent from English's
+    # 3.38% but a spread, and the spread is what makes "one easy audiobook" the
+    # wrong reading of any single one of them.
+    ("spanish-small", 0.0858),
 ])
 def test_the_committed_wer_figures_are_what_the_records_say(name, expected_wer):
     path = RUNS / f"{name}.json"
@@ -285,27 +294,34 @@ def test_no_telugu_clip_meets_the_p9_bar():
     )
 
 
-def test_two_c10_languages_are_measured_and_both_pass():
-    """P9 asks for <=25% WER on at least 3 of the 6 C10 languages. Two are now
-    measured — Polish at 11.01% and Italian at 20.11% — and both are inside the
-    bar. That is the result that moves the criterion from "not yet
-    contradicted" to "reachable": one passing language could be an easy
-    audiobook, two cannot. Four remain unmeasured, so P9 still cannot be
-    claimed, and this test exists so the count of *passing* languages cannot
-    drift up in prose without a third run record to back it."""
+def test_three_c10_languages_are_measured_and_all_pass():
+    """P9 asks for <=25% WER on at least 3 of the 6 C10 languages, and three are
+    now measured and inside the bar: Polish 11.01%, Italian 20.11%, Spanish
+    8.58%. This is the point where the criterion is *met*, not merely
+    reachable — but read what "met" covers. Three of six says nothing about
+    French, Dutch or German, which stay unmeasured, and it says nothing about
+    Indic (Telugu fails at 151.08%, outside C10 entirely). The honest sentence
+    is "P9 holds on the three measured C10 languages", not "transcription is
+    multilingual".
+
+    This test exists so the count of passing languages cannot drift up in prose
+    without a run record to back each increment. It was raised from two to three
+    when spanish-small landed; raising it again needs a fourth file.
+    """
     polish = RUNS / "polish-small.json"
     italian = RUNS / "italian-small.json"
-    if not (polish.is_file() and italian.is_file()):
-        pytest.skip("both C10 runs must be present to compare")
+    spanish = RUNS / "spanish-small.json"
+    if not (polish.is_file() and italian.is_file() and spanish.is_file()):
+        pytest.skip("all three C10 runs must be present to compare")
     passing = []
-    for path, name in ((polish, "Polish"), (italian, "Italian")):
+    for path, name in ((polish, "Polish"), (italian, "Italian"), (spanish, "Spanish")):
         rec = json.loads(path.read_text(encoding="utf-8"))
         assert rec["wer"] <= 0.25, \
             f"{name} moved above the 25% bar ({rec['wer']}) — P9's row and " \
             f"every doc quoting it must be re-written"
         passing.append(name)
     # What the docs may say is bounded by what has actually been run.
-    assert len(passing) == 2
+    assert len(passing) == 3
 
 
 def test_a_larger_model_helps_telugu_but_does_not_reach_the_bar():

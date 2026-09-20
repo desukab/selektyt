@@ -89,6 +89,36 @@ every line below was true on this host at that point.
 
 ## Completed work
 
+### This session — criterion P9 was satisfied: Spanish is the third C10 language
+
+**WER 8.58% / CER 2.64% on Multilingual LibriSpeech Spanish test — 40 clips,
+10.08 min, 1503 reference words, 129 word errors, 38 of 40 clips inside the 25%
+bar** (`corpus/wer/runs/spanish-small.json`, manifest at
+`corpus/wer/mls-spanish-test/manifest.jsonl`). The 50 GiB archive was streamed
+twice and never touched disk, which is the only way it fit against ~3 GB free.
+
+P9 asks for ≤25% WER on at least 3 of the 6 C10 languages. Polish (11.01%),
+Italian (20.11%) and this are all inside the bar, so **the criterion is met as
+written** — the first of the eight P-criteria to close on measured
+non-English data.
+
+What the claim is deliberately *not* promoted to. Three of six is the count, but
+the three are the clean-read audiobook half of C10: German, French and Dutch stay
+unmeasured, and a bar satisfied only on its easiest half is weaker than the same
+bar met on six. Spanish's 8.58% is also the *best* of the three and the closest
+to English's 3.38%, so the four results are a spread (3.38 / 8.58 / 11.01 /
+20.11) whose position tracks corpus and register — Italian is Dante, Spanish is
+modern prose — rather than a graded descent from English. Nothing here says
+"transcription is multilingual"; it says adequate on three European audiobook
+languages at this model size, and §7.1's Telugu failure at 151.08% is still the
+counterexample that bounds it.
+
+Pinned in `tests/test_wer_bench.py`: `spanish-small` joins the parametrized list
+at 0.0858, and the count test is raised from two to three, so the passing count
+cannot drift up in prose without a run record per increment. `docs/EVALUATION.md`'s
+P9 row, `docs/TRANSCRIPTION_EVALUATION.md` §7 (new §7.4), and the state file's
+finding 9 were rewritten with the bounded claim rather than the bare one.
+
 ### This session — the audit became a sweep, and two of its own claims were wrong
 
 `editorial_audit.py` is the benchmark the release validation phase asked for, but
@@ -463,10 +493,13 @@ under the same harness — 0 of 50 utterances inside the 25% bar, best 71.4%.
 The reading judgment above is confirmed by a reference transcript, which is
 worth stating plainly because the same paragraph also admits that reading
 judgments are not evidence. Of the six C10 languages the criterion actually
-names, two are now measured and both pass — Polish at WER 11.01% with 34 of 35
-clips inside the bar, and Italian at WER 20.11% with 26 of 40 inside it, the
-latter on Dante's archaic Italian, a harder condition — and four remain
-unmeasured; Telugu is a language outside that set, chosen because it is the one
+names, three are now measured and all three pass — Polish at WER 11.01% with 34 of 35
+clips inside the bar, Italian at WER 20.11% with 26 of 40 inside it (the latter
+on Dante's archaic Italian, a harder condition), and Spanish at WER 8.58% with
+38 of 40 inside it, the best of the three. Three is the count P9 asks for, so
+the criterion is met as written; three remain unmeasured, and the three that
+pass are all clean-read audiobook prose, so this is the criterion satisfied on
+its easiest half, not transcription shown to be multilingual. Telugu is a language outside that set, chosen because it is the one
 the pipeline demonstrably cannot handle.
 
 **Two: two real defects, found by running new sources rather than by reading
@@ -608,8 +641,10 @@ In rough order of how much it would cost a user (fuller list in
    contains — the model is not transcribing Telugu, it is emitting plausible
    script. The observation from reading was correct, but a correct guess is not
    a measurement, and the two are now recorded separately. Telugu is not one of
-   P9's six C10 languages, so the criterion is still formally unmeasured on its
-   own corpus; what this does establish is that the failure is a decode failure
+   P9's six C10 languages, so this is not a measurement of the criterion's own
+   corpus — three of those (Polish, Italian, Spanish) are now measured and pass,
+   which is what satisfies P9; this result is the counterexample that bounds them;
+   what this does establish is that the failure is a decode failure
    at this model size and not a transcription-pipeline failure, because the
    English path on the same harness scores 3.38%. The `medium` run on the same
    Telugu corpus has finished, and it bounds the question in the worse direction:
@@ -628,14 +663,22 @@ In rough order of how much it would cost a user (fuller list in
    `corpus/wer/runs/italian-small.json`). The Italian corpus is Dante, so the
    reference is archaic Italian against a modern ASR and the worst clips reach
    46% — a materially harder condition than Polish's modern prose, and still a
-   pass at the corpus level. Two independent European languages passing is what
+   pass at the corpus level. **Spanish — a third one of the six — scores WER
+   8.58% / CER 2.64% with 38 of 40 clips inside the bar** (MLS test, 40 clips,
+   10.08 min, 1503 reference words; `corpus/wer/runs/spanish-small.json`), the
+   best of the three and the closest to English's 3.38%. Two independent
+   European languages passing is what
    shows the first was not one easy audiobook. Telugu is *not* a C10 language, so
    these read against it as a set: the failure is localised to Indic, not to
-   "everything outside English". The criterion needs **3 of 6**, so German,
-   Spanish, French and Dutch remain unmeasured and P9 cannot be claimed. One
-   more passing language is all the criterion lacks, and clean read audiobook
-   prose is the easiest condition the bar will be faced with — so these are
-   evidence the bar is reachable, not evidence it is met.
+   "everything outside English". **The criterion needs 3 of 6, so with Polish,
+   Italian and Spanish all inside the bar, P9 is met as written.** The claim is
+   deliberately bounded in both directions: German, French and Dutch remain
+   unmeasured, and all three passing measurements are clean-read audiobook prose
+   — the easiest condition the bar will be faced with — so this is "P9 holds on
+   the three measured C10 languages", not "transcription is multilingual". A bar
+   met only on its easiest half is weaker than the same bar met on six, and
+   §7.1's Telugu failure at 151.08% remains the counterexample that bounds every
+   one of these numbers.
 10. **A candidate's text described a different clip from the one that ships.**
     Selection bounds are estimated proportionally to character span, so a bound
     can land inside a word; the word list is real timing and the cut snaps to it,
