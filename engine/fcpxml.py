@@ -25,6 +25,21 @@ We:
   - Shift every asset-clip's `start` by the same offset
   - Stamp `tcFormat="DF"` for NTSC drop-frame, `"NDF"` otherwise
 
+That logic is implemented and covered by the synthetic tests in
+``tests/test_fcpxml_multitrack.py``, including the 29.97 drop-frame case and
+its 108-frame drop count. What has never happened is that it ran against media
+that would exercise it. All 27 committed timelines declare
+`asset start="0s"` and `tcFormat="NDF"`, and the two sources whose media is on
+this host carry no timecode track at all — neither the webm nor the MP4 has a
+TMCD stream, and both report `start_time=0`. The committed transcripts carry no
+`source.start_timecode`, so the `;`-in-timecode test that selects drop-frame
+has never seen a semicolon on real media. The branch is verified against a
+constructed input and unobserved against a real one, which is a narrower gap
+than untested, but the observation still matters: an NLE reads ``tcFormat`` as a
+statement about the source media's own TC, so the interesting failure — a
+document stamping NDF onto DF media — is one this corpus has never been able to
+produce.
+
 The export is optional and behind the --export-fcpxml flag.
 """
 from __future__ import annotations

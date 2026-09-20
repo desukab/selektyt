@@ -271,3 +271,71 @@ def test_the_tolerance_is_set_by_the_grid_not_chosen_to_pass() -> None:
     derived from the worst measured value, so the bound is fixed by the frame
     grid and the measurement has to fit it."""
     assert DURATION_TOLERANCE_S == 1.0 / 25.0 * 0.95
+
+
+def test_the_corpus_has_never_produced_a_drop_frame_timeline() -> None:
+    """The drop-frame branch is covered synthetically and has never been
+    reached on real media. This records that as a property of the committed
+    corpus rather than as a passing remark in a comment, so the day a DF
+    source enters the corpus this test fails and the caveat in
+    ``engine/fcpxml.py`` has to be rewritten instead of quietly going false.
+
+    Both facts are asserted, not just the absence: a corpus with zero NTSC
+    rates would also produce all-NDF documents, and that would not be the same
+    finding at all.
+    """
+    rates: set[str] = set()
+    formats: set[str] = set()
+    for timeline in sorted(ROOT.glob("corpus/*_run/project/timeline/*.fcpxml")):
+        root = ET.fromstring(timeline.read_bytes())
+        for seq in root.iter("sequence"):
+            formats.add(seq.get("tcFormat") or "")
+        for fmt in root.iter("format"):
+            rates.add((fmt.get("frameDuration") or "").removesuffix("s"))
+    assert formats == {"NDF"}, formats
+    # 1001/30000s and 3960/120000s are NTSC-family rates where drop-frame is a
+    # real possibility; 1/25s and 1/39s are not. The finding is that DF was
+    # available and not selected, which needs at least one NTSC rate present.
+    ntsc = {"1001/30000", "3960/120000"}
+    assert rates & ntsc, (
+        f"no NTSC-family frame rate remains in the corpus ({sorted(rates)}), so "
+        f"all-NDF no longer means drop-frame was never chosen"
+    )
+
+
+def test_neither_probeable_source_carries_a_timecode_track() -> None:
+    """The half of the DaVinci relink check that is about the media, not the
+    document. Neither source on this host has a TMCD stream or a nonzero
+    container start, so ``asset start="0s"`` has only ever been correct by
+    being trivial. Stated here because it bounds the ffprobe check above: the
+    resource block agrees with the container, and the container has no
+    timecode opinion to disagree with."""
+    for source in (MEDIA / s for s in SOURCES):
+        probe = _probe(source)
+        start = probe.get("start_time")
+        if start is None:
+            # ffprobe reports no container start_time for this muxer, which is
+            # itself the absence of an opinion; the stream-level check below is
+            # what settles it.
+            pass
+        else:
+            assert abs(float(start)) < 0.05, (
+                f"{source.name} reports a nonzero container start_time of "
+                f"{start}s; asset start=\"0s\" is then wrong on this media, not "
+                f"merely unexercised"
+            )
+        kinds = {k for k in probe if k == "codec_type"}
+        # A TMCD stream would appear as a third codec_type alongside video and
+        # audio. _probe only asks for video/audio rates, so a timecode track is
+        # detected by asking for it explicitly rather than by counting.
+        check = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "stream=codec_name",
+             "-of", "default=noprint_wrappers=1", str(source)],
+            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        names = {ln.partition("=")[2].strip()
+                 for ln in check.stdout.decode().splitlines() if "=" in ln}
+        assert "srt" not in names and not any(
+            n.startswith("tmcd") for n in names
+        ), f"{source.name} carries a timecode track ({sorted(names)}); the " \
+           f"embedded-TC offset path is exercised by this media"
