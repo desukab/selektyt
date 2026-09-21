@@ -107,7 +107,12 @@ A second job, `msix`, packs the Store / sideload package from the installer the
 is separate and `needs: build`, so that when the MSIX tooling was still unproven
 a failure there could not take the installers down with it — that separation
 was load-bearing: it failed four times before it went green, and the installers
-shipped on every one of those runs. It has now been green four times in a row.
+shipped on every one of those runs. It has been green on every run since, on
+commits this report did and did not author. The current streak is a property of
+the run history, not of this paragraph — check it with
+`gh run list --workflow build-windows.yml --limit 10` rather than trusting a
+count quoted here, because every count in this document set has been stale
+within a commit of being written.
 See item 9 of the blocked list.
 
 ## Windows artifact produced
@@ -477,7 +482,10 @@ build succeeded, but built is still not installed.
 
    The artifact was then verified off the runner by reading its zip64 central
    directory directly: 9552 entries, zero duplicates, 2057.5 MiB uncompressed
-   → 1525.2 MiB compressed (the runner reported 1527.4 MB; that is rounding).
+   → 1525.2 MiB compressed. That is the sum of the members' compressed streams;
+   the whole `SelekyT.msix` file is 1527.44 MiB once headers, the 1.21 MiB
+   central directory and the zip64 records are included. The two are different
+   quantities, not the same one rounded.
    `AppxManifest.xml`, `[Content_Types].xml`, `AppxBlockMap.xml`,
    `SelekyT.exe` and all six `Assets\*.png` are present, and the packed manifest
    still says `Executable="SelekyT.exe"` — the committed copy and the installed

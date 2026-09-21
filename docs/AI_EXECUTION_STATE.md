@@ -282,12 +282,19 @@ job-by-job: `build` and `msix` both `success`, 0 steps failed, 0 steps skipped.
 Four consecutive greens on four different commits, including commits this
 session did not author, is a *stable* pipeline rather than a lucky run —
 which is the difference between "the fix worked" and "the fix worked once".
+The streak has continued since, including on this session's own docs commits;
+it is a property of the run history, so check
+`gh run list --workflow build-windows.yml --limit 10` before quoting a count.
 
 The MSIX artifact was then verified **off the runner, from this Linux host**,
 by reading the GitHub artifact's bytes directly over HTTP ranges and parsing
 the zip64 central directory by hand. Results: 9552 entries, zero duplicate
-names, 2057.5 MiB uncompressed → 1525.2 MiB compressed (the runner's 1527.4 MB
-is the same number rounded up). Present: `AppxManifest.xml` (4704 B),
+names, 2057.5 MiB uncompressed → 1525.2 MiB compressed. Those two are not the
+same quantity as the artifact's reported 1527.44 MiB and the difference is not
+rounding: 1525.2 MiB is the sum of the members' compressed streams, while
+1527.44 MiB is the whole `SelekyT.msix` file, which additionally carries ~2.2
+MiB of local headers, the 1.21 MiB central directory and the zip64 records.
+They reconcile to within 0.15%. Present: `AppxManifest.xml` (4704 B),
 `[Content_Types].xml` (94152 B), `AppxBlockMap.xml` (4006955 B),
 `SelekyT.exe` (4791296 B) and all six `Assets\*.png`. The packed manifest still
 reads `Executable="SelekyT.exe"` — the committed copy and the installed payload

@@ -269,12 +269,18 @@ It has not been a one-off. Three further runs have gone green since, on commits
 made outside this session (`35594437455`, `35594441067`, `35604822603` —
 27m29s, 37m0s, 27m51s), the last of them inspected job-by-job with both `build`
 and `msix` reporting 0 steps failed and 0 skipped. Four consecutive greens on
-four different commits is a stable pipeline, not a lucky run.
+four different commits is a stable pipeline, not a lucky run. The streak has
+continued since; it is a property of the run history rather than of this
+paragraph, so check it with
+`gh run list --workflow build-windows.yml --limit 10` before quoting a count —
+every count quoted in this document set has been stale within a commit.
 
 The artifact was then verified off the runner by enumerating its zip64 central
 directory directly (9552 entries, zero duplicate names, 2057.5 MiB uncompressed
-→ 1525.2 MiB compressed, which reconciles with the runner's reported
-1,527.4 MB within rounding). Present in the package: `AppxManifest.xml`
+→ 1525.2 MiB compressed). That 1525.2 MiB is the sum of the members' compressed
+streams; the whole `SelekyT.msix` file is 1527.44 MiB once the local headers,
+the 1.21 MiB central directory and the zip64 records are counted in — different
+quantities, not the same one rounded, and they agree to 0.15%. Present in the package: `AppxManifest.xml`
 (4704 bytes), `[Content_Types].xml` (94152), `AppxBlockMap.xml` (4006955),
 `SelekyT.exe` (4791296) and all six referenced `Assets\*.png`. The six PNGs are
 **byte-for-byte identical to the committed originals** (same byte count on both
