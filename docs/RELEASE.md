@@ -104,8 +104,11 @@ the job posts a warning saying so.
 
 A second job, `msix`, packs the Store / sideload package from the installer the
 `build` job produced and uploads `selekyt-windows-msix-unsigned-unverified`. It
-is separate and `needs: build`, so a failure in unverified MSIX tooling cannot
-take the installers down with it. See item 9 of the blocked list.
+is separate and `needs: build`, so that when the MSIX tooling was still unproven
+a failure there could not take the installers down with it — that separation
+was load-bearing: it failed four times before it went green, and the installers
+shipped on every one of those runs. It has now been green four times in a row.
+See item 9 of the blocked list.
 
 ## Windows artifact produced
 
@@ -309,7 +312,14 @@ code that could not be executed here.
 4. **`Systran/faster-whisper-small` ships no `preprocessor_config.json`.** A
    real transcription has not confirmed faster-whisper's fallback to its
    built-in 16 kHz defaults.
-5. **Installer size and install UX.** ~1 GB payload; NSIS LZMA will be slow.
+5. **Installer size and install UX.** Measured: the MSIX payload is
+   2057.5 MiB uncompressed / 1525.2 MiB in the package, across 9550 files. NSIS
+   LZMA over that is slow — the silent install alone takes 69 seconds on the
+   runner — and the artifact is 1.5 GB to download. The single biggest lever is
+   not ffmpeg or the interpreter: the whisper `small` weights are staged
+   **three times byte-for-byte** (922 MiB of the 2058 MiB total), which is a
+   `stage-windows.sh` layout defect, not a packaging one. Fixing it needs a
+   Windows run to confirm the interpreter still resolves the weights.
 6. **The GUI has now rendered — but on Linux under xvfb, never on Windows.**
    This is the item that moved this session, and it moved in a way that
    strengthens the case for the rest of the list: running the window is what
@@ -393,7 +403,8 @@ in the same run, and it is the first installer this pipeline has produced whose
 name agrees with its trust state. Nothing else on this list changed — the
 build succeeded, but built is still not installed.
 
-9. **MSIX / Microsoft Store packaging now exists, and is UNVERIFIED.** Tauri
+9. **MSIX / Microsoft Store packaging now exists — the pack is green, the
+   install is not.** Tauri
    2's `BundleType` has no `Appx` variant (verified in the vendored
    `tauri-utils` config source, not assumed from docs), so the Store path needs
    its own MakeAppx + `AppxManifest.xml` stage. That stage is written:
@@ -496,6 +507,7 @@ build succeeded, but built is still not installed.
    Signing is a separate release stage and is not faked: the artifact is named
    `selekyt-windows-msix-unsigned-unverified`, and an unsigned MSIX will not
    install without developer mode or sideloading.
+
 ## Known leftover
 
 `origin/worktree-agent-a8b3e2de76a11eaa1` is a stale branch from an earlier
@@ -505,3 +517,13 @@ the Tauri capability file and the packaging scripts — were reviewed and the
 capability file was brought over by hand (with `dialog:allow-open` added, which
 the branch's copy omitted and the UI requires). It was left in place rather
 than deleted; it should be removed or archived.
+
+**A mislabelled artifact is still published.** Run `35538322486` (head
+`de0c151`) uploaded its installer as `selekyt-windows-x64-signed` (artifact id
+`10614207051`, 1.22 GiB, created 2026-09-20T21:41Z) when every build in that era
+was unsigned — this is exactly the labelling bug item 8 above describes, and the
+artifact keeps the name the bug gave it. It is **unsigned despite its name**, it
+will trip SmartScreen, and it should be deleted from the run's artifacts page.
+It has not been deleted, because that is irreversible and the decision belongs
+to whoever owns the release. Do not download it on the assumption the name is
+accurate.

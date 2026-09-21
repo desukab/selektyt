@@ -40,11 +40,11 @@ ffprobe out/web/pipeline/project/source/NASA_360_program5_HD.mov
   "edl independent parse", skipped on this run because `pycmx` was not then installed — it
   is now a declared dependency, so those 6 execute today), exit 0. VERIFIED at the time.
 - `tools/editorial_audit.py out/web/pipeline/project` → **6/6 clips PASS, cross-clip PASS**. VERIFIED.
-- `.venv/bin/python -m pytest -q` → **1240 passed, 13 skipped in 183.9 s** (re-run 2026-09-20;
+- `.venv/bin/python -m pytest -q` → **1251 passed, 13 skipped in 187.7 s** (re-run 2026-09-21;
   the skips are 7 opt-in real-media measurements, 5 WER records too old to
   re-derive, and 1 language with no run record — not missing backends). VERIFIED.
 
-**What that does and does not establish.** Six clips passing two audits and 1240 unit tests passing
+**What that does and does not establish.** Six clips passing two audits and 1251 unit tests passing
 is evidence that the *machinery* is sound and self-consistent. It is not evidence that a human
 editor would ship those cuts, and it is not evidence that any of it generalises beyond one tape.
 

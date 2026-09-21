@@ -276,8 +276,14 @@ directory directly (9552 entries, zero duplicate names, 2057.5 MiB uncompressed
 → 1525.2 MiB compressed, which reconciles with the runner's reported
 1,527.4 MB within rounding). Present in the package: `AppxManifest.xml`
 (4704 bytes), `[Content_Types].xml` (94152), `AppxBlockMap.xml` (4006955),
-`SelekyT.exe` (4791296) and all six referenced `Assets\*.png`. The packed
-manifest carries `Executable="SelekyT.exe"` **unmodified** — the committed copy
+`SelekyT.exe` (4791296) and all six referenced `Assets\*.png`. The six PNGs are
+**byte-for-byte identical to the committed originals** (same byte count on both
+sides), and each decodes to the exact dimensions its manifest attribute calls
+for: `Square44x44Logo` 44×44, `Square150x150Logo` 150×150,
+`Square310x310Logo` 310×310, `Wide310x150Logo` 310×150, `SplashScreen` 620×300
+— so the wide tile really is a composed 310×150 image rather than a rescaled
+square, which is what the non-square render path in `make_icons.py` exists for.
+The packed manifest carries `Executable="SelekyT.exe"` **unmodified** — the committed copy
 and the installed payload agreed, so no correction warning fired, which is the
 outcome the reconciliation logic exists to produce.
 

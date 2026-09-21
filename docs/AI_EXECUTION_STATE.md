@@ -392,14 +392,15 @@ is an MSIX job that downloads nothing while the build job looks healthy — thre
 mutations against it (hardcoded label, dropped dependency, wrong output name)
 each fail exactly that test.
 
-None of this has run on a Windows machine. The host has no MakeAppx, no Windows
-SDK and no PowerShell, so the manifest has never been packed and the script has
-never run. What the host *can* reach is pinned: identity, version, executable
-name and every referenced asset agree with `tauri.conf.json` and the icon
-generator, and every PNG is round-trip decoded and compared pixel-for-pixel
-against the buffer that produced it. **The first green `msix` job is the
-verification step, not a release**, and the artifact is named
+**It has now run on a Windows machine.** The job went green on its fifth run
+(`35555583046`) and has repeated green three times since on commits this session
+did not author. The manifest was packed with validation ON and the artifact
+verified off the runner, so what was speculative above is now observed —
+except the last sentence, which is unchanged: **a green pack is not an
+install**, and the artifact is still named
 `selekyt-windows-msix-unsigned-unverified` so it cannot be mistaken for one.
+What has *not* run anywhere is the install itself, the full-trust activation,
+the tile and splash, or a Partner Center submission.
 
 ### This session — the Windows build ran, and it had been mislabelling every release
 
@@ -552,12 +553,13 @@ before the Windows job spends ~25 minutes and a ~1 GB download.
 
 **Two things to carry forward:**
 
-* **MSIX is impossible in Tauri 2.** `BundleType` in the vendored
+* **MSIX is impossible in Tauri 2, so the Store path needs a packaging stage
+  outside it.** `BundleType` in the vendored
   `tauri-utils-2.9.3/src/config.rs` is exactly `{Deb, Rpm, AppImage, Msi, Nsis,
-  App, Dmg}` — read from the crate source, not from docs that imply more. So the
-  Microsoft Store path needs a packaging stage outside Tauri (MakeAppx +
-  `AppxManifest.xml`). **That stage is UNVERIFIED and does not exist yet.**
-  `scripts/sign.ps1` is also **UNVERIFIED** — there is no PowerShell on this
+  App, Dmg}` — read from the crate source, not from docs that imply more. That
+  stage now **exists and is green**: `apps/desktop/package-msix.ps1` + MakeAppx +
+  `AppxManifest.xml`, verified on the runner and off it.
+  `scripts/sign.ps1` is still **UNVERIFIED** — there is no PowerShell on this
   Linux box, and it has never been executed. Its contract is pinned by a test
   that reads it, which is the strongest statement that can honestly be made
   here.
@@ -1387,9 +1389,12 @@ In rough order of how much it would cost a user (fuller list in
    `windows-latest` since (22m27s for `de0c151`), but built is not installed —
    webkit2gtk is not WebView2, and no Windows desktop has run the installer, its
    Start Menu entry or its uninstall path. The `sign.ps1` hook has run 154 times
-   on that same runner, and every one of them was a decline; the *signing* path
-   and any MSIX/Appx stage remain **UNVERIFIED** (no PowerShell here, Tauri 2
-   cannot emit MSIX at all). Revised honest summary: the app's *logic* is
+   on that same runner, and every one of them was a decline, so the *signing*
+   path itself remains **UNVERIFIED**. **The MSIX half of this item has since
+   closed**: the `msix` job has gone green four times in a row and the artifact
+   was verified off the runner — but the pack being green is still not the app
+   being installed, and this item stays open until a Windows machine actually
+   runs it. Revised honest summary: the app's *logic* is
    tested and its *Linux rendering* is now observed; its *Windows installation*
    is not, and running the window once is exactly what proves that gap is worth
    closing.
@@ -1679,17 +1684,36 @@ selections).
 9. **Complete one real Windows install.** This was previously ranked low
    ("package the Tauri shell once, or record that v1 ships CLI + web shell
    only"), and the founder's directive overrides that ranking: the Windows
-   desktop app *is* the current line of work. The packaging is built and the
-   pipeline is honest about its trust state, so the remaining work is the part
-   that cannot be done on this Linux host, in this order: (a) let
-   `build-windows.yml` complete on a `windows-latest` runner to produce a real
-   NSIS + MSI pair, (b) install the unsigned artifact on a clean Windows 11
-   machine, run a real local video through the real pipeline in the webview, and
-   inspect real artifacts, (c) write the MSIX/Appx packaging stage Tauri cannot
-   emit, (d) set the `SELEKYT_AZURE_*` secrets and confirm `scripts/sign.ps1`
-   actually signs and verifies — currently **UNVERIFIED**, never executed. Until
-   (b) happens, no claim about the running application is supportable; the
-   contract tests cover the logic, not the app.
+   desktop app *is* the current line of work. Progress, as of the green MSIX:
+   **(a) DONE** — `build-windows.yml` completes on `windows-latest` and has now
+   gone green four times in a row on four different commits (`35555583046`,
+   `35594437455`, `35594441067`, `35604822603`), the last inspected job-by-job
+   with 0 steps failed. **(c) DONE** — the MSIX stage is written, packed with
+   validation ON by the x64 MakeAppx, and its artifact verified off the runner
+   (9552 entries, all manifest-referenced assets and the executable present,
+   identity matching `tauri.conf.json` on all four fields). **(b) and (d)
+   remain open and are now the entire gap:**
+   - **(b) install and run.** Install the unsigned artifact on a clean Windows
+     11 machine, run a real local video through the real pipeline in the
+     webview, and inspect real artifacts. **This is blocked on hardware, not on
+     code** — this host is Linux with no Windows machine, no PowerShell and no
+     SDK, so it cannot be done here. Until it happens, no claim about the
+     *running* application is supportable; the contract tests cover the logic,
+     not the app, and the artifact name says `-unverified` for exactly that
+     reason.
+   - **(d) signing.** Set the `SELEKYT_AZURE_*` secrets and confirm
+     `scripts/sign.ps1` actually signs and verifies — currently **UNVERIFIED**,
+     never executed. Note the trust problem is not solved by signing alone:
+     an Azure Trusted Signing cert makes the package install without developer
+     mode, but SmartScreen reputation still has to be earned, and this is a
+     release/distribution problem to state plainly, not a bypass to document.
+   - **New, found while verifying the green artifact:** the whisper `small`
+     weights are staged into the payload **three times byte-for-byte** — 922 MiB
+     of a 2058 MiB package is one 461 MiB file. Fixing this in
+     `stage-windows.sh` is the largest available size win and would cut the
+     artifact roughly to half, but it must be followed by a Windows run
+     confirming the interpreter still resolves the weights, because
+     `huggingface_hub`'s cache layout is what it is importing from.
 10. **Audit the preserved worktrees for now-merged or superseded work** and
     record the verdict in `docs/agent-worktrees.md`. **DONE** — and it paid off.
     The timeline worktree is confirmed fully superseded (`0328858` on `main`
@@ -1823,12 +1847,12 @@ selections).
   fixed). All four distinguish "code exists and unit tests pass" from "a user
   can rely on this".
 * **Start any work by re-running the suite** (`.venv/bin/python -m pytest -q`)
-  and confirming the count in "Current repository state" above (**1240 passed /
-  13 skipped**, 183.9 s, 2026-09-20). A number other than that means something
+  and confirming the count in "Current repository state" above (**1251 passed /
+  13 skipped**, 187.7 s, 2026-09-21). A number other than that means something
   has drifted. The count was refreshed across the doc
   set after RED_TEAM, AI_EXECUTION_STATE and an agent appendix disagreed within
   one day (824, 819, 834); it has moved 819 → 824 → 834 → 837 → 890 → 895 → 898
-  → 1031 → 1034 → 1036 → 1080 → 1215 → 1236 → 1240 as regression tests landed, and the skip count moved
+  → 1031 → 1034 → 1036 → 1080 → 1215 → 1236 → 1240 → 1251 as regression tests landed, and the skip count moved
   10 → 7 → 12 → 13 → 12 → 13 as gated real-media tests, backend-gated checks and
   WER run records arrived and departed. **A quoted count is
   stale the moment it is written** — this session quoted 1234, then 1236, then
@@ -1836,12 +1860,18 @@ selections).
   and the four labelling tests were shipped with a commit message quoting the
   count from before they existed. — the "How to run things" note above carries
   the same caveat, and the note there explains why the count moved twice during
-  this session alone. The same applies to commit counts — the repo is at **194
-  commits, 85 of them machine-authored under the "Ubuntu" identity**
+  this session alone. The same applies to commit counts — the repo is at
+  **271
+  commits, 159 of them machine-authored under the "Ubuntu" identity**
   (`git log --format='%an' | grep -ci ubuntu`).
   This line is itself a self-checkpoint and it has to be edited whenever the
   count changes — a previous session let it sit at 819 through fifteen new
   tests, and the drift was found only because a red-team agent audited it.
+  The same applied to the two numbers in this bullet: it said "194 commits, 85
+  machine-authored" and the real figures are **271 commits, 159 machine-authored**
+  (`git rev-list --count HEAD`, `git log --format='%an' | grep -ci ubuntu`).
+  That is a 77-commit and 74-machine-authored drift, in a bullet whose entire
+  purpose is to be re-measured — measure both numbers, do not carry them.
 * **Two FCPXML exporters exist and only one is live.** `engine/fcpxml.py` is
   the multitrack exporter used by `engine/audio_analysis.py` and
   `engine/multitrack.py`; `engine/nle_export.py` is the one the pipeline

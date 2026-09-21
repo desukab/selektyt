@@ -351,12 +351,12 @@ cd /home/azureuser/selektyt && .venv/bin/python -m pytest -q
 Real output, exit code 0:
 
 ```
-1240 passed, 13 skipped in 183.9 s
+1251 passed, 13 skipped in 187.7 s
 ```
 
 What this proves: there is a large, green suite. **Say the number as a number
 you just ran, not as one quoted from this file** — it moved 1034 → 1080 → 1215
-→ 1236 → 1240 as regression tests landed, and every one of those was correct on
+→ 1236 → 1240 → 1251 as regression tests landed, and every one of those was correct on
 the day it was written and stale by the next commit. Say immediately
 what it does not cover — because the honest version is stronger than
 the number:
