@@ -351,7 +351,7 @@ cd /home/azureuser/selektyt && .venv/bin/python -m pytest -q
 Real output, exit code 0:
 
 ```
-1251 passed, 13 skipped in 187.7 s
+1287 passed, 13 skipped in 260.7 s
 ```
 
 What this proves: there is a large, green suite. **Say the number as a number

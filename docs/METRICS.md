@@ -560,7 +560,7 @@ capital. It has not been done.
 
 ## A5 — Pipeline and engineering health
 
-### A5.1 Test suite — 1251 passed, 13 skipped in 187.7 s
+### A5.1 Test suite — 1287 passed, 13 skipped in 260.7 s
 
 **Command:**
 
@@ -568,7 +568,7 @@ capital. It has not been done.
 cd /home/azureuser/selektyt && .venv/bin/python -m pytest -q
 ```
 
-**Current value: `1251 passed, 13 skipped in 187.7 s`, exit code 0.** VERIFIED,
+**Current value: `1287 passed, 13 skipped in 260.7 s`, exit code 0.** VERIFIED,
 re-run 2026-09-21. The 13 skips are not one group, and treating them as one
 hides the most important of them: **7** are `SELEKYT_PROXY_MEDIA`-gated
 measurements that expect a ~239 MB recording that is not redistributable with

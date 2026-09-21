@@ -115,6 +115,10 @@ an organization that has something to lose.
 Built and verified, not pitched:
 
 - **1034 tests passing, 12 skipped** (re-run on this host, 2026-09-20, 110 s).
+  A point-in-time figure, and a floor rather than a current count: the suite was
+  **1287 passed / 13 skipped** at the last refresh of this section, and the
+  number moves whenever a regression test lands. Run
+  `.venv/bin/python -m pytest -q` before quoting one.
   The 12 skips are all `SELEKYT_PROXY_MEDIA`-gated optional backends absent from
   this host (sherpa-onnx, silero, ollama) — environment skips, not failures.
 - **A three-layer architecture**, each layer independently usable: the CLI;
@@ -317,8 +321,9 @@ copied.
 
 What does exist, in descending order of durability:
 
-1. **A tested system where competitors have decks.** 1034 tests, real-input
-   verification, byte-identical cross-language export. A starting position.
+1. **A tested system where competitors have decks.** Over a thousand tests,
+   real-input verification, byte-identical cross-language export. A starting
+   position — the exact count is a moving target, not a strength to quote.
 2. **The audit + provenance contract.** Every decision scored, rejectable and
    reproducible; every run records which backends actually ran. A governance
    property that is genuinely hard to retrofit onto a black box. The seed of a

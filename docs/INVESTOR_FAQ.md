@@ -7,7 +7,11 @@ written. No user, customer, revenue figure, investor, or valuation exists to be
 quoted, because none does.
 
 Ground truth used throughout: 1080 tests passing, 12 skipped (re-run on this host
-today, 65s); one real rights-permitted 24:29 source (NASA 360 Episode 5, US
+today, 65s). That is a point-in-time figure and it is already low — the suite
+was **1287 passed / 13 skipped** when this page was last touched, because the
+count moves with every regression test that lands. Verify it with
+`.venv/bin/python -m pytest -q` instead of quoting a number off a dated page.
+Also established: one real rights-permitted 24:29 source (NASA 360 Episode 5, US
 Government public domain) ran the full chain green; one YouTube download
 observed (640x360, 11.8 MB, via an unauthenticated android client) while other
 videos returned the sign-in wall from this datacenter IP; EDL/FCPXML

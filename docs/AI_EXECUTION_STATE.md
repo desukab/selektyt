@@ -36,7 +36,7 @@ every line below was true on this host at that point.
   `b5078e5` (the Tauri 2 shell).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1251 passed, 13 skipped** (2026-09-21, 187.74 s) — measured by
+* Test suite: **1287 passed, 13 skipped** (2026-09-21, 260.7 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work", and the
   disk note above: a concurrent `cargo test` + `pytest` pair hit 100% disk and

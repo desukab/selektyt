@@ -338,13 +338,16 @@ the installer without the ~500 MB weights download (smoke runs).
   `Sidecar::spawn_in`, not by the UI relay), and six tests for
   `selekyt_delete_project` covering each escape route its path validation
   guards.
-- `1251 passed, 13 skipped` across the full Python suite (re-measured
-  2026-09-21, 187.7 s, at the commit this file ships in), including the sidecar
+- `1287 passed, 13 skipped` across the full Python suite (re-measured
+  2026-09-21, 260.7 s, at the commit this file ships in), including the sidecar
   envelope contract, the desktop shell ops (`probe_media`, `read_artifact`,
   `stat_artifact`) and the **20** packaging tests that pin the workflow, the
   signing hook, the MakeAppx architecture selection, the MSIX manifest and the
   two jobs' artifact contract. Re-run `.venv/bin/pytest -q` before quoting this
-  number; it moves with every test added.
+  number; it moves with every test added, and this paragraph has been stale
+  before (it read 1251 while the suite already held 1277). The wall clock next
+  to it is the more reliable half of the pair — a count that cannot be off by
+  much in either direction is a count someone has stopped measuring.
 - A real end-to-end run of the actual staged `selekyt-python` sidecar binary
   against a real 1013.9 s / 1280×720 source, over the same JSON-RPC the Tauri
   `selekyt_rpc` command uses. See `docs/release-validation.md`.
