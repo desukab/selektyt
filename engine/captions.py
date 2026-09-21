@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import os
 import re
-import unicodedata
 from pathlib import Path
 
 from models.core import Candidate, Word
-from engine.caption_director import build_blocks, style_name, CaptionBlock
+from engine.caption_director import (
+    build_blocks, style_name, CaptionBlock, caption_width,
+)
 from engine.edit_plan import retention_intervals, join_words
 
 
@@ -48,7 +49,8 @@ def _ts(v: float) -> str:
 
 
 def _width(text: str) -> int:
-    return sum(2 if unicodedata.east_asian_width(ch) in "WFA" else 1 for ch in text)
+    # One policy for every caption writer: see caption_director.caption_width.
+    return caption_width(text)
 
 
 def _group_words(words: list[Word], max_words: int = 6, max_width: int = 34) -> list[list[Word]]:

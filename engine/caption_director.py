@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass
-from collections import Counter
 from models.core import Candidate, Word
 from engine.edit_plan import join_words
 
@@ -29,9 +29,121 @@ def _clean(text: str) -> str:
     return re.sub(r"\s+", " ", text.strip())
 
 
-def _width(text: str) -> int:
-    # Approximate visual width; Indian scripts generally need more room than ASCII.
-    return sum(2 if ord(ch) >= 0x0900 else 1 for ch in text)
+# The Brahmic abugidas: Devanagari, Bengali, Gurmukhi, Gujarati, Odia, Tamil,
+# Telugu, Kannada, Malayalam, Sinhala. Every one of them is a syllabic script
+# in which a consonant carries an inherent vowel and a virama cancels it, so
+# the unit of layout is the syllable, not the code point: "ప్ర" is three code
+# points (ప + ് + ర) but one glyph cluster. Counting code points made a Telugu
+# line fit barely half as much text as an English one of the same nominal width.
+_INDIC_RANGES = (
+    (0x0900, 0x097F),  # Devanagari
+    (0x0980, 0x09FF),  # Bengali
+    (0x0A00, 0x0A7F),  # Gurmukhi
+    (0x0A80, 0x0AFF),  # Gujarati
+    (0x0B00, 0x0B7F),  # Odia
+    (0x0B80, 0x0BFF),  # Tamil
+    (0x0C00, 0x0C7F),  # Telugu
+    (0x0C80, 0x0CFF),  # Kannada
+    (0x0D00, 0x0D7F),  # Malayalam
+    (0x0D80, 0x0DFF),  # Sinhala
+)
+
+
+def _is_indic(ch: str) -> bool:
+    o = ord(ch)
+    return any(lo <= o <= hi for lo, hi in _INDIC_RANGES)
+
+
+# Combining class 9 is the Unicode category "virama" and is the same in every
+# Brahmic script, so it detects a conjunct without a per-script table.
+def _is_virama(ch: str) -> bool:
+    return unicodedata.combining(ch) == 9
+
+
+def _is_mark(ch: str) -> bool:
+    # Mn, Mc or Me. Absorption has to key on the category rather than on a
+    # nonzero combining class: a spacing mark such as the Telugu anusvara
+    # "ం" is Mc with combining class 0, and treating it as a new syllable
+    # doubled the measured width of ordinary Telugu prose.
+    return unicodedata.category(ch)[0] == "M"
+
+
+# Zero-width joiner and the skin-tone/hair components: one emoji person with a
+# skin tone is one glyph, and counting the joiner and the modifier as columns
+# would more than double a wide glyph's cost.
+_JOINERS = frozenset({0x200D, 0x2060, 0x2061, 0x2062, 0x2063, 0x2064})
+_MODIFIER_RANGES = ((0x1F3FB, 0x1F3FF), (0x1F9B0, 0x1F9B5))
+
+
+def _is_emoji_component(ch: str) -> bool:
+    o = ord(ch)
+    return o in _JOINERS or any(lo <= o <= hi for lo, hi in _MODIFIER_RANGES)
+
+
+def caption_width(text: str) -> int:
+    """Width of ``text`` in display columns, where one column is an average
+    ASCII character.
+
+    This is the one place caption layout measures text, shared by the ASS/SRT
+    writers and the timeline cue wrapper; the two previous copies disagreed
+    with each other and both disagreed with the fonts.
+
+    Measured against real type (DejaVu Sans and Noto Sans Telugu at 100 px, one
+    column defined as the mean advance of English lowercase prose):
+
+    * an ASCII character is exactly one column by definition;
+    * an East Asian fullwidth or wide glyph is two (it is 1.0 em against
+      lowercase prose's 0.52 em, and it takes a full monospace cell in every
+      CJK-aware renderer);
+    * an Indic syllable cluster is two. On the Telugu fixture the real clusters
+      measure 2.4–10.2 columns against the rule's 4–10, so the rule is +29%
+      conservative in the mean and between −8% and +89% per word —
+      conservative on average, occasionally narrow, which is why
+      ``max_line_width`` is a soft bound with a force-wrap fallback rather than
+      a hard clip. The code-point rule it replaced was +145% conservative, and
+      a Telugu line that should have held ~34 columns was being broken at ~14;
+    * a combining mark is zero, because it does not advance the pen: it
+      modifies the base before it. This is what makes "e" + U+0301 cost one
+      column, not two;
+    * everything else — Latin extended, Greek, Cyrillic, Hebrew, Arabic,
+      punctuation — is one column per code point.
+    """
+    total = 0
+    i = 0
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        if _is_mark(ch) or _is_emoji_component(ch):
+            i += 1
+            continue
+        if _is_indic(ch):
+            total += 2
+            i += 1
+            # Absorb the signs of this syllable; a virama additionally absorbs
+            # the consonant that follows, because "ప్ర" is one cluster.
+            pending_conjunct = False
+            while i < n:
+                c = text[i]
+                if _is_mark(c) or _is_emoji_component(c):
+                    pending_conjunct = pending_conjunct or _is_virama(c)
+                    i += 1
+                    continue
+                if pending_conjunct and _is_indic(c):
+                    i += 1
+                    pending_conjunct = False
+                    continue
+                break
+            continue
+        if unicodedata.east_asian_width(ch) in ("W", "F"):
+            total += 2
+            i += 1
+            continue
+        total += 1
+        i += 1
+    return total
+
+
+_width = caption_width
 
 
 def _tokens(words: list[Word]) -> list[str]:

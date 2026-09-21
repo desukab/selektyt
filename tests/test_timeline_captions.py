@@ -14,6 +14,7 @@ import re
 import pytest
 
 from engine import timecode
+from engine.caption_director import caption_width
 from engine.timeline import Timeline
 from engine.timeline_captions import (
     CaptionConfig,
@@ -157,12 +158,11 @@ def test_cues_respect_max_lines_and_width():
         assert len(cue.lines) <= config.max_lines
         for line in cue.lines:
             # Whitespace between words is not drawn, so measure per glyph.
-            width = sum(
-                2 if ord(ch) >= 0x0900 else 1
-                for ch in line
-                if not ch.isspace()
+            # The shared policy, not a local copy: the wrapper and the ASS/SRT
+            # writers must agree on how wide a glyph is.
+            assert caption_width(line.replace(" ", "")) <= config.max_line_width, (
+                line, caption_width(line)
             )
-            assert width <= config.max_line_width, (line, width)
 
 
 def test_cues_do_not_overlap_and_stay_inside_the_timeline():
