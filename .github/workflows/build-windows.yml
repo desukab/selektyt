@@ -208,6 +208,10 @@ jobs:
         with:
           name: ${{ needs.build.outputs.signed == 'true' && 'selekyt-windows-x64-signed' || 'selekyt-windows-x64-unsigned' }}
           path: bundle
+          # The pack script looks for the .exe anywhere under this directory,
+          # but a flat layout is what its -BundleDir documents, and the original
+          # tree was six directories deep with no signal in the name.
+          merge-multiple: true
 
       - name: Pack the MSIX
         shell: pwsh

@@ -53,12 +53,18 @@ $ErrorActionPreference = "Stop"
 
 # ── locate the NSIS installer ────────────────────────────────────────────────
 
-$installer = Get-ChildItem -Path $BundleDir -Filter "*.exe" -File |
+# -Recurse rather than a flat lookup: actions/download-artifact reproduces the
+# tree the upload captured unless merge-multiple is set, so the installer can
+# arrive several directories deep. Searching for it costs nothing and keeps the
+# script honest about either layout.
+$installer = Get-ChildItem -Path $BundleDir -Recurse -Filter "*.exe" -File |
     Sort-Object Length -Descending |
     Select-Object -First 1
 
 if (-not $installer) {
-    throw "No NSIS installer found under '$BundleDir'. Run 'npx tauri build --bundles nsis' first; this script packs what that produced."
+    $found = (Get-ChildItem -Path $BundleDir -Recurse -File -ErrorAction SilentlyContinue |
+        Select-Object -First 10 -ExpandProperty FullName) -join "`n  "
+    throw "No NSIS installer (.exe) found under '$BundleDir'. Run 'npx tauri build --bundles nsis' first; this script packs what that produced.`n  first files present:`n  $found"
 }
 Write-Host "packing payload from installer: $($installer.Name) ($('{0:N1}' -f ($installer.Length / 1MB)) MB)"
 
