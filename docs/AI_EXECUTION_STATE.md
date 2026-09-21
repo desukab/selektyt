@@ -6,11 +6,14 @@ every line below was true on this host at that point.
 ## Current repository state
 
 * Repository: `/home/azureuser/selektyt`, on `main`. Working tree state
-  **changes within a session by design** — this checkpoint is written while the
-  MSIX scaffolding and the workflow fix are staged for commit, so expect two
-  commits above `011ec03`; verify with `git status` rather than trusting "clean"
-  here.
-  Up to date with `origin/main` (`https://github.com/desukab/selektyt.git`).
+  **changes within a session by design** — verify with `git status` rather than
+  trusting "clean" here.
+  Local `main` is **3 commits ahead of `origin/main`**: `55e6a06` and
+  `f4f90e2` (docs-only, held back while the MSIX run was in flight so the run
+  built from one coherent commit) plus this file's own commit. The green run
+  `35555583046` was built from `d428c78`, which was `origin/main` at the time —
+  confirmed by the packed manifest's own header comment still carrying the
+  pre-`f4f90e2` wording, so no mixed-state build happened.
   Nothing stashed, nothing in `git stash list`.
   The two untracked leftovers noted by the previous checkpoint are resolved:
   `tools/caption_ocr.py` was already tracked and clean, and the WER run record
@@ -20,22 +23,30 @@ every line below was true on this host at that point.
   `docs/RELEASE.md` for the acceptance position, which keeps three claims
   strictly separate: the engine path is proven on a real file through the
   shipped sidecar binary; the Windows build pipeline now *produces* installers
-  on `windows-latest` in ~22 minutes; and **no installer has ever been
-  installed or run on a Windows desktop.** Built is not run, and a green
-  `build-windows` badge is not a Windows validation.
-  The last substantive commits are `61ce51f` (the per-step env fix) and
-  `74d148d` (the MSIX scaffolding). Earlier relevant: `011ec03` (the labelling
-  fix that broke parsing at the job level — see "Completed work"),
-  `968e9c1` (the destructive-command test), `59e5327` (cancellation,
-  contract-tested UI, honest signing), `b5078e5` (the Tauri 2 shell).
+  **and a green MSIX** on `windows-latest` (the whole run is 27m10s end to end);
+  and **no installer has ever been installed or run on a Windows desktop.**
+  Built is not packed, packed is not installed, installed is not run, and a
+  green `build-windows` badge is not a Windows validation.
+  The last substantive commit is `d428c78` (the 64-bit MakeAppx selection,
+  which made the `msix` job green on run `35555583046`). Earlier relevant:
+  `baf46a8` and `2d8be2d` (the two pack-script arithmetic fixes),
+  `ba7d8e5` (the sixth asset — the store logo lives in a `<Logo>` *element*,
+  not an attribute), `61ce51f` (the per-step env fix), `74d148d` (the MSIX
+  scaffolding), `59e5327` (cancellation, contract-tested UI, honest signing),
+  `b5078e5` (the Tauri 2 shell).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1251 passed, 13 skipped** (2026-09-21, 184.33 s) — measured by
+* Test suite: **1251 passed, 13 skipped** (2026-09-21, 187.74 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
-  background task's exit code (see the trap note in "Completed work"). The
+  background task's exit code (see the trap note in "Completed work", and the
+  disk note above: a concurrent `cargo test` + `pytest` pair hit 100% disk and
+  both died reporting success-shaped exit codes). The
   prior baseline was 1240/13; the growth is entirely
-  `tests/test_desktop_packaging.py`, which went 9 → 20 over the packaging work: eleven contracts added since `011ec03`, the last three of them this session — the manifest anchor, the payload path round-trip, and the 64-bit MakeAppx selection, each mutation-verified against the pre-fix code
-  contract tests, three that pin the workflow's context-availability,
+  `tests/test_desktop_packaging.py`, which went 9 → 20 over the packaging work:
+  eleven contracts added since `011ec03`, the last three of them this session —
+  the manifest anchor, the payload path round-trip, and the 64-bit MakeAppx
+  selection, each mutation-verified against the pre-fix code. The remaining
+  seven include the three that pin the workflow's context-availability,
   artifact-name and sign-input rules, the one that keeps the PowerShell
   pack script's asset parsing honest against the canonical parser, and the one
   that resolves its path arithmetic against the real tree. No
@@ -108,13 +119,25 @@ every line below was true on this host at that point.
   sidecar cannot resolve `yt-dlp`. Plain `nohup … &` dies with the shell.
 * No project server is listening right now. Scratch run scripts in `/tmp` were
   removed.
-* Disk: **2.0 G free of 29 G, 94% used** (`df -h /`, 2026-09-20). This file
-  previously said both "5.7 G" and "14 G" in different places; both were stale,
-  and the disk is the binding constraint on what can be attempted next. The
-  corpus's downloaded media is deliberately *not* kept — `corpus/media/` is
+* Disk: **1.6 G free of 29 G, 95% used** (`df -h /`, 2026-09-21) — and it
+  *filled completely* mid-session. The root filesystem hit 100% with 129 MB free
+  while `cargo test` and `pytest` ran concurrently, and **both suites died with
+  `No space left on device`, each reporting a misleading exit code**: cargo's
+  failure surfaced as `[exited with code 0]` because the pipeline's exit code
+  was `tail`'s, not cargo's. A green-looking test run that was killed by the
+  filesystem is the same shape as the "background task reported exit 0 without
+  running pytest" trap recorded further down — **always capture the real exit
+  code into the log, never trust a piped one.** The reclaim was deleting
+  `apps/desktop/src-tauri/target` (1.6 G of an *incomplete* debug build that
+  cargo had died inside, so it was inconsistent anyway and fully regenerable).
+  Do not clear `/tmp` to make room — it holds other projects' files. The disk
+  remains the binding constraint: a full Tauri debug build is ~1.6 G, which is
+  the entire free space, so Rust work here needs `RUSTFLAGS="-C debuginfo=0"`
+  and sequential, not concurrent, suite runs.
+  The corpus's downloaded media is deliberately *not* kept — `corpus/media/` is
   gitignored and regenerable from `corpus/manifest.json`, and it had to be
-  removed mid-run when the filesystem hit 118 MB free and started failing every
-  Bash call. **Two sources' media survives locally:
+  removed mid-run in an earlier session when the filesystem hit 118 MB free and
+  started failing every Bash call. **Two sources' media survives locally:
   `corpus/media/royal-society-cloke.webm` (85 MB) and
   `corpus/media/pentagon-esper-briefing.mp4` (158 MB, kept for the re-run that
   confirmed the word-boundary fix and the text desync).** The text artifacts
@@ -134,12 +157,15 @@ every line below was true on this host at that point.
 
 ## Completed work
 
-### This session — the MSIX job failed four times, and the fourth failure was not in this repository at all
+### This session — the MSIX job went green on the fifth run, and the artifact was verified off the runner
 
-The `msix` job exists to be the verification of a manifest that has never been
-packed anywhere, and it is doing that job. It has now failed twice, each time
-one step further in, and each time on something no host-side test could have
-reached.
+The `msix` job existed to verify a manifest that had never been packed
+anywhere. **It has now done that: run `35555583046` (commit `d428c78`) is
+GREEN** — 27m10s, both jobs 0 failed / 0 skipped, artifact
+`selekyt-windows-msix-unsigned-unverified`. The four failures below are the
+history of how it got there; each was one line of arithmetic no Linux host
+could have caught, and each produced an error message that pointed at the wrong
+layer.
 
 **Run `35548174430`** failed 47 seconds in:
 `actions/download-artifact` reproduces the directory tree the upload captured,
@@ -237,10 +263,70 @@ the failure as a *symptom of a computation* rather than as a report about a
 file — and each was fixed by making the computation's inputs consistent by
 construction, then pinning the property with a test that fails against the
 pre-fix code. Four runs, four mutation-verified pins, and the boundary of what
-is verified has moved from "the download happened" to "the pack starts".
+is verified moved from "the download happened" to "the pack starts".
 
-**What remains UNVERIFIED:** the pack itself. Everything upstream of
-MakeAppx has now run on a real Windows runner and passed.
+**Run `35555583046` (commit `d428c78`) was the fifth run, and it was GREEN.**
+27m10s, `completed success`, both `build` and `msix` 0 failed / 0 skipped. The
+fix above — preferring `x64`/`arm64` over the naive descending-name sort — was
+the last thing standing in the way, and MakeAppx packed the payload with
+validation ON from
+`C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe`.
+Artifacts: `selekyt-windows-x64-unsigned` (1245.54 MiB) and
+`selekyt-windows-msix-unsigned-unverified` (1527.44 MiB).
+
+**It has not been a one-off.** Three further runs have since gone green on
+commits made outside this session — `35594437455` (`d288189`, the landing page,
+27m29s), `35594441067` (`1d16498`, the Pages deploy, 37m0s) and `35604822603`
+(`2cf32a7`, the README rewrite, 27m51s). The last of those was inspected
+job-by-job: `build` and `msix` both `success`, 0 steps failed, 0 steps skipped.
+Four consecutive greens on four different commits, including commits this
+session did not author, is a *stable* pipeline rather than a lucky run —
+which is the difference between "the fix worked" and "the fix worked once".
+
+The MSIX artifact was then verified **off the runner, from this Linux host**,
+by reading the GitHub artifact's bytes directly over HTTP ranges and parsing
+the zip64 central directory by hand. Results: 9552 entries, zero duplicate
+names, 2057.5 MiB uncompressed → 1525.2 MiB compressed (the runner's 1527.4 MB
+is the same number rounded up). Present: `AppxManifest.xml` (4704 B),
+`[Content_Types].xml` (94152 B), `AppxBlockMap.xml` (4006955 B),
+`SelekyT.exe` (4791296 B) and all six `Assets\*.png`. The packed manifest still
+reads `Executable="SelekyT.exe"` — the committed copy and the installed payload
+agreed, so the reconciliation logic never fired, which is the outcome it exists
+to produce. Identity matches `tauri.conf.json` on all four fields
+(`Name`/`productName`, `Version`/`version` in dotted-quad form,
+`Publisher`/`bundle.publisher` with the `CN=` prefix,
+`Executable`/`mainBinaryName`).
+
+**Two non-obvious facts about reading a GitHub artifact, both of which cost a
+round trip each.** (1) The outer artifact zip stores the MSIX with method 0, so
+**artifact offsets are MSIX offsets plus 42** (30-byte local header + 12-byte
+name `SelekyT.msix`). Every range read before that correction came back 42
+bytes early and reported all six assets missing. (2) MakeAppx writes a *full
+zip64* central directory: every 32-bit size/offset field is the `0xFFFFFFFF`
+sentinel and the real values live in the `0x0001` extra block, which starts at
+`o+46+nlen` — **not** `o+46`, or every size reads as 4 GiB. It also uses
+trailing data descriptors (flag bit 3) rather than local-header sizes, so
+inflating a member needs `zlib.decompressobj(-15)` and `unused_data`, not a
+length from the header. Separately, the signed Azure blob URL behind the
+artifacts API **expires about 10 minutes after issue** — resolve the redirect,
+then finish all reads inside one window.
+
+**One real defect found in the payload and deliberately not fixed:** the
+whisper `small` weights are in the package **three times byte-for-byte**
+(crc32 `81093b67`, 483546902 bytes each) — the snapshot `model.bin`, the repo
+blob, and a `models/hub/blobs/42/...` copy. 922 MiB of a 2058 MiB payload, on
+the order of 45%, is one file. This is a `stage-windows.sh` staging-layout
+question, not a manifest or MakeAppx one, and pruning it needs a Windows run to
+confirm the interpreter still resolves the weights — which this host cannot
+provide. It is the single highest-value size win available.
+
+**What remains UNVERIFIED, and this is now the whole remaining gap:**
+everything *after* the pack. The MSIX has never been installed, the app has
+never started under the `windows.fullTrustApplication` activation, the tile and
+splash have never rendered, and no Partner Center submission has been made.
+This host has no Windows machine, no PowerShell and no SDK, so none of those
+can be tested here — the artifact name says `-unverified` because that is true.
+Schema-valid, structurally consistent and MakeAppx-accepted is not installable.
 
 ### This session — a fix that broke the file at parse time, and the MSIX half of the contract
 

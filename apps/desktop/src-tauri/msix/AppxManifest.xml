@@ -15,12 +15,32 @@
       VALIDATED this manifest: schema, application identity and all six
       referenced assets were accepted. It then failed inside the writer for a
       reason unrelated to this file (a 32-bit MakeAppx against a 578 MB payload),
-      so the pack never completed and the package has never been installed or
-      run. Schema-valid is not installable.
+      so the pack never completed.
+    * Run `35555583046` (commit `d428c78`) was the first GREEN `msix` job: 27m10s,
+      both jobs 0 failed / 0 skipped, artifact
+      `selekyt-windows-msix-unsigned-unverified`. MakeAppx ran with validation ON
+      from `C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe`
+      and accepted this manifest. The artifact was then verified off the runner by
+      enumerating its zip64 central directory (9552 entries, 2057.5 MiB
+      uncompressed / 1525.2 MiB compressed): this manifest is present at 4704
+      bytes with `Executable="SelekyT.exe"` unmodified — the committed copy and
+      the installed payload agreed, so no correction warning fired — and
+      `[Content_Types].xml`, `AppxBlockMap.xml`, `SelekyT.exe` (4791296 bytes)
+      and all six referenced assets are in the package. Identity cross-checked
+      against tauri.conf.json: Name `SelekyT` == productName, Version `0.3.0.0`
+      == version `0.3.0`, Publisher `CN=SelekyT Project` == bundle publisher,
+      `SelekyT.exe` == mainBinaryName. Every field agrees.
     * What no run has established: that the package installs, that the app
       starts under the full-trust activation, that the tile and splash appear, or
-      that Partner Center accepts a submission. Only a Store submission
-      validates the 720x1080 store logo.
+      that Partner Center accepts a submission. The pack being green means the
+      manifest is schema-valid and the layout is MakeAppx's own output;
+      schema-valid is not installable, and this host has no Windows machine to
+      install on. Only a Store submission validates the 720x1080 store logo.
+    * Payload note, observed in the green artifact: the whisper `small` weights
+      are in the package three times byte-for-byte (crc32 `81093b67`,
+      483546902 bytes each) — the snapshot file, the repo blob, and a
+      `models/hub/blobs/` copy. That is 922 MiB of a 2058 MiB payload, and it is
+      a staging-layout question, not a manifest one; it is left alone here.
 
   How the payload is built: apps/desktop/package-msix.ps1 runs the NSIS
   installer produced by `tauri build` (bundles: nsis) silently into an empty

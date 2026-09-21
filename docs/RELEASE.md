@@ -1,21 +1,30 @@
 # RELEASE — SelekyT desktop application for Windows 11
 
-**Acceptance status: the engine path is proven on a real file. The Windows
-installer itself has never been executed on a Windows machine.** The two
-claims are separate and this report does not merge them.
+**Acceptance status: the engine path is proven on a real file, and the Windows
+packaging pipeline now produces a green MSIX. The installer itself has never
+been executed or installed on a Windows machine.** The three claims are
+separate and this report does not merge them: built is not packed, packed is
+not installed, installed is not run.
 
 ---
 
 ## Current commit
 
 ```
-61ce51f  fix(windows): declare the build log path on each step, not on the job   ← tip as written
+f4f90e2  docs(msix): the manifest is now schema-validated by a real MakeAppx run
+55e6a06  docs: correct the third-run narrative and reflow the fourth
+d428c78  fix(msix): pick the 64-bit makeappx, which the naive sort does not   ← first GREEN msix run (35555583046)
+9ae48c8  docs(ci): repair the fused comment block on the build step's env
+baf46a8  fix(msix): the payload and the executable were two forms of one directory
+2d8be2d  fix(msix): anchor the manifest at the script's own directory, not its parent
+4cf9c28  docs: the msix job ran once and failed 47 seconds in — record what it found
+de8be7e  fix(msix): the installer arrives six directories deep, not flat in bundle/
+ba7d8e5  fix(msix): the pack script was checking five of six referenced images
+2941666  docs: the labelling chain is verified on a real runner, not just in tests
+df0fa01  fix(windows): the sign dispatch input now fails the run instead of doing nothing
+742bad8  ci(windows): run the MSIX pack as its own job, and document the parse-time trap
+61ce51f  fix(windows): declare the build log path on each step, not on the job
 74d148d  desktop: MSIX scaffolding for the Store path — manifest, assets, pack script
-011ec03  fix(windows): hoist the build log path to job env so the signing label can read it
-968e9c1  desktop: test the one destructive command — and refactor so it can be tested
-69c8324  docs: built is not installed — the distinction the whole blocked list turns on
-ffade21  docs: every quoted test count was stale again, and the skip story was wrong
-6e52d13  docs: 1240/13, the corrected commit block, and the release-label history
 30ace62  ci: pyyaml is a test dependency — the packaging tests read the workflows
 ```
 
@@ -68,8 +77,8 @@ network permission at all; `src-tauri/capabilities/main.json` is the entire ACL.
 | `engine/nle_export.py` | Windows file-URI fix (the offline-import bug) |
 | `providers/youtube.py`, `selekyt/cli.py`, `tools/*.py` | Windows portability fixes |
 | 12 files under `selekyt/` `engine/` `providers/` | UTF-8 encoding sweep |
-| `apps/desktop/package-msix.ps1` | The Store / sideload pack stage: installs the built NSIS silently into an empty dir and packs *that*, so the MSIX payload provably matches the installer's (**never run**) |
-| `apps/desktop/src-tauri/msix/AppxManifest.xml` | Full-trust desktop-bridge manifest, 10.0.17763, EntryPoint form (**never packed**) |
+| `apps/desktop/package-msix.ps1` | The Store / sideload pack stage: installs the built NSIS silently into an empty dir and packs *that*, so the MSIX payload provably matches the installer's (**now run green — run `35555583046`**) |
+| `apps/desktop/src-tauri/msix/AppxManifest.xml` | Full-trust desktop-bridge manifest, 10.0.17763, EntryPoint form (**packed and accepted with validation ON**) |
 | `apps/desktop/src-tauri/msix/Assets/*.png` | The six manifest-referenced images, generated and pixel round-trip verified |
 | `apps/desktop/src-tauri/icons/make_icons.py` | Gains the `MSIX_ASSETS` set and a non-square render path for wide tiles and the splash screen |
 | `docs/packaging.md`, `docs/release-validation.md` | What shipped, what did not |
@@ -144,15 +153,17 @@ claiming success.
 
 ## Tests
 
-- **1240 passed, 13 skipped** (full Python suite, 183.9 s on this host), up from
-  a 1215 / 13 baseline. The 25 new tests are the desktop packaging contract (9,
-  including the four that pin the release label), the `read_text` op's envelope
-  and traversal surface, and engine-side growth; nothing regressed. The count
+- **1251 passed, 13 skipped** (full Python suite, 187.7 s on this host, re-measured
+  2026-09-21), up from a 1215 / 13 baseline. The growth is the desktop packaging
+  contract (20 tests in `tests/test_desktop_packaging.py` alone, including the
+  four that pin the release label and `test_the_pack_script_picks_the_64bit_makeappx`,
+  which the green MSIX run vindicated), the `read_text` op's envelope and
+  traversal surface, and engine-side growth; nothing regressed. The count
   was measured by re-running the whole suite and reading its summary line — a
   background run earlier in the session reported exit 0 without having executed
-  pytest at all (see `docs/AI_EXECUTION_STATE.md`), and 1240 is the count
-  *after* the four labelling tests landed, not the one quoted in their own
-  commit message.
+  pytest at all (see `docs/AI_EXECUTION_STATE.md`), and the count is the one
+  *after* the labelling tests landed, not the one quoted in their own
+  commit message. Re-measure before quoting this; it moves with every test added.
 - **18 Rust unit tests** in `apps/desktop/src-tauri`, including
   `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the pipe-buffer
   deadlock fix that this session found by hitting it for real,
@@ -448,20 +459,39 @@ build succeeded, but built is still not installed.
    failing when only a 32-bit one exists, and pinning both with a test that
    fails against the naive sort.
 
-   What has still never executed is the pack itself. Everything up to it has
-   now run on a real runner and passed.
+   The pack has now executed. Run `35555583046` (commit `d428c78`) completed
+   `success` in 27m10s, both jobs 0 failed / 0 skipped, with MakeAppx running
+   validation ON from the x64 binary. The first green `msix` job was the
+   verification step — and it passed.
+
+   The artifact was then verified off the runner by reading its zip64 central
+   directory directly: 9552 entries, zero duplicates, 2057.5 MiB uncompressed
+   → 1525.2 MiB compressed (the runner reported 1527.4 MB; that is rounding).
+   `AppxManifest.xml`, `[Content_Types].xml`, `AppxBlockMap.xml`,
+   `SelekyT.exe` and all six `Assets\*.png` are present, and the packed manifest
+   still says `Executable="SelekyT.exe"` — the committed copy and the installed
+   payload agreed, so no correction fired. Identity matches `tauri.conf.json`
+   on all four fields. One real defect found and *not* fixed: the whisper
+   `small` weights are in the package three times byte-for-byte, 922 MiB of a
+   2058 MiB payload. That is a staging-layout problem, and it needs a Windows
+   run to fix safely.
 
    This host has no MakeAppx, no Windows SDK and no PowerShell, and that is
-   the whole point of the paragraph above: four runs, four defects, and not
-   one of them was reachable from a Linux host. What the host *can* reach is
+   the whole point of the history above: five runs, four defects and then a
+   green, and not one of the four was reachable from a Linux host. What the host
+   *can* reach is
    pinned by the packaging tests: identity, version,
    executable name and every image the manifest references agree with
    `tauri.conf.json` and with the generator, and each PNG is round-trip decoded
    and compared pixel-for-pixel against the buffer that produced it. MakeAppx's
-   schema validation is the one check that does not exist here, which is why the
-   pack script runs it with validation deliberately ON and the CI job is
-   expected to be where a manifest or layout problem first surfaces. **Treat the
-   first green `msix` job as the verification step, not as a release.**
+   schema validation was the one check that did not exist here, which is why the
+   pack script runs it with validation deliberately ON.
+
+   **What the green run does not establish:** the package has never been
+   installed or run. Schema-valid, structurally consistent and MakeAppx-accepted
+   is not installable. This host has no Windows machine, so activation, the tile
+   and splash, and Partner Center submission are all untested, and the artifact
+   name says `-unverified` for exactly that reason.
 
    Signing is a separate release stage and is not faked: the artifact is named
    `selekyt-windows-msix-unsigned-unverified`, and an unsigned MSIX will not

@@ -11,6 +11,7 @@ cookies.txt
 *.cookies.txt
 *.cookie
 rust/target/
+apps/desktop/src-tauri/target/
 .worktrees/
 .claude/worktrees/
 .coverage*

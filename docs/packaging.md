@@ -91,8 +91,8 @@ against each other by `tests/test_desktop_packaging.py`, because two
 hand-written copies of a two-valued label drift apart silently and the failure
 is an MSIX job that downloads nothing while the build job looks healthy.
 
-The `msix` job is separate and `needs: build` for a reason: the MSIX tooling
-has never run anywhere, and a job that fails must not take the installers down
+The `msix` job is separate and `needs: build` for a reason: it was unproven
+tooling, and a job that fails must not take the installers down
 with it. A failure there shows up as its own red row.
 
 The workflow file has one non-obvious constraint worth recording, because it
@@ -174,9 +174,11 @@ Two things the script does not trust:
   published scale-100 size — a 310x150 wide tile is not a rescaled square, so
   they are composed individually rather than cropped.
 
-**Status: UNVERIFIED, and the CI job is the verification.** The `msix` job has
-run four times and each failure was a line of arithmetic no Linux host could
-have caught. It has now reached MakeAppx and has never got past it. The first
+**Status: GREEN — the pack has run and produced a structurally verified MSIX.
+Installation and runtime remain untested, because no Windows machine exists in
+this environment.** The `msix` job has run five times. The first four each
+failed on a line of arithmetic no Linux host could have caught; the fifth
+(run `35555583046`, commit `d428c78`) completed `success` in 27m10s. The first
 run (run `35548174430`, commit `742bad8`) **failed 47 seconds in**, exactly as designed — `actions/download-artifact` reproduces the tree the
 upload captured, so the NSIS setup arrived at
 `bundle/apps/desktop/src-tauri/target/release/bundle/nsis/*.exe` while the
@@ -256,22 +258,59 @@ small enough to fit. Pinned by
 `test_the_pack_script_picks_the_64bit_makeappx`, which fails against the
 naive sort and against a preference with no fallback.
 
-What has *not* yet run is the pack itself. Everything up to it has now run on
-a real Windows runner and passed: the installer is found, installs silently,
-`SelekyT.exe` is reconciled against the payload without disagreeing with the
-committed manifest, and every referenced asset is present. The manifest has
-never been packed, installed or run. What *is*
-verified on Linux is the structural contract — identity, version, executable
-name and every referenced asset agree with `tauri.conf.json` and with the
-generator — and every PNG is round-trip decoded and compared pixel-for-pixel
-against the buffer that produced it. MakeAppx's schema validation is the only
-check that does not exist here, which is why the pack script runs it with
-validation deliberately ON and the CI step is expected to be where a manifest
-or layout problem first surfaces. Treat the first green `msix` job as the
-verification step, not as a release.
+**The pack has now run, and it is green.** Run `35555583046` (commit `d428c78`)
+completed `success` in 27m10s with both jobs 0 failed / 0 skipped, and produced
+the `selekyt-windows-msix-unsigned-unverified` artifact. MakeAppx ran with
+validation deliberately ON from
+`C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe` and
+accepted the manifest, the application identity and the whole payload.
 
-Signing is a separate stage and is not faked. An unsigned MSIX will not install
-without developer mode or sideloading, and the artifact name says so.
+It has not been a one-off. Three further runs have gone green since, on commits
+made outside this session (`35594437455`, `35594441067`, `35604822603` —
+27m29s, 37m0s, 27m51s), the last of them inspected job-by-job with both `build`
+and `msix` reporting 0 steps failed and 0 skipped. Four consecutive greens on
+four different commits is a stable pipeline, not a lucky run.
+
+The artifact was then verified off the runner by enumerating its zip64 central
+directory directly (9552 entries, zero duplicate names, 2057.5 MiB uncompressed
+→ 1525.2 MiB compressed, which reconciles with the runner's reported
+1,527.4 MB within rounding). Present in the package: `AppxManifest.xml`
+(4704 bytes), `[Content_Types].xml` (94152), `AppxBlockMap.xml` (4006955),
+`SelekyT.exe` (4791296) and all six referenced `Assets\*.png`. The packed
+manifest carries `Executable="SelekyT.exe"` **unmodified** — the committed copy
+and the installed payload agreed, so no correction warning fired, which is the
+outcome the reconciliation logic exists to produce.
+
+Identity cross-checked field by field against `tauri.conf.json`, all agreeing:
+`Identity Name="SelekyT"` == `productName`; `Version="0.3.0.0"` == `version`
+`0.3.0` in dotted-quad form; `Publisher="CN=SelekyT Project"` ==
+`bundle.publisher` with the required `CN=` prefix; `Executable="SelekyT.exe"`
+== `mainBinaryName`. The zip64 extra-field parsing needed to read any of this is
+non-obvious enough to record: MakeAppx writes a full zip64 central directory
+(every 32-bit size/offset field is the `0xFFFFFFFF` sentinel, real values live
+in the `0x0001` extra block starting at `o+46+nlen`, **not** `o+46`), uses
+trailing data descriptors rather than local-header sizes, and the outer GitHub
+artifact zip stores the MSIX with method 0 — so **artifact offsets are MSIX
+offsets plus 42** (30-byte local header + 12-byte name). Every range read before
+that correction came back 42 bytes early and reported all six assets missing.
+
+One real finding from the payload, reported not fixed: the whisper `small`
+weights are in the package **three times byte-for-byte** (crc32 `81093b67`,
+483546902 bytes each) — the snapshot `model.bin`, the repo blob, and a
+`models/hub/blobs/42/...` copy. That is 922 MiB of a 2058 MiB payload, ~45%,
+being one file. It is a staging-layout question in `stage-windows.sh`, not a
+manifest or MakeAppx one, and it is deliberately left alone here: pruning it
+needs a Windows run to confirm the interpreter still resolves the weights, and
+this host cannot provide one.
+
+**What is still not verified:** the package has never been installed or run.
+Schema-valid and structurally consistent is not installable. No Windows machine
+exists in this environment — no PowerShell, no MakeAppx, no SDK — so
+installation, full-trust activation, tile/splash rendering and Partner Center
+submission are all untested. The artifact name says `-unverified` because that
+is true. Signing is a separate stage and is not faked: an unsigned MSIX will not
+install without developer mode or sideloading. Only a Store submission
+validates the 720x1080 store logo.
 
 ### Environment overrides
 
@@ -281,16 +320,19 @@ the installer without the ~500 MB weights download (smoke runs).
 
 ## Verification evidence (runs on THIS Linux host)
 
-- `cargo build` and `cargo test` in `apps/desktop/src-tauri` pass: 6 Rust unit
+- `cargo test --bin SelekyT` in `apps/desktop/src-tauri` passes: 18 Rust unit
   tests, including `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the
   pipe-buffer deadlock fix (stderr is drained unconditionally inside
-  `Sidecar::spawn_in`, not by the UI relay).
-- `1251 passed, 13 skipped` across the full Python suite (measured at the
-  commit this file ships in), including the sidecar envelope contract, the
-  desktop shell ops (`probe_media`, `read_artifact`, `stat_artifact`) and the
-  15 packaging tests that pin the workflow, the signing hook, the MSIX manifest
-  and the two jobs' artifact contract. Re-run `.venv/bin/pytest -q` before
-  quoting this number; it moves with every test added.
+  `Sidecar::spawn_in`, not by the UI relay), and six tests for
+  `selekyt_delete_project` covering each escape route its path validation
+  guards.
+- `1251 passed, 13 skipped` across the full Python suite (re-measured
+  2026-09-21, 187.7 s, at the commit this file ships in), including the sidecar
+  envelope contract, the desktop shell ops (`probe_media`, `read_artifact`,
+  `stat_artifact`) and the **20** packaging tests that pin the workflow, the
+  signing hook, the MakeAppx architecture selection, the MSIX manifest and the
+  two jobs' artifact contract. Re-run `.venv/bin/pytest -q` before quoting this
+  number; it moves with every test added.
 - A real end-to-end run of the actual staged `selekyt-python` sidecar binary
   against a real 1013.9 s / 1280×720 source, over the same JSON-RPC the Tauri
   `selekyt_rpc` command uses. See `docs/release-validation.md`.
@@ -326,14 +368,24 @@ could not be executed here, not a verified result.
 4. **`Systran/faster-whisper-small` ships no `preprocessor_config.json`.**
    faster-whisper should fall back to its built-in 16 kHz defaults, but a real
    transcription has not confirmed it.
-5. **Installer size.** ffmpeg+ffprobe ≈ 210 MB, `small` ≈ 484 MB,
-   interpreter+deps ≈ 250 MB → payload near 1 GB. Under NSIS's 2 GB ceiling,
-   but LZMA over 1 GB is slow and the artifact is big. `SELEKYT_SKIP_MODEL=1`
-   or a `tiny`/`base` model are the levers.
-6. **The MSIX manifest and pack script.** See "The Store / sideload path"
-   above. `package-msix.ps1` and `AppxManifest.xml` are written and structurally
-   pinned by tests, but MakeAppx has never seen them. The CI `msix` job is the
-   first time they run anywhere.
+5. **Installer size.** Measured, not estimated: the green MSIX payload is
+   2057.5 MiB uncompressed across 9550 files (1525.2 MiB compressed in the
+   package, 1527.4 MB as the runner reported the artifact). The single largest
+   component is the whisper `small` weights, and they are in the package
+   **three times** — 922 MiB of the 2058 MiB total is one 461 MiB file
+   duplicated (see "The Store / sideload path"). Fixing that staging layout is
+   the biggest available size win, and it needs a Windows run to confirm the
+   interpreter still finds the weights afterwards. Under NSIS's 2 GB ceiling,
+   but LZMA over 2 GB is slow and the artifact is big.
+   `SELEKYT_SKIP_MODEL=1` or a `tiny`/`base` model are the levers.
+6. **MSIX installation and activation.** Largely resolved — see "The Store /
+   sideload path" above. `package-msix.ps1` and `AppxManifest.xml` have now run
+   end to end on a real runner (run `35555583046`): MakeAppx packed them with
+   validation ON, and the artifact was structurally verified off the runner.
+   What is *still* untested is everything after the pack: installing the MSIX,
+   the full-trust activation, the tile and splash, and a Partner Center
+   submission. This host has no Windows machine to install on, and the artifact
+   name says `-unverified` for exactly that reason.
 7. **The GUI itself.** The host is headless (no X server, no xvfb), so the
    binary was verified through its RPC surface, not its window. The acceptance
    path — launch, pick a file, watch progress, read results — was driven
