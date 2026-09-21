@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       sign:
-        description: "Sign the build (requires the SELEKYT_AZURE_* secrets)"
+        description: "Require signing: the run FAILS rather than ship an unsigned build when the SELEKYT_AZURE_* secrets are not set. Leave it unset to build unsigned deliberately."
         required: false
         default: "0"
 
@@ -128,8 +128,12 @@ jobs:
         shell: bash
         # Its own copy of the path: step env does not cross steps, and the job
         # cannot hold it either (see the build step above).
+        # SELEKYT_SIGN_REQUESTED is the dispatch input, and it is read here
+        # rather than anywhere in the build because this is the step that
+        # decides what the artifact will claim about itself.
         env:
           SELEKYT_BUILD_LOG: ${{ runner.temp }}/selekyt-build.log
+          SELEKYT_SIGN_REQUESTED: ${{ github.event.inputs.sign }}
         # sign.ps1 emits the greppable marker when it declines to sign. A build
         # that intended to sign but could not fails the job instead, so the only
         # way to reach this step unsigned is "no credentials configured".
@@ -151,7 +155,18 @@ jobs:
           marker="$(grep -c 'SELEKYT_UNSIGNED' "$SELEKYT_BUILD_LOG" || true)"
           marker="${marker:-0}"
           creds="${{ secrets.SELEKYT_AZURE_TENANT_ID != '' }}"
-          echo "marker hits: $marker; credentials configured: $creds"
+          requested="${SELEKYT_SIGN_REQUESTED:-0}"
+          echo "marker hits: $marker; credentials configured: $creds; signing requested: $requested"
+          # The dispatch input is a maintainer saying "I intend this build to be
+          # signed". Without this check it is decoration — it is read nowhere
+          # else, and a request to sign would be satisfied by an unsigned build
+          # with no comment at all. A request that cannot be honoured fails the
+          # run instead, because an artifact that quietly lacks what was asked
+          # for is the same class of misrepresentation as a mislabelled name.
+          if [ "$marker" -gt 0 ] && [ "$requested" = "1" ]; then
+            echo "::error::signing was requested for this run but the hook reported SELEKYT_UNSIGNED. Configure the SELEKYT_AZURE_* secrets, or leave the input unset to build unsigned deliberately."
+            exit 1
+          fi
           if [ "$marker" -gt 0 ]; then
             echo "signed=false" >> "$GITHUB_OUTPUT"
             echo "::warning::this build is UNSIGNED; Windows SmartScreen will warn"

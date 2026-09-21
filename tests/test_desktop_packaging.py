@@ -280,11 +280,12 @@ def test_an_unsigned_build_without_credentials_fails_the_job(build_workflow: dic
     branching — a reimplementation would pass while the real script named an
     unsigned build "signed", which is the exact failure this guards.
 
-    state                          marker   credentials   expected
-    no credentials, hook declined   yes      false         unsigned, exit 0
-    credentials present, signed     no       true          signed, exit 0
-    marker missing, no credentials  no       false         FAIL — never "signed"
-    log path unset, no credentials  n/a      false         FAIL — never "signed"
+    state                          marker   credentials   requested   expected
+    no credentials, hook declined   yes      false         no          unsigned, exit 0
+    credentials present, signed     no       true          no          signed, exit 0
+    marker missing, no credentials  no       false         no          FAIL — never "signed"
+    log path unset, no credentials  n/a      false         no          FAIL — never "signed"
+    signing asked, hook declined    yes      false         yes         FAIL — the request is not satisfied
     """
     import subprocess
     import tempfile
@@ -296,6 +297,7 @@ def test_an_unsigned_build_without_credentials_fails_the_job(build_workflow: dic
 
     def run_label(
         marker_in_log: bool, creds_configured: bool, *, log_path: str | None = "set",
+        sign_requested: bool = False,
     ) -> tuple[int, str]:
         # GitHub substitutes the secrets expression before the step runs; do the
         # same so the script under test is the one the runner will execute.
@@ -323,6 +325,7 @@ def test_an_unsigned_build_without_credentials_fails_the_job(build_workflow: dic
             env = {**os.environ, "GITHUB_OUTPUT": str(out)}
             if path is not None:
                 env["SELEKYT_BUILD_LOG"] = path
+            env["SELEKYT_SIGN_REQUESTED"] = "1" if sign_requested else "0"
             proc = subprocess.run(
                 ["bash", "-c", script],
                 capture_output=True,
@@ -336,6 +339,14 @@ def test_an_unsigned_build_without_credentials_fails_the_job(build_workflow: dic
     assert code == 0 and "signed=false" in emitted, (
         "a build whose hook reported SELEKYT_UNSIGNED must be labelled unsigned, "
         f"not fail or be relabelled (exit {code}: {emitted!r})"
+    )
+
+    code, emitted = run_label(marker_in_log=True, creds_configured=False, sign_requested=True)
+    assert code != 0 and "signed=true" not in emitted and "signed=false" not in emitted, (
+        "a build signing was explicitly requested for must not be labelled either "
+        "way when the hook reported SELEKYT_UNSIGNED — the request is unsatisfied, "
+        "and labelling it at all would let an unsigned build through with a "
+        f"signed-looking name (exit {code}: {emitted!r})"
     )
 
     code, emitted = run_label(marker_in_log=False, creds_configured=True)
@@ -361,6 +372,41 @@ def test_an_unsigned_build_without_credentials_fails_the_job(build_workflow: dic
             "an unreadable marker — this is the state that misnamed every "
             f"unsigned build before the guard existed (exit {code}: {emitted!r})"
         )
+
+
+def test_the_signing_request_input_reaches_the_step_that_acts_on_it(
+    build_workflow: dict,
+) -> None:
+    """The dispatch input has to be wired to the one step that reads it.
+
+    It was declared for a whole session and consumed by nothing, which made the
+    checkbox in the Actions UI a control that silently does nothing: a
+    maintainer asking for a signed build got an unsigned one with no indication
+    the request had been ignored. A declared input is not a wired input.
+    """
+    label = _steps(build_workflow)["Record whether the build was signed"]
+    env = label.get("env", {})
+    assert "SELEKYT_SIGN_REQUESTED" in env, (
+        "the labelling step does not read the sign input, so requesting signing "
+        "from the Actions UI has no effect"
+    )
+    assert "inputs.sign" in env["SELEKYT_SIGN_REQUESTED"], (
+        f"the variable must come from the dispatch input, not a constant: "
+        f"{env['SELEKYT_SIGN_REQUESTED']!r}"
+    )
+    # A substring check is not enough: inputs.signing contains inputs.sign, and
+    # a rename like that would leave the step reading an input the workflow
+    # never declares.
+    assert re.search(r"inputs\.sign(?![A-Za-z0-9_])", env["SELEKYT_SIGN_REQUESTED"]), (
+        f"the expression must name the input exactly: "
+        f"{env['SELEKYT_SIGN_REQUESTED']!r}"
+    )
+    # And the input has to exist, or the expression reads a void.
+    inputs = build_workflow.get(True, {}).get("workflow_dispatch", {}).get("inputs", {})
+    assert "sign" in inputs, "the workflow declares no sign input for the step to read"
+    assert env["SELEKYT_SIGN_REQUESTED"].endswith("}}"), (
+        "an unterminated expression is a silent empty string at runtime"
+    )
 
 
 def test_the_artifact_name_branches_on_the_marker(build_workflow: dict) -> None:
