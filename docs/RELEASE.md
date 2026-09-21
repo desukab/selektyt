@@ -420,10 +420,40 @@ build succeeded, but built is still not installed.
    test that reproduces the runner's own error message when run against the
    pre-fix script.
 
-   Everything *after* that line has still never executed: the executable
-   reconciliation against the payload, the asset check, and MakeAppx itself.
-   This host has no MakeAppx, no Windows SDK and no PowerShell. What the
-   host *can* reach is pinned by the packaging tests: identity, version,
+   **It ran a third time, and the arithmetic was finally right — run
+   `35551339487` (commit `2d8be2d`).** The installer installed, `SelekyT.exe`
+   was found, and the reconciliation *disagreed with the committed manifest*,
+   rewriting it to `Executable="ad\SelekyT.exe"`. `ad` is the last two
+   letters of "payload": `$env:TEMP` on the runner is the 8.3 short form
+   (`C:\Users\RUNNER~1\...`) while `Get-ChildItem` reports the canonical
+   one, so slicing the discovered path by the *string's* length cut three
+   characters early and landed inside the payload directory's own name. Both
+   strings name the same directory; only the arithmetic was wrong. The
+   committed manifest was never incorrect, and the warning that said it was
+   was itself the bug. Fixed (`baf46a8`) by resolving the directory once and
+   using one form for both the enumeration and the length, guarded by a
+   round-trip check that rejoins the derived path and requires it to resolve.
+
+   **It ran a fourth time, and reached MakeAppx — run `35553464487` (commit
+   `baf46a8`).** This is the first run where the script's own work was correct
+   end to end: `payload executable: SelekyT.exe` with no correction warning,
+   and all six assets present. MakeAppx validated the manifest, accepted the
+   application identity, and walked every payload file before dying in its
+   writer with `0x8007000e - Not enough memory resources are available to
+   complete this operation`. The tool it selected was the **x86** binary: the
+   SDK ships x86 and x64 side by side, a descending name sort puts `x86`
+   first, and a 32-bit process cannot hold this payload's file list in 2 GB.
+   Nothing about the package was wrong — the wrong architecture of a correct
+   tool was chosen. Fixed by preferring the 64-bit binary, warning instead of
+   failing when only a 32-bit one exists, and pinning both with a test that
+   fails against the naive sort.
+
+   What has still never executed is the pack itself. Everything up to it has
+   now run on a real runner and passed.
+   This host has no MakeAppx, no Windows SDK and no PowerShell, and that is
+   the whole point of the paragraph above: four runs, four defects, and not
+   one of them was reachable from a Linux host. What the host *can* reach is
+   pinned by the packaging tests: identity, version,
    executable name and every image the manifest references agree with
    `tauri.conf.json` and with the generator, and each PNG is round-trip decoded
    and compared pixel-for-pixel against the buffer that produced it. MakeAppx's

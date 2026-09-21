@@ -30,11 +30,11 @@ every line below was true on this host at that point.
   contract-tested UI, honest signing), `b5078e5` (the Tauri 2 shell).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1249 passed, 13 skipped** (2026-09-21, 183.96 s) — measured by
+* Test suite: **1251 passed, 13 skipped** (2026-09-21, 184.33 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work"). The
   prior baseline was 1240/13; the growth is entirely
-  `tests/test_desktop_packaging.py`, which went 9 → 18 this session: five MSIX
+  `tests/test_desktop_packaging.py`, which went 9 → 20 over the packaging work: eleven contracts added since `011ec03`, the last three of them this session — the manifest anchor, the payload path round-trip, and the 64-bit MakeAppx selection, each mutation-verified against the pre-fix code
   contract tests, three that pin the workflow's context-availability,
   artifact-name and sign-input rules, the one that keeps the PowerShell
   pack script's asset parsing honest against the canonical parser, and the one
@@ -134,7 +134,7 @@ every line below was true on this host at that point.
 
 ## Completed work
 
-### This session — the MSIX job failed twice more, and each failure was a line of arithmetic
+### This session — the MSIX job failed four times, and the fourth failure was not in this repository at all
 
 The `msix` job exists to be the verification of a manifest that has never been
 packed anywhere, and it is doing that job. It has now failed twice, each time
@@ -180,9 +180,67 @@ fails rather than passing unmodelled. Run against the pre-fix script it
 reproduces the runner's own error message verbatim, which is what makes it a
 regression test rather than a test that happens to pass.
 
-**What remains UNVERIFIED:** everything after that line — the executable
-reconciliation, the asset check against the installed payload, and MakeAppx
-itself, which is the only schema validation the manifest has ever had.
+**Run `35551339487`** got past all of that, and failed on arithmetic again —
+but arithmetic on two *forms* of one path. The reconciliation reported that the
+committed manifest disagreed with the payload and rewrote the packed copy to
+
+```
+Executable="ad\SelekyT.exe"
+```
+
+`ad` is the last two letters of "payload". `$env:TEMP` on a GitHub Windows
+runner is the 8.3 short form, `C:\Users\RUNNER~1\...`, while `Get-ChildItem`
+reports the canonical `C:\Users\runneradmin\...`. Slicing the discovered
+path by the *string's* length cut three characters early — exactly the
+difference in length between those two spellings of one directory — and
+landed inside the payload directory's own name. The committed manifest was
+never wrong; the warning that said it was, was the defect. Fixed by resolving
+the directory once with `Get-Item` and using its `FullName` for both the
+enumeration and the length, which makes the two consistent by construction.
+
+The guard I wrote first was wrong too, and I caught it by reading my own
+comment rather than by running anything: it checked the *shape* of the derived
+path, and `ad\SelekyT.exe` fails a shape test — but so does
+`SelekyT\SelekyT.exe`, which is a perfectly legal package-relative path if
+Tauri ever nests the install. The guard would then have been the thing
+breaking the build. It now tests the operation itself: rejoining the derived
+path to the payload must resolve to the file it was derived from. That holds
+for a nested layout and fails for a sliced one, in either path form.
+
+**Run `35553464487`** is the first run where the script's own arithmetic was
+right end to end — `payload executable: SelekyT.exe` with no correction
+warning, all six assets present — and it failed inside MakeAppx:
+
+```
+MakeAppx : error: Failure at (packageWriter3->AddPayloadFiles(
+    addedFiles, preparedFiles, performanceOptions.memoryLimit))
+  - 0x8007000e - Not enough memory resources are available to complete
+  this operation.
+```
+
+The tool selected was `...\bin\10.0.26100.0\x86\makeappx.exe`, the **x86**
+binary. The SDK ships x86 and x64 side by side under one version directory,
+the script took the first hit of a descending name sort, and `x86` sorts above
+`x64` because `'8'` is greater than `'6'`. A 32-bit process has 2 GB of address
+space against a 578.7 MB payload's worth of files, and the writer's
+prepared-file list exhausted it. Nothing in this repository was wrong. The
+fix is to prefer the 64-bit binary and to *warn* rather than throw when only a
+32-bit one exists — that tool is still correct for a payload small enough to
+fit, and hard-failing would be a regression on a machine with an older SDK.
+
+**Why the pattern matters more than any single one of these:** all four
+failures were invisible from this host, and all four produced error text that
+pointed at the wrong layer. "Manifest is missing" pointed at a manifest that
+existed. `Executable="ad\..."` pointed at a manifest that was correct. An
+memory error code pointed at a package that was fine. Each required reading
+the failure as a *symptom of a computation* rather than as a report about a
+file — and each was fixed by making the computation's inputs consistent by
+construction, then pinning the property with a test that fails against the
+pre-fix code. Four runs, four mutation-verified pins, and the boundary of what
+is verified has moved from "the download happened" to "the pack starts".
+
+**What remains UNVERIFIED:** the pack itself. Everything upstream of
+MakeAppx has now run on a real Windows runner and passed.
 
 ### This session — a fix that broke the file at parse time, and the MSIX half of the contract
 

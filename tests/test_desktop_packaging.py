@@ -840,3 +840,84 @@ def test_the_msix_manifest_targets_the_desktop_full_trust_profile() -> None:
         "a RuntimeBehavior attribute would contradict the EntryPoint form this "
         "manifest uses on its target minimum version"
     )
+
+
+def test_the_pack_script_picks_the_64bit_makeappx() -> None:
+    """The Windows SDK ships a 32-bit and a 64-bit ``makeappx.exe`` side by side
+    under the same version directory, and the script used to take the first hit
+    of a descending name sort. That is the 32-bit one: ``x86`` sorts *above*
+    ``x64`` character by character, because ``'8'`` (0x38) is greater than
+    ``'6'`` (0x36). So a correct-looking ``Sort-Object ... | Select-Object
+    -First 1`` handed a 578.7 MB payload to a 2 GB process, and run 35553464487
+    died in the writer:
+
+        MakeAppx : error: Failure at (packageWriter3->AddPayloadFiles(
+            addedFiles, preparedFiles, performanceOptions.memoryLimit))
+          - 0x8007000e - Not enough memory resources are available to complete
+          this operation.
+
+    The tool had walked every payload file and accepted all six assets by then,
+    so the manifest and the payload were fine — the wrong architecture of a
+    correct tool was selected. This pins the preference and its fallback, so a
+    revert to the naive sort fails here rather than 23 minutes into a build.
+    """
+    script = (SRC_TAURI.parent / "package-msix.ps1").read_text(encoding="utf-8")
+
+    # The ordering is the point: an x64 filter that only exists in a dead branch,
+    # or that runs after the fallback already chose, is the same bug as no filter.
+    enumeration = re.search(
+        r"(?m)^\s*\$candidates\s*=\s*Get-ChildItem\b.*makeappx\.exe",
+        script,
+    )
+    assert enumeration, (
+        "the script no longer enumerates the makeappx candidates into $candidates, "
+        "so the architecture preference below may not be selecting among them"
+    )
+    preference = re.search(
+        r"(?s)Where-Object\s*\{.*?Directory\.Name.*?-ieq\s*'x64'.*?\}",
+        script,
+    )
+    assert preference, (
+        "the script does not filter the candidates for an x64 Directory.Name "
+        "before choosing. Without that filter a descending name sort selects the "
+        "x86 binary, whose 2 GB address space the payload exceeds."
+    )
+    assert enumeration.start() < preference.start(), (
+        "the candidate enumeration must come before the architecture preference, "
+        "or the preference is selecting from nothing"
+    )
+
+    # arm64 is a host tool that builds an x64 package just as well, so it is
+    # accepted alongside x64; a filter reading only 'x64' would make the script
+    # fail outright on an arm64 runner and fall to the same 32-bit fallback.
+    assert re.search(r"Directory\.Name\s*-ieq\s*'arm64'", script), (
+        "arm64 MakeAppx is a valid 64-bit host tool and should be accepted; "
+        "excluding it makes the preference a hard failure on those runners"
+    )
+
+    # The preference has to be *recoverable*, not a hard requirement. A machine
+    # with only the older SDK installed has a 32-bit MakeAppx and nothing else,
+    # and that tool is still correct for a payload small enough to fit.
+    fallback = re.search(
+        r"(?m)^\s*\$makeappx\s*=\s*\$candidates\s*\|\s*Sort-Object\b",
+        script,
+    )
+    assert fallback, (
+        "the x64 preference has no fallback to the unfiltered candidates, so the "
+        "script would rather throw than pack on a machine without a 64-bit SDK"
+    )
+    assert preference.start() < fallback.start(), (
+        "the fallback must run after the preference, not instead of it"
+    )
+
+    # A 32-bit selection should say so before minutes of work are spent on it.
+    # A run that reports 0x8007000e after ten minutes of processing reads as a
+    # broken package; this is the same fact, stated while it is still cheap.
+    assert re.search(
+        r"(?s)if\s*\(\(\$makeappx\.Directory\.Name\s*-ine\s*'x64'.*?\)\s*"
+        r"-and.*?-ine\s*'arm64'.*?\)\s*\{.*?Write-Warning",
+        script,
+    ), (
+        "a 32-bit-only selection is not warned about. The raw 0x8007000e later "
+        "reads as a broken package rather than as a known address-space ceiling."
+    )

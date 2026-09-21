@@ -175,8 +175,9 @@ Two things the script does not trust:
   they are composed individually rather than cropped.
 
 **Status: UNVERIFIED, and the CI job is the verification.** The `msix` job has
-now run once (run `35548174430`, commit `742bad8`) and it **failed 47 seconds
-in**, exactly as designed — `actions/download-artifact` reproduces the tree the
+run four times and each failure was a line of arithmetic no Linux host could
+have caught. It has now reached MakeAppx and has never got past it. The first
+run (run `35548174430`, commit `742bad8`) **failed 47 seconds in**, exactly as designed — `actions/download-artifact` reproduces the tree the
 upload captured, so the NSIS setup arrived at
 `bundle/apps/desktop/src-tauri/target/release/bundle/nsis/*.exe` while the
 script looked for a `.exe` directly under `bundle/`. Nothing matched and the
@@ -206,9 +207,60 @@ resolves PowerShell path arithmetic against the tree. `tests/test_desktop_packag
 resolves it now — whichever expression the script assigns, the manifest has to
 exist at the end of it.
 
-What has *not* yet run is everything after that line: the executable
-reconciliation, the asset check and MakeAppx itself.
- The manifest has never been packed, installed or run. What *is*
+The third run (`35551339487`, commit `2d8be2d`) got past the manifest. The
+installer installed, `SelekyT.exe` was found in the payload, all six
+manifest-referenced assets were present — and the manifest the run packed said
+
+    Executable="ad\SelekyT.exe"
+
+`ad` is the last two letters of "payload". `$env:TEMP` on the runner is the
+8.3 short form (`C:\Users\RUNNER~1\...`) and `Get-ChildItem` reports the
+canonical one (`C:\Users\runneradmin\...`), so slicing the discovered path
+by the *string*'s length cut three characters early — the length of the
+difference between `runneradmin` and `RUNNER~1` — and landed inside the
+payload directory's own name. Both forms name the same directory; only the
+arithmetic was wrong. Fixed by resolving the directory once with `Get-Item`
+and using its `FullName` for the enumeration *and* the length, which makes
+the two consistent by construction, and guarded by a round-trip check:
+rejoining the derived path to the payload must resolve to the file it came
+from. The guard deliberately tests resolution rather than shape, because a
+shape check would also reject `SelekyT\SelekyT.exe`, which is a legal
+package-relative path.
+
+The fourth run (`35553464487`, commit `baf46a8`) is the first one where the
+script's own arithmetic was right end to end. The log reports
+`payload executable: SelekyT.exe` with no manifest-correction warning — the
+committed manifest and the installed payload agree, as they should — and all
+six assets present. MakeAppx validated the manifest, accepted the application
+identity and walked every one of the tens of thousands of payload files
+before it failed:
+
+    MakeAppx : error: Failure at (packageWriter3->AddPayloadFiles(
+        addedFiles, preparedFiles, performanceOptions.memoryLimit))
+      - 0x8007000e - Not enough memory resources are available to complete
+      this operation.
+
+The tool it chose was
+
+    C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x86\makeappx.exe
+
+the **x86** binary. The SDK ships x86 and x64 side by side under the same
+version directory and the script took the first hit of a descending name
+sort, and `x86` sorts above `x64` — `'8'` is greater than `'6'`. A 32-bit
+process has 2 GB of address space and this payload is a 578.7 MB installer's
+worth of files; the writer's prepared-file list exhausted it. Nothing about
+the package was wrong. The fix is to select the 64-bit tool, which is the
+same code with effectively no such ceiling, and to warn rather than fail when
+only a 32-bit tool exists, because that tool is still correct for a payload
+small enough to fit. Pinned by
+`test_the_pack_script_picks_the_64bit_makeappx`, which fails against the
+naive sort and against a preference with no fallback.
+
+What has *not* yet run is the pack itself. Everything up to it has now run on
+a real Windows runner and passed: the installer is found, installs silently,
+`SelekyT.exe` is reconciled against the payload without disagreeing with the
+committed manifest, and every referenced asset is present. The manifest has
+never been packed, installed or run. What *is*
 verified on Linux is the structural contract — identity, version, executable
 name and every referenced asset agree with `tauri.conf.json` and with the
 generator — and every PNG is round-trip decoded and compared pixel-for-pixel
@@ -233,7 +285,7 @@ the installer without the ~500 MB weights download (smoke runs).
   tests, including `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the
   pipe-buffer deadlock fix (stderr is drained unconditionally inside
   `Sidecar::spawn_in`, not by the UI relay).
-- `1249 passed, 13 skipped` across the full Python suite (measured at the
+- `1251 passed, 13 skipped` across the full Python suite (measured at the
   commit this file ships in), including the sidecar envelope contract, the
   desktop shell ops (`probe_media`, `read_artifact`, `stat_artifact`) and the
   15 packaging tests that pin the workflow, the signing hook, the MSIX manifest

@@ -222,11 +222,43 @@ Write-Host "all $($referenced.Count) manifest-referenced assets are present in t
 
 # ── locate MakeAppx ───────────────────────────────────────────────────────────
 
-$makeappx = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter "makeappx.exe" -ErrorAction SilentlyContinue |
+# Prefer the 64-bit binary. The SDK ships x86 alongside it, and a descending
+# sort on the full path puts x86 FIRST — "x86" sorts above "x64" character by
+# character, since '8' (0x38) is greater than '6' (0x36) — so "take the first
+# hit" quietly selects the 32-bit tool. Run 35553464487 ran it against a 578.7
+# MB payload and it died inside the writer:
+#
+#   MakeAppx : error: Failure at (packageWriter3->AddPayloadFiles(
+#       addedFiles, preparedFiles, performanceOptions.memoryLimit))
+#     - 0x8007000e - Not enough memory resources are available to complete
+#     this operation.
+#
+# A 32-bit process has 2 GB of address space and this payload is tens of
+# thousands of files; the writer's prepared-file list alone exhausts it. The
+# tool had already walked every payload file and accepted all six assets when
+# it failed, so neither the manifest nor the payload was wrong — the wrong
+# architecture of a correct tool was. The x64 binary has the same code and
+# effectively no such ceiling, so selecting it is the whole fix.
+$candidates = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter "makeappx.exe" -ErrorAction SilentlyContinue
+$makeappx = $candidates |
+    Where-Object { ($_.Directory.Name -ieq 'x64') -or ($_.Directory.Name -ieq 'arm64') } |
     Sort-Object FullName -Descending |
     Select-Object -First 1
 if (-not $makeappx) {
+    # No 64-bit tool on this machine. Fall back to whatever the SDK offers
+    # rather than refusing: a 32-bit MakeAppx is still correct for a payload
+    # small enough to fit, and hard-failing here would be a regression on a
+    # machine that only has an older SDK installed.
+    $makeappx = $candidates | Sort-Object FullName -Descending | Select-Object -First 1
+}
+if (-not $makeappx) {
     throw "MakeAppx.exe was not found under C:\Program Files (x86)\Windows Kits\10\bin. Install the Windows SDK, or the 'MSIX packaging' workload."
+}
+if (($makeappx.Directory.Name -ine 'x64') -and ($makeappx.Directory.Name -ine 'arm64')) {
+    # Say it rather than let it surface as the raw OOM code later. A run that
+    # dies at 0x8007000e after ten minutes of processing reads like a broken
+    # package; this is the same fact, stated before the work is wasted.
+    Write-Warning "Only a 32-bit MakeAppx ($($makeappx.Directory.Name)) is installed. A payload this size can exhaust its address space; expect '0x8007000e - Not enough memory resources'."
 }
 Write-Host "using MakeAppx: $($makeappx.FullName)"
 
