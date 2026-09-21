@@ -97,7 +97,8 @@ jobs:
         # The log is teed to a file because the next step has to know whether
         # sign.ps1 declined to sign, and $GITHUB_STEP_LOG points at *its own*
         # step log, not this one. When that was the grep target the marker was
-        # never found and every unsigned build uploaded as "signed" — the exact
+        # never found and every unsigned build uploaded as "signed".
+        #
         # The path is declared here AND on the labelling step below. GitHub step
         # `env:` does not leak to sibling steps, so a single declaration leaves
         # one of the two reading an empty string — which is what failed run
