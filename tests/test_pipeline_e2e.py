@@ -139,7 +139,8 @@ def test_run_produces_the_full_project_tree(patched_pipeline, tmp_path, media):
     assert project == tmp_path / "project"
     for name in (
         "pipeline_state.json", "transcript.json", "selections.json",
-        "editorial_report.json", "pacing_report.json", "edit_plan.json",
+        "editorial_report.json", "editorial_corpus.json",
+        "pacing_report.json", "edit_plan.json",
         "content_pack.json", "report.json",
     ):
         assert (project / name).is_file(), f"missing {name}"
@@ -153,6 +154,12 @@ def test_run_produces_the_full_project_tree(patched_pipeline, tmp_path, media):
     assert report["selected_count"] >= 1
     assert report["audio"] == {"enabled": False}, "audio stage is explicitly off"
     assert "fabricated" in report["policy"]
+
+    # The corpus layer used to be reachable only by importing engine.corpus
+    # directly; the report must now name it, and the path it names must exist.
+    corpus = json.loads((project / "editorial_corpus.json").read_text())
+    assert corpus["build"]["schema"]
+    assert report["editorial_corpus"] == str(project / "editorial_corpus.json")
 
     # captions for every selected clip, both formats
     packs = json.loads((project / "content_pack.json").read_text())

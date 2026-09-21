@@ -1,5 +1,6 @@
 from models.core import Segment, Word
 from engine.editorial import make_thoughts, rank, score_candidate
+from engine.context_guard import validate
 
 
 def test_thought_segmentation_preserves_complete_thoughts():
@@ -41,12 +42,13 @@ def test_rank_is_deterministic_and_non_overlapping():
 
 # ── a candidate's text, bounds and words must describe one clip ──────────────
 
-def _words(text, start, step=0.3):
+def _words(text, start, step=0.3, conf=1.0):
     """Word timing of the kind faster-whisper returns: leading space on every
-    token after the first, one word per 0.3 s."""
+    token after the first, one word per 0.3 s. ``conf`` stands in for the
+    per-word probability the decoder actually emits."""
     out, t = [], start
     for i, w in enumerate(text.split()):
-        out.append(Word((" " if i else "") + w, t, t + step * 0.8))
+        out.append(Word((" " if i else "") + w, t, t + step * 0.8, conf))
         t += step
     return out
 
@@ -111,3 +113,87 @@ def test_an_already_aligned_candidate_is_left_alone():
 
     assert (c.start, c.end) == (10.0, end)
     assert c.text == text, "an aligned span must not have its text rebuilt"
+
+
+def test_reasons_differ_between_clips_and_name_their_evidence():
+    """Priority 0 requires the product to answer "why was this selected?", and
+    the reason field is the answer. It used to be a fixed-format string of
+    numbers whose prose prefix was identical for every clip, so on the real
+    corpus all six candidates' reasons were the same length and opened the same
+    way — the field carried measurements but no clip-specific judgement.
+
+    Two clips with opposite profiles must now read differently in prose, not
+    only in digits, and the prose must stay truthful about the numbers."""
+    strong = ("We found that the failure rate doubled overnight, and the "
+              "cause was a single misconfigured valve we could name and fix.")
+    weak = ("So, um, well, you know, it is, like, basically the sort of thing "
+            "that, you know, one might perhaps consider at some point maybe.")
+    c_strong = score_candidate(Segment(5.0, 5.0 + 0.3 * len(strong.split()),
+                                       strong, _words(strong, 5.0)))
+    c_weak = score_candidate(Segment(95.0, 95.0 + 0.3 * len(weak.split()),
+                                     weak, _words(weak, 95.0)))
+
+    for c, label in ((c_strong, "strong"), (c_weak, "weak")):
+        assert any(ch.isalpha() for ch in c.reason), \
+            f"{label} reason quotes only numbers"
+        # The prose sentence comes first and the numeric detail follows it, so
+        # the reason stays measurable as well as readable.
+        assert c.reason.lstrip()[:1].isalpha(), \
+            f"{label} reason does not open with a sentence"
+
+    assert c_strong.reason != c_weak.reason
+    # Not merely different digits: the clip-specific prose differs too. Two
+    # reasons that share their opening words are still boilerplate.
+    assert c_strong.reason.split(".")[0] != c_weak.reason.split(".")[0], \
+        f"both reasons open with the same prose: {c_strong.reason.split('.')[0]!r}"
+    # The strongest/weakest signal named in the prose is a real claim about the
+    # clip, so the score it asserts must actually appear in the reason itself.
+    for c in (c_strong, c_weak):
+        assert "opening=" in c.reason and "density=" in c.reason
+
+    # The claim must match the measurement, not flatter the clip: the weak
+    # passage is filler-heavy, and a reason that called it clean of filler
+    # would be a fabrication.
+    assert "clean of filler" not in c_weak.reason, c_weak.reason
+    assert "fillers" in c_weak.reason
+
+
+def test_confidence_is_measured_not_constant_and_the_guard_can_fire():
+    """``score_candidate`` set ``confidence`` to the literal 0.90 for every
+    candidate from every source, which made ``context_guard.validate``'s
+    ``c.confidence < 0.75`` branch unreachable from any input — a guard written
+    to reject clips the decoder was unsure of rejected nothing, and the shipped
+    report's confidence column read "0.9 (all six)" because it was a constant,
+    not a measurement.
+
+    faster-whisper emits a probability per word, so the confidence is now that.
+    """
+    text = ("We found that the failure rate doubled overnight, and the cause "
+            "was a single misconfigured valve we could name and fix.")
+    n = len(text.split())
+    span = lambda conf: Segment(5.0, 5.0 + 0.3 * n, text, _words(text, 5.0, conf=conf))
+
+    clean = score_candidate(span(0.97))
+    garbled = score_candidate(span(0.30))
+    assert clean.confidence != garbled.confidence, \
+        "confidence must vary with the transcript it was scored from"
+    assert clean.confidence > 0.75 and garbled.confidence < 0.75
+
+    # The guard's own branch, which was dead code before this:
+    assert validate(clean)[0] is True
+    ok, why = validate(garbled)
+    assert ok is False and why == "low factual confidence", \
+        f"a low-confidence clip must be gated, got ok={ok} why={why!r}"
+
+    # One hard word in a long clip is a word an editor can fix; averaging
+    # rather than taking the minimum keeps the clip.
+    mixed = _words(text, 5.0, conf=0.97)
+    mixed[3] = Word(mixed[3].text, mixed[3].start, mixed[3].end, 0.05)
+    c = score_candidate(Segment(5.0, 5.0 + 0.3 * n, text, mixed))
+    assert validate(c)[0] is True, "a single low word must not sink a clean clip"
+
+    # A transcript path that supplies no probabilities must read as unknown,
+    # never as low: Word.confidence defaults to 1.0 and there is no evidence
+    # to translate into a rejection.
+    c = score_candidate(Segment(5.0, 5.0 + 0.3 * n, text, []))
+    assert c.confidence == 1.0 and validate(c)[0] is True

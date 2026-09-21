@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from collections import Counter
 from models.core import Candidate, Word
+from engine.edit_plan import join_words
 
 
 @dataclass
@@ -21,7 +22,7 @@ class CaptionBlock:
 
     @property
     def text(self) -> str:
-        return " ".join(w.text.strip() for w in self.words if w.text.strip())
+        return join_words([w for w in self.words if w.text.strip()])
 
 
 def _clean(text: str) -> str:

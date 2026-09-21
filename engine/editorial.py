@@ -332,7 +332,65 @@ def _score(s: Segment) -> tuple[float, float, float, float, str, str, float]:
         audio_pace = max(0.0, 1.0 - 0.8 * silence_ratio - 0.4 * long_gap_ratio)
         reason += (f"; audio_pace={audio_pace:.2f}; "
                    f"silence={audio_q['silence_ratio']:.3f}")
+    reason = _explain(story_type, reason, opening, progression, payoff, density,
+                      standalone, coherence, completeness, repetition, filler,
+                      bp_kinds, audio_q if audio_q else None)
     return editorial, virality, context, visual, story_type, reason, coherence, completeness
+
+
+def _explain(story_type: str, detail: str, opening: float, progression: float,
+             payoff: float, density: float, standalone: float, coherence: float,
+             completeness: float, repetition: float, filler: float,
+             bp_kinds: list[str], audio_q: dict | None) -> str:
+    """State, in words, why this clip was judged the way it was.
+
+    The numeric detail is the measurement; this is the sentence an editor
+    actually reads. Without it every clip's reason is the same wall of
+    numbers, and "why was this selected?" has no clip-specific answer.
+
+    The prose names the two signals that most set the clip apart — the
+    strongest and the weakest — because those are what an editor would
+    challenge first. It never invents a judgement the numbers do not support.
+    """
+    labels = {
+        "opening": ("opens with a hook the viewer can land on mid-scroll", "opens slowly, with no hook in the first sentence"),
+        "progression": ("moves from one idea to the next rather than circling", "repeats its own wording rather than progressing"),
+        "payoff": ("lands a clear closing thought", "ends without resolving its point"),
+        "density": ("carries substance per second", "is thin, with little content per second"),
+        "standalone": ("makes sense without the surrounding context", "depends on context the clip does not carry"),
+        "coherence": ("stays on one topic throughout", "splices two topics at the seam"),
+        "completeness": ("tells a whole thought, not a fragment", "cuts a flowing sentence short"),
+    }
+    scores = {
+        "opening": opening, "progression": progression, "payoff": payoff,
+        "density": density, "standalone": standalone, "coherence": coherence,
+        "completeness": completeness,
+    }
+    # Repetition and filler are penalties, so a low score is good; invert them
+    # so the same "high = stands out" comparison works for every signal.
+    scores["repetition"] = 1.0 - repetition
+    labels["repetition"] = ("does not restate itself", "repeats phrasing the clip already used")
+    scores["fillers"] = 1.0 - filler
+    labels["fillers"] = ("is clean of filler words", "carries filler words an edit would cut")
+
+    ordered = sorted(scores, key=lambda k: scores[k], reverse=True)
+    strongest = ordered[0]
+    weakest = ordered[-1]
+    high = scores[strongest] >= 0.7
+    low = scores[weakest] <= 0.4
+
+    parts = [f"{story_type} candidate that "]
+    parts.append(labels[strongest][0] if high else f"rates {strongest} at {scores[strongest]:.2f}")
+    if scores[weakest] <= 0.4:
+        parts.append(f", though it {labels[weakest][1]}")
+    elif scores[weakest] <= 0.7:
+        parts.append(f", with {weakest} middling at {scores[weakest]:.2f}")
+    if bp_kinds:
+        parts.append(f", and carries boilerplate ({', '.join(bp_kinds)}) an editor would cut")
+    if audio_q and audio_q.get("silence_ratio", 0.0) > 0.25:
+        parts.append(", and has enough silence that tightening it would help")
+    parts.append(f". {detail}")
+    return "".join(parts)
 
 
 def _clean_hook_payoff(text: str) -> tuple[str, str]:
@@ -355,6 +413,26 @@ def _clean_hook_payoff(text: str) -> tuple[str, str]:
     return clean[0][:160], clean[-1][-220:]
 
 
+def _asr_confidence(words: list[Word]) -> float:
+    """Per-word ASR confidence for the span, or 1.0 when the decoder gave none.
+
+    faster-whisper emits a probability with every word, and a clip is only as
+    trustworthy as the words it is built from: a misheard number or name is a
+    factual error in the deliverable even when the surrounding 90 words decoded
+    cleanly. Averaging rather than taking the minimum keeps one hard word in a
+    long clip from disqualifying it — an editor can fix a word, not a passage.
+
+    Word confidences default to 1.0 (see ``models.core.Word``), so a transcript
+    whose path never produced probabilities reads as unknown rather than as
+    low. That is the safe direction: this signal can flag a bad transcript, it
+    must not invent a bad transcript.
+    """
+    confs = [float(w.confidence) for w in words if w.text.strip()]
+    if not confs:
+        return 1.0
+    return sum(confs) / len(confs)
+
+
 def score_candidate(s: Segment) -> Candidate:
     # The span is aligned before it is scored, so the score, the hook, the
     # text and the shipped interval all describe the same clip. Without this
@@ -368,9 +446,19 @@ def score_candidate(s: Segment) -> Candidate:
     dead_air = _dead_air_fraction(words, aligned.duration) if words else None
     if dead_air is not None:
         detail += f"; dead_air={dead_air:.2f}"
+    # ``confidence`` used to be the literal .90 below, which made
+    # ``context_guard.validate``'s ``c.confidence < 0.75`` branch unreachable
+    # from any input — a guard written to reject clips the decoder was unsure
+    # of has never rejected one. It is now the measured per-word confidence, so
+    # the gate is live and the report's ``confidence`` column is a reading
+    # rather than a constant. On the committed nasa360 corpus all six shipped
+    # clips land 0.92–0.95, so the change does not destabilise a clean source;
+    # the transcripts that genuinely decoded badly (mean word confidence 0.32
+    # and 0.40 on two corpus sources) are what it is for.
+    confidence = _asr_confidence(words)
     return Candidate(
         start, end, text, story_type, hook, payoff,
-        editorial, virality, context, .90,
+        editorial, virality, context, confidence,
         f"Structural editorial score: {detail}.",
         visual, words, coherence, getattr(s, "completeness", 1.0),
     )

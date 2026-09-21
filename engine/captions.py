@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import os
+import re
 import unicodedata
 from pathlib import Path
 
 from models.core import Candidate, Word
 from engine.caption_director import build_blocks, style_name, CaptionBlock
-from engine.edit_plan import retention_intervals
+from engine.edit_plan import retention_intervals, join_words
 
 
 def caption_presets() -> dict:
@@ -71,16 +72,25 @@ def _escape(text: str) -> str:
 
 def _karaoke_text(words: list[Word], emphasis: set[int]) -> str:
     """Render word timings with ASS karaoke tags and subtle emphasis."""
-    pieces: list[str] = []
+    out: list[str] = []
+    prev_raw = ""
     for idx, word in enumerate(words):
         duration_cs = max(1, int(round((word.end - word.start) * 100)))
-        text = _escape(word.text.strip())
-        if not text:
+        # The spacing decision is made on the raw token, where whisper's
+        # leading space still carries the gluing ('1' + ',024' -> '1,024').
+        # Only the visible text is escaped; stripping before deciding would
+        # destroy that space and re-split the number.
+        raw = word.text
+        if not raw.strip():
             continue
+        if out and not prev_raw[-1:].isspace() and re.match(r"\w", raw):
+            out.append(" ")
+        text = _escape(raw.strip())
         if idx in emphasis:
             text = r"{\c&H00D7FF&\b1}" + text + r"{\c&HFFFFFF&\b0}"
-        pieces.append(rf"{{\k{duration_cs}}}{text}")
-    return " ".join(pieces)
+        out.append(rf"{{\k{duration_cs}}}{text}")
+        prev_raw = raw
+    return "".join(out)
 
 
 def _fallback_words(c: Candidate, words_per_line: int) -> list[Word]:
@@ -196,7 +206,7 @@ def srt_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
     # invalid SubRip index and breaks anything that renumbers or diffs cues.
     for i, (st, en) in enumerate(_cue_sequence(c, blocks)):
         block = blocks[i]
-        text = " ".join(w.text.strip() for w in block.words if w.text.strip())
+        text = join_words([w for w in block.words if w.text.strip()])
         if not text:
             continue
         cues.append(f"{len(cues) + 1}\n{_srt_ts(st)} --> {_srt_ts(en)}\n{text}")

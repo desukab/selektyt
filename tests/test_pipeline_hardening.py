@@ -17,6 +17,7 @@ F13 — a cached render is only reused when ffprobe confirms it is a real,
 from __future__ import annotations
 
 import contextlib
+import io
 import json
 import shutil
 import subprocess
@@ -101,7 +102,8 @@ def _entered(patches: dict):
 
 
 def _run_pipeline(tmp_path, candidates, *, limit=6, gate_results=None,
-                  real_pacing=False, **kw):
+                  real_pacing=False, source="https://example.com/v",
+                  media_info=None, **kw):
     media = tmp_path / "video.mp4"
     media.write_bytes(b"0" * 100)
     project = tmp_path / "project"
@@ -109,8 +111,9 @@ def _run_pipeline(tmp_path, candidates, *, limit=6, gate_results=None,
     for sub in ("facebook", "shorts", "captions", "content_pack"):
         (project / sub).mkdir(parents=True, exist_ok=True)
     (project / "pipeline_state.json").write_text(
-        json.dumps({"source": "https://example.com/v", "media_path": str(media),
-                    "media_info": {"title": "t"}, "fingerprint": fp}),
+        json.dumps({"source": source, "media_path": str(media),
+                    "media_info": {"title": "t"} if media_info is None else media_info,
+                    "fingerprint": fp}),
         encoding="utf-8")
     (project / "transcript.json").write_text(json.dumps({
         "language": "en",
@@ -124,8 +127,7 @@ def _run_pipeline(tmp_path, candidates, *, limit=6, gate_results=None,
         # tests need the real aggregate_pacing_report rather than the stub.
         patches.pop("aggregate_pacing_report")
     with _entered(patches), patch("selekyt.pipeline._fingerprint", return_value=fp):
-        return pipeline_run("https://example.com/v", tmp_path, model="small",
-                            limit=limit, **kw)
+        return pipeline_run(source, tmp_path, model="small", limit=limit, **kw)
 
 
 # ── F9: rejection accounting separates gate rejections from --limit ──
@@ -162,6 +164,80 @@ def test_no_truncation_when_everything_fits(tmp_path):
     report = json.loads((project / "report.json").read_text())
     assert report["rejected_by_context_guard"] == 0
     assert report["truncated_by_limit"] == 0
+
+
+def test_local_source_title_is_the_filename_not_null(tmp_path):
+    """``report.json`` opened with ``"title": null`` for every local file,
+    because a local path supplies no metadata title and nothing fell back. The
+    title is the first thing shown about the user's own media, and null is an
+    absence where the product owed a name."""
+    cands = [_candidate(10.0, 20.0)]
+    media = tmp_path / "My Interview 2024.mp4"
+    media.write_bytes(b"0" * 100)
+    project = _run_pipeline(tmp_path, cands, limit=6, source=str(media),
+                            media_info={})
+    report = json.loads((project / "report.json").read_text())
+    assert report["title"] == "My Interview 2024", \
+        f"a local file's title must be its stem, got {report['title']!r}"
+
+
+def test_a_metadata_title_is_preferred_over_the_filename(tmp_path):
+    """The fallback must not displace a real title: a download that supplied one
+    keeps it, so the two sources of a title stay in the right order.
+
+    The channel matters here. A metadata title comes from the downloader's info
+    dict, which a local path cannot supply — so this exercises the resume path,
+    where a run that already fetched the source reads its persisted
+    ``media_info`` back (line 333) rather than fetching again. That is also the
+    path an editor hits on their second run on the same project."""
+    cands = [_candidate(10.0, 20.0)]
+    project = _run_pipeline(tmp_path, cands, limit=6,
+                            source="https://example.com/episode-7",
+                            media_info={"title": "Episode 7 — The Valve"})
+    report = json.loads((project / "report.json").read_text())
+    assert report["title"] == "Episode 7 — The Valve", \
+        f"a supplied metadata title must win over the stem, got {report['title']!r}"
+
+
+def test_corpus_analysis_is_written_and_reports_when_unavailable(tmp_path):
+    """The corpus layer (topics, threads, redundancy groups) is a finished
+    analysis that nothing in the pipeline consumed, so the product computed
+    redundancy groups no editor could see. It now ships as
+    ``editorial_corpus.json``; a failure in that optional analysis must report
+    to stderr and not destroy a run whose clips are already selected."""
+    cands = [_candidate(10.0, 20.0)]
+    project = _run_pipeline(tmp_path, cands, limit=6)
+    corpus_path = project / "editorial_corpus.json"
+    assert corpus_path.exists(), "the corpus artifact must be written"
+
+    corpus = json.loads(corpus_path.read_text())
+    assert corpus["build"]["schema"]
+    assert "units" in corpus and "topics" in corpus
+    assert "redundancy_groups" in corpus and "threads" in corpus
+    # Registered in the report next to the other artifact paths, the way every
+    # other analysis file is.
+    report = json.loads((project / "report.json").read_text())
+    assert report["editorial_corpus"] == str(corpus_path)
+
+    # The analysis is optional: a raised exception must be reported, not
+    # raised, and the rest of the run must still complete.
+    err = io.StringIO()
+    second = tmp_path / "second"
+    second.mkdir()
+    with patch("selekyt.pipeline.build_corpus",
+               side_effect=RuntimeError("corpus exploded")):
+        with contextlib.redirect_stderr(err):
+            project2 = _run_pipeline(second, cands, limit=6)
+    assert "corpus exploded" in err.getvalue(), \
+        "the failure must be surfaced on stderr rather than swallowed"
+    assert (project2 / "report.json").exists(), \
+        "a corpus failure must not abort the pipeline"
+    assert not (project2 / "editorial_corpus.json").exists()
+    # The report must not then claim the artifact it failed to write: a key
+    # pointing at a missing file is how a UI shows an editor a broken run.
+    report2 = json.loads((project2 / "report.json").read_text())
+    assert report2.get("editorial_corpus") is None, \
+        "the report must name the corpus only when it actually exists"
 
 
 # ── F13: cached renders are validated, stubs are re-rendered ──

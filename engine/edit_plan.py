@@ -37,6 +37,37 @@ def _word_aligned(t: float, words: list[Word]) -> float:
     return t
 
 
+def join_words(words: list[Word]) -> str:
+    """Rebuild readable text from whisper word tokens.
+
+    faster-whisper emits ``' has'`` rather than ``'has'``, and the leading
+    space is load-bearing: a hyphen token is ``'-lived'``, which has to glue
+    onto the word before it (``'short' + '-lived'`` -> ``'short-lived'``), and
+    a number splits as ``'1' + ',024'``. Concatenating raw tokens is therefore
+    right for every token after the first, and wrong for exactly one — the
+    first token of a segment carries no leading space, so when such a token is
+    pulled in behind a word the two glue together (``'Syria.' + 'has'``). A
+    separator is inserted only where a word actually starts: a token beginning
+    with a letter or digit, following one that does not end in a space.
+    Punctuation-initial tokens still glue.
+
+    This is the *only* correct way to turn word tokens back into text, so every
+    emitter that builds a caption, a content pack or a sub-span from words must
+    go through here. The naive ``' '.join(w.text.strip() for w in words)``
+    re-corrupts exactly what ``align_span`` repaired: it strips the leading
+    space that carries the gluing, so the shipped captions read
+    ``"This is about the 1 ,024"`` while the transcript they caption reads
+    ``"1,024"``. A caption track that disagrees with its own transcript is not
+    a cosmetic defect — it is the deliverable being wrong.
+    """
+    parts: list[str] = []
+    for w in words:
+        if parts and not parts[-1][-1:].isspace() and re.match(r"\w", w.text):
+            parts.append(" ")
+        parts.append(w.text)
+    return " ".join("".join(parts).split())
+
+
 def align_span(start: float, end: float, words: list[Word], text: str) -> tuple[float, float, str]:
     """Make a span's bounds, text and word list describe the same clip.
 
@@ -70,22 +101,12 @@ def align_span(start: float, end: float, words: list[Word], text: str) -> tuple[
     kept = [w for w in words if w.start >= a - 1e-6 and w.end <= b + 1e-6]
     if not kept:
         return start, end, text
-    # faster-whisper emits ' has' rather than 'has', and the leading space is
-    # load-bearing: a hyphen token is '-lived', which has to glue onto the
-    # word before it ('short' + '-lived' -> 'short-lived'), and a number
-    # splits as '1' + ',024'. Concatenating raw tokens is therefore right for
-    # every token after the first, and wrong for exactly one — the first token
-    # of a segment carries no leading space, so when the snap pulls such a
-    # token in behind a word the two glue together ('Syria.' + 'has'). A
-    # separator is inserted only where a word actually starts: a token
-    # beginning with a letter or digit, following one that does not end in a
-    # space. Punctuation-initial tokens still glue.
-    parts: list[str] = []
-    for w in kept:
-        if parts and not parts[-1][-1:].isspace() and re.match(r"\w", w.text):
-            parts.append(" ")
-        parts.append(w.text)
-    rebuilt = " ".join("".join(parts).split())
+    # ``join_words`` is the only correct way to rebuild text from whisper
+    # tokens: the naive ``" ".join(w.text.strip() ...)`` strips the leading
+    # space that carries the gluing and re-corrupts what the snap just fixed.
+    # See its docstring for why the separator is inserted only where a word
+    # actually starts.
+    rebuilt = join_words(kept)
     if not rebuilt:
         return start, end, text
     # Rebuilding is only warranted when the kept words are not the words the

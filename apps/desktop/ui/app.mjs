@@ -595,7 +595,8 @@ async function listArtifacts() {
   }
   for (const name of [
     "report.json", "selections.json", "edit_plan.json", "transcript.json",
-    "qa.json", "pacing_report.json", "editorial_report.json", "pipeline_state.json",
+    "qa.json", "pacing_report.json", "editorial_report.json",
+    "editorial_corpus.json", "pipeline_state.json",
   ]) {
     out.push({ kind: "project data", path: `${p}/${name}` });
   }

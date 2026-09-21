@@ -93,6 +93,74 @@ def test_srt_and_ass_cues_match_one_for_one(tmp_path):
     assert len(srt_cues) == len(ass_lines)
 
 
+def _number_and_hyphen_words() -> list[Word]:
+    """Tokens as faster-whisper actually emits them.
+
+    A four-digit number comes apart as ``'1'`` and ``'',024'``, and a hyphenated
+    word as ``'short'`` and ``'-lived'``. The leading space is load-bearing: it
+    is what makes the pieces glue back into ``1,024`` and ``short-lived``.
+    """
+    return [
+        Word("this", 0.0, 0.3),
+        Word("is", 0.3, 0.6),
+        Word("about", 0.6, 0.9),
+        Word("the", 0.9, 1.2),
+        Word("1", 1.2, 1.5),
+        Word(",024", 1.5, 1.8),
+        Word("pixels", 1.8, 2.1),
+        Word("short", 2.1, 2.4),
+        Word("-lived", 2.4, 2.7),
+    ]
+
+
+def test_captions_glue_split_numbers_and_hyphens_not_re_split_them(tmp_path):
+    """The caption track must agree with the transcript it captions.
+
+    ``align_span`` glues these tokens; the emitters used to ``.strip()`` and
+    space-join, re-corrupting exactly what had been repaired, so the shipped
+    SRT read ``"the 1 ,024"`` while the transcript read ``"1,024"``. A caption
+    that disagrees with the text it captions is a wrong deliverable, and the
+    failure looks entirely plausible — the cue is well formed, it just says
+    the wrong thing.
+    """
+    words = _number_and_hyphen_words()
+    c = _candidate(words)
+    srt = srt_for_candidate(c, tmp_path / "01.srt")
+    ass = ass_for_candidate(c, tmp_path / "01.ass")
+    srt_body = srt.read_text(encoding="utf-8")
+    ass_body = ass.read_text(encoding="utf-8")
+
+    for needle in ("1,024", "short-lived"):
+        assert needle in srt_body, f"SRT lost {needle!r}: {srt_body!r}"
+    # The ASS dialogue line carries karaoke tags between tokens, so compare
+    # visible text rather than raw bytes.
+    ass_visible = re.sub(r"\{\\[^}]*\}", "", ass_body)
+    for needle in ("1,024", "short-lived"):
+        assert needle in ass_visible, f"ASS lost {needle!r}: {ass_visible!r}"
+    # The specific corruption: a space inserted inside a number or a hyphenation.
+    assert "1 ,024" not in srt_body
+    assert "short -lived" not in srt_body
+    assert "1 ,024" not in ass_visible
+    assert "short -lived" not in ass_visible
+
+
+def test_karaoke_keeps_glued_tokens_adjacent():
+    """The ASS karaoke path tags each word separately, so it must still glue.
+
+    Karaoke tags sit *between* tokens (``{\\k30}1{\\k30},024``), so the check
+    strips them first: what is left must read ``1,024``, with no space inside
+    the number.
+    """
+    from engine.captions import _karaoke_text
+
+    text = _karaoke_text(_number_and_hyphen_words(), set())
+    visible = re.sub(r"\{\\[^}]*\}", "", text)
+    assert "1,024" in visible, visible
+    assert "short-lived" in visible, visible
+    assert "1 ,024" not in visible
+    assert "short -lived" not in visible
+
+
 def test_srt_handles_missing_word_timestamps(tmp_path):
     c = Candidate(
         0.0, 4.0, "caption fallback works even without word timings",

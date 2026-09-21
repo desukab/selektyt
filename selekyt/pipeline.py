@@ -5,6 +5,7 @@ import json
 import math
 import os
 import shutil
+import sys
 from dataclasses import asdict
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from engine.captions import ass_for_candidate, srt_for_candidate
 from engine.caption_director import caption_metadata, style_name
 from engine.content_pack import build_content_pack
 from engine.context_guard import validate
+from engine.corpus import build_corpus
 from engine.coverage import check as check_coverage
 from engine.edit_plan import retention_intervals, pacing_report, aggregate_pacing_report
 from engine.qa import write_report
@@ -553,6 +555,33 @@ def run(
         json.dumps(editorial_report, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
+    # The corpus layer (topics, threads, redundancy groups, rhythm) is a
+    # finished, tested analysis that nothing in the pipeline consumed: it was
+    # reachable only by importing engine.corpus directly, so an editor running
+    # the product never saw the redundancy groups it had already computed and
+    # never saw a topic spine at all. It is deterministic, pure and 0.2 s on an
+    # 8.9-minute source, so writing it alongside the other reports costs
+    # nothing and it degrades to a valid corpus with explanatory notes on a
+    # transcript too short or too sparse to analyse. A failure here must not
+    # take down a run whose clips are already selected and rendered, so the
+    # write reports rather than raises. The report then names the path only if
+    # the file landed: a key pointing at a missing artifact is worse than an
+    # absent key, because a UI resolving it fails loudly and an editor reads
+    # that as a broken run.
+    corpus_path = project / "editorial_corpus.json"
+    try:
+        corpus_report = build_corpus(
+            transcript,
+            duration=max((s.end for s in transcript), default=0.0),
+            language=detected or "unknown",
+            source=source,
+        )
+        corpus_path.write_text(
+            json.dumps(corpus_report.to_dict(), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+        print(f"[selektyt] corpus analysis unavailable: {exc}", file=sys.stderr)
     pacing = aggregate_pacing_report(
         selected, rejected, context_guard_rejections,
         truncated_by_limit=truncated_by_limit,
@@ -703,9 +732,15 @@ def run(
         json.dumps(content_packs, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     qa_path = write_report(project, outputs, source_path=str(media))
+    # A local file carries no metadata title, so the report used to read
+    # ``"title": null`` for every local source — the first thing shown about
+    # the user's own media was an absence. yt-dlp's title is preferred when a
+    # download supplied one; otherwise the stem of the file is the title the
+    # user already knows it by.
+    title = info.get("title") or media.stem
     report = {
         "source": source,
-        "title": info.get("title"),
+        "title": title,
         "language": detected,
         "candidate_count": len(thoughts),
         "selected_count": len(selected),
@@ -720,6 +755,7 @@ def run(
         "timeline": str(project / "timeline"),
         "content_pack": str(project / "content_pack.json"),
         "editorial_report": str(project / "editorial_report.json"),
+        "editorial_corpus": str(corpus_path) if corpus_path.is_file() else None,
         "pacing_report": str(project / "pacing_report.json"),
         "qa": str(qa_path),
         "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",

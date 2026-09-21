@@ -114,7 +114,7 @@ decomposed into `editorial_score`, `virality_score`, `context_score`,
 | `virality_score` | 0.309 – 0.769 |
 | `context_score` | 0.877 – 1.000 |
 | `visual_potential` | 0.45 – 0.85 |
-| `confidence` | 0.9 (all six) |
+| `confidence` | 0.916 – 0.961 (measured, not a constant) |
 
 `story_type` labels shipped: `conflict`, `conflict`, `revelation`, `revelation`,
 `fact`, `story`.
@@ -122,11 +122,15 @@ decomposed into `editorial_score`, `virality_score`, `context_score`,
 **How to read it:** every shipped clip passed the context/truth guard
 (`rejected_by_context_guard: 0`, `context_score ≥ 0.877`), and every clip carries
 a human-readable `reason` string decomposing its score — e.g. clip 01 reads
-`opening=0.75; progression=0.95; payoff=1.00; density=1.00; fillers=0;
-standalone=1.00; repetition=0.18; coherence=1.00; completeness=1.00;
-audio_pace=0.88; silence=0.147; dead_air=0.00`. **That decomposed reason string is
+`conflict candidate that lands a clear closing thought. opening=0.75;
+progression=0.95; payoff=1.00; density=1.00; fillers=0; standalone=1.00;
+repetition=0.18; coherence=1.00; completeness=1.00; audio_pace=0.88;
+silence=0.147; dead_air=0.00`. **That decomposed reason string is
 the metric that matters most for the editor beachhead** — it is the auditability
-the positioning depends on, and it is per-clip, not per-run.
+the positioning depends on, and it is per-clip, not per-run. The prose sentence
+that now leads it names the signal that most sets the clip apart and the one
+that most limits it, so two clips with different profiles read differently
+rather than differing only in their digits.
 
 **Limit:** `report.json` records `rejected_count: 0` and `truncated_by_limit: 5`.
 Because the run was capped at 6, the shipped clips are the top of a ranked list

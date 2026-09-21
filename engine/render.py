@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 from models.core import Candidate
 from engine.reframe import landscape_filter, vertical_crop_filter
-from engine.edit_plan import retention_intervals
+from engine.edit_plan import retention_intervals, join_words
 from engine.captions import ass_for_candidate
 
 
@@ -105,7 +105,7 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
 
 def _subcandidate(c: Candidate, start: float, end: float) -> Candidate:
     words = [w for w in (c.words or []) if w.end >= start and w.start <= end]
-    return Candidate(start, end, " ".join(w.text for w in words), c.story_type, c.hook, c.payoff, c.editorial_score, c.virality_score, c.context_score, c.confidence, c.reason, c.visual_potential, words)
+    return Candidate(start, end, join_words(words), c.story_type, c.hook, c.payoff, c.editorial_score, c.virality_score, c.context_score, c.confidence, c.reason, c.visual_potential, words)
 
 
 def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None = None, vertical: bool = False, fps: float = 30.0) -> Path:
