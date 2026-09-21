@@ -207,9 +207,9 @@ resolves PowerShell path arithmetic against the tree. `tests/test_desktop_packag
 resolves it now — whichever expression the script assigns, the manifest has to
 exist at the end of it.
 
-The third run (`35551339487`, commit `2d8be2d`) got past the manifest. The
-installer installed, `SelekyT.exe` was found in the payload, all six
-manifest-referenced assets were present — and the manifest the run packed said
+The third run (`35551339487`, commit `2d8be2d`) got past the manifest: the
+installer installed, `SelekyT.exe` was found in the payload, and all six
+manifest-referenced assets were present. But the manifest the run packed said
 
     Executable="ad\SelekyT.exe"
 

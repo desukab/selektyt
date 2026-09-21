@@ -420,7 +420,7 @@ build succeeded, but built is still not installed.
    test that reproduces the runner's own error message when run against the
    pre-fix script.
 
-   **It ran a third time, and the arithmetic was finally right — run
+   **It ran a third time, and the manifest was no longer the problem — run
    `35551339487` (commit `2d8be2d`).** The installer installed, `SelekyT.exe`
    was found, and the reconciliation *disagreed with the committed manifest*,
    rewriting it to `Executable="ad\SelekyT.exe"`. `ad` is the last two
@@ -450,6 +450,7 @@ build succeeded, but built is still not installed.
 
    What has still never executed is the pack itself. Everything up to it has
    now run on a real runner and passed.
+
    This host has no MakeAppx, no Windows SDK and no PowerShell, and that is
    the whole point of the paragraph above: four runs, four defects, and not
    one of them was reachable from a Linux host. What the host *can* reach is
