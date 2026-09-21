@@ -140,12 +140,17 @@ Three facts follow, and all three are VERIFIED from the code:
    (`:386`), then applies overlap, text-similarity (`>= .78`), hook-similarity
    (`>= .65`), topic-token overlap (`> 12`) and per-kind diversity caps
    (`:397-406`) — and returns only what survives. In this run, 9 of 4000.
-3. **The identity of every rejected or unshipped candidate is discarded.**
-   `selected = passed[:limit]` (`selekyt/pipeline.py:316`) keeps 3; the other 6
-   passed candidates exist only as a count (`truncated_by_limit`), and the
-   gate-rejected ones exist only as reason counts in `rejection_reasons`
-   (`selekyt/pipeline.py:312-315`). `selections.json` holds 3 entries — the 6
-   on the bench, with their full feature vectors, are gone.
+3. **The identity of every unshipped candidate is recorded, and was not
+   always.** `selected = passed[:limit]` (`selekyt/pipeline.py`) keeps 3; the
+   other 6 passed candidates used to exist only as a count
+   (`truncated_by_limit`), and the gate-rejected ones only as reason counts
+   in `rejection_reasons`. `selections.json` holds 3 entries and `report.json`
+   now carries the 6 in a `bench` key — the same fields minus the word timings
+   a re-render would need — so the count is a claim the artifact backs. That
+   closes the half of the gap that was fixable: a candidate can now be
+   identified without re-running the source, but it still cannot be *pulled
+   forward* without one, because `rank()` has no include/exclude hook (see
+   `docs/PRODUCT_WORKFLOW_AUDIT.md` J2).
 
 So the honest accounting of existing signal: **one real run produces ~4000
 fully-featured editorial candidates and persists 3 of them, with no label

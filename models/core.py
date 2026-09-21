@@ -58,3 +58,19 @@ class Candidate:
         d = asdict(self)
         d["total_score"] = round(self.total_score, 4)
         return d
+
+    def to_bench_dict(self) -> dict[str, Any]:
+        """The lean record for a candidate that passed every gate and lost only
+        to the ``--limit`` budget.
+
+        ``to_dict`` carries the word-level timings and any attached LLM
+        metadata, which is what a clip needs to be re-rendered. The bench only
+        has to answer "is this worth pulling up?", so the word list is dropped:
+        a few dozen bench entries then cost about the space of one selection,
+        and an editor comparing a bench entry against a shipped clip still sees
+        the same scores in the same places.
+        """
+        d = {k: v for k, v in asdict(self).items()
+             if k not in ("words", "llm_metadata")}
+        d["total_score"] = round(self.total_score, 4)
+        return d

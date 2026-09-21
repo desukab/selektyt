@@ -102,24 +102,43 @@ tell something is wrong.
 the run — it is the *normal* outcome when candidates pass and the limit
 truncates (`truncated_by_limit: 5`). So the documented recovery path yields
 nothing precisely in the case a user is most likely to hit (too few clips).
-**J2 — The report invites an action that no code can perform.** `pipeline.py:508-511`:
+**J2 — The report named a bench it did not contain; the bench now exists, the
+workflow to pull from it still does not.** `pipeline.py` used to comment
 *"these passed every editorial gate and were dropped only because --limit capped
 the output. An editor reading this report can challenge the rejections and pull
-from this bench."* There is no flag, no API, and no code path that can pull from
-that bench. I searched: `rank()` (`engine/editorial.py:383-411`) is deterministic
-with no seed and no include/exclude hook, and nothing downstream consumes
-`truncated_by_limit`. The comment describes a workflow that does not exist.
+from this bench."* At that point the bench was a count: `truncated_by_limit`
+held the number and `report.json` carried nothing else, so there was no clip to
+identify, let alone pull forward. `rank()` remains deterministic with no seed and
+no include/exclude hook, and nothing downstream consumes `truncated_by_limit`.
+
+**What changed, and what did not.** `report.json` now carries a `bench` key with
+the candidates themselves — the same fields a shipped clip has, minus the word
+timings and LLM metadata that only a re-render needs. So an editor can now *see*
+what the count was counting, and the summary strip in the desktop UI surfaces it
+as "+N on the bench". What is still not possible is the second half of the
+sentence: there is no flag, no API and no code path that promotes a bench entry
+into the selection, because `rank()` has no hook and the render loop consumes
+the ranked list it is handed. That requires an `--include`-shaped flag, and it is
+recorded here as open rather than shipped. The comment in the report now says
+what the artifact can actually support.
 **J3 — The selection is invisible until after the expensive part.** Ranking
 (`pipeline.py:301`), gating (310-329) and rendering (412-478) are one
 uninterrupted function. The user cannot see the six chosen clips before the
 render, and the render is the costly step (`docs/TIME_SAVINGS.md` §10.6 measures
 one discard-and-substitute at 18.6 min).
-**J4 — The summary omits what model actually transcribed the audio.** Downgrade
-notices print to stdout (`pipeline.py:259-264`) and provenance is persisted only
-in `transcript.json` (`pipeline.py:265-280`, key `asr` at line 269). `report.json`
-(`pipeline.py:501-521`) has **no `asr` key**. A user who reads only the summary
-cannot tell `small` from `base`, or attention timestamps from
-character-proportional ones — and the difference changes caption timing.
+**J4 — The summary omitted what model actually transcribed the audio. Fixed.**
+Downgrade notices print to stdout (`pipeline.py`) and provenance was persisted
+only in `transcript.json` under `asr`, so a user who read only the summary could
+not tell `small` from `base`, or attention timestamps from character-proportional
+ones — and the difference changes caption timing. `report.json` now carries a
+`transcription` block with the six fields a trust judgement turns on — `engine`,
+`requested_model`, `model`, `downgrade_reason`, `word_timestamps`,
+`fallback_reason` — read back from `transcript.json` on a resumed run, which
+never calls the ASR engine, rather than from a value that path does not assign.
+A null `downgrade_reason` reads as "the requested model ran all the way through"
+and is recorded on every run, not only when a downgrade fires. The desktop UI
+surfaces the model as a chip and marks a downgrade; the full provenance stays in
+`transcript.json` for anything that needs more than those six.
 **J5 — The reported title is null.** `report.json` `title: null` on a real URL
 run. A user sorting project directories by title has nothing to sort on.
 **J6 — The two entry points disagree about what a source is.** The CLI accepts

@@ -160,6 +160,20 @@ def _load_transcript(path: Path) -> tuple[list[Segment], str] | None:
         return None
 
 
+def _asr_provenance(path: Path) -> dict | None:
+    """The ``asr`` block of a transcript already on disk, or None.
+
+    A resumed run reuses the cached transcript and never calls the ASR engine,
+    so the model that produced those words has to be read back from the file
+    the run wrote earlier. The report repeats six fields of it; without this,
+    that path points at a name that was never assigned on a resume.
+    """
+    try:
+        return json.loads(path.read_text(encoding="utf-8")).get("asr") or None
+    except (OSError, ValueError, TypeError):
+        return None
+
+
 def _fingerprint(media: Path, source: str, model: str, language: str | None) -> str:
     st = media.stat()
     raw = f"{source}|{media.resolve()}|{st.st_size}|{st.st_mtime_ns}|{model}|{language or 'auto'}"
@@ -360,6 +374,10 @@ def run(
     cached = _load_transcript(transcript_path) if state.get("fingerprint") == fingerprint else None
     if cached and not language:
         transcript, detected = cached
+        # Provenance is read back rather than carried in a local: this branch
+        # skips transcription entirely, and the report still has to name which
+        # model produced the words a resumed run is reusing.
+        asr_provenance = _asr_provenance(transcript_path) or {}
         print("[cache] using unchanged transcript", flush=True)
     else:
         print(
@@ -524,6 +542,11 @@ def run(
         if not ok:
             rejection_reasons[reason] = rejection_reasons.get(reason, 0) + 1
     selected = passed[:limit]
+    # The bench: candidates that passed every editorial gate and lost only to
+    # the --limit budget. Recording just the count left an editor staring at
+    # "5 more clips passed" with no way to see them, so the report now carries
+    # the candidates themselves and the count is a claim the artifact backs.
+    bench = [c.to_bench_dict() for c in passed[limit:]]
     if not selected:
         raise RuntimeError("No complete standalone stories passed the editorial/context gate.")
     if ollama_url:
@@ -746,9 +769,15 @@ def run(
         "selected_count": len(selected),
         "rejected_by_context_guard": context_guard_rejections,
         # Separate from the above: these passed every editorial gate and were
-        # dropped only because --limit capped the output. An editor reading
-        # this report can challenge the rejections and pull from this bench.
+        # dropped only because --limit capped the output. A budget, not a
+        # judgment — and the bench below is what it counts.
         "truncated_by_limit": truncated_by_limit,
+        # The bench: these passed every gate and differ from the shipped clips
+        # only in rank, so an editor raising --limit reads from here. The
+        # entries are visible and comparable; promoting one without re-running
+        # the source is not possible, because rank() has no include hook —
+        # see docs/PRODUCT_WORKFLOW_AUDIT.md J2.
+        "bench": bench,
         "rejection_reasons": dict(sorted(rejection_reasons.items(), key=lambda kv: -kv[1])),
         "outputs": {"facebook": str(project / "facebook"), "shorts": str(project / "shorts")},
         "captions": str(project / "captions"),
@@ -759,6 +788,18 @@ def run(
         "pacing_report": str(project / "pacing_report.json"),
         "qa": str(qa_path),
         "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
+        # Which model actually produced the words, and at what timing
+        # fidelity. The full provenance is in transcript.json under ``asr``;
+        # repeating the six fields a trust judgement needs keeps an editor
+        # from hunting for them in a different file to decide whether the word
+        # timing is attention-based or character-proportional. A null
+        # downgrade_reason reads as "the requested model ran all the way
+        # through" — it is recorded on every run, not only when it fires.
+        "transcription": {
+            k: asr_provenance.get(k)
+            for k in ("engine", "requested_model", "model", "downgrade_reason",
+                      "word_timestamps", "fallback_reason")
+        },
         # The completeness measurement behind the coverage guard. Recorded on
         # every run, not only on failures: a `not_computable` verdict is a
         # statement that the check could not measure anything, and recording

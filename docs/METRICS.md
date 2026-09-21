@@ -167,11 +167,18 @@ differently rather than differing only in their digits; the labelled numeric
 block that follows it is unchanged, so the measurement an editor would challenge
 is still right there.
 
-**Limit:** `report.json` records `rejected_count: 0` and `truncated_by_limit: 5`.
-Because the run was capped at 6, the shipped clips are the top of a ranked list
-that was truncated, not a set that survived a hard gate. **A rejection rate of
-zero on one run is not evidence the gate is discriminating** — see the warning in
-`docs/PILOT_PROGRAM.md` F3.
+**Limit:** `report.json` records `rejected_by_context_guard: 0` and
+`truncated_by_limit: 5`. Because the run was capped at 6, the shipped clips are
+the top of a ranked list that was truncated, not a set that survived a hard
+gate. **A rejection rate of zero on one run is not evidence the gate is
+discriminating** — see the warning in `docs/PILOT_PROGRAM.md` F3.
+
+The 5 that count is a claim the report can now back and could not then: a fresh
+run carries those candidates under `bench`, with the same fields a shipped clip
+has minus the word timings a re-render needs. **The committed corpus report does
+not have that key**, because it is a frozen historical benchmark of the code that
+ran at the time (see `docs/CORPUS_BENCHMARK_STATUS.md`) and is not regenerated —
+the absence is a date, not a defect. Regenerating that one run would add it.
 
 ### A2.2 Dead-air removal rate — 1.33% of selected span removed
 

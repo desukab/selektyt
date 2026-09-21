@@ -613,11 +613,15 @@ function renderSummaryStrip() {
   const r = state.report || {};
   const el = $("review-head");
   const n = state.selections.length;
+  const bench = r.bench ?? [];
+  const asr = r.transcription ?? {};
   el.innerHTML = `
     <h2>${esc(stem(state.projectDir))}</h2>
     <span class="chip ok">${n} clip${n === 1 ? "" : "s"} shipped</span>
+    ${bench.length ? `<span class="chip" title="${esc(bench.length)} candidate${bench.length === 1 ? "" : "s"} passed every editorial gate and lost only to the clip budget. They are listed in report.json under bench.">+${bench.length} on the bench</span>` : ""}
     <span class="chip">${esc(r.language || "—")}</span>
     <span class="chip">${r.candidate_count ?? 0} candidates</span>
+    ${asr.model ? `<span class="chip" title="The model that produced this transcript. ${esc(asr.downgrade_reason ? "Downgraded from " + (asr.requested_model || "?") + ": " + asr.downgrade_reason : "The requested model ran.")}">${esc(asr.model)}${asr.downgrade_reason ? " ⚠" : ""}</span>` : ""}
     <span class="rh-actions">
       <button class="ghost small" id="rh-open">Open folder</button>
       <button class="ghost small" id="rh-rerun">Run again</button>

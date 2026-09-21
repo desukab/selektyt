@@ -525,9 +525,14 @@ name-address and speech resumes within ~2 seconds. It would have failed Cuts
 and it attacks the exact failure the `payoff_presence_rate: 1.0` metric is
 currently hiding.
 
-Second priority: persist the ranked-but-truncated candidates
-(`report.json` already carries `truncated_by_limit: 6`) so that ranking
-quality becomes auditable at all. Third: an aspect-ratio assertion on every
+Second priority: persist the ranked-but-truncated candidates so that ranking
+quality becomes auditable at all. Done — `report.json` now carries them under
+`bench`, the same fields a shipped clip has minus the word timings and LLM
+metadata that only a re-render needs, so `truncated_by_limit` is a claim the
+artifact backs and the bench can be compared against the selection it lost to.
+That makes the *auditability* half real; the other half, promoting a bench entry
+without re-running the source, is still open and is recorded in
+`docs/PRODUCT_WORKFLOW_AUDIT.md` J2. Third: an aspect-ratio assertion on every
 render (`display_aspect_ratio` must equal the platform's target), which would
 have caught the finding in §5 without watching a single frame.
 

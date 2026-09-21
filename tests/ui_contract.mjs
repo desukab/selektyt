@@ -232,6 +232,47 @@ for (const [file, entry] of Object.entries(qa.per_file || {})) {
 
 // ─── path helpers: the identity a resumed project is matched on ──────────────
 
+// ─── the bench and the ASR model the summary strip renders as chips ─────────
+
+// Both come from report.json and both are surfaced without a second file open:
+// the bench because the "+N on the bench" chip promises clips the count names,
+// the transcription block because a downgrade changes what the word timing is
+// worth. A run that ships everything writes an empty bench, and a transcript
+// from before the block existed writes nulls — both are valid, so the checks
+// are on shape, not on presence of a value.
+check("bench" in report, "report.json is missing bench — the summary chip reads r.bench");
+check(Array.isArray(report.bench), `bench is a ${typeof report.bench}, the chip iterates it`);
+if (report.bench.length) {
+  for (const [i, b] of report.bench.entries()) {
+    for (const key of ["start", "end", "text", "story_type", "hook", "payoff",
+                      "editorial_score", "virality_score", "context_score",
+                      "confidence", "reason", "total_score"]) {
+      check(key in b, `bench entry ${i + 1} is missing ${key} — it would render an empty cell next to a shipped clip`);
+    }
+    check(!("words" in b), `bench entry ${i + 1} carries word timings; the bench is a ranking view, not a re-render`);
+    check(Number.isFinite(b.total_score), `bench entry ${i + 1} total_score is ${b.total_score}, not a number`);
+  }
+} else {
+  console.log(`  SKIP  bench is empty (${report.selected_count} shipped, nothing lost to the clip budget)`);
+}
+check("transcription" in report, "report.json is missing transcription — the model chip reads r.transcription");
+for (const key of ["engine", "requested_model", "model", "downgrade_reason", "word_timestamps", "fallback_reason"]) {
+  check(key in report.transcription, `transcription is missing ${key} — a trust judgement needs it`);
+}
+// The block is a copy of transcript.json's `asr`, and a resumed run reads it
+// back from there rather than from a value the transcription stage never set.
+// A mismatch means the copy drifted from the source of truth.
+if (transcript.asr) {
+  for (const key of ["engine", "requested_model", "model", "downgrade_reason", "word_timestamps", "fallback_reason"]) {
+    check(
+      JSON.stringify(report.transcription[key]) === JSON.stringify(transcript.asr[key]),
+      `report.transcription.${key} is ${report.transcription[key]} but transcript.json says ${transcript.asr[key]}`,
+    );
+  }
+} else {
+  console.log("  SKIP  transcript.json predates the asr block, so the model is not recorded");
+}
+
 }
 section("project identity helpers");
 check(sameSource("/a/b/Pentagon.mp4", "C:\\x\\PENTAGON.MP4") === true, "case and OS differ but the basename matches");

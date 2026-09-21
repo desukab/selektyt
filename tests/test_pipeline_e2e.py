@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -20,7 +21,7 @@ _HAVE_FFMPEG = shutil.which("ffmpeg") is not None
 pytestmark = pytest.mark.skipif(not _HAVE_FFMPEG, reason="ffmpeg not available")
 
 
-def _synthetic_video(out: Path, frames: int = 180, size: int = 320, fps: int = 10) -> Path:
+def _synthetic_video(out: Path, frames: int = 320, size: int = 320, fps: int = 10) -> Path:
     """16:9 mp4 with a silent audio track: the QA gate requires landscape
     video plus an audio stream on every output."""
     import cv2
@@ -47,7 +48,7 @@ def _synthetic_video(out: Path, frames: int = 180, size: int = 320, fps: int = 1
     subprocess.run(
         [
             "ffmpeg", "-y", "-f", "lavfi",
-            "-i", "sine=frequency=440:duration=20", str(tone),
+            "-i", "sine=frequency=440:duration=36", str(tone),
         ],
         check=True, capture_output=True,
     )
@@ -65,11 +66,15 @@ def _synthetic_video(out: Path, frames: int = 180, size: int = 320, fps: int = 1
 
 
 def _transcript() -> list[Segment]:
-    """Word-timed transcript forming two 8s thoughts with sentence boundaries.
+    """Two 8s thoughts with sentence boundaries, separated by a section marker.
 
     make_thoughts needs >= 6s spans ending in terminal punctuation, and the
     context guard rejects clips that start with a connective or anaphora, so
     the first thought starts with a subject and each sentence ends cleanly.
+
+    Only the first story lives here: the marker and the second story have
+    their own constructors and their own reasons for being shaped as they
+    are.
     """
 
     def w(text: str, start: float, end: float) -> Word:
@@ -108,9 +113,94 @@ def _transcript() -> list[Segment]:
     return [seg1, seg2]
 
 
+def _separator() -> Segment:
+    """A section marker between the two stories.
+
+    The run ships at most --limit clips, so a fixture with only one story in
+    it cannot leave anything on the bench: every truncation assertion then
+    holds vacuously at zero. Two stories need a separator, and it has to be
+    one the engine actually recognises — ``segment_story_units`` only breaks
+    a span at a boilerplate sentence, so a plain sentence here would be
+    absorbed into a single candidate spanning both stories, which is the
+    opposite of what the fixture is for. It also has to be wide: ``rank``
+    keeps two clips only when they are more than four seconds apart, so a
+    two-second marker still collapses the pair into one.
+    """
+
+    def w(text: str, start: float, end: float) -> Word:
+        return Word(text, start, end)
+
+    return Segment(
+        16.0, 20.0,
+        "Episode 12. Recorded in March 2024.",
+        [
+            w("Episode", 16.0, 16.9), w("12.", 16.9, 17.4),
+            w("Recorded", 17.4, 18.4), w("in", 18.4, 18.7),
+            w("March", 18.7, 19.3), w("2024.", 19.3, 20.0),
+        ],
+    )
+
+
+def _second_story() -> Segment:
+    """An 8s story on an unrelated subject, 4s after the first.
+
+    See ``_separator`` for why the gap is what it is. Its sentences share a
+    content word and its last opens with a discourse attachment, because the
+    coherence score reads three sentences with no lexical continuity and no
+    attachment as two spliced stories — which is correct behaviour, and
+    would keep this story off the bench for a reason the fixture is not
+    trying to exercise.
+    """
+
+    def w(text: str, start: float, end: float) -> Word:
+        return Word(text, start, end)
+
+    return Segment(
+        20.0, 28.0,
+        "Hiring doubled the engineering team that year. Two interviewers "
+        "joined every hiring panel. So the offer acceptance rate climbed "
+        "to ninety percent.",
+        [
+            w("Hiring", 20.0, 20.4), w("doubled", 20.4, 20.9),
+            w("the", 20.9, 21.1), w("engineering", 21.1, 21.8),
+            w("team", 21.8, 22.2), w("that", 22.2, 22.4), w("year", 22.4, 22.8),
+            w("Two", 22.8, 23.0), w("interviewers", 23.0, 23.7),
+            w("joined", 23.7, 24.2), w("every", 24.2, 24.6),
+            w("hiring", 24.6, 25.1), w("panel", 25.1, 25.6),
+            w("So", 25.6, 25.8), w("the", 25.8, 26.0),
+            w("offer", 26.0, 26.3), w("acceptance", 26.3, 26.7),
+            w("rate", 26.7, 27.0), w("climbed", 27.0, 27.3),
+            w("to", 27.3, 27.5), w("ninety", 27.5, 27.7),
+            w("percent", 27.7, 28.0),
+        ],
+    )
+
+
 @pytest.fixture
 def media(tmp_path: Path) -> Path:
     return _synthetic_video(tmp_path / "source" / "clip.mp4")
+
+
+def _ui_contract_against(project: Path) -> None:
+    """Run the desktop UI's artifact contract against a tree the engine wrote.
+
+    ``node tests/ui_contract.mjs`` with no argument runs only the
+    project-independent checks — which is how CI calls it — so every
+    artifact-shape assertion there is unexercised unless something passes a
+    real project in. This does, and fails on the report the run produced
+    rather than on a fixture.
+    """
+    node = shutil.which("node")
+    if node is None:
+        return
+    proc = subprocess.run(
+        [node, str(_REPO / "tests" / "ui_contract.mjs"), str(project)],
+        capture_output=True, text=True, cwd=_REPO,
+    )
+    assert proc.returncode == 0, (
+        "the UI contract failed against a tree this run produced:\n"
+        + proc.stdout + proc.stderr)
+    assert "PASS" in proc.stdout
 
 
 @pytest.fixture
@@ -123,10 +213,14 @@ def patched_pipeline(monkeypatch, media):
     monkeypatch.setattr(
         p, "transcribe_auto",
         lambda media, **kw: (
-            _transcript(),
+            [*_transcript(), _separator(), _second_story()],
             "en",
-            {"engine": "test", "model": "test", "word_timestamps": "test",
-             "fallback_reason": ""},
+            # The full six-field provenance, including a downgrade: the report
+            # repeats these and the UI warns on a downgrade, so a fixture that
+            # only carried an engine name exercised neither.
+            {"engine": "test", "requested_model": "large", "model": "small",
+             "downgrade_reason": "large is unavailable in this environment",
+             "word_timestamps": "test", "fallback_reason": ""},
         ),
     )
     return p
@@ -172,6 +266,68 @@ def test_run_produces_the_full_project_tree(patched_pipeline, tmp_path, media):
     assert (project / "captions" / f"{idx}.srt").is_file()
     assert (project / "facebook" / f"{idx}.mp4").stat().st_size > 0
     assert (project / "shorts" / f"{idx}.mp4").stat().st_size > 0
+
+    # The bench and the model the summary strip renders as chips. Both are read
+    # straight from report.json, so an editor who raises --limit pulls from the
+    # entries the report names rather than re-running the source.
+    assert report["truncated_by_limit"] == len(report["bench"]), \
+        "the bench is the count the report prints; it must not be a bare number"
+    for entry in report["bench"]:
+        assert not (entry.keys() & {"words", "llm_metadata"}), \
+            "the bench is a ranking view, not a re-render"
+        assert isinstance(entry["total_score"], float)
+    assert report["transcription"]["model"] == "small"
+    assert report["transcription"]["requested_model"] == "large"
+    assert report["transcription"]["downgrade_reason"] == \
+        "large is unavailable in this environment", \
+        "the model that ran is named, and so is why it was not the ask"
+    assert report["transcription"] == {
+        k: v for k, v in
+        json.loads((project / "transcript.json").read_text())["asr"].items()
+        if k in report["transcription"]}
+
+    # The UI's contract with this tree: the formatters, the SRT grammar, the
+    # selections/edit-plan arithmetic and the summary fields, all checked
+    # against artifacts this run actually wrote.
+    _ui_contract_against(project)
+
+
+def test_a_clip_on_the_bench_can_be_read_without_rerunning(patched_pipeline, tmp_path, media):
+    """--limit 1 against a source with two distinct stories.
+
+    The report used to print "1 more candidate passed" and name none of them,
+    so an editor who wanted that clip had to re-run the source to find it. The
+    bench is the clip itself, and it is the one the shipped selection is
+    ranked above — the same fields, on the same scale, without the word
+    timings a re-render would need.
+    """
+    project = patched_pipeline.run(
+        "https://example.com/v", tmp_path, model="small", limit=1,
+    )
+    report = json.loads((project / "report.json").read_text())
+    selections = json.loads((project / "selections.json").read_text())
+
+    assert report["selected_count"] == 1
+    assert report["truncated_by_limit"] == 1
+    assert len(report["bench"]) == 1
+    shipped, benched = selections[0], report["bench"][0]
+    assert benched["start"] != shipped["start"], \
+        "the bench holds a different clip, not a copy of the shipped one"
+    for key in ("start", "end", "text", "story_type", "hook", "payoff",
+                "editorial_score", "virality_score", "context_score",
+                "confidence", "reason", "visual_potential", "total_score"):
+        assert key in benched, f"the bench entry is missing {key}"
+    assert not (benched.keys() & {"words", "llm_metadata"}), \
+        "word timings and LLM metadata belong to a re-render, not a ranking view"
+    # Ranked on the same scale as the clip above it, so an editor comparing the
+    # two is comparing like with like.
+    assert benched["total_score"] < shipped["total_score"], \
+        "the bench is the clip the shipped selection outranked"
+
+    # And the UI contract on a tree whose bench is non-empty: the chip renders
+    # "+1 on the bench", so the contract's per-entry shape checks run against
+    # a real entry rather than its empty-bench skip.
+    _ui_contract_against(project)
 
 
 def test_audio_stage_reports_provenance_when_enabled(patched_pipeline, tmp_path, media):

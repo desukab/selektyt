@@ -103,7 +103,7 @@ def _entered(patches: dict):
 
 def _run_pipeline(tmp_path, candidates, *, limit=6, gate_results=None,
                   real_pacing=False, source="https://example.com/v",
-                  media_info=None, **kw):
+                  media_info=None, asr=None, **kw):
     media = tmp_path / "video.mp4"
     media.write_bytes(b"0" * 100)
     project = tmp_path / "project"
@@ -115,12 +115,17 @@ def _run_pipeline(tmp_path, candidates, *, limit=6, gate_results=None,
                     "media_info": {"title": "t"} if media_info is None else media_info,
                     "fingerprint": fp}),
         encoding="utf-8")
-    (project / "transcript.json").write_text(json.dumps({
-        "language": "en",
-        "segments": [{"start": 10.0, "end": 20.0, "text": "hello world",
-                      "words": [{"text": "hello", "start": 0.0,
-                                 "end": 0.5, "confidence": 1.0}]}],
-    }), encoding="utf-8")
+    if not (project / "transcript.json").exists():
+        # A second call with the same project is a resume: the transcript on
+        # disk is what that run reuses, so it is left alone rather than
+        # rewritten without the provenance the first run recorded.
+        (project / "transcript.json").write_text(json.dumps({
+            "language": "en",
+            **({"asr": asr} if asr is not None else {}),
+            "segments": [{"start": 10.0, "end": 20.0, "text": "hello world",
+                          "words": [{"text": "hello", "start": 0.0,
+                                     "end": 0.5, "confidence": 1.0}]}],
+        }), encoding="utf-8")
     patches = _pipeline_patches(tmp_path, candidates, gate_results)
     if real_pacing:
         # The pacing report carries the truncation distinction too, so some
@@ -156,6 +161,125 @@ def test_report_separates_gate_rejections_from_limit_truncation(tmp_path):
     pacing = json.loads((project / "pacing_report.json").read_text())
     assert pacing["context_guard_rejections"] == 2
     assert pacing["truncated_by_limit"] == 1
+
+
+# ── the bench: the count the report prints, backed by the clips it names ──
+
+def _bench_report(tmp_path, n: int, limit: int, asr: dict | None = None):
+    cands = [_candidate(10.0 + i, 20.0 + i, f"clip number {i}") for i in range(n)]
+    gate = [(True, "ok") for _ in cands]
+    return _run_pipeline(tmp_path, cands, limit=limit, gate_results=gate,
+                         real_pacing=True, asr=asr)
+
+
+def test_the_bench_carries_the_clips_the_limit_dropped(tmp_path):
+    """Four candidates pass every gate, --limit 1.
+
+    The report said "3 more candidates passed" and named none of them, so the
+    count was a claim with nothing behind it: an editor who wanted the third
+    clip had to re-run the source to find it. The bench is those clips, and
+    its length is the count the report already printed.
+    """
+    report = json.loads((_bench_report(tmp_path, 4, 1) / "report.json").read_text())
+
+    assert report["selected_count"] == 1
+    assert report["truncated_by_limit"] == 3
+    assert len(report["bench"]) == report["truncated_by_limit"], \
+        "the bench is the count; it must not be a claim the report cannot back"
+    assert [c["text"] for c in report["bench"]] == \
+        ["clip number 1", "clip number 2", "clip number 3"], \
+        "the bench is the clips the limit dropped, in rank order"
+
+
+def test_bench_entries_are_lean_but_scored_on_the_same_scale(tmp_path):
+    """``--limit`` drops are read to decide whether to raise the budget, so a
+    bench entry carries the same scores in the same places as a shipped clip
+    and none of the word timings it does not need."""
+    report = json.loads((_bench_report(tmp_path, 2, 1) / "report.json").read_text())
+    bench = report["bench"]
+
+    assert len(bench) == 1
+    entry = bench[0]
+    assert not (entry.keys() & {"words", "llm_metadata"}), \
+        "word timings and LLM metadata are what a re-render needs, not a bench"
+    for field in ("start", "end", "text", "story_type", "hook", "payoff",
+                  "editorial_score", "virality_score", "context_score",
+                  "confidence", "reason"):
+        assert field in entry, f"a bench entry must answer {field}"
+
+    # Same weighting as the shipped clips: 0.9/0.8/0.9 editorial/virality/
+    # context with 0.8 visual, so 0.27+0.16*0.8 ... computed by Candidate.
+    expected = Candidate(
+        entry["start"], entry["end"], entry["text"], entry["story_type"],
+        entry["hook"], entry["payoff"], entry["editorial_score"],
+        entry["virality_score"], entry["context_score"], entry["confidence"],
+        entry["reason"], visual_potential=entry["visual_potential"],
+    ).total_score
+    assert entry["total_score"] == round(expected, 4), \
+        "a bench entry must rank on the same scale as the clips above it"
+
+
+def test_no_bench_when_everything_ships(tmp_path):
+    """A run that ships everything it found reports an empty bench rather than
+    omitting the key: the absence of "bench" would read as "not computed"."""
+    report = json.loads((_bench_report(tmp_path, 1, 6) / "report.json").read_text())
+    assert report["truncated_by_limit"] == 0
+    assert report["bench"] == []
+
+
+# ── the report names the model that actually produced the words ──
+
+_ASR = {
+    "engine": "whisper.cpp",
+    "requested_model": "medium",
+    "model": "small",
+    "downgrade_reason": "medium is not available locally",
+    "word_timestamps": "attention",
+    "fallback_reason": None,
+}
+
+
+def test_report_repeats_the_six_provenance_fields_a_trust_decision_needs(tmp_path):
+    """The model name sits in ``transcript.json`` under ``asr``. An editor
+    deciding whether the word timing is trustworthy had to open a second file
+    to find it; the report now carries the six fields that decision turns on,
+    and the downgrade is named rather than inferred from a mismatch."""
+    report = json.loads((_bench_report(tmp_path, 1, 6, asr=_ASR)
+                         / "report.json").read_text())
+
+    assert set(report["transcription"]) == set(_ASR)
+    assert report["transcription"]["model"] == "small"
+    assert report["transcription"]["requested_model"] == "medium"
+    assert report["transcription"]["downgrade_reason"] == \
+        "medium is not available locally", \
+        "the model that ran is named, and so is the reason it was not the ask"
+    assert report["transcription"]["word_timestamps"] == "attention"
+
+
+def test_provenance_survives_a_resumed_run(tmp_path):
+    """A resumed run reuses the transcript on disk and never calls the ASR
+    engine. Reading provenance from a local that only the fresh path assigns
+    would UnboundLocalError on the second run instead of naming the model."""
+    project = _bench_report(tmp_path, 1, 6, asr=_ASR)
+    # The state file is what makes the second run a resume: the fingerprint
+    # matches, so transcription is skipped and the cached transcript is used.
+    report = json.loads((project / "report.json").read_text())
+    assert report["transcription"]["model"] == "small"
+
+    rerun = _run_pipeline(tmp_path, [_candidate(10.0, 20.0)], limit=6,
+                          real_pacing=True)
+    rerun_report = json.loads((rerun / "report.json").read_text())
+    assert rerun_report["transcription"]["model"] == "small", \
+        "a resumed run still names the model that produced the cached words"
+
+
+def test_provenance_is_absent_rather_than_fabricated_on_an_old_transcript(tmp_path):
+    """A transcript written before the ``asr`` block existed is still usable.
+    The report says None — "not recorded" — rather than inventing a model."""
+    report = json.loads((_bench_report(tmp_path, 1, 6, asr=None)
+                         / "report.json").read_text())
+    assert report["transcription"]["model"] is None
+    assert report["transcription"]["engine"] is None
 
 
 def test_no_truncation_when_everything_fits(tmp_path):
