@@ -367,6 +367,21 @@ code that could not be executed here.
    Signing credentials exist, so **every build the pipeline can currently
    produce is unsigned**, and Windows SmartScreen will warn on all of them.
    That is expected and is not being hidden or worked around.
+**Verified since the last revision of this list — run `35547280561`,
+commit `61ce51f`.** The labelling step executed on the Windows runner and did
+what it was written to do. Its own log line reads:
+
+```
+marker hits: 152; credentials configured: false
+##[warning]this build is UNSIGNED; Windows SmartScreen will warn
+```
+
+and the artifact left the run as `selekyt-windows-x64-unsigned`. That closes
+the loop on item 8: the name the artifact carries is now derived from evidence
+in the same run, and it is the first installer this pipeline has produced whose
+name agrees with its trust state. Nothing else on this list changed — the
+build succeeded, but built is still not installed.
+
 9. **MSIX / Microsoft Store packaging now exists, and is UNVERIFIED.** Tauri
    2's `BundleType` has no `Appx` variant (verified in the vendored
    `tauri-utils` config source, not assumed from docs), so the Store path needs

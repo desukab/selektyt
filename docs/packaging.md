@@ -74,6 +74,13 @@ GitHub Actions runs exactly this, end to end, in
 | `build` | the NSIS `.exe` and the MSI | `selekyt-windows-x64-unsigned` today; `-signed` once the Azure Trusted Signing secrets exist |
 | `msix` | the Store / sideload `.msix` | `selekyt-windows-msix-unsigned-unverified` |
 
+**Verified on the runner** (run `35547280561`, commit `61ce51f`): the
+labelling step read `marker hits: 152; credentials configured: false`, emitted
+`signed=false`, posted the unsigned warning, and the artifact was uploaded as
+`selekyt-windows-x64-unsigned`. That is the first installer the pipeline has
+produced whose name matches its trust state — every run before the fix was
+named `signed` regardless.
+
 The artifact name is *derived*, not written: the `build` job greps the build
 log for the `SELEKYT_UNSIGNED` marker that `scripts/sign.ps1` emits when it
 declines to sign, and the name flips with it. A build that intended to sign but
