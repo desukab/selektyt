@@ -188,8 +188,26 @@ Fixed: the download flattens (`merge-multiple: true`, which is what the
 `-BundleDir` contract documents) and the script searches recursively as well,
 because either layout is legal and the cost of looking is nothing.
 
-What has *not* yet run is everything after that line: the silent install, the
-executable reconciliation, the asset check and MakeAppx itself.
+The second run (`35549741215`, commit `de8be7e`) got past all of that and failed
+one line later. The installer was found flat, the 578 MB silent install
+completed in 69 seconds, and the script then threw
+
+    AppxManifest.xml is missing at D:\a\selektyt\selektyt\apps\src-tauri\msix\AppxManifest.xml
+
+That path is one directory short of the real file. The script sits at
+`apps/desktop/` and the manifest at `apps/desktop/src-tauri/msix/`, so
+`$tauri = Split-Path -Parent $here` resolves to `apps/`, which has no
+`src-tauri` under it at all. `$here` itself resolved correctly —
+`$MyInvocation.MyCommand.Path` is fine under the `pwsh -Command ". 'script'"`
+invocation GitHub uses, and the script now falls back to `$PSScriptRoot` as
+insurance rather than as a fix. The mistake lasted because the message reads
+like a missing manifest: a plausible-looking path, and nothing off the runner
+resolves PowerShell path arithmetic against the tree. `tests/test_desktop_packaging.py`
+resolves it now — whichever expression the script assigns, the manifest has to
+exist at the end of it.
+
+What has *not* yet run is everything after that line: the executable
+reconciliation, the asset check and MakeAppx itself.
  The manifest has never been packed, installed or run. What *is*
 verified on Linux is the structural contract — identity, version, executable
 name and every referenced asset agree with `tauri.conf.json` and with the
@@ -215,7 +233,7 @@ the installer without the ~500 MB weights download (smoke runs).
   tests, including `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the
   pipe-buffer deadlock fix (stderr is drained unconditionally inside
   `Sidecar::spawn_in`, not by the UI relay).
-- `1248 passed, 13 skipped` across the full Python suite (measured at the
+- `1249 passed, 13 skipped` across the full Python suite (measured at the
   commit this file ships in), including the sidecar envelope contract, the
   desktop shell ops (`probe_media`, `read_artifact`, `stat_artifact`) and the
   15 packaging tests that pin the workflow, the signing hook, the MSIX manifest

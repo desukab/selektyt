@@ -30,14 +30,15 @@ every line below was true on this host at that point.
   contract-tested UI, honest signing), `b5078e5` (the Tauri 2 shell).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1248 passed, 13 skipped** (2026-09-21, 183.4 s) — measured by
+* Test suite: **1249 passed, 13 skipped** (2026-09-21, 183.96 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work"). The
   prior baseline was 1240/13; the growth is entirely
-  `tests/test_desktop_packaging.py`, which went 9 → 17 this session: five MSIX
+  `tests/test_desktop_packaging.py`, which went 9 → 18 this session: five MSIX
   contract tests, three that pin the workflow's context-availability,
-  artifact-name and sign-input rules, and the one that keeps the PowerShell
-  pack script's asset parsing honest against the canonical parser. No
+  artifact-name and sign-input rules, the one that keeps the PowerShell
+  pack script's asset parsing honest against the canonical parser, and the one
+  that resolves its path arithmetic against the real tree. No
   regressions, no engine changes.
   **18 Rust unit tests** in `apps/desktop/src-tauri` pass, including
   `cancel_unblocks_a_call_in_flight` (0.15 s — see the note below about why its
@@ -132,6 +133,56 @@ every line below was true on this host at that point.
   a measurement is impossible.
 
 ## Completed work
+
+### This session — the MSIX job failed twice more, and each failure was a line of arithmetic
+
+The `msix` job exists to be the verification of a manifest that has never been
+packed anywhere, and it is doing that job. It has now failed twice, each time
+one step further in, and each time on something no host-side test could have
+reached.
+
+**Run `35548174430`** failed 47 seconds in:
+`actions/download-artifact` reproduces the directory tree the upload captured,
+so the NSIS installer arrived at
+`bundle/apps/desktop/src-tauri/target/release/bundle/nsis/*.exe` — six
+directories deeper than the flat `bundle/` the pack script's `-BundleDir`
+contract documents. Nothing on this host knows what the download action does
+with a nested `path:`. Fixed with `merge-multiple: true` plus a recursive
+lookup, because either layout is legal and the cost of looking is nothing.
+
+**Run `35549741215`** failed one line later, and this one was my own arithmetic.
+The installer arrived flat, the 578 MB silent install completed in 69 seconds,
+and the script then threw
+
+```
+AppxManifest.xml is missing at D:\a\selektyt\selektyt\apps\src-tauri\msix\AppxManifest.xml
+```
+
+That path is one directory short of the real file. The script lives at
+`apps/desktop/`, the manifest at `apps/desktop/src-tauri/msix/`, and the line
+read `$tauri = Split-Path -Parent $here` — which resolves to `apps/`, a
+directory containing no `src-tauri` at all. `$here` itself resolved correctly,
+so `$MyInvocation.MyCommand.Path` is fine under the `pwsh -Command ". 'script'"`
+invocation GitHub uses; the anchor was wrong, not the resolution.
+
+**Why it lasted a whole session:** the failure message names a path that looks
+plausible. A missing-manifest error points at the manifest; nobody reads
+"`apps\src-tauri`" and sees "I split one directory too many". And nothing off
+the runner resolves PowerShell path arithmetic against the repository tree, so
+there was no local signal at all — the same shape as the asset check that
+matched five of six images: prose in the path, and the wrong count reported as
+a complete set.
+
+**The pin:** `tests/test_desktop_packaging.py` now extracts the expression the
+script assigns to `$tauri`, resolves it against the real tree, and requires the
+manifest to exist at the end of it. An expression the test does not recognise
+fails rather than passing unmodelled. Run against the pre-fix script it
+reproduces the runner's own error message verbatim, which is what makes it a
+regression test rather than a test that happens to pass.
+
+**What remains UNVERIFIED:** everything after that line — the executable
+reconciliation, the asset check against the installed payload, and MakeAppx
+itself, which is the only schema validation the manifest has ever had.
 
 ### This session — a fix that broke the file at parse time, and the MSIX half of the contract
 

@@ -405,9 +405,24 @@ build succeeded, but built is still not installed.
    Fixed (`merge-multiple: true` plus a recursive lookup), so the next run gets
    past it.
 
-   Everything *after* that line has still never executed: the silent install,
-   the executable reconciliation against the payload, the asset check, and
-   MakeAppx itself. This host has no MakeAppx, no Windows SDK and no PowerShell. What the
+   **It ran again, and failed one line later — run `35549741215` (commit
+   `de8be7e`).** This time the installer arrived flat, the 578 MB silent install
+   completed in 69 seconds, and the script threw on the manifest lookup with a
+   path one directory short of the real file:
+   `D:\a\selektyt\selektyt\apps\src-tauri\msix\AppxManifest.xml`. The script
+   lives at `apps/desktop/` and the manifest at
+   `apps/desktop/src-tauri/msix/`, so `Split-Path -Parent` of the script's own
+   directory is `apps/`, which contains no `src-tauri` at all. `$here` itself
+   resolved correctly — `$MyInvocation.MyCommand.Path` is fine under GitHub's
+   dot-sourcing — so the anchor, not the resolution, was wrong. Fixed
+   (`2d8be2d`), and pinned by a test that resolves the script's path arithmetic
+   against the real tree and fails if the manifest is not where it lands — a
+   test that reproduces the runner's own error message when run against the
+   pre-fix script.
+
+   Everything *after* that line has still never executed: the executable
+   reconciliation against the payload, the asset check, and MakeAppx itself.
+   This host has no MakeAppx, no Windows SDK and no PowerShell. What the
    host *can* reach is pinned by the packaging tests: identity, version,
    executable name and every image the manifest references agree with
    `tauri.conf.json` and with the generator, and each PNG is round-trip decoded

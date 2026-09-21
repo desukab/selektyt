@@ -570,6 +570,90 @@ def test_the_msix_manifest_names_an_executable_the_config_builds(conf: dict) -> 
     assert ":" not in declared, f"a package-relative Executable has a drive: '{declared}'"
 
 
+def test_the_pack_script_rejects_a_relative_path_that_is_not_relative() -> None:
+    """``package-msix.ps1`` computes the manifest's ``Executable`` by slicing the
+    installed executable's full path at the payload directory's length. The two
+    paths have to be the *same path in the same form* or the slice is by the
+    wrong amount.
+
+    Run `35551339487` sliced the canonical form by the 8.3 short form's length:
+    ``$env:TEMP`` on a GitHub runner is ``C:\\Users\\RUNNER~1\\...`` while
+    ``Get-ChildItem`` reports ``C:\\Users\\runneradmin\\...`` — three characters
+    longer — so the cut landed three early, inside the payload directory's own
+    name, and produced ``Executable="ad\\SelekyT.exe"``. The manifest was then
+    "repaired" to that value and the warning told the maintainer to fix the
+    *committed manifest*, which was the one correct thing in the chain.
+
+    Two pins, because they fail for different reasons:
+
+    * the payload the script enumerates and the length it slices by must come
+      from one ``Get-Item`` call, not from ``$env:TEMP`` — consistent by
+      construction instead of by assumption;
+    * the result must be rejected when it is not package-relative, so a future
+      form mismatch throws both paths at the reader instead of becoming a
+      convincing-looking warning about manifest drift.
+
+    PowerShell cannot run on this host, so the guard's regex is extracted from
+    the script and evaluated in Python against the value the runner actually
+    produced. The character class is identical in both engines; what is *not*
+    tested here is the ``Get-Item`` call itself, which only the runner can
+    exercise.
+    """
+    script = (SRC_TAURI.parent / "package-msix.ps1").read_text(encoding="utf-8")
+
+    # The reconciliation has to re-anchor $payload on the directory object
+    # before either side reads it, or the two forms can still disagree.
+    reanchor = re.search(
+        r"(?m)^\s*\$payload\s*=\s*\(?\s*Get-Item\b.*\)\s*$"
+        r"|^\s*\$payload\s*=\s*\$\w+\.FullName\s*$",
+        script,
+    )
+    assert reanchor, (
+        "the script never re-anchors $payload on a Get-Item result before "
+        "deriving the executable's relative path, so the enumerated paths and "
+        "the length sliced by can still be two forms of one directory"
+    )
+    # ...and it has to happen before the slice, not after.
+    slice_at = re.search(r"\$exe\.FullName\.Substring\(\s*\$payload\.Length", script)
+    assert slice_at, "the script no longer derives the relative path by slicing $payload"
+    assert reanchor.start() < slice_at.start(), (
+        "$payload is re-anchored after the slice that consumes it; the two are "
+        "still whichever forms they happened to be in"
+    )
+
+    # The guard. Shape checks are not enough here — 'ad\SelekyT.exe' fails a
+    # "no separators" test, but so does 'SelekyT\SelekyT.exe', which is a legal
+    # package-relative path if Tauri ever nests the install, and a shape guard
+    # would then be the thing breaking the build. The script has to verify the
+    # operation instead: rejoining the derived path to the payload must resolve
+    # to a file. A reimplementation in Python cannot model "this file exists",
+    # so what is pinned is that the check is a resolution, and that a
+    # non-resolving value is fatal.
+    resolve = re.search(
+        r"(?s)if\s*\(-not \(Test-Path \(?Join-Path\s+\$payload\s+\$relative.*?\n\}",
+        script,
+    )
+    assert resolve, (
+        "the script no longer verifies the derived path resolves under the "
+        "payload; a path-form mismatch would be written into the manifest and "
+        "reported to the maintainer as manifest drift"
+    )
+    clause = resolve.group(0)
+    assert "Join-Path $payload $relative" in clause, (
+        "the guard tests something other than the joined path"
+    )
+    assert "throw" in clause, (
+        "the guard logs instead of failing; a non-resolving path would still be "
+        "written into the manifest"
+    )
+    # A derived path with a drive or a leading separator is not package-relative
+    # even when it does resolve, so that is checked separately.
+    assert re.search(r"\$relative\s+-match\s+'[^']*:'", script), (
+        "the script no longer rejects a derived path that carries a drive or a "
+        "leading separator"
+    )
+
+
 def _asset_references(manifest: str) -> list[str]:
     """Every image path the manifest asks for.
 

@@ -129,6 +129,21 @@ Copy-Item $assetsSrc $assetsDst -Recurse -Force
 
 # ── reconcile the executable path against the installed payload ─────────────
 
+# $payload is a *string* built from $env:TEMP, which on a GitHub Windows runner
+# is the 8.3 short form — C:\Users\RUNNER~1\... — while Get-ChildItem reports
+# the canonical long form, C:\Users\runneradmin\... Slicing one by the other's
+# length is therefore slicing by the wrong amount, and run 35551339487 did
+# exactly that: "runneradmin" is three characters longer than "RUNNER~1", the
+# cut landed three early, inside the payload directory's own name, and the
+# manifest was "repaired" to Executable="ad\SelekyT.exe" — the last two letters
+# of "payload". MakeAppx caught it; nothing before it could have.
+#
+# Both sides have to come from the same source. Resolving the directory once and
+# using its FullName for the enumeration *and* the length keeps the two forms
+# consistent by construction, whichever one PowerShell happens to report.
+$payloadDir = Get-Item -Path $payload
+$payload = $payloadDir.FullName
+
 $exe = Get-ChildItem -Path $payload -Recurse -Filter "SelekyT.exe" -File |
     # Prefer the shallowest match: the application executable sits at the
     # install root, while a bundled Python tree could contain a same-named shim.
@@ -147,6 +162,24 @@ if (-not $exe) {
 # and report the disagreement loudly. A silent repair would hide real drift; a
 # hard failure would block the build on a fact nobody could have checked.
 $relative = $exe.FullName.Substring($payload.Length + 1)
+
+# The derivation above is arithmetic on two strings, and arithmetic can be
+# wrong in ways that still look like paths. Checking the *shape* is not enough:
+# 'ad\SelekyT.exe' fails a "no separators" test, but 'SelekyT\SelekyT.exe' — a
+# perfectly legal package-relative path if Tauri ever nests the install — would
+# fail it too, and the guard would then be the thing breaking the build. So
+# verify the operation itself instead: rejoining the result to the payload must
+# resolve to the file it was derived from. That holds for a nested layout and
+# fails for a sliced-one, in either path form.
+if (-not (Test-Path (Join-Path $payload $relative))) {
+    throw "The executable path derived from the payload does not resolve: '$relative'`n  payload: $payload`n  executable: $($exe.FullName)`n  The two paths are probably in different forms (8.3 short vs canonical long), so the length sliced by was not the length of the prefix. Refusing to write a manifest path that does not name a file."
+}
+# And a relative path must not carry a drive or a leading separator — those are
+# not legal in the manifest's Executable even when the file does exist.
+if (($relative -match ':') -or ($relative -match '^[\\/]')) {
+    throw "The executable path derived from the payload is not package-relative: '$relative'`n  payload: $payload`n  executable: $($exe.FullName)"
+}
+
 $manifestText = Get-Content $payloadManifest -Raw
 $declared = [regex]::Match($manifestText, 'Executable="([^"]+)"').Groups[1].Value
 if ($declared -ne $relative) {
