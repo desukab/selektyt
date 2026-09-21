@@ -654,6 +654,51 @@ def test_the_pack_script_finds_every_image_the_manifest_references() -> None:
     )
 
 
+def test_the_pack_script_anchors_the_manifest_at_the_directory_containing_it() -> None:
+    """The script copies ``AppxManifest.xml`` from ``apps/desktop/src-tauri/msix/``
+    and lives at ``apps/desktop/`` itself, so its anchor is its *own* directory.
+    Taking the parent of that gives ``apps/``, which has no ``src-tauri`` under
+    it at all.
+
+    That one-line mistake is run 35549741215: the script printed
+    ``apps\\src-tauri\\msix\\AppxManifest.xml`` — one directory short of the real
+    file — and the message reads as a missing manifest rather than as a wrong
+    anchor. It survived a whole session for the same reason the asset check did:
+    the path it named was plausible-looking, and nothing on this host resolves
+    PowerShell path arithmetic to check it against the tree.
+
+    So resolve it here. Whichever expression the script assigns, the manifest has
+    to exist at the end of it, and a form this test does not recognise fails
+    rather than passing unmodelled.
+    """
+    script_path = SRC_TAURI.parent / "package-msix.ps1"
+    source = script_path.read_text(encoding="utf-8")
+
+    # $here is itself the script's directory (Split-Path -Parent of the script
+    # path), so the two anchors this script can plausibly name are its own
+    # directory and its parent.
+    anchors = {
+        "$here": script_path.parent,
+        "Split-Path -Parent $here": script_path.parent.parent,
+    }
+    assignment = re.search(r"(?m)^\s*\$tauri\s*=\s*(.+)$", source)
+    assert assignment, (
+        "the script never assigns $tauri, so it has no way to locate the manifest"
+    )
+    expression = assignment.group(1).strip()
+    assert expression in anchors, (
+        f"the anchor is written as {expression!r}, which this test does not model; "
+        "add it so the path it resolves to is checked against the real tree"
+    )
+    resolved = anchors[expression] / "src-tauri" / "msix" / "AppxManifest.xml"
+    assert resolved.is_file(), (
+        f"the script anchors the manifest at {expression}, which resolves to "
+        f"{resolved} and no manifest is there. The script sits at "
+        f"{script_path.parent} and the manifest below its src-tauri, so the "
+        "anchor is the script's own directory and not its parent."
+    )
+
+
 def test_the_manifest_and_the_icon_generator_agree_on_the_asset_set() -> None:
     """``icons/make_icons.py`` emits the MSIX assets and the manifest references
     them, so the two are one contract split across a Python dict and an XML

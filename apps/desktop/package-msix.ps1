@@ -89,8 +89,28 @@ if ($install.ExitCode -ne 0) {
 
 # ── place the manifest and assets at the payload root ────────────────────────
 
-$here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$tauri = Split-Path -Parent $here
+# The script lives at apps/desktop/ and the manifest under src-tauri/msix/.
+# $PSScriptRoot is the PowerShell 3+ way to get this directory and is what the
+# pwsh shell GitHub uses resolves; $MyInvocation.MyCommand.Path is the pre-v3
+# idiom and can come back empty when the script is dot-sourced — which is how
+# `shell: pwsh` actually invokes it, as `pwsh -Command ". 'script.ps1'"`. Both
+# are tried because the fallback costs nothing and a $null here would fail four
+# lines later at the manifest copy with a message that does not name the cause.
+$here = if ($MyInvocation.MyCommand.Path) {
+    Split-Path -Parent $MyInvocation.MyCommand.Path
+} elseif ($PSScriptRoot) {
+    $PSScriptRoot
+} else {
+    throw "Neither $MyInvocation.MyCommand.Path nor $PSScriptRoot resolved; the script cannot locate the manifest beside itself."
+}
+# $here IS the directory whose child is src-tauri. Do not go a level higher:
+# this script lives at apps/desktop/, and the manifest is at
+# apps/desktop/src-tauri/msix/, so splitting the parent resolves to apps/ and
+# the manifest check below reports a path that never existed. That is what run
+# 35549741215 failed on — the message named "apps\src-tauri\msix\AppxManifest.xml",
+# one directory short of the real file, and it read like a missing manifest
+# rather than like a wrong anchor.
+$tauri = $here
 
 $manifestSrc = Join-Path $tauri "src-tauri\msix\AppxManifest.xml"
 if (-not (Test-Path $manifestSrc)) {
