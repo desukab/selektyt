@@ -602,6 +602,58 @@ def test_every_image_the_manifest_references_exists() -> None:
         )
 
 
+def test_the_pack_script_finds_every_image_the_manifest_references() -> None:
+    """``package-msix.ps1`` re-implements the asset check above in PowerShell,
+    and a re-implementation is where a contract silently halves itself: the
+    script matched only the attribute form for a whole session, so the store
+    logo went unchecked while the step logged "all referenced assets present".
+
+    The script cannot run on this host, so what is pinned here is its parsing.
+    Every single-quoted literal in it that compiles as a regex and matches an
+    image path in the manifest is collected, and the union has to be exactly
+    what the canonical parser above produces — so a dropped alternative, a
+    renamed group, or a pattern that stops matching fails here rather than in a
+    25-minute Windows run.
+    """
+    script = (SRC_TAURI.parent / "package-msix.ps1").read_text(encoding="utf-8")
+    manifest = _manifest_body()
+    canonical = set(_asset_references(manifest))
+    assert canonical, "the manifest references no images for the script to find"
+
+    # Single quotes are PowerShell string literals; the two image patterns are
+    # among them, and so is incidental prose, which simply will not compile.
+    candidates = re.findall(r"'([^'\n]*)'", script)
+    found: set[str] = set()
+    for literal in candidates:
+        if "Logo" not in literal and "Image" not in literal:
+            continue
+        try:
+            matches = re.findall(literal, manifest)
+        except re.error:
+            continue
+        for match in matches:
+            # findall yields a tuple when the pattern has groups; either way the
+            # path is the non-empty member.
+            if isinstance(match, tuple):
+                found.update(m for m in match if m)
+            elif match:
+                found.add(match)
+
+    assert found == canonical, (
+        "the pack script's regexes resolve to a different asset set than the "
+        "canonical parser; the store logo is the usual casualty — it lives in "
+        f"the <Logo> element, not an attribute. symmetric difference: "
+        f"{sorted(found ^ canonical)}"
+    )
+    # An empty match set makes the presence loop pass vacuously, so the script
+    # has to refuse that state rather than report success about nothing.
+    assert "No image references were found" in script, (
+        "a manifest that lost every image reference would pack with no Start "
+        "Menu presence and a green log; the script must fail instead of "
+        "iterating over an empty set"
+    )
+
+
 def test_the_manifest_and_the_icon_generator_agree_on_the_asset_set() -> None:
     """``icons/make_icons.py`` emits the MSIX assets and the manifest references
     them, so the two are one contract split across a Python dict and an XML

@@ -133,9 +133,26 @@ Write-Host "payload executable: $relative"
 # MakeAppx fails the pack if the manifest references an image that is not in
 # the payload, so check it here with a message that names the missing file
 # rather than letting a bare error code speak.
-$referenced = [regex]::Matches($manifestText, '(?i)(?:Logo|Image)="([^"]+\.(?:png|jpg|jpeg))"') |
-    ForEach-Object { $_.Groups[1].Value } |
-    Sort-Object -Unique
+#
+# Two syntactic shapes carry an image path: the Logo=/Image= attributes on the
+# tile and splash elements, and the <Logo> element text under <Properties>,
+# which is the store logo. Matching only the attributes silently skips that one
+# and then reports "all referenced assets present" about a set it did not fully
+# read — the store logo is the asset MakeAppx looks for earliest. The same
+# expression lives in tests/test_desktop_packaging.py::_asset_references, which
+# is the pin this loop is implementing.
+$referenced = @(
+    [regex]::Matches($manifestText, '(?i)(?:Logo|Image)="([^"]+\.(?:png|jpg|jpeg))"') |
+        ForEach-Object { $_.Groups[1].Value }
+    [regex]::Matches($manifestText, '(?i)<Logo>\s*([^<]+\.(?:png|jpg|jpeg))\s*</Logo>') |
+        ForEach-Object { $_.Groups[1].Value }
+) | Sort-Object -Unique
+if ($referenced.Count -eq 0) {
+    # An empty match set makes the loop below pass vacuously, which is worse
+    # than not checking at all: a manifest that lost every image reference would
+    # pack a package with no Start Menu presence and a green log.
+    throw "No image references were found in the manifest at $payloadManifest. The asset check below is vacuous without them, so this is a failure rather than a pass."
+}
 foreach ($rel in $referenced) {
     $resolved = Join-Path $payload $rel
     if (-not (Test-Path $resolved)) {
