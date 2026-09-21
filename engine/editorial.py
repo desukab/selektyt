@@ -389,7 +389,11 @@ def _explain(story_type: str, detail: str, opening: float, progression: float,
         parts.append(f", and carries boilerplate ({', '.join(bp_kinds)}) an editor would cut")
     if audio_q and audio_q.get("silence_ratio", 0.0) > 0.25:
         parts.append(", and has enough silence that tightening it would help")
-    parts.append(f". {detail}")
+    # The sentence leads and the measurement follows it, labelled so a reader
+    # knows what the numbers are. The label goes *here*, not on the front of
+    # the string: a fixed prefix makes every clip's reason open identically,
+    # which is the failure this function exists to remove.
+    parts.append(f". Structural editorial score: {detail}")
     return "".join(parts)
 
 
@@ -440,12 +444,15 @@ def score_candidate(s: Segment) -> Candidate:
     # hooked on a text that omits it. See edit_plan.align_span.
     start, end, text = align_span(s.start, s.end, s.words or [], s.text.strip())
     aligned = Segment(start, end, text, s.words, s.coherence, s.completeness)
-    editorial, virality, context, visual, story_type, detail, coherence, completeness = _score(aligned)
+    editorial, virality, context, visual, story_type, reason, coherence, completeness = _score(aligned)
     hook, payoff = _clean_hook_payoff(text)
     words = aligned.words or []
     dead_air = _dead_air_fraction(words, aligned.duration) if words else None
     if dead_air is not None:
-        detail += f"; dead_air={dead_air:.2f}"
+        # ``dead_air`` is measured here, after ``_explain`` has already run, so
+        # it joins the numeric block the label introduces rather than landing
+        # outside it.
+        reason += f"; dead_air={dead_air:.2f}"
     # ``confidence`` used to be the literal .90 below, which made
     # ``context_guard.validate``'s ``c.confidence < 0.75`` branch unreachable
     # from any input — a guard written to reject clips the decoder was unsure
@@ -459,7 +466,7 @@ def score_candidate(s: Segment) -> Candidate:
     return Candidate(
         start, end, text, story_type, hook, payoff,
         editorial, virality, context, confidence,
-        f"Structural editorial score: {detail}.",
+        reason + ".",
         visual, words, coherence, getattr(s, "completeness", 1.0),
     )
 

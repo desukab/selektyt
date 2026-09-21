@@ -20,6 +20,7 @@ from pathlib import Path
 import pytest
 
 from tools.corpus_reproducibility import (
+    _reason_measurement,
     audit_corpus,
     audit_run,
     main,
@@ -93,16 +94,30 @@ def test_committed_selections_reproduce_except_two_named_low_confidence_runs():
 
 def test_the_only_allowed_difference_is_a_remeasured_field():
     """Runs may differ from the committed artifact in exactly the fields a
-    named later commit rewrote. Anything else is real drift and fails."""
+    named later commit rewrote. Anything else is real drift and fails.
+
+    ``reason`` is deliberately absent from the allowed set as a *differing
+    field*: the sentence moved from behind the label to in front of it, so the
+    whole string differs on every clip whether or not anything was
+    recalculated. The audit compares the numeric block instead, and reports the
+    moved sentence separately — so a ``reason`` appearing in differing_fields
+    means the measurement itself changed, which is drift.
+    """
     report = audit_corpus(_REPO)
     for run in report["per_run"]:
         if run["status"] not in ("reproduces",):
             continue
         differing = {f for c in run["clips_detail"] for f in c["differing_fields"]}
-        assert differing <= {"confidence", "reason"}, (run["run"], differing)
+        assert differing <= {"confidence"}, (run["run"], differing)
         # Spans must be byte-identical: a confidence fix must not have moved
         # a single clip boundary.
         assert all(c["span_reproduces"] for c in run["clips_detail"])
+        # The sentence moved on every clip; the measurement it introduces must
+        # not have moved on any. If it did, the run is silently describing a
+        # different scoring than the one it shipped, which is what the
+        # differing_fields check above is for.
+        for c in run["clips_detail"]:
+            assert c["reason_prose_moved"], (run["run"], c["n"])
 
 
 # ── the two runs that no longer ship, and the reason ──
@@ -168,3 +183,50 @@ def test_a_moved_bound_is_drift_not_a_remeasurement():
     assert span_delta > 1e-6, "a shifted bound must be detectable"
     assert moved[0]["total_score"] == real[0]["total_score"]
     assert moved[0]["confidence"] == real[0]["confidence"]
+
+
+def test_a_moved_sentence_is_not_drift_but_a_moved_number_is():
+    """The reason string differs on every clip because a later commit moved its
+    sentence in front of its label. Comparing whole strings would flag every
+    clip as drift and bury a real change; comparing the numeric block keeps the
+    moved sentence an explained difference and makes a changed measurement
+    unambiguous.
+
+    Both directions are tested, because a comparison that reports the same
+    verdict for a moved sentence and for a changed number is not comparing
+    anything.
+    """
+    recorded = ("Structural editorial score: opening=0.75; progression=0.95; "
+                "payoff=1.00.")
+    now = ("conflict candidate that lands a clear closing thought. "
+           "Structural editorial score: opening=0.75; progression=0.95; "
+           "payoff=1.00.")
+    # The label moved and the sentence appeared, but the digits are the same.
+    assert _reason_measurement(recorded) == _reason_measurement(now)
+
+    # One digit changed. This is the case the audit exists to catch, and the
+    # moved sentence must not mask it.
+    rescored = now.replace("opening=0.75", "opening=0.61")
+    assert _reason_measurement(rescored) != _reason_measurement(recorded)
+
+    # A reason with no label at all still compares against the digits it
+    # carries, so a future change to the string's shape cannot turn the check
+    # into a no-op that reports everything as matching.
+    bare = "opening=0.75; progression=0.95; payoff=1.00."
+    assert _reason_measurement(bare) == _reason_measurement(now)
+    assert _reason_measurement(bare) != _reason_measurement(rescored)
+
+
+def test_a_reason_measurement_change_reads_as_drift():
+    """A clip whose reason carries different numbers from the committed
+    artifact is reported as drift, not as a moved sentence — the measurement is
+    what an editor would challenge, so it cannot be explained away as prose."""
+    real = json.loads((_RUN / "project" / "selections.json").read_text(encoding="utf-8"))
+    before = real[0]["reason"]
+    # The sentence sits in front of the label under the current code, so the
+    # committed string is what a moved-from artifact looks like.
+    assert "Structural editorial score: " in before
+    assert _reason_measurement(before) == _reason_measurement(
+        "any sentence at all. Structural editorial score: "
+        + before.split("Structural editorial score: ", 1)[1])
+

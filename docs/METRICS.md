@@ -8,9 +8,19 @@ Two rules govern it, and they are the reason it is worth reading:
 1. **A metric with no current value is fine. A metric with an invented value is a
    defect.** Where a number cannot be computed, it says `N/A` and the reason.
 2. **Every value below was computed by the author on 2026-09-19** from the one
-   existing run at `out/web/pipeline/project/` (NASA 360 Episode 5, public domain,
-   1469.77 s, 29.97 fps, two-host unscripted speech), or it says how it would be
-   computed. Nothing is projected, extrapolated, or "expected."
+   existing run at `corpus/nasa360-ep5_run/project/` (NASA 360 Episode 5, public
+   domain, 1469.77 s, 29.97 fps, two-host unscripted speech), or it says how it
+   would be computed. Nothing is projected, extrapolated, or "expected."
+
+   That path is version-controlled, so every command below can be re-run from a
+   checkout. It was not always: this document previously cited
+   `out/web/pipeline/project/`, a gitignored working directory that is absent
+   from a clean clone and that held a run predating several later fixes. The
+   committed corpus run is the same source with the same numbers — confirmed by
+   re-running the commands against it, not by assumption — and pointing at it
+   is what makes "VERIFIED" a claim a reader can check. Whether that run still
+   reproduces under the *current* code is a separate question, answered in
+   `docs/CORPUS_BENCHMARK_STATUS.md`.
 
 **The state of the venture that makes section B what it is:** SelekyT has **zero
 users, zero revenue, zero pilots, and zero investors**. It has been run end-to-end
@@ -23,7 +33,7 @@ reason is always the same.
 
 | Marker | Meaning |
 | --- | --- |
-| **VERIFIED** | Computed by the author from the repo on 2026-09-19. The file or command is named. |
+| **VERIFIED** | Computed by the author from the repo on 2026-09-19, from a file the repository tracks. The file or command is named. |
 | **NOT MEASURED** | Nobody has measured it. No number exists. Any figure quoted for it would be invented. |
 | **N/A** | The metric is structurally undefined — no users, no revenue, no pilot — not merely unmeasured. |
 | **ASSUMPTION** | Reasoning, not data. Discardable without breaking the argument. |
@@ -48,7 +58,7 @@ editorial engine finds enough shippable material in a source.
 ```sh
 cd /home/azureuser/selektyt && .venv/bin/python -c "
 import json
-er=json.load(open('out/web/pipeline/project/editorial_report.json'))
+er=json.load(open('corpus/nasa360-ep5_run/project/editorial_report.json'))
 print(len(er), 'clips')"
 ```
 
@@ -71,7 +81,7 @@ the long-form video that became short-form output.
 ```sh
 cd /home/azureuser/selektyt && .venv/bin/python -c "
 import json
-er=json.load(open('out/web/pipeline/project/editorial_report.json'))
+er=json.load(open('corpus/nasa360-ep5_run/project/editorial_report.json'))
 sel=sum(c['end']-c['start'] for c in er)
 print('%.2fs of 1469.77s = %.2f%%' % (sel, 100*sel/1469.77))"
 ```
@@ -103,7 +113,7 @@ intersecting the sorted `(start, end)` intervals from `editorial_report.json`.
 decomposed into `editorial_score`, `virality_score`, `context_score`,
 `visual_potential` and `confidence`.
 
-**File:** `out/web/pipeline/project/editorial_report.json`.
+**File:** `corpus/nasa360-ep5_run/project/editorial_report.json`.
 
 **Current value (VERIFIED):**
 
@@ -114,23 +124,48 @@ decomposed into `editorial_score`, `virality_score`, `context_score`,
 | `virality_score` | 0.309 – 0.769 |
 | `context_score` | 0.877 – 1.000 |
 | `visual_potential` | 0.45 – 0.85 |
-| `confidence` | 0.916 – 0.961 (measured, not a constant) |
+| `confidence` | 0.9 for all six as committed (see below) |
+
+**`confidence` needs two numbers, and confusing them is the easy mistake to
+make.** The committed `editorial_report.json` records `0.9` for all six clips,
+because the run predates the change that made this field a measurement; `0.9`
+was a literal the context gate could never fail. Re-scoring the committed
+transcript with the current code measures **0.916 – 0.961** on the same six
+spans, and that is the figure to quote when describing what the product does
+today. The span-by-span comparison is `tools/corpus_reproducibility.py`, and
+`docs/CORPUS_BENCHMARK_STATUS.md` records which runs this affects and which it
+does not.
 
 `story_type` labels shipped: `conflict`, `conflict`, `revelation`, `revelation`,
 `fact`, `story`.
 
 **How to read it:** every shipped clip passed the context/truth guard
 (`rejected_by_context_guard: 0`, `context_score ≥ 0.877`), and every clip carries
-a human-readable `reason` string decomposing its score — e.g. clip 01 reads
-`conflict candidate that lands a clear closing thought. opening=0.75;
-progression=0.95; payoff=1.00; density=1.00; fillers=0; standalone=1.00;
-repetition=0.18; coherence=1.00; completeness=1.00; audio_pace=0.88;
-silence=0.147; dead_air=0.00`. **That decomposed reason string is
-the metric that matters most for the editor beachhead** — it is the auditability
-the positioning depends on, and it is per-clip, not per-run. The prose sentence
-that now leads it names the signal that most sets the clip apart and the one
-that most limits it, so two clips with different profiles read differently
-rather than differing only in their digits.
+a human-readable `reason` string decomposing its score. The committed artifact's
+clip 01 reads:
+
+```
+Structural editorial score: opening=0.75; progression=0.95; payoff=1.00;
+density=1.00; fillers=0; standalone=1.00; repetition=0.18; coherence=1.00;
+completeness=1.00; audio_pace=0.88; silence=0.147; dead_air=0.00.
+```
+
+The current code emits the same digits with the sentence in front of them:
+
+```
+conflict candidate that lands a clear closing thought. Structural editorial
+score: opening=0.75; progression=0.95; payoff=1.00; density=1.00; fillers=0;
+standalone=1.00; repetition=0.18; coherence=1.00; completeness=1.00;
+audio_pace=0.88; silence=0.147; dead_air=0.00.
+```
+
+**That decomposed reason string is the metric that matters most for the editor
+beachhead** — it is the auditability the positioning depends on, and it is
+per-clip, not per-run. The sentence names the signal that most sets the clip
+apart and the one that most limits it, so two clips with different profiles read
+differently rather than differing only in their digits; the labelled numeric
+block that follows it is unchanged, so the measurement an editor would challenge
+is still right there.
 
 **Limit:** `report.json` records `rejected_count: 0` and `truncated_by_limit: 5`.
 Because the run was capped at 6, the shipped clips are the top of a ranked list
@@ -149,7 +184,7 @@ classification.
 ```sh
 cd /home/azureuser/selektyt && .venv/bin/python -c "
 import json
-ep=json.load(open('out/web/pipeline/project/edit_plan.json'))
+ep=json.load(open('corpus/nasa360-ep5_run/project/edit_plan.json'))
 s=sum(e['source_duration'] for e in ep); r=sum(e['removed_seconds'] for e in ep)
 print('removed %.2fs of %.2fs = %.2f%%' % (r, s, 100*r/s))"
 ```
@@ -173,7 +208,7 @@ re-cut five ways.
 **Command:**
 
 ```sh
-cd /home/azureuser/selektyt && .venv/bin/python tools/editorial_audit.py out/web/pipeline/project
+cd /home/azureuser/selektyt && .venv/bin/python tools/editorial_audit.py corpus/nasa360-ep5_run/project
 ```
 
 **Current value: 0 duplicates — `cross-clip PASS no duplicated sentences`, exit
@@ -213,15 +248,22 @@ the render is sound; the metric's name is the defect.
 
 | Clip | Silence share | Rendered | Cues |
 | --- | --- | --- | --- |
-| 01 | 14.7% | 24.89 s | 20 |
-| 02 | 10.3% | 17.14 s | 13 |
+| 01 | 14.7% | 24.86 s | 20 |
+| 02 | 10.3% | 17.10 s | 13 |
 | 03 | 3.6% | 16.45 s | 12 |
 | 04 | 7.6% | 14.01 s | 11 |
-| 05 | **40.8%** | 17.68 s | 10 |
+| 05 | **40.8%** | 17.65 s | 10 |
 | 06 | 17.9% | 9.08 s | 8 |
 
 Mean silence share 15.8%. `qa.json`/`pacing_report.json` report a run-level
 `silence_pct: 8.2` and `filler_pct: 0.0`.
+
+The *Rendered* column is the wall-clock duration of the committed
+`facebook/NN.mp4` render, measured from the container rather than estimated from
+the edit plan. It differs from the edit plan's `edited_duration` by up to
+0.03 s (clip 02: 17.10 s rendered against 17.08 s planned) because the render
+snaps to whole frames; the plan's figure is the one to quote when describing the
+cut, the rendered figure is the one to quote when describing the deliverable.
 
 **How to read it:** clip 05's 40.8% is a music bed, not dead air — see the
 measurement above. The previous reading of this metric ("a deliberate pause
@@ -241,7 +283,7 @@ has stopped firing.
 **Definition:** speech rate, hook latency (time to the first hook), payoff
 presence, and cue-count distribution.
 
-**File:** `out/web/pipeline/project/pacing_report.json` (mirrored in
+**File:** `corpus/nasa360-ep5_run/project/pacing_report.json` (mirrored in
 `qa.json → pacing`).
 
 **Current value (VERIFIED):** `avg_words_per_second: 3.62`,
@@ -267,8 +309,8 @@ dimensions alone.
 **Command:**
 
 ```sh
-ffprobe -v error -show_entries stream=width,height,sample_aspect_ratio,display_aspect_ratio -of default=noprint_wrappers=1 out/web/pipeline/project/facebook/01.mp4
-ffprobe -v error -show_entries stream=width,height,sample_aspect_ratio,display_aspect_ratio -of default=noprint_wrappers=1 out/web/pipeline/project/shorts/01.mp4
+ffprobe -v error -show_entries stream=width,height,sample_aspect_ratio,display_aspect_ratio -of default=noprint_wrappers=1 corpus/nasa360-ep5_run/project/facebook/01.mp4
+ffprobe -v error -show_entries stream=width,height,sample_aspect_ratio,display_aspect_ratio -of default=noprint_wrappers=1 corpus/nasa360-ep5_run/project/shorts/01.mp4
 ```
 
 **Current value (VERIFIED, identical across all 6 clips):**
@@ -300,16 +342,23 @@ def tos(t):
     h,m,s=t.split(':'); s,ms=s.split(','); return int(h)*3600+int(m)*60+int(s)+int(ms)/1000
 TC=re.compile(r'(\d+:\d\d:\d\d,\d\d\d) --> (\d+:\d\d:\d\d,\d\d\d)')
 for i in range(1,7):
-    s=open('out/web/pipeline/project/captions/%02d.srt'%i).read()
+    s=open('corpus/nasa360-ep5_run/project/captions/%02d.srt'%i).read()
     c=TC.findall(s)
     print(i, len(c), tos(c[-1][1])-tos(c[0][0]))"
 ```
 
 **Current value (VERIFIED):** 74 cues and 345 words across a 99.10 s caption span,
-against 99.25 s of total rendered output = **99.85% coverage**, at
+against 99.15 s of total rendered output = **99.95% coverage**, at
 **3.48 words/s** (3.62 words/s as reported by the pacing report — 4% agreement).
 Per clip: 20 / 13 / 12 / 11 / 10 / 8 cues at 24.86 / 17.08 / 16.44 / 14.00 /
 17.66 / 9.06 s.
+
+The coverage figure is span coverage, not sum-of-cue coverage: per clip it
+measures from the first cue's start to the last cue's end, so the inter-cue
+gaps are counted as covered. Summing the cue durations themselves gives 87.84 s
+(88.6%) — a different, narrower question. The span is what the metric asks
+("does the caption track run the length of the render"), but a reader wanting
+the other number has it now.
 
 **Caveat that must be stated with this number:** the cue counts and durations are
 verified; **that the captions are actually burned into the pixels is not verified
@@ -345,7 +394,7 @@ thin"). This metric has no value for those rates.
 
 **Definition:** fraction of shipped renders passing `engine/qa.py`.
 
-**File:** `out/web/pipeline/project/qa.json` — `"ok": true`, `errors: []`,
+**File:** `corpus/nasa360-ep5_run/project/qa.json` — `"ok": true`, `errors: []`,
 `warnings: []`, per-file entries for all 12 MP4s.
 
 **Current value: 12/12 pass.** VERIFIED. Silent tails: 0 across all 12.
@@ -371,7 +420,7 @@ and they are the only ones measured by tools *outside* SelekyT's own parsers.
 **Command:**
 
 ```sh
-cd /home/azureuser/selektyt && PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py out/web/pipeline/project
+cd /home/azureuser/selektyt && PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py corpus/nasa360-ep5_run/project
 ```
 
 ### A4.1 Independent-parse acceptance — 6/6 EDLs
@@ -552,7 +601,7 @@ extras, so A4.1 executes instead of skipping — but the wiring half is still op
 
 ### A5.3 Transcription provenance — 425 segments, 4,236 word-timed tokens
 
-**File:** `out/web/pipeline/project/transcript.json`.
+**File:** `corpus/nasa360-ep5_run/project/transcript.json`.
 
 **Current value (VERIFIED):** `language: en`, `asr.engine: faster-whisper`,
 `asr.model: small`, `asr.word_timestamps: "per-token"`, `asr.chunks: 5` with
@@ -633,14 +682,14 @@ value is fine. A metric with an invented value is a defect.**
 ```sh
 cd /home/azureuser/selektyt
 .venv/bin/python -m pytest -q                                            # A5.1
-.venv/bin/python tools/editorial_audit.py out/web/pipeline/project       # A2.3, A2.4
-PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py out/web/pipeline/project   # A4.1–A4.6
-ffprobe -v error -show_entries stream=width,height,sample_aspect_ratio,display_aspect_ratio -of default=noprint_wrappers=1 out/web/pipeline/project/facebook/01.mp4   # A3.1
-ffprobe -v error -show_entries stream=width,height,sample_aspect_ratio,display_aspect_ratio -of default=noprint_wrappers=1 out/web/pipeline/project/shorts/01.mp4      # A3.1
+.venv/bin/python tools/editorial_audit.py corpus/nasa360-ep5_run/project       # A2.3, A2.4
+PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py corpus/nasa360-ep5_run/project   # A4.1–A4.6
+ffprobe -v error -show_entries stream=width,height,sample_aspect_ratio,display_aspect_ratio -of default=noprint_wrappers=1 corpus/nasa360-ep5_run/project/facebook/01.mp4   # A3.1
+ffprobe -v error -show_entries stream=width,height,sample_aspect_ratio,display_aspect_ratio -of default=noprint_wrappers=1 corpus/nasa360-ep5_run/project/shorts/01.mp4      # A3.1
 ```
 
 All of the above were run by the author on 2026-09-19 and exited 0. The remaining
 product-quality values are computed directly from the JSON artifacts under
-`out/web/pipeline/project/` — `editorial_report.json`, `edit_plan.json`,
+`corpus/nasa360-ep5_run/project/` — `editorial_report.json`, `edit_plan.json`,
 `report.json`, `qa.json`, `pacing_report.json`, `transcript.json` and
 `captions/*.srt` — with the exact command given at each metric.

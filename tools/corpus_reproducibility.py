@@ -18,6 +18,9 @@ disk. It reports, per run:
   * confidence          the recorded value against the value the current code
                         measures, and whether the context gate would still let
                         the clip ship;
+  * reason              whether the clip-specific sentence moved, and —
+                        separately — whether the measurement it introduces
+                        did;
   * cause               the named change in the code that explains any gap.
 
 Run it from the repository root:
@@ -30,9 +33,13 @@ this composes with CI rather than being a report someone has to remember to
 read. Runs that ended in a documented failure (no speech, no stories) have no
 selections to check and are reported as such, not counted as drift.
 
-A run whose *spans* reproduce but whose confidence differs is not drift in the
-editorial judgement — it is a recorded measurement that a later commit made
-honest. The cause is named in the report so a reader can tell the two apart.
+A run whose *spans* reproduce but whose recorded fields differ is not drift in
+the editorial judgement — confidence was made a measurement and the reason's
+sentence was moved in front of its label, and neither moves a clip. Both are
+named in the report so a reader can tell a re-recorded field from a moved
+judgement. Reason is compared on the numeric block it carries for exactly this
+reason: the sentence moved, so comparing whole strings would flag every clip
+and a genuine change to the measurement would be indistinguishable from that.
 """
 from __future__ import annotations
 
@@ -50,7 +57,7 @@ _NUM = {
     "total_score", "editorial_score", "virality_score", "context_score",
     "coherence_score", "completeness", "confidence", "visual_potential",
 }
-_STR = {"story_type", "text", "hook", "payoff"}
+_STR = {"story_type", "text", "hook", "payoff", "reason"}
 
 # to_dict rounds total_score to four decimals when it writes selections.json,
 # so comparing it at full float precision would flag every clip as drifted for
@@ -105,6 +112,21 @@ def _scored_candidates(segments):
         for s in make_thoughts(segments)
         if 8 <= s.duration <= 55 and len(re.findall(r"\w+", s.text, re.UNICODE)) >= 20
     ]
+
+
+def _reason_measurement(reason: str) -> str:
+    """The numeric block of a reason, independent of where the prose sits.
+
+    A later commit moved the clip-specific sentence from behind the label to in
+    front of it, so the whole string differs while the measurement it carries
+    does not. Comparing the blocks keeps that an explained difference instead
+    of drift; comparing the raw strings would flag every clip and bury a
+    genuine change in the noise.
+    """
+    label = "Structural editorial score: "
+    at = reason.find(label)
+    block = reason[at + len(label):] if at >= 0 else reason
+    return block.strip().rstrip(".")
 
 
 def audit_run(run_dir: Path) -> dict:
@@ -194,9 +216,23 @@ def audit_run(run_dir: Path) -> dict:
             > _TOLERANCE.get(f, 1e-9)
         )
         textual = sorted(
-            f for f in _STR
+            f for f in _STR - {"reason"}
             if (getattr(cur, f, "") or "").strip() != (com.get(f) or "").strip()
         )
+        # ``reason`` is compared on its measurement alone: the sentence moved
+        # from behind the label to in front of it, so the string differs on
+        # every clip whether or not anything was recalculated. A moved sentence
+        # is reported as such; a moved number is drift, and is listed alongside
+        # the score fields so it cannot hide.
+        reason_now = (getattr(cur, "reason", "") or "").strip()
+        reason_was = (com.get("reason") or "").strip()
+        prose_moved = reason_now != reason_was
+        measurement_moved = (
+            prose_moved and _reason_measurement(reason_now)
+            != _reason_measurement(reason_was)
+        )
+        if measurement_moved:
+            textual.append("reason")
         if not span_ok or numeric or textual:
             reproduces = False
         gate_ok, gate_why = validate(cur)
@@ -212,37 +248,52 @@ def audit_run(run_dir: Path) -> dict:
             "confidence_recorded": com.get("confidence"),
             "gate_verdict_now": "passes" if gate_ok else f"rejected: {gate_why}",
             "differing_fields": numeric + textual,
+            "reason_prose_moved": prose_moved and not measurement_moved,
         })
     out["clips_detail"] = clip_reports
 
     # Name the change that explains a gap rather than leaving the reader to
-    # guess. Only confidence and reason were rewritten since the runs were
-    # committed; a difference in anything else is real drift and should fail.
+    # guess. Since the runs were committed, confidence was made a measurement
+    # and the reason's sentence was moved in front of its label — neither of
+    # which moves a clip. A difference in anything else is real drift.
     differing = sorted({f for c in clip_reports for f in c["differing_fields"]})
-    if not reproduces:
-        explained = set(differing) <= {"confidence", "reason"}
-        if explained:
-            out["status"] = "reproduces"
-            out["note"] = _explain_field_drift(differing, clip_reports)
-        else:
-            out["status"] = "drift"
-            out["note"] = (
-                "differs in fields no committed change explains: "
-                f"{', '.join(differing)}"
-            )
+    prose_moved = any(c["reason_prose_moved"] for c in clip_reports)
+    if not reproduces and set(differing) <= {"confidence"}:
+        out["status"] = "reproduces"
+        out["note"] = _explain_field_drift(differing, prose_moved, clip_reports)
+    elif not reproduces:
+        out["status"] = "drift"
+        out["note"] = (
+            "differs in fields no committed change explains: "
+            f"{', '.join(differing)}"
+        )
+    elif prose_moved:
+        # Nothing the audit treats as a change moved a clip, but the reason
+        # string a reader will actually open differs from the artifact, so the
+        # report says why rather than presenting an unexplained difference.
+        out["note"] = _explain_field_drift(differing, prose_moved, clip_reports)
     return out
 
 
-def _explain_field_drift(differing: list[str], clip_reports: list[dict]) -> str:
-    """Plain-language cause for the two fields rewritten after the runs were
+def _explain_field_drift(differing: list[str], prose_moved: bool,
+                         clip_reports: list[dict]) -> str:
+    """Plain-language cause for the fields rewritten after the runs were
     committed, and the consequence a reader should take away."""
+    named = list(differing)
+    if prose_moved:
+        named.append("reason")
+    if not named:
+        return ""
+    if len(named) > 1:
+        listed = f"{', '.join(named[:-1])} and {named[-1]} differ"
+    else:
+        listed = f"{named[0]} differs"
     parts = [
         "Spans, story types and scores reproduce exactly. Only "
-        f"{', '.join(differing)} {'differ' if len(differing) > 1 else 'differs'}, "
-        "which are the fields rewritten after "
-        "the run was committed:"
+        f"{listed} — a field rewritten after the run was "
+        "committed, not a change of judgement:"
     ]
-    if "confidence" in differing:
+    if "confidence" in named:
         parts.append(
             f"the recorded confidence is the pre-measurement literal "
             f"{_PRE_MEASURED_CONFIDENCE}, which the context gate could never "
@@ -258,10 +309,16 @@ def _explain_field_drift(differing: list[str], clip_reports: list[dict]) -> str:
             )
         else:
             parts.append("Every clip still clears the confidence floor.")
-    if "reason" in differing:
+    if prose_moved:
         parts.append(
-            "The recorded reason was a wall of numbers identical on every "
-            "clip; the current code leads with a clip-specific sentence."
+            "The recorded reason opens with the 28-character label "
+            "'Structural editorial score: ' and then the numbers, so every "
+            "clip's reason read identically up to the first digit; the "
+            "current code leads with the sentence naming the strongest and "
+            "weakest signal for that clip, and the measurement follows it "
+            "under the label. The numbers the label introduces are "
+            "byte-identical — the difference is where the prose sits, not "
+            "what was measured."
         )
     return " ".join(parts)
 

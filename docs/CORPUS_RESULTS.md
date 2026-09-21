@@ -1,5 +1,14 @@
 # Corpus results — first run, 2026-09-19
 
+**This document describes what the corpus run found on the day it ran.** It is
+a historical record, not a current status: two of the seven sources it lists
+as delivering would no longer ship under the current code, because the
+confidence gate now measures a signal the earlier version filled in with a
+constant. For whether a given run still reproduces — and the named cause when
+it does not — read `docs/CORPUS_BENCHMARK_STATUS.md` and run
+`tools/corpus_reproducibility.py`, which checks this against the current code
+instead of trusting this page.
+
 This is the first time SelekyT has been run on more than one source. It was
 run by `tools/corpus_run.py` over `corpus/manifest.json`; the raw record is
 `corpus/results.jsonl` (one JSON object per source, including every failure),
