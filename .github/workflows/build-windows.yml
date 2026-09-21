@@ -42,15 +42,6 @@ jobs:
   build:
     runs-on: windows-latest
     timeout-minutes: 90
-    # Job-level so every step sees it. SELEKYT_BUILD_LOG was first declared on
-    # the build step alone, and the labelling step below expanded it to an empty
-    # string: `grep -c` then errored on the missing filename, wrote nothing to
-    # stdout, `$marker` came back empty rather than 0, and `[ "" -gt 0 ]` is a
-    # bash error rather than a comparison — which fell through to the fail-closed
-    # branch and failed run 35543527611. The failure was correct; the wiring was
-    # not. GitHub step `env:` does not leak to sibling steps.
-    env:
-      SELEKYT_BUILD_LOG: ${{ runner.temp }}/selekyt-build.log
     steps:
       - uses: actions/checkout@v4
 
@@ -103,9 +94,21 @@ jobs:
         # sign.ps1 declined to sign, and $GITHUB_STEP_LOG points at *its own*
         # step log, not this one. When that was the grep target the marker was
         # never found and every unsigned build uploaded as "signed" — the exact
-        # drift this workflow exists to prevent. The path itself is declared at
-        # job level above.
+        # The path is declared here AND on the labelling step below. GitHub step
+        # `env:` does not leak to sibling steps, so a single declaration leaves
+        # one of the two reading an empty string — which is what failed run
+        # 35543527611, where the labelling step's `grep -c` errored on the
+        # missing filename, wrote nothing to stdout, `$marker` came back empty
+        # rather than 0, and `[ "" -gt 0 ]` was a bash type error rather than a
+        # comparison that fell through to the fail-closed branch.
+        #
+        # It is not on the *job*, despite that being the natural "visible to
+        # every step" place: the runner context is unavailable in job-level env,
+        # and putting it there makes GitHub reject the whole workflow file before
+        # any job runs — run 35545641450 died at parse time with "Unrecognized
+        # named-value: 'runner'" and zero jobs executed.
         env:
+          SELEKYT_BUILD_LOG: ${{ runner.temp }}/selekyt-build.log
           SELEKYT_AZURE_TENANT_ID: ${{ secrets.SELEKYT_AZURE_TENANT_ID }}
           SELEKYT_AZURE_CLIENT_ID: ${{ secrets.SELEKYT_AZURE_CLIENT_ID }}
           SELEKYT_AZURE_CLIENT_SECRET: ${{ secrets.SELEKYT_AZURE_CLIENT_SECRET }}
@@ -119,6 +122,10 @@ jobs:
       - name: Record whether the build was signed
         id: signed
         shell: bash
+        # Its own copy of the path: step env does not cross steps, and the job
+        # cannot hold it either (see the build step above).
+        env:
+          SELEKYT_BUILD_LOG: ${{ runner.temp }}/selekyt-build.log
         # sign.ps1 emits the greppable marker when it declines to sign. A build
         # that intended to sign but could not fails the job instead, so the only
         # way to reach this step unsigned is "no credentials configured".
@@ -132,7 +139,7 @@ jobs:
           # than guess: an unset SELEKYT_BUILD_LOG makes grep error and print
           # nothing, which turns `[ "$marker" -gt 0 ]` into a bash type error
           # rather than a comparison — the same failure that cost run
-          # 35543527611, before the variable moved to job level.
+          # 35543527611, when only the build step declared the path.
           if [ ! -s "$SELEKYT_BUILD_LOG" ]; then
             echo "::error::the build log at SELEKYT_BUILD_LOG='$SELEKYT_BUILD_LOG' is missing or empty, so the signing marker cannot be checked."
             exit 1

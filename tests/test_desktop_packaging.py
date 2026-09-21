@@ -259,6 +259,20 @@ def test_the_unsigned_marker_is_read_from_the_build_step_own_log(
     assert "SELEKYT_UNSIGNED" in label_script
     assert "SELEKYT_UNSIGNED" in sign_text
 
+    # Contexts are not equally available everywhere. The runner context is
+    # valid in a *step's* env but not in the *job's*, and a job-level
+    # `${{ runner.temp }}` makes GitHub reject the whole workflow file before a
+    # single job runs — the run dies at parse time, so nothing else in the file
+    # is exercised and the failure message names the wrong thing. Visibility
+    # alone is not enough; the declaration has to be somewhere GitHub accepts.
+    # Discovered when the fix for run 35543527611 moved the variable to job env
+    # and run 35545641450 came back "failure" with zero jobs executed.
+    assert "runner.temp" not in " ".join(_job_env(build_workflow).values()), (
+        "the runner context is not available in job-level env; GitHub rejects the "
+        "workflow file at parse time and no job ever runs. Declare the path on the "
+        "steps that need it instead"
+    )
+
 
 def test_an_unsigned_build_without_credentials_fails_the_job(build_workflow: dict) -> None:
     """Fail closed. The labelling step is a shell script and this *runs it* in
