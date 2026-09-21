@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#08090b">
+<meta name="description" content="SelekyT is building an AI-native editorial engine for long-form video.">
+<meta property="og:title" content="SelekyT — AI Editorial Engine for Long-Form Video">
+<meta property="og:description" content="Turn long-form video into structured stories, selected moments and editable outputs — with AI doing the first pass and humans making the final call.">
+<meta property="og:type" content="website">
+<title>SelekyT — AI Editorial Engine</title>
+<style>
+:root{--bg:#08090b;--panel:#0e1014;--panel2:#12151a;--text:#f5f7fa;--muted:#9ba3af;--line:#242932;--accent:#ff3b30;--accent2:#ff6a5f;--max:1180px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(900px 500px at 75% -5%,rgba(255,59,48,.12),transparent 60%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}
+a{color:inherit;text-decoration:none}.wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+nav{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.06)}
+.logo{font-weight:800;letter-spacing:-.04em;font-size:21px}.logo i{display:inline-block;width:9px;height:9px;background:var(--accent);border-radius:50%;margin-left:4px;box-shadow:0 0 18px rgba(255,59,48,.65)}
+.navlinks{display:flex;gap:25px;color:#aeb5bf;font-size:14px}.navlinks a:hover{color:#fff}
+.hero{padding:110px 0 85px;display:grid;grid-template-columns:1.15fr .85fr;gap:65px;align-items:center}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;border:1px solid #2b3038;background:#0d0f12;border-radius:999px;padding:7px 12px;color:#c5cbd3;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.11em}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px rgba(255,59,48,.8)}
+h1{font-size:clamp(48px,7vw,88px);line-height:.98;letter-spacing:-.065em;margin:23px 0}.hero h1 span{color:#8d949f}
+.lead{font-size:20px;color:#b8bec7;max-width:690px}.actions{display:flex;gap:12px;margin-top:31px;flex-wrap:wrap}.btn{padding:12px 17px;border-radius:10px;border:1px solid #303640;background:#111419;font-weight:700;font-size:14px}.btn.primary{background:var(--text);color:#08090b;border-color:var(--text)}.btn:hover{transform:translateY(-1px)}
+.visual{position:relative;border:1px solid var(--line);background:linear-gradient(145deg,#11141a,#0b0d10);border-radius:22px;padding:20px;box-shadow:0 25px 80px rgba(0,0,0,.35)}
+.window{border:1px solid #292e36;border-radius:14px;overflow:hidden;background:#0a0c0f}.windowbar{height:34px;border-bottom:1px solid #20242b;display:flex;align-items:center;gap:6px;padding:0 12px}.windowbar b{width:7px;height:7px;border-radius:50%;background:#343942}
+.pipeline{padding:28px 20px 20px}.pipe-row{display:grid;grid-template-columns:1fr 28px 1fr 28px 1fr;align-items:center;gap:8px}.node{min-height:110px;border:1px solid #2b3038;border-radius:12px;background:#11141a;padding:14px}.node strong{display:block;font-size:13px}.node small{display:block;color:#737c89;margin-top:8px;font-size:11px}.arrow{color:#5c6571;text-align:center}.timeline{margin-top:20px;height:70px;border:1px solid #252a32;border-radius:10px;padding:9px;background:#0c0f13}.track{height:10px;border-radius:4px;background:#20252d;margin:7px 0}.track span{display:inline-block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),#ff887e);margin-right:5px}.badge{font-size:10px;color:#8f98a4;margin-top:10px}
+section{padding:88px 0;border-top:1px solid rgba(255,255,255,.06)}.section-head{max-width:700px;margin-bottom:40px}.kicker{color:var(--accent2);font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.section-head h2{font-size:clamp(32px,4vw,54px);letter-spacing:-.05em;line-height:1.05;margin:10px 0 14px}.section-head p{color:var(--muted);font-size:17px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{border:1px solid var(--line);background:linear-gradient(150deg,#101318,#0c0e12);border-radius:16px;padding:24px}.card .num{font-size:12px;color:#737c88}.card h3{margin:22px 0 8px;font-size:18px}.card p{color:#929ba7;font-size:14px;margin:0}.card:hover{border-color:#3a404a;transform:translateY(-2px);transition:.2s}
+.process{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.step{padding:17px 13px;border:1px solid var(--line);border-radius:12px;background:#0d1014}.step b{font-size:12px}.step small{display:block;color:#7d8692;margin-top:7px;font-size:11px}
+.proof{display:grid;grid-template-columns:1fr 1fr;gap:18px}.proof .card{min-height:190px}.quote{font-size:27px;line-height:1.25;letter-spacing:-.03em}.quote em{color:#858d99;font-style:normal}
+.status{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.status .item{border-left:2px solid var(--accent);padding:5px 0 5px 17px}.status strong{display:block;font-size:15px}.status span{display:block;color:#7f8895;font-size:13px;margin-top:4px}
+.cta{background:linear-gradient(135deg,#171a20,#0d0f13);border:1px solid #2a2f37;border-radius:22px;padding:55px;display:flex;justify-content:space-between;gap:30px;align-items:center}.cta h2{font-size:42px;letter-spacing:-.05em;line-height:1.05;margin:0 0 10px}.cta p{color:#929aa6;margin:0;max-width:620px}
+footer{padding:45px 0;color:#707985;font-size:13px;display:flex;justify-content:space-between;gap:20px;border-top:1px solid rgba(255,255,255,.06)}footer a:hover{color:#fff}
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .7s ease,transform .7s ease}.reveal.visible{opacity:1;transform:none}
+@media(max-width:850px){.hero{grid-template-columns:1fr;padding:75px 0 65px}.grid,.proof{grid-template-columns:1fr 1fr}.process{grid-template-columns:repeat(3,1fr)}.cta{display:block;padding:35px}.cta .actions{margin-top:25px}}
+@media(max-width:560px){.wrap{width:min(var(--max),calc(100% - 28px))}.navlinks{display:none}.hero h1{font-size:53px}.lead{font-size:17px}.grid,.proof,.status{grid-template-columns:1fr}.process{grid-template-columns:repeat(2,1fr)}.pipe-row{grid-template-columns:1fr}.arrow{transform:rotate(90deg);height:15px}.cta h2{font-size:32px}footer{display:block}footer div+div{margin-top:10px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{transition:none}}
+</style>
+</head>
+<body>
+<header>
+<nav class="wrap">
+<a class="logo" href="#">SelekyT<i></i></a>
+<div class="navlinks"><a href="#product">Product</a><a href="#evidence">Evidence</a><a href="#build">Build in public</a><a href="#contact">Contact</a></div>
+</nav>
+</header>
+
+<main>
+<section class="hero wrap">
+<div>
+<div class="eyebrow"><span class="dot"></span> Building in public</div>
+<h1>The AI editorial engine for <span>long-form video.</span></h1>
+<p class="lead">SelekyT is being built to turn long-form video into structured stories, selected moments, captions and editable outputs — with AI doing the first pass and humans making the final call.</p>
+<div class="actions">
+<a class="btn primary" href="#product">See what we're building</a>
+<a class="btn" href="https://github.com/desukab/selektyt" target="_blank" rel="noopener">View GitHub</a>
+</div>
+</div>
+<div class="visual" aria-label="SelekyT workflow illustration">
+<div class="window">
+<div class="windowbar"><b></b><b></b><b></b></div>
+<div class="pipeline">
+<div class="pipe-row">
+<div class="node"><strong>Long-form video</strong><small>Hours of footage, interviews, podcasts, talks.</small></div>
+<div class="arrow">→</div>
+<div class="node"><strong>SelekyT</strong><small>Transcribe · understand · select · structure.</small></div>
+<div class="arrow">→</div>
+<div class="node"><strong>Editorial outputs</strong><small>Stories · clips · captions · timelines.</small></div>
+</div>
+<div class="timeline">
+<div class="track"><span style="width:24%"></span><span style="width:12%"></span><span style="width:31%"></span><span style="width:18%"></span></div>
+<div class="track"><span style="width:15%"></span><span style="width:29%"></span><span style="width:21%"></span></div>
+<div class="badge">AI first pass → human editorial control</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="product">
+<div class="wrap reveal">
+<div class="section-head"><div class="kicker">The product</div><h2>Make the first editorial pass dramatically less manual.</h2><p>The goal isn't to remove the editor. It's to move the editor closer to the decisions that matter.</p></div>
+<div class="grid">
+<div class="card"><span class="num">01</span><h3>Understand</h3><p>Transcribe long-form footage and turn raw media into structured, searchable editorial material.</p></div>
+<div class="card"><span class="num">02</span><h3>Find the story</h3><p>Group moments, identify potential story units and rank material for editorial review.</p></div>
+<div class="card"><span class="num">03</span><h3>Shape the cut</h3><p>Analyze filler and dead air, reframe for vertical formats and prepare captioned outputs.</p></div>
+<div class="card"><span class="num">04</span><h3>Keep it editable</h3><p>Generate professional timeline artifacts so the result can remain inside an editor's workflow.</p></div>
+<div class="card"><span class="num">05</span><h3>Keep humans in control</h3><p>AI proposes the first pass. Editors review, change and approve the final story.</p></div>
+<div class="card"><span class="num">06</span><h3>Learn over time</h3><p>The long-term direction is an editorial intelligence layer that can learn how each team tells stories.</p></div>
+</div>
+</div>
+</section>
+
+<section>
+<div class="wrap reveal">
+<div class="section-head"><div class="kicker">Pipeline</div><h2>From footage to an editable editorial starting point.</h2></div>
+<div class="process">
+<div class="step"><b>01 · Media</b><small>Long-form source</small></div>
+<div class="step"><b>02 · Speech</b><small>Transcript + timing</small></div>
+<div class="step"><b>03 · Story</b><small>Units + ranking</small></div>
+<div class="step"><b>04 · Edit</b><small>Selection + reframing</small></div>
+<div class="step"><b>05 · Output</b><small>Captions + renders</small></div>
+<div class="step"><b>06 · Timeline</b><small>EDL / FCPXML</small></div>
+</div>
+</div>
+</section>
+
+<section id="evidence">
+<div class="wrap reveal">
+<div class="section-head"><div class="kicker">Engineering, not hype</div><h2>We test the system by trying to break it.</h2><p>SelekyT is still early. The public story should reflect what has actually been built, what has been measured, and what remains unproven.</p></div>
+<div class="proof">
+<div class="card"><div class="quote">“Mechanical correctness is not the same as <em>editorial correctness.</em>”</div><p style="margin-top:22px">Real media testing has exposed failures that ordinary happy-path tests would miss — including media/container issues and multilingual transcription quality.</p></div>
+<div class="card"><div class="quote">The next proof is not another feature. It is <em>real editors saving real time.</em></div><p style="margin-top:22px">Current validation is focused on real NLE import, transcription reliability, blinded editorial evaluation and measured time saved.</p></div>
+</div>
+<div class="status" style="margin-top:18px">
+<div class="item"><strong>Built</strong><span>Local-first editorial pipeline, Rust/Python core, web shell and desktop packaging work.</span></div>
+<div class="item"><strong>Being validated</strong><span>Real NLE workflows, multilingual transcription and editorial quality.</span></div>
+<div class="item"><strong>Not claimed yet</strong><span>Paying customers, measured time savings, broad NLE compatibility or proven production scale.</span></div>
+</div>
+</div>
+</section>
+
+<section id="build">
+<div class="wrap reveal">
+<div class="section-head"><div class="kicker">Build in public</div><h2>Follow the experiments, failures and fixes.</h2><p>Development updates will focus on the real work: what changed, what broke, what we measured and what we learned.</p></div>
+<div class="grid">
+<div class="card"><span class="num">BUILD</span><h3>Shipping the engine</h3><p>Follow the implementation as the editorial pipeline moves from prototype toward a dependable product.</p></div>
+<div class="card"><span class="num">BREAK</span><h3>Showing the failures</h3><p>When a passing test hides a real media failure, that failure becomes part of the engineering story.</p></div>
+<div class="card"><span class="num">MEASURE</span><h3>Proving the value</h3><p>The goal is measurable editor time saved — not a marketing percentage invented before the experiment.</p></div>
+</div>
+<div class="actions" style="margin-top:25px">
+<a class="btn primary" href="https://github.com/desukab/selektyt" target="_blank" rel="noopener">Follow the code on GitHub</a>
+<a class="btn" href="https://x.com/" target="_blank" rel="noopener">X / Twitter</a>
+</div>
+</div>
+</section>
+
+<section id="contact">
+<div class="wrap reveal">
+<div class="cta">
+<div><h2>We're building SelekyT in public.</h2><p>If you're an editor, creator, newsroom, agency or media team interested in testing the workflow, get in touch while the product is being validated.</p></div>
+<div class="actions"><a class="btn primary" href="https://github.com/desukab/selektyt" target="_blank" rel="noopener">Explore the project</a></div>
+</div>
+</div>
+</section>
+</main>
+
+<footer class="wrap">
+<div>© 2026 SelekyT</div>
+<div>AI-native editorial infrastructure · Built in public</div>
+</footer>
+<script>
+const items=document.querySelectorAll('.reveal');
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target)}}),{threshold:.08});
+items.forEach(x=>io.observe(x));
+</script>
+</body>
+</html>
