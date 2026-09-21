@@ -174,8 +174,23 @@ Two things the script does not trust:
   published scale-100 size — a 310x150 wide tile is not a rescaled square, so
   they are composed individually rather than cropped.
 
-**Status: UNVERIFIED.** This host has no MakeAppx, no Windows SDK and no
-PowerShell. The manifest has never been packed, installed or run. What *is*
+**Status: UNVERIFIED, and the CI job is the verification.** The `msix` job has
+now run once (run `35548174430`, commit `742bad8`) and it **failed 47 seconds
+in**, exactly as designed — `actions/download-artifact` reproduces the tree the
+upload captured, so the NSIS setup arrived at
+`bundle/apps/desktop/src-tauri/target/release/bundle/nsis/*.exe` while the
+script looked for a `.exe` directly under `bundle/`. Nothing matched and the
+script threw. That is a bug no amount of local checking could have found —
+nothing on this host knows what the download action does with a nested
+`path:` — and it cost 47 seconds, not a release.
+
+Fixed: the download flattens (`merge-multiple: true`, which is what the
+`-BundleDir` contract documents) and the script searches recursively as well,
+because either layout is legal and the cost of looking is nothing.
+
+What has *not* yet run is everything after that line: the silent install, the
+executable reconciliation, the asset check and MakeAppx itself.
+ The manifest has never been packed, installed or run. What *is*
 verified on Linux is the structural contract — identity, version, executable
 name and every referenced asset agree with `tauri.conf.json` and with the
 generator — and every PNG is round-trip decoded and compared pixel-for-pixel
@@ -200,7 +215,7 @@ the installer without the ~500 MB weights download (smoke runs).
   tests, including `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the
   pipe-buffer deadlock fix (stderr is drained unconditionally inside
   `Sidecar::spawn_in`, not by the UI relay).
-- `1246 passed, 13 skipped` across the full Python suite (measured at the
+- `1248 passed, 13 skipped` across the full Python suite (measured at the
   commit this file ships in), including the sidecar envelope contract, the
   desktop shell ops (`probe_media`, `read_artifact`, `stat_artifact`) and the
   15 packaging tests that pin the workflow, the signing hook, the MSIX manifest

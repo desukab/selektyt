@@ -30,13 +30,15 @@ every line below was true on this host at that point.
   contract-tested UI, honest signing), `b5078e5` (the Tauri 2 shell).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1246 passed, 13 skipped** (2026-09-21, 184.1 s) — measured by
+* Test suite: **1248 passed, 13 skipped** (2026-09-21, 183.4 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work"). The
   prior baseline was 1240/13; the growth is entirely
-  `tests/test_desktop_packaging.py`, which went 9 → 15 this session: five MSIX
-  contract tests and the two that pin the workflow's context-availability and
-  artifact-name rules. No regressions, no engine changes.
+  `tests/test_desktop_packaging.py`, which went 9 → 17 this session: five MSIX
+  contract tests, three that pin the workflow's context-availability,
+  artifact-name and sign-input rules, and the one that keeps the PowerShell
+  pack script's asset parsing honest against the canonical parser. No
+  regressions, no engine changes.
   **18 Rust unit tests** in `apps/desktop/src-tauri` pass, including
   `cancel_unblocks_a_call_in_flight` (0.15 s — see the note below about why its
   fake sidecar is a shell builtin loop, not `sleep`),

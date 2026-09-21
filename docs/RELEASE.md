@@ -396,9 +396,18 @@ build succeeded, but built is still not installed.
    manifest assets come from `apps/desktop/src-tauri/icons/make_icons.py`, and a
    new `msix` job runs the whole thing on every push.
 
-   **None of it has ever executed on a Windows machine.** This host has no
-   MakeAppx, no Windows SDK and no PowerShell, so the manifest has never been
-   packed, installed or run and the pack script has never run either. What the
+   **It has run once, and it failed 47 seconds in — which is the job doing its
+   job.** Run `35548174430` (commit `742bad8`) reached the pack step, and
+   `actions/download-artifact` handed it the installer six directories deep
+   (`bundle/apps/desktop/src-tauri/target/release/bundle/nsis/*.exe`) where the
+   script looked for a flat `bundle/`. Nothing on this host could have predicted
+   that: nothing here knows what the download action does with a nested `path:`.
+   Fixed (`merge-multiple: true` plus a recursive lookup), so the next run gets
+   past it.
+
+   Everything *after* that line has still never executed: the silent install,
+   the executable reconciliation against the payload, the asset check, and
+   MakeAppx itself. This host has no MakeAppx, no Windows SDK and no PowerShell. What the
    host *can* reach is pinned by the packaging tests: identity, version,
    executable name and every image the manifest references agree with
    `tauri.conf.json` and with the generator, and each PNG is round-trip decoded
