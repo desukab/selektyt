@@ -7,8 +7,9 @@ every line below was true on this host at that point.
 
 * Repository: `/home/azureuser/selektyt`, on `main`. Working tree state
   **changes within a session by design** — this checkpoint is written while the
-  captions fix and its docs are staged for commit, so expect one commit above
-  `de0c151`; verify with `git status` rather than trusting "clean" here.
+  MSIX scaffolding and the workflow fix are staged for commit, so expect two
+  commits above `011ec03`; verify with `git status` rather than trusting "clean"
+  here.
   Up to date with `origin/main` (`https://github.com/desukab/selektyt.git`).
   Nothing stashed, nothing in `git stash list`.
   The two untracked leftovers noted by the previous checkpoint are resolved:
@@ -22,18 +23,20 @@ every line below was true on this host at that point.
   on `windows-latest` in ~22 minutes; and **no installer has ever been
   installed or run on a Windows desktop.** Built is not run, and a green
   `build-windows` badge is not a Windows validation.
-  The last substantive commit is `59e5327` (cancellation, contract-tested UI,
-  honest signing). Earlier relevant commits: `91f3a39` (stage-evidence fix),
-  `6aa5e83` (RELEASE report), `33e42f8` (Windows portability fixes),
-  `b5078e5` (the Tauri 2 shell and its build pipeline).
+  The last substantive commits are `61ce51f` (the per-step env fix) and
+  `74d148d` (the MSIX scaffolding). Earlier relevant: `011ec03` (the labelling
+  fix that broke parsing at the job level — see "Completed work"),
+  `968e9c1` (the destructive-command test), `59e5327` (cancellation,
+  contract-tested UI, honest signing), `b5078e5` (the Tauri 2 shell).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1240 passed, 13 skipped** (2026-09-20, 183.9 s) — measured by
+* Test suite: **1246 passed, 13 skipped** (2026-09-21, 184.1 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work"). The
-  prior baseline was 1215/13; the growth is the desktop packaging contract
-  (`tests/test_desktop_packaging.py`, now 9), the `read_text` op's envelope and
-  traversal surface, and engine-side growth. No regressions.
+  prior baseline was 1240/13; the growth is entirely
+  `tests/test_desktop_packaging.py`, which went 9 → 15 this session: five MSIX
+  contract tests and the two that pin the workflow's context-availability and
+  artifact-name rules. No regressions, no engine changes.
   **18 Rust unit tests** in `apps/desktop/src-tauri` pass, including
   `cancel_unblocks_a_call_in_flight` (0.15 s — see the note below about why its
   fake sidecar is a shell builtin loop, not `sleep`),
@@ -127,6 +130,79 @@ every line below was true on this host at that point.
   a measurement is impossible.
 
 ## Completed work
+
+### This session — a fix that broke the file at parse time, and the MSIX half of the contract
+
+**The labelling fix, when first applied, made GitHub reject the workflow file.**
+The previous fix tees the build log to a path the labelling step reads, and it
+put that path on the *job's* `env:` — the natural "visible to every step" place.
+It is visible there. It is also illegal: **the `runner` context is available in a
+step's `env:` and not in a job's**, and using it at the job level does not fail a
+step, it fails the file:
+
+```
+Invalid Argument - failed to parse workflow:
+(Line: 53, Col: 26): Unrecognized named-value: 'runner'.
+Located at position 1 within expression: runner.temp          (HTTP 422)
+```
+
+Run `35545641450` therefore reported failure with **zero jobs executed**. The
+signature is distinctive and worth knowing, because nothing else in the pipeline
+fails this way: `created_at` equals `updated_at` to the second, the jobs API
+reports `total_count: 0`, every log download 404s, the rerun API answers `403
+This workflow run cannot be retried`, and `gh run view` prints only that the run
+"likely failed because of a workflow file issue".
+
+The diagnosis took the long route because every local check passed. The YAML
+parses, it lints clean (no tabs, no CRLF, no duplicate keys, no anchors, one
+document), and the file fetched back from GitHub's contents API was
+**byte-identical** to the local commit. None of that establishes that GitHub
+will accept the file. `workflow_dispatch` on the ref is the only offline probe
+that reports the real error, and it is now the tool to reach for first: it
+answers in under a second and costs nothing.
+
+Fixed by declaring the path on each of the two steps that need it — step env
+does not cross steps in either direction, so both copies are required; one
+declaration leaves the other reading an empty string, which is the original bug.
+
+**The test suite passed on the file GitHub rejects, and that is the interesting
+failure.** The helper the tests use merges the job's env into each step's,
+which is a correct model of *visibility* and useless as a model of *legality*:
+a job-level declaration satisfies every assertion and is rejected anyway. The
+rule is now pinned explicitly — job-level env may not use the `runner` context —
+and the new assertion was verified to discriminate by re-injecting the
+job-level declaration, which fails exactly one test with a message naming the
+parse-time rejection. Six mutations against this workflow file have now each
+been confirmed to fail exactly the test written for them.
+
+**The MSIX / Store half of the distribution contract now exists, and is
+UNVERIFIED.** Tauri 2 has no `Appx` bundle type (verified in the vendored
+`tauri-utils` source, not assumed), so the Store path needs its own stage:
+`apps/desktop/package-msix.ps1` installs the NSIS installer the `build` job
+produced — silently, into an empty directory — and packs *that*, so the MSIX
+payload provably matches what the installer installs rather than a
+hand-assembled guess at Tauri's layout. `src-tauri/msix/AppxManifest.xml` is a
+full-trust desktop-bridge manifest on 10.0.17763 using the EntryPoint form; the
+equivalent `uap10:RuntimeBehavior` form only exists from 10.0.19041, and
+declaring both is an error when they contradict. A new `msix` job runs it.
+
+The job is **separate and `needs: build`** so that a failure in unverified MSIX
+tooling cannot take the installers down with it, and it downloads whichever
+artifact the build job uploaded by reading its `signed` output. Those two
+artifact-name expressions are pinned against each other by a test, because two
+hand-written copies of a two-valued label drift apart silently and the failure
+is an MSIX job that downloads nothing while the build job looks healthy — three
+mutations against it (hardcoded label, dropped dependency, wrong output name)
+each fail exactly that test.
+
+None of this has run on a Windows machine. The host has no MakeAppx, no Windows
+SDK and no PowerShell, so the manifest has never been packed and the script has
+never run. What the host *can* reach is pinned: identity, version, executable
+name and every referenced asset agree with `tauri.conf.json` and the icon
+generator, and every PNG is round-trip decoded and compared pixel-for-pixel
+against the buffer that produced it. **The first green `msix` job is the
+verification step, not a release**, and the artifact is named
+`selekyt-windows-msix-unsigned-unverified` so it cannot be mistaken for one.
 
 ### This session — the Windows build ran, and it had been mislabelling every release
 

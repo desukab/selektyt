@@ -378,6 +378,54 @@ def test_the_artifact_name_branches_on_the_marker(build_workflow: dict) -> None:
     assert "steps.signed.outputs.signed" in name
 
 
+def test_the_msix_job_consumes_whatever_the_build_job_uploaded(
+    build_workflow: dict,
+) -> None:
+    """The MSIX job repacks the installer the build job produced, so it has to
+    ask for the artifact by the name that job actually uploaded.
+
+    Both sides branch on the signing outcome, and the branch is written out
+    twice — once as ``steps.signed.outputs.signed`` in the upload, once as
+    ``needs.build.outputs.signed`` in the download. Two hand-written copies of a
+    two-valued choice drift apart silently, and the failure is an MSIX job that
+    downloads nothing while the build job looks healthy.
+    """
+    jobs = build_workflow["jobs"]
+    assert "msix" in jobs, "the Store/sideload pack job is missing"
+
+    def artifact_name(step: dict) -> str:
+        return step["with"]["name"]
+
+    def uses(action: str, step: dict) -> bool:
+        return step.get("uses", "").startswith(action)
+
+    upload = next(s for s in jobs["build"]["steps"] if uses("actions/upload-artifact", s))
+    download = next(
+        s for s in jobs["msix"]["steps"] if uses("actions/download-artifact", s)
+    )
+    uploaded, fetched = artifact_name(upload), artifact_name(download)
+    # Both branches must carry both labels, or one path silently uploads to a
+    # name nothing ever downloads.
+    for label, expr in (("upload", uploaded), ("download", fetched)):
+        assert "selekyt-windows-x64-signed" in expr and "selekyt-windows-x64-unsigned" in expr, (
+            f"the {label} artifact name must branch on the signing outcome rather "
+            f"than hardcode one label, or an unsigned build can be fetched as signed: {expr!r}"
+        )
+    # And the branch must read the same output, not re-derive the answer.
+    assert "outputs.signed" in fetched, (
+        f"the download name must read the build job's signed output; it is "
+        f"instead hardcoding or recomputing it: {fetched!r}"
+    )
+    assert "steps.signed.outputs.signed" in jobs["build"].get("outputs", {}).get(
+        "signed", ""
+    ), "the job output has to forward the step's, or the download reads a void"
+    # Ordering: a pack job that raced ahead of the upload it consumes would
+    # download a stale or empty bundle and never notice.
+    assert jobs["msix"].get("needs") == "build" or "build" in (
+        jobs["msix"].get("needs") or []
+    ), "the MSIX job must depend on the build job, whose installer it repacks"
+
+
 def test_the_release_workflow_sets_exactly_the_credentials_the_hook_reads(
     build_workflow: dict, sign_text: str,
 ) -> None:

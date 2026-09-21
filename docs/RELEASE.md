@@ -9,13 +9,14 @@ claims are separate and this report does not merge them.
 ## Current commit
 
 ```
-30ace62  ci: pyyaml is a test dependency — the packaging tests read the workflows   ← tip as written
-9e53836  ci: every unsigned build was being published as "signed"
-5977a92  ci: the Linux shell job can actually run — patch out the staging-dependent keys
-288bcd0  desktop: the captions tab actually renders now — a path-precedence fix on both sides
-de0c151  docs: release report and state for the cancellation + signing session
-59e5327  desktop: real cancellation, contract-tested UI, and honest signing
-b5078e5  feat(desktop): the SelekyT Windows desktop shell and its build pipeline
+61ce51f  fix(windows): declare the build log path on each step, not on the job   ← tip as written
+74d148d  desktop: MSIX scaffolding for the Store path — manifest, assets, pack script
+011ec03  fix(windows): hoist the build log path to job env so the signing label can read it
+968e9c1  desktop: test the one destructive command — and refactor so it can be tested
+69c8324  docs: built is not installed — the distinction the whole blocked list turns on
+ffade21  docs: every quoted test count was stale again, and the skip story was wrong
+6e52d13  docs: 1240/13, the corrected commit block, and the release-label history
+30ace62  ci: pyyaml is a test dependency — the packaging tests read the workflows
 ```
 
 This file's own commit sits above `30ace62`, so the hash marked ← is already one
@@ -67,6 +68,10 @@ network permission at all; `src-tauri/capabilities/main.json` is the entire ACL.
 | `engine/nle_export.py` | Windows file-URI fix (the offline-import bug) |
 | `providers/youtube.py`, `selekyt/cli.py`, `tools/*.py` | Windows portability fixes |
 | 12 files under `selekyt/` `engine/` `providers/` | UTF-8 encoding sweep |
+| `apps/desktop/package-msix.ps1` | The Store / sideload pack stage: installs the built NSIS silently into an empty dir and packs *that*, so the MSIX payload provably matches the installer's (**never run**) |
+| `apps/desktop/src-tauri/msix/AppxManifest.xml` | Full-trust desktop-bridge manifest, 10.0.17763, EntryPoint form (**never packed**) |
+| `apps/desktop/src-tauri/msix/Assets/*.png` | The six manifest-referenced images, generated and pixel round-trip verified |
+| `apps/desktop/src-tauri/icons/make_icons.py` | Gains the `MSIX_ASSETS` set and a non-square render path for wide tiles and the splash screen |
 | `docs/packaging.md`, `docs/release-validation.md` | What shipped, what did not |
 
 ## Build command
@@ -80,12 +85,18 @@ npx tauri build --bundles nsis,msi
 ```
 
 GitHub Actions runs exactly this on `windows-latest` on every push to `main`
-(`.github/workflows/build-windows.yml`), and uploads the NSIS `.exe` and MSI as
-`selekyt-windows-x64-signed` or `selekyt-windows-x64-unsigned` depending on
-whether `scripts/sign.ps1` actually signed the binaries — the name is derived
-from the run, not asserted, so the artifact can never claim a trust state the
-build did not achieve. Today, with no `SELEKYT_AZURE_*` secrets configured,
-every artifact is `-unsigned` and the job posts a warning saying so.
+(`.github/workflows/build-windows.yml`) as the `build` job, and uploads the NSIS
+`.exe` and MSI as `selektyt-windows-x64-signed` or
+`selektyt-windows-x64-unsigned` depending on whether `scripts/sign.ps1`
+actually signed the binaries — the name is derived from the run, not asserted,
+so the artifact can never claim a trust state the build did not achieve. Today,
+with no `SELEKYT_AZURE_*` secrets configured, every artifact is `-unsigned` and
+the job posts a warning saying so.
+
+A second job, `msix`, packs the Store / sideload package from the installer the
+`build` job produced and uploads `selekyt-windows-msix-unsigned-unverified`. It
+is separate and `needs: build`, so a failure in unverified MSIX tooling cannot
+take the installers down with it. See item 9 of the blocked list.
 
 ## Windows artifact produced
 
@@ -110,8 +121,9 @@ Under NSIS's 2 GB ceiling, but LZMA over 1 GB is slow.
 
 ## Installation and run instructions (Windows 11)
 
-1. Download the `selektyt-windows-x64` artifact from the Actions run, or the
-   NSIS setup it contains.
+1. Download the `selektyt-windows-x64-unsigned` artifact from the Actions run,
+   or the NSIS setup it contains. The `-signed` variant does not exist yet
+   — no Azure Trusted Signing credentials are configured.
 2. Run the installer. Nothing else is required: the interpreter, ffmpeg and the
    whisper weights are bundled. There is no cloud signup, no Azure dependency
    and no login.
@@ -316,13 +328,36 @@ code that could not be executed here.
    while this report asserted "the artifact name says" the build is unsigned.
    Both were wrong at the same time, and neither was wrong in a way a test
    could see, because no test covered the workflow at all.
-   Fixed: the build step tees its output to a file the labelling step reads,
+   Fixed, in two rounds — and the second round is the one worth recording,
+   because it is a class of failure no local check can see.
+
+   *Round 1:* the build step tees its output to a file the labelling step reads,
    and the step now fails closed — an absent marker with no configured
-   credentials cannot be labelled signed, it fails the run. Four new tests in
-   `tests/test_desktop_packaging.py` cover it, one of which *executes the
-   real labelling script* in all three reachable states rather than
-   reimplementing its branching; both were verified to fail against the old
-   workflow and pass against the new one.
+   credentials cannot be labelled signed, it fails the run. That fix placed the
+   log path on the *job's* `env:`, on the reasonable assumption that job env is
+   the "visible to every step" place. It is visible there. It is also illegal.
+
+   *Round 2:* the `runner` context is unavailable in a job's `env:` — it is
+   legal in a *step's* `env:` and not at the job level — so GitHub rejected the
+   entire workflow file at parse time, before any job ran:
+
+   ```
+   Invalid Argument - failed to parse workflow:
+   (Line: 53, Col: 26): Unrecognized named-value: 'runner'.
+   Located at position 1 within expression: runner.temp          (HTTP 422)
+   ```
+
+   Run `35545641450` therefore reported failure with **zero jobs executed**, no
+   logs to download, and `This workflow run cannot be retried` from the rerun
+   API. Every local check stayed green: the YAML parses, it lints clean, and the
+   byte-identical file comes back from GitHub's contents API. None of those
+   checks know which contexts are legal where. `workflow_dispatch` on the ref is
+   the only offline probe that surfaces it. The path is now declared on each of
+   the two steps that need it, and `tests/test_desktop_packaging.py` pins the
+   rule — job-level env may not use the `runner` context — after the suite had
+   passed on a file GitHub rejects. The test was verified to discriminate by
+   re-injecting the job-level declaration, which fails exactly one test with a
+   message naming the parse-time rejection.
    **The stale artifact from that mislabelled run is still downloadable**
    (attempted deletion was denied as irreversible; see
    `docs/AI_EXECUTION_STATE.md`). It is 1.22 GiB, named `signed`, and it is
@@ -332,12 +367,35 @@ code that could not be executed here.
    Signing credentials exist, so **every build the pipeline can currently
    produce is unsigned**, and Windows SmartScreen will warn on all of them.
    That is expected and is not being hidden or worked around.
-9. **MSIX / Microsoft Store packaging does not exist.** Tauri 2's `BundleType`
-   has no `Appx` variant (verified in the vendored `tauri-utils` config source,
-   not assumed from docs), so the Store path needs a separate MakeAppx +
-   `AppxManifest.xml` stage that has not been written. The current NSIS + MSI
-   pair covers direct distribution only.
+9. **MSIX / Microsoft Store packaging now exists, and is UNVERIFIED.** Tauri
+   2's `BundleType` has no `Appx` variant (verified in the vendored
+   `tauri-utils` config source, not assumed from docs), so the Store path needs
+   its own MakeAppx + `AppxManifest.xml` stage. That stage is written:
+   `apps/desktop/package-msix.ps1` installs the NSIS installer the `build` job
+   produced, silently, into an empty directory and packs *that* — so the MSIX
+   payload provably matches what the installer installs, rather than a
+   hand-assembled guess at Tauri's install layout. `src-tauri/msix/AppxManifest.xml`
+   is a full-trust desktop-bridge manifest on 10.0.17763 using the EntryPoint
+   form (the equivalent `uap10` RuntimeBehavior form only exists from
+   10.0.19041, and declaring both is an error when they contradict). The six
+   manifest assets come from `apps/desktop/src-tauri/icons/make_icons.py`, and a
+   new `msix` job runs the whole thing on every push.
 
+   **None of it has ever executed on a Windows machine.** This host has no
+   MakeAppx, no Windows SDK and no PowerShell, so the manifest has never been
+   packed, installed or run and the pack script has never run either. What the
+   host *can* reach is pinned by the packaging tests: identity, version,
+   executable name and every image the manifest references agree with
+   `tauri.conf.json` and with the generator, and each PNG is round-trip decoded
+   and compared pixel-for-pixel against the buffer that produced it. MakeAppx's
+   schema validation is the one check that does not exist here, which is why the
+   pack script runs it with validation deliberately ON and the CI job is
+   expected to be where a manifest or layout problem first surfaces. **Treat the
+   first green `msix` job as the verification step, not as a release.**
+
+   Signing is a separate release stage and is not faked: the artifact is named
+   `selekyt-windows-msix-unsigned-unverified`, and an unsigned MSIX will not
+   install without developer mode or sideloading.
 ## Known leftover
 
 `origin/worktree-agent-a8b3e2de76a11eaa1` is a stale branch from an earlier

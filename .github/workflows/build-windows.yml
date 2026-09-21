@@ -42,6 +42,10 @@ jobs:
   build:
     runs-on: windows-latest
     timeout-minutes: 90
+    # The msix job downloads whatever this one uploaded, so it has to know which
+    # of the two artifact names to ask for.
+    outputs:
+      signed: ${{ steps.signed.outputs.signed }}
     steps:
       - uses: actions/checkout@v4
 
@@ -168,5 +172,43 @@ jobs:
           if-no-files-found: error
           # They are already compressed; recompressing them costs minutes and
           # bytes for nothing.
+          compression-level: 0
+          retention-days: 30
+
+  # The Store / sideload half. It is a separate job on purpose: the MSIX tooling
+  # has never run anywhere, and a job that fails must not take the installers
+  # down with it. `needs:` keeps the ordering, and a failure here shows up as its
+  # own red row rather than as a failed build.
+  msix:
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      # The installers the pack script consumes, dropped into a flat directory
+      # the way the upload left them.
+      - name: Download the installers
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.signed == 'true' && 'selekyt-windows-x64-signed' || 'selekyt-windows-x64-unsigned' }}
+          path: bundle
+
+      - name: Pack the MSIX
+        shell: pwsh
+        # UNVERIFIED: this is the first time MakeAppx ever sees this manifest, so
+        # the step is expected to be where a schema or layout problem surfaces.
+        # That is the point of running it here rather than at release time.
+        run: |
+          ./apps/desktop/package-msix.ps1 -BundleDir bundle `
+            -OutDir msix -SkipSigning
+
+      - name: Upload the MSIX
+        uses: actions/upload-artifact@v4
+        # Compressed already; see the installers step above.
+        with:
+          name: selekyt-windows-msix-unsigned-unverified
+          path: msix/SelekyT.msix
+          if-no-files-found: error
           compression-level: 0
           retention-days: 30

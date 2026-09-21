@@ -67,8 +67,46 @@ npx tauri build --bundles nsis,msi
 
 GitHub Actions runs exactly this, end to end, in
 `.github/workflows/build-windows.yml` (push to `main`, or
-`workflow_dispatch`), and uploads the NSIS `.exe` and the MSI as the
-`selektyt-windows-x64` artifact.
+`workflow_dispatch`). Two jobs, in this order:
+
+| job | produces | artifact |
+| --- | --- | --- |
+| `build` | the NSIS `.exe` and the MSI | `selekyt-windows-x64-unsigned` today; `-signed` once the Azure Trusted Signing secrets exist |
+| `msix` | the Store / sideload `.msix` | `selekyt-windows-msix-unsigned-unverified` |
+
+The artifact name is *derived*, not written: the `build` job greps the build
+log for the `SELEKYT_UNSIGNED` marker that `scripts/sign.ps1` emits when it
+declines to sign, and the name flips with it. A build that intended to sign but
+could not fails the job, so the only way to reach the upload unsigned is "no
+credentials configured". The `msix` job downloads whichever artifact that job
+uploaded, by reading its `signed` output — the two expressions are pinned
+against each other by `tests/test_desktop_packaging.py`, because two
+hand-written copies of a two-valued label drift apart silently and the failure
+is an MSIX job that downloads nothing while the build job looks healthy.
+
+The `msix` job is separate and `needs: build` for a reason: the MSIX tooling
+has never run anywhere, and a job that fails must not take the installers down
+with it. A failure there shows up as its own red row.
+
+The workflow file has one non-obvious constraint worth recording, because it
+cost two runs. **The `runner` context is unavailable in a job's `env:`** — it
+is legal in a *step's* `env:` and not at the job level, and putting it there
+does not fail a step: it makes GitHub reject the whole file at parse time.
+
+```
+Invalid Argument - failed to parse workflow:
+(Line: 53, Col: 26): Unrecognized named-value: 'runner'.
+Located at position 1 within expression: runner.temp          (HTTP 422)
+```
+
+Zero jobs execute, there are no logs to download, the rerun API answers
+`This workflow run cannot be retried`, and `gh run view` only hints that "this
+run likely failed because of a workflow file issue". Everything local stays
+green — the YAML parses, it lints clean, and the byte-identical file comes back
+from the contents API — because none of those checks know which contexts are
+legal where. `workflow_dispatch` on the ref is the only offline check that
+surfaces it, and `tests/test_desktop_packaging.py` now pins the rule so the
+suite cannot pass on a file GitHub rejects.
 
 `stage-windows.sh` stages, into the exact paths `tauri.conf.json` declares:
 
@@ -97,7 +135,54 @@ stdio and the child's exit code. Its fallback lookup
 (`../resources/python/python.exe`) exists so the staged binary is pingable
 before an installer exists.
 
+## The Store / sideload path (MSIX)
+
+The NSIS + MSI installers above are the direct-download half of the
+distribution contract. `apps/desktop/package-msix.ps1` is the other half, and
+it does not assemble its payload by hand: it runs the NSIS installer that
+`tauri build --bundles nsis` already produced, silently, into an empty
+directory, and packs *that*. Reconstructing where Tauri places the sidecars,
+the interpreter, ffmpeg and the weights is a layout that can only be observed
+on Windows; getting it wrong would ship an MSIX whose contents do not match
+what the installer installs.
+
+`src-tauri/msix/AppxManifest.xml` is a full-trust desktop-bridge manifest on
+`10.0.17763`. It uses `EntryPoint="windows.fullTrustApplication"` rather than
+`uap10:RuntimeBehavior="packagedClassicApp"` + `uap10:TrustLevel="mediumIL"`,
+which are the same thing — but the `uap10` attributes only exist from
+10.0.19041, so a 17763 manifest must use the EntryPoint form. Declaring both at
+once is an error when they contradict, so only one appears.
+
+Two things the script does not trust:
+
+- **The committed `Executable` value is reconciled against the payload.** The
+  manifest's path is package-relative and the Tauri install layout is not
+  knowable from this host, so the script finds `SelekyT.exe` in the installed
+  tree, repairs the copy being packed if it disagrees, and warns loudly. A
+  silent repair would hide real drift; a hard failure would block the build on
+  a fact nobody could have checked.
+- **Every image the manifest references must be in the payload**, because
+  MakeAppx checks that and does *not* check pixel dimensions. The six assets
+  come from `MSIX_ASSETS` in `icons/make_icons.py`, each at Microsoft's
+  published scale-100 size — a 310x150 wide tile is not a rescaled square, so
+  they are composed individually rather than cropped.
+
+**Status: UNVERIFIED.** This host has no MakeAppx, no Windows SDK and no
+PowerShell. The manifest has never been packed, installed or run. What *is*
+verified on Linux is the structural contract — identity, version, executable
+name and every referenced asset agree with `tauri.conf.json` and with the
+generator — and every PNG is round-trip decoded and compared pixel-for-pixel
+against the buffer that produced it. MakeAppx's schema validation is the only
+check that does not exist here, which is why the pack script runs it with
+validation deliberately ON and the CI step is expected to be where a manifest
+or layout problem first surfaces. Treat the first green `msix` job as the
+verification step, not as a release.
+
+Signing is a separate stage and is not faked. An unsigned MSIX will not install
+without developer mode or sideloading, and the artifact name says so.
+
 ### Environment overrides
+
 
 `PBS_TAG` pins a python-build-standalone release; `SELEKYT_SKIP_MODEL=1` builds
 the installer without the ~500 MB weights download (smoke runs).
@@ -108,9 +193,12 @@ the installer without the ~500 MB weights download (smoke runs).
   tests, including `a_chatty_stderr_does_not_deadlock_the_rpc`, which pins the
   pipe-buffer deadlock fix (stderr is drained unconditionally inside
   `Sidecar::spawn_in`, not by the UI relay).
-- `1215 passed, 13 skipped` across the full Python suite, including the
-  sidecar envelope contract and the desktop shell ops (`probe_media`,
-  `read_artifact`, `stat_artifact`).
+- `1246 passed, 13 skipped` across the full Python suite (measured at the
+  commit this file ships in), including the sidecar envelope contract, the
+  desktop shell ops (`probe_media`, `read_artifact`, `stat_artifact`) and the
+  15 packaging tests that pin the workflow, the signing hook, the MSIX manifest
+  and the two jobs' artifact contract. Re-run `.venv/bin/pytest -q` before
+  quoting this number; it moves with every test added.
 - A real end-to-end run of the actual staged `selekyt-python` sidecar binary
   against a real 1013.9 s / 1280×720 source, over the same JSON-RPC the Tauri
   `selekyt_rpc` command uses. See `docs/release-validation.md`.
@@ -150,7 +238,11 @@ could not be executed here, not a verified result.
    interpreter+deps ≈ 250 MB → payload near 1 GB. Under NSIS's 2 GB ceiling,
    but LZMA over 1 GB is slow and the artifact is big. `SELEKYT_SKIP_MODEL=1`
    or a `tiny`/`base` model are the levers.
-6. **The GUI itself.** The host is headless (no X server, no xvfb), so the
+6. **The MSIX manifest and pack script.** See "The Store / sideload path"
+   above. `package-msix.ps1` and `AppxManifest.xml` are written and structurally
+   pinned by tests, but MakeAppx has never seen them. The CI `msix` job is the
+   first time they run anywhere.
+7. **The GUI itself.** The host is headless (no X server, no xvfb), so the
    binary was verified through its RPC surface, not its window. The acceptance
    path — launch, pick a file, watch progress, read results — was driven
    end-to-end against the real engine over that same RPC boundary.
