@@ -162,9 +162,18 @@ Said, because it is verifiable in the repo:
   own validators are clean on each pair, and **each** `<asset-clip>` carries
   the same offset/start/duration as its EDL event to within 1.5 frames (worst
   measured deviation across the whole corpus: exactly 1.000 frame, the expected
-  grid-snapping artefact). This is stronger than `nle_check`, which compares
-  only aggregate spans and would miss a mis-timed clip in the middle of a
-  multi-event cut.
+  grid-snapping artefact).
+- Each format is also compared against the ground truth of what the render
+  actually kept, interval by interval and in order, by `tools/nle_check.py` —
+  all **44 retained intervals across the 27 clips**, in both formats, with the
+  worst endpoint off by exactly 1.00 frame against the `edit_plan.json` record.
+  This is the third leg and it is not the same claim as the one above: the two
+  formats could agree with each other while both mis-describing the cut, and
+  on a multi-interval clip they would still agree on the total duration while
+  doing it. Every multi-interval clip in the corpus keeps its extra interval in
+  the middle, which is where a totals comparison is blind. The audit also
+  rejects a hole between neighbouring spine clips, which "clips in
+  non-decreasing order" admits.
 - Frame-rate handling is correct on the grid the timelines were written on,
   including the case where the source media is gone (see §1 of
   `tools/nle_check.py` for the recorded-probe fallback).

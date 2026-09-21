@@ -9,6 +9,7 @@ defect classes.
 """
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -18,8 +19,8 @@ import pytest
 TOOLS = Path(__file__).resolve().parent.parent / "tools"
 
 
-def _write_media(path: Path) -> None:
-    """A real 1-second file so ffprobe reports a true frame rate and duration.
+def _write_media(path: Path, seconds: float = 1.0) -> None:
+    """A real file so ffprobe reports a true frame rate and duration.
 
     Video only, and the duration bound by the lavfi source itself rather than
     by an ffmpeg ``-t``: an ``-t`` placed before the inputs is an *input*
@@ -29,7 +30,7 @@ def _write_media(path: Path) -> None:
     """
     subprocess.run(
         ["ffmpeg", "-y", "-loglevel", "error",
-         "-f", "lavfi", "-i", "color=black:s=64x64:d=1:r=25",
+         "-f", "lavfi", "-i", f"color=black:s=64x64:d={seconds}:r=25",
          "-c:v", "libx264", "-pix_fmt", "yuv420p", str(path)],
         check=True,
         timeout=60,
@@ -68,8 +69,13 @@ _FCPXML = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
-def _build_project(root: Path) -> Path:
-    """A minimal project: source, one EDL, one FCPXML, one render, a selection."""
+def _build_project(root: Path, intervals: list[tuple[float, float]] | None = None) -> Path:
+    """A minimal project: source, one EDL, one FCPXML, one render, a selection.
+
+    ``intervals`` writes the ``edit_plan.json`` the interval checks compare
+    against. Without it those checks SKIP rather than fail, so a test that
+    means to exercise them has to supply one.
+    """
     media = root / "source" / "movie.mov"
     media.parent.mkdir(parents=True)
     _write_media(media)
@@ -88,6 +94,14 @@ def _build_project(root: Path) -> Path:
     root.joinpath("selections.json").write_text(
         '[{"start": 0.0, "end": 1.0, "text": "a", "hook": "a", "payoff": "a"}]'
     )
+    if intervals is not None:
+        root.joinpath("edit_plan.json").write_text(
+            json.dumps([{"index": 1, "source_start": intervals[0][0],
+                         "source_end": intervals[-1][1],
+                         "intervals": [list(iv) for iv in intervals],
+                         "edited_duration": sum(b - a for a, b in intervals),
+                         "removed_seconds": 0.0}])
+        )
     return root
 
 
@@ -183,3 +197,144 @@ def test_an_overlapping_record_span_is_caught(tmp_path):
     ok, findings = _audit(project)
     assert not ok
     assert any("before the previous edit ends" in d for _n, _o, d in findings)
+
+
+# A two-interval cut at 25 fps: 0.0-0.4 s and 0.6-1.0 s of the source, read as
+# frames 0-10 and 15-25, concatenated into a 0.8 s record. The kept total is
+# genuinely 0.8 s, so the renders are 0.8 s too — a cut that removes a middle
+# interval is what the fixture is for, and the durations only line up if the
+# renders describe the same cut.
+_TWO_INTERVAL_EDL = """TITLE:   test cut
+FCM: NON-DROP FRAME
+001  MOVIE V     C        00:00:00:00 00:00:00:10 00:00:00:00 00:00:00:10
+     M2   movie.mov
+* FROM CLIP: {media}
+001  MOVIE A     C        00:00:00:00 00:00:00:10 00:00:00:00 00:00:00:10
+002  MOVIE V     C        00:00:00:15 00:00:01:00 00:00:00:10 00:00:00:20
+     M2   movie.mov
+* FROM CLIP: {media}
+002  MOVIE A     C        00:00:00:15 00:00:01:00 00:00:00:10 00:00:00:20
+"""
+
+_TWO_INTERVAL_FCPXML = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="f1" name="FFVideoFormat" frameDuration="1/25s" />
+    <asset id="r1" name="movie.mov" start="0s" duration="25/25s" hasVideo="1" videoSources="1" hasAudio="1" audioSources="1" audioChannels="2">
+      <media-rep kind="original-media" src="{media_uri}"/>
+    </asset>
+  </resources>
+  <library>
+    <event name="test">
+      <project name="test">
+        <sequence format="f1" tcFormat="NDF">
+          <spine>
+            <asset-clip ref="r1" offset="0s" start="0s" duration="10/25s" />
+            <asset-clip ref="r1" offset="10/25s" start="15/25s" duration="10/25s" />
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>
+"""
+
+
+def _drop_edl_interval(text: str) -> str:
+    """Delete the second event, so one event describes a cut the plan records
+    as two. The record span shrinks too, which is a second defect the audit
+    reports independently."""
+    events = [ln for ln in text.splitlines() if ln.startswith("002")]
+    out = text
+    for ln in events:
+        out = out.replace(ln + "\n", "")
+    return out
+
+
+def _drop_fcpxml_interval(text: str) -> str:
+    """Delete the second asset-clip from the spine."""
+    return text.replace(
+        '            <asset-clip ref="r1" offset="10/25s" start="15/25s" '
+        'duration="10/25s" />\n',
+        "",
+    )
+
+
+_DROP_EDL_INTERVAL = _drop_edl_interval
+_DROP_FCPXML_INTERVAL = _drop_fcpxml_interval
+
+
+def _two_interval_project(root: Path) -> Path:
+    """A cut that keeps two intervals out of one second of source."""
+    project = _build_project(root, intervals=[(0.0, 0.4), (0.6, 1.0)])
+    media = project / "source" / "movie.mov"
+    # The renders the timeline must describe: the 0.8 s the cut actually kept,
+    # in both aspect ratios. Built after _build_project overwrote them with a
+    # one-second file.
+    for preset in ("facebook", "shorts"):
+        _write_media(project / preset / "01.mp4", seconds=0.8)
+    (project / "timeline" / "01.edl").write_text(
+        _TWO_INTERVAL_EDL.format(media=media)
+    )
+    (project / "timeline" / "01.fcpxml").write_text(
+        _TWO_INTERVAL_FCPXML.format(media_uri="file://" + str(media.resolve()))
+    )
+    return project
+
+
+@pytest.mark.skipif(subprocess.run(["which", "ffmpeg"]).returncode != 0,
+                    reason="ffmpeg is needed to build the test media")
+def test_a_two_interval_cut_passes_interval_by_interval(tmp_path):
+    """Both interchange formats must describe every retained interval, in
+    order, not merely the clip's overall extent. A clean two-interval cut is
+    the fixture this check was written against, so it has to pass first."""
+    ok, findings = _audit(_two_interval_project(tmp_path / "project"))
+    failed = [f"{n}: {d}" for n, cok, d in findings if not cok]
+    assert ok, f"the audit failed a clean two-interval cut: {failed}"
+    interval_findings = [d for n, _o, d in findings
+                         if "source intervals == edit plan" in n]
+    assert len(interval_findings) == 2, "one interval check per format"
+    for detail in interval_findings:
+        assert "2 interval(s)" in detail, detail
+
+
+@pytest.mark.skipif(subprocess.run(["which", "ffmpeg"]).returncode != 0,
+                    reason="ffmpeg is needed to build the test media")
+def test_a_dropped_middle_interval_is_caught(tmp_path):
+    """The failure this check exists for. A cut of two intervals exported as
+    one — the middle interval silently lost — keeps the same total duration,
+    so the render comparison passes and only an interval-level comparison
+    notices. On the real corpus every multi-interval clip has its extra
+    interval in the middle, which is where a totals check is blind."""
+    for ext, drop in (("edl", _DROP_EDL_INTERVAL), ("fcpxml", _DROP_FCPXML_INTERVAL)):
+        project = _two_interval_project(tmp_path / f"project-{ext}")
+        text = (project / "timeline" / f"01.{ext}").read_text()
+        broken = drop(text)
+        assert broken != text, "the fixture no longer contains the interval"
+        (project / "timeline" / f"01.{ext}").write_text(broken)
+        ok, findings = _audit(project)
+        assert not ok, f"{ext}: one interval describing a two-interval cut passed"
+        named = [f"{n}: {d}" for n, cok, d in findings
+                 if "source intervals == edit plan" in n and not cok]
+        assert named, f"{ext}: the interval check did not fire"
+        assert "describe a cut the edit plan records as 2 interval(s)" in named[0]
+
+
+@pytest.mark.skipif(subprocess.run(["which", "ffmpeg"]).returncode != 0,
+                    reason="ffmpeg is needed to build the test media")
+def test_a_hole_in_the_spine_is_caught(tmp_path):
+    """The render concatenates the kept intervals, so a gap between two
+    neighbouring asset-clips is a cut the export does not describe. 'Clips in
+    non-decreasing start order' admits a gap, and the duration check sees only
+    the total — which a gap and an equal-length overlap cancel out of."""
+    project = _two_interval_project(tmp_path / "project")
+    text = (project / "timeline" / "01.fcpxml").read_text()
+    # The second clip starts a frame late, opening a one-frame hole.
+    broken = text.replace('offset="10/25s"', 'offset="11/25s"')
+    assert broken != text, "the fixture has no second clip to shift"
+    (project / "timeline" / "01.fcpxml").write_text(broken)
+    ok, findings = _audit(project)
+    assert not ok
+    assert any("leaves a" in d and "hole" in d for _n, _o, d in findings), (
+        [f"{n}: {d}" for n, _o, d in findings])

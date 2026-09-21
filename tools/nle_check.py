@@ -7,7 +7,12 @@ well-formed CMX 3600 and still be useless to an editor:
     up offline and the user faces a relink dialog for a file that never moved;
   - record spans that overlap, so the NLE reports a conflict on import;
   - a timeline whose duration disagrees with the render it describes, which
-    means the exported sequence is not the cut the user just watched.
+    means the exported sequence is not the cut the user just watched;
+  - a cut that keeps several intervals, exported with one of them missing or
+    out of order. The total duration is unchanged, so the check above passes
+    and only an interval-by-interval comparison notices. Every multi-interval
+    clip in the corpus has its extra interval in the middle of the clip, which
+    is where a totals comparison is blind.
 
 Those are exactly the failures that only surface when someone opens the project
 in Premiere/Resolve/FCP — so this tool checks them against the rendered files
@@ -50,6 +55,17 @@ FCPXML_ELEMENTS = {
     "metadata", "string", "float", "int", "bool", "date",
 }
 FRAME_TOLERANCE = 1.0
+# Per-interval tolerance, in frames. The export snaps each retained interval's
+# ends to the frame grid independently of the float seconds the edit plan
+# records, so an interval can read a little under a frame away from the plan
+# without the cut being different. Measured across the committed corpus — 44
+# retained intervals over 27 clips, every interval in every timeline, in both
+# interchange formats — the worst deviation is exactly 1.00 frame, so this
+# leaves half a frame of headroom. A genuinely moved interval is off by the
+# length of the cut that replaced it, which is many frames, and a dropped or
+# reordered one changes the count or the sequence, which this compares rather
+# than tolerating.
+INTERVAL_FRAME_TOLERANCE = 1.5
 # Render comparison tolerance. Measured across the committed corpus (11 sources,
 # 27 clips, every timeline checked against both its renders), the exported
 # timeline is systematically a fraction of a frame shorter than the rendered
@@ -343,38 +359,104 @@ def _check_edl(edl: Path, renders: dict[str, Path], selections: list[dict], fps:
                          f"timeline {span:.3f}s vs render {got:.3f}s {detail}"
                          if frame else detail))
 
-    # The source in/out must agree with what was actually kept. The selection
-    # is the wrong comparison: a selection is a span, while the EDL describes
-    # the retained intervals inside it — dead air at the head or tail is
-    # removed before export, so the first event legitimately starts after the
-    # selection start. On clip 01 of the OOI source the selection began at
-    # 112.471 s but its first retained interval at 113.36 s, and the check
-    # reported a 26-frame disagreement about an export that was correct.
-    # ``edit_plan.json`` is the record of what the render concatenated.
+    # The source in/out must agree with what was actually kept, interval by
+    # interval and in order. The selection is the wrong comparison: a selection
+    # is a span, while the EDL describes the retained intervals inside it —
+    # dead air at the head, tail or middle is removed before export, so the
+    # first event legitimately starts after the selection start. On clip 01 of
+    # the OOI source the selection began at 112.471 s but its first retained
+    # interval at 113.36 s, and an endpoint comparison reported a 26-frame
+    # disagreement about an export that was correct. ``edit_plan.json`` is the
+    # record of what the render concatenated.
     index = int(re.sub(r"[^0-9]", "", stem) or "0") - 1
-    if 0 <= index < len(selections):
-        want = selections[index]
-        span = _retained_span(project, index)
-        if span is None:
-            # Without the plan the check can only fall back to the selection,
-            # and a multi-interval cut will report a false disagreement. Say
-            # that rather than passing silently.
-            findings.append((f"{stem} source interval == selection", True,
-                             "SKIP (edit_plan.json unreadable; selection span "
-                             "would give a false negative on a multi-interval cut)"))
-        else:
-            lo, hi = span
-            src_in = min(_tc_seconds(e["src_in"], fps) for e in all_edits)
-            src_out = max(_tc_seconds(e["src_out"], fps) for e in all_edits)
-            d_start = abs(src_in - lo) / frame if frame else 0.0
-            d_end = abs(src_out - hi) / frame if frame else 0.0
-            ok = d_start <= FRAME_TOLERANCE + 0.5 and d_end <= FRAME_TOLERANCE + 1.5
-            findings.append((f"{stem} source interval == selection", ok,
-                             f"src {src_in:.2f}-{src_out:.2f}s vs retained "
-                             f"{lo:.2f}-{hi:.2f}s (selection "
-                             f"{want['start']:.2f}-{want['end']:.2f}s; "
-                             f"start {d_start:.1f}f, end {d_end:.1f}f)"))
+    want_sel = selections[index] if 0 <= index < len(selections) else None
+    ok, detail = _interval_findings(
+        stem, "EDL", _event_spans(events, fps), _intervals(project, index),
+        frame, want_sel,
+    )
+    findings.append((f"{stem} source intervals == edit plan", ok, detail))
     return findings
+
+
+def _event_spans(events: list[dict], fps: float) -> list[tuple[float, float]]:
+    """One source span per edit event, deduplicated across channels.
+
+    CMX 3600 writes the video and audio records of one edit under the same
+    event number with identical timecodes, so a cut of N retained intervals is
+    N events, not 2N. Counting channel records reads a two-interval cut as four
+    intervals and the interval-by-interval comparison below fails on every
+    multi-interval clip in the corpus.
+    """
+    spans: list[tuple[float, float]] = []
+    for ev in events:
+        seen: set[tuple[str, str]] = set()
+        for edit in ev["edits"]:
+            key = (edit["src_in"], edit["src_out"])
+            if key in seen:
+                continue
+            seen.add(key)
+            spans.append((_tc_seconds(edit["src_in"], fps),
+                          _tc_seconds(edit["src_out"], fps)))
+    return spans
+
+
+def _intervals(project: Path, index: int) -> list[tuple[float, float]] | None:
+    """The retained intervals the render concatenated for one clip, in order.
+
+    ``edit_plan.json`` is the record of what the render actually kept, so it is
+    what the interchange file is obliged to describe — a selection is a single
+    span and a multi-interval cut removes dead air from inside it, so comparing
+    against the selection would report a disagreement about a correct export.
+    Returns ``None`` when the plan is missing or malformed rather than silently
+    falling back to the selection, which would turn a real disagreement into a
+    pass on every multi-interval cut.
+    """
+    path = project / "edit_plan.json"
+    if not path.is_file():
+        return None
+    try:
+        plan = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(plan, list) or not (0 <= index < len(plan)):
+        return None
+    raw = plan[index].get("intervals") or []
+    if not raw or not all(
+            isinstance(iv, (list, tuple)) and len(iv) == 2 for iv in raw):
+        return None
+    return [(float(iv[0]), float(iv[1])) for iv in raw]
+
+
+def _interval_findings(stem: str, kind: str, got: list[tuple[float, float]],
+                       want: list[tuple[float, float]], frame: float,
+                       selection: dict | None) -> tuple[bool, str]:
+    """Compare the intervals an interchange file describes against the plan,
+    one at a time and in order.
+
+    Comparing only the first and last interval — what the duration checks can
+    see — passes an export that dropped or reordered a middle interval, and
+    every multi-interval cut in the corpus has its extra interval in the
+    middle of the clip. Returns the verdict and a detail line naming the worst
+    interval, so a reader can see how close a pass was rather than a boolean.
+    """
+    if frame <= 0.0:
+        return True, "NOT RUN (source frame rate unknown)"
+    if want is None:
+        return True, ("SKIP (edit_plan.json unreadable; the selection span "
+                      "would give a false negative on a multi-interval cut)")
+    if len(got) != len(want):
+        return False, (f"{len(got)} {kind} interval(s) describe a cut the edit "
+                       f"plan records as {len(want)} interval(s)")
+    worst = 0.0
+    for i, (g, w) in enumerate(zip(got, want), 1):
+        worst = max(worst, abs(g[0] - w[0]) / frame, abs(g[1] - w[1]) / frame)
+    ok = worst <= INTERVAL_FRAME_TOLERANCE
+    where = ""
+    if selection is not None:
+        where = (f"; selection {selection['start']:.2f}-"
+                 f"{selection['end']:.2f}s")
+    return ok, (f"{len(got)} interval(s), worst endpoint off by {worst:.2f} "
+                f"frame(s){where}")
 
 
 def _retained_span(project: Path, index: int) -> tuple[float, float] | None:
@@ -404,6 +486,7 @@ def _retained_span(project: Path, index: int) -> tuple[float, float] | None:
 
 
 def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float,
+                  project: Path, selections: list[dict],
                   media_retained: bool = True) -> list[tuple[str, bool, str]]:
     findings: list[tuple[str, bool, str]] = []
     stem = fcpxml.stem
@@ -486,6 +569,46 @@ def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float,
     frame = 1.0 / fps if fps else 0.0
     findings.append((f"{stem} fcpxml spine advances", advances,
                      "clips in non-decreasing start order" if advances else "a clip starts before its predecessor ends"))
+
+    # The spine must be contiguous: the render concatenates the retained
+    # intervals, so a hole between two asset-clips is a cut the export does not
+    # describe. "Advances" alone admits a gap, and the duration check below
+    # only sees the total, which a gap and an equal overlap cancel out of.
+    holes: list[str] = []
+    cursor = 0.0
+    if spine is not None:
+        for clip in spine:
+            if clip.tag not in ("asset-clip", "gap", "sync-clip"):
+                continue
+            offset = _rational_seconds(clip.get("offset", "0s"))
+            if clip.tag == "asset-clip" and offset is not None:
+                if offset > cursor + 1e-6:
+                    holes.append(f"clip at {offset:.3f}s leaves a "
+                                 f"{offset - cursor:.3f}s hole")
+                cursor = max(cursor, offset + (_rational_seconds(clip.get("duration", "0s")) or 0.0))
+    findings.append((f"{stem} fcpxml spine contiguous", not holes,
+                     "; ".join(holes) or "no gap between neighbouring clips"))
+
+    # The intervals the spine reads must be the ones the render kept, in order
+    # — the same standard as the EDL. The spine's asset-clips carry the source
+    # span in ``start``/``duration`` rather than in timecode, so this is also
+    # the check that the two encodings of one cut agree on more than their
+    # total length.
+    index = int(re.sub(r"[^0-9]", "", stem) or "0") - 1
+    want_sel = selections[index] if 0 <= index < len(selections) else None
+    got: list[tuple[float, float]] = []
+    if spine is not None:
+        for clip in spine:
+            if clip.tag != "asset-clip":
+                continue
+            start = _rational_seconds(clip.get("start", "0s"))
+            duration = _rational_seconds(clip.get("duration", "0s"))
+            if start is None or duration is None:
+                continue
+            got.append((start, start + duration))
+    ok, detail = _interval_findings(stem, "FCPXML", got,
+                                    _intervals(project, index), frame, want_sel)
+    findings.append((f"{stem} fcpxml source intervals == edit plan", ok, detail))
     for preset, render in renders.items():
         if not render.exists():
             findings.append((f"{stem} fcpxml duration == {preset} render", True,
@@ -570,7 +693,8 @@ def check_project(project: Path) -> tuple[bool, list[tuple[str, bool, str]]]:
     for fcpxml in sorted(timeline.glob("*.fcpxml")):
         renders = {"facebook": project / "facebook" / f"{fcpxml.stem}.mp4",
                    "shorts": project / "shorts" / f"{fcpxml.stem}.mp4"}
-        findings += _check_fcpxml(fcpxml, renders, fps, media_retained)
+        findings += _check_fcpxml(fcpxml, renders, fps, project, selections,
+                                  media_retained)
 
     # The two formats must agree with each other as well as with the render.
     stems = {p.stem for p in timeline.glob("*.edl")} & {p.stem for p in timeline.glob("*.fcpxml")}
