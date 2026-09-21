@@ -2,13 +2,25 @@
 <!--
   The MSIX package manifest for the Store / sideload distribution path.
 
-  UNVERIFIED — this host has no MakeAppx and no Windows SDK, so the manifest has
-  never been packed, installed or run. The structural contract it declares is
-  pinned by tests/test_desktop_packaging.py against tauri.conf.json (identity,
-  version, executable name and every referenced asset all have to agree), but
-  schema-level validity is only established the first time a Windows runner runs
-  MakeAppx over it. Treat the first MSIX build as the verification step, not as
-  a release.
+  VERIFICATION STATE, updated after each run of the `msix` CI job (the job is
+  the only place this file is ever validated, since this host has no MakeAppx
+  and no Windows SDK):
+
+    * The structural contract it declares is pinned on this host by
+      tests/test_desktop_packaging.py against tauri.conf.json: identity, version,
+      executable name and every referenced asset all have to agree, and each PNG
+      is round-trip decoded and compared pixel-for-pixel against the buffer that
+      produced it.
+    * Run `35553464487` was the first run to reach MakeAppx, and MakeAppx
+      VALIDATED this manifest: schema, application identity and all six
+      referenced assets were accepted. It then failed inside the writer for a
+      reason unrelated to this file (a 32-bit MakeAppx against a 578 MB payload),
+      so the pack never completed and the package has never been installed or
+      run. Schema-valid is not installable.
+    * What no run has established: that the package installs, that the app
+      starts under the full-trust activation, that the tile and splash appear, or
+      that Partner Center accepts a submission. Only a Store submission
+      validates the 720x1080 store logo.
 
   How the payload is built: apps/desktop/package-msix.ps1 runs the NSIS
   installer produced by `tauri build` (bundles: nsis) silently into an empty
