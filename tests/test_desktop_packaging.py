@@ -40,6 +40,8 @@ import pytest
 SRC_TAURI = pathlib.Path(__file__).resolve().parent.parent / "apps" / "desktop" / "src-tauri"
 TAURI_CONF = SRC_TAURI / "tauri.conf.json"
 SIGN_SCRIPT = SRC_TAURI / "scripts" / "sign.ps1"
+MSIX_DIR = SRC_TAURI / "msix"
+APPX_MANIFEST = MSIX_DIR / "AppxManifest.xml"
 WORKFLOWS = pathlib.Path(__file__).resolve().parent.parent / ".github" / "workflows"
 BUILD_WINDOWS = WORKFLOWS / "build-windows.yml"
 
@@ -375,4 +377,177 @@ def test_the_release_workflow_sets_exactly_the_credentials_the_hook_reads(
         f"the credential contract drifted: workflow sets {sorted(set_vars - read_vars)} "
         f"that the hook never reads, and the hook reads {sorted(read_vars - set_vars)} "
         "that the workflow never sets"
+    )
+
+
+# ── the MSIX / Store package ──────────────────────────────────────────────────
+
+
+def _manifest_text() -> str:
+    """The manifest is XML with no schema here, so it is read as text: the
+    assertions are about the values it declares, which is the contract that
+    MakeAppx will not check on this host."""
+    assert APPX_MANIFEST.is_file(), f"the MSIX manifest is missing: {APPX_MANIFEST}"
+    import xml.etree.ElementTree as ET
+
+    ET.fromstring(APPX_MANIFEST.read_text(encoding="utf-8"))  # well-formedness
+    return APPX_MANIFEST.read_text(encoding="utf-8")
+
+
+def _manifest_body() -> str:
+    """The manifest with comments stripped.
+
+    Comments are where the *reasoning* about an attribute lives — including the
+    names of attributes this file deliberately does not use — so a substring
+    check over the raw text sees the commentary and not the markup. Assertions
+    about what the manifest declares read this instead; assertions about what
+    it explains still read the raw text."""
+    return re.sub(r"<!--.*?-->", "", _manifest_text(), flags=re.S)
+
+
+def test_the_msix_manifest_declares_the_application_identity(conf: dict) -> None:
+    """The MSIX identity is a *different* identity from the installer's registry
+    one, and both have to agree with the config or the two distribution paths
+    ship two different products. Version must be four-part; a three-part value
+    is rejected at install time, not at pack time."""
+    manifest = _manifest_body()
+
+    def attr(tag: str, name: str) -> str:
+        m = re.search(rf'<{tag}\b[^>]*\b{name}="([^"]+)"', manifest)
+        assert m, f"the manifest declares no {tag}/{name}, so the MSIX has no {name}"
+        return m.group(1)
+
+    assert attr("Identity", "Name") == conf["productName"], (
+        "the MSIX package name must match the product name, or the Store package "
+        "and the installer are two different products"
+    )
+    publisher = attr("Identity", "Publisher")
+    assert publisher.startswith("CN="), (
+        f"an MSIX Publisher must be a distinguished name (CN=...); '{publisher}' "
+        "would not match any certificate subject"
+    )
+    assert conf["bundle"]["publisher"] in publisher, (
+        "the MSIX publisher must carry the configured publisher name, or the "
+        "Store listing and the package disagree about who publishes the app"
+    )
+    # A quad version is built from the config's three-part one with a zero
+    # revision, which is the documented form for an appx Identity.
+    parts = attr("Identity", "Version").split(".")
+    assert len(parts) == 4 and all(p.isdigit() for p in parts), (
+        "an appx Identity Version must be four-part dotted numeric; anything "
+        "else is accepted by nothing that installs packages"
+    )
+    assert ".".join(parts[:3]) == conf["version"], (
+        "the MSIX version's first three parts must track the config version, or "
+        "the package and the installer claim different releases"
+    )
+
+
+def test_the_msix_manifest_names_an_executable_the_config_builds(conf: dict) -> None:
+    """The manifest's Executable is package-relative. If it names the wrong file
+    the package installs and does nothing, which is a failure mode no later
+    check catches. It must end in the configured binary name."""
+    manifest = _manifest_body()
+    exe = re.search(r'\bExecutable="([^"]+)"', manifest)
+    assert exe, "the manifest declares no Executable, so the package has no entry point"
+    declared = exe.group(1)
+    assert declared.endswith(conf["mainBinaryName"] + ".exe"), (
+        f"the manifest's Executable is '{declared}' but the built binary is "
+        f"{conf['mainBinaryName']}.exe; the package would install and never run"
+    )
+    # A package-relative path may not be rooted or contain a drive letter.
+    assert not declared.startswith(("/", "\\")), (
+        f"a package-relative Executable cannot be rooted: '{declared}'"
+    )
+    assert ":" not in declared, f"a package-relative Executable has a drive: '{declared}'"
+
+
+def _asset_references(manifest: str) -> list[str]:
+    """Every image path the manifest asks for.
+
+    Two forms carry one: the ``Logo=``/``Image=`` attributes on the tile and
+    splash elements, and the ``<Logo>`` element text under ``<Properties>``
+    (which is the store logo). Missing the second means the store logo is
+    unchecked, and it is the one asset MakeAppx looks for earliest.
+    """
+    pattern = (
+        r'(?i)(?:Logo|Image)="([^"]+\.(?:png|jpg|jpeg))"'
+        r'|<Logo>\s*([^<]+\.(?:png|jpg|jpeg))\s*</Logo>'
+    )
+    return [m for pair in re.findall(pattern, manifest) for m in pair if m]
+
+
+def test_every_image_the_manifest_references_exists() -> None:
+    """MakeAppx fails the pack on a referenced-but-missing image, but only after
+    minutes of installer and SDK work, and its message does not name the file.
+    This checks the same thing in milliseconds, and names the offender."""
+    referenced = _asset_references(_manifest_body())
+    assert referenced, (
+        "the manifest references no images at all; it is missing the tile and "
+        "store logos, and the package would have no Start Menu presence"
+    )
+    for rel in set(referenced):
+        resolved = (MSIX_DIR / rel.replace("\\", "/")).resolve()
+        assert resolved.is_file(), (
+            f"the manifest references {rel} but {resolved} does not exist; "
+            "MakeAppx would refuse to pack — regenerate with icons/make_icons.py"
+        )
+
+
+def test_the_manifest_and_the_icon_generator_agree_on_the_asset_set() -> None:
+    """``icons/make_icons.py`` emits the MSIX assets and the manifest references
+    them, so the two are one contract split across a Python dict and an XML
+    file. Either can drift without the other noticing; this pins them together
+    so a new logo is added in both places or neither."""
+    import importlib.util
+
+    gen = SRC_TAURI / "icons" / "make_icons.py"
+    assert gen.is_file(), f"the icon generator is missing: {gen}"
+    spec = importlib.util.spec_from_file_location("selekyt_make_icons", gen)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    generated = set(module.MSIX_ASSETS)
+    referenced = {
+        # The manifest writes Windows-style backslash paths; on a non-Windows
+        # host Path() does not treat those as separators, so normalise first.
+        pathlib.Path(rel.replace("\\", "/")).name
+        for rel in _asset_references(_manifest_body())
+    }
+    assert referenced <= generated, (
+        "the manifest references assets the generator does not emit: "
+        f"{sorted(referenced - generated)}"
+    )
+    # Emitted-but-unreferenced assets are dead weight in the package and a sign
+    # the manifest lost an entry, so flag them rather than shipping them.
+    assert not (generated - referenced), (
+        "the generator emits assets the manifest never references: "
+        f"{sorted(generated - referenced)} — either the manifest lost an entry "
+        "or the generator gained one that nothing displays"
+    )
+
+
+def test_the_msix_manifest_targets_the_desktop_full_trust_profile() -> None:
+    """A Tauri shell that spawns sidecars and reads the whole filesystem has to
+    be a full-trust desktop package. The activation form is what makes that
+    true, and it is the one detail of the manifest that has to be exactly right
+    or the app installs and cannot do anything it needs to."""
+    manifest = _manifest_body()
+    assert "windows.fullTrustApplication" in manifest, (
+        "the manifest must declare the full-trust activation entry point, or the "
+        "packaged app runs sandboxed and cannot reach the filesystem"
+    )
+    assert "Windows.Desktop" in manifest, (
+        "the target device family must be Windows.Desktop for a converted Win32 app"
+    )
+    assert "runFullTrust" in manifest, (
+        "runFullTrust is the capability that the full-trust entry point requires; "
+        "one without the other does not install"
+    )
+    # uap10:RuntimeBehavior only exists from 10.0.19041; this manifest targets
+    # 17763 and uses the EntryPoint form. Declaring both, contradictorily, is an
+    # error, so a RuntimeBehavior attribute must not appear at all.
+    assert "RuntimeBehavior" not in manifest, (
+        "a RuntimeBehavior attribute would contradict the EntryPoint form this "
+        "manifest uses on its target minimum version"
     )

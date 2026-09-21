@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The MSIX package manifest for the Store / sideload distribution path.
+
+  UNVERIFIED — this host has no MakeAppx and no Windows SDK, so the manifest has
+  never been packed, installed or run. The structural contract it declares is
+  pinned by tests/test_desktop_packaging.py against tauri.conf.json (identity,
+  version, executable name and every referenced asset all have to agree), but
+  schema-level validity is only established the first time a Windows runner runs
+  MakeAppx over it. Treat the first MSIX build as the verification step, not as
+  a release.
+
+  How the payload is built: apps/desktop/package-msix.ps1 runs the NSIS
+  installer produced by `tauri build` (bundles: nsis) silently into an empty
+  directory and packs *that*. The MSIX payload is therefore the layout a user's
+  machine ends up with, rather than a hand-assembled guess at where Tauri
+  places the sidecars and resources — that guess is the part that could not be
+  checked from Linux.
+
+  Activation: the combination below is docs combination #3
+  (Executable + EntryPoint="windows.fullTrustApplication"), which is equivalent
+  to uap10:RuntimeBehavior="packagedClassicApp" + uap10:TrustLevel="mediumIL".
+  The uap10 attributes only exist from 10.0.19041, so this manifest targets
+  10.0.17763 and uses the EntryPoint form that 17763 understands. Specifying
+  both forms at once is an error if they contradict, so only one appears.
+
+  Identity notes for whoever signs this later:
+    * Publisher MUST equal the certificate's subject exactly, including the
+      "CN=" prefix, or the package will not install even with a valid cert.
+      It is a plain display name today because no certificate exists; an
+      unsigned MSIX will not install without developer mode or sideloading, and
+      this manifest does not pretend otherwise.
+    * Name is the first half of the package family name. Once published it
+      cannot change without a new Store listing.
+    * MakeAppx checks that every image referenced below exists in the payload;
+      it does NOT check image dimensions. The sizes emitted by
+      icons/make_icons.py match Microsoft's published scale-100 sizes for each
+      attribute, and the Store listing logo is 720x1080, but only a submission
+      to Partner Center actually validates the latter.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <Identity Name="SelekyT"
+            Publisher="CN=SelekyT Project"
+            Version="0.3.0.0"
+            ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>SelekyT</DisplayName>
+    <PublisherDisplayName>SelekyT Project</PublisherDisplayName>
+    <Description>Local-first long-form to social video editorial engine</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Dependencies>
+    <!-- Desktop bridge: a full-trust converted Win32 app, which is what a
+         Tauri shell that spawns sidecars and reads the filesystem has to be.
+         17763 is the first build carrying the full-trust capability set. -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22631.0" />
+  </Dependencies>
+
+  <Applications>
+    <Application Id="SelekyT"
+                 Executable="SelekyT.exe"
+                 EntryPoint="windows.fullTrustApplication">
+      <uap:VisualElements
+        DisplayName="SelekyT"
+        Description="Local-first long-form to social video editorial engine"
+        BackgroundColor="#101318"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Square310x310Logo="Assets\Square310x310Logo.png"
+                         Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- runFullTrust is what makes this a full-trust packaged app rather than a
+         sandboxed one; broadFileSystemAccess is why the app may read media
+         anywhere on disk instead of only under its own install directory. -->
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="broadFileSystemAccess" />
+    <Capability Name="internetClient" />
+  </Capabilities>
+</Package>

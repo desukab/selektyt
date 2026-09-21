@@ -38,6 +38,25 @@ PNG_SLOTS = {16: "16x16.png", 32: "32x32.png", 64: "64x64.png",
              128: "128x128.png", 256: "128x128@2x.png", 512: "512x512.png",
              1024: "icon.png"}
 
+# The MSIX/AppxManifest asset set, written to msix/Assets. Each entry is the
+# base scale-100 pixel size for the manifest attribute that names it; these are
+# the sizes Microsoft publishes per attribute, and they are the reason the
+# assets cannot just be rescaled copies of the square icon (a 310x150 wide tile
+# is not square). This is the one part of the MSIX packaging that this host CAN
+# verify — the PNGs are round-trip checked like every other output — while
+# MakeAppx and install remain a Windows-runner gap recorded in the manifest's
+# own comment block.
+MSIX_ASSETS = {
+    "Square44x44Logo.png": (44, 44),
+    "Square150x150Logo.png": (150, 150),
+    "Square310x310Logo.png": (310, 310),
+    "Wide310x150Logo.png": (310, 150),
+    "SplashScreen.png": (620, 300),
+    # The store logo's documented size is 720x1080; the icon is not a crop of
+    # the 9:16 bracket, so this one renders the mark alone, centred.
+    "StoreLogo.png": (720, 1080),
+}
+
 # ICNS PNG ostypes by square size.
 _ICNS_TYPE = {16: "ic11", 32: "ic12", 64: "ic13", 128: "ic07",
               256: "ic08", 512: "ic09", 1024: "ic10"}
@@ -49,9 +68,15 @@ def _lerp(a: tuple, b: tuple, t: float) -> tuple:
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
-def render(size: int) -> bytes:
-    """RGBA pixel buffer of the icon at ``size`` pixels square."""
-    px = bytearray(size * size * 4)
+def render(width: int, height: int) -> bytes:
+    """RGBA pixel buffer of the icon at ``width`` x ``height`` pixels.
+
+    Non-square canvases are needed for the MSIX assets: a wide tile is 310x150
+    and a splash screen is 620x300. The composition normalises each axis
+    independently so the mark scales into whatever aspect it is given.
+    """
+    size = width
+    px = bytearray(width * height * 4)
     # Deterministic pseudo-random energy profile, stable across sizes.
     bars = 13
 
@@ -59,9 +84,9 @@ def render(size: int) -> bytes:
         x = (i * 0.7 + 1.0) % 1.6180339887
         return 0.18 + 0.62 * abs(((x * 3.1) % 1.0) - 0.5) * 2.0
 
-    for y in range(size):
-        for x in range(size):
-            u, v = x / max(size - 1, 1), y / max(size - 1, 1)
+    for y in range(height):
+        for x in range(width):
+            u, v = x / max(width - 1, 1), y / max(height - 1, 1)
             col = _lerp(BG, BG_EDGE, (u + v) / 2)
             # rounded-rect field: clear corners outside a 22% radius
             r = 0.22
@@ -69,30 +94,30 @@ def render(size: int) -> bytes:
             outside = dx > 0 and dy > 0 and (dx * dx + dy * dy) > r * r
             if outside:
                 col = (0, 0, 0, 0)
-            gap = size * 0.035
-            bw = (size - gap * (bars + 1)) / bars
+            gap = width * 0.035
+            bw = (width - gap * (bars + 1)) / bars
             for i in range(bars):
                 bx0 = gap + i * (bw + gap)
                 if bx0 <= x < bx0 + bw:
-                    h = bar_height(i) * size * 0.66
-                    by1 = size * 0.82 - h
-                    by0 = size * 0.82
-                    thr_y = size * 0.82 - 0.5 * size * 0.66
+                    h = bar_height(i) * height * 0.66
+                    by1 = height * 0.82 - h
+                    by0 = height * 0.82
+                    thr_y = height * 0.82 - 0.5 * height * 0.66
                     if by1 <= y <= by0:
                         col = TEAL if (y - by1) / max(h, 1) > 0.12 else TEAL_DIM
                         # tallest bar gets the amber "selected" cap
-                        if i == 6 and y - by1 < size * 0.055:
+                        if i == 6 and y - by1 < height * 0.055:
                             col = AMBER
-                    elif abs(y - thr_y) < max(size * 0.012, 1.0):
+                    elif abs(y - thr_y) < max(height * 0.012, 1.0):
                         col = AMBER
             # 9:16 crop bracket, top-right
-            cw, ch = size * 0.20, size * 0.34
-            cx0, cy0 = size - size * 0.10 - cw, size * 0.10
-            near = (abs(x - cx0) < max(size * 0.012, 1) and cy0 <= y <= cy0 + ch) or \
-                   (abs(y - (cy0 + ch)) < max(size * 0.012, 1) and cx0 <= x <= cx0 + cw)
+            cw, ch = width * 0.20, height * 0.34
+            cx0, cy0 = width - width * 0.10 - cw, height * 0.10
+            near = (abs(x - cx0) < max(width * 0.012, 1) and cy0 <= y <= cy0 + ch) or \
+                   (abs(y - (cy0 + ch)) < max(height * 0.012, 1) and cx0 <= x <= cx0 + cw)
             if near and not outside:
                 col = WHITE
-            idx = (y * size + x) * 4
+            idx = (y * width + x) * 4
             px[idx:idx + 4] = bytes(col) if len(col) == 4 else bytes(col) + b"\xff"
             if len(col) == 3:
                 px[idx + 3] = 255
@@ -213,16 +238,22 @@ def parse_icns(data: bytes) -> list[tuple[str, bytes]]:
 
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
-    frames: dict[int, bytes] = {}
-    for size, name in PNG_SLOTS.items():
-        rgba = render(size)
-        png = encode_png(size, size, rgba)
+
+    def write_png(path: Path, w: int, h: int) -> bytes:
+        """Render, self-check and write one PNG. Returns the encoded buffer so
+        the ICO/ICNS frames can reuse already-verified pixels."""
+        rgba = render(w, h)
+        png = encode_png(w, h, rgba)
         # round-trip self-check: decode must reproduce the exact pixels
         dw, dh, drgba = decode_png(png)
-        assert (dw, dh) == (size, size) and drgba == rgba, f"PNG round-trip failed at {size}"
-        frames[size] = png
-        (OUT / name).write_bytes(png)
-        print(f"wrote {name} ({size}x{size}, {len(png)} bytes)")
+        assert (dw, dh) == (w, h) and drgba == rgba, f"PNG round-trip failed at {w}x{h}"
+        path.write_bytes(png)
+        return png
+
+    frames: dict[int, bytes] = {}
+    for size, name in PNG_SLOTS.items():
+        frames[size] = write_png(OUT / name, size, size)
+        print(f"wrote {name} ({size}x{size}, {len(frames[size])} bytes)")
 
     ico_frames = [(s, frames[s]) for s in (16, 32, 64, 128, 256)]
     ico = encode_ico(ico_frames)
@@ -238,7 +269,17 @@ def main() -> int:
     for _tag, png in parsed:
         decode_png(png)
     (OUT / "icon.icns").write_bytes(icns)
-    print(f"wrote icon.icns ({len(icns)} bytes, {len(parsed)} frames)")
+    print(f"wrote icon.icns ({len(icns)} bytes, {len(parsed)} entries)")
+
+    # The MSIX asset set. MakeAppx requires every image the manifest references
+    # to exist in the payload, and the manifest references all of these, so the
+    # generator and the manifest have to stay in step — pinned by
+    # tests/test_desktop_packaging.py rather than by this script.
+    assets = OUT.parent / "msix" / "Assets"
+    assets.mkdir(parents=True, exist_ok=True)
+    for name, (w, h) in MSIX_ASSETS.items():
+        png = write_png(assets / name, w, h)
+        print(f"wrote msix/Assets/{name} ({w}x{h}, {len(png)} bytes)")
     return 0
 
 
