@@ -1,93 +1,141 @@
-source frame rate                      PASS  NASA_360_program5_HD.mov @ 29.9700 fps
-01 edl independent parse               PASS  1 event(s), 1 channel record(s), title='very much like the electronic camera you have at home.'
-01 edl record spans advance            PASS  1 event(s), no overlap
-01 edl media exists                    PASS  1 clip path(s)
-01 timeline == facebook render         PASS  timeline 24.858s vs render 24.892s (1.00 frames)
-01 timeline == shorts render           PASS  timeline 24.858s vs render 24.892s (1.00 frames)
-01 source interval == selection        PASS  src 414.31-439.17s vs selection 414.30-439.16s (start 0.4f, end 0.4f)
-02 edl independent parse               PASS  2 event(s), 3 channel record(s), title="Welcome to the world's largest clean room."
-02 edl record spans advance            PASS  2 event(s), no overlap
-02 edl media exists                    PASS  2 clip path(s)
-02 timeline == facebook render         PASS  timeline 17.084s vs render 17.138s (1.63 frames)
-02 timeline == shorts render           PASS  timeline 17.084s vs render 17.138s (1.63 frames)
-02 source interval == selection        PASS  src 327.86-346.28s vs selection 327.86-346.28s (start 0.0f, end 0.0f)
-03 edl independent parse               PASS  1 event(s), 1 channel record(s), title="Well, we're studying the energy transfer in and out of this region of the atmosphere and the dynamics that result from the energy being put into the part of thi"
-03 edl record spans advance            PASS  1 event(s), no overlap
-03 edl media exists                    PASS  1 clip path(s)
-03 timeline == facebook render         PASS  timeline 16.450s vs render 16.450s (0.00 frames)
-03 timeline == shorts render           PASS  timeline 16.450s vs render 16.450s (0.00 frames)
-03 source interval == selection        PASS  src 654.95-671.40s vs selection 654.94-671.38s (start 0.4f, end 0.7f)
-04 edl independent parse               PASS  1 event(s), 1 channel record(s), title="Well, it's the interface and buffer region of the Earth's atmosphere."
-04 edl record spans advance            PASS  1 event(s), no overlap
-04 edl media exists                    PASS  1 clip path(s)
-04 timeline == facebook render         PASS  timeline 14.014s vs render 14.014s (0.00 frames)
-04 timeline == shorts render           PASS  timeline 14.014s vs render 14.014s (0.00 frames)
-04 source interval == selection        PASS  src 606.01-620.02s vs selection 606.02-620.02s (start 0.4f, end 0.0f)
-05 edl independent parse               PASS  1 event(s), 1 channel record(s), title="Well, the Hubble Space Telescope has revealed more to us about space in the past 10 years than we've ever known about the universe."
-05 edl record spans advance            PASS  1 event(s), no overlap
-05 edl media exists                    PASS  1 clip path(s)
-05 timeline == facebook render         PASS  timeline 17.651s vs render 17.684s (1.00 frames)
-05 timeline == shorts render           PASS  timeline 17.651s vs render 17.684s (1.00 frames)
-05 source interval == selection        PASS  src 94.99-112.65s vs selection 94.98-112.64s (start 0.4f, end 0.2f)
-06 edl independent parse               PASS  1 event(s), 1 channel record(s), title="See the pure science of how these three things interact, it's huge."
-06 edl record spans advance            PASS  1 event(s), no overlap
-06 edl media exists                    PASS  1 clip path(s)
-06 timeline == facebook render         PASS  timeline 9.076s vs render 9.076s (0.00 frames)
-06 timeline == shorts render           PASS  timeline 9.076s vs render 9.076s (0.00 frames)
-06 source interval == selection        PASS  src 507.11-516.18s vs selection 507.11-516.17s (start 0.1f, end 0.4f)
-01 fcpxml well-formed                  PASS  parsed
-01 fcpxml version                      PASS  version="1.11"
-01 fcpxml vocabulary                   PASS  all elements in the 1.11 set
-01 fcpxml media relinkable             PASS  every asset src is an absolute URI to an existing file
-01 fcpxml clips within asset           PASS  no clip reads past its asset
-01 fcpxml spine advances               PASS  clips in non-decreasing start order
-01 fcpxml duration == facebook render  PASS  spine 24.858s vs render 24.892s (1.00 frames)
-01 fcpxml duration == shorts render    PASS  spine 24.858s vs render 24.892s (1.00 frames)
-02 fcpxml well-formed                  PASS  parsed
-02 fcpxml version                      PASS  version="1.11"
-02 fcpxml vocabulary                   PASS  all elements in the 1.11 set
-02 fcpxml media relinkable             PASS  every asset src is an absolute URI to an existing file
-02 fcpxml clips within asset           PASS  no clip reads past its asset
-02 fcpxml spine advances               PASS  clips in non-decreasing start order
-02 fcpxml duration == facebook render  PASS  spine 17.084s vs render 17.138s (1.63 frames)
-02 fcpxml duration == shorts render    PASS  spine 17.084s vs render 17.138s (1.63 frames)
-03 fcpxml well-formed                  PASS  parsed
-03 fcpxml version                      PASS  version="1.11"
-03 fcpxml vocabulary                   PASS  all elements in the 1.11 set
-03 fcpxml media relinkable             PASS  every asset src is an absolute URI to an existing file
-03 fcpxml clips within asset           PASS  no clip reads past its asset
-03 fcpxml spine advances               PASS  clips in non-decreasing start order
-03 fcpxml duration == facebook render  PASS  spine 16.450s vs render 16.450s (0.00 frames)
-03 fcpxml duration == shorts render    PASS  spine 16.450s vs render 16.450s (0.00 frames)
-04 fcpxml well-formed                  PASS  parsed
-04 fcpxml version                      PASS  version="1.11"
-04 fcpxml vocabulary                   PASS  all elements in the 1.11 set
-04 fcpxml media relinkable             PASS  every asset src is an absolute URI to an existing file
-04 fcpxml clips within asset           PASS  no clip reads past its asset
-04 fcpxml spine advances               PASS  clips in non-decreasing start order
-04 fcpxml duration == facebook render  PASS  spine 14.014s vs render 14.014s (0.00 frames)
-04 fcpxml duration == shorts render    PASS  spine 14.014s vs render 14.014s (0.00 frames)
-05 fcpxml well-formed                  PASS  parsed
-05 fcpxml version                      PASS  version="1.11"
-05 fcpxml vocabulary                   PASS  all elements in the 1.11 set
-05 fcpxml media relinkable             PASS  every asset src is an absolute URI to an existing file
-05 fcpxml clips within asset           PASS  no clip reads past its asset
-05 fcpxml spine advances               PASS  clips in non-decreasing start order
-05 fcpxml duration == facebook render  PASS  spine 17.651s vs render 17.684s (1.00 frames)
-05 fcpxml duration == shorts render    PASS  spine 17.651s vs render 17.684s (1.00 frames)
-06 fcpxml well-formed                  PASS  parsed
-06 fcpxml version                      PASS  version="1.11"
-06 fcpxml vocabulary                   PASS  all elements in the 1.11 set
-06 fcpxml media relinkable             PASS  every asset src is an absolute URI to an existing file
-06 fcpxml clips within asset           PASS  no clip reads past its asset
-06 fcpxml spine advances               PASS  clips in non-decreasing start order
-06 fcpxml duration == facebook render  PASS  spine 9.076s vs render 9.076s (0.00 frames)
-06 fcpxml duration == shorts render    PASS  spine 9.076s vs render 9.076s (0.00 frames)
-01 edl == fcpxml duration              PASS  edl 24.858s vs fcpxml 24.858s (0.00 frames)
-02 edl == fcpxml duration              PASS  edl 17.084s vs fcpxml 17.084s (0.00 frames)
-03 edl == fcpxml duration              PASS  edl 16.450s vs fcpxml 16.450s (0.00 frames)
-04 edl == fcpxml duration              PASS  edl 14.014s vs fcpxml 14.014s (0.00 frames)
-05 edl == fcpxml duration              PASS  edl 17.651s vs fcpxml 17.651s (0.00 frames)
-06 edl == fcpxml duration              PASS  edl 9.076s vs fcpxml 9.076s (0.00 frames)
+# tools/nle_check.py against the frozen NASA 360 Episode 5 corpus.
+#
+# Command:  python3 tools/nle_check.py corpus/nasa360-ep5_run/project
+# Recorded: 2026-09-22, against the committed corpus tree as it stands.
+#
+# This transcript supersedes the earlier one, which was captured from
+# out/url-e2e/project -- a scratch run directory that no longer exists, whose
+# source was named NASA_360_program5_HD.mov. Those numbers (worst case 1.63
+# frames) described renders that are not in this repository. Everything below
+# describes artifacts that are, and is reproducible with the command above.
+#
+# The 12 SKIPs are the source-media check: corpus_run.py deletes the source
+# unless --keep-media is passed, so relink cannot be verified from this tree.
+# Re-running the corpus with --keep-media is the way to turn them into PASSes.
 
-ALL CHECKS PASS
+source frame rate                        PASS  ? @ 29.9700 fps
+01 edl independent parse                 PASS  1 event(s), 1 channel record(s), title='very much like the electronic camera you have at home.'
+01 edl record spans advance              PASS  1 event(s), no overlap
+01 edl media exists                      SKIP   NOT RUN (source media not retained): 1 clip path(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+01 timeline == facebook render           PASS  timeline 24.858s vs render 24.858s (0.00 frames)
+01 timeline == shorts render             PASS  timeline 24.858s vs render 24.858s (0.00 frames)
+01 source intervals == edit plan         PASS  1 interval(s), worst endpoint off by 0.42 frame(s); selection 414.30-439.16s
+02 edl independent parse                 PASS  2 event(s), 3 channel record(s), title="Welcome to the world's largest clean room."
+02 edl record spans advance              PASS  2 event(s), no overlap
+02 edl media exists                      SKIP   NOT RUN (source media not retained): 2 clip path(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+02 timeline == facebook render           PASS  timeline 17.084s vs render 17.105s (0.63 frames)
+02 timeline == shorts render             PASS  timeline 17.084s vs render 17.105s (0.63 frames)
+02 source intervals == edit plan         PASS  2 interval(s), worst endpoint off by 0.48 frame(s); selection 327.86-346.28s
+03 edl independent parse                 PASS  1 event(s), 1 channel record(s), title="Well, we're studying the energy transfer in and out of this region of the atmosphere and the dynamics that result from the energy being put into the part of thi"
+03 edl record spans advance              PASS  1 event(s), no overlap
+03 edl media exists                      SKIP   NOT RUN (source media not retained): 1 clip path(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+03 timeline == facebook render           PASS  timeline 16.450s vs render 16.450s (0.00 frames)
+03 timeline == shorts render             PASS  timeline 16.450s vs render 16.450s (0.00 frames)
+03 source intervals == edit plan         PASS  1 interval(s), worst endpoint off by 0.72 frame(s); selection 654.94-671.38s
+04 edl independent parse                 PASS  1 event(s), 1 channel record(s), title="Well, it's the interface and buffer region of the Earth's atmosphere."
+04 edl record spans advance              PASS  1 event(s), no overlap
+04 edl media exists                      SKIP   NOT RUN (source media not retained): 1 clip path(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+04 timeline == facebook render           PASS  timeline 14.014s vs render 14.014s (0.00 frames)
+04 timeline == shorts render             PASS  timeline 14.014s vs render 14.014s (0.00 frames)
+04 source intervals == edit plan         PASS  1 interval(s), worst endpoint off by 0.44 frame(s); selection 606.02-620.02s
+05 edl independent parse                 PASS  1 event(s), 1 channel record(s), title="Well, the Hubble Space Telescope has revealed more to us about space in the past 10 years than we've ever known about the universe."
+05 edl record spans advance              PASS  1 event(s), no overlap
+05 edl media exists                      SKIP   NOT RUN (source media not retained): 1 clip path(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+05 timeline == facebook render           PASS  timeline 17.651s vs render 17.651s (0.00 frames)
+05 timeline == shorts render             PASS  timeline 17.651s vs render 17.651s (0.00 frames)
+05 source intervals == edit plan         PASS  1 interval(s), worst endpoint off by 0.45 frame(s); selection 94.98-112.64s
+06 edl independent parse                 PASS  1 event(s), 1 channel record(s), title="See the pure science of how these three things interact, it's huge."
+06 edl record spans advance              PASS  1 event(s), no overlap
+06 edl media exists                      SKIP   NOT RUN (source media not retained): 1 clip path(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+06 timeline == facebook render           PASS  timeline 9.076s vs render 9.076s (0.00 frames)
+06 timeline == shorts render             PASS  timeline 9.076s vs render 9.076s (0.00 frames)
+06 source intervals == edit plan         PASS  1 interval(s), worst endpoint off by 0.37 frame(s); selection 507.11-516.17s
+01 fcpxml well-formed                    PASS  parsed
+01 fcpxml version                        PASS  version="1.11"
+01 fcpxml vocabulary                     PASS  all elements in the 1.11 set
+01 fcpxml media relinkable               SKIP   NOT RUN (source media not retained): 1 asset(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+01 fcpxml clips within asset             PASS  no clip reads past its asset
+01 fcpxml spine advances                 PASS  clips in non-decreasing start order
+01 fcpxml spine contiguous               PASS  no gap between neighbouring clips
+01 fcpxml source intervals == edit plan  PASS  1 interval(s), worst endpoint off by 0.42 frame(s); selection 414.30-439.16s
+01 fcpxml duration == facebook render    PASS  spine 24.858s vs render 24.858s (0.00 frames)
+01 fcpxml duration == shorts render      PASS  spine 24.858s vs render 24.858s (0.00 frames)
+02 fcpxml well-formed                    PASS  parsed
+02 fcpxml version                        PASS  version="1.11"
+02 fcpxml vocabulary                     PASS  all elements in the 1.11 set
+02 fcpxml media relinkable               SKIP   NOT RUN (source media not retained): 1 asset(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+02 fcpxml clips within asset             PASS  no clip reads past its asset
+02 fcpxml spine advances                 PASS  clips in non-decreasing start order
+02 fcpxml spine contiguous               PASS  no gap between neighbouring clips
+02 fcpxml source intervals == edit plan  PASS  2 interval(s), worst endpoint off by 0.48 frame(s); selection 327.86-346.28s
+02 fcpxml duration == facebook render    PASS  spine 17.084s vs render 17.105s (0.63 frames)
+02 fcpxml duration == shorts render      PASS  spine 17.084s vs render 17.105s (0.63 frames)
+03 fcpxml well-formed                    PASS  parsed
+03 fcpxml version                        PASS  version="1.11"
+03 fcpxml vocabulary                     PASS  all elements in the 1.11 set
+03 fcpxml media relinkable               SKIP   NOT RUN (source media not retained): 1 asset(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+03 fcpxml clips within asset             PASS  no clip reads past its asset
+03 fcpxml spine advances                 PASS  clips in non-decreasing start order
+03 fcpxml spine contiguous               PASS  no gap between neighbouring clips
+03 fcpxml source intervals == edit plan  PASS  1 interval(s), worst endpoint off by 0.72 frame(s); selection 654.94-671.38s
+03 fcpxml duration == facebook render    PASS  spine 16.450s vs render 16.450s (0.00 frames)
+03 fcpxml duration == shorts render      PASS  spine 16.450s vs render 16.450s (0.00 frames)
+04 fcpxml well-formed                    PASS  parsed
+04 fcpxml version                        PASS  version="1.11"
+04 fcpxml vocabulary                     PASS  all elements in the 1.11 set
+04 fcpxml media relinkable               SKIP   NOT RUN (source media not retained): 1 asset(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+04 fcpxml clips within asset             PASS  no clip reads past its asset
+04 fcpxml spine advances                 PASS  clips in non-decreasing start order
+04 fcpxml spine contiguous               PASS  no gap between neighbouring clips
+04 fcpxml source intervals == edit plan  PASS  1 interval(s), worst endpoint off by 0.44 frame(s); selection 606.02-620.02s
+04 fcpxml duration == facebook render    PASS  spine 14.014s vs render 14.014s (0.00 frames)
+04 fcpxml duration == shorts render      PASS  spine 14.014s vs render 14.014s (0.00 frames)
+05 fcpxml well-formed                    PASS  parsed
+05 fcpxml version                        PASS  version="1.11"
+05 fcpxml vocabulary                     PASS  all elements in the 1.11 set
+05 fcpxml media relinkable               SKIP   NOT RUN (source media not retained): 1 asset(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+05 fcpxml clips within asset             PASS  no clip reads past its asset
+05 fcpxml spine advances                 PASS  clips in non-decreasing start order
+05 fcpxml spine contiguous               PASS  no gap between neighbouring clips
+05 fcpxml source intervals == edit plan  PASS  1 interval(s), worst endpoint off by 0.45 frame(s); selection 94.98-112.64s
+05 fcpxml duration == facebook render    PASS  spine 17.651s vs render 17.651s (0.00 frames)
+05 fcpxml duration == shorts render      PASS  spine 17.651s vs render 17.651s (0.00 frames)
+06 fcpxml well-formed                    PASS  parsed
+06 fcpxml version                        PASS  version="1.11"
+06 fcpxml vocabulary                     PASS  all elements in the 1.11 set
+06 fcpxml media relinkable               SKIP   NOT RUN (source media not retained): 1 asset(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+06 fcpxml clips within asset             PASS  no clip reads past its asset
+06 fcpxml spine advances                 PASS  clips in non-decreasing start order
+06 fcpxml spine contiguous               PASS  no gap between neighbouring clips
+06 fcpxml source intervals == edit plan  PASS  1 interval(s), worst endpoint off by 0.37 frame(s); selection 507.11-516.17s
+06 fcpxml duration == facebook render    PASS  spine 9.076s vs render 9.076s (0.00 frames)
+06 fcpxml duration == shorts render      PASS  spine 9.076s vs render 9.076s (0.00 frames)
+01 edl == fcpxml duration                PASS  edl 24.858s vs fcpxml 24.858s (0.00 frames)
+02 edl == fcpxml duration                PASS  edl 17.084s vs fcpxml 17.084s (0.00 frames)
+03 edl == fcpxml duration                PASS  edl 16.450s vs fcpxml 16.450s (0.00 frames)
+04 edl == fcpxml duration                PASS  edl 14.014s vs fcpxml 14.014s (0.00 frames)
+05 edl == fcpxml duration                PASS  edl 17.651s vs fcpxml 17.651s (0.00 frames)
+06 edl == fcpxml duration                PASS  edl 9.076s vs fcpxml 9.076s (0.00 frames)
+
+ALL RUN CHECKS PASS, but 12 could not run (source media not retained; re-run with --keep-media to verify relink)
+
+# ---
+# Corpus-wide, same command over every committed project, 2026-09-22.
+# The four FAILs are not export defects: each is a source the pipeline
+# correctly declined, and since 2026-09-22 the finding names the recorded
+# cause instead of printing "no timeline/".
+#
+#   alice-1903                NO_SPEECH_DETECTED   fail=1 exit=1
+#   emwcon-panel-2018          OK                  pass=76  skip=10 fail=0 exit=0
+#   hadhazy-protest            OK                  pass=46  skip=6  fail=0 exit=0
+#   hindi-baiga-interview      NO_STORIES_PASSED   fail=1 exit=1
+#   nasa360-ep5                OK                  pass=91  skip=12 fail=0 exit=0
+#   ooi-vertical               OK                  pass=46  skip=6  fail=0 exit=0
+#   pentagon-esper-briefing    OK                  pass=86  skip=0  fail=0 exit=0
+#   roman-portrait-trailer     NO_SPEECH_DETECTED  fail=1 exit=1
+#   royal-society-cloke        OK                  pass=69  skip=0  fail=0 exit=0
+#   telugu-launch              NO_SPEECH_DETECTED  fail=1 exit=1
+#   telugu-tutorial            OK                  pass=16  skip=2  fail=0 exit=0
+#
+# The 7 runs that exported: 430 PASS, 36 SKIP, 0 FAIL. Criterion P1 in
+# docs/EVALUATION.md is met on every run that produced an export.

@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 
 TOOLS = Path(__file__).resolve().parent.parent / "tools"
+ROOT = Path(__file__).resolve().parent.parent
 
 
 def _write_media(path: Path, seconds: float = 1.0) -> None:
@@ -338,3 +339,103 @@ def test_a_hole_in_the_spine_is_caught(tmp_path):
     assert not ok
     assert any("leaves a" in d and "hole" in d for _n, _o, d in findings), (
         [f"{n}: {d}" for n, _o, d in findings])
+
+
+# --- a source the pipeline correctly declined ------------------------------
+
+
+def _outcome(project: Path, **fields) -> Path:
+    """Write the record corpus_run.py leaves in a finished project tree.
+
+    Four committed corpus runs ship a transcript and no timeline: the source
+    had no speech, or nothing passed the gate. Their outcome used to live only
+    in ``corpus/results.jsonl`` — a sibling of the tree — so pointed at the
+    project alone the audit could print "no timeline/" and nothing else, which
+    reads as a broken export rather than a declined source.
+    """
+    rec = {"id": "some-source", "status": "NO_SPEECH_DETECTED", "exit_code": 1,
+           "no_speech_cause": None, "clips": 0, "segments": 0,
+           "elapsed_s": 12.3, "finished_utc": "2026-09-22T00:00:00Z"}
+    rec.update(fields)
+    path = project / "run_outcome.json"
+    path.write_text(json.dumps(rec, ensure_ascii=False, indent=1),
+                    encoding="utf-8")
+    return path
+
+
+def test_a_declined_source_names_its_cause_not_just_the_missing_dir(tmp_path):
+    """A run that found no speech is a correct negative result, not a broken
+    export. The finding has to say so, because that is how a reader tells the
+    four committed failures from an interrupted run."""
+    project = tmp_path / "project"
+    project.mkdir()
+    _outcome(project, status="NO_SPEECH_DETECTED",
+             no_speech_cause="silent_track")
+    ok, findings = _audit(project)
+    assert not ok, "there is no timeline, so the check must still fail"
+    [(_name, _cok, detail)] = findings
+    assert "NO_SPEECH_DETECTED" in detail
+    assert "exit 1" in detail
+    assert "silent_track" in detail
+    assert "did not export anything to check" in detail
+
+
+def test_a_run_that_succeeded_but_never_exported_is_a_real_defect(tmp_path):
+    """The other half of the distinction. An OK outcome with no timeline means
+    the export stage is missing — a bug in the pipeline, not a property of the
+    source — and the finding must not soften that into 'declined'."""
+    project = tmp_path / "project"
+    project.mkdir()
+    _outcome(project, status="OK", exit_code=0)
+    ok, findings = _audit(project)
+    assert not ok
+    [(_name, _cok, detail)] = findings
+    assert "though the run records OK" in detail
+    assert "real defect" in detail
+    assert "did not export anything" not in detail
+
+
+def test_an_unclassifiable_run_says_so_rather_than_guessing(tmp_path):
+    """No outcome record and no timeline: the run cannot be classified, and the
+    finding must not imply a cause it does not have."""
+    project = tmp_path / "project"
+    project.mkdir()
+    ok, findings = _audit(project)
+    assert not ok
+    [(_name, _cok, detail)] = findings
+    assert "cannot be classified" in detail
+    assert "NO_SPEECH" not in detail
+
+
+def test_a_corrupt_outcome_is_handled_not_crashed(tmp_path):
+    """A truncated run_outcome.json is a plausible on-disk state for an
+    interrupted write; the audit degrades to 'cannot be classified' rather
+    than raising on a reader who has no other copy of the record."""
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "run_outcome.json").write_text('{"status": "OK', encoding="utf-8")
+    ok, findings = _audit(project)
+    assert not ok
+    assert any("cannot be classified" in d for _n, _o, d in findings)
+
+
+def test_every_committed_corpus_project_is_self_describing():
+    """A checkout must explain its own failures. Before run_outcome.json this
+    required corpus/results.jsonl, which a tarball of one project does not
+    include; now the reason travels with the artifacts."""
+    roots = sorted((ROOT / "corpus").glob("*_run/project"))
+    assert roots, "no corpus projects found; the fixture glob is wrong"
+    missing = [str(p.parent.name) for p in roots
+               if not (p / "run_outcome.json").is_file()]
+    assert not missing, f"projects without run_outcome.json: {missing}"
+    for p in roots:
+        rec = json.loads((p / "run_outcome.json").read_text(encoding="utf-8"))
+        assert rec["status"] in {
+            "OK", "NO_SPEECH_DETECTED", "NO_STORIES_PASSED", "PIPELINE_FAILED",
+            "FETCH_FAILED", "TIMEOUT", "HARNESS_ERROR",
+        }, f"{p.parent.name}: unrecognised status {rec['status']!r}"
+        # The status and the artifacts have to agree, or one of them is stale.
+        has_timeline = (p / "timeline").is_dir()
+        assert has_timeline == (rec["status"] == "OK"), (
+            f"{p.parent.name}: status {rec['status']} but "
+            f"{'a' if has_timeline else 'no'} timeline/")

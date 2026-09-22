@@ -36,9 +36,13 @@ ffprobe out/web/pipeline/project/source/NASA_360_program5_HD.mov
 - Source duration **1469.77 s (24:29)**, 4:3 NTSC SD, 29.97 fps, PCM stereo audio. VERIFIED.
 - The run produced **6 clips, each in 16:9 and 9:16**, i.e. 12 rendered files plus per-cut
   EDL, FCPXML 1.11, SRT, ASS and a content-pack JSON. VERIFIED (directory listing + audit runs below).
-- `tools/nle_check.py out/web/pipeline/project` → **86 PASS, 0 FAIL, 6 SKIP** (the 6 skips are
-  "edl independent parse", skipped on this run because `pycmx` was not then installed — it
-  is now a declared dependency, so those 6 execute today), exit 0. VERIFIED at the time.
+- `tools/nle_check.py corpus/nasa360-ep5_run/project` → **91 PASS, 12 SKIP, 0 FAIL**, exit 0,
+  re-run 2026-09-22 with `pycmx` 1.5.1 installed. VERIFIED. The figure was previously quoted as
+  86/0/6 against the scratch path `out/web/pipeline/project`, which is gitignored and absent from
+  a clean clone; the committed path is the reproducible one. The 12 skips are `media not retained`
+  (6 `edl media exists` + 6 `fcpxml media relinkable` — re-runnable with `--keep-media`), not
+  missing parsers. Across all 11 committed runs the 7 that exported total 430/36/0; the other 4
+  FAIL on one `no timeline/` finding each, naming the recorded cause — see criterion P1.
 - `tools/editorial_audit.py out/web/pipeline/project` → **6/6 clips PASS, cross-clip PASS**. VERIFIED.
 - `.venv/bin/python -m pytest -q` → **1287 passed, 13 skipped in 260.7 s** (re-run 2026-09-21;
   the skips are 7 opt-in real-media measurements, 5 WER records too old to
@@ -202,8 +206,11 @@ VERIFIED on the reference: `facebook/01.mp4` is 864×486, SAR 1:1, DAR 16:9, 29.
 
 ### D3 — Interchange validity
 
-`tools/nle_check.py` already implements this and is the contract. On the reference it returns
-**86 PASS / 0 FAIL / 6 SKIP** (VERIFIED). The corpus run must additionally:
+`tools/nle_check.py` already implements this and is the contract. On the reference it returned
+**86 PASS / 0 FAIL / 6 SKIP** (VERIFIED at the time it was written, on `out/web/pipeline/project`,
+with `pycmx` absent). Re-run on the committed corpus on 2026-09-22 with `pycmx` 1.5.1 present it is
+**430 PASS / 36 SKIP / 0 FAIL across the 7 runs that exported**, with the 6 formerly skipped
+`edl independent parse` checks now executing as real checks. The corpus run must additionally:
 
 - ~~install `pycmx`~~ — **DONE**: `pycmx>=1.5` is in the `nle`, `dev` and `all` extras and 1.5.1
   is installed, so the "edl independent parse" checks are no longer skipped by default. They
@@ -266,9 +273,18 @@ the reference run immediately.
 
 | # | Criterion | Threshold | Status today |
 | --- | --- | --- | --- |
-| P1 | `tools/nle_check.py` exit code 0, **with `pycmx` installed** so the 6 EDL-parse skips become real checks | 0 FAIL on **100%** of corpus | 86/0/6 when `pycmx` was absent — the dependency gap is closed
-  (`pycmx>=1.5` in `nle`/`dev`/`all`, 1.5.1 installed) but the corpus has not been re-audited
-  with it present, so 0-FAIL is still **UNMEASURED at corpus scale** |
+| P1 | `tools/nle_check.py` exit code 0, **with `pycmx` installed** so the 6 EDL-parse skips become real checks | 0 FAIL on **100%** of corpus | **MEASURED across all 11 committed runs on 2026-09-22.** The 7 runs that
+  exported total **430 PASS, 36 SKIP, 0 FAIL, exit 0** — the 6 formerly-skipped
+  EDL parses now execute as real checks (`pycmx` 1.5.1 present), and the 36
+  skips are all `media not retained` (relink, runnable with `--keep-media`).
+  The other 4 runs (`alice-1903`, `hindi-baiga-interview`,
+  `roman-portrait-trailer`, `telugu-launch`) FAIL with one finding each —
+  no timeline, because the source had no speech or no story passed the gate.
+  Those are recorded corpus *failures*, not export defects, and since
+  2026-09-22 the finding names the cause from `run_outcome.json` instead of
+  printing `no timeline/`. So the criterion is met on every run that
+  produced an export, and is unmet on 4 of 11 sources for a reason the
+  corpus itself records. |
 | P2 | `tools/editorial_audit.py` all clips pass | 100% of clips, on **100%** of corpus | 6/6 — CURRENT, one source |
 | P3 | Geometry: every 16:9 file DAR exactly 16:9; every 9:16 file displays 9:16 | 100% of files | CURRENT, one source |
 | P4 | Frame rate of output == frame rate of source | 100% of files, at every rate in §2.1 | CURRENT at 29.97 only; **untested at 23.976/25/50/59.94** |

@@ -623,11 +623,43 @@ def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float,
     return findings
 
 
+def _no_timeline_reason(project: Path) -> str:
+    """Explain a missing ``timeline/`` from what the run left behind.
+
+    Four committed corpus projects (`alice-1903`, `hindi-baiga-interview`,
+    `roman-portrait-trailer`, `telugu-launch`) ship a transcript and nothing
+    else. Each is a recorded failure — no speech detected, or no story passed
+    the gate — but the record used to sit only in ``corpus/results.jsonl``, a
+    sibling of the tree. Pointed at the project alone, this check could only
+    print "no timeline/", which reads as a broken export rather than a source
+    the pipeline correctly declined. The outcome the runner writes into the
+    tree is now read here so the finding states the cause.
+    """
+    outcome_path = project / "run_outcome.json"
+    if outcome_path.is_file():
+        try:
+            o = json.loads(outcome_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            o = None
+        if isinstance(o, dict) and o.get("status"):
+            status = o["status"]
+            tail = (f" (run_outcome.json: {status}, exit {o.get('exit_code')}"
+                    + (f", {o['no_speech_cause']}" if o.get("no_speech_cause") else "")
+                    + ")")
+            if status != "OK":
+                return (f"no timeline/ in {project}: the run did not export "
+                        f"anything to check{tail}")
+            return (f"no timeline/ in {project} though the run records "
+                    f"{status}{tail} — the export stage is missing, which is a "
+                    f"real defect, not a failed source")
+    return f"no timeline/ in {project}: no run_outcome.json and no timeline/, so the run cannot be classified"
+
+
 def check_project(project: Path) -> tuple[bool, list[tuple[str, bool, str]]]:
     """Run every NLE-compatibility check on one project directory."""
     timeline = project / "timeline"
     if not timeline.is_dir():
-        return False, [("timeline directory", False, f"no timeline/ in {project}")]
+        return False, [("timeline directory", False, _no_timeline_reason(project))]
     source_dir = project / "source"
     source = next(source_dir.glob("*"), None) if source_dir.is_dir() else None
     # A local-file run does not copy the media into the project tree, so there

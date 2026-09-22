@@ -1,0 +1,10 @@
+{
+ "id": "alice-1903",
+ "status": "NO_SPEECH_DETECTED",
+ "exit_code": 1,
+ "no_speech_cause": null,
+ "clips": null,
+ "segments": 0,
+ "elapsed_s": 7.5,
+ "finished_utc": "2026-09-19T15:04:54Z"
+}

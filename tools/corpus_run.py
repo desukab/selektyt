@@ -219,6 +219,23 @@ def run_one(entry: dict, workdir: Path, keep_media: bool) -> dict:
                 if "passed the editorial/context gate" in line:
                     rec["status"] = "NO_STORIES_PASSED"
                     break
+        # The status lives in results.jsonl, which is a sibling of the project
+        # tree — so a reader who has only the project (an exported tarball, a
+        # fresh checkout, or tools/nle_check.py pointed at one directory) cannot
+        # tell a failed run from an interrupted one. `alice-1903` and its three
+        # neighbours ship a transcript and nothing else, and the reason was
+        # reachable only by grepping a file one level up. Writing the outcome
+        # into the tree makes the failure self-describing where the artifacts
+        # are, which is also where the audits read it from.
+        (probe_dir / "run_outcome.json").write_text(
+            json.dumps(
+                {"id": rec["id"], "status": rec["status"],
+                 "exit_code": rec.get("exit_code"),
+                 "no_speech_cause": rec.get("no_speech_cause"),
+                 "clips": rec.get("clips"), "segments": rec.get("segments"),
+                 "elapsed_s": rec.get("elapsed_s"), "finished_utc": _utcnow()},
+                ensure_ascii=False, indent=1),
+            encoding="utf-8")
         if not keep_media:
             # ``fetch`` writes a regular file, and ``shutil.rmtree`` on a regular
             # file raises NotADirectoryError, which ``ignore_errors`` swallowed —
