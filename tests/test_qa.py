@@ -546,3 +546,153 @@ def test_write_report_raises_on_hard_render_failure():
         _lavfi_video(src, duration=30.0)
         with pytest.raises(RuntimeError):
             write_report(td, [fb, sh], source_path=str(src))
+
+
+# ── duration against the edit plan ──
+
+def test_validate_output_accepts_duration_matching_plan():
+    with tempfile.TemporaryDirectory() as td:
+        mp4 = Path(td) / "good.mp4"
+        _lavfi_video(mp4, duration=3.0)
+        ok, errors = validate_output(mp4, vertical=False, expected_duration=3.0)
+        assert ok, errors
+
+
+def test_validate_output_tolerates_small_duration_drift():
+    """ffmpeg clocks its own container duration, so exact equality is hopeless.
+
+    The 1% band is roughly seven times the worst drift measured on the corpus
+    (0.025 s in 17.08 s); anything inside it is the same cut measured twice.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        mp4 = Path(td) / "good.mp4"
+        _lavfi_video(mp4, duration=3.0)
+        ok, errors = validate_output(mp4, vertical=False, expected_duration=3.02)
+        assert ok, errors
+
+
+def test_validate_output_rejects_a_dropped_interval():
+    """The one failure no other check can see: a cleanly encoded wrong cut.
+
+    A render that silently dropped a retention interval is a playable video of
+    the wrong program — it decodes, has audio, sits at the right aspect and
+    frame rate, and passes every structural check. Only the plan's own sum
+    notices that a piece of the program is missing.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        mp4 = Path(td) / "short.mp4"
+        _lavfi_video(mp4, duration=3.0)
+        ok, errors = validate_output(mp4, vertical=False, expected_duration=10.0)
+        assert not ok
+        assert any("edit plan expected" in e for e in errors), errors
+        assert any("dropped or duplicated" in e for e in errors), errors
+
+
+def test_validate_output_rejects_an_overlong_render():
+    with tempfile.TemporaryDirectory() as td:
+        mp4 = Path(td) / "long.mp4"
+        _lavfi_video(mp4, duration=10.0)
+        ok, errors = validate_output(mp4, vertical=False, expected_duration=3.0)
+        assert not ok
+        assert any("edit plan expected" in e for e in errors), errors
+
+
+def test_write_report_checks_durations_against_the_plan():
+    """The plan the pipeline writes is what the renders are measured against."""
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        (td / "facebook").mkdir()
+        (td / "shorts").mkdir()
+        fb = td / "facebook" / "01.mp4"
+        sh = td / "shorts" / "01.mp4"
+        _lavfi_video(fb, duration=3.0, size="640x360")
+        _lavfi_video(sh, duration=3.0, size="360x640")
+        (td / "selections.json").write_text(json.dumps([{"start": 1, "end": 3}]))
+        (td / "edit_plan.json").write_text(json.dumps([
+            {"index": 1, "edited_duration": 3.0, "intervals": [[0.0, 3.0]]},
+        ]))
+        src = td / "src.mp4"
+        _lavfi_video(src, duration=30.0, size="640x360")
+        data = json.loads(write_report(td, [fb, sh], source_path=str(src)).read_text())
+        assert data["ok"] is True, data["errors"]
+
+
+def test_write_report_fails_when_a_clip_is_shorter_than_the_plan():
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        (td / "facebook").mkdir()
+        (td / "shorts").mkdir()
+        fb = td / "facebook" / "01.mp4"
+        sh = td / "shorts" / "01.mp4"
+        _lavfi_video(fb, duration=3.0, size="640x360")
+        _lavfi_video(sh, duration=3.0, size="360x640")
+        (td / "selections.json").write_text(json.dumps([{"start": 1, "end": 3}]))
+        (td / "edit_plan.json").write_text(json.dumps([
+            {"index": 1, "edited_duration": 9.0, "intervals": [[0.0, 9.0]]},
+        ]))
+        src = td / "src.mp4"
+        _lavfi_video(src, duration=30.0, size="640x360")
+        with pytest.raises(RuntimeError) as excinfo:
+            write_report(td, [fb, sh], source_path=str(src))
+        assert "edit plan expected" in str(excinfo.value)
+
+
+def test_write_report_ignores_an_unreadable_plan():
+    """A plan that cannot be parsed costs the plan comparison, not the run."""
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        (td / "facebook").mkdir()
+        (td / "shorts").mkdir()
+        fb = td / "facebook" / "01.mp4"
+        sh = td / "shorts" / "01.mp4"
+        _lavfi_video(fb, duration=3.0, size="640x360")
+        _lavfi_video(sh, duration=3.0, size="360x640")
+        (td / "selections.json").write_text(json.dumps([{"start": 1, "end": 3}]))
+        (td / "edit_plan.json").write_text("{not json")
+        src = td / "src.mp4"
+        _lavfi_video(src, duration=30.0, size="640x360")
+        data = json.loads(write_report(td, [fb, sh], source_path=str(src)).read_text())
+        assert data["ok"] is True, data["errors"]
+
+
+# ── unmeasurable advisory metrics ──
+
+def test_black_frame_pct_reports_none_for_an_unreadable_file():
+    """``0.0`` would read as "verified no black frames" on a file it never read."""
+    with tempfile.TemporaryDirectory() as td:
+        junk = Path(td) / "not_a_video.mp4"
+        junk.write_bytes(b"not a video at all")
+        assert black_frame_pct(junk) is None
+
+
+def test_visual_diversity_reports_none_when_no_clip_decodes():
+    """Two clips given and none readable is no measurement, not diversity 1.0."""
+    with tempfile.TemporaryDirectory() as td:
+        a = Path(td) / "a.mp4"
+        b = Path(td) / "b.mp4"
+        a.write_bytes(b"not a video")
+        b.write_bytes(b"not a video either")
+        assert visual_diversity_score([a, b]) is None
+
+
+def test_unmeasurable_black_ratio_is_reported_not_read_as_clean(monkeypatch):
+    """An unmeasurable metric must appear in qa.json as a gap, not a number.
+
+    Mutation-checked by forcing the failure path directly: with the metric
+    returning ``None`` the run stays ``ok`` (the video is still valid) but says
+    so in warnings, instead of recording ``black_frame_pct: 0.0`` for a file
+    whose frames were never read.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        (td / "facebook").mkdir()
+        (td / "shorts").mkdir()
+        fb = td / "facebook" / "01.mp4"
+        sh = td / "shorts" / "01.mp4"
+        _lavfi_video(fb, duration=3.0, size="640x360")
+        _lavfi_video(sh, duration=3.0, size="360x640")
+        monkeypatch.setattr("engine.qa.black_frame_pct", lambda path, **kw: None)
+        data = json.loads(write_report(td, [fb, sh]).read_text())
+        assert data["ok"] is True, "an unmeasured advisory metric is not a hard failure"
+        assert data["per_file"][str(fb)]["black_frame_pct"] is None
+        assert any("black-frame ratio could not be measured" in w for w in data["warnings"])

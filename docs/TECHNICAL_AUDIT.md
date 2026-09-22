@@ -331,7 +331,7 @@ declared against 28.785 s rendered) and carries a two-frame tolerance. The
 finding stands, but it is a *post hoc* audit: it lives in `tools/nle_check.py`,
 not in the pipeline, and it is not run in CI (`docs/METRICS.md` A4.1).
 
-### QA can pass while the output is wrong — VERIFIED
+### QA can pass while the output is wrong — VERIFIED, then partly RESOLVED
 
 `engine/qa.py:19-43` (`validate_output`) asserts: file exists, size ≥ 1000
 bytes, a video stream, an audio stream, orientation (`h > w` vertical / `w >
@@ -343,11 +343,57 @@ not silent, or that two clips are the same length as each other. Warnings in
 visual diversity — are computed and then never fail the run. `write_report`
 (`:324-345`) raises only on `not report["ok"]`.
 
+**Of that list, the aspect ratio, the plan duration and the silent-audio case
+are now checked** — see the resolution note below the code excerpt. The rest of
+the list still stands: captions are not verified at runtime, and the advisory
+findings still never fail a run, which is by design (a usable render with a
+quiet tail is not discarded) and would be a defect only if a *broken* render
+slipped through — the check for that is the decode sample and the plan
+comparison, not the advisory tier.
+
 `black_frame_pct` (`:138-164`) and `visual_diversity_score` (`:167-209`)
 swallow all exceptions to `return 0.0` / `continue`, so a broken OpenCV path
 reports a clean bill of health rather than a failure. This is the pattern the
 repo's own docs warn about: a metric that fails open is indistinguishable from
 a metric that passed.
+
+**Resolved 2026-09-22, except caption presence.** The paragraph above was
+written against the code as it stood; what each part does now:
+
+- **Aspect ratio is checked precisely.** `_display_aspect` (`:19-35`) derives
+  the display aspect from the stream's sample aspect ratio rather than reading
+  the container's often-unpopulated `display_aspect_ratio`, and
+  `validate_output` (`:271-278`) errors when it is more than 1% off 16:9 or
+  9:16. This was found by measuring, not by reading: a real anamorphic source
+  (720×486, SAR 8:9) shipped a landscape deliverable at DAR 320:243 — 4:3 —
+  labelled 16:9, and nothing else in the pipeline noticed.
+- **Duration is compared against the edit plan.** `write_report` (`:639`)
+  reads the `edit_plan.json` the pipeline writes beside the outputs, maps each
+  entry's `edited_duration` to the render's stem, and `validate_output`
+  (`:327-341`) errors beyond 1% drift. The tolerance is roughly seven times the
+  worst drift measured across the corpus's 18 real renders (0.025 s in 17.08 s,
+  0.15%); a dropped retention interval is off by a whole clip and lands far
+  outside it. This is the only check that can see a wrong *cut* — a cleanly
+  encoded video of the wrong program decodes, has audio, and passes every
+  structural check. Stem-matched, not position-matched, because the plan holds
+  one entry per clip and each clip yields two delivers.
+- **The advisory metrics no longer fail open.** Both return `None` when they
+  cannot measure anything — an unprobeable file, a capture that will not open,
+  a sample that decoded no frames — and `validate_outputs_expanded` reports the
+  gap in `warnings` and records `null` in `qa.json` rather than recording a
+  number that reads as a pass. `black_frame_pct` also divides by the frames it
+  actually decoded rather than the frames it asked for, so a capture that
+  silently drops seek positions cannot dilute the ratio toward "clean".
+  Note the deliberate asymmetry: a *single* clip still scores a defined
+  diversity of 1.0, because with no peer there is nothing to measure and the
+  value is a definition, not a claim.
+- **Caption presence remains open**, and deliberately so. There is no cheap
+  exact signal for "the subtitle filter ran"; a sampled-pixel heuristic would
+  need a per-clip uncaptioned control that runtime QA does not have, and a
+  false failure would discard a good render. The real verification is
+  `tests/test_render.py::test_the_burned_captions_are_in_the_pixels`, which
+  decodes the rendered MP4 frame by frame against an uncaptioned control of
+  the same source — a test-time comparison, not a runtime one.
 
 ### The falsifiable audit tools are built and never wired in — VERIFIED
 
@@ -548,7 +594,7 @@ means the shipped output is wrong and nothing in the system says so.
 | 4 | **High** | Security | `web/server.mjs:288-290`, `selekyt/server.py:307-325` | SSRF. `http://169.254.169.254/...` is a valid `source`, fetched from the server's network. No host/port allowlist anywhere. |
 | 5 | **High** | Reliability | `selekyt/pipeline.py:391-419`, `:117-151` | Caption-style render-cache staleness. Re-run with a different `SELEKYT_CAPTION_STYLE`: the new ASS is written, the old MP4 is shipped. **Falsifies QA.** The cache key omits the style in both `_fingerprint` and `_selection_digest`. **FIXED —** the key now requires a matching `caption_style`, records it back, and treats a record with no style as a miss; pinned by `tests/test_caption_style_cache.py` (5 tests). |
 | 6 | **High** | Scalability | `pyproject.toml` | `faster-whisper` is not a base dependency. Default install cannot transcribe. First-run experience is a crash. |
-| 7 | **High** | Reliability | `engine/qa.py:19-43`, `:138-209` | QA never checks aspect ratio precisely, duration vs edit plan, or caption presence; `black_frame_pct`/`visual_diversity_score` swallow exceptions and report clean. **Falsifies QA.** |
+| 7 | **High** | Reliability | `engine/qa.py:19-43`, `:138-209` | QA never checks aspect ratio precisely, duration vs edit plan, or caption presence; `black_frame_pct`/`visual_diversity_score` swallow exceptions and report clean. **Falsifies QA.** **Partly resolved 2026-09-22 —** the aspect ratio *is* checked precisely now (display aspect from SAR, 1% tolerance), the container duration is compared against the edit plan's per-clip `edited_duration` at a 1% tolerance, and the two advisory metrics return `None` on any failure to measure instead of a clean-looking `0.0`/`1.0`. Still open: **caption presence** — no cheap exact signal exists for whether the burn happened, and a sampled-frame heuristic would fail false on real corpus clips, so that verification lives in `tests/test_render.py::test_the_burned_captions_are_in_the_pixels` rather than in runtime QA. |
 | 8 | **High** | Scalability | no cleanup anywhere; `providers/atomic.py:24-34` | ~900 MB retained per project, 92% intermediates, 13 GB free, no GC. At 100× the run dies in `OSError` mid-write after the checkpoint. The fixed `.tmp` name also loses data under concurrent writes to one state file. |
 | 9 | **Medium** | Architecture | `engine/fcpxml.py` vs `engine/nle_export.py`; `selekyt/server.py:27,185-194` vs `selekyt/pipeline.py:21,438` | Two live FCPXML emitters with divergent error policy (raise vs silent fallback) behind two entry points. The web preview and the shipped file can disagree. |
 | 10 | **Medium** | Reliability | `selekyt/pipeline.py:433-452` | Export validation runs after renders are checkpointed, so a bad timeline kills a run that has already produced deliverables. Recovers on resume; reports failure. Also, `:433-436` claims timeline duration == render duration but never measures the render. |

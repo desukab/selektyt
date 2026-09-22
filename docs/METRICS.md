@@ -486,6 +486,19 @@ Additionally `black_frame_pct` and `visual_diversity_score` swallow all exceptio
 and return clean values, so the `0.442` diversity figure should be treated as
 unreliable until that behaviour is fixed.
 
+**Updated 2026-09-22 — both halves moved, in opposite directions.** The
+duration is now compared against the edit plan and the aspect ratio against the
+true display aspect, so the "12/12 pass" above is stronger than when it was
+written: it now also means no render lost an interval and every deliverable
+displays at the ratio it claims. The two advisory metrics no longer fail open —
+they return `None` and report the gap as a warning instead of a clean number —
+but the `0.442` and the `0.125` above were measured under the old code and have
+not been re-measured, so they are still not fit to be quoted as verified. What
+is now *measured* by the suite rather than asserted by the metric is caption
+presence: `tests/test_render.py::test_the_burned_captions_are_in_the_pixels`
+decodes rendered pixels against an uncaptioned control, which runtime QA still
+cannot do.
+
 ---
 
 ## A4 — Interchange fidelity (the metrics that carry the most weight)

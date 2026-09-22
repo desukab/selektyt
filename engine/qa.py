@@ -227,6 +227,7 @@ def _parse_rate(rate: str) -> float | None:
 def validate_output(path: Path, vertical: bool, *,
                     source: Path | None = None,
                     expected_fps: float | None = None,
+                    expected_duration: float | None = None,
                     audio_cond: dict | None = None,
                     sample: dict | None = None) -> tuple[bool, list[str]]:
     """Validate one deliverable.
@@ -237,6 +238,14 @@ def validate_output(path: Path, vertical: bool, *,
     and this function would otherwise run the whole thing a second time to
     reach the same answer. ``audio_cond`` takes precedence when both are given,
     since it already carries the sample's findings.
+
+    ``expected_duration`` is the edit plan's duration for this clip — the sum of
+    the retention intervals the render was asked to concatenate. ffmpeg writes
+    container and stream durations from its own clocking, so exact equality is
+    not achievable; the tolerance is 1%, which is roughly seven times the worst
+    drift measured across the corpus (0.025 s in 17.08 s). A render that
+    silently dropped an interval — the failure this check exists for — is off by
+    a whole clip's worth of time and lands far outside it.
     """
     errors: list[str] = []
     if not path.is_file() or path.stat().st_size < 1000:
@@ -315,6 +324,21 @@ def validate_output(path: Path, vertical: bool, *,
     duration = float(data.get("format", {}).get("duration", 0) or 0)
     if duration < 1.0:
         errors.append("output duration is too short")
+    if expected_duration is not None and expected_duration > 0 and duration >= 1.0:
+        # The container duration against the plan: every interval the render
+        # was asked to keep is accounted for in the plan's sum, so a render
+        # that dropped one lands a whole interval short. This is the only
+        # check that can see a wrong *cut* as opposed to a broken file — a
+        # cleanly encoded video of the wrong program passes every other check
+        # here, including the decode sample.
+        drift = duration - expected_duration
+        if abs(drift) / expected_duration > 0.01:
+            errors.append(
+                f"output is {duration:.3f}s, the edit plan expected "
+                f"{expected_duration:.3f}s (drift {drift:+.3f}s, "
+                f"{abs(drift) / expected_duration:.1%}): an interval was "
+                f"probably dropped or duplicated"
+            )
     if video is not None and audio is not None and duration >= 1.0 \
             and cond["state"] == "present":
         # A stream present at 0.0 s is exactly the shape the shipped defect
@@ -430,42 +454,63 @@ def detect_silent_tail(
     return False, 0.0, None
 
 
-def black_frame_pct(path: Path, threshold: float = 16.0, sample_count: int = 8) -> float:
-    """Estimate percentage of frames that are near-black via uniform sampling."""
+def black_frame_pct(path: Path, threshold: float = 16.0,
+                    sample_count: int = 8) -> float | None:
+    """Estimate percentage of frames that are near-black via uniform sampling.
+
+    Returns ``None`` when the metric could not be measured rather than ``0.0``,
+    which reads as "verified no black frames". A probe that cannot run, a
+    capture that will not open, a clip too short to sample, and a sample that
+    decoded no frames at all are all unknowns — callers must not read any of
+    them as a clean bill of health.
+    """
     import cv2
     import numpy as np
     try:
         info = probe(path)
         duration = float(info.get("format", {}).get("duration", 0) or 0)
         if duration < 0.5:
-            return 0.0
+            return None
         cap = cv2.VideoCapture(str(path))
         if not cap.isOpened():
-            return 0.0
+            return None
         fps = cap.get(cv2.CAP_PROP_FPS) or 25
         total = int(duration * fps)
         indices = np.linspace(0, max(0, total - 1), sample_count, dtype=int)
         black_count = 0
+        sampled = 0
         for idx in indices:
             cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
             ok, frame = cap.read()
-            if ok:
-                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                if gray.mean() < threshold:
-                    black_count += 1
+            if not ok:
+                continue
+            sampled += 1
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            if gray.mean() < threshold:
+                black_count += 1
         cap.release()
-        return round(black_count / max(1, sample_count), 3)
+        if sampled == 0:
+            return None
+        # Divided by the frames actually decoded, not the frames asked for: a
+        # capture that silently drops positions would otherwise dilute the
+        # ratio toward "clean" with every frame it failed to read.
+        return round(black_count / sampled, 3)
     except Exception:
-        return 0.0
+        return None
 
 
-def visual_diversity_score(paths: list[Path], sample_count: int = 5) -> float:
+def visual_diversity_score(paths: list[Path],
+                           sample_count: int = 5) -> float | None:
     """Pairwise HSV histogram Bhattacharyya distance across output clips.
 
     Computes one representative histogram per clip (mean of sampled frames),
     then averages Bhattacharyya distance across clip pairs. Returns 0.0
     (identical visuals) to 1.0 (very diverse). A single clip has no peer to
-    compare against and scores a default 1.0.
+    compare against and scores a defined 1.0.
+
+    Returns ``None`` when two or more clips were given but fewer than two could
+    be read: that is no measurement at all, and the old fallback reported 1.0 —
+    "very diverse" — for a set of clips where not one frame decoded.
     """
     import cv2
     import numpy as np
@@ -490,8 +535,10 @@ def visual_diversity_score(paths: list[Path], sample_count: int = 5) -> float:
                 clip_histograms.append(np.mean(frames, axis=0))
         except Exception:
             continue
-    if len(clip_histograms) < 2:
+    if len(paths) < 2:
         return 1.0
+    if len(clip_histograms) < 2:
+        return None
     distances: list[float] = []
     for i in range(len(clip_histograms)):
         for j in range(i + 1, len(clip_histograms)):
@@ -506,7 +553,8 @@ def visual_diversity_score(paths: list[Path], sample_count: int = 5) -> float:
 
 def validate_outputs_expanded(outputs: list[Path], *,
                                source: Path | None = None,
-                               expected_fps: float | None = None) -> dict:
+                               expected_fps: float | None = None,
+                               expected_durations: dict[str, float] | None = None) -> dict:
     """Full QA: ffprobe + decode sampling + silent tail + black frames + diversity.
 
     Two tiers of finding, and only one of them fails the run:
@@ -531,6 +579,13 @@ def validate_outputs_expanded(outputs: list[Path], *,
     make that distinction and reports the conservative failure instead.
     ``expected_fps`` is the rate the render was asked to run at, and comes from
     the source's own frame rate.
+    ``expected_durations`` maps an output's stem to the duration its edit plan
+    promised. Stems, not list positions, are the key because the plan holds one
+    entry per clip and each clip yields both a landscape and a vertical deliver
+    with the same stem; matching by position would couple this check to the
+    caller's ordering. An output whose stem is absent from the map is simply not
+    checked against a plan — the map is built from a file the caller may not
+    have written.
     """
     report: dict = {"ok": True, "errors": [], "warnings": [], "per_file": {}, "diversity": 0.0}
     for f in outputs:
@@ -543,6 +598,7 @@ def validate_outputs_expanded(outputs: list[Path], *,
         cond = audio_condition(f, source, sample)
         ok, errors = validate_output(f, is_vertical, source=source,
                                      expected_fps=expected_fps,
+                                     expected_duration=(expected_durations or {}).get(f.stem),
                                      audio_cond=cond, sample=sample)
         tail, tail_sec, tail_error = detect_silent_tail(f)
         black = black_frame_pct(f)
@@ -562,7 +618,12 @@ def validate_outputs_expanded(outputs: list[Path], *,
             file_report["probe_error"] = tail_error
         elif tail:
             warnings.append(f"silent tail ({tail_sec:.1f}s)")
-        if black > 0.5:
+        if black is None:
+            # Not a pass and not a failure to ship: the metric is simply absent,
+            # and recording it as a number would let an unreadable file read as
+            # a clean one. Reported so the gap is visible in qa.json.
+            warnings.append("black-frame ratio could not be measured")
+        elif black > 0.5:
             # Mostly-black frames are usually a real composition problem, but
             # the video is still structurally valid — an editor decides.
             warnings.append(f"{black:.0%} near-black frames")
@@ -575,7 +636,15 @@ def validate_outputs_expanded(outputs: list[Path], *,
             report["warnings"].extend(f"{f}: {w}" for w in warnings)
     fb_clips = [p for p in outputs if "facebook" in p.parts]
     report["diversity"] = visual_diversity_score(fb_clips) if len(fb_clips) > 1 else 1.0
-    if len(fb_clips) > 1 and report["diversity"] < 0.15:
+    if report["diversity"] is None:
+        # Two or more clips and not enough frames decoded to compare them: no
+        # measurement, reported as such rather than as the 1.0 the old code
+        # returned for exactly this case.
+        report["warnings"].append(
+            "visual diversity could not be measured — no clip produced "
+            "decodable frames"
+        )
+    elif len(fb_clips) > 1 and report["diversity"] < 0.15:
         report["warnings"].append(
             f"selected clips are visually similar (diversity {report['diversity']:.2f})"
         )
@@ -652,7 +721,32 @@ def write_report(root: Path, outputs: list[Path], source_path: str | None = None
                 expected_fps = _parse_rate(v.get("r_frame_rate") or v.get("avg_frame_rate") or "")
         except Exception:
             expected_fps = None
-    report = validate_outputs_expanded(outputs, source=source, expected_fps=expected_fps)
+    # The plan's per-clip durations, keyed by the same stem the renders are
+    # named for. The pipeline writes edit_plan.json next to the outputs, so a
+    # caller who has it gets the check for free and a caller who does not — a
+    # bare ``write_report`` over a hand-built output set — gets the same QA
+    # minus the one comparison. A plan that cannot be read is not an error: the
+    # rest of QA still runs, and the only thing lost is the plan comparison.
+    expected_durations: dict[str, float] = {}
+    plan_path = root / "edit_plan.json"
+    if plan_path.is_file():
+        try:
+            for entry in json.loads(plan_path.read_text(encoding="utf-8")):
+                val = float(entry.get("edited_duration", 0) or 0)
+                if val <= 0:
+                    continue
+                # The renders are named for the plan index, zero-padded to two
+                # digits, so the lookup key is that form; the raw string is
+                # kept as a fallback for a caller whose naming differs.
+                try:
+                    key = f"{int(entry.get('index')):02d}"
+                except (TypeError, ValueError):
+                    key = str(entry.get("index"))
+                expected_durations[key] = val
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            expected_durations = {}
+    report = validate_outputs_expanded(outputs, source=source, expected_fps=expected_fps,
+                                       expected_durations=expected_durations or None)
     selections_path = root / "selections.json"
     sd = None
     if source_path:
