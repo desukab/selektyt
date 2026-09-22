@@ -136,6 +136,25 @@ def test_asset_src_passthrough_for_url_paths():
     assert 'src="https://example.com/v.mp4"' in xml
 
 
+def test_an_unresolvable_asset_path_fails_instead_of_shipping_a_relative_uri():
+    """``engine/nle_export._to_file_uri`` raises on a path it cannot make
+    absolute, and this emitter has to agree: a relative-looking ``src`` imports
+    with every clip offline because it resolves against the timeline file's own
+    directory, not the media's. A live run hit that — the timeline directory
+    moved, resolve() raised, and the fallback wrote a URI that *looked*
+    complete. TECHNICAL_AUDIT row #9 once recorded the two emitters as having
+    divergent policy here (raise vs silent fallback); this pins the alignment,
+    so a silent fallback reintroduced on either side fails this test."""
+    from engine.nle_export import _to_file_uri as timeline_uri
+
+    def raises(uri):
+        with pytest.raises(RuntimeError, match="cannot turn the source path"):
+            uri("a\0b.mov")
+
+    raises(fcpxml._to_file_uri)
+    raises(timeline_uri)
+
+
 # ── linked tracks ──
 
 def test_a_linked_video_track_becomes_a_connected_clip_above_the_primary():

@@ -68,30 +68,42 @@ The call graph is genuinely layered: `selekyt/cli.py` and `selekyt/server.py`
 imports `selekyt`, and no `provider` imports `engine`. That is a real
 boundary, and it holds.
 
-### Two FCPXML emitters with divergent policy — VERIFIED
+### Two FCPXML emitters — VERIFIED; the policy divergence is CLOSED
 
 `engine/fcpxml.py` is a CutList-driven emitter; `engine/nle_export.py` is a
 Timeline-driven emitter. Both are live, in different products:
 
-- `selekyt/pipeline.py:21` imports `nle_export` and `:438` calls it — this is
-  what writes the timelines a user actually receives.
-- `selekyt/server.py:27` imports `engine.fcpxml` and `:185-194` (`op_render_fcpxml`)
-  implements the sidecar's `render_fcpxml` op with the **older** cutlist
-  emitter, which `:187` documents as "Rust sidecar's `render_fcpxml` op
-  (asserted in test_sidecar_parity)".
+- `selekyt/pipeline.py` imports `nle_export` and calls it — this is what writes
+  the timelines a user actually receives.
+- `selekyt/server.py`'s `op_render_fcpxml` implements the sidecar's
+  `render_fcpxml` op with the **older** cutlist emitter, documented there as
+  matching the Rust sidecar's op of the same name (asserted in
+  `test_sidecar_parity`).
 
-So the interactive web path and the batch pipeline emit FCPXML through
+So the interactive web path and the batch pipeline do emit FCPXML through
 different code. Both route their timecode math through `engine.timecode`, so
-the *arithmetic* has one source of truth — but the *policy* does not. The two
-emitters disagree on how to handle an unresolvable asset path: the cutlist
-emitter's `_to_file_uri` raises, the timeline emitter's silently falls back
-(INSPECTED). An asset that fails in one path will silently produce a
-relinkable-looking-but-broken file in the other. There is also a second
-`Track` dataclass (`engine/fcpxml.py:33` alongside `engine/timeline.py:75`)
-representing the same concept.
+the *arithmetic* has one source of truth. **The *policy* now does too — this
+is the part of the finding that has closed.** Both `_to_file_uri` functions
+were recorded here as divergent, the cutlist emitter raising and the timeline
+emitter "silently falling back"; that description is stale, and inspecting
+both today shows the same guard on both: an unresolvable path raises a
+`RuntimeError` naming the path, because a relative `src` imports with every
+clip offline and a fallback would ship that under a URI that looks complete.
+The alignment is pinned by
+`tests/test_fcpxml_multitrack.py::test_an_unresolvable_asset_path_fails_instead_of_shipping_a_relative_uri`,
+which asserts the raise on both emitters in one test and was
+mutation-verified (a silent fallback reintroduced on the cutlist side fails
+exactly that test).
 
-This is the largest pure-maintenance cost in the codebase and the most likely
-source of a "the web preview is not the cut I got" report.
+**Still open, and now the whole of the finding:** the two emitters are
+separate by design — the cutlist one speaks AutoCut's keeps/removes
+vocabulary and the timeline one speaks an editor's clips, and each is
+self-contained — but the consequence is two code paths that can drift in ways
+the alignment test does not cover (element vocabulary, gap handling, lane
+assignment), plus a second `Track` dataclass (`engine/fcpxml.py` alongside
+`engine/timeline.py`) representing the same concept. Merging them would be a
+rewrite of a working export surface for no user-visible gain, so it is not
+done; the cost is accepted and recorded rather than pretended away.
 
 ### Duplicated geometry work in the reframe layer — INSPECTED
 
@@ -682,7 +694,7 @@ means the shipped output is wrong and nothing in the system says so.
 | 6 | **High** | Scalability | `pyproject.toml` | `faster-whisper` is not a base dependency. Default install cannot transcribe. First-run experience is a crash. **Mostly resolved 2026-09-22 —** the failure was never a traceback: `providers/transcribe.py` runs faster-whisper → sherpa-onnx → a `RuntimeError` naming both pip extras and the sherpa model path, and `selekyt cli --doctor` reports the gap before any work, so the first-run experience is an actionable error. The deliberate design decision that neither ASR engine is a base dependency stands and is documented in `pyproject.toml`; it is what lets the package install on a host with no ctranslate2 wheel. The remaining real residue was *ordering*: for a URL source the download ran to completion before the error fired, so a user on a default install fetched a whole video to be told to run pip. **FIXED —** `run_pipeline` now probes `select_engine` alongside its existing fail-fast parameter block, so the same message arrives before the network. Pinned by `tests/test_pipeline_hardening.py::test_pipeline_reports_a_missing_transcription_engine_before_download` (fails if the probe is removed; the sibling test fails if it is made unconditional). `select_engine` is the one place the choice is made, so the pre-flight cannot drift from the transcription path. |
 | 7 | **High** | Reliability | `engine/qa.py:19-43`, `:138-209` | QA never checks aspect ratio precisely, duration vs edit plan, or caption presence; `black_frame_pct`/`visual_diversity_score` swallow exceptions and report clean. **Falsifies QA.** **Partly resolved 2026-09-22 —** the aspect ratio *is* checked precisely now (display aspect from SAR, 1% tolerance), the container duration is compared against the edit plan's per-clip `edited_duration` at a 1% tolerance, and the two advisory metrics return `None` on any failure to measure instead of a clean-looking `0.0`/`1.0`. Still open: **caption presence** — no cheap exact signal exists for whether the burn happened, and a sampled-frame heuristic would fail false on real corpus clips, so that verification lives in `tests/test_render.py::test_the_burned_captions_are_in_the_pixels` rather than in runtime QA. |
 | 8 | **High** | Scalability | no cleanup anywhere; `providers/atomic.py:24-34` | ~900 MB retained per project, 92% intermediates, 13 GB free, no GC. At 100× the run dies in `OSError` mid-write after the checkpoint. The fixed `.tmp` name also loses data under concurrent writes to one state file. |
-| 9 | **Medium** | Architecture | `engine/fcpxml.py` vs `engine/nle_export.py`; `selekyt/server.py:27,185-194` vs `selekyt/pipeline.py:21,438` | Two live FCPXML emitters with divergent error policy (raise vs silent fallback) behind two entry points. The web preview and the shipped file can disagree. |
+| 9 | **Medium** | Architecture | `engine/fcpxml.py` vs `engine/nle_export.py`; `selekyt/server.py` (`op_render_fcpxml`) vs `selekyt/pipeline.py` | Two live FCPXML emitters with divergent error policy (raise vs silent fallback) behind two entry points. The web preview and the shipped file can disagree. **The policy half is closed 2026-09-22 —** both `_to_file_uri` functions now raise on an unresolvable path with the path named (the "silently falls back" description was stale), and the alignment is pinned by one test asserting the raise on both emitters. What remains is the maintenance cost the finding was really about: two deliberately separate emitters speaking different vocabularies, a duplicated `Track` dataclass, and the possibility of drift in what the alignment test does not cover. Merging them would rewrite a working export for no user-visible gain, so it is recorded as accepted, not fixed. |
 | 10 | **Medium** | Reliability | `selekyt/pipeline.py:433-452` | Export validation runs after renders are checkpointed, so a bad timeline kills a run that has already produced deliverables. Recovers on resume; reports failure. Also, `:433-436` claims timeline duration == render duration but never measures the render. |
 | 11 | **Medium** | Test quality | `tests/test_render.py:170-176` et al. | The burned-captions test cannot detect a missing caption track; four tests assert a literal `True` constant; `test_audio_analysis.py:133-142` does not test what its name claims; `test_editorial_rank.py:51` disables its own assertion via `or True`. **Mostly resolved 2026-09-22 —** the burned-captions half is closed by a pixel-decoding test; `test_editorial_rank.py` now asserts the retained clips' sorted spans do not overlap instead of `... or True`; `test_reproducible_segmentation_across_runs` now re-runs at the same threshold and compares the persisted regions, and proves the threshold reaches the segmenter (0.3 vs 0.5 straddle the boundary where this fixture's segmentation actually moves; 0.5 vs 0.9 do not, because the fixture's bursts saturate the score at 1.0). Both replacements were mutation-verified. Remaining by deliberate decision: the four `is True` constants (see §"Three more near-vacuous assertions, left in place"). |
 | 12 | **Medium** | Scalability | `selekyt/server.py:476-498`, `web/server.mjs:93-148` | One serial sidecar, FIFO `pending[]` with no request id, no timeout. One slow pipeline blocks `/api/ping`; one crash rejects every queued request; a `stdin.write` failure leaves a promise unresolved forever. |
