@@ -11,10 +11,13 @@ import select
 import shutil
 import subprocess
 import os
+import sys
+import threading
 import time
 import urllib.parse
 import urllib.error
 import urllib.request
+from contextlib import contextmanager
 from pathlib import Path
 from os.path import dirname
 
@@ -28,39 +31,55 @@ pytestmark = pytest.mark.skipif(NODE is None, reason="node not on PATH")
 
 @pytest.fixture(scope="module")
 def base():
+    env = dict(os.environ)
+    env.pop("SELEKYT_PYTHON", None)
+    with _bridge(env) as base:
+        yield base
+
+
+@contextmanager
+def _bridge(env):
+    """Run the bridge against a given environment and yield its base URL.
+
+    ``SELEKYT_PYTHON`` is the hook a caller uses to point the bridge at a
+    sidecar that is not the real one; popping it is what makes the default
+    fixture immune to an override left in the ambient environment.
+    """
     proc = subprocess.Popen(
         [NODE, str(ROOT / "web" / "server.mjs"), "--port", "0"],
         cwd=str(ROOT),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        env=env,
     )
-    line = b""
-    deadline = time.time() + 20
-    while time.time() < deadline:
-        r, _, _ = select.select([proc.stdout], [], [], 1)
-        if not r:
-            if proc.poll() is not None:
-                raise RuntimeError(f"server exited: {proc.stderr.read().decode()[-500:]}")
-            continue
-        chunk = proc.stdout.readline()
-        if not chunk:
-            break
-        line += chunk
-        if b"LISTEN" in line:
-            break
-    match = re.search(rb"LISTEN (\S+):(\d+)", line)
-    if not match:
-        proc.kill()
-        raise RuntimeError(f"server did not report a port: {line!r}")
-    host, port = match.group(1).decode(), int(match.group(2))
-    base = f"http://{host}:{port}"
-    yield base
-    proc.terminate()
     try:
-        proc.wait(timeout=10)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        proc.wait()
+        line = b""
+        deadline = time.time() + 20
+        while time.time() < deadline:
+            r, _, _ = select.select([proc.stdout], [], [], 1)
+            if not r:
+                if proc.poll() is not None:
+                    raise RuntimeError(f"server exited: {proc.stderr.read().decode()[-500:]}")
+                continue
+            chunk = proc.stdout.readline()
+            if not chunk:
+                break
+            line += chunk
+            if b"LISTEN" in line:
+                break
+        match = re.search(rb"LISTEN (\S+):(\d+)", line)
+        if not match:
+            proc.kill()
+            raise RuntimeError(f"server did not report a port: {line!r}")
+        host, port = match.group(1).decode(), int(match.group(2))
+        yield f"http://{host}:{port}"
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
 
 
 def _get(base, path):
@@ -483,32 +502,217 @@ def test_sidecar_resolution_skips_an_interpreter_that_cannot_run_it(tmp_path):
     env["PATH"] = f"{tmp_path}{os.pathsep}{dirname(real)}{os.pathsep}{env.get('PATH', '')}"
     # Force the probe path: never honour an inherited override here.
     env.pop("SELEKYT_PYTHON", None)
-    proc = subprocess.Popen(
-        [NODE, str(ROOT / "web" / "server.mjs"), "--port", "0"],
-        cwd=str(ROOT),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env,
-    )
-    try:
-        base = None
-        deadline = time.time() + 20
-        while time.time() < deadline:
-            r, _, _ = select.select([proc.stdout], [], [], 1)
-            if not r:
-                assert proc.poll() is None, proc.stderr.read().decode()[-800:]
-                continue
-            m = re.search(rb"LISTEN (\S+):(\d+)", proc.stdout.readline())
-            if m:
-                base = f"http://{m.group(1).decode()}:{int(m.group(2))}"
-                break
-        assert base, f"server never reported a port: {proc.stderr.read().decode()[-800:]}"
+    with _bridge(env) as base:
         data = _expect_ok(base, "ping", {})
         assert data["engine"] == "python"
-    finally:
-        proc.terminate()
-        try:
-            proc.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.wait()
+
+
+# ── the request queue: correlation, strays and a dead sidecar ──
+#
+# These run the bridge against a sidecar that is deliberately not the real one,
+# because the failure shapes being pinned are timing and ordering ones the real
+# sidecar cannot produce on demand: a line printed to stdout that is not a
+# response, an envelope for an id nobody sent, and a child that dies between
+# requests. ``mode`` is read by the fake and is a no-op parameter to the real
+# sidecar, which is why ``/api/segment`` — the one route that forwards its body
+# verbatim — is the route these use.
+
+_SLOW_S = 15.0
+# The probe has to come back well inside the slow request's duration. Measured
+# against the deadline the route applies rather than against the sleep, so a
+# loaded runner's jitter lands in a gap seconds wide on either side rather than
+# next to a boundary: the fix returns at ~5s (the route's own deadline) and the
+# old queue at ~``_SLOW_S``, and this sits between them.
+_PROBE_BACK_BY = 10.0
+
+_FAKE_SIDECAR = '''import json
+import sys
+import time
+
+SLOW_S = %(slow)s
+
+
+def send(payload):
+    sys.stdout.write(json.dumps(payload) + "\\n")
+    sys.stdout.flush()
+
+
+held = []
+
+
+def answer(req, data):
+    payload = {"ok": True, "op": req.get("op", ""), "data": data}
+    if "id" in req:
+        payload["id"] = req["id"]
+    send(payload)
+
+
+for line in sys.stdin:
+    if not line.strip():
+        continue
+    try:
+        req = json.loads(line)
+    except ValueError:
+        send({"ok": False, "op": "", "error": "invalid JSON"})
+        continue
+    op = req.get("op", "")
+    mode = (req.get("params") or {}).get("mode", "")
+    if op == "ping":
+        answer(req, {"pong": True, "engine": "fake", "version": "0.0.0-fake",
+                     "protocol": "selekyt-jsonrpc/fake", "vad_backend": "energy"})
+    elif op == "segment" and mode == "slow":
+        # Holds the sidecar long enough that a probe arriving while it runs
+        # cannot be answered until it finishes.
+        time.sleep(SLOW_S)
+        answer(req, {"segments": [{"start": 1.0, "end": 2.0}], "marker": "slow"})
+    elif op == "segment" and mode == "stray":
+        # A line on stdout that is a response to nothing: the shape of a
+        # library deep in the pipeline printing to fd 1 past the protocol.
+        sys.stdout.write("PROGRESS 42/100\\n")
+        sys.stdout.flush()
+        answer(req, {"segments": [{"start": 3.0, "end": 4.0}], "marker": "stray"})
+    elif op == "segment" and mode == "foreign":
+        # A well-formed envelope for an id no request sent. Under a pure FIFO
+        # this is simply the answer to whichever request is waiting.
+        send({"ok": True, "op": "segment",
+              "data": {"segments": []}, "id": 99999})
+        answer(req, {"segments": [{"start": 5.0, "end": 6.0}], "marker": "foreign"})
+    elif op == "segment" and mode == "first":
+        # Held, not answered: the request after it is answered first, so the
+        # two responses arrive back to front.
+        held.append(req)
+    elif op == "segment" and mode == "second":
+        answer(req, {"segments": [{"start": 9.0, "end": 10.0}], "marker": "second"})
+        while held:
+            answer(held.pop(0),
+                   {"segments": [{"start": 7.0, "end": 8.0}], "marker": "first"})
+    elif op == "segment" and mode == "die":
+        sys.stderr.write("fake sidecar: dying on purpose\\n")
+        sys.stderr.flush()
+        raise SystemExit(1)
+    else:
+        answer(req, {"segments": []})
+''' % {"slow": _SLOW_S}
+
+
+@pytest.fixture
+def fake_base(tmp_path):
+    """The bridge pointed at a sidecar script instead of the real one.
+
+    ``SELEKYT_PYTHON`` replaces the interpreter wholesale, so the fake is a shim
+    that execs a real python on a script the test wrote. It has to honour the
+    bridge's import probe too, even though ``SELEKYT_PYTHON`` bypasses it, so a
+    change in that resolution path cannot silently leave the fixture spawning a
+    sidecar that never answers.
+    """
+    script = tmp_path / "fake_sidecar.py"
+    script.write_text(_FAKE_SIDECAR, encoding="utf-8")
+    real = shutil.which("python3") or sys.executable
+    shim = tmp_path / "python3"
+    shim.write_text(f'#!/bin/sh\nexec "{real}" "{script}" "$@"\n', encoding="utf-8")
+    shim.chmod(0o755)
+    env = dict(os.environ)
+    env["SELEKYT_PYTHON"] = str(shim)
+    with _bridge(env) as base:
+        yield base
+
+
+def test_ping_reports_busy_instead_of_hanging_behind_a_running_request(fake_base):
+    """``/api/ping`` is the page's liveness probe and used to wait for whatever
+    was in front of it. The sidecar is one thread, so while it serves a request
+    it cannot even *read* a probe, let alone answer one — the probe's response
+    could only arrive after that request completed, and the page read an engine
+    that was working as unreachable for the whole run.
+
+    What is fixed is the hang: the probe returns in bounded time with a report
+    that says the engine is busy rather than dead, and the request that held it
+    is neither cancelled nor disturbed. That the probe cannot be answered at
+    all while a run is in flight is a property of the single-threaded loop, and
+    is stated as still-open in the audit rather than claimed as solved here.
+
+    The old FIFO fails this test twice over: the probe returned only after the
+    sleep (so ``elapsed`` clears it), and it returned carrying the slow
+    request's answer instead of its own."""
+    box = {}
+
+    def _slow():
+        box["resp"] = _post(fake_base, "segment", {"mode": "slow"})
+
+    worker = threading.Thread(target=_slow)
+    worker.start()
+    # Let the slow request reach the sidecar first, so the probe genuinely
+    # arrives while it is being served rather than before it.
+    time.sleep(0.75)
+    started = time.time()
+    ping = _post_or_error(fake_base, "ping", {})
+    elapsed = time.time() - started
+    assert elapsed < _PROBE_BACK_BY, (
+        f"the probe waited {elapsed:.1f}s behind a request it cannot be served "
+        "ahead of"
+    )
+    assert ping["ok"] is False, \
+        "a probe behind a running request is busy, not successfully answered"
+    assert "single-threaded" in ping["error"], ping
+    # The request that held the sidecar still completes with its own answer —
+    # the busy report cost it nothing.
+    worker.join(timeout=30)
+    assert worker.is_alive() is False, "the in-flight request was disturbed"
+    assert box["resp"]["ok"] is True, box["resp"]
+    assert box["resp"]["data"]["marker"] == "slow", \
+        f"the slow request did not get its own answer: {box['resp']}"
+
+
+def test_a_line_printed_past_the_protocol_does_not_steal_the_answer(fake_base):
+    """A library that writes to fd 1 directly emits a line that is a response to
+    nothing. Charging the next pending request for it is the bug: under the old
+    queue that request was answered with an "invalid response" error about a
+    line it never sent, and the answer that was really for it was then handed to
+    the request behind it."""
+    resp = _post(fake_base, "segment", {"mode": "stray"})
+    assert resp["ok"] is True, resp
+    assert resp["data"]["marker"] == "stray", resp
+
+
+def test_an_envelope_for_an_id_no_one_sent_is_dropped(fake_base):
+    """The other half of correlation: a line that parses and looks like a
+    response but names no live request must not be matched to one, or the
+    request waiting for the real answer gets an empty one and never complains."""
+    resp = _post(fake_base, "segment", {"mode": "foreign"})
+    assert resp["ok"] is True, resp
+    assert resp["data"]["marker"] == "foreign", resp
+
+
+def test_answers_arriving_out_of_order_still_reach_their_request(fake_base):
+    """Correlation is by id rather than by position, so a response that arrives
+    before an earlier request's has to land on the request that asked for it.
+    Under a FIFO the first request is handed the second's answer and neither
+    error surfaces — both responses are well-formed and the mismatch is silent."""
+    box = {}
+
+    def _first():
+        box["resp"] = _post(fake_base, "segment", {"mode": "first"})
+
+    worker = threading.Thread(target=_first)
+    worker.start()
+    time.sleep(0.2)
+    second = _post(fake_base, "segment", {"mode": "second"})
+    worker.join(timeout=30)
+    assert second["data"]["marker"] == "second", second
+    assert box["resp"]["data"]["marker"] == "first", \
+        f"the first request received the second's answer: {box['resp']}"
+
+
+def test_a_dead_sidecar_names_the_op_it_died_serving_and_is_replaced(fake_base):
+    """A crash rejects every queued request, which is correct — the sidecar is
+    gone and none of them will be answered. What the rejection has to carry is
+    which op it was, because "the sidecar exited" answers a queue of different
+    questions with the same words, and the stderr that explains why has to
+    travel with it."""
+    resp = _post_or_error(fake_base, "segment", {"mode": "die"})
+    assert resp["ok"] is False, "the fake sidecar exits on this request"
+    assert resp["op"] == "segment", "the failure must name the op it was serving"
+    assert "dying on purpose" in resp["error"], resp
+    # The dead child has to be replaced rather than remembered, or every later
+    # request is written to a pipe nothing is reading.
+    data = _expect_ok(fake_base, "ping", {})
+    assert data["engine"] == "fake"

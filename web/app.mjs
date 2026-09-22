@@ -275,7 +275,16 @@ async function init() {
     $("engine").textContent =
       `${ping.engine} v${ping.version} · backend ${ping.vad_backend} · ${ping.vad_model ?? ""}`;
   } catch (err) {
-    $("engine").textContent = `sidecar unreachable: ${err.message}`;
+    // A busy report is not an unreachable engine: the sidecar is one thread, so
+    // a request still running holds it and the probe timed out against it. The
+    // distinction is worth the words, because "unreachable" says to reinstall.
+    const msg = String(err.message || err);
+    if (/single-threaded|busy/i.test(msg)) {
+      $("engine").textContent = "engine busy — a request is still running";
+      $("engine").classList.add("muted");
+      return;
+    }
+    $("engine").textContent = `sidecar unreachable: ${msg}`;
   }
   $("analyze-sample").addEventListener("click", () => analyze({ sample: true }));
   $("export-fcpxml").addEventListener("click", exportCut);

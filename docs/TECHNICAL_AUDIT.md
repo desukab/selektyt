@@ -121,8 +121,8 @@ duplicated decode it was built to prevent.
 ### The CLI/web contract disagreement is real and deliberate — VERIFIED
 
 `selekyt/cli.py` accepts any local source path and any `--out` directory with
-no confinement. `web/server.mjs:291` confines a local source to the repo root
-via `guardedPath`, and `:297` hardcodes `out: join(OUT_WEB, "pipeline")`. The
+no confinement. `web/server.mjs` `resolveMedia` confines a local source to the repo root
+via `guardedPath`, and `route` hardcodes `out: join(OUT_WEB, "pipeline")`. The
 web comment at `:299-300` documents that the cookies path is *deliberately*
 not confined. So the two entry points disagree on three axes (source path,
 output location, cookie path), and `docs/product-gap-map.md` confirms this is
@@ -131,7 +131,7 @@ behaviour verified through the CLI is not what the web user gets, and the two
 are tested separately rather than against a shared contract.
 
 Web exposure is also narrower than the CLI: `selekyt/cli.py` exposes 16
-tunable flags; `/api/run_pipeline` (`web/server.mjs:298-310`) forwards 9 of
+tunable flags; `/api/run_pipeline` (`web/server.mjs` `assertSameOrigin`) forwards 9 of
 them and omits every audio-analysis parameter, while `/api/export` forwards
 the audio parameters that `/api/run_pipeline` omits. `vad_backend` is
 reachable from neither.
@@ -206,7 +206,7 @@ remote access), and is not claimed here.
 
 ### `guardedPath` is a prefix check and is bypassable — VERIFIED, then FIXED
 
-`web/server.mjs:203-209`:
+`web/server.mjs` `guardedPath`:
 
 ```js
 function guardedPath(raw) {
@@ -220,7 +220,7 @@ I extracted the function and ran it with `ROOT=/tmp/gptest/selektyt`.
 `/etc/passwd` is blocked. `/tmp/gptest/selektytEVIL/secrets/credentials.txt`
 **passes** — `String.prototype.startsWith` is not a path-boundary test, so any
 sibling whose name extends the repo name (`selektyt-backup`, `selektyt.old`,
-`selektyt-anything`) escapes the jail entirely. `tests/test_web_harness.py:218`
+`selektyt-anything`) escapes the jail entirely. `test_a_sibling_directory_extending_the_project_name_is_rejected`
 asserts that `/etc/hostname` is rejected, and it passes — while the bypass
 stands. The test proves the guard blocks the obvious case and nothing else.
 The correct check is `candidate === ROOT || candidate.startsWith(ROOT + sep)`.
@@ -238,7 +238,7 @@ the one-line guard above and passes against the separator version.
 
 ### `/api/file` serves the whole repo, not the output directory — VERIFIED, then FIXED
 
-`web/server.mjs:317` passed `guardedPath(url.searchParams.get("path"))`, and
+`web/server.mjs` `route` passed `guardedPath(url.searchParams.get("path"))`, and
 `guardedPath` confines to `ROOT`, the repository, not `OUT_WEB`. So `.git/`,
 `selekyt/`, `.env`, and every other user's `out/web/uploads/` file were
 readable by any unauthenticated caller. Only the static-file route at `:334`
@@ -278,7 +278,7 @@ would have served it no longer can.
 
 ### SSRF is reachable — INSPECTED, then PARTLY FIXED at the boundary
 
-`web/server.mjs:288-290` accepts any `https?://` `source` and hands it to the
+`web/server.mjs` `resolveMedia` accepts any `https?://` `source` and hands it to the
 pipeline. `selekyt/server.py`'s `_pipeline_source` rejected `file://` but
 placed no restriction on host or port, so `http://169.254.169.254/latest/meta-data/`
 (the cloud metadata endpoint) was a valid source, fetched from the server's
@@ -334,7 +334,7 @@ against method-name injection.
 ### Error messages leak internals — INSPECTED
 
 `selekyt/server.py:456-474` catches everything and returns `str(exc)` to the
-caller, and `web/server.mjs:128-138` slices up to 2000 chars of stderr into
+caller, and `web/server.mjs` `spawnChild` slices up to 2000 chars of stderr into
 rejection messages. Full filesystem paths, provider error text, and stack
 summaries travel to any caller.
 
@@ -522,14 +522,14 @@ Two specific consequences:
   concurrent writers of one state file race on the same temp filename and one
   silently loses.
 - `pipeline_state.json` is read-modify-write with no lock, and the web shell
-  hardcodes one project directory (`web/server.mjs:297`), so two concurrent
+  hardcodes one project directory (`web/server.mjs` `route`), so two concurrent
   web runs clobber each other by construction.
 
 The single sidecar child serializes requests today (`selekyt/server.py:476-498`
 is a `for line in stream` loop), which is why the process-global caption-style
 env var is currently safe. That serial loop is also a hard availability
 ceiling: one long pipeline blocks `/api/ping`, and one sidecar crash rejects
-every queued request (`web/server.mjs:128-138`).
+every queued request (`web/server.mjs` `spawnChild`).
 
 ---
 
@@ -688,7 +688,7 @@ and the correctness argument for a cursor is weaker than the one here.
 ### Multi-tenancy: state is a single file — VERIFIED
 
 Everything for one project lives in `pipeline_state.json` under one directory
-that the web shell hardcodes (`web/server.mjs:297`). There is no project ID in
+that the web shell hardcodes (`web/server.mjs` `route`). There is no project ID in
 the URL, no per-user isolation, no shared-nothing decomposition: the state
 file, the render cache, and the upload directory are all singletons. Two
 tenants are not a scaling problem, they are a correctness problem — they
@@ -798,13 +798,25 @@ on a wrong output. Most of the rest of the suite would not.
 
 ### Skipped surface — VERIFIED
 
-Ten tests skip. The meaningful ones: `test_proxy_validation.py`,
-`test_sidecar_parity.py`, and `test_web_harness.py`. The skipped
-`test_sidecar_parity.py` is the only test of the Rust sidecar's behavioural
-parity, and `test_web_harness.py` is the only end-to-end test of the HTTP
-layer — the layer with the bypassable path jail. The security-relevant test
-in the suite is skipped or shallow, which is how `guardedPath` shipped with a
-prefix bypass and a passing test.
+Thirteen tests skip, and none of them is the surface a reader would worry
+about. Seven are `test_proxy_validation.py`, an opt-in measurement suite that
+names the exact recording it needs (a ~239 MB YouTube source, not
+redistributable with the repo) and the env var that un-skips it. Five are
+`test_wer_bench.py` rows for corpus runs that predate the `wer_err_total` field
+in their own run record, so the number the test would assert does not exist
+yet; the sixth is a Dutch row with no run record at all. Both groups are
+measurements against committed corpus state, not tests of behaviour that could
+regress silently.
+
+Notably *not* skipped: `test_web_harness.py` — the only end-to-end test of the
+HTTP layer, the layer that shipped with the bypassable path jail — and
+`test_sidecar_parity.py`, the only cross-check of the Rust and Python VAD
+paths. The parity test used to skip on any host without a real recording;
+`conftest.py` now generates a deterministic synthetic recording once per
+session when `SELEKYT_PARITY_MEDIA` does not name one, so the contract runs on
+every machine. That is what makes the skip list above a list of unavailable
+*measurements* rather than a list of untested *behaviour*; when a skip appears
+in the second category it is a finding in itself.
 
 ### CI does not run the tools that would catch the real classes of bug — VERIFIED
 
@@ -827,9 +839,9 @@ means the shipped output is wrong and nothing in the system says so.
 | # | Severity | Area | File:line | Failure scenario |
 |---|---|---|---|---|
 | 1 | **Critical** | Security | `web/server.mjs` (origin + Content-Type gates) | No auth, no origin check, `Content-Type`-blind JSON POST. Any web page the user visits drives the pipeline via CSRF. Combined with #2/#3 this is remote credential theft from a localhost service. **FIXED 2026-09-22 at the boundary the attack actually used** — every mutating route now calls `assertSameOrigin` before its body is parsed: a request carrying a foreign `Origin` (or a foreign `Referer` when `Origin` is absent) is refused with the offending origin named, and `getJson` refuses any body that is not `application/json`, which kills the no-prefilter `text/plain` form primitive outright. Pinned by four tests in `tests/test_web_harness.py`: the cross-origin POST, the cross-origin-`Referer` POST, and two positive tests (own origin, and no header at all) that make a blanket refusal fail. Mutation-verified both ways. **Residual, deliberately open:** a request with neither `Origin` nor `Referer` is still accepted and there is still no token — that is curl, a script or the test suite, i.e. a process the localhost bind already trusted; an unforgeable local secret is a different product shape (multi-user / remote access). See "There is no authentication at any layer" below. |
-| 2 | **Critical** | Security | `web/server.mjs:203-209` | `guardedPath` prefix bypass. `/tmp/selektyt-backup/secrets` passes the jail. Any sibling directory whose name extends the repo name reads arbitrary files via `/api/file`. The test at `tests/test_web_harness.py:218` passes while the bypass stands. **FIXED —** the boundary is now `ROOT + sep`, and a sibling-prefix regression test (`test_a_sibling_directory_extending_the_project_name_is_rejected`) fails against the old one-liner. The `/api/file` half was a separate defect with a separate boundary, fixed separately below. |
-| 3 | **Critical** | Security | `selekyt/pipeline.py:206` → `web/server.mjs:317` | yt-dlp `media_info` (embedding the `Cookie` header) is persisted to `pipeline_state.json` and served unauthenticated by `/api/file`. `cookies.py` goes out of its way never to print a cookie value; this path prints all of them. **FIXED on both sides —** `media_info` now passes through `_scrub_credentials` before it is ever written, dropping `http_headers`/`cookies`/`_cookies`/`cookie_manager`/`cookiejar`/`cookies_str` at every depth, and `/api/file`'s boundary is now `OUT_WEB + sep` so the state file is not inside it either. Pinned by `tests/test_pipeline_hardening.py::test_scrub_credentials_removes_every_credential_field`. This was a latent defect, never a demonstrated leak — no URL source run on this host was authenticated. |
-| 4 | **High** | Security | `web/server.mjs:288-290`, `selekyt/server.py` | SSRF. `http://169.254.169.254/...` is a valid `source`, fetched from the server's network. No host/port allowlist anywhere. **Partly fixed 2026-09-22 —** `_pipeline_source` now refuses the metadata endpoints (IPv4 `169.254.0.0/16`, IPv6 `fe80::/10`, `fd00:ec2::254`, `metadata.google.internal`, `metadata.azure.com`) before the downloader is handed anything, on the only URL-fetch path the web shell has. **Still open:** this is a boundary check on the URL as written, not egress filtering — DNS rebinding to a link-local address, and any host on any port, are both still reachable. See "SSRF is reachable" below for the full limit. |
+| 2 | **Critical** | Security | `web/server.mjs` `guardedPath` | `guardedPath` prefix bypass. `/tmp/selektyt-backup/secrets` passes the jail. Any sibling directory whose name extends the repo name reads arbitrary files via `/api/file`. The test at `test_a_sibling_directory_extending_the_project_name_is_rejected` passes while the bypass stands. **FIXED —** the boundary is now `ROOT + sep`, and a sibling-prefix regression test (`test_a_sibling_directory_extending_the_project_name_is_rejected`) fails against the old one-liner. The `/api/file` half was a separate defect with a separate boundary, fixed separately below. |
+| 3 | **Critical** | Security | `selekyt/pipeline.py:206` → `web/server.mjs` `route` | yt-dlp `media_info` (embedding the `Cookie` header) is persisted to `pipeline_state.json` and served unauthenticated by `/api/file`. `cookies.py` goes out of its way never to print a cookie value; this path prints all of them. **FIXED on both sides —** `media_info` now passes through `_scrub_credentials` before it is ever written, dropping `http_headers`/`cookies`/`_cookies`/`cookie_manager`/`cookiejar`/`cookies_str` at every depth, and `/api/file`'s boundary is now `OUT_WEB + sep` so the state file is not inside it either. Pinned by `tests/test_pipeline_hardening.py::test_scrub_credentials_removes_every_credential_field`. This was a latent defect, never a demonstrated leak — no URL source run on this host was authenticated. |
+| 4 | **High** | Security | `web/server.mjs` `resolveMedia`, `selekyt/server.py` | SSRF. `http://169.254.169.254/...` is a valid `source`, fetched from the server's network. No host/port allowlist anywhere. **Partly fixed 2026-09-22 —** `_pipeline_source` now refuses the metadata endpoints (IPv4 `169.254.0.0/16`, IPv6 `fe80::/10`, `fd00:ec2::254`, `metadata.google.internal`, `metadata.azure.com`) before the downloader is handed anything, on the only URL-fetch path the web shell has. **Still open:** this is a boundary check on the URL as written, not egress filtering — DNS rebinding to a link-local address, and any host on any port, are both still reachable. See "SSRF is reachable" below for the full limit. |
 | 5 | **High** | Reliability | `selekyt/pipeline.py:391-419`, `:117-151` | Caption-style render-cache staleness. Re-run with a different `SELEKYT_CAPTION_STYLE`: the new ASS is written, the old MP4 is shipped. **Falsifies QA.** The cache key omits the style in both `_fingerprint` and `_selection_digest`. **FIXED —** the key now requires a matching `caption_style`, records it back, and treats a record with no style as a miss; pinned by `tests/test_caption_style_cache.py` (5 tests). |
 | 6 | **High** | Scalability | `pyproject.toml` | `faster-whisper` is not a base dependency. Default install cannot transcribe. First-run experience is a crash. **Mostly resolved 2026-09-22 —** the failure was never a traceback: `providers/transcribe.py` runs faster-whisper → sherpa-onnx → a `RuntimeError` naming both pip extras and the sherpa model path, and `selekyt cli --doctor` reports the gap before any work, so the first-run experience is an actionable error. The deliberate design decision that neither ASR engine is a base dependency stands and is documented in `pyproject.toml`; it is what lets the package install on a host with no ctranslate2 wheel. The remaining real residue was *ordering*: for a URL source the download ran to completion before the error fired, so a user on a default install fetched a whole video to be told to run pip. **FIXED —** `run_pipeline` now probes `select_engine` alongside its existing fail-fast parameter block, so the same message arrives before the network. Pinned by `tests/test_pipeline_hardening.py::test_pipeline_reports_a_missing_transcription_engine_before_download` (fails if the probe is removed; the sibling test fails if it is made unconditional). `select_engine` is the one place the choice is made, so the pre-flight cannot drift from the transcription path. |
 | 7 | **High** | Reliability | `engine/qa.py:19-43`, `:138-209` | QA never checks aspect ratio precisely, duration vs edit plan, or caption presence; `black_frame_pct`/`visual_diversity_score` swallow exceptions and report clean. **Falsifies QA.** **Partly resolved 2026-09-22 —** the aspect ratio *is* checked precisely now (display aspect from SAR, 1% tolerance), the container duration is compared against the edit plan's per-clip `edited_duration` at a 1% tolerance, and the two advisory metrics return `None` on any failure to measure instead of a clean-looking `0.0`/`1.0`. Still open: **caption presence** — no cheap exact signal exists for whether the burn happened, and a sampled-frame heuristic would fail false on real corpus clips, so that verification lives in `tests/test_render.py::test_the_burned_captions_are_in_the_pixels` rather than in runtime QA. |
@@ -839,8 +851,8 @@ means the shipped output is wrong and nothing in the system says so.
 | 9 | **Medium** | Architecture | `engine/fcpxml.py` vs `engine/nle_export.py`; `selekyt/server.py` (`op_render_fcpxml`) vs `selekyt/pipeline.py` | Two live FCPXML emitters with divergent error policy (raise vs silent fallback) behind two entry points. The web preview and the shipped file can disagree. **The policy half is closed 2026-09-22 —** both `_to_file_uri` functions now raise on an unresolvable path with the path named (the "silently falls back" description was stale), and the alignment is pinned by one test asserting the raise on both emitters. What remains is the maintenance cost the finding was really about: two deliberately separate emitters speaking different vocabularies, a duplicated `Track` dataclass, and the possibility of drift in what the alignment test does not cover. Merging them would rewrite a working export for no user-visible gain, so it is recorded as accepted, not fixed. |
 | 10 | **Medium** | Reliability | `selekyt/pipeline.py` export block | Export validation runs after renders are checkpointed, so a bad timeline kills a run that has already produced deliverables. Recovers on resume; reports failure. Also, the export comment claimed timeline duration == render duration without ever measuring the render. **The second half is resolved 2026-09-22 —** the rendered MP4s *are* measured now (`write_report` probes each one against the plan's `edited_duration` at 1%), and the comment now says what is verified instead of assuming it. The agreement is checked in two legs that meet at the edit plan, not one direct comparison; sub-frame slop between the timeline and the render is still only measured by `tools/nle_check.py`, which remains unscheduled. **The first half is still open by design** — running the media-backed cross-check before the checkpoint would mean discarding payable deliverables on a failure, so the ordering is deliberate and the run recovers on resume. |
 | 11 | **Medium** | Test quality | `tests/test_render.py:170-176` et al. | The burned-captions test cannot detect a missing caption track; four tests assert a literal `True` constant; `test_audio_analysis.py:133-142` does not test what its name claims; `test_editorial_rank.py:51` disables its own assertion via `or True`. **Mostly resolved 2026-09-22 —** the burned-captions half is closed by a pixel-decoding test; `test_editorial_rank.py` now asserts the retained clips' sorted spans do not overlap instead of `... or True`; `test_reproducible_segmentation_across_runs` now re-runs at the same threshold and compares the persisted regions, and proves the threshold reaches the segmenter (0.3 vs 0.5 straddle the boundary where this fixture's segmentation actually moves; 0.5 vs 0.9 do not, because the fixture's bursts saturate the score at 1.0). Both replacements were mutation-verified. Remaining by deliberate decision: the four `is True` constants (see §"Three more near-vacuous assertions, left in place"). |
-| 12 | **Medium** | Scalability | `selekyt/server.py:476-498`, `web/server.mjs:93-148` | One serial sidecar, FIFO `pending[]` with no request id, no timeout. One slow pipeline blocks `/api/ping`; one crash rejects every queued request; a `stdin.write` failure leaves a promise unresolved forever. |
-| 13 | **Medium** | Scalability | `web/server.mjs:297`, `pipeline_state.json` | No project ID, no per-tenant isolation, hardcoded output directory. Two concurrent web runs clobber one state file. Multi-tenancy is a correctness bug, not a scaling task. |
+| 12 | **Medium** | Scalability | `selekyt/server.py` `_envelope`/`process_line`, `web/server.mjs` `spawnChild`/`rpc` | One serial sidecar, FIFO `pending[]` with no request id, no timeout. One slow pipeline blocks `/api/ping`; one crash rejects every queued request; a `stdin.write` failure leaves a promise unresolved forever. **Mostly resolved 2026-09-22.** Three of the four named halves are closed; the one that is not is a property of the design rather than a bug left in place.<br><br>**Correlation replaces position.** Every request now carries an `id` the sidecar echoes back on both the success and the failure envelope (`_envelope`), and the bridge matches a response to the request that asked for it instead of to whichever request happens to be first in line. This was not theoretical: the wire *is* stdout, and a library deep in the pipeline that writes to fd 1 directly — CTranslate2 has done it from under faster-whisper — emits a line that is a response to nothing. Under the old FIFO that line was consumed as one, and the request behind it silently received the answer to the request in front of it, or an "invalid response" error about a line it never sent. Nothing complained. Now a line that parses but names no live request is dropped and logged, and an unparseable line is dropped too rather than charged to a request — `_progress_to_stderr` already keeps Python-level prints off the wire, which covers `print()` but not a C extension or a subprocess that inherited fd 1, so the two guards are at different layers on purpose. A caller that sends no `id` still gets FIFO, which is correct for the single-threaded loop and keeps the Rust worker and every caller predating the field working.<br><br>**A crash names what it killed.** The exit handler still rejects every queued request — correct, the sidecar is gone — but each rejection now carries the op it was serving, because "the sidecar exited" answers a queue of different questions with the same words and the one a user was watching was not identifiable.<br><br>**No unresolved promise.** A `stdin.write` that throws is caught, and the entry is *removed* from the queue before the promise settles — leaving it in place is the subtler half of the bug, since a response arriving later settles an already-settled promise (a no-op) and shifts every response after it by one. A stdin `error` event settles everything still queued and drops the reference; the child is deliberately not killed, because a broken stdin is usually the aftermath of a death whose exit handler has already cleared the queue, and if it has not, the process reads EOF and exits on its own. Killing it here could instead cut short a render that was still progressing.<br><br>**Still open, and why: `/api/ping` cannot be answered while a run is in flight.** The probe gets a 5s deadline and reports *busy* rather than hanging for the length of a pipeline — the page used to read an engine that was working as "unreachable" until the run finished — but the probe genuinely cannot be answered. The sidecar is one thread and `serve()` is a blocking line loop, so while it serves a request it cannot even *read* a probe, let alone answer one. Answering from a second thread would require thread-safe handlers in a sidecar whose handlers are not (models, `SELEKYT_CAPTION_STYLE`, the `sys.stdout` swap in `_progress_to_stderr`), so it is recorded as a design limit rather than a fix. The deadline applies to ping only: a transcribe and a hang are not distinguishable from outside the process, and a long op that gets a deadline would be killed or reported failed for working.<br><br>**What pins it.** `tests/test_server.py` (3 tests) pins the wire side: the id is echoed on both envelopes, a request without one gets no synthetic field, and a string id is carried verbatim rather than coerced. `tests/test_web_harness.py` (5 tests) pins the queue side against a sidecar script — the one route that forwards its body verbatim is the one these use, because the `mode` field the fake reads is a no-op parameter to the real sidecar: a line printed past the protocol does not steal the next answer, an envelope for an id nobody sent is dropped, answers arriving back to front still reach their request, the probe reports busy inside its deadline while the request that held it completes untouched, and a dead sidecar names the op it died serving and is replaced by the next one. Each was mutation-verified and failed exactly the test that names it: restoring the FIFO's line consumption fails the stray test only; ignoring the id fails the foreign-id and out-of-order tests only; removing the probe's deadline fails the busy test on the deadline assertion, which is what proves the queue is correct *and* still slow without it — correlation fixed the mismatch, not the hang; dropping the op from the crash envelope fails the dead-sidecar test only; dropping the id from `_envelope` fails the two wire tests only. |
+| 13 | **Medium** | Scalability | `web/server.mjs` `route`, `pipeline_state.json` | No project ID, no per-tenant isolation, hardcoded output directory. Two concurrent web runs clobber one state file. Multi-tenancy is a correctness bug, not a scaling task. |
 | 14 | **Low** | Reliability | `selekyt/pipeline.py:502` | `state["complete"] = True` is written and never read; resume keys off `renders`. Dead state. **FIXED 2026-09-22 —** the write is removed (the line is now `:888`, which also records why no completion flag exists). No reader existed anywhere to break. |
 | 15 | **Low** | Scalability | `SileroVADBackend.analyze` (always `NotImplementedError`), `EnergyVAD._read_mono` (full WAV in memory), `make_thoughts` quadratic pre-cap | The documented fallback chain has a leg that cannot fire; one VAD reads a whole file while another in the same package already windows it; the thought cap bounds output, not cost. **The first third is fixed 2026-09-22 —** `is_available` no longer reports a backend whose `analyze` raises (it returned True on a host with onnxruntime and a model path), the module docstring now lists the chain as selected — including `EnergyVAD`, which it omitted though it is the effective default — and `--vad-backend silero` now says "not implemented" and names the working backends. The backend itself is still unimplemented; see "One VAD backend cannot work". `EnergyVAD._read_mono` is still open, and `make_thoughts` is half-closed: the cap now bounds cost as well as output (3.3× faster at 80 minutes, output-identical on all 8 corpus transcripts), while `_words_in` still rescans from the front per thought. |
 
@@ -856,12 +868,12 @@ means the shipped output is wrong and nothing in the system says so.
    `tests/test_web_harness.py` pin both gates in both directions. The residual
    is stated in row #1 above: no token, and no-header requests still accepted.
 2. **`guardedPath` is a `startsWith` prefix check and is bypassable** —
-   `web/server.mjs:203-209`. `/repo-backup/secrets` escapes the jail; the
+   `web/server.mjs` `guardedPath`. `/repo-backup/secrets` escapes the jail; the
    existing test passed anyway. **Fixed:** the boundary now includes the
    separator, and a sibling-prefix regression test covers the case the
    original test could not see.
 3. **Cookie credentials persisted into `pipeline_state.json` and served
-   unauthenticated** — `selekyt/pipeline.py:206` → `web/server.mjs:317`.
+   unauthenticated** — `selekyt/pipeline.py:206` → `web/server.mjs` `route`.
    **Fixed on both sides:** the blob is scrubbed before it is written, and the
    route that would have served it no longer serves outside `OUT_WEB`.
 4. **Caption-style render-cache staleness** — `selekyt/pipeline.py:391-419`
@@ -923,7 +935,7 @@ boundary of this fix, not as a gap I have closed.
 
 ## The thing that would embarrass the company in an enterprise review
 
-**`guardedPath`** (`web/server.mjs:203-209`). It is a one-line jail that a
+**`guardedPath`** (`web/server.mjs` `guardedPath`). It is a one-line jail that a
 reviewer will read in five seconds and break in ten:
 
 ```js
@@ -933,7 +945,7 @@ if (candidate.startsWith(ROOT)) return candidate;
 It is the security control the codebase actually relies on — it gates
 `/api/file`, `/api/run_pipeline`, and `/api/export` — it is bypassable by any
 sibling directory whose name extends the repo name, and it is defended by a
-test (`tests/test_web_harness.py:218`) that asserts the one case it does
+test (`test_a_sibling_directory_extending_the_project_name_is_rejected`) that asserts the one case it does
 handle. An enterprise reviewer does not need to find the cookie leak or the
 SSRF to fail this product; they need only read those four lines and write
 `/tmp/selektyt-anything/secrets` — which I did, and it passed the guard.

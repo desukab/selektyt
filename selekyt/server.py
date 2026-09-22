@@ -623,12 +623,30 @@ def _progress_to_stderr():
         sys.stdout = real
 
 
+def _envelope(ok: bool, op: str, rid: Any, **fields: Any) -> str:
+    """Serialise one response line, echoing the request's id when it sent one.
+
+    The id is what lets a caller with more than one request outstanding match a
+    response to the request that asked for it instead of to whichever request
+    is first in its queue. Nothing here requires it: the loop in ``serve`` is
+    strictly one-request-one-response, so a caller that never sends one is
+    still right to match on order alone. Both sides of that are deliberate —
+    the protocol adds a correlation handle without breaking the callers that
+    predate it.
+    """
+    payload = {"ok": ok, "op": op, **fields}
+    if rid is not None:
+        payload["id"] = rid
+    return json.dumps(payload, ensure_ascii=False)
+
+
 def process_line(line: str) -> str:
     """Handle one request line, return one JSON response line."""
     try:
         req = json.loads(line)
     except ValueError:
         return json.dumps({"ok": False, "op": "", "error": "invalid JSON"})
+    rid = req.get("id") if isinstance(req, dict) else None
     op = req.get("op", "") if isinstance(req, dict) else ""
     params = req.get("params") if isinstance(req, dict) else None
     if not isinstance(params, dict):
@@ -636,9 +654,9 @@ def process_line(line: str) -> str:
     try:
         with _progress_to_stderr():
             data = handle(op, params)
-        return json.dumps({"ok": True, "op": op, "data": data}, ensure_ascii=False)
+        return _envelope(True, op, rid, data=data)
     except Exception as exc:  # noqa: BLE001 — JSON-RPC boundary converts to envelope
-        return json.dumps({"ok": False, "op": op, "error": str(exc)}, ensure_ascii=False)
+        return _envelope(False, op, rid, error=str(exc))
 
 
 def serve(stream: TextIO, out: TextIO) -> int:

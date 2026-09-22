@@ -71,6 +71,34 @@ def test_serve_loop_roundtrip():
     assert lines[1]["ok"] is False
 
 
+def test_a_request_id_is_echoed_on_both_envelopes():
+    """The id is what lets a caller with several requests outstanding match an
+    answer to the request that asked for it. It has to come back on the failure
+    envelope as well as the success one, or a caller cannot tell which of its
+    requests the error is about."""
+    ok = json.loads(process_line('{"op": "ping", "params": {}, "id": 7}'))
+    assert ok["id"] == 7
+    bad = json.loads(process_line('{"op": "bogus", "params": {}, "id": 8}'))
+    assert bad["id"] == 8
+    assert bad["ok"] is False
+
+
+def test_a_request_without_an_id_gets_no_synthetic_one():
+    """Order is a valid correlation strategy for the loop's one-request-one-
+    response contract, so a caller that never sends an id must keep working and
+    must not receive a field it cannot make sense of."""
+    resp = json.loads(process_line('{"op": "ping"}'))
+    assert "id" not in resp
+
+
+def test_a_non_string_id_round_trips():
+    """The bridge assigns a monotonic integer; a caller using a string must not
+    be coerced, because both are carried verbatim and a comparison that
+    normalises them matches the wrong request."""
+    resp = json.loads(process_line('{"op": "ping", "id": "req-1"}'))
+    assert resp["id"] == "req-1"
+
+
 # ── deterministic ops: parity with engine functions ──
 
 def test_segment_matches_engine_direct():

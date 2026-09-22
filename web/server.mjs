@@ -84,11 +84,36 @@ function pickPython() {
 
 const PYTHON = pickPython();
 
-// ── persistent sidecar child with FIFO request queue ──
+// ── persistent sidecar child with a correlated request queue ──
 
+// Every request carries an id the sidecar echoes back, so a response is
+// matched to the request that asked for it rather than to whichever request
+// happened to be first in line. That difference is not theoretical: the wire
+// is stdout, and a library deep in the pipeline that prints to fd 1 directly —
+// CTranslate2 has done it from under faster-whisper — emits a line that is a
+// response to nothing. Under a pure FIFO that line was consumed as one and the
+// request behind it silently received the answer to the request in front of
+// it, or an "invalid response" error about a line it never sent. With ids, a
+// line that names no pending request is dropped and logged instead.
 let child = null;
 const pending = [];
+let nextId = 1;
 let outBuf = "";
+
+function _settle(entry, resp) {
+  if (entry.timer) clearTimeout(entry.timer);
+  entry.resolve(resp);
+}
+
+function _fail(entry, error) {
+  // Removing the entry matters as much as resolving it: a promise settled here
+  // would still be in the queue, and the next response to arrive would settle
+  // it a second time. That is a no-op for the promise, but it silently shifts
+  // every response after it by one.
+  const at = pending.indexOf(entry);
+  if (at >= 0) pending.splice(at, 1);
+  _settle(entry, { ok: false, op: entry.op, error });
+}
 
 function spawnChild() {
   // stderr is captured, not inherited: a sidecar that cannot start (missing
@@ -104,16 +129,45 @@ function spawnChild() {
     outBuf += chunk;
     let i;
     while ((i = outBuf.indexOf("\n")) >= 0) {
-      const line = outBuf.slice(0, i).trim();
+      const raw = outBuf.slice(0, i).trim();
       outBuf = outBuf.slice(i + 1);
-      if (!line) continue;
-      const entry = pending.shift();
-      if (!entry) continue;
+      if (!raw) continue;
+      let resp;
       try {
-        entry.resolve(JSON.parse(line));
+        resp = JSON.parse(raw);
       } catch {
-        entry.resolve({ ok: false, error: `sidecar sent a non-JSON line: ${line}` });
+        // The stream is JSON-only by contract, so an unparseable line is not a
+        // malformed answer: it is a line that was never an answer at all. It
+        // belongs to no request, and charging one for it is the mismatch above.
+        console.error(
+          `sidecar: dropping a non-JSON line from the JSON stream: ${raw.slice(0, 200)}`
+        );
+        continue;
       }
+      const id = resp?.id;
+      let entry = null;
+      if (id !== undefined && id !== null) {
+        const at = pending.findIndex((e) => e.id === id);
+        if (at < 0) {
+          console.error(
+            `sidecar: a response for id ${id} matched no pending request; dropping it`
+          );
+          continue;
+        }
+        entry = pending.splice(at, 1)[0];
+      } else {
+        // A sidecar that does not echo ids — an older release, or the Rust
+        // worker spoken to directly — still answers strictly in order, which
+        // is what the single-threaded loop guarantees.
+        entry = pending.shift();
+        if (!entry) {
+          console.error(
+            `sidecar: a response arrived with no request waiting: ${raw.slice(0, 200)}`
+          );
+          continue;
+        }
+      }
+      _settle(entry, resp);
     }
   });
   c.stderr.setEncoding("utf8");
@@ -123,7 +177,21 @@ function spawnChild() {
   });
   c.on("error", (err) => {
     const entry = pending.shift();
-    if (entry) entry.resolve({ ok: false, error: `sidecar failed to start: ${err.message}` });
+    if (entry) _fail(entry, `sidecar failed to start: ${err.message}`);
+  });
+  c.stdin.on("error", (err) => {
+    // The pipe to the child broke, so nothing queued can be sent. Leaving those
+    // promises unresolved is worse than an error: a hung request is
+    // indistinguishable from a working one, and the page waiting on it never
+    // says why. The child itself is left alone — a broken stdin is usually the
+    // aftermath of the child having died, in which case its own exit handler
+    // below has already cleared the queue, and if it has not, the process reads
+    // EOF and exits on its own. Killing it here could instead cut short a
+    // render that was still progressing.
+    for (const entry of pending.splice(0)) {
+      _settle(entry, { ok: false, op: entry.op, error: `the sidecar pipe failed: ${err.message}` });
+    }
+    child = null;
   });
   c.on("exit", (code, signal) => {
     child = null;
@@ -133,22 +201,45 @@ function spawnChild() {
       : `sidecar exited before answering (code ${code ?? signal})`;
     let entry;
     while ((entry = pending.shift())) {
-      entry.resolve({ ok: false, error });
+      // The op is named per request because "the sidecar died" answers a
+      // queue of different questions with the same words otherwise, and the
+      // one a user was watching is not identifiable from the error.
+      _settle(entry, { ok: false, op: entry.op, error });
     }
   });
   return c;
 }
 
-function rpc(op, params = {}) {
+function rpc(op, params = {}, { timeoutMs = 0 } = {}) {
   if (!child) child = spawnChild();
-  return new Promise((resolvePromise) => {
-    pending.push({ resolve: resolvePromise });
-    child.stdin.write(`${JSON.stringify({ op, params })}\n`);
+  const id = nextId++;
+  return new Promise((resolve) => {
+    const entry = { id, op, resolve };
+    pending.push(entry);
+    if (timeoutMs > 0) {
+      entry.timer = setTimeout(() => {
+        _fail(
+          entry,
+          `the sidecar has not answered '${op}' in ${timeoutMs / 1000}s. It is ` +
+            `single-threaded, so a request still running holds it: this is a ` +
+            `busy report, not a crash, and the in-flight request is untouched.`
+        );
+      }, timeoutMs);
+    }
+    try {
+      child.stdin.write(`${JSON.stringify({ op, params, id })}\n`);
+    } catch (err) {
+      // A write to a dead pipe throws synchronously inside the executor, which
+      // would reject this promise and still leave its entry in the queue — the
+      // response after it then settles an already-rejected promise and the one
+      // after that gets the answer meant for this one.
+      _fail(entry, `could not send '${op}' to the sidecar: ${err.message}`);
+    }
   });
 }
 
-async function rpcData(op, params = {}) {
-  const resp = await rpc(op, params);
+async function rpcData(op, params = {}, options = {}) {
+  const resp = await rpc(op, params, options);
   if (!resp.ok) throw new Error(resp.error || `op failed: ${op}`);
   return resp.data;
 }
@@ -308,7 +399,18 @@ async function resolveMedia(body) {
 async function route(req, res, url, method) {
   const expectedOrigin = `http://${req.headers.host || url.host}`;
   if ((method === "GET" || method === "POST") && url.pathname === "/api/ping") {
-    return sendJson(res, { ok: true, op: "ping", data: await rpcData("ping") });
+    // Ping is the page's liveness probe and is the one request that cannot
+    // wait for the pipeline: the sidecar is a single thread, so while it
+    // transcribes it answers nothing, and without a deadline the probe would
+    // hang for the length of a run and report an engine that is working as
+    // unreachable. The report when the deadline fires is a busy one — the
+    // in-flight request is not cancelled, disturbed or killed, because a hang
+    // and a long transcribe are not distinguishable from here.
+    return sendJson(res, {
+      ok: true,
+      op: "ping",
+      data: await rpcData("ping", {}, { timeoutMs: 5000 }),
+    });
   }
   if (method === "GET" && url.pathname === "/api/sample.wav") {
     ensureSample();
