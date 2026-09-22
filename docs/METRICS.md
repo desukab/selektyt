@@ -46,6 +46,13 @@ All values in this section are computed from the single existing run. **Sample
 size: one source, six clips, twelve renders.** That is the honest scope of every
 number below, and no aggregation over one sample is a trend.
 
+Section A4 is the exception and says so in its own header: its figures are
+measured across the whole committed corpus — 11 sources, of which 7 exported a
+timeline, 27 clips — because the corpus rather than one run carries the
+interchange artifacts. Where an A4 metric is measurable only on the one run it
+says so, and where the corpus media is absent from the checkout it reports the
+gap as a SKIP rather than a PASS.
+
 ## A1 — Yield and coverage
 
 ### A1.1 Selection yield — 6 clips per 24:29 of source (14.7 clips/hour)
@@ -479,6 +486,16 @@ unreliable until that behaviour is fixed.
 These are the metrics that would have to be true for the editor beachhead to work,
 and they are the only ones measured by tools *outside* SelekyT's own parsers.
 
+Unlike A1–A3, **every figure in this section is corpus-wide**: 11 sources, of
+which 7 exported a timeline, 27 clips, 27 EDLs, 27 FCPXMLs. The command above
+audits one of those seven; the sweep over all of them is
+`tests/test_nle_frame_deltas.py`, which is also what pins the numbers below. Two
+limits of that corpus are stated where they bite and are not hidden behind a
+round number: the source media is deleted from the checkout unless `corpus_run.py
+--keep-media` is passed, so on five of the seven exporting sources the relink
+checks SKIP; and the rendered MP4s are gitignored, so A4.2 is measured on this
+machine and is not reproducible from a clean clone.
+
 **Command:**
 
 ```sh
@@ -510,7 +527,7 @@ per preset. This is the only metric that proves the exported timeline describes
 the video that was actually shipped.
 
 **Current value (VERIFIED on this machine):** 54 measurements (27 clips × 2
-presets, all 6 sources that rendered), all PASS, worst case **0.69 frames**
+presets, all 7 sources that exported a timeline), all PASS, worst case **0.69 frames**
 (pentagon-esper-briefing clip 04: timeline 28.762 s vs render 28.785 s at
 30 fps). 32 of the 54 pairs agree to **0.00 frames**; the 22 that do not fall
 into three narrow bands — 0.53, 0.63 and 0.69 frames. The tolerance is 2 frames,
@@ -518,7 +535,7 @@ set by measuring the committed corpus rather than by taste, which makes it ~2.9�
 the largest gap measured.
 
 > **Provenance.** The EDLs and FCPXMLs are committed (27 of each), but **the
-> rendered MP4s are not** — all 59 are gitignored, so this metric recomputes
+> rendered MP4s are not** — all 54 are gitignored, so this metric recomputes
 > only where the renders are present. `tests/test_nle_frame_deltas.py` pins it
 > when they are and skips with a stated reason when they are not; it does not
 > silently pass. Read "VERIFIED" above as *verified here*, not as a claim a
@@ -561,25 +578,46 @@ cut.
 `tests/test_nle_frame_deltas.py`. The render is a third
 independent path (an ffmpeg filter chain), and its agreement with both is A4.2.
 
-### A4.4 Source-interval fidelity — worst case 0.7 frames
+### A4.4 Source-interval fidelity — worst case 1.00 frames
 
 **Definition:** |EDL source in/out − the selection the cut was made from|. If this
 drifts, the timeline points at the wrong part of the source media.
 
-**Current value (VERIFIED):** all 6 PASS, worst case **0.7 frames** (clip 03,
-end point). Clip 02 is exact to 0.0 frames on both points.
+**Current value (VERIFIED):** all 54 PASS — 27 clips read in both formats —
+worst case **1.00 frames** (royal-society-cloke clip 03, a two-interval cut,
+25 fps). That is inside the 1.5-frame tolerance, which is set to that measured
+worst case rather than chosen. nasa360-ep5 alone is tighter, 0.72 frames at clip
+03's end point.
 
-### A4.5 Media relinkability — 6/6 assets resolve
+**Why the tolerance is 1.5 and not smaller:** 1.00 frames is a rounding boundary,
+not a systematic drift — the selection is scored in seconds and the timeline in
+frames at a rate that does not divide it. Tightening the tolerance below the
+measured worst case would fail a correct export.
+
+### A4.5 Media relinkability — 9/9 verified where media is retained, 18 NOT RUN
 
 **Definition:** every FCPXML asset `src` is an absolute `file:///` URI to an
 existing file, and no asset-clip reads past its asset's declared extent.
 
-**Current value: 6/6 pass both checks** (`fcpxml media relinkable PASS every asset
-src is an absolute URI to an existing file`; `fcpxml clips within asset PASS no
-clip reads past its asset`). VERIFIED. This matters because a relative asset URI
-was once a live defect that would have imported with every clip offline
-(`NLE_COMPATIBILITY.md`, defect 1 — found on all six timelines of a freshly
-regenerated run, i.e. the live path, not a stale artifact).
+**Current value: 6/6 for the extent half; the relink half is NOT RUN on this
+project.** `fcpxml clips within asset` PASSES on all six nasa360 clips — no clip
+reads past its asset. `fcpxml media relinkable` **SKIPs on all six**, because
+`corpus_run.py` deletes the source media unless `--keep-media` is passed, and
+nasa360-ep5's media is not in this checkout. So the URI half of this metric is
+unverified here, not confirmed; running the audit on a run built with
+`--keep-media` is what would confirm it.
+
+Corpus-wide, the URI half is measured where the media happens to be retained —
+two sources, pentagon-esper-briefing and royal-society-cloke, 9 assets — and
+PASSES 9/9, every `src` an absolute `file:///` URI to an existing file. The
+other five exporting sources have no media in the checkout and SKIP the same way.
+This matters because a relative asset URI was once a live defect that would have
+imported with every clip offline (`NLE_COMPATIBILITY.md`, defect 1 — found on all
+six timelines of a freshly regenerated run, i.e. the live path, not a stale
+artifact), and the regression test for it
+(`tests/test_nle_check.py::test_an_offline_media_reference_is_caught`) is what
+actually holds that fix, since it does not depend on the corpus media being
+present.
 
 ### A4.6 FCPXML structural validity — 6/6 well-formed, version 1.11
 

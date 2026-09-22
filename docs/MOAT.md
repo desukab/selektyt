@@ -56,9 +56,9 @@ how much of the eventual training data already exists unlabelled.
 
 | Artifact | What it carries | Written by |
 | --- | --- | --- |
-| `pipeline_state.json` (+ `.bak`, quarantine) | download cache, source fingerprint, per-clip render cache, `media_info` (the full yt-dlp info dict, 53 keys) | `selekyt/pipeline.py:30`, `:80-94`, `:194-207`, `:423-432`, `:502` |
-| `transcript.json` | `language`, `asr` provenance block, 425 segments with per-word `text`/`start`/`end`/`confidence` | `selekyt/pipeline.py:252-267` |
-| `selections.json` | the **selected** candidates only: span, text, `story_type`, `hook`, `payoff`, five scores, `reason`, `visual_potential`, full word list, `coherence_score`, `completeness`, `total_score` | `selekyt/pipeline.py:321-323` |
+| `pipeline_state.json` (+ `.bak`, quarantine) | download cache, transcript fingerprint, per-clip render cache, `media_info` (the yt-dlp info dict **minus its credential keys** — see 6.1) | `selekyt/pipeline.py:36`, `:106-124`, `:363-385`, `:687-732`, `:888` |
+| `transcript.json` | `language`, `asr` provenance block, 425 segments with per-word `text`/`start`/`end`/`confidence` | `selekyt/pipeline.py:438-453` (retry path `:490`) |
+| `selections.json` | the **selected** candidates only: span, text, `story_type`, `hook`, `payoff`, five scores, `reason`, `visual_potential`, full word list, `coherence_score`, `completeness`, `total_score` | `selekyt/pipeline.py:578-580` |
 | `editorial_report.json` | per-selected-clip scores plus the decomposed `reason` string | `selekyt/pipeline.py:325-345` |
 | `edit_plan.json` | per clip: `source_start/end`, kept `intervals`, `edited_duration`, `removed_seconds` — deterministic, no paths | `selekyt/pipeline.py:455-470` |
 | `pacing_report.json` | aggregate pacing: `avg_duration`, `duration_distribution`, `silence_pct`, `filler_pct`, `avg_words_per_second`, `avg_hook_latency`, `payoff_presence_rate`, `duplicate_overlap_rate` | `selekyt/pipeline.py:347-376`, `engine/edit_plan.py:63-130` |
@@ -580,10 +580,10 @@ the entire flywheel hangs from.
 Editing confidential footage is the norm for newsrooms and enterprises. A
 learning loop is only permissible if it never becomes a confidentiality risk.
 
-### 6.1 A real defect found in the current artifacts — **VERIFIED**
+### 6.1 A real defect found in the current artifacts — **VERIFIED, and fixed**
 
-`out/url-e2e/project/pipeline_state.json` persists `media_info` — the complete
-yt-dlp info dict, 53 keys — verbatim. That dict contains, in the real run:
+`pipeline_state.json` persists `media_info` — the complete yt-dlp info dict — and
+the raw dict contains, on a real download:
 
 * a live session cookie (`media_info.cookies`, value
   `ia-csrf=51ce7e1cead7cd41bdb5c5713da82f78; Domain=.archive.org; …`), and
@@ -592,13 +592,27 @@ yt-dlp info dict, 53 keys — verbatim. That dict contains, in the real run:
 This is not a training concern today, because nothing leaves the machine. But
 it is the exact field that a future telemetry/feedback upload would serialize
 by accident. `providers/youtube.py:31` is careful to pass cookie files as a
-subprocess list and never echo them — that care is undone by the persistence of
-`media_info` into state. **Before any feedback channel exists, `media_info` must
-be scrubbed (`cookies`, `http_headers`, and any `*_token` fields) at write
-time, not at upload time.** A privacy guarantee applied only at the network
-boundary will eventually be bypassed by a refactor; applied at the write it is
-structural. This is the single concrete change needed to make the loop's
-plumbing safe, and it is cheap.
+subprocess list and never echo them; without a scrub at the write, that care is
+undone by the persistence of `media_info` into state.
+
+**The fix is in the code, not the roadmap.** `selekyt/pipeline.py:371` persists
+`_scrub_credentials(info)` rather than `info`, dropping `http_headers`,
+`cookies`, `cookie_manager`, `cookiejar`, `_cookies` and `cookies_str` at every
+depth. The rationale is the one above and it is deliberate: a privacy guarantee
+applied only at the network boundary will eventually be bypassed by a refactor;
+applied at the write it is structural. Nothing downstream reads those keys — the
+pipeline reads duration, title and format ids — so the scrub costs no
+functionality.
+
+**What holds it.** `tests/test_pipeline_hardening.py` runs the pipeline with a
+mocked download returning a dict carrying `http_headers` and `cookies`, then
+reads `pipeline_state.json` off disk and asserts neither key is present. The
+assertion is on the file, not on an in-memory dict, because a scrub that only
+held in memory would be exactly the bug this is about. Two limits, stated: the
+list of dropped keys is a known-bad list, so a future yt-dlp key carrying a
+credential under a new name is not caught by it, and the recursion is
+depth-bounded at 8 rather than unbounded. Both are the scrub's real shape, not
+a claim of completeness.
 
 ### 6.2 The local-first architecture is the enabler, not the obstacle — **VERIFIED**
 

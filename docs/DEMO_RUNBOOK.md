@@ -22,9 +22,25 @@ are not ready to demo.
 ## What this demo is, and what it is not
 
 **It is** a verification walk over a real, finished artifact that already exists
-in the repo: the NASA 360 Episode 5 run at `out/web/pipeline/project/`. Every
-step below proves a specific, checkable property of that artifact, using tools
+in the repo: the NASA 360 Episode 5 run at `corpus/nasa360-ep5_run/project/`.
+Every step below proves a specific, checkable property of that artifact, using tools
 that were written to *falsify* the pipeline's output rather than to praise it.
+
+That path is version-controlled, so every command below runs from a clean
+checkout. It was not always the path this runbook cited: it previously walked
+`out/web/pipeline/project/`, a gitignored working directory that is absent from a
+clean clone and whose run predates several later fixes. This run is the same
+source, and its numbers are the ones re-quoted below — re-measured on
+2026-09-22, not carried over, which is why several differ from the earlier
+pass (clip 05 is now `REVIEW`, the render durations moved by up to 34 ms, and
+twelve relink checks skip because the source media is not retained).
+
+**One consequence to say in the room:** the source file itself is not in the
+repo. `corpus_run.py` deletes it unless `--keep-media` is passed, so
+`source/` does not exist and the probe facts the run was cut on are in
+`source_probe.json` — 720x486, SAR 8:9, 29.97 fps, 1469.77 s. Any step below
+that would need the source is marked as such, and the exact command to keep it
+is in `docs/CORPUS_BENCHMARK_STATUS.md`.
 
 **It is not** a live pipeline run. Re-running the pipeline end-to-end
 (download 884 MB, transcribe 24:29 of speech on CPU, render twelve MP4s) costs
@@ -114,7 +130,7 @@ is acceptable. Choose your audience accordingly — see `docs/PILOT_PROGRAM.md`.
 Do not audit a black box. List it first.
 
 ```sh
-ls out/web/pipeline/project/
+ls corpus/nasa360-ep5_run/project/
 ```
 
 Real result:
@@ -124,14 +140,24 @@ captions/            pacing_report.json   timeline/
 content_pack/        pipeline_state.json  transcript.json
 content_pack.json    qa.json              transcription/
 edit_plan.json       report.json
-editorial_report.json  selections.json
-facebook/            shorts/              source/
+editorial_report.json  run_outcome.json
+facebook/            selections.json
+microbench_captions/   shorts/
+microbench_render/     source_probe.json
+microbench_timeline
+microbench_transcribe
 ```
+
+Note the two files that are not outputs of the pipeline: `source_probe.json`
+carries the ffprobe facts the run was cut on (the source itself is not retained,
+see above), and `run_outcome.json` is the corpus runner's record of how the run
+ended — for this project, `status: OK, exit_code: 0`. Together they are what
+makes the tree self-describing without the media.
 
 Then the deliverables, which is what an audience came to see:
 
 ```sh
-ls out/web/pipeline/project/facebook out/web/pipeline/project/shorts out/web/pipeline/project/timeline out/web/pipeline/project/captions
+ls corpus/nasa360-ep5_run/project/facebook corpus/nasa360-ep5_run/project/shorts corpus/nasa360-ep5_run/project/timeline corpus/nasa360-ep5_run/project/captions
 ```
 
 Real result: **6 MP4s in `facebook/` (864x486, 16:9), 6 MP4s in `shorts/`
@@ -151,22 +177,32 @@ fabricated claims"` and every `content_pack.json` item carries
 ## Step 2 — The editorial audit: what was selected, and is it clean?
 
 ```sh
-cd /home/azureuser/selektyt && .venv/bin/python tools/editorial_audit.py out/web/pipeline/project
+cd /home/azureuser/selektyt && .venv/bin/python tools/editorial_audit.py corpus/nasa360-ep5_run/project
 ```
 
-Real output, exit code 0:
+Real output, **exit code 1**:
 
 ```
-clip 01     PASS  silence share 14.7%; rendered 24.89s, 20 cues
-clip 02     PASS  silence share 10.3%; rendered 17.14s, 13 cues
+clip 01     PASS  silence share 14.7%; rendered 24.86s, 20 cues
+clip 02     PASS  silence share 10.3%; rendered 17.10s, 13 cues
 clip 03     PASS  silence share 3.6%; rendered 16.45s, 12 cues
 clip 04     PASS  silence share 7.6%; rendered 14.01s, 11 cues
-clip 05     PASS  silence share 40.8%; rendered 17.68s, 10 cues
+clip 05     REVIEW  silence share 40.8% (word-free; measured 0.80s = 4.5% below -60 dBFS, RMS -31.4 dB — not dead air; low-level content rather than a pause — check whether the material earns its place); rendered 17.65s, 10 cues
 clip 06     PASS  silence share 17.9%; rendered 9.08s, 8 cues
 cross-clip  PASS  no duplicated sentences
 
-ALL CHECKS PASS
+FAILURES PRESENT (1 clip(s) awaiting human review)
 ```
+
+**The exit code is not a misprint, and do not hide it.** Five of six clips pass
+outright. Clip 05 is `REVIEW`, not `FAIL`: since 2026-09-22 the audit decodes the
+render and measures the word-free window instead of asserting a cause, and what
+it found is 0.80 s — 4.5% of the window — below −60 dBFS, at RMS −31.4 dB. That
+is a music bed, not a pause. The audit still exits 1, because a human has not
+said whether that bed earns its place in a 17.65 s cut. Presenting this as
+"ALL CHECKS PASS" would be the exact false confidence the tool was written to
+prevent, and it is a stronger demo to show a tool that refuses to sign off than
+one that does.
 
 What this proves:
 
@@ -174,7 +210,7 @@ What this proves:
   it is **not a measure of audio at all**, and clip 05's 40.8% is not dead air.
   The metric is computed from transcript word timings over the edit plan's
   intervals and never decodes audio (VERIFIED — `tools/editorial_audit.py:check_silence_share`,
-  lines 205–219). I probed the contested window directly: the 6.26 s word-free
+  line 223). I probed the contested window directly: the 6.26 s word-free
   span in clip 05 is a **music bed**, mean −31.4 dB, max −14.1 dB, spectral
   flatness 0.007–0.012, and 0.00 s of true silence. Re-transcribing that window
   standalone with the same `small`/int8/beam-1 model returns only the single
@@ -219,30 +255,46 @@ over-claimed. Read `docs/NLE_COMPATIBILITY.md` before you present it. Its
 headline, verbatim: **"No NLE has ever opened a SelekyT EDL or FCPXML."**
 
 ```sh
-cd /home/azureuser/selektyt && PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py out/web/pipeline/project
+cd /home/azureuser/selektyt && PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py corpus/nasa360-ep5_run/project
 ```
 
-Real output, exit code 0. **92 checks, all PASS.** The lines that matter:
+Real output, exit code 0. **103 checks: 91 PASS, 12 SKIP, 0 FAIL.** The lines
+that matter:
 
 ```
-source frame rate                      PASS  NASA_360_program5_HD.mov @ 29.9700 fps
-01 edl independent parse               PASS  1 event(s), 1 channel record(s), title='very much like the electronic camera you have at home.'
-01 edl record spans advance            PASS  1 event(s), no overlap
-01 edl media exists                    PASS  1 clip path(s)
-01 timeline == facebook render         PASS  timeline 24.858s vs render 24.892s (1.00 frames)
-01 timeline == shorts render           PASS  timeline 24.858s vs render 24.892s (1.00 frames)
-01 source interval == selection        PASS  src 414.31-439.17s vs selection 414.30-439.16s (start 0.4f, end 0.4f)
+source frame rate                        PASS  ? @ 29.9700 fps
+01 edl independent parse                 PASS  1 event(s), 1 channel record(s), title='very much like the electronic camera you have at home.'
+01 edl record spans advance              PASS  1 event(s), no overlap
+01 edl media exists                      SKIP   NOT RUN (source media not retained): 1 clip path(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+01 timeline == facebook render           PASS  timeline 24.858s vs render 24.858s (0.00 frames)
+01 timeline == shorts render             PASS  timeline 24.858s vs render 24.858s (0.00 frames)
+01 source intervals == edit plan         PASS  1 interval(s), worst endpoint off by 0.42 frame(s); selection 414.30-439.16s
 ...
-01 fcpxml well-formed                  PASS  parsed
-01 fcpxml version                      PASS  version="1.11"
-01 fcpxml vocabulary                   PASS  all elements in the 1.11 set
-01 fcpxml media relinkable             PASS  every asset src is an absolute URI to an existing file
-01 fcpxml clips within asset           PASS  no clip reads past its asset
-01 fcpxml spine advances               PASS  clips in non-decreasing start order
-01 fcpxml duration == facebook render  PASS  spine 24.858s vs render 24.892s (1.00 frames)
+01 fcpxml well-formed                    PASS  parsed
+01 fcpxml version                        PASS  version="1.11"
+01 fcpxml vocabulary                     PASS  all elements in the 1.11 set
+01 fcpxml media relinkable               SKIP   NOT RUN (source media not retained): 1 asset(s) point at the source, which corpus_run.py deletes unless --keep-media is passed
+01 fcpxml clips within asset             PASS  no clip reads past its asset
+01 fcpxml spine advances                 PASS  clips in non-decreasing start order
+01 fcpxml duration == facebook render    PASS  spine 24.858s vs render 24.858s (0.00 frames)
 ...
-ALL CHECKS PASS
+ALL RUN CHECKS PASS, but 12 could not run (source media not retained; re-run with --keep-media to verify relink)
 ```
+
+**Read the two honest details before you present them:**
+
+- The `?` in the frame-rate line is not a failure to probe. The source media is
+  not retained, so the audit reads `source_probe.json` — the ffprobe facts
+  recorded when the run was made — and 29.9700 fps is the true value. The
+  filename field is empty because the probe record stores a path the runner
+  later deleted.
+- **The twelve SKIPs are exactly the relink checks, six per format.** They ask
+  "does the file the timeline points at exist on disk?", and the file is the
+  deleted source. This is a property of the committed corpus, not a missing
+  parser: the independent EDL parse, the record-span overlap check, the
+  interval-by-interval comparison and every duration check all ran. A re-run
+  with `--keep-media` turns all twelve into checks. **Do not present a SKIP as
+  a pass, and do not present 91/0 as 103/0.**
 
 **What this proves, and it is real:** the EDL is accepted by `pycmx`, an
 *independent* CMX 3600 reader that is deliberately not SelekyT's own parser
@@ -250,10 +302,11 @@ ALL CHECKS PASS
 present in the venv; historically it was loaded from `/tmp/nlelibs` outside the
 venv for the same isolation).
 The FCPXML is well-formed 1.11 XML using only 1.11-vocabulary elements. Every
-asset `src` is an absolute `file:///` URI to a file that exists. Three separate
-code paths — the EDL emitter, the FCPXML emitter and the ffmpeg render chain —
-agree with each other to within **1.63 frames** (the worst case, clip 02; four of
-six clips agree to 0.00 frames). Nothing else in the environment provides this
+asset `src` is an absolute `file:///` URI — to a file that is no longer retained
+in this checkout, which is what the twelve skips are. Three separate code paths —
+the EDL emitter, the FCPXML emitter and the ffmpeg render chain — agree with
+each other to within **0.63 frames** (the worst case, clip 02; five of six clips
+agree to 0.00 frames). Nothing else in the environment provides this
 evidence.
 
 **What this does not prove, and you must say so:** none of these files has ever
@@ -282,7 +335,7 @@ sentence.
 Do not describe a video. Probe it.
 
 ```sh
-ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,avg_frame_rate -show_entries format=duration -of default=noprint_wrappers=1 out/web/pipeline/project/facebook/01.mp4
+ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,avg_frame_rate -show_entries format=duration -of default=noprint_wrappers=1 corpus/nasa360-ep5_run/project/facebook/01.mp4
 ```
 
 Real output:
@@ -298,12 +351,14 @@ avg_frame_rate=2997/100
 codec_name=aac
 codec_type=audio
 avg_frame_rate=0/0
-duration=24.891558
-duration=24.891558
+codec_name=unknown
+codec_type=data
+avg_frame_rate=11988/400
+duration=24.858192
 ```
 
 ```sh
-ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,avg_frame_rate -show_entries format=duration -of default=noprint_wrappers=1 out/web/pipeline/project/shorts/01.mp4
+ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,avg_frame_rate -show_entries format=duration -of default=noprint_wrappers=1 corpus/nasa360-ep5_run/project/shorts/01.mp4
 ```
 
 Real output:
@@ -319,20 +374,26 @@ avg_frame_rate=2997/100
 codec_name=aac
 codec_type=audio
 avg_frame_rate=0/0
-duration=24.891558
-duration=24.891558
+codec_name=unknown
+codec_type=data
+avg_frame_rate=11988/400
+duration=24.858192
 ```
+
+The third stream in both is `tmcd` — a timecode track the encoder writes, not a
+defect, and worth naming if someone asks, because "unknown codec" looks like one.
 
 What this proves:
 
 - **The 16:9 cut really is 16:9** — 864x486 square-pixel, 29.97 fps, h264 + aac,
-  24.89 s. A deliverable, not a promise.
+  24.86 s. A deliverable, not a promise.
 - **The vertical cut really is 9:16 — but the storage dimensions will confuse a
   careful viewer, so get this right.** It is **308x486 storage with SAR 8:9 and
   DAR 1232:2187**. That is *anamorphic*: it displays as 9:16 (0.5633 vs the 0.5625
   target) without wasting encode resolution on padding. If someone asks "why is
   this not 1080x1920?", the answer is that the source is itself anamorphic
-  (720x486, SAR 8:9, DAR 320:243 — VERIFIED by probing `source/`), and a naive
+  (720x486, SAR 8:9, DAR 320:243 — VERIFIED from `source_probe.json`, since the
+  source itself is not retained), and a naive
   `ih*9/16` crop produced a 1:2 display until the crop was scaled by the sample
   aspect ratio. `docs/product-gap-map.md` records this as a real bug found and
   fixed. **This is a good story to tell**: it shows the geometry was measured
@@ -351,17 +412,17 @@ cd /home/azureuser/selektyt && .venv/bin/python -m pytest -q
 Real output, exit code 0:
 
 ```
-1287 passed, 13 skipped in 260.7 s
+1324 passed, 13 skipped in 280.3 s
 ```
 
 What this proves: there is a large, green suite. **Say the number as a number
 you just ran, not as one quoted from this file** — it moved 1034 → 1080 → 1215
-→ 1236 → 1240 → 1251 as regression tests landed, and every one of those was correct on
-the day it was written and stale by the next commit. Say immediately
-what it does not cover — because the honest version is stronger than
+→ 1236 → 1240 → 1251 → 1324 as regression tests landed, and every one of those
+was correct on the day it was written and stale by the next commit. Say
+immediately what it does not cover — because the honest version is stronger than
 the number:
 
-- **Twelve tests skip, and every one of them is an environment skip, not a
+- **Thirteen tests skip, and every one of them is an environment skip, not a
   failure.** They are gated on `SELEKYT_PROXY_MEDIA` or on optional backends
   absent from this host (sherpa-onnx, silero, ollama). The meaningful ones are
   `test_sidecar_parity.py` (the only behavioural test of the Rust sidecar) and
@@ -380,7 +441,8 @@ the number:
 
 ## Step 6 — Show the editor's deliverable, then stop
 
-Open `out/web/pipeline/project/timeline/01.edl` and `01.fcpxml` in a text editor.
+Open `corpus/nasa360-ep5_run/project/timeline/01.edl` and `01.fcpxml` in a text
+editor.
 Read the EDL out loud: source in/out, record in/out, a title that is the clip's
 opening sentence. Then open `captions/01.srt` alongside `facebook/01.mp4` and play
 it if the room allows.
@@ -398,7 +460,8 @@ an expert asking "why this clip?"
 | `--doctor` reports `faster-whisper` missing | Transcription extra not installed (`pip install -e '.[transcription]'`) | The artifact walk needs no model. Run it and say the live-transcription path is unavailable today. |
 | `nle_check.py` prints `SKIP` for the EDL parse | `pycmx` not installed in the active environment — it is declared in the `nle`, `dev` and `all` extras, so `pip install -e '.[nle]'` provides it; the historical workaround was to load it from `/tmp/nlelibs` outside the venv | Re-install the extra, or re-run with exactly `PYTHONPATH=/tmp/nlelibs:tools` if that directory is present. Without it the audit still runs; it just loses its most valuable check, which is the entire point of the tool. Do not present a `SKIP` as a pass. |
 | `nle_check.py` fails a duration check by > 2 frames | A render was deleted or re-encoded after the timelines were written | The timelines are derived from the same interval list the render concatenated; re-rendering regenerates both. Delete the affected `facebook/NN.mp4` and re-run the pipeline, which checkpoints per clip and will only redo the missing one. |
-| `editorial_audit.py` fails a silence-share check | Source with a music bed, cutaway, or any word-free-but-loud audio | **Do not call it silence.** The metric is computed from transcript word timings and never decodes audio — it measures word *coverage*, not acoustic silence. If challenged on clip 05's 40.8%, the measured answer is: that window is a music bed at mean −31.4 dB with 0.00 s of true silence (`docs/METRICS.md` A2.4). Say the metric's name overstates what it measures and that renaming it is on the list — do not offer it as a measure of dead air |
+| `editorial_audit.py` fails a silence-share check | Source with a music bed, cutaway, or any word-free-but-loud audio | **Do not call it silence.** The metric is computed from transcript word timings and never decodes audio — it measures word *coverage*, not acoustic silence. If challenged on clip 05's 40.8%, the measured answer is: that window is a music bed at mean −31.4 dB with 0.00 s of true silence (`docs/METRICS.md` A2.4). Since 2026-09-22 the audit reports `REVIEW` rather than `FAIL` for exactly this case — the render *is* measured now, and the exit code stays 1 because a human has not decided. Say the metric's name overstates what it measures and that renaming it is on the list — do not offer it as a measure of dead air |
+| `editorial_audit.py` exits 1 in the demo | Clip 05 is `REVIEW`, not `FAIL` | Do not reach for `--no-verify` or a quieter invocation. Show the line, say "five of six pass outright, one needs a human, and the tool will not sign off until that happens", and move on. An audit that cannot refuse is not an audit. |
 | `ffprobe` reports the shorts render as 308x486, someone calls it "not 9:16" | Anamorphic storage, SAR 8:9, DAR 1232:2187 | Show the `display_aspect_ratio` line. 0.5633 against a 0.5625 target. This is correct behaviour, documented in `product-gap-map.md`. |
 | A question about YouTube | `yt-dlp` bot-blocks this datacenter IP range on most videos; **one fetch has ever been observed, and no artifact from it survives** | Say exactly that. The URL path is the same code YouTube uses and it is verified end-to-end against archive.org, but YouTube itself is only partially observed here. Do not claim it works. |
 | A question about the web shell | `web/server.mjs` has **no authentication, no origin check, and a prefix-based path jail that is bypassable** (`docs/TECHNICAL_AUDIT.md`, defects #1–#3) | Do not demo the web shell on a shared network. Say plainly that the web layer is a local single-user tool today and would fail an enterprise security review. This run's `pipeline_state.json` contains no cookies (VERIFIED), but the code path persists them in general. |
@@ -455,8 +518,9 @@ stronger because it is checkable.
 1. **One real run, end to end, on real unscripted human speech.** A 24:29
    two-host NASA episode, 4,236 word-timed transcript tokens across 425 segments
    decoded in 5-minute chunks, 4,000 candidates scored, six story units selected,
-   twelve renders, twelve timeline files, eighteen caption files. Audited green
-   by two tools built to falsify it.
+   twelve renders, twelve timeline files, eighteen caption files. Audited by two
+   tools built to falsify it — one of which refuses to sign off until a human
+   looks at clip 05, which is the stronger of the two results.
 2. **The machine shows its working.** Every selection carries a decomposed score,
    a hook, a payoff and a reason string. Every cut has provenance. The deliverable
    is a timeline the editor finishes, not a black-box clip. That is the
@@ -475,12 +539,15 @@ stronger because it is checkable.
 cd /home/azureuser/selektyt
 .venv/bin/python -m selekyt --doctor
 .venv/bin/python -m selekyt --help
-ls out/web/pipeline/project/
-.venv/bin/python tools/editorial_audit.py out/web/pipeline/project
-PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py out/web/pipeline/project
-ffprobe -v error -show_entries stream=codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,avg_frame_rate -show_entries format=duration -of default=noprint_wrappers=1 out/web/pipeline/project/facebook/01.mp4
-ffprobe -v error -show_entries stream=codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,avg_frame_rate -show_entries format=duration -of default=noprint_wrappers=1 out/web/pipeline/project/shorts/01.mp4
+ls corpus/nasa360-ep5_run/project/
+.venv/bin/python tools/editorial_audit.py corpus/nasa360-ep5_run/project
+PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py corpus/nasa360-ep5_run/project
+ffprobe -v error -show_entries stream=codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,avg_frame_rate -show_entries format=duration -of default=noprint_wrappers=1 corpus/nasa360-ep5_run/project/facebook/01.mp4
+ffprobe -v error -show_entries stream=codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,avg_frame_rate -show_entries format=duration -of default=noprint_wrappers=1 corpus/nasa360-ep5_run/project/shorts/01.mp4
 .venv/bin/python -m pytest -q
 ```
 
-All eight were run by the author on 2026-09-19. All eight exited 0.
+Seven of the eight were re-run by the author on 2026-09-22 and match the quoted
+output above. The eighth — `pytest` — is re-quoted in Step 5; **`editorial_audit.py`
+exits 1, not 0**, and that is the one exit code in this list that is doing real
+work.

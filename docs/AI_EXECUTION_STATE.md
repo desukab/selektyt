@@ -724,7 +724,9 @@ timeline checked against both its renders — 54 clip/render pairs):
 
 **Two provenance facts this surfaced, which the docs now state instead of
 hiding.** First, **no rendered MP4 is committed** — `git ls-files "*.mp4"`
-returns zero; all 59 renders are gitignored. So A4.2 (timeline vs render) is
+returns zero; the 54 renders are gitignored (27 clips × 2 presets; four further
+MP4s in `microbench_render/` are microbenchmark output, not renders). So A4.2
+(timeline vs render) is
 measurable on this machine only and is *not* reproducible from a clean
 checkout, while A4.3 (EDL vs FCPXML) is. The A4.2 test skips with a stated
 reason rather than passing vacuously, and the doc says "verified here" rather

@@ -236,9 +236,18 @@ DOC_CLAIMS = [
 # The superseded figures, each already replaced by a measured value. Checked
 # per document for the same reason: a correction undone in one file is a defect
 # whether or not the other file still avoids the phrase.
+#
+# The two paired durations are banned as the *table row*, not as bare numbers:
+# `24.858` is no longer unreproducible — it is the committed nasa360-ep5 clip-01
+# timeline span and the duration of its render, which the pin test below reads
+# straight out of the audit. What was fabricated was the *pairing*
+# (24.858 s of timeline against 24.892 s of render, a 1.00-frame disagreement)
+# and the 17.084/17.138 pairing beside it; neither pair matches any committed
+# artifact. Banning the bare number would forbid the page from quoting a value
+# the corpus now genuinely measures.
 STALE_FIGURES = (
     "1.63 frames", "746 rendered", "745-frame", "513 vs 512",
-    "493 frames", "~0.04 s", "24.858", "17.084",
+    "493 frames", "~0.04 s", "24.858/24.892", "17.084",
 )
 
 
@@ -264,3 +273,30 @@ def test_each_document_states_the_figure_it_claims():
             f"measurement tests above have to move with it — or the doc "
             f"drifted, and those tests are what is still holding the real value."
         )
+
+
+def test_the_da_vinci_experiment_quotes_the_committed_clip_01_span():
+    """The closing experiment names a duration a reader will check against a
+    render. It has to be the span the committed timeline measures, not a figure
+    carried over from the superseded per-clip table — which quoted 24.858 s
+    against a 24.892 s render that matches nothing, and is why the bare number
+    was banned in the first place. The audit is the source here, not the doc:
+    pinning the doc to the artifact is what makes the number reproducible."""
+    nasa = ROOT / "corpus" / "nasa360-ep5_run" / "project"
+    assert (nasa / "timeline" / "01.edl").is_file(), (
+        "the nasa360-ep5 clip-01 timeline the experiment points at is gone; "
+        "the experiment and this test both need a committed target"
+    )
+    spans = {d for name, _ok, d in check_project(nasa)[1]
+             if name == "01 edl == fcpxml duration"}
+    assert len(spans) == 1, (
+        f"expected one clip-01 duration finding, got {sorted(spans)}"
+    )
+    m = re.search(r"edl ([\d.]+)s", spans.pop())
+    assert m, "the edl==fcpxml finding no longer quotes the span in seconds"
+    text = _doc_text(ROOT / "docs" / "NLE_COMPATIBILITY.md")
+    assert m.group(1) in text, (
+        f"NLE_COMPATIBILITY.md quotes a clip-01 duration other than the "
+        f"{m.group(1)} s the committed timeline measures; the experiment's "
+        f"figure has to come from the artifact it names"
+    )

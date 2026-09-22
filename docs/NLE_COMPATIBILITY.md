@@ -1,9 +1,21 @@
 # NLE Compatibility — Verification Status
 
-**Date of record:** 2026-09-19
-**Source of evidence:** the shipped run on `out/web/pipeline/project` — a real
-rights-permitted 24:29 NASA 360 source (`NASA_360_program5_HD.mov`, 29.97 fps,
-1469.77 s) cut into six clips with 16:9 and 9:16 renders.
+**Date of record:** 2026-09-19 (re-audited 2026-09-22; every number on this page
+is from the re-audit)
+**Source of evidence:** the committed corpus — 11 sources, of which 7 exported a
+timeline: 27 clips, 27 EDLs, 27 FCPXMLs and 54 rendered MP4s. The canonical
+example is `corpus/nasa360-ep5_run/project`, a real rights-permitted 24:29 NASA
+360 source (`NASA_360_program5_HD.mov`, 29.97 fps, 1469.77 s) cut into six clips
+with 16:9 and 9:16 renders.
+
+Two limits of that corpus matter for reading the table below. The source media is
+not retained in the checkout — `corpus_run.py` deletes it unless `--keep-media`
+is passed — so on 5 of the 7 exporting sources the two relink checks per timeline
+SKIP (36 SKIPs in total) and the frame rate is read from `source_probe.json`
+rather than probed. And the rendered MP4s are gitignored, so the duration
+comparisons ran on this machine and are re-run by
+`tests/test_nle_frame_deltas.py` rather than being reproducible from a clean
+clone. Every structural and duration check runs either way.
 
 ---
 
@@ -27,8 +39,13 @@ Every line below is reproduced by a repeatable tool, not asserted by the code
 that wrote the files:
 
 ```
-python tools/nle_check.py out/web/pipeline/project
+python tools/nle_check.py corpus/nasa360-ep5_run/project
 ```
+
+That is one project: 91 PASS, 12 SKIP, 0 FAIL. The table below aggregates the
+sweep over all of them, which `tests/test_nle_frame_deltas.py` runs in one
+process; on this machine it totals **430 PASS, 36 SKIP, 0 FAIL** across the seven
+sources that export.
 
 The tool deliberately does **not** use SelekyT's own parsers to validate
 SelekyT's own output — proving our file with our reader proves nothing. The
@@ -40,12 +57,12 @@ measured by `ffprobe`.
 | `pycmx` (independent CMX 3600 reader) accepts every EDL | **PASS** — 6/6, events and channel records counted |
 | EDL is well-formed CMX 3600 with advancing record spans | **PASS** |
 | FCPXML is well-formed XML, version 1.11, elements inside the 1.11 vocabulary | **PASS** — 6/6 |
-| Every asset `src` is an absolute `file:///` URI to an existing file | **PASS** — 6/6 |
+| Every asset `src` is an absolute `file:///` URI to an existing file | **PASS — 9/9 where the media is retained** (2 sources kept locally); **SKIP on the other 18** — those sources' media is deleted from the checkout, so the check has no evidence either way. Not a pass, and not a defect |
 | No asset-clip reads past its asset's declared extent | **PASS** — 6/6 |
 | FCPXML spine advances; no clip precedes its predecessor | **PASS** |
 | EDL total span == FCPXML spine total | **PASS** — 0.00 frames on all six |
 | Timeline duration == rendered MP4 duration (both presets) | **PASS** — 0.00–0.69 frames |
-| EDL source in/out == the selection the cut was made from | **PASS** — 0.0–0.7 frames |
+| EDL source in/out == the selection the cut was made from | **PASS** — worst endpoint deviation 1.00 frame over 54 timeline/format pairs, inside the 1.5-frame tolerance |
 | FCPXML asset duration and frame rate == the real container, read by `ffprobe` | **PASS** — 9 timelines over 2 sources; worst disagreement 0.425 frame (`royal-society-cloke`, the other source reads 0.168), within the 0.95-frame tolerance |
 
 Full output is in `docs/nle-audit-output.txt`.
@@ -54,7 +71,7 @@ Full output is in `docs/nle-audit-output.txt`.
 
 For each cut the EDL's total record span, the FCPXML's spine total, and both
 rendered MP4s agree to within 0.69 frames, measured over all 27 clips across
-the six sources that render. This matters more than it sounds:
+the seven sources that render. This matters more than it sounds:
 the EDL and the FCPXML are emitted by separate code paths, and the render by a
 third (ffmpeg filter chains). Their agreement is the only evidence available
 here that all three describe the same cut. The EDL and the FCPXML agree with
@@ -179,10 +196,13 @@ gates the entire customer thesis (`docs/CUSTOMER_DISCOVERY.md` calls this out
 as Step 0):
 
 > Install DaVinci Resolve (free tier) on a machine with a display. Import
-> `out/web/pipeline/project/timeline/01.edl` and `01.fcpxml`. Record, for
+> `corpus/nasa360-ep5_run/project/timeline/01.edl` and `01.fcpxml`. Record, for
 > each: does the project open; are the clips online or offline; does the
-> timeline duration equal the rendered `facebook/01.mp4` (24.892 s); do the
+> timeline duration equal the rendered `facebook/01.mp4` (24.858 s); do the
 > source in-points match the selection (414.30 s); is there a relink dialog.
+> The media the timelines point at is deleted from the checkout, so re-fetch
+> it first (`corpus_run.py --only nasa360-ep5 --keep-media`) or the import
+> will show every clip offline for a reason that is not a defect.
 
 Cost: zero capital, one machine with a GUI. Resolve on Linux needs an
 unsupported workaround or a VM, so a macOS or Windows machine is preferred.
@@ -234,7 +254,7 @@ edit remain self-checked.
 # and the remaining checks still run. Prepending /tmp/nlelibs is optional; it
 # pins a reader outside the venv when you want the isolation explicit.
 PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py \
-    out/web/pipeline/project
+    corpus/nasa360-ep5_run/project
 
 # The tests, including three that fail the audit on purpose.
 .venv/bin/python -m pytest tests/test_nle_check.py tests/test_timeline_build.py -q
