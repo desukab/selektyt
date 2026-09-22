@@ -446,6 +446,16 @@ underlying code has since been fixed (see R12), so this is now a test-coverage
 gap rather than a live vulnerability. Add the sibling-prefix case as a
 regression test so the fix cannot silently regress.
 
+**Resolved.**
+`tests/test_web_harness.py::test_a_sibling_directory_extending_the_project_name_is_rejected`
+builds a real sibling of the repo, sends its *absolute* path to `/api/export`,
+and asserts the refusal. The absolute form matters: it is the shape of the
+bypass, and it contains no `..`, so a traversal-based filter would not have
+caught it either. Verified by reverting `guardedPath` to the bare
+`startsWith(ROOT)` — the new test fails, the rest of the suite still passes,
+which is exactly the signature of a test that covers the defect rather than
+the happy path.
+
 ### R16. Two documents of record contradict each other about YouTube, and neither can be settled
 
 - **Claim A:** `docs/AI_EXECUTION_STATE.md:277-281` — "The blanket 'Sign in to

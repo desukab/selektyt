@@ -153,7 +153,7 @@ CORS preflight. That is the classic JSON CSRF primitive. Any web page the
 user visits can drive the pipeline, and `127.0.0.1` binding does not stop it —
 the browser is on the same host.
 
-### `guardedPath` is a prefix check and is bypassable — VERIFIED
+### `guardedPath` is a prefix check and is bypassable — VERIFIED, then FIXED
 
 `web/server.mjs:203-209`:
 
@@ -175,9 +175,15 @@ stands. The test proves the guard blocks the obvious case and nothing else.
 The correct check is `candidate === ROOT || candidate.startsWith(ROOT + sep)`.
 
 **Fixed** (the correction above is what the code now does), and the sibling
-case is now a regression test in `tests/test_web_harness.py` alongside the
-obvious one — the audit's point about the test was the real finding, and it
-applied to the test as much as to the guard.
+case is now a regression test —
+`tests/test_web_harness.py::test_a_sibling_directory_extending_the_project_name_is_rejected`
+— alongside the obvious one. The audit's point about the test was the real
+finding, and it applied to the test as much as to the guard: the test that
+asserts `/etc/hostname` is refused passes either way, so it could not detect
+the regression. The new test builds a real sibling of the repo, sends the
+*absolute* path (the shape of the bypass — no `..` in it, so a traversal
+filter would not catch it either) and asserts it is refused; it fails against
+the one-line guard above and passes against the separator version.
 
 ### `/api/file` serves the whole repo, not the output directory — VERIFIED, then FIXED
 
@@ -589,7 +595,7 @@ means the shipped output is wrong and nothing in the system says so.
 | # | Severity | Area | File:line | Failure scenario |
 |---|---|---|---|---|
 | 1 | **Critical** | Security | `web/server.mjs:345-360` | No auth, no origin check, `Content-Type`-blind JSON POST. Any web page the user visits drives the pipeline via CSRF. Combined with #2/#3 this is remote credential theft from a localhost service. |
-| 2 | **Critical** | Security | `web/server.mjs:203-209` | `guardedPath` prefix bypass. `/tmp/selektyt-backup/secrets` passes the jail. Any sibling directory whose name extends the repo name reads arbitrary files via `/api/file`. The test at `tests/test_web_harness.py:218` passes while the bypass stands. |
+| 2 | **Critical** | Security | `web/server.mjs:203-209` | `guardedPath` prefix bypass. `/tmp/selektyt-backup/secrets` passes the jail. Any sibling directory whose name extends the repo name reads arbitrary files via `/api/file`. The test at `tests/test_web_harness.py:218` passes while the bypass stands. **FIXED —** the boundary is now `ROOT + sep`, and a sibling-prefix regression test (`test_a_sibling_directory_extending_the_project_name_is_rejected`) fails against the old one-liner. The `/api/file` half was a separate defect with a separate boundary, fixed separately below. |
 | 3 | **Critical** | Security | `selekyt/pipeline.py:206` → `web/server.mjs:317` | yt-dlp `media_info` (embedding the `Cookie` header) is persisted to `pipeline_state.json` and served unauthenticated by `/api/file`. `cookies.py` goes out of its way never to print a cookie value; this path prints all of them. |
 | 4 | **High** | Security | `web/server.mjs:288-290`, `selekyt/server.py:307-325` | SSRF. `http://169.254.169.254/...` is a valid `source`, fetched from the server's network. No host/port allowlist anywhere. |
 | 5 | **High** | Reliability | `selekyt/pipeline.py:391-419`, `:117-151` | Caption-style render-cache staleness. Re-run with a different `SELEKYT_CAPTION_STYLE`: the new ASS is written, the old MP4 is shipped. **Falsifies QA.** The cache key omits the style in both `_fingerprint` and `_selection_digest`. **FIXED —** the key now requires a matching `caption_style`, records it back, and treats a record with no style as a miss; pinned by `tests/test_caption_style_cache.py` (5 tests). |
@@ -613,7 +619,9 @@ means the shipped output is wrong and nothing in the system says so.
    `:283` onward. Any web page can drive the pipeline via CSRF.
 2. **`guardedPath` is a `startsWith` prefix check and is bypassable** —
    `web/server.mjs:203-209`. `/repo-backup/secrets` escapes the jail; the
-   existing test passes anyway.
+   existing test passed anyway. **Fixed:** the boundary now includes the
+   separator, and a sibling-prefix regression test covers the case the
+   original test could not see.
 3. **Cookie credentials persisted into `pipeline_state.json` and served
    unauthenticated** — `selekyt/pipeline.py:206` → `web/server.mjs:317`.
 4. **Caption-style render-cache staleness** — `selekyt/pipeline.py:391-419`
@@ -657,3 +665,13 @@ test (`tests/test_web_harness.py:218`) that asserts the one case it does
 handle. An enterprise reviewer does not need to find the cookie leak or the
 SSRF to fail this product; they need only read those four lines and write
 `/tmp/selektyt-anything/secrets` — which I did, and it passed the guard.
+
+**Resolved.** The guard now reads `candidate === ROOT ||
+candidate.startsWith(ROOT + sep)`, and the test that could not see the bypass
+is no longer the only one on it. The code block above is the *old* guard,
+retained because the finding is about that line and a reader needs to see what
+was wrong with it; it is not what ships. Two things had to change, and only
+one of them was code: the boundary, and the test that asserted the obvious
+case and therefore passed while the jail was open. The second is the more
+general lesson of this audit — a guard's test has to be written against the
+bypass, not against the intended input, or it certifies nothing.

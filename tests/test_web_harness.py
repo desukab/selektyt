@@ -220,6 +220,46 @@ def test_out_of_project_paths_are_rejected(base):
     assert isinstance(resp["error"], str)
 
 
+def test_a_sibling_directory_extending_the_project_name_is_rejected(base):
+    """The prefix bypass this test exists for: ``guardedPath`` used to be a bare
+    ``startsWith(ROOT)``, and a *sibling* directory whose name extends the
+    project's own name string-matches it. Resolved absolute,
+    ``/home/.../selektyt-secret/leak.wav`` starts with ``/home/.../selektyt``
+    and would have been accepted as inside the jail — which is why the boundary
+    now includes the separator.
+
+    Two details make this test able to see the bypass:
+
+    - The probe is sent as an **absolute** path. That is the shape of the
+      bypass: no ``..`` anywhere in it, so a traversal filter would not catch
+      it either.
+    - The probe is a **real WAV**, not an arbitrary file. A probe the pipeline
+      would reject anyway cannot distinguish "blocked by the jail" from
+      "rejected for not being audio", and passes against a broken guard.
+    """
+    wav = _get(base, "/api/sample.wav")
+    sibling = ROOT.parent / f"{ROOT.name}-secret"
+    probe = sibling / "leak.wav"
+    try:
+        sibling.mkdir(parents=True, exist_ok=True)
+        probe.write_bytes(wav)
+    except OSError as exc:
+        pytest.skip(f"cannot create a sibling of the repo ({exc}); the jail "
+                    f"cannot be probed from outside it")
+    try:
+        absolute = str(probe)
+        assert absolute.startswith(str(ROOT)), "the probe must be the bypass shape"
+        assert not absolute.startswith(str(ROOT) + os.sep), \
+            "the probe must actually be outside the project"
+        # vad_analyze is the cheapest route through guardedPath; it would
+        # happily analyse this WAV if the jail let it through.
+        resp = _post(base, "vad_analyze", {"path": absolute})
+        assert resp["ok"] is False, f"{absolute} escaped the project jail"
+        assert "inside the project" in resp["error"], resp
+    finally:
+        shutil.rmtree(sibling, ignore_errors=True)
+
+
 def _get_envelope(base, path) -> dict:
     """A rejected path is still HTTP 200 — the bridge answers bad requests with
     an ``{"ok": false}`` envelope rather than a non-2xx — so a plain ``_get``
