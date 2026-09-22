@@ -20,6 +20,7 @@ from engine import timecode
 from engine.nle_export import (
     export,
     export_edl,
+    independent_parse_edl,
     render_edl,
     render_fcpxml,
     validate_edl,
@@ -195,6 +196,87 @@ def test_validator_catches_a_malformed_timecode():
 def test_validator_rejects_garbage():
     assert validate_edl("") != []
     assert validate_edl("not an edl at all") != []
+
+
+# ── the independent reader: a second parser on the same text ─────────────
+
+@pytest.mark.parametrize("tl_name", ["two_clip", "gapped", "multitrack", "telugu"])
+def test_the_exported_edl_is_accepted_by_an_independent_reader(tl_name, tmp_path):
+    """``validate_edl`` and ``render_edl`` are one grammar: whatever the emitter
+    writes, the validator is built to accept, so an EDL that passes it has been
+    checked by nobody but its author. ``pycmx`` is an independent CMX 3600
+    reader, so a real export must parse under it too.
+
+    This is the half of ``tools/nle_check.py``'s audit that needs no media, and
+    running it on every export is what closes that tool being "wired into
+    nothing" for the EDL format.
+    """
+    pytest.importorskip("pycmx", reason="the nle extra supplies the independent reader")
+    tl = {
+        "two_clip": two_clip_timeline,
+        "gapped": gapped_timeline,
+        "multitrack": multitrack_timeline,
+        "telugu": telugu_timeline,
+    }[tl_name]()
+    text = render_edl(tl)
+    ran, problems = independent_parse_edl(text)
+    assert ran, "pycmx importorskip above means the reader must be present"
+    assert problems == [], f"pycmx rejected an EDL our own validator passed: {problems}"
+
+
+def test_an_edl_our_validator_accepts_but_a_reader_rejects_is_caught(tmp_path, monkeypatch):
+    """The independent parse has to be able to fire, and it has to be able to
+    fire *when our own validator finds nothing* — that is the entire reason it
+    exists. So this takes a real, valid EDL (``validate_edl`` returns an empty
+    list for it) and injects a reader that rejects the file at the read, which
+    is where a genuinely malformed EDL would fail.
+
+    Without this the previous test is one-sided: it can only prove agreement,
+    and an ``independent_parse_edl`` that always returned ``(True, [])`` would
+    pass it as easily as a real one."""
+    text = render_edl(two_clip_timeline())
+    assert validate_edl(text) == [], \
+        "the fixture must be an EDL our own validator accepts, or this " \
+        "test is not demonstrating what its name claims"
+    monkeypatch.setattr(
+        "engine.nle_export.io.StringIO",
+        lambda s: _ExplodingReader(s),
+    )
+    ran, problems = independent_parse_edl(text)
+    assert ran and problems, \
+        "a reader that rejects the text must report a problem, not pass"
+
+
+class _ExplodingReader:
+    """Stand in for a file object a real reader chokes on: ``parse_cmx3600``
+    takes a file-like object, so the failure is injected at the read, which is
+    where a genuinely malformed EDL would fail."""
+
+    def __init__(self, text):
+        self._text = text
+
+    def readlines(self):
+        raise ValueError("malformed CMX 3600 input")
+
+
+def test_a_missing_reader_is_reported_as_not_run_not_as_a_defect(monkeypatch):
+    """``pycmx`` is an optional extra. A base install must still be able to
+    export, so absence is ``(False, [])`` — not a problem. The runtime pipeline
+    turns that into an advisory line; ``tools/nle_check.py`` turns it into a
+    FAIL, and that difference is deliberate and documented at the function."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def refuse(name, *a, **k):
+        if name == "pycmx" or name.startswith("pycmx."):
+            raise ImportError("simulated: the nle extra is not installed")
+        return real_import(name, *a, **k)
+
+    monkeypatch.setattr(builtins, "__import__", refuse)
+    ran, problems = independent_parse_edl("TITLE: x\nFCM: NON-DROP FRAME\n")
+    assert ran is False, "the reader's absence is not a defect in this EDL"
+    assert problems == []
 
 
 # ------------------------------------------------------------------ FCPXML

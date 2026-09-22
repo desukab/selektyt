@@ -34,6 +34,7 @@ claim; they are format-validity claims.
 
 from __future__ import annotations
 
+import io
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
@@ -885,6 +886,34 @@ def validate_edl(text: str, fps: float | None = None) -> list[str]:
                 f"but events use {';' if used_drop else ':'} separators"
             )
     return problems
+
+
+def independent_parse_edl(text: str) -> tuple[bool, list[str]]:
+    """Parse an EDL with a third-party CMX 3600 reader, not our own.
+
+    Returns (ran, problems). ``ran`` is False when the reader is absent —
+    ``pycmx`` is an optional extra, and its absence is a property of this
+    install rather than a defect in this EDL, so a missing reader is *not*
+    reported as a problem here. The runtime pipeline reports it as an advisory
+    instead, because failing every export on a base install would be worse
+    than an unverified one. ``tools/nle_check.py`` takes the opposite stance
+    deliberately: invoked by name on a finished project, a check that passes
+    while its validator is missing proves nothing, so it FAILs there.
+
+    ``validate_edl`` above and this function read the text with different
+    parsers for the same reason: a single regex that both emits and checks a
+    format is self-consistent by construction and cannot see its own mistakes.
+    """
+    try:
+        from pycmx import parse_cmx3600
+    except ImportError:
+        return False, []
+    try:
+        parsed = parse_cmx3600(io.StringIO(text))
+        list(parsed.events)
+    except Exception as exc:  # an independent reader rejecting it is the point
+        return True, [f"pycmx rejected the EDL: {type(exc).__name__}: {exc}"]
+    return True, []
 
 
 def _sep_rate(sep: str) -> float:

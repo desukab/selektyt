@@ -669,9 +669,20 @@ means the shipped output is wrong and nothing in the system says so.
 5. **QA that cannot detect a wrong output, plus the tools that could are
    unwired** — `engine/qa.py:19-43` never checks aspect, duration-vs-plan, or
    captions; `tools/nle_check.py` (independent `pycmx` parse, render-vs-timeline
-   cross-check) is never called by the pipeline, the web shell, or CI. (`pycmx`
-   is now a declared dependency, so the check *can* run — it simply is not
-   scheduled to, which is the defect, not a missing library.)
+   cross-check) is never called by the pipeline, the web shell, or CI. **Partly
+   fixed 2026-09-22 —** the QA half is row #7 above: aspect ratio and
+   duration-vs-edit-plan are now measured precisely at runtime, and the two
+   exception-swallowing metrics report `None` instead of a clean-looking zero.
+   The EDL half is wired in now too, in the one place it can be cheaply: every
+   export is parsed by `pycmx` — an independent CMX 3600 reader — and a
+   rejection is fatal (`engine.nle_export.independent_parse_edl`, called from
+   `selekyt/pipeline.py` at the export-validation site). That is deliberately
+   *not* `tools/nle_check.py` itself, whose value is the media-backed
+   render-vs-timeline cross-check; wiring that in after renders are
+   checkpointed is row #10's hazard. The remaining open defect is the
+   scheduling one: `pycmx` is a declared dependency, so `tools/nle_check.py`
+   *can* run — nothing schedules it to. CI installs the library but does not
+   invoke the tools (see "CI does not run the tools" below).
 
 ## The single most severe risk
 

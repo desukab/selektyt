@@ -24,7 +24,12 @@ from engine.qa import write_report
 from engine.report import ReportBuilder
 from engine.render import render_clip
 from engine.timeline_build import timeline_for_candidate
-from engine.nle_export import export as nle_export, validate_edl, validate_fcpxml
+from engine.nle_export import (
+    export as nle_export,
+    independent_parse_edl,
+    validate_edl,
+    validate_fcpxml,
+)
 from engine.llm_editorial import attach_metadata
 from engine.pipeline_audio import run_pipeline_audio
 from providers.ffmpeg import FfmpegError, probe_duration, probe_fps
@@ -751,16 +756,31 @@ def run(
         # the same retention_intervals the render just concatenated and stamped
         # on the same frame grid, so an NLE relinking these clips gets the cut
         # that was shipped. tools/nle_check.py is the check that verifies this
-        # agreement to within RENDER_FRAME_TOLERANCE; it is not invoked here —
-        # run it over the project directory, or tools/corpus_run.py does.
+        # agreement to within RENDER_FRAME_TOLERANCE against the rendered
+        # files; it is not invoked here — run it over the project directory, or
+        # tools/corpus_run.py does. The independent EDL parse below is the half
+        # of that audit that needs no media, so it runs on every export.
         tl = timeline_for_candidate(media, c, fps=source_fps, duration=source_duration)
         exported = nle_export(tl, project / "timeline", stem=f"{idx:02d}")
         # CMX 3600 declares no frame rate, so the list is validated on the grid
         # it was written on. Without the real rate a 24 fps cut is read as 30
         # and correct spans report a spurious few-frame retime.
-        edl_problems = validate_edl(
-            exported["edl"].read_text(encoding="ascii"), fps=source_fps
-        )
+        edl_text = exported["edl"].read_text(encoding="ascii")
+        edl_problems = validate_edl(edl_text, fps=source_fps)
+        # A reader that is not ours must accept the same text: the regex above
+        # is the emitter's own grammar, so an EDL it accepts is not thereby an
+        # EDL an NLE can read. Absent pycmx this stays advisory rather than
+        # fatal — see independent_parse_edl for why the two differ.
+        ran, indep_problems = independent_parse_edl(edl_text)
+        if ran:
+            if indep_problems:
+                edl_problems += indep_problems
+        else:
+            print(
+                "[export] pycmx is not installed, so the EDL was not parsed by an "
+                "independent reader; install the 'nle' extra to verify it",
+                flush=True,
+            )
         fcpxml_problems = validate_fcpxml(
             exported["fcpxml"].read_text(encoding="utf-8"), tl
         )
