@@ -764,9 +764,12 @@ def run(
         # slop a container muxer can introduce, which is what
         # tools/nle_check.py's direct render-vs-timeline comparison is for at
         # its two-frame tolerance. That tool is not invoked here; run it over
-        # the project directory, or tools/corpus_run.py does. The independent
-        # EDL parse below is the half of that audit that needs no media, so it
-        # runs on every export.
+        # the project directory, or tools/corpus_run.py does, or the suite
+        # does — tests/test_nle_check.py runs it over the committed corpus and
+        # tests/test_pipeline_e2e.py over a tree this code just wrote, which
+        # is what catches an emitter drifting past its own self-consistent
+        # validation. The independent EDL parse below is the half of that audit
+        # that needs no media, so it runs on every export.
         tl = timeline_for_candidate(media, c, fps=source_fps, duration=source_duration)
         exported = nle_export(tl, project / "timeline", stem=f"{idx:02d}")
         # CMX 3600 declares no frame rate, so the list is validated on the grid

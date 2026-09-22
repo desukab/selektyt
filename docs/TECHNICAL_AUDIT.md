@@ -926,16 +926,59 @@ every machine. That is what makes the skip list above a list of unavailable
 *measurements* rather than a list of untested *behaviour*; when a skip appears
 in the second category it is a finding in itself.
 
-### CI does not run the tools that would catch the real classes of bug — VERIFIED
+### CI does not run the tools that would catch the real classes of bug — VERIFIED, then PARTLY FIXED
 
 `.github/workflows/ci.yml` installs `.[dev,llm,nle]`, ffmpeg and node, then runs
 `pytest tests/ -q -rs`. `pycmx` is in the `nle`, `dev` and `all` extras and is
 installed in CI, so the independent-parse check is *able* to run — an earlier
-version of this section said it was in no extra, which was wrong. What CI still
-does not do is run `tools/editorial_audit.py` or `tools/nle_check.py`
-themselves: they are invoked by hand or by `tools/corpus_run.py`, so a change
-that breaks the render/interchange agreement is only caught when a human audits
-a project directory.
+version of this section said it was in no extra, which was wrong. What CI did
+not do was run `tools/editorial_audit.py` or `tools/nle_check.py` themselves:
+they were invoked by hand or by `tools/corpus_run.py`, so a change that broke
+the render/interchange agreement was only caught when a human audited a project
+directory.
+
+**`tools/nle_check.py` is scheduled 2026-09-22, in two legs that test different
+things.** Both run the audit itself rather than a reimplementation of its
+checks, so a change to the tool is covered as well as a change to the emitter.
+
+The first leg runs it over the seven committed corpus projects that have a
+timeline — 466 findings, all hard checks passing
+(`tests/test_nle_check.py::test_every_committed_corpus_project_passes_the_independent_audit`).
+This pins the committed artifacts and the audit's verdict on them. It is *not*
+a test of the emitter: those timelines were written by whatever the code
+produced at corpus-run time, and re-running the pipeline would not change them,
+so a change to `nle_export` is invisible to it. What it does catch is anything
+that makes a real committed tree fail — verified by mutation, forcing every
+probed render duration to 0.0 fails this test (and two of the audit's own
+fixture tests) by turning the render comparisons into not-run-but-failing
+findings.
+
+The second leg is the one that pins the emitter
+(`tests/test_pipeline_e2e.py::test_the_independent_nle_audit_passes_a_tree_the_pipeline_just_wrote`):
+run the real pipeline, then audit the tree it just wrote, so the EDL and FCPXML
+did not exist until `nle_export` emitted them from the same retention intervals
+the render just concatenated. This is the coverage the finding was about, and
+it turned out to be coverage nothing else in the suite has. The pipeline's own
+export validation is *self-consistent*: `validate_fcpxml` checks the emitted
+text against the same `Timeline` model the emitter was built from, and against
+the same `FCPXML_VERSION` constant the emitter wrote — so an emitter that
+bumped the version to 1.12 passes its own validation and every other test in
+the repo, and only this one fails (`1 failed, 73 passed`). That is a change no
+amount of internal validation could have caught, because the disagreement is
+with an external standard, not with the model. Two mutations that break the
+emitted span or clip extent also fail this test, but they fail six other tests
+too because the pipeline's own validation is strict — recorded honestly, since
+"isolation" is not the same claim as "the test detects it".
+
+**Still open:** `tools/editorial_audit.py` is still not scheduled, and the
+relink half of `tools/nle_check.py` still cannot run in CI. Of the seven
+committed trees, five reference their source media by a path that no longer
+exists anywhere, and the other two reference absolute paths that resolve only
+on the machine that generated them — so those findings report NOT RUN here and
+NOT RUN on a CI runner, and the audit's own 36 deferred findings on this corpus
+are the honest count. Verifying relink means re-running the corpus with
+`--keep-media` (the media is not redistributable with the repo) or opening the
+formats in a real NLE, which is B1 below.
 
 ---
 
@@ -957,7 +1000,7 @@ means the shipped output is wrong and nothing in the system says so.
 
 **The disk-growth half is addressed 2026-09-22 by an opt-in control, not by automatic cleanup** — `selekyt --clean-project <dir>` removes `source/` and `transcription/` from a finished run, refusing unless every render the plan called for is on disk, and reports the bytes it reclaimed. Measured on the committed corpus: 60 MB of 115 MB (52%), 34 MB of 120 MB (28%) and 4 MB of 69 MB (6%) — the spread is why the claim is a table and not a number. **Still open:** nothing schedules it, so `out/` still grows until a user runs it, and the `OSError` at 100× is deferred rather than solved. See "Disk is the binding constraint" for the measurement and the reasoning about what is and is not safe to delete. |
 | 9 | **Medium** | Architecture | `engine/fcpxml.py` vs `engine/nle_export.py`; `selekyt/server.py` (`op_render_fcpxml`) vs `selekyt/pipeline.py` | Two live FCPXML emitters with divergent error policy (raise vs silent fallback) behind two entry points. The web preview and the shipped file can disagree. **The policy half is closed 2026-09-22 —** both `_to_file_uri` functions now raise on an unresolvable path with the path named (the "silently falls back" description was stale), and the alignment is pinned by one test asserting the raise on both emitters. What remains is the maintenance cost the finding was really about: two deliberately separate emitters speaking different vocabularies, a duplicated `Track` dataclass, and the possibility of drift in what the alignment test does not cover. Merging them would rewrite a working export for no user-visible gain, so it is recorded as accepted, not fixed. |
-| 10 | **Medium** | Reliability | `selekyt/pipeline.py` export block | Export validation runs after renders are checkpointed, so a bad timeline kills a run that has already produced deliverables. Recovers on resume; reports failure. Also, the export comment claimed timeline duration == render duration without ever measuring the render. **The second half is resolved 2026-09-22 —** the rendered MP4s *are* measured now (`write_report` probes each one against the plan's `edited_duration` at 1%), and the comment now says what is verified instead of assuming it. The agreement is checked in two legs that meet at the edit plan, not one direct comparison; sub-frame slop between the timeline and the render is still only measured by `tools/nle_check.py`, which remains unscheduled. **The first half is still open by design** — running the media-backed cross-check before the checkpoint would mean discarding payable deliverables on a failure, so the ordering is deliberate and the run recovers on resume. |
+| 10 | **Medium** | Reliability | `selekyt/pipeline.py` export block | Export validation runs after renders are checkpointed, so a bad timeline kills a run that has already produced deliverables. Recovers on resume; reports failure. Also, the export comment claimed timeline duration == render duration without ever measuring the render. **The second half is resolved 2026-09-22 —** the rendered MP4s *are* measured now (`write_report` probes each one against the plan's `edited_duration` at 1%), and the comment now says what is verified instead of assuming it. The agreement is checked in two legs that meet at the edit plan, not one direct comparison; sub-frame slop between the timeline and the render is still only measured by `tools/nle_check.py`, which is now scheduled in the suite (see "CI does not run the tools") but runs *after* the checkpoint by the same constraint. **The first half is still open by design** — running the media-backed cross-check before the checkpoint would mean discarding payable deliverables on a failure, so the ordering is deliberate and the run recovers on resume. |
 | 11 | **Medium** | Test quality | `tests/test_render.py:170-176` et al. | The burned-captions test cannot detect a missing caption track; four tests assert a literal `True` constant; `test_audio_analysis.py:133-142` does not test what its name claims; `test_editorial_rank.py:51` disables its own assertion via `or True`. **Mostly resolved 2026-09-22 —** the burned-captions half is closed by a pixel-decoding test; `test_editorial_rank.py` now asserts the retained clips' sorted spans do not overlap instead of `... or True`; `test_reproducible_segmentation_across_runs` now re-runs at the same threshold and compares the persisted regions, and proves the threshold reaches the segmenter (0.3 vs 0.5 straddle the boundary where this fixture's segmentation actually moves; 0.5 vs 0.9 do not, because the fixture's bursts saturate the score at 1.0). Both replacements were mutation-verified. Remaining by deliberate decision: the four `is True` constants (see §"Three more near-vacuous assertions, left in place"). |
 | 12 | **Medium** | Scalability | `selekyt/server.py` `_envelope`/`process_line`, `web/server.mjs` `spawnChild`/`rpc` | One serial sidecar, FIFO `pending[]` with no request id, no timeout. One slow pipeline blocks `/api/ping`; one crash rejects every queued request; a `stdin.write` failure leaves a promise unresolved forever. **Mostly resolved 2026-09-22.** Three of the four named halves are closed; the one that is not is a property of the design rather than a bug left in place.<br><br>**Correlation replaces position.** Every request now carries an `id` the sidecar echoes back on both the success and the failure envelope (`_envelope`), and the bridge matches a response to the request that asked for it instead of to whichever request happens to be first in line. This was not theoretical: the wire *is* stdout, and a library deep in the pipeline that writes to fd 1 directly — CTranslate2 has done it from under faster-whisper — emits a line that is a response to nothing. Under the old FIFO that line was consumed as one, and the request behind it silently received the answer to the request in front of it, or an "invalid response" error about a line it never sent. Nothing complained. Now a line that parses but names no live request is dropped and logged, and an unparseable line is dropped too rather than charged to a request — `_progress_to_stderr` already keeps Python-level prints off the wire, which covers `print()` but not a C extension or a subprocess that inherited fd 1, so the two guards are at different layers on purpose. A caller that sends no `id` still gets FIFO, which is correct for the single-threaded loop and keeps the Rust worker and every caller predating the field working.<br><br>**A crash names what it killed.** The exit handler still rejects every queued request — correct, the sidecar is gone — but each rejection now carries the op it was serving, because "the sidecar exited" answers a queue of different questions with the same words and the one a user was watching was not identifiable.<br><br>**No unresolved promise.** A `stdin.write` that throws is caught, and the entry is *removed* from the queue before the promise settles — leaving it in place is the subtler half of the bug, since a response arriving later settles an already-settled promise (a no-op) and shifts every response after it by one. A stdin `error` event settles everything still queued and drops the reference; the child is deliberately not killed, because a broken stdin is usually the aftermath of a death whose exit handler has already cleared the queue, and if it has not, the process reads EOF and exits on its own. Killing it here could instead cut short a render that was still progressing.<br><br>**Still open, and why: `/api/ping` cannot be answered while a run is in flight.** The probe gets a 5s deadline and reports *busy* rather than hanging for the length of a pipeline — the page used to read an engine that was working as "unreachable" until the run finished — but the probe genuinely cannot be answered. The sidecar is one thread and `serve()` is a blocking line loop, so while it serves a request it cannot even *read* a probe, let alone answer one. Answering from a second thread would require thread-safe handlers in a sidecar whose handlers are not (models, `SELEKYT_CAPTION_STYLE`, the `sys.stdout` swap in `_progress_to_stderr`), so it is recorded as a design limit rather than a fix. The deadline applies to ping only: a transcribe and a hang are not distinguishable from outside the process, and a long op that gets a deadline would be killed or reported failed for working.<br><br>**What pins it.** `tests/test_server.py` (3 tests) pins the wire side: the id is echoed on both envelopes, a request without one gets no synthetic field, and a string id is carried verbatim rather than coerced. `tests/test_web_harness.py` (5 tests) pins the queue side against a sidecar script — the one route that forwards its body verbatim is the one these use, because the `mode` field the fake reads is a no-op parameter to the real sidecar: a line printed past the protocol does not steal the next answer, an envelope for an id nobody sent is dropped, answers arriving back to front still reach their request, the probe reports busy inside its deadline while the request that held it completes untouched, and a dead sidecar names the op it died serving and is replaced by the next one. Each was mutation-verified and failed exactly the test that names it: restoring the FIFO's line consumption fails the stray test only; ignoring the id fails the foreign-id and out-of-order tests only; removing the probe's deadline fails the busy test on the deadline assertion, which is what proves the queue is correct *and* still slow without it — correlation fixed the mismatch, not the hang; dropping the op from the crash envelope fails the dead-sidecar test only; dropping the id from `_envelope` fails the two wire tests only. |
 | 13 | **Medium** | Scalability | `web/server.mjs` `route`, `pipeline_state.json` | No project ID, no per-tenant isolation, hardcoded output directory. Two concurrent web runs clobber one state file. Multi-tenancy is a correctness bug, not a scaling task. **The collision half is FIXED 2026-09-22; the isolation half is not, and is a product-shape question rather than a bug.** `pipeline_state.json` is a run's state machine — it records what has been rendered so a resume picks up where the run left off — and two runs into one directory do not share that machine, they fight over it. The second's state write landed over the first's renders list and the first then resumed against a state that no longer described its own work. The atomic write from row #8 is what made this silent rather than a crash: neither payload was corrupted, last writer won, and nothing said which run the state file described. `run_pipeline` and `export` now hold their project directory for the duration of a run through `_runExclusive`, and a second caller into the same directory is refused with the directory and the holding op named, instead of being allowed to corrupt the first. The lock is keyed by directory, not global: the two routes write to different directories and a run holding one does not block the other. It is in-process, which is the right scope because the bridge is one process and every web request crosses it — and because a lock file on disk would outlive a bridge restart and report a project busy forever after a crash nothing cleaned up. It is released in a `finally`, and release on a dead sidecar falls out of that for free: the queue's exit handler settles the outstanding promise with an error, `rpcData` throws, and the `finally` runs. Pinned by three tests in `tests/test_web_harness.py`: two concurrent runs of one project are refused rather than interleaved, a refused run releases the project for the next one (the stuck-lock case, which reads as "this project is busy" forever if the release path is wrong), and a run holding one project does not block another. Mutation-verified: disabling the guard fails exactly the first two and *not* the third, which is what pins the lock to a directory rather than to the server. **Still open:** there is still one project directory per route and no project ID, so this is a collision guard, not isolation — a user gets one `out/web/pipeline` and one `out/web/project`, and naming, listing or choosing between past projects is a product surface the shell does not have. Two browser tabs can no longer silently corrupt each other; they still cannot have separate work. |
@@ -1003,10 +1046,15 @@ means the shipped output is wrong and nothing in the system says so.
    `selekyt/pipeline.py` at the export-validation site). That is deliberately
    *not* `tools/nle_check.py` itself, whose value is the media-backed
    render-vs-timeline cross-check; wiring that in after renders are
-   checkpointed is row #10's hazard. The remaining open defect is the
-   scheduling one: `pycmx` is a declared dependency, so `tools/nle_check.py`
-   *can* run — nothing schedules it to. CI installs the library but does not
-   invoke the tools (see "CI does not run the tools" below).
+   checkpointed is row #10's hazard. **The scheduling half is fixed
+   2026-09-22** — see "CI does not run the tools" below: the audit now runs in
+   the suite over the seven committed corpus projects (466 findings, no hard
+   failure) and, separately, over a tree the pipeline wrote this run — the
+   second is the one that pins the emitter, and is the only test in the repo
+   that catches an emitter bumping the FCPXML version past its own
+   self-consistent validation. What remains open is `tools/editorial_audit.py`,
+   still unscheduled, and the relink checks, which need media the repo does not
+   ship.
 
 ## The single most severe risk
 

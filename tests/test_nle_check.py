@@ -439,3 +439,80 @@ def test_every_committed_corpus_project_is_self_describing():
         assert has_timeline == (rec["status"] == "OK"), (
             f"{p.parent.name}: status {rec['status']} but "
             f"{'a' if has_timeline else 'no'} timeline/")
+
+
+# --- the audit is actually scheduled ----------------------------------------
+
+
+def _require_independent_validator():
+    """The independent EDL parse is the point of the audit — SelekyT's own
+    emitter wrote the file and ``pycmx`` reads it — so in the tool that check
+    FAILS rather than skipping when pycmx is absent. A checkout that did not
+    install the ``nle`` extra skips here rather than reporting a green audit
+    the validator never ran. CI installs the extra."""
+    import importlib.util
+
+    if importlib.util.find_spec("pycmx") is None:
+        pytest.skip("pycmx is not installed; pip install -e '.[nle]'")
+    if subprocess.run(["which", "ffprobe"],
+                      capture_output=True).returncode != 0:
+        pytest.skip("ffprobe is needed to measure the committed renders")
+
+
+@pytest.mark.skipif(subprocess.run(["which", "ffmpeg"]).returncode != 0,
+                    reason="ffmpeg is needed to build the test media")
+def test_every_committed_corpus_project_passes_the_independent_audit():
+    """The audit existed, its dependency was declared and installed in CI, and
+    nothing ran it — so a change that broke the agreement between the render
+    and the interchange formats was caught only when a human audited a project
+    directory by hand. This schedules it, over the committed corpus rather than
+    over a hand-built fixture.
+
+    That matters because the fixtures above are written to be correct by
+    construction: they exercise the audit's logic, but they do not exercise the
+    *emitter*. These timelines are what ``engine.nle_export`` actually wrote on
+    real sources, against the renders the pipeline actually produced, so an
+    emitter that drifted into output its own reader would accept fails here.
+
+    What this still cannot do is the relink half. ``corpus_run.py`` deletes the
+    source media unless ``--keep-media`` is passed, so a finding that the media
+    is absent is a property of the audit's evidence, not of the export, and it
+    is accepted here as NOT RUN rather than as a failure. Worth knowing about
+    the committed trees: five reference their media by a path that no longer
+    exists anywhere, and the other two reference absolute paths that resolve
+    only on the machine that generated them — so the relink check passes here
+    and reports NOT RUN everywhere else, CI included. Both are accepted; what
+    is not accepted is a finding that ran and failed.
+    """
+    _require_independent_validator()
+    roots = sorted((ROOT / "corpus").glob("*_run/project"))
+    audited = [p for p in roots if (p / "timeline").is_dir()]
+    assert audited, "no corpus project with a timeline; the glob is wrong"
+    # A project that declined its source has no timeline by design (see the
+    # self-describing tests above), so it is not a missing audit target.
+
+    failures = []
+    deferred = 0
+    passed = 0
+    for project in audited:
+        ok, findings = _audit(project)
+        if not ok:
+            failures.append(f"{project.parent.name}: a hard check failed")
+        for name, cok, detail in findings:
+            # A NOT RUN or SKIP finding can carry cok=True — the audit's own
+            # emitter does this for the media checks, so counting them by the
+            # ok flag alone would read a corpus where nothing could run as one
+            # where everything passed. The detail prefix is the verdict.
+            if detail.startswith(("SKIP", "NOT RUN")):
+                deferred += 1
+                continue
+            if cok:
+                passed += 1
+            else:
+                failures.append(f"{project.parent.name}: {name}: {detail}")
+
+    assert not failures, "\n".join(failures)
+    assert passed > 0, \
+        "no finding actually ran; the audit accepted the corpus without checking it"
+    print(f"nle_check: {len(audited)} projects, {passed} findings passed, "
+          f"{deferred} deferred (media not retained, or a preset not rendered)")

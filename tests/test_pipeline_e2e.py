@@ -402,3 +402,81 @@ def test_transcript_cache_is_invalidated_on_model_change(patched_pipeline, tmp_p
     patched_pipeline.run("https://example.com/v", tmp_path, model="medium", limit=1)
     out = capsys.readouterr().out
     assert "[transcribe]" in out, "a model change must bust the transcript cache"
+
+
+def _independent_nle_audit_available() -> None:
+    """``tools/nle_check.py`` parses the EDL SelekyT emitted with ``pycmx``, a
+    reader this repo did not write — that independence is the whole point, so
+    in the tool a missing reader is a FAIL rather than a SKIP. A checkout
+    without the ``nle`` extra skips here instead of reporting a verified export
+    the validator never saw. CI installs the extra."""
+    import importlib.util
+
+    if importlib.util.find_spec("pycmx") is None:
+        pytest.skip("pycmx is not installed; pip install -e '.[nle]'")
+
+
+def _audit_for_nle(project: Path):
+    """Run the NLE-compatibility audit over a tree this pipeline just wrote."""
+    import importlib
+    import sys
+
+    tools = _REPO / "tools"
+    sys.path.insert(0, str(tools))
+    try:
+        nle_check = importlib.import_module("nle_check")
+        return importlib.reload(nle_check).check_project(project)
+    finally:
+        sys.path.remove(str(tools))
+        sys.modules.pop("nle_check", None)
+
+
+def test_the_independent_nle_audit_passes_a_tree_the_pipeline_just_wrote(
+        patched_pipeline, tmp_path, media, monkeypatch):
+    """``tools/nle_check.py`` caught the classes of bug that only appear when
+    someone opens the export in an NLE, and nothing scheduled it: pycmx was a
+    declared dependency and installed in CI, but no code path or CI step ran
+    the tool, so a change that broke the render/interchange agreement was only
+    caught by a human auditing a directory by hand.
+
+    The corpus-wide version of this test in ``tests/test_nle_check.py`` pins
+    the audit against committed artifacts. This one pins the *emitter*: the
+    EDL and FCPXML here did not exist until ``nle_export`` wrote them from the
+    same retention intervals the render just concatenated, and the renders did
+    not exist until ``render_clip`` cut them, so an emitter that drifts out of
+    agreement with its own render fails here rather than in a user's NLE.
+
+    What this cannot verify is what no test can: that an NLE actually opens the
+    result. The audit checks the properties an NLE would complain about, not
+    the import itself.
+    """
+    _independent_nle_audit_available()
+    # The shared fixture's download stub returns the media where the fixture
+    # built it; the real one writes into its out_dir and returns that path. The
+    # audit resolves the source from project/source, so mirror the real
+    # contract here or the audit reads "could not probe the source" about a run
+    # whose media it could have found.
+    def download(source, out_dir, cookies=None):
+        out_dir.mkdir(parents=True, exist_ok=True)
+        dest = out_dir / media.name
+        shutil.copy(media, dest)
+        return dest, {"title": "synthetic clip"}
+
+    patched_pipeline.download = download
+    project = patched_pipeline.run(
+        "https://example.com/v", tmp_path, model="small", limit=2,
+    )
+
+    ok, findings = _audit_for_nle(project)
+    failures = [f"{name}: {detail}" for name, cok, detail in findings
+                if not cok and not detail.startswith(("SKIP", "NOT RUN"))]
+    assert not failures, "the audit failed a tree this pipeline just wrote:\n" \
+        + "\n".join(failures)
+    assert ok, "the audit reported checks it could not run on a tree whose " \
+        "source is present"
+
+    # The independent parse is the finding that an emitter's own grammar check
+    # cannot substitute for, so it has to have actually run here.
+    parsed = [d for n, _o, d in findings if n.endswith("edl independent parse")]
+    assert parsed, "no EDL was parsed by an independent reader"
+    assert "pycmx" not in parsed[0], parsed[0]
