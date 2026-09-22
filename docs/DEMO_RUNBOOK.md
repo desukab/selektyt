@@ -430,9 +430,12 @@ the number:
   covered by that gate, so say plainly that the sidecar and the HTTP layer are
   *not* exercised on this host at all. VERIFIED from the suite output and
   `docs/TECHNICAL_AUDIT.md`.
-- **No test in the suite verifies that a caption track is actually burned into
-  the pixels.** `tests/test_render.py:170-176` asserts the file exists and is
-  non-empty. TECHNICAL_AUDIT calls this out by name.
+- **The burn is verified in pixels, but only on a synthetic fixture.**
+  `tests/test_render.py::test_the_burned_captions_are_in_the_pixels` decodes
+  the rendered MP4 and diffs it frame by frame against an uncaptioned control,
+  on all four caption styles; a vertical-path variant exists too. It does not
+  cover real footage. For the corpus renders the evidence is the pixel
+  comparison in `docs/RED_TEAM_FINDINGS.md` R11, or playing the MP4.
 - **The audit tools you just ran are not wired into CI.** `.github/workflows/ci.yml`
   runs `pytest` and nothing else. The green suite and the green audit are two
   different signals, produced by two different sets of tools, and you ran both.
@@ -505,9 +508,12 @@ stronger because it is checkable.
    one video. `docs/AI_EXECUTION_STATE.md` records editorial judgement as
    unmeasured at scale. *Say instead:* "one run, six clips, one source — the
    sample size is one."
-9. **Do not claim the captions are verified burned in.** The suite asserts the
-   file exists, not that the pixels carry captions. You can *see* them by playing
-   the MP4, which is the honest demonstration — do that rather than citing a test.
+9. **Do not claim the captions are verified burned in on real footage.** The
+   suite now decodes the render and diffs it against an uncaptioned control,
+   so the burn *is* verified — on a synthetic flat source, all four styles,
+   both orientations. That is not the same as the six corpus renders. For
+   those, play the MP4, or cite the one real pixel comparison in
+   `docs/RED_TEAM_FINDINGS.md` R11.
 10. **Do not claim Avid support.** SelekyT emits neither AAF nor OMF
     (`NLE_COMPATIBILITY.md`). Not supported. Not planned in this demo.
 

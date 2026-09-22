@@ -110,10 +110,17 @@ whether they block the pilot or merely limit it.
 | # | Gap | Evidence | Why it blocks a pilot |
 | --- | --- | --- | --- |
 | B1 | **No NLE import ever performed** | `NLE_COMPATIBILITY.md`; product-gap-map G2; CUSTOMER_DISCOVERY falsifier #2 | The pilot's central claim is untested at the exact point it is sold. See §0 above. |
-| B2 | **Caption-style render-cache staleness** | TECHNICAL_AUDIT defect #5: `selekyt/pipeline.py:391-419` with a style-blind cache key at `:117-151`. A re-run with a different `SELEKYT_CAPTION_STYLE` rewrites the ASS and ships the *old* MP4. **Falsifies QA.** | A pilot editor iterating on caption style — which the four presets (`minimal,punch,spotlight,noir`) explicitly invite — will receive a video whose burned-in captions disagree with its sidecar file, with no error. This is a trust-destroying bug and it is invisible to the user. |
 | B3 | **Web shell is unauthenticated, origin-blind, and the path jail is bypassable** | TECHNICAL_AUDIT defects #1–#3: no bearer token, session, `Origin`/`Referer` or CORS check (`web/server.mjs:345-360`); `guardedPath` uses `String.prototype.startsWith` so `/selektyt-anything/secrets` escapes the jail (`:203-209`); yt-dlp's `media_info` blob — embedding the `Cookie` header — is persisted to `pipeline_state.json` and served by `/api/file` | If the pilot runs SelekyT's web shell on any network reachable from a browser, any page the editor visits can drive the pipeline via JSON CSRF, read arbitrary files under the repo root, and retrieve persisted cookie material. A studio on shared Wi-Fi is exactly that environment. |
 | B4 | **Default install cannot transcribe** | TECHNICAL_AUDIT defect #6 / `pyproject.toml`: `faster-whisper` is only in the `[transcription]` extra | A pilot editor who runs `pip install selekyt && selekyt source.mp4` hits a crash at transcription. First-run experience is the whole pilot. |
-| B5 | **The pilot's own QA cannot detect a wrong output** | TECHNICAL_AUDIT defect #7: `engine/qa.py:19-43` checks existence, size, streams, orientation and duration ≥ 1 s — never aspect ratio precisely, never duration vs the edit plan, never caption presence. `black_frame_pct` and `visual_diversity_score` swallow exceptions and report clean. | During a pilot, SelekyT must be able to tell *itself* that a run went wrong. The tools that would do it — `tools/nle_check.py`, `tools/editorial_audit.py` — exist, are falsifiable, and are wired into nothing (`TECHNICAL_AUDIT`, "built and never wired in"; `pycmx` is now a declared dependency — `pycmx>=1.5` in the `nle`, `dev` and `all` extras — so the check *can* run, but nothing is scheduled to invoke it, which is the actual defect). |
+| B5 | **The pilot's own QA cannot detect a wrong output** | TECHNICAL_AUDIT defect #7: `engine/qa.py:19-43` checks existence, size, streams, orientation and duration ≥ 1 s — never aspect ratio precisely, never duration vs the edit plan, never caption presence. `black_frame_pct` and `visual_diversity_score` swallow exceptions and report clean. | During a pilot, SelekyT must be able to tell *itself* that a run went wrong. The tools that would do it — `tools/nle_check.py`, `tools/editorial_audit.py` — exist, are falsifiable, and are wired into nothing (`TECHNICAL_AUDIT`, "built and never wired in"; `pycmx` is now a declared dependency (`pycmx>=1.5` in the `nle`, `dev` and `all` extras), so the check *can* run, but nothing is scheduled to invoke it, which is the actual defect). |
+
+**Closed since this table was written:** the former **B2**, caption-style
+render-cache staleness. The cache key now carries `SELEKYT_CAPTION_STYLE`, a
+record with no style key reads as a miss rather than as a match against
+`minimal`, and the style is written back into the record — pinned by five tests
+in `tests/test_caption_style_cache.py`. The row is removed rather than left
+stamped "fixed", because a blocking list that keeps its closed items stops
+telling you what is open. Four items remain.
 
 ### Limiting — pilot can start, but these cap its scale and credibility
 
@@ -198,7 +205,7 @@ A sixth falsifier is added by this program, from `TECHNICAL_AUDIT`:
 
 | # | Falsifier | What it means | Decision it forces |
 | --- | --- | --- | --- |
-| F6 | **A pilot run ships a wrong output and nothing detects it** | The caption-style cache bug (B2) or QA's exception-swallowing metrics (B5) surface in front of a customer | The program pauses to fix the feedback loop, because a pilot whose numbers cannot be trusted produces no usable evidence either way. |
+| F6 | **A pilot run ships a wrong output and nothing detects it** | QA's exception-swallowing metrics (B5) surface in front of a customer — the former caption-style cache bug (B2) that this row also named is fixed and pinned by `tests/test_caption_style_cache.py` | The program pauses to fix the feedback loop, because a pilot whose numbers cannot be trusted produces no usable evidence either way. |
 
 ---
 
@@ -209,7 +216,8 @@ No participant pays during the pilot. SelekyT runs the pipeline; the editor
 supplies source material and judgement.
 
 - **Week 0 (internal, before any participant is contacted).** Close G2 (§0). Fix
-  B2, B4 and the `guardedPath` prefix bypass in B3. Wire `nle_check.py` and
+  B4 and the `guardedPath` prefix bypass in B3 — B2, the caption-style cache
+  bug, is already closed and pinned. Wire `nle_check.py` and
   `editorial_audit.py` into the run so every pilot project is audited
   automatically. `pycmx` is already a declared dependency (`pycmx>=1.5` in the
   `nle`, `dev` and `all` extras), so that half of the item is closed; the open half
@@ -328,8 +336,9 @@ is inherited unchanged from `CUSTOMER_DISCOVERY.md`.
   and the exact import experiment that is this program's precondition.
 - `docs/product-gap-map.md` — per-capability status: what is verified, what is
   code-reviewed only, and what is missing.
-- `docs/TECHNICAL_AUDIT.md` — defects B2–B5 and L3–L5, ranked by severity, with
-  file:line citations.
+- `docs/TECHNICAL_AUDIT.md` — defects B3–B5 and L3–L5, ranked by severity, with
+  file:line citations. (B2, the caption-style render-cache staleness, is closed
+  and pinned by `tests/test_caption_style_cache.py`.)
 - `docs/METRICS.md` — the metric definitions this program reports against, with
   the current values that are computable today and the N/A markers for those that
   are not.

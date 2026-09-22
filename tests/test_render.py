@@ -3,15 +3,25 @@
 render_clip is the product output step (MP4 + optional burned captions, with
 concat for multi-interval candidates). It needs a real encoder, so these skip
 cleanly when ffmpeg is absent but otherwise run the genuine subprocess.
+
+The burned-caption tests below decode the MP4's pixels rather than checking the
+file exists. That distinction is the whole point: ``_render_one`` appends the
+``subtitles`` filter conditionally, and a refactor that dropped it — or that
+made the filtergraph silently invalid — would leave every existing size and
+duration assertion green while shipping a video with no captions in it. The
+delivery path is the one place the burn is claimed, so it is the one place the
+burn is measured.
 """
 from __future__ import annotations
 
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
 
-from engine.captions import ass_for_candidate
+from engine.captions import (MARGIN_H, PLAYRES_X, ass_for_candidate,
+                             caption_presets)
 from engine.render import render_clip, require_ffmpeg
 from models.core import Candidate, Word
 
@@ -173,13 +183,192 @@ def test_render_vertical_clip_is_9_16_in_display_space_for_anamorphic(tmp_path):
     )
 
 
-def test_render_with_burned_captions(tmp_path):
-    source = _video(tmp_path / "source.mp4")
+def _flat_source(out: Path, size: int = 320, dur: float = 2.0) -> Path:
+    """A flat grey source, used as a control for the burn.
+
+    Every frame is a single colour, so the uncaptioned render is provably
+    uniform: whatever non-background pixels appear in the captioned render can
+    only have been drawn by the subtitle filter. ``_video`` puts its own text in
+    the middle of the frame, which would make that inference impossible.
+
+    The source is 16:9 because the landscape fit pads rather than crops: a
+    square source lands in a 568x320 frame with black pillarbox bars, and the
+    bars make the "control" frame span 0-64 on its own. At 16:9 the picture
+    fills the frame exactly and the control is genuinely flat.
+    """
+    h = size * 9 // 16
+    subprocess.run(
+        ["ffmpeg", "-y", "-f", "lavfi",
+         "-i", f"color=c=0x404040:s={size}x{h}:d={dur}:rate=15",
+         "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
+         str(out)],
+        check=True, capture_output=True,
+    )
+    return out
+
+
+def _frames(video: Path) -> "list":
+    """Every frame of an MP4 as a 2-D grayscale array, decoded by ffmpeg.
+
+    ffmpeg rather than cv2 because the control render is flat and the test
+    needs the exact byte layout with no colourspace negotiation in between.
+    """
+    import numpy as np
+
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=width,height", "-of", "csv=p=0", str(video)],
+        capture_output=True, text=True, check=True,
+    )
+    w, h = (int(x) for x in probe.stdout.strip().split(","))
+    raw = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", str(video),
+         "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+        check=True, capture_output=True,
+    ).stdout
+    n = len(raw) // (w * h)
+    return [
+        np.frombuffer(raw, dtype=np.uint8, count=w * h, offset=i * w * h).reshape(h, w)
+        for i in range(n)
+    ], (w, h)
+
+
+def _ink_mask(burned, control) -> "tuple":
+    """Pixels the caption drew, as (ys, xs) index arrays.
+
+    Compared per frame against the *same frame* of the uncaptioned control, so
+    a difference has to be the subtitle filter and not the encoder's own
+    variation between two runs of the same input.
+    """
+    import numpy as np
+
+    assert len(burned) == len(control), (
+        f"the captioned and uncaptioned renders disagree on frame count "
+        f"({len(burned)} vs {len(control)}); the burn cannot be compared frame "
+        f"by frame"
+    )
+    ys, xs = [], []
+    for b, c in zip(burned, control):
+        diff = np.abs(b.astype(np.int16) - c.astype(np.int16)) > 20
+        if diff.any():
+            fy, fx = np.where(diff)
+            ys.append(fy)
+            xs.append(fx)
+    if not ys:
+        return np.array([], dtype=int), np.array([], dtype=int)
+    return np.concatenate(ys), np.concatenate(xs)
+
+
+# The caption band, as a fraction of frame height. Every preset lays out on a
+# PLAYRES_Y canvas with Alignment 2 (bottom-centred) and a bottom margin of
+# 165-180, so the ink's top edge sits around (1920 - 180 - one line) / 1920 =
+# 0.86. The bound is set at 0.70 deliberately: it has to be loose enough that a
+# two-line cue or a larger substituted font still passes, and tight enough that
+# a caption rendered at the top of the frame — a real failure mode for a
+# mis-set alignment — is caught.
+_CAPTION_BAND_TOP = 0.70
+
+
+@pytest.mark.parametrize("style", sorted(caption_presets()))
+def test_the_burned_captions_are_in_the_pixels(tmp_path, style, monkeypatch):
+    """The delivery path really does composite the ASS into the MP4.
+
+    ``docs/EDITORIAL_EVALUATION.md`` asserts captions are burned into both
+    renders, and ``docs/product-gap-map.md`` prices the capability as
+    "complete and verified" — but the check underneath that claim was this
+    file asserting the MP4 was non-empty. A dropped ``subtitles`` filter would
+    have passed it. So the pixels are decoded and compared against an
+    uncaptioned render of the same source: the ink has to exist, sit in the
+    caption band, and stay inside the horizontal safe area the ASS declares.
+    """
+    import numpy as np
+
+    monkeypatch.setenv("SELEKYT_CAPTION_STYLE", style)
+    source = _flat_source(tmp_path / "source.mp4")
     c = _candidate_with_words(0.0, 1.3)
+
+    control, _ = _frames(
+        render_clip(source, c, tmp_path / "fb" / "plain.mp4")
+    )
+    assert control, "the uncaptioned control render produced no frames"
+    # The control is the precondition for the whole comparison: a source whose
+    # own content changed between renders would make any difference ambiguous.
+    flat = np.concatenate(control)
+    assert flat.max() - flat.min() <= 24, (
+        f"the uncaptioned render of a flat source is not flat "
+        f"({flat.min()}-{flat.max()}); the captioned render cannot then be "
+        f"attributed to the subtitle filter"
+    )
+
     ass = ass_for_candidate(c, tmp_path / "captions" / "01.ass")
-    out = render_clip(source, c, tmp_path / "fb" / "01.mp4", ass=ass)
-    assert out.is_file()
-    assert out.stat().st_size > 0
+    burned, (w, h) = _frames(
+        render_clip(source, c, tmp_path / "fb" / "burned.mp4", ass=ass)
+    )
+    ys, xs = _ink_mask(burned, control)
+    assert ys.size, (
+        f"{style}: the captioned MP4 is pixel-identical to the uncaptioned one; "
+        f"the ASS was written but never composited"
+    )
+    assert ys.min() >= _CAPTION_BAND_TOP * h, (
+        f"{style}: ink appears at row {ys.min()} of {h}, above the caption band "
+        f"that starts at {_CAPTION_BAND_TOP:.0%} of the frame height"
+    )
+    # The ASS declares MARGIN_H of PLAYRES_X on each side, so the ink has to
+    # stay inside it. A few pixels of slack for the outline and shadow, which
+    # are drawn outside the glyph and are what makes the text readable.
+    frac = MARGIN_H / PLAYRES_X
+    assert xs.min() >= frac * w - 6, (
+        f"{style}: ink at column {xs.min()} of {w} runs into the left safe-area "
+        f"margin"
+    )
+    assert xs.max() < (1 - frac) * w + 6, (
+        f"{style}: ink at column {xs.max()} of {w} runs into the right "
+        f"safe-area margin"
+    )
+
+
+def test_the_burned_captions_survive_the_vertical_crop(tmp_path):
+    """The vertical path crops and rescales before compositing, which is where
+    an ASS written against a 1080x1920 canvas meets a frame of a different
+    shape. The ink has to land in the band on that geometry too."""
+    source = _flat_source(tmp_path / "source.mp4")
+    c = _candidate_with_words(0.0, 1.3)
+    control, _ = _frames(
+        render_clip(source, c, tmp_path / "sh" / "plain.mp4", vertical=True)
+    )
+    assert control
+    ass = ass_for_candidate(c, tmp_path / "captions" / "01.ass")
+    burned, (w, h) = _frames(
+        render_clip(source, c, tmp_path / "sh" / "burned.mp4", ass=ass,
+                    vertical=True)
+    )
+    ys, _ = _ink_mask(burned, control)
+    assert ys.size, "the vertical render is pixel-identical with and without captions"
+    assert ys.min() >= _CAPTION_BAND_TOP * h, (
+        f"ink appears at row {ys.min()} of {h} on the vertical render, above "
+        f"the caption band"
+    )
+
+
+def test_an_absent_ass_produces_no_ink(tmp_path):
+    """The other half of the contract: ``ass=None`` must not draw anything,
+    because that is what the uncaptioned renders above are assumed to be, and
+    what a caption-style "off" would have to mean."""
+    import numpy as np
+
+    source = _flat_source(tmp_path / "source.mp4")
+    c = _candidate_with_words(0.0, 1.3)
+    first, _ = _frames(render_clip(source, c, tmp_path / "fb" / "a.mp4"))
+    second, _ = _frames(render_clip(source, c, tmp_path / "fb" / "b.mp4"))
+    assert len(first) == len(second)
+    spread = max(
+        int(np.abs(a.astype(np.int16) - b.astype(np.int16)).max())
+        for a, b in zip(first, second)
+    )
+    assert spread <= 24, (
+        f"two uncaptioned renders of the same flat source differ by {spread} "
+        f"levels; the control the burn test relies on is not reproducible"
+    )
 
 
 def test_render_rejects_empty_intervals(tmp_path):

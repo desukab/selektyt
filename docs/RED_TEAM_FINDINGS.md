@@ -361,8 +361,14 @@ of capability.
   the frame at mean|diff| = 0.98 with 0.0% changed — the exact signature of
   burned-in caption text at the bottom. So captions really are in the pixels,
   which is what makes the stale-style bug a genuine shipped-product defect.
-- **What would make it true.** Add `SELEKYT_CAPTION_STYLE` (or a digest of
-  the emitted ASS) to the render cache key at `selekyt/pipeline.py:440-447`.
+- **Status: FIXED.** `selekyt/pipeline.py` now reads `caption_style` before the
+  cache lookup, requires `cached.get("caption_style") == caption_style` to
+  reuse a render, and writes the style back into the record. A record with no
+  style key — the shape of every pre-fix `pipeline_state.json` — misses rather
+  than matching `minimal`, so the corpus re-renders once under a validated key.
+  Pinned by `tests/test_caption_style_cache.py`: a style change forces a
+  re-render, the same style still reuses the cache, a bare record misses, and
+  the record carries the style that was burned in.
 
 ### R12. The technical audit's headline security finding is already fixed; its caption-style finding is not
 
@@ -375,8 +381,11 @@ of capability.
   reproduced the bypass only by re-typing the *old* vulnerable form; the
   deployed code is immune. **The audit's #1 finding is stale.**
 - The audit's caption-style cache finding (`docs/TECHNICAL_AUDIT.md` §3,
-  "captions and renders can disagree") **does** survive — see R11, which I
-  reproduced against current code.
+  "captions and renders can disagree") **was live when I wrote this and is now
+  fixed** — `selekyt/pipeline.py` keys the render cache on `caption_style` and
+  treats a record with no style as a miss, pinned by
+  `tests/test_caption_style_cache.py`. R11's corroboration of the burn itself
+  is unaffected.
 - `docs/TECHNICAL_AUDIT.md:23` reports the suite as "824 passed, 10 skipped".
   I just ran it: **854 passed, 7 skipped in 161 s**. The suite has grown
   since; the audit figure is stale but was not wrong when written.

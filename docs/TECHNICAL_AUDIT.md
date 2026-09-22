@@ -272,31 +272,38 @@ the comment at `:385-387` records that the earlier single-end-of-run
 fingerprint made a killed run unresumable. This design works: an interrupt
 during clip 3 of 5 loses nothing.
 
-### Partial-failure semantics: captions and renders can disagree — VERIFIED
+### Partial-failure semantics: captions and renders can disagree — VERIFIED then FIXED
 
-The order in the render loop is the defect:
+The order in the render loop was the defect:
 
-- `:390` `retention_intervals(c)`
-- `:391-396` **write `captions/NN.ass`, `.srt`, `.json` unconditionally**
-- `:413-419` **then** consult the render cache
-- `:421-422` render only on a miss
+- write `captions/NN.ass`, `.srt`, `.json` unconditionally, then
+- consult the render cache, and render only on a miss.
 
-The render cache key is `_fingerprint` (`:117-120`: source, resolved path,
-size, mtime, model, language) plus `_selection_digest` (`:142-151`: sha256 of
-`start,end,text`). **Neither includes the caption style.** I VERIFIED that
-distinct `SELEKYT_CAPTION_STYLE` values produce distinct `ass_for_candidate`
-bytes (same 631-byte length, differing `Style` line). So a re-run with a
-different style rewrites `captions/NN.ass` to the new style, takes the cache
-hit, and **ships the MP4 that has the old style burned into it**. The video
-and its sidecar caption file now disagree, and nothing downstream detects it:
-`engine/qa.py:19-43` never checks that captions are present, and
-`nle_export` re-derives the timeline from `retention_intervals`, not from the
-shipped file.
+The render cache key was `_fingerprint` (source, resolved path, size, mtime,
+model, language) plus `_selection_digest` (sha256 of `start,end,text`).
+**Neither included the caption style**, and distinct `SELEKYT_CAPTION_STYLE`
+values provably produce distinct `ass_for_candidate` bytes — so a re-run with a
+different style rewrote `captions/NN.ass` to the new style, took the cache hit,
+and **shipped the MP4 that had the old style burned into it**. The video and
+its sidecar caption file disagreed, and nothing downstream detected it:
+`engine/qa.py` never checks that captions are present, and `nle_export`
+re-derives the timeline from `retention_intervals`, not from the shipped file.
 
-The same ordering means a run killed between `:396` and `:421` leaves caption
-artifacts for a clip whose render never happened — harmless, since they are
-regenerated, but it means the presence of `captions/NN.ass` is not evidence of
-a completed render.
+**FIXED.** `selekyt/pipeline.py` now reads `caption_style = style_name()` and
+requires `cached.get("caption_style") == caption_style` before reusing a
+render, and writes that style back into the cache record. A record with no
+style key — which is what every pre-fix `pipeline_state.json` looks like —
+reads as a miss rather than as a match against `minimal`, so the corpus
+re-renders once instead of staying on an unvalidated key. Pinned by
+`tests/test_caption_style_cache.py`: a style change forces a re-render, the
+same style still reuses the cache, a record with no style misses, and the
+record carries the style that was burned in.
+
+**What remains true and is not a defect:** the captions are still written
+before the cache is consulted, so a run killed in that window leaves caption
+artifacts for a clip whose render never happened. They are regenerated on
+resume, but it means the presence of `captions/NN.ass` is not evidence of a
+completed render.
 
 ### The known "export failed after renders" case — INSPECTED
 
@@ -453,12 +460,18 @@ question is which of those tests would still pass if the output were wrong.
 ### Tests that assert what the code claims rather than what the output is
 
 - **`tests/test_render.py:170-176`** — `test_render_with_burned_captions`
-  asserts `out.is_file()` and `out.stat().st_size > 0`. It never looks inside
-  the pixels. A render with no captions at all passes it. This is the test
-  that guards the feature the caption-style cache bug breaks, and it cannot
-  see the breakage. (Compare `:138-167`, the anamorphic test, which computes
-  the display aspect ratio from the probed SAR and asserts it to 0.005 — that
-  is a real test, and it is what the weak one should look like.)
+  asserted `out.is_file()` and `out.stat().st_size > 0`. It never looked
+  inside the pixels. A render with no captions at all passed it. **RESOLVED
+  2026-09-22:** the test is gone, replaced by
+  `test_the_burned_captions_are_in_the_pixels`, which decodes the MP4 with
+  ffmpeg and compares it frame by frame against an uncaptioned render of the
+  same flat source, requiring ink, in the caption band, inside the safe area.
+  It runs on all four presets; the 9:16 path has its own variant; and
+  `test_an_absent_ass_produces_no_ink` pins the other half of the contract.
+  The new test was mutation-checked: deleting the `subtitles` filter from
+  `_render_one` fails all five. (Compare `:138-167`, the anamorphic test,
+  which computes the display aspect ratio from the probed SAR and asserts it
+  to 0.005 — that is a real test, and it is the pattern the new one follows.)
 - **`tests/test_audio_analysis.py:133-142`** — named
   `test_reproducible_segmentation_across_runs`, it asserts
   `a["speech_regions"] >= 0 and b["speech_regions"] >= 0`, which is true of
@@ -533,13 +546,13 @@ means the shipped output is wrong and nothing in the system says so.
 | 2 | **Critical** | Security | `web/server.mjs:203-209` | `guardedPath` prefix bypass. `/tmp/selektyt-backup/secrets` passes the jail. Any sibling directory whose name extends the repo name reads arbitrary files via `/api/file`. The test at `tests/test_web_harness.py:218` passes while the bypass stands. |
 | 3 | **Critical** | Security | `selekyt/pipeline.py:206` → `web/server.mjs:317` | yt-dlp `media_info` (embedding the `Cookie` header) is persisted to `pipeline_state.json` and served unauthenticated by `/api/file`. `cookies.py` goes out of its way never to print a cookie value; this path prints all of them. |
 | 4 | **High** | Security | `web/server.mjs:288-290`, `selekyt/server.py:307-325` | SSRF. `http://169.254.169.254/...` is a valid `source`, fetched from the server's network. No host/port allowlist anywhere. |
-| 5 | **High** | Reliability | `selekyt/pipeline.py:391-419`, `:117-151` | Caption-style render-cache staleness. Re-run with a different `SELEKYT_CAPTION_STYLE`: the new ASS is written, the old MP4 is shipped. **Falsifies QA.** The cache key omits the style in both `_fingerprint` and `_selection_digest`. |
+| 5 | **High** | Reliability | `selekyt/pipeline.py:391-419`, `:117-151` | Caption-style render-cache staleness. Re-run with a different `SELEKYT_CAPTION_STYLE`: the new ASS is written, the old MP4 is shipped. **Falsifies QA.** The cache key omits the style in both `_fingerprint` and `_selection_digest`. **FIXED —** the key now requires a matching `caption_style`, records it back, and treats a record with no style as a miss; pinned by `tests/test_caption_style_cache.py` (5 tests). |
 | 6 | **High** | Scalability | `pyproject.toml` | `faster-whisper` is not a base dependency. Default install cannot transcribe. First-run experience is a crash. |
 | 7 | **High** | Reliability | `engine/qa.py:19-43`, `:138-209` | QA never checks aspect ratio precisely, duration vs edit plan, or caption presence; `black_frame_pct`/`visual_diversity_score` swallow exceptions and report clean. **Falsifies QA.** |
 | 8 | **High** | Scalability | no cleanup anywhere; `providers/atomic.py:24-34` | ~900 MB retained per project, 92% intermediates, 13 GB free, no GC. At 100× the run dies in `OSError` mid-write after the checkpoint. The fixed `.tmp` name also loses data under concurrent writes to one state file. |
 | 9 | **Medium** | Architecture | `engine/fcpxml.py` vs `engine/nle_export.py`; `selekyt/server.py:27,185-194` vs `selekyt/pipeline.py:21,438` | Two live FCPXML emitters with divergent error policy (raise vs silent fallback) behind two entry points. The web preview and the shipped file can disagree. |
 | 10 | **Medium** | Reliability | `selekyt/pipeline.py:433-452` | Export validation runs after renders are checkpointed, so a bad timeline kills a run that has already produced deliverables. Recovers on resume; reports failure. Also, `:433-436` claims timeline duration == render duration but never measures the render. |
-| 11 | **Medium** | Test quality | `tests/test_render.py:170-176` et al. | The burned-captions test cannot detect a missing caption track; four tests assert a literal `True` constant; `test_audio_analysis.py:133-142` does not test what its name claims; `test_editorial_rank.py:51` disables its own assertion via `or True`. |
+| 11 | **Medium** | Test quality | `tests/test_render.py:170-176` et al. | The burned-captions test cannot detect a missing caption track; four tests assert a literal `True` constant; `test_audio_analysis.py:133-142` does not test what its name claims; `test_editorial_rank.py:51` disables its own assertion via `or True`. **Partly resolved 2026-09-22** — the burned-captions half is closed by a pixel-decoding test; the `or True`, the four `is True` constants and the segmentation-reproducibility name remain. |
 | 12 | **Medium** | Scalability | `selekyt/server.py:476-498`, `web/server.mjs:93-148` | One serial sidecar, FIFO `pending[]` with no request id, no timeout. One slow pipeline blocks `/api/ping`; one crash rejects every queued request; a `stdin.write` failure leaves a promise unresolved forever. |
 | 13 | **Medium** | Scalability | `web/server.mjs:297`, `pipeline_state.json` | No project ID, no per-tenant isolation, hardcoded output directory. Two concurrent web runs clobber one state file. Multi-tenancy is a correctness bug, not a scaling task. |
 | 14 | **Low** | Reliability | `selekyt/pipeline.py:502` | `state["complete"] = True` is written and never read; resume keys off `renders`. Dead state. |

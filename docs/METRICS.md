@@ -429,11 +429,18 @@ gaps are counted as covered. Summing the cue durations themselves gives 87.84 s
 ("does the caption track run the length of the render"), but a reader wanting
 the other number has it now.
 
-**Caveat that must be stated with this number:** the cue counts and durations are
-verified; **that the captions are actually burned into the pixels is not verified
-by any test** — `tests/test_render.py:170-176` asserts only that the render file
-exists and is non-empty (`docs/TECHNICAL_AUDIT.md`). The honest demonstration is to
-play the MP4. Do not cite a test for this.
+**Caveat that must be stated with this number:** the cue counts and durations
+are verified, and as of this commit the burn itself is verified in pixels too —
+`tests/test_render.py::test_the_burned_captions_are_in_the_pixels` decodes the
+rendered MP4 with ffmpeg and compares it frame by frame against an uncaptioned
+render of the same source, requiring non-background ink, in the bottom caption
+band, and inside the horizontal safe area the ASS declares. It runs on all four
+caption styles, and `test_the_burned_captions_survive_the_vertical_crop` covers
+the 9:16 path. What it does **not** cover is the six corpus renders below: the
+fixture is a synthetic flat 16:9 source, not real footage, so a claim about
+*these* files still rests on the pixel comparison recorded in
+`docs/RED_TEAM_FINDINGS.md` R11 (bottom-band mean|diff| 7.74 vs 0.98 in the
+upper frame) or on playing the MP4.
 
 ### A3.3 Caption format parity — 6/6 clips, ASS dialogue count == SRT cue count
 
@@ -672,8 +679,9 @@ record. Only the last of those is arguably "environment".
 
 **How to read it:** the number is large and green and it is the *weakest* number
 in this document. `TECHNICAL_AUDIT.md` names specific tests that assert what the
-code claims rather than what the output is: the burned-captions test asserts a
-non-empty file, four tests assert a literal `True` constant, one reproducibility
+code claims rather than what the output is. One of those has since been closed —
+the burned-captions test now decodes pixels (see §A3.2) — but four tests still
+assert a literal `True` constant, one reproducibility
 test asserts only that two values are non-negative, and `test_editorial_rank.py:51`
 disables its own assertion with `or True`. Thirteen tests skip, including the only
 end-to-end HTTP test and the only Rust-sidecar parity test, and that count is

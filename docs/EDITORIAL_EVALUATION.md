@@ -587,10 +587,17 @@ Loudness, for completeness: integrated loudness on the facebook renders is
 range (−31.0 LUFS), with true peaks at −12.9 / −12.2 / −13.0 dBFS. There is no
 loudness normalisation stage in the render path; the output sits ~14–17 LU
 below the −14 to −16 LUFS that short-form platforms normalise to, with ~12 dB
-of unused headroom. Captions **are** burned into both renders (verified by
-detecting bright text-shaped pixels in the bottom band, y≈414–439, of all six
-files) and are also shipped as sidecar SRT/ASS/JSON — so mute-autoplay works,
-which is a genuine plus.
+of unused headroom. Captions **are** burned into both renders — but not by
+this evaluation, which decoded no frames (see the disclaimer above). The burn
+on these six files is corroborated by one real pixel measurement,
+`docs/RED_TEAM_FINDINGS.md` R11: the facebook render against the matching source
+frame shows a bottom-band mean|diff| of 7.74 with 3.8% of pixels changed >60,
+versus 0.98 and 0.0% in the upper frame — the signature of burned-in text. The
+suite now also decodes the render and compares it against an uncaptioned control
+(`tests/test_render.py::test_the_burned_captions_are_in_the_pixels`, all four
+styles, both orientations), though on a synthetic flat source rather than real
+footage. Captions are also shipped as sidecar SRT/ASS/JSON — so mute-autoplay
+works, which is a genuine plus.
 
 ---
 
