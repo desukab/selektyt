@@ -40,6 +40,36 @@ def test_rank_is_deterministic_and_non_overlapping():
         assert b <= c, f"selected clips overlap in source time: {b} > {c}"
 
 
+def test_rank_rejects_a_time_overlapping_candidate():
+    """The non-overlap check above is only as strong as its input: the three
+    segments there are already disjoint in source time, so a ``rank`` with the
+    de-overlap guard deleted returns the same answer and the assertion still
+    passes. This test supplies what that one cannot — two candidates that
+    *overlap*, and would both be kept if the guard were gone.
+
+    The wording is the other half of what makes this work. With three clips
+    about the same topic, the similarity and topic-token filters in ``rank``
+    drop the second one on their own, so the overlap guard never gets to fire
+    and the test would again pass against a guardless ``rank``. The three
+    passages here are deliberately about separate subjects — finance, whales,
+    bridge maintenance — which I confirmed by instrumenting ``rank``: the
+    overlapping candidate is skipped by the overlap check and by nothing else.
+    """
+    segs = [
+        Segment(0, 20, "The fiscal quarter closed with an unexpected surplus in the ledger, and the auditors confirmed every line item reconciled against the prior statement without a single discrepancy remaining open.", []),
+        Segment(10, 32, "Marine biologists tagged a juvenile whale near the reef shelf, tracking its dive profile across three separate feeding cycles throughout the migration season this year entirely.", []),
+        Segment(60, 85, "The bridge maintenance crew repainted the north span overnight, finishing two hours ahead of the Monday commute schedule and under the allocated municipal budget by six percent.", []),
+    ]
+    chosen = rank(segs, 3)
+    assert len(chosen) == 2, "the overlapping candidate must be the one dropped"
+
+    spans = sorted((c.start, c.end) for c in chosen)
+    for (_, b), (c, _) in zip(spans, spans[1:]):
+        assert b <= c, f"selected clips overlap in source time: {b} > {c}"
+    assert not any(10 <= c.start < 32 for c in chosen), \
+        "the whale passage (10-32 s) overlaps the fiscal clip and must not ship"
+
+
 # ── a candidate's text, bounds and words must describe one clip ──────────────
 
 def _words(text, start, step=0.3, conf=1.0):

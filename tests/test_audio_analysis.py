@@ -8,6 +8,7 @@ model.
 """
 from __future__ import annotations
 
+import json
 import wave
 from pathlib import Path
 
@@ -131,12 +132,47 @@ def test_score_cache_key_is_isolated_per_backend(tmp_path, media):
 
 
 def test_reproducible_segmentation_across_runs(tmp_path, media):
-    """Threshold changes re-segment cached scores; the model never re-runs."""
+    """Threshold changes re-segment cached scores; the model never re-runs.
+
+    The two thresholds are not arbitrary. This fixture's bursts saturate the
+    energy score at 1.0, so 0.5 and 0.9 land on identical regions — a
+    "different threshold, same answer" pair would prove nothing about whether
+    the threshold reaches the segmenter. 0.3 and 0.5 straddle the boundary
+    where the segmentation actually moves on this media, which is what makes
+    the difference assertion below a measurement rather than a guess.
+    """
     a = run_audio_analysis(
+        media, tmp_path / "proj", source="clip.wav", threshold=0.3,
+    )
+    a_regions = json.loads(Path(a["vad_regions"]).read_text(encoding="utf-8"))
+    b = run_audio_analysis(
         media, tmp_path / "proj", source="clip.wav", threshold=0.5,
     )
-    b = run_audio_analysis(
-        media, tmp_path / "proj", source="clip.wav", threshold=0.9,
+    b_regions = json.loads(Path(b["vad_regions"]).read_text(encoding="utf-8"))
+    same = run_audio_analysis(
+        media, tmp_path / "proj", source="clip.wav", threshold=0.3,
     )
+    same_regions = json.loads(Path(same["vad_regions"]).read_text(encoding="utf-8"))
     assert b["scores_cached"] is True, "re-tuning must not re-run the VAD model"
-    assert a["speech_regions"] >= 0 and b["speech_regions"] >= 0
+    assert same["scores_cached"] is True
+    assert Path(b["vad_score_file"]) == Path(a["vad_score_file"]), \
+        "a threshold change reused a different score file than the first run"
+    # The threshold genuinely reaches the segmenter: the same cached scores,
+    # sliced at a different point, give a different cut.
+    assert b_regions["speech"] != a_regions["speech"], \
+        "the threshold changed the stored config but not the segmentation"
+    # Reproducible means a re-run at the same threshold lands on the same
+    # regions, not merely on a non-negative count — which an empty result also
+    # satisfies. The cached scores make this deterministic, so any difference
+    # here is state leaking between runs.
+    assert same_regions["speech"] == a_regions["speech"], "segments are not reproducible"
+    assert same["speech_regions"] == a["speech_regions"]
+    assert same["speech_ratio"] == a["speech_ratio"]
+    # Monotone over the same scores: the frames above 0.5 are a subset of those
+    # above 0.3, so the stricter tuning cannot retain more speech than the
+    # laxer one. This holds even where the two thresholds agree, so it is the
+    # part of the assertion that survives a fixture whose scores saturate.
+    assert b_regions["config"]["threshold"] == 0.5
+    b_speech = sum(r[1] - r[0] for r in b_regions["speech"])
+    a_speech = sum(r[1] - r[0] for r in a_regions["speech"])
+    assert b_speech <= a_speech, "a stricter threshold retained more speech than a laxer one"

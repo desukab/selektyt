@@ -48,7 +48,12 @@ def test_rank_rejects_overlapping_candidates():
     c = _seg(40, 60 - 1, _wordy("the separate later story"))
     chosen = rank([a, b, c], limit=3)
     assert len(chosen) == 2
-    assert all(not (x.start <= 10 and x.end >= 10) for x in chosen if x is not chosen[0]) or True
+    # The retained clips must not overlap — the de-overlap pass is what makes
+    # the resulting cut list actually cuttable. Sorted by start so the check
+    # does not depend on the ranker's own output order.
+    ordered = sorted(chosen, key=lambda s: s.start)
+    for earlier, later in zip(ordered, ordered[1:]):
+        assert earlier.end <= later.start, (earlier, later)
     # the overlapping rival is excluded
     assert not any("overlapping rival" in c.text for c in chosen)
 

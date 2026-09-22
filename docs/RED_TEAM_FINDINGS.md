@@ -437,6 +437,47 @@ genuine absence).
 an input for which `rank` actually returns candidates, and add a real
 non-overlap assertion (`all(a.end <= b.start for a, b in pairwise(candidates))`).
 
+**Resolved.** Both halves of the demand are in place at
+`tests/test_editorial.py:17-40`. The three segments now carry 25+ words each,
+above the 20-word floor, so `rank` returns real candidates; an explicit
+`assert first` guards the determinism comparison against silently comparing
+two empty lists again; and the overlap check the name always promised is
+there, walking consecutive shipped spans and asserting `b <= c` in source
+time. The test's docstring records the vacuity it replaced, so a reader can
+tell why the non-empty check is load-bearing.
+
+That repair exposed a second-order problem the red team did not name, and it
+is the more useful of the two. Once the non-overlap assertion existed I
+mutation-tested it by deleting the de-overlap guard from `rank()`, and the
+test still passed: its three segments are already disjoint in source time,
+so a guardless `rank` returns the same answer. An assertion cannot cover a
+property its own input does not exercise. `test_rank_rejects_a_time_overlapping_candidate`
+now supplies two candidates that genuinely overlap (0-20 s and 10-32 s).
+Its wording is the other half of what makes it work — with three clips on
+one topic, `rank`'s similarity and topic-token filters drop the second
+candidate unaided, so the overlap guard never fires; the three passages are
+deliberately about separate subjects, which I confirmed by instrumenting
+`rank` step by step and finding the overlapping candidate rejected by the
+overlap check and by nothing else. Deleting the guard now fails this test
+and this test alone (`1 failed, 7 passed`), which is the signature of a
+test that covers the defect.
+
+Honest limit, stated because it is the difference between a real test and
+theatre: the assertion detects a *removed* guard. A guard rewritten to a
+different but still-restrictive condition can still leave these three clips
+disjoint, and the suite will not notice — the correction above pins the
+property the cut list needs to be cuttable, it does not prove the guard's
+arithmetic.
+
+The three near-vacuous tests named below are **not** resolved, and the
+distinction matters. They are weak relative to their names, not empty —
+`test_report.py:9-25` does confirm the report's sections survive a
+round-trip, `test_ffmpeg_error.py:15-34` does test `__str__` formatting, and
+`test_cli_entry.py:189-192` does confirm the entry point is importable and
+callable. Strengthening them into tests that would catch a real regression
+in those three modules is genuine remaining work; none of them certifies a
+property that is false today.
+
 ### R15. `tests/test_web_harness.py` guards the path jail against only the obvious case
 
 `tests/test_web_harness.py:218` asserts `/etc/hostname` is rejected by
@@ -448,10 +489,14 @@ regression test so the fix cannot silently regress.
 
 **Resolved.**
 `tests/test_web_harness.py::test_a_sibling_directory_extending_the_project_name_is_rejected`
-builds a real sibling of the repo, sends its *absolute* path to `/api/export`,
-and asserts the refusal. The absolute form matters: it is the shape of the
-bypass, and it contains no `..`, so a traversal-based filter would not have
-caught it either. Verified by reverting `guardedPath` to the bare
+builds a real sibling of the repo, sends its *absolute* path to
+`/api/vad_analyze`, and asserts the refusal. The absolute form matters: it is
+the shape of the bypass, and it contains no `..`, so a traversal-based filter
+would not have caught it either. `vad_analyze` is the route chosen because a
+probe the pipeline would reject anyway proves nothing: the sibling is filled
+with a real WAV fetched from `/api/sample.wav`, so the only thing that can
+make the request fail is the jail.
+Verified by reverting `guardedPath` to the bare
 `startsWith(ROOT)` — the new test fails, the rest of the suite still passes,
 which is exactly the signature of a test that covers the defect rather than
 the happy path.

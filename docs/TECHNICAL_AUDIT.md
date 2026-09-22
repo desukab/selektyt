@@ -525,10 +525,22 @@ question is which of those tests would still pass if the output were wrong.
   which computes the display aspect ratio from the probed SAR and asserts it
   to 0.005 — that is a real test, and it is the pattern the new one follows.)
 - **`tests/test_audio_analysis.py:133-142`** — named
-  `test_reproducible_segmentation_across_runs`, it asserts
+  `test_reproducible_segmentation_across_runs`, it asserted
   `a["speech_regions"] >= 0 and b["speech_regions"] >= 0`, which is true of
   any non-negative integer in both runs. The reproducibility claim in the
-  name is never tested. (The cache-reuse assertions above it are genuine.)
+  name was never tested. (The cache-reuse assertions above it were genuine.)
+  **RESOLVED 2026-09-22:** the test now runs three times — threshold 0.3,
+  then 0.5, then 0.3 again — and asserts that the third run's persisted
+  regions, region count and speech ratio are *equal* to the first's, that
+  both re-runs report `scores_cached is True` and reused the same score
+  file, that the 0.5 run produced *different* speech regions from the 0.3
+  run, and that its retained speech duration is no greater. The difference
+  assertion is what makes the equality one meaningful: a pair of thresholds
+  that land on identical regions would leave "the threshold reaches the
+  segmenter" untested. On this fixture the energy score saturates at 1.0
+  during the bursts, so 0.5 and 0.9 are such a pair; 0.3 and 0.5 straddle
+  the boundary where the segmentation actually moves, which is why the test
+  uses those two. That measurement is recorded in the test's own docstring.
 - **`tests/test_jumpcut_fcpxml.py:138-156`** — asserts the document version,
   that `<asset ` and `ref="r1"` are present, and `content.count("<asset-clip") == 2`.
   Structure, not cuts: no cut time is parsed and compared to the input
@@ -538,14 +550,35 @@ question is which of those tests would still pass if the output were wrong.
   `tests/test_pipeline_e2e.py:161` all assert `pack["source_based"] is True`.
   This asserts the code sets a flag to `True`. It is evidence the field
   exists and is spelled correctly, and nothing else; it does not distinguish
-  a source-based product from one that rewrites speech.
-- **`tests/test_editorial_rank.py:51`** — contains `or True` in an assertion.
+  a source-based product from one that rewrites speech. **Left in place,
+  deliberately:** the four tests exist to pin that the field is populated at
+  all on the real pack paths, and the claim they could be upgraded into —
+  that the output media is byte-identical to the source over the kept spans
+  — is a different test belonging to the render pass, not a stronger
+  assertion in these four. They stay as weak-but-non-vacuous pins; they are
+  the remaining item behind row #11's "Mostly resolved".
+- **`tests/test_editorial_rank.py:51`** — contained `or True` in an assertion.
   I VERIFIED that `rank()` *does* enforce the 4-second separation this
-  appears to guard (`editorial.py`: `if any(not (c.end <= x.start-4 or
-  c.start >= x.end+4) for x in chosen): continue`), so today this is dead
-  weight rather than a masked live bug. It is still a landmine: it disables
-  the assertion it was written to carry, and the next person to touch `rank()`
-  has no test.
+  appeared to guard (`editorial.py`: `if any(not (c.end <= x.start-4 or
+  c.start >= x.end+4) for x in chosen): continue`), so today this was dead
+  weight rather than a masked live bug. It was still a landmine: it disabled
+  the assertion it was written to carry, and the next person to touch
+  `rank()` had no test. **RESOLVED 2026-09-22:** the tautology is replaced by
+  the post-condition callers actually depend on — the retained clips are
+  sorted by start and every consecutive pair must satisfy `earlier.end <=
+  later.start`, and the overlapping candidate must be absent from the
+  result. Verified by mutation: deleting the guard from `rank()` fails this
+  test alone (`1 failed, 10 passed` —
+  `test_rank_rejects_overlapping_candidates`); inverting its sense fails it
+  plus `test_rank_rejects_near_duplicate_text` (`2 failed, 9 passed`), which
+  is the signature of an assertion covering the defect rather than the happy
+  path. Honestly noted: the count assertion fires before the span assertion
+  under the first mutation, so I do not claim the span check alone isolates
+  the defect — the test as a whole detects a disabled and an inverted
+  filter, which is what it needs to do.
+- **Four tests assert a literal constant**: `tests/test_content_pack.py:70-72`,
+  `tests/test_project_lifecycle.py:275`, `tests/test_unicode_pipeline.py:171`,
+  `tests/test_pipeline_e2e.py:161` all assert `pack["source_based"] is True`.
 - **`selekyt/pipeline.py:502`** sets `state["complete"] = True` and nothing in
   the codebase ever reads it. The resume logic keys off `renders`, not
   `complete`. A test asserting `state["complete"]` is asserting a write, not
@@ -604,7 +637,7 @@ means the shipped output is wrong and nothing in the system says so.
 | 8 | **High** | Scalability | no cleanup anywhere; `providers/atomic.py:24-34` | ~900 MB retained per project, 92% intermediates, 13 GB free, no GC. At 100× the run dies in `OSError` mid-write after the checkpoint. The fixed `.tmp` name also loses data under concurrent writes to one state file. |
 | 9 | **Medium** | Architecture | `engine/fcpxml.py` vs `engine/nle_export.py`; `selekyt/server.py:27,185-194` vs `selekyt/pipeline.py:21,438` | Two live FCPXML emitters with divergent error policy (raise vs silent fallback) behind two entry points. The web preview and the shipped file can disagree. |
 | 10 | **Medium** | Reliability | `selekyt/pipeline.py:433-452` | Export validation runs after renders are checkpointed, so a bad timeline kills a run that has already produced deliverables. Recovers on resume; reports failure. Also, `:433-436` claims timeline duration == render duration but never measures the render. |
-| 11 | **Medium** | Test quality | `tests/test_render.py:170-176` et al. | The burned-captions test cannot detect a missing caption track; four tests assert a literal `True` constant; `test_audio_analysis.py:133-142` does not test what its name claims; `test_editorial_rank.py:51` disables its own assertion via `or True`. **Partly resolved 2026-09-22** — the burned-captions half is closed by a pixel-decoding test; the `or True`, the four `is True` constants and the segmentation-reproducibility name remain. |
+| 11 | **Medium** | Test quality | `tests/test_render.py:170-176` et al. | The burned-captions test cannot detect a missing caption track; four tests assert a literal `True` constant; `test_audio_analysis.py:133-142` does not test what its name claims; `test_editorial_rank.py:51` disables its own assertion via `or True`. **Mostly resolved 2026-09-22 —** the burned-captions half is closed by a pixel-decoding test; `test_editorial_rank.py` now asserts the retained clips' sorted spans do not overlap instead of `... or True`; `test_reproducible_segmentation_across_runs` now re-runs at the same threshold and compares the persisted regions, and proves the threshold reaches the segmenter (0.3 vs 0.5 straddle the boundary where this fixture's segmentation actually moves; 0.5 vs 0.9 do not, because the fixture's bursts saturate the score at 1.0). Both replacements were mutation-verified. Remaining by deliberate decision: the four `is True` constants (see §"Three more near-vacuous assertions, left in place"). |
 | 12 | **Medium** | Scalability | `selekyt/server.py:476-498`, `web/server.mjs:93-148` | One serial sidecar, FIFO `pending[]` with no request id, no timeout. One slow pipeline blocks `/api/ping`; one crash rejects every queued request; a `stdin.write` failure leaves a promise unresolved forever. |
 | 13 | **Medium** | Scalability | `web/server.mjs:297`, `pipeline_state.json` | No project ID, no per-tenant isolation, hardcoded output directory. Two concurrent web runs clobber one state file. Multi-tenancy is a correctness bug, not a scaling task. |
 | 14 | **Low** | Reliability | `selekyt/pipeline.py:502` | `state["complete"] = True` is written and never read; resume keys off `renders`. Dead state. |
