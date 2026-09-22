@@ -112,6 +112,8 @@ header {
 .chip.ok::before { background: var(--good); }
 .chip.bad::before { background: var(--bad); }
 .chip.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+.chip.warn::before { background: var(--warn); }
+.chip.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
 
 main {
   flex: 1;

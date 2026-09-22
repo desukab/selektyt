@@ -174,6 +174,21 @@ def _asr_provenance(path: Path) -> dict | None:
         return None
 
 
+def _recovery_note(path: Path) -> str | None:
+    """The ``container_recovery`` marker on a transcript already on disk.
+
+    The marker says the words did not come from the file the user handed in:
+    the container was damaged and a remux of it transcribed where the original
+    did not. That is a reason to check the deliverable against the source, and
+    a resumed run has to be able to state it again — the recovery branch is
+    not taken when the transcript is cached.
+    """
+    try:
+        return json.loads(path.read_text(encoding="utf-8")).get("container_recovery")
+    except (OSError, ValueError, TypeError):
+        return None
+
+
 def _fingerprint(media: Path, source: str, model: str, language: str | None) -> str:
     st = media.stat()
     raw = f"{source}|{media.resolve()}|{st.st_size}|{st.st_mtime_ns}|{model}|{language or 'auto'}"
@@ -376,8 +391,10 @@ def run(
         transcript, detected = cached
         # Provenance is read back rather than carried in a local: this branch
         # skips transcription entirely, and the report still has to name which
-        # model produced the words a resumed run is reusing.
+        # model produced the words a resumed run is reusing. The recovery
+        # marker goes with it for the same reason.
         asr_provenance = _asr_provenance(transcript_path) or {}
+        recovery_note = _recovery_note(transcript_path)
         print("[cache] using unchanged transcript", flush=True)
     else:
         print(
@@ -394,6 +411,7 @@ def run(
             beam_size=beam_size,
             cpu_threads=cpu_threads,
         )
+        recovery_note = None
         print(
             f"[transcribe] engine={asr_provenance['engine']} "
             f"word_timestamps={asr_provenance['word_timestamps']}"
@@ -479,6 +497,7 @@ def run(
                         "container_recovery": note,
                 },
             )
+                recovery_note = note
                 print(f"[transcribe] recovered {len(transcript)} segment(s) via {note}",
                       flush=True)
 
@@ -800,6 +819,14 @@ def run(
             for k in ("engine", "requested_model", "model", "downgrade_reason",
                       "word_timestamps", "fallback_reason")
         },
+        # None means the transcript came from the file the user handed in. A
+        # value means it did not: the container was damaged, a remux
+        # transcribed where the original did not, and the clips were cut from
+        # the repair. Timings in a repaired file can shift relative to the
+        # original, so this is the thing to check before trusting a frame, and
+        # it lived only in transcript.json until now — the same gap as the
+        # model name above.
+        "container_recovery": recovery_note,
         # The completeness measurement behind the coverage guard. Recorded on
         # every run, not only on failures: a `not_computable` verdict is a
         # statement that the check could not measure anything, and recording

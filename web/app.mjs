@@ -240,10 +240,15 @@ async function runCuts() {
     }
     const data = await post("run_pipeline", params);
     const r = data.report;
+    // A recovered run cut its clips from a repair of the source, not from the
+    // file handed in; the deliverable is still usable but its timing is not
+    // trustworthy until checked against the original. This is the one line in
+    // the web shell that says so.
     summary.textContent =
       `${r.selected_count} clip${r.selected_count === 1 ? "" : "s"} from ` +
       `${r.candidate_count} candidates · ${r.language ?? "?"} · ` +
-      `${data.artifacts.filter((p) => p.endsWith(".mp4")).length} renders`;
+      `${data.artifacts.filter((p) => p.endsWith(".mp4")).length} renders` +
+      (r.container_recovery ? ` · source repaired (${r.container_recovery})` : "");
     for (const p of data.artifacts) {
       const a = document.createElement("a");
       a.href = `/api/file?path=${encodeURIComponent(p)}`;

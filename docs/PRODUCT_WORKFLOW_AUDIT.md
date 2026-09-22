@@ -166,6 +166,36 @@ re-rank, or override control in the CLI, the web shell, or the artifact format.
 `web/app.mjs:247-258` renders results as a flat list of `download` links — no
 preview, no inspection, no rejection. The only remediation is re-running the
 whole pipeline or hand-editing the EDL.
+**J10 — A run that repaired the source shipped clips and said nothing. Fixed.**
+The recovery B2 asked for exists, and for its whole life it recorded the repair
+in a file nothing reads: `transcript.json`'s `container_recovery` key, written
+by `pipeline.py` on a successful remux and consumed by no code. An editor whose
+source was damaged received clips cut from a *different file* than the one they
+handed in, with no indication. That is the same class of defect as J4 — the
+pipeline computed something that changes what the deliverable is worth and put
+it where the editor was not looking — and it is worse than J4, because a remux
+can shift timing relative to the original, which is a way to be subtly wrong
+rather than merely under-described.
+
+**What changed.** `report.json` now carries `container_recovery` on every run.
+`null` is a statement — the transcript came from the source as given — and the
+key is present even when nothing recovered, so "not recovered" stays
+distinguishable from "not recorded". A value is the note the recovery wrote,
+repeated rather than paraphrased, and the desktop summary renders it as a
+"source repaired" warning chip whose tooltip says what to do about it: check a
+clip's frames against the source before relying on a cut. A resumed run reads
+the marker back from `transcript.json`, because the resume path reuses the
+cached transcript and never enters the recovery branch — the same read-back J4
+needs, for the same reason.
+
+**What is still not proven.** The test that covers this
+(`tests/test_container_recovery.py`) builds a *healthy* file, transcribes
+nothing from it, and lets the recovery produce the real transcript from a
+stream-copy remux. That proves a recovered run reports itself; it does not prove
+a remux of a *damaged* container recovers, which remains the open observational
+gap recorded in `docs/AI_EXECUTION_STATE.md` item 7. No committed transcript
+carries the marker, so the field is exercised on synthetic media only.
+
 
 ---
 

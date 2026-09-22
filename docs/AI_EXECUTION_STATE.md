@@ -1459,6 +1459,22 @@ In rough order of how much it would cost a user (fuller list in
    one: **the diagnosis distinguishes a silent track from a damaged container,
    and the silent-track half of that is now shown on real media while the
    damaged-container half is not.**
+
+   **One half of the *reporting* gap is closed, and the observational gap is
+   not.** Until now a run that recovered wrote the marker to `transcript.json`
+   under a key nothing read: the editor was shipped clips cut from a repair and
+   told none of it. `report.json` now carries `container_recovery` on every run
+   (null meaning "the transcript came from the file you handed in"), the desktop
+   summary renders a "source repaired" warning chip on a non-null value, and a
+   resumed run reads the marker back from `transcript.json` because the resume
+   path never enters the recovery branch. `tests/test_container_recovery.py`
+   now drives the recovery end to end on a real remux — the original decode
+   yields nothing, the stream-copy remux transcribes, the run renders from the
+   repair, and the report a resumed run writes still names it. That closes the
+   *surfacing* defect. It does not close item 7 above: the remux in that test is
+   a healthy file, so the test proves a recovered run reports itself, not that a
+   remux of a *damaged* container recovers. No committed transcript carries the
+   marker, and nothing here changes that.
 8. **Non-English transcription quality is now measured, and it is broken.**
    The `small` model produced garbage in Telugu, Hungarian and Hindi. English is
    the exception: WER is measured for clean read English at **3.38%** on

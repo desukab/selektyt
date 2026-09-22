@@ -622,6 +622,7 @@ function renderSummaryStrip() {
     <span class="chip">${esc(r.language || "—")}</span>
     <span class="chip">${r.candidate_count ?? 0} candidates</span>
     ${asr.model ? `<span class="chip" title="The model that produced this transcript. ${esc(asr.downgrade_reason ? "Downgraded from " + (asr.requested_model || "?") + ": " + asr.downgrade_reason : "The requested model ran.")}">${esc(asr.model)}${asr.downgrade_reason ? " ⚠" : ""}</span>` : ""}
+    ${r.container_recovery ? `<span class="chip warn" title="The transcript did not come from the file you handed in: ${esc(r.container_recovery)}. Timings in a repaired container can shift, so check a clip's frames against the source before relying on a cut.">source repaired ⚠</span>` : ""}
     <span class="rh-actions">
       <button class="ghost small" id="rh-open">Open folder</button>
       <button class="ghost small" id="rh-rerun">Run again</button>

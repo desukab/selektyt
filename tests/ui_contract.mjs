@@ -272,6 +272,17 @@ if (transcript.asr) {
 } else {
   console.log("  SKIP  transcript.json predates the asr block, so the model is not recorded");
 }
+// The recovery marker: the summary strip renders a warning chip on a non-null
+// value, and a resumed run reads it back from transcript.json rather than from
+// a value the transcription stage never set. The key is on every report so
+// that null reads as "the transcript came from the file you handed in".
+check("container_recovery" in report, "report.json is missing container_recovery — the chip tests r.container_recovery");
+if (report.container_recovery !== null) {
+  check(typeof report.container_recovery === "string", `container_recovery is a ${typeof report.container_recovery}, the chip renders it`);
+  check(report.container_recovery === transcript.container_recovery, "report.json's recovery note disagrees with transcript.json, the source of truth on a resume");
+} else if ("container_recovery" in transcript) {
+  check(transcript.container_recovery === null, "transcript.json records a recovery the report does not carry");
+}
 
 }
 section("project identity helpers");
