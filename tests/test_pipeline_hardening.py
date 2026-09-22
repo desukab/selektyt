@@ -29,6 +29,7 @@ import pytest
 
 from models.core import Candidate, Segment, Word
 from selekyt.pipeline import run as pipeline_run, _selection_digest
+from providers.transcribe import _ENGINE_INSTALLED_MESSAGE
 
 
 # ── shared scaffolding ──
@@ -492,6 +493,47 @@ def test_pipeline_rejects_bad_cpu_threads_before_download(tmp_path):
             pipeline_run("https://example.com/v", tmp_path, cpu_threads=0)
         dl.assert_not_called()
         asr.assert_not_called()
+
+
+# ── F7b: a default install fails before it downloads ──
+
+def test_pipeline_reports_a_missing_transcription_engine_before_download(tmp_path):
+    """faster-whisper is an extra, not a base dependency — deliberately, so the
+    package installs without an ASR engine and the selector is what says which
+    one will run. Before this check the failure surfaced at transcription, i.e.
+    after a URL source had been downloaded and remuxed, so a user asking for a
+    clip fetched a whole video to be told to run pip.
+
+    ``select_engine`` is patched rather than uninstalled because the host this
+    suite runs on has an engine; the pipeline reads the same function the real
+    transcription path does, so the patched value is what the run would have
+    concluded on its own.
+    """
+    with patch("selekyt.pipeline.download") as dl, \
+         patch("selekyt.pipeline.transcribe_auto") as asr, \
+         patch("selekyt.pipeline.select_engine", return_value=None):
+        with pytest.raises(RuntimeError) as excinfo:
+            pipeline_run("https://example.com/v", tmp_path)
+        dl.assert_not_called()
+        asr.assert_not_called()
+    message = str(excinfo.value)
+    # The message has to be the one that names the fix, and both extras have to
+    # be in it: a user who cannot install ctranslate2 needs the sherpa path.
+    assert "pip install -e '.[transcription]'" in message
+    assert "pip install -e '.[sherpa]'" in message
+
+
+def test_a_run_with_an_engine_available_is_not_blocked_by_that_check(tmp_path):
+    """The check must be a probe, not an unconditional gate. With an engine
+    reported available the run proceeds past it — otherwise the previous test
+    would pass against a check that always raises. The run still fails here,
+    but elsewhere and for an unrelated reason (yt-dlp is not on PATH in this
+    sandbox), and that is what proves the pre-flight let it through."""
+    with patch("selekyt.pipeline.select_engine", return_value="faster-whisper"):
+        with pytest.raises(Exception) as excinfo:
+            pipeline_run("https://example.com/v", tmp_path)
+    assert str(excinfo.value) != _ENGINE_INSTALLED_MESSAGE, \
+        "the pre-flight raised the engine error on a host that does have an engine"
 
 
 _HAVE_FFMPEG = shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None

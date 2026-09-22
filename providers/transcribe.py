@@ -24,6 +24,31 @@ def _faster_whisper_available() -> bool:
         return False
 
 
+_ENGINE_INSTALLED_MESSAGE = (
+    "no transcription engine available: install faster-whisper "
+    "(pip install -e '.[transcription]'), or install sherpa-onnx "
+    "(pip install -e '.[sherpa]') and place a sherpa-onnx whisper model "
+    "under ~/.cache/telugify/models/sherpa-onnx-whisper-base"
+)
+
+
+def select_engine(model_name: str = "small") -> str | None:
+    """Report which engine a call to ``transcribe`` would use on this host.
+
+    Returns the engine name, or None if no engine can run. ``run_pipeline``
+    calls this before the network so a default install fails before
+    downloading media, not after; ``transcribe`` calls it because it makes the
+    same choice when it actually has to run. One function, so the two cannot
+    disagree.
+    """
+    if _faster_whisper_available():
+        return "faster-whisper"
+    from providers.sherpa import is_available
+    if is_available(model_name):
+        return "sherpa-onnx-whisper"
+    return None
+
+
 def transcribe(
     media: Path,
     model_name: str = "small",
@@ -39,7 +64,7 @@ def transcribe(
     Returns (segments, detected_language, provenance). Provenance records
     which engine ran and why, plus the word-timestamp fidelity.
     """
-    if _faster_whisper_available():
+    if select_engine(model_name) == "faster-whisper":
         from providers.whisper import transcribe as _fw
         segments, lang, prov = _fw(
             media, model_name, language, checkpoint_dir,
@@ -64,8 +89,8 @@ def transcribe(
             "vad_filter": vad_filter,
         }
 
-    from providers.sherpa import transcribe as _so, is_available
-    if is_available(model_name):
+    from providers.sherpa import transcribe as _so
+    if select_engine(model_name) == "sherpa-onnx-whisper":
         segments, lang, prov = _so(
             media, model_name, language, checkpoint_dir,
             chunk_minutes=chunk_minutes, cpu_threads=cpu_threads, beam_size=beam_size,
@@ -91,9 +116,4 @@ def transcribe(
             "vad_filter": False,
         }
 
-    raise RuntimeError(
-        "no transcription engine available: install faster-whisper "
-        "(pip install -e '.[transcription]'), or install sherpa-onnx "
-        "(pip install -e '.[sherpa]') and place a sherpa-onnx whisper model "
-        "under ~/.cache/telugify/models/sherpa-onnx-whisper-base"
-    )
+    raise RuntimeError(_ENGINE_INSTALLED_MESSAGE)

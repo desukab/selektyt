@@ -29,7 +29,11 @@ from engine.llm_editorial import attach_metadata
 from engine.pipeline_audio import run_pipeline_audio
 from providers.ffmpeg import FfmpegError, probe_duration, probe_fps
 from providers.youtube import download
-from providers.transcribe import transcribe as transcribe_auto
+from providers.transcribe import (
+    _ENGINE_INSTALLED_MESSAGE,
+    select_engine,
+    transcribe as transcribe_auto,
+)
 from models.core import Segment, Word
 
 
@@ -344,6 +348,15 @@ def run(
         raise ValueError("silence_threshold and silence_padding must be >= 0")
     if min_speech_ms < 0 or min_silence_ms < 0:
         raise ValueError("min_speech_ms and min_silence_ms must be >= 0")
+    # Same reason, larger cost: on a default install (neither ASR extra), the
+    # transcription backend is missing, and before this check that only became
+    # apparent after download and audio extraction — a whole video fetched to
+    # reach an error about pip. The probe reports which engine would run, so
+    # it also fails on a default install that has faster-whisper but is asking
+    # for a model the fallback cannot supply. Sherpa availability depends on
+    # the requested model, hence the model name rather than a bare boolean.
+    if select_engine(model) is None:
+        raise RuntimeError(_ENGINE_INSTALLED_MESSAGE)
     project = out_root / "project"
     project.mkdir(parents=True, exist_ok=True)
     # Resolved before anything is recorded: report.json quotes these paths to
