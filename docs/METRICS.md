@@ -235,7 +235,9 @@ clip 05 at 40.8%, implying ~7 s of non-speech in a 17.68 s clip. I measured the
 actual audio in that window and the implication is false:
 
 - The gap is **6.26 s at 101.56→107.82 s** in the source, between the words
-  "Ever." and "And". VERIFIED from `transcript.json`.
+  "Ever." and "And". VERIFIED from `transcript.json`. In render time the same
+  window is **6.700→12.840 s** (6.14 s), between the last cue ending 6.700 s and
+  the next starting 12.840 s. VERIFIED from `captions/05.srt`.
 - Acoustic measurement of that window: **mean −31.4 dB, max −14.1 dB, and 0.00 s
   of silence at `-40dB:d=0.25`** — the region is *loud throughout*. VERIFIED,
   `ffmpeg -af volumedetect` / `silencedetect` on the extracted window.
@@ -246,6 +248,42 @@ actual audio in that window and the implication is false:
   model the pipeline uses returns only "Ever." and nothing else — so the
   pipeline did not drop or mis-time speech; the model correctly has no words
   where a music bed plays.
+
+**The exact sample-level measurement, reproducible from a checkout** (added
+2026-09-22; this is the measurement the audit now performs itself on the shipped
+render, replacing the filter-based figures above where the two disagree):
+
+Decode the render once to 16 kHz mono 16-bit PCM and count samples by threshold
+in Python rather than parsing a filter's formatted output, because a number a
+filter printed is not a number this audit can re-derive:
+
+```sh
+ffmpeg -y -v error -i corpus/nasa360-ep5_run/project/facebook/05.mp4 \
+  -ac 1 -ar 16000 -c:a pcm_s16le /tmp/05.wav
+```
+
+| Window | Duration | RMS | Peak | Below −60 dBFS | Below −45 dBFS |
+| --- | --- | --- | --- | --- | --- |
+| speech 0.000→6.700 s | 6.70 s | −31.56 dB | −14.41 dB | <0.1 s | 1.94 s |
+| **word-free 6.700→12.840 s** | 6.14 s | **−32.26 dB** | **−17.24 dB** | **<0.1 s** | **1.28 s** |
+| speech 12.840→17.651 s | 4.81 s | −30.32 dB | −13.68 dB | <0.1 s | 1.11 s |
+| whole render | 17.66 s | **−31.40 dB** | **−13.68 dB** | **0.80 s (4.5%)** | **4.33 s (24.6%)** |
+
+The word-free window is *not* the quietest part of the render: both speech
+halves sit at a similar or slightly louder RMS, and the window's peak (−17.24 dB)
+is 3.2 dB below the render's peak. A bed under dialogue is what that looks like.
+
+A 0.5 s profile of the word-free window rises from −40.03 dB at 6.70 s to about
+−30.6 dB by 9.70 s and then holds in the −30 to −33 dB band to the end — a bed
+swelling in, not a burst of silence with noise around it.
+
+Note the two "0.00 s" figures answer different questions and both are true.
+`silencedetect -40:d=0.25` sums *continuous runs* of at least 0.25 s under its
+threshold, and the render's sub-threshold spans are all shorter than that; the
+sample count below an absolute −60 dBFS floor totals 0.80 s across the whole
+17.66 s render. Quoting either without its definition is how the clip first got
+called a pause and then dead air. The audit's line quotes the absolute floor and
+names it.
 
 **Conclusion:** the 40.8% is real as a *word-coverage* number and wrong as a
 *silence* number. The transcript is sound, the word timestamps are sound, and
@@ -278,12 +316,29 @@ inside a cut is editorial, not dead air") was an inference made without
 listening, and it was wrong; the audio in that window is loud and tonal.
 
 **The metric should be renamed** `word_coverage_deficit` or similar, with the
-0.55 threshold re-derived against measured audio on a corpus. Until it is, the
-safe reading is: a high value means *the transcript has no words there*, and the
-cause must be determined acoustically before it is reported as silence. A pilot
+threshold re-derived against measured audio on a larger corpus. The threshold was
+corrected to 0.30 — criterion P5's actual bar, where the previous 0.55 was 2.75×
+looser than the criterion it existed to enforce and so could never fire — and the
+audit now performs the acoustic check itself instead of leaving the cause to
+whoever reads the number, but the name still says something the computation does
+not do. Until it is renamed, the safe reading is: a high value means *the
+transcript has no words there*, and the cause is only stated once the render has
+been decoded. A pilot
 where the mean drifts far above ~15% on talk content is a signal to investigate,
 not a verdict — and `filler_pct` drifting above zero is a signal the filler gate
 has stopped firing.
+
+**The second over-bar clip is a different finding, and that is the point.**
+`telugu-tutorial_run` clip 01 measures 46.3% word-free, and decoding its render
+gives 0.54 s = 4.6% below −60 dBFS of an 11.78 s render at **RMS −17.37 dB** —
+loud, not silent, and louder than the speech-bearing NASA window. Two causes fit
+those numbers: a music bed, or Telugu speech the transcript missed. Telugu ASR
+quality is a known gap (P9; two of six benchmark languages pass), so the second
+explanation is the live hypothesis here, and the fix is in transcription, not in
+the cut. The audit prints the same `REVIEW` for both clips and does not guess
+which one it is — the level is quoted precisely because that is what separates
+them, and only a listener can close it. VERIFIED, same decode and sample math as
+above on `corpus/telugu-tutorial_run/project/facebook/01.mp4`.
 
 ### A2.5 Pacing — 3.62 words/s, 1.00 payoff rate, 0.45 s hook latency
 
@@ -695,7 +750,15 @@ ffprobe -v error -show_entries stream=width,height,sample_aspect_ratio,display_a
 ffprobe -v error -show_entries stream=width,height,sample_aspect_ratio,display_aspect_ratio -of default=noprint_wrappers=1 corpus/nasa360-ep5_run/project/shorts/01.mp4      # A3.1
 ```
 
-All of the above were run by the author on 2026-09-19 and exited 0. The remaining
+All of the above were run by the author on 2026-09-19 and exited 0 **except the
+editorial audit, which exits 1 by design**. That is not a regression — it is the
+audit firing on the one condition it was written for. Clip 05 is 40.8%
+word-free, over P5's 30% bar, and since 2026-09-22 the audit decodes the shipped
+render and classifies the window rather than asserting a cause from the word
+timings: it prints `REVIEW` with the measured figures (0.80 s = 4.5% below
+−60 dBFS, RMS −31.4 dB — content, not dead air) and still exits 1, because a clip
+over the bar needs a human to listen to it before it ships. An over-bar clip with
+corroborated dead air, or with no render decodable, stays a plain `FAIL`. The remaining
 product-quality values are computed directly from the JSON artifacts under
 `corpus/nasa360-ep5_run/project/` — `editorial_report.json`, `edit_plan.json`,
 `report.json`, `qa.json`, `pacing_report.json`, `transcript.json` and

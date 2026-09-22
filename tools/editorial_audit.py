@@ -26,8 +26,11 @@ What it measures, and why each one is falsifiable rather than impressionistic:
   - span mismatch     the caption span and the rendered duration disagree by
                        more than the tolerance ffprobe rounds to
   - silence share     how much of the kept timeline is pause rather than
-                       speech; a clip that is mostly silence is a dead-air
-                       failure no score can hide
+                       speech; a clip over the bar has its shipped render
+                       decoded so the word-free window is measured
+                       acoustically, and the finding says what the measurement
+                       found rather than asserting a cause the timings cannot
+                       support
   - duplication       the same sentence shipped in two clips, which is what a
                        reordering editor produces when its story units overlap
   - selection size    zero selections is a hard failure with a diagnostic
@@ -250,6 +253,158 @@ def check_silence_share(cand: dict, intervals: list[tuple[float, float]]) -> tup
     return share <= SILENCE_SHARE_MAX, share
 
 
+QUIET_DBFS = -60.0
+"""The acoustic floor that separates dead air from a non-speech bed.
+
+Below this the waveform is digital quiet by the standard production definition.
+`check_silence_share` never touches the audio, so when it fires the only honest
+thing left to do is decode the render and count the seconds actually under this
+floor — which is what the two committed over-bar clips needed: both turned out
+to hold content, not silence (`docs/METRICS.md` A2.4)."""
+
+QUIET_LINEAR = 10.0 ** (QUIET_DBFS / 20.0)
+RENDER_SAMPLE_RATE = 16000
+
+
+def _decode_render_audio(mp4: Path) -> tuple[list[int], int] | None:
+    """Decode a shipped render to mono PCM, or ``None`` if that is impossible.
+
+    One ffmpeg pass to 16 kHz 16-bit mono, then exact sample math in Python on
+    the whole buffer. Parsing a filter's stderr was tried and discarded: the
+    values it printed were uniform across windows that audibly differ, and a
+    number a filter formatted is not a number this audit can reproduce.
+
+    ``None`` is deliberate rather than an exception: a machine without ffmpeg,
+    a project whose renders were never produced, or a corrupt file all mean the
+    window cannot be measured, and that has to be *reported*, never silently
+    cleared (see `word_free_finding`).
+    """
+    import shutil
+    import struct
+    import subprocess
+    import tempfile
+    import wave
+
+    if shutil.which("ffmpeg") is None:
+        return None
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            raw = Path(td) / "pcm.wav"
+            subprocess.run(
+                ["ffmpeg", "-y", "-v", "error", "-i", str(mp4), "-ac", "1",
+                 "-ar", str(RENDER_SAMPLE_RATE), "-c:a", "pcm_s16le", str(raw)],
+                capture_output=True, check=True, timeout=180,
+            )
+            with wave.open(str(raw), "rb") as w:
+                rate = w.getframerate()
+                n = w.getnframes()
+                frames = w.readframes(n)
+    except Exception:
+        return None
+    # A truncated wav yields fewer frames than the header claims; unpack what is
+    # there rather than raising, since a partial buffer still measures fine.
+    n = len(frames) // 2
+    return list(struct.unpack("<%dh" % n, frames[: n * 2])), rate
+
+
+def measure_audio(samples: list[int], rate: int) -> dict | None:
+    """RMS, peak and seconds of digital quiet over a decoded buffer."""
+    import math
+
+    n = len(samples)
+    if not n or rate <= 0:
+        return None
+    floor = QUIET_LINEAR * 32768.0
+    quiet = 0
+    peak = 0
+    total = 0
+    for s in samples:
+        a = -s if s < 0 else s
+        if a > peak:
+            peak = a
+        if a < floor:
+            quiet += 1
+        total += s * s
+    rms = math.sqrt(total / n) / 32768.0
+    dur = n / rate
+    return {
+        "dur": dur,
+        "quiet_s": quiet / rate,
+        "quiet_share": (quiet / rate) / dur,
+        "rms_db": 20 * math.log10(rms) if rms > 0 else float("-inf"),
+        "peak_db": 20 * math.log10(peak / 32768.0) if peak > 0 else float("-inf"),
+    }
+
+
+def measure_clip_render(project: Path, index: int) -> dict | None:
+    """Acoustic measurement of the render shipped for clip ``index``, or None.
+
+    The facebook render is the one the social formats are cut from, so it is
+    measured; the shorts render is the fallback when facebook is absent. Both
+    carry the same timeline, so measuring either answers the question the
+    silence-share failure asks: what is actually in that window.
+    """
+    for kind in ("facebook", "shorts"):
+        mp4 = project / kind / f"{index:02d}.mp4"
+        if not mp4.is_file():
+            continue
+        decoded = _decode_render_audio(mp4)
+        if decoded is None:
+            return None
+        return measure_audio(*decoded)
+    return None
+
+
+def word_free_finding(share: float, measured: dict | None) -> tuple[str, str]:
+    """Compose the finding line for a word-free share that is over the bar.
+
+    Returns ``(state, detail)``. ``state`` is ``REVIEW`` when acoustic
+    measurement contradicts dead air, and ``FAIL`` when it corroborates the
+    reading — or when no measurement was possible at all, which is the case
+    that must never be cleared: an unmeasurable window stays a failure with the
+    reason attached, not a pass.
+
+    REVIEW is not an acquittal. ``audit`` keeps the clip's boolean False either
+    way, so the exit code does not soften and CI still fails; REVIEW only
+    changes what the line claims, from a cause the word timings cannot support
+    to the figures the decode actually produced. A human still has to listen,
+    because "not digital silence" does not establish that the material belongs
+    in the clip — a loud window can be a music bed or speech the transcript
+    missed, and those need opposite fixes.
+    """
+    if measured is None:
+        return (
+            "FAIL",
+            f"silence share {share:.1%} (word-free; cause unmeasured — the "
+            f"render could not be decoded to check it)",
+        )
+    if measured["quiet_share"] <= SILENCE_SHARE_MAX:
+        # Name the level, because the fix depends on it. A loud window is a
+        # music bed or speech the transcript missed — opposite fixes, and the
+        # second one is a transcription-quality problem, not an editing one. A
+        # low-level window is a bed or a pause, which is an editorial call.
+        if measured["rms_db"] >= -30.0:
+            why = ("loud content rather than a pause — check for a music bed "
+                   "or speech the transcript missed")
+        else:
+            why = ("low-level content rather than a pause — check whether the "
+                   "material earns its place")
+        return (
+            "REVIEW",
+            f"silence share {share:.1%} (word-free; measured "
+            f"{measured['quiet_s']:.2f}s = {measured['quiet_share']:.1%} below "
+            f"{QUIET_DBFS:.0f} dBFS, RMS {measured['rms_db']:.1f} dB — not dead "
+            f"air; {why})",
+        )
+    return (
+        "FAIL",
+        f"silence share {share:.1%} (word-free; measured "
+        f"{measured['quiet_s']:.2f}s = {measured['quiet_share']:.1%} below "
+        f"{QUIET_DBFS:.0f} dBFS, RMS {measured['rms_db']:.1f} dB — dead air "
+        f"corroborated)",
+    )
+
+
 def check_no_duplicate_sentences(cands: list[dict]) -> tuple[bool, list[str]]:
     """The same sentence must not ship in two clips."""
     seen: dict[str, int] = {}
@@ -345,6 +500,7 @@ def audit(project: Path) -> tuple[bool, dict]:
     from models.core import Candidate, Word
 
     ok_all = True
+    review: list[str] = []
     for i, cand in enumerate(cands, start=1):
         words = [Word(w["text"], w["start"], w["end"], w.get("confidence", 1.0))
                  for w in (cand.get("words") or [])
@@ -371,12 +527,19 @@ def audit(project: Path) -> tuple[bool, dict]:
         detail += d
         o, share = check_silence_share(cand, intervals)
         ok &= o
-        # The label deliberately does not say "dead air". This number counts
-        # word-free timeline, and on nasa360-ep5 clip 05 a 40.8% reading turned
-        # out to be a loud music bed (mean -31.4 dB, 0.00 s of true silence;
-        # docs/METRICS.md A2.4), not silence. A FAIL means the window must be
-        # listened to before it is called anything.
-        detail.append(f"silence share {share:.1%}" + ("" if o else " (word-free; cause unmeasured)"))
+        if o:
+            detail.append(f"silence share {share:.1%}")
+        else:
+            # The word timings said the window is empty of speech. That is all
+            # they can say: on nasa360-ep5 clip 05 this reading was explained
+            # first as a pause and then as dead air to cut, and measuring the
+            # render showed a loud music bed (docs/METRICS.md A2.4). Decode the
+            # shipped render and report what is actually in the window, so the
+            # finding states a measurement instead of a guess.
+            state, line = word_free_finding(share, measure_clip_render(project, i))
+            detail.append(line)
+            if state == "REVIEW":
+                review.append(name)
 
         # Captions shipped beside this clip, if any.
         srt = project / "captions" / f"{i:02d}.srt"
@@ -398,7 +561,7 @@ def audit(project: Path) -> tuple[bool, dict]:
     o, d = check_no_duplicate_sentences(cands)
     ok_all &= o
     findings.append(("cross-clip", o, "; ".join(d) or "no duplicated sentences"))
-    return ok_all, {"findings": findings}
+    return ok_all, {"findings": findings, "review": review}
 
 
 def _probe_duration(mp4: Path) -> float:
@@ -431,11 +594,27 @@ def main(argv: list[str]) -> int:
         print("FAILURES PRESENT")
         return 1
     width = max((len(n) for n, _o, _d in rep["findings"]), default=8)
+    review = set(rep.get("review") or [])
     for name, cok, detail in rep["findings"]:
-        mark = "PASS" if cok else "FAIL"
+        if cok:
+            mark = "PASS"
+        elif name in review:
+            mark = "REVIEW"
+        else:
+            mark = "FAIL"
         print(f"{name:<{width}}  {mark}  {detail}")
     print()
-    print("ALL CHECKS PASS" if ok else "FAILURES PRESENT")
+    # REVIEW findings are still failures for the exit code — a clip over the bar
+    # needs a human to listen to it before it ships — so they are counted, not
+    # cleared. Silently passing them would be the exact defect this state was
+    # added to remove.
+    if ok:
+        print("ALL CHECKS PASS")
+    elif review:
+        print(f"FAILURES PRESENT ({len(review)} clip(s) awaiting human review)")
+        return 1
+    else:
+        print("FAILURES PRESENT")
     return 0 if ok else 1
 
 

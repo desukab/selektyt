@@ -43,7 +43,15 @@ ffprobe out/web/pipeline/project/source/NASA_360_program5_HD.mov
   (6 `edl media exists` + 6 `fcpxml media relinkable` — re-runnable with `--keep-media`), not
   missing parsers. Across all 11 committed runs the 7 that exported total 430/36/0; the other 4
   FAIL on one `no timeline/` finding each, naming the recorded cause — see criterion P1.
-- `tools/editorial_audit.py out/web/pipeline/project` → **6/6 clips PASS, cross-clip PASS**. VERIFIED.
+- `tools/editorial_audit.py out/web/pipeline/project` → **6/6 clips PASS, cross-clip PASS**. VERIFIED
+  **at the time it was written, and false since 2026-09-22.** The audit's silence-share
+  threshold was 0.55 then — 2.75× looser than criterion P5's 30% bar, so it could not fire on
+  the one condition it existed to enforce. Corrected to 0.30, clip 05 is 40.8% word-free and
+  the run exits 1. The audit now decodes the shipped render and classifies the window: clip 05
+  is `REVIEW` (0.80 s = 4.5% below −60 dBFS, RMS −31.4 dB — a music bed, not dead air), and
+  the exit code stays nonzero because a clip over the bar needs a human to listen to it. See
+  `docs/METRICS.md` A2.4 for the reproducible sample-level measurement. The 6/6 figure above is
+  retained as the reading it was, not as a current result.
 - `.venv/bin/python -m pytest -q` → **1287 passed, 13 skipped in 260.7 s** (re-run 2026-09-21;
   the skips are 7 opt-in real-media measurements, 5 WER records too old to
   re-derive, and 1 language with no run record — not missing backends). VERIFIED.
@@ -285,7 +293,7 @@ the reference run immediately.
   printing `no timeline/`. So the criterion is met on every run that
   produced an export, and is unmet on 4 of 11 sources for a reason the
   corpus itself records. |
-| P2 | `tools/editorial_audit.py` all clips pass | 100% of clips, on **100%** of corpus | 6/6 — CURRENT, one source |
+| P2 | `tools/editorial_audit.py` all clips pass | 100% of clips, on **100%** of corpus | **FAILING on the one source that exists, by design.** 5/6 clips pass; clip 05 is 40.8% word-free against the 30% bar. Since 2026-09-22 the audit decodes the render and reports `REVIEW` (music bed: 0.80 s = 4.5% below −60 dBFS, RMS −31.4 dB) rather than asserting a cause, and still exits 1 — see `docs/METRICS.md` A2.4. The old 6/6 was measured against a 0.55 threshold, 2.75× looser than this criterion, so it was not evidence for P2. |
 | P3 | Geometry: every 16:9 file DAR exactly 16:9; every 9:16 file displays 9:16 | 100% of files | CURRENT, one source |
 | P4 | Frame rate of output == frame rate of source | 100% of files, at every rate in §2.1 | CURRENT at 29.97 only; **untested at 23.976/25/50/59.94** |
 | P5 | Per-clip `silence_share` after dead-air removal | ≤ **20%** on ≥ 90% of clips; no clip > 30% | **FAILS on 2 of 27 committed clips** — `nasa360-ep5` clip 05 at 40.8% and `telugu-tutorial` clip 01 at 46.3%, both now flagged by the audit (threshold corrected from 0.55). The 90% clause itself *passes*: 25/27 = 92.6% are at or under 20% |

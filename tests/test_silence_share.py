@@ -27,7 +27,13 @@ if str(TOOLS) not in sys.path:
 
 ROOT = Path(__file__).resolve().parent.parent
 
-from tools.editorial_audit import SILENCE_SHARE_MAX, check_silence_share  # noqa: E402
+from tools.editorial_audit import (  # noqa: E402
+    QUIET_DBFS,
+    SILENCE_SHARE_MAX,
+    check_silence_share,
+    measure_audio,
+    word_free_finding,
+)
 
 
 def _cand(text: str, words: list[tuple[float, float]]) -> dict:
@@ -197,7 +203,7 @@ def test_share_is_bounded_so_no_out_of_range_value_can_be_read_as_a_bug():
     )
 
 
-def test_a_failure_is_reported_as_unmeasured_not_as_dead_air():
+def test_a_failure_with_no_render_to_decode_reports_unmeasured_not_a_cause():
     """The word "silence" in this metric's name is the defect, not the reading.
 
     On nasa360-ep5 clip 05 a 40.8% figure was explained first as an editorial
@@ -207,13 +213,213 @@ def test_a_failure_is_reported_as_unmeasured_not_as_dead_air():
     must not assert a cause it has not measured, because that is how the second
     explanation nearly became a change that cut music out of a shipped clip.
     """
-    # The label is composed in the report loop, not in the check itself, so this
-    # builds the string the same way that loop does.
+    # The label is composed in word_free_finding, not in the check itself, so
+    # this calls it the same way the report loop does, with no measurement.
     cand = _cand("w w w", [(0.0, 2.0), (2.1, 4.0), (9.0, 11.0)])
-    intervals = [(0.0, 11.0)]
-    ok, share = check_silence_share(cand, intervals)
+    ok, share = check_silence_share(cand, [(0.0, 11.0)])
     assert not ok
-    label = "" if ok else " (word-free; cause unmeasured)"
-    line = f"silence share {share:.1%}{label}"
+    state, line = word_free_finding(share, None)
+    assert state == "FAIL", "an unmeasurable window must stay a failure"
     assert "dead air" not in line
     assert "unmeasured" in line
+    # No figures are quoted, because none exist: a dB number on this line would
+    # have to come from a decode that never happened.
+    assert "-60" not in line and "dB" not in line
+
+
+# --- acoustic measurement of the shipped render ----------------------------
+
+
+def _pcm(seconds: float, amplitude: float, rate: int = 16000) -> list[int]:
+    """A deterministic buffer: a full-scale square-ish tone scaled by amplitude.
+
+    Synthesised rather than decoded so the measurement is tested against known
+    numbers instead of against a fixture nobody can re-derive.
+    """
+    import math
+
+    n = int(seconds * rate)
+    return [
+        int(32767 * amplitude * (1.0 if (i // 200) % 2 else -1.0))
+        for i in range(n)
+    ]
+
+
+def test_a_silent_buffer_reads_as_silent_and_corroborates_dead_air():
+    m = measure_audio(_pcm(2.0, 10 ** (-70 / 20)), 16000)
+    assert m is not None
+    assert m["dur"] == pytest.approx(2.0, abs=1e-3)
+    assert m["quiet_share"] == pytest.approx(1.0)
+    assert m["rms_db"] < QUIET_DBFS
+    state, line = word_free_finding(0.55, m)
+    assert state == "FAIL"
+    assert "dead air corroborated" in line
+
+
+def test_a_loud_buffer_reads_as_content_and_downgrades_to_review():
+    m = measure_audio(_pcm(2.0, 10 ** (-20 / 20)), 16000)
+    assert m["quiet_share"] == pytest.approx(0.0, abs=1e-6)
+    assert m["rms_db"] == pytest.approx(-20.0, abs=0.5)
+    state, line = word_free_finding(0.55, m)
+    assert state == "REVIEW"
+    # The figures quoted are the ones measured, so an editor can check them.
+    assert f"= {m['quiet_share']:.1%} below" in line
+    assert f"RMS {m['rms_db']:.1f} dB" in line
+    assert "dead air corroborated" not in line
+
+
+def test_a_window_at_exactly_the_bar_stays_review():
+    """The classification bar is the same 30% as the word-coverage bar, so a
+    window sitting on it is REVIEW rather than a pass by rounding."""
+    m = measure_audio(_pcm(2.0, 10 ** (-20 / 20)), 16000)
+    m["quiet_s"] = SILENCE_SHARE_MAX * m["dur"]
+    m["quiet_share"] = SILENCE_SHARE_MAX
+    state, _line = word_free_finding(0.40, m)
+    assert state == "REVIEW"
+
+
+def test_an_empty_buffer_is_no_measurement_not_a_silence_reading():
+    """Zero samples cannot support a claim either way, so it returns None and
+    the finding falls back to unmeasured rather than to a clean reading."""
+    assert measure_audio([], 16000) is None
+    assert measure_audio(_pcm(1.0, 0.001), 0) is None
+    state, line = word_free_finding(0.55, None)
+    assert state == "FAIL" and "unmeasured" in line
+
+
+def test_decoding_is_skipped_when_ffmpeg_is_absent(tmp_path, monkeypatch):
+    """A machine without ffmpeg must report the window as unmeasured, not raise
+    and not silently pass it."""
+    from tools.editorial_audit import _decode_render_audio, measure_clip_render
+
+    monkeypatch.setattr("shutil.which", lambda _name: None)
+    assert _decode_render_audio(tmp_path / "nope.mp4") is None
+    assert measure_clip_render(tmp_path, 1) is None
+
+
+def test_a_render_that_does_not_exist_is_no_measurement(tmp_path):
+    from tools.editorial_audit import measure_clip_render
+
+    assert measure_clip_render(tmp_path, 1) is None
+
+
+def test_a_real_render_decodes_to_measurable_pcm(tmp_path):
+    """End to end against ffmpeg, guarded so it skips where ffmpeg is missing
+    rather than failing the suite on a machine that does not have it."""
+    import shutil
+    import subprocess
+
+    pytest.importorskip("wave")
+    if shutil.which("ffmpeg") is None:
+        pytest.skip("ffmpeg is not installed")
+
+    # A one-second 1 kHz tone at -20 dBFS, muxed as the audit's renders are.
+    raw = tmp_path / "tone.wav"
+    samples = _pcm(1.0, 10 ** (-20 / 20))
+    import wave
+
+    with wave.open(str(raw), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16000)
+        w.writeframes(b"".join(s.to_bytes(2, "little", signed=True) for s in samples))
+    mp4 = tmp_path / "facebook" / "01.mp4"
+    mp4.parent.mkdir()
+    subprocess.run(
+        ["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-c:a", "aac",
+         "-b:a", "128k", str(mp4)],
+        capture_output=True, check=True, timeout=180,
+    )
+    from tools.editorial_audit import measure_clip_render
+
+    m = measure_clip_render(tmp_path, 1)
+    assert m is not None, "ffmpeg is installed but the decode failed"
+    # AAC round-trips the level closely, so this is a tolerance on a codec, not
+    # on the measurement: a silent or full-scale buffer would miss by 20+ dB.
+    assert m["dur"] == pytest.approx(1.0, abs=0.05)
+    assert m["rms_db"] == pytest.approx(-20.0, abs=3.0)
+    assert m["quiet_share"] == pytest.approx(0.0, abs=0.05)
+
+
+# --- the two committed clips, measured against their shipped renders --------
+
+
+@pytest.mark.parametrize("project, index, expected", [
+    ("nasa360-ep5_run", 4, 0.408),
+    ("telugu-tutorial_run", 0, 0.463),
+])
+def test_the_two_over_bar_clips_are_reviewed_with_measured_figures(
+    project, index, expected,
+):
+    """Both clips fail P5's 30% word-free bar, and both renders decode to
+    content rather than to silence — which is exactly the finding the audit
+    used to assert without measuring.
+
+    This is a real integration test against the committed renders, not a
+    restatement of the doc: the dB figures are produced here by decoding the
+    shipped mp4. ``rms_max`` is loose because the point is the sign of the
+    conclusion (content, not digital quiet), not the level.
+    """
+    import shutil
+
+    from engine.edit_plan import retention_intervals
+    from models.core import Candidate, Word
+
+    if shutil.which("ffmpeg") is None:
+        pytest.skip("ffmpeg is not installed; the render cannot be decoded")
+
+    project_dir = ROOT / "corpus" / project / "project"
+    selections = json.loads((project_dir / "selections.json").read_text())
+    src = selections[index]
+    cand = Candidate(
+        start=src["start"], end=src["end"], text=src.get("text", ""),
+        words=[Word(w["text"], w["start"], w["end"], w.get("confidence", 1.0))
+               for w in src.get("words", [])],
+        story_type=src.get("story_type", ""), hook=src.get("hook", ""),
+        payoff=src.get("payoff", ""),
+        editorial_score=src.get("editorial_score", 0.0),
+        virality_score=src.get("virality_score", 0.0),
+        context_score=src.get("context_score", 0.0),
+        confidence=src.get("confidence", 0.0),
+        reason=src.get("reason", ""),
+    )
+    ok, share = check_silence_share(src, retention_intervals(cand))
+    assert not ok
+    assert share == pytest.approx(expected, abs=2e-3)
+
+    from tools.editorial_audit import measure_clip_render
+
+    measured = measure_clip_render(project_dir, index + 1)
+    assert measured is not None, "the committed render failed to decode"
+    assert measured["quiet_share"] < SILENCE_SHARE_MAX, (
+        f"{project} clip {index + 1}: {measured['quiet_s']:.2f}s below "
+        f"{QUIET_DBFS:.0f} dBFS of a {measured['dur']:.2f}s render — the window "
+        f"is dead air, not content, and the REVIEW classification is wrong"
+    )
+    assert measured["rms_db"] > QUIET_DBFS, (
+        f"{project} clip {index + 1}: render RMS {measured['rms_db']:.1f} dB is "
+        f"under {QUIET_DBFS:.0f} dBFS, which contradicts a window of content"
+    )
+    state, line = word_free_finding(share, measured)
+    assert state == "REVIEW"
+    assert "unmeasured" not in line
+    assert "dead air corroborated" not in line
+
+
+@pytest.mark.parametrize("project", ["nasa360-ep5_run", "telugu-tutorial_run"])
+def test_review_does_not_clear_the_exit_code(project):
+    """A REVIEW is still a nonzero exit: the clip is over the bar and a human
+    has not listened to it yet. Softening this would turn a measurement into a
+    silent pass, which is the defect the state was added to remove."""
+    import shutil
+
+    from tools.editorial_audit import audit
+
+    if shutil.which("ffmpeg") is None:
+        pytest.skip("ffmpeg is not installed")
+
+    ok, rep = audit(ROOT / "corpus" / project / "project")
+    assert not ok
+    assert rep["review"], "an over-bar clip produced no REVIEW finding"
+    for name in rep["review"]:
+        assert name.startswith("clip "), f"{name} is not a clip finding"
