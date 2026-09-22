@@ -104,11 +104,19 @@ This is the strongest section of the room, and it is genuinely strong.
 - **One source.** Every quality claim rests on a single 24:29 tape. Editorial
   judgement at scale is unmeasured (gap G6). (VERIFIED — `docs/AI_EXECUTION_STATE.md`
   item 6.)
-- **Security findings are unremediated.** `docs/TECHNICAL_AUDIT.md` ranks three
-  Critical and two High severity security defects, including a bypassable
-  `guardedPath` prefix check and cookie material persisted into state and served
-  unauthenticated. These are documented, which is a credit; they are not fixed,
-  which is a liability.
+- **Security findings are largely remediated, with one stated residual.** The
+  audit ranked three Critical and two High severity defects. All three Critical
+  are fixed — the bypassable `guardedPath` prefix check, the cookie material
+  persisted into state and served unauthenticated, and the origin-less
+  control plane that let any page drive the pipeline via CSRF — and the
+  caption-style cache High is fixed. The SSRF High is partly fixed: the cloud
+  metadata endpoints are refused at the URL boundary, but the check is on the
+  URL as written rather than egress filtering, so DNS rebinding and arbitrary
+  hosts remain reachable. The one residual kept open deliberately is that a
+  request with neither `Origin` nor `Referer` is still accepted and no token
+  exists — that is a local process the localhost bind already trusted, and
+  closing it is a different product shape, not a bug. (VERIFIED —
+  `docs/TECHNICAL_AUDIT.md` rows 1–5.)
 - **CI does not run the tools that catch the real bug classes.**
   `tools/nle_check.py` and `tools/editorial_audit.py` are not in the CI run. The
   dependency half of this was closed — `pycmx>=1.5` is in the `nle`, `dev` and
@@ -225,14 +233,18 @@ it is rather than left for a reviewer to infer.
 
 ## 7. Legal, compliance and security — **PARTIAL**
 
-- **Security posture is documented and unfixed.** Three Critical findings (no
-  authentication or origin policy on the localhost control plane; a bypassable
-  `guardedPath` prefix check; cookie credentials persisted and served
-  unauthenticated) and two High findings (SSRF via arbitrary `source` URLs;
-  caption-style render-cache staleness that ships a stale MP4 beside fresh
-  captions). (VERIFIED — `docs/TECHNICAL_AUDIT.md` defects 1–5.) An enterprise
-  reviewer fails this product on `guardedPath` alone in under a minute; that is
-  the stated conclusion of the audit.
+- **Security posture is remediated except the SSRF boundary and the absence of
+  a token.** Of the three Critical findings (no authentication or origin policy
+  on the localhost control plane; a bypassable `guardedPath` prefix check;
+  cookie credentials persisted and served unauthenticated) all three are now
+  fixed, as is the caption-style render-cache High. The SSRF High is partly
+  fixed — the metadata endpoints are refused, but not arbitrary hosts or DNS
+  rebinding. What remains honestly open: no bearer token, and a request with
+  no `Origin`/`Referer` is still accepted, which is a local client rather than
+  the remote-page threat the CSRF gate closed. (VERIFIED —
+  `docs/TECHNICAL_AUDIT.md` defects 1–5, each naming its pinning test.) An
+  enterprise reviewer can still fail this product on the missing token, and
+  on the disk growth of row #8 — but no longer on `guardedPath`.
 - **No SOC 2, no DPA template, no data-retention policy.** All three are
   prerequisites for any customer handling source footage under contract.
 - **One privacy defect with a known fix.** `pipeline_state.json` persists the

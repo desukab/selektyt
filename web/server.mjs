@@ -185,7 +185,55 @@ function readBody(req) {
   });
 }
 
-function getJson(req) {
+// A browser attaches `Origin` to every POST it sends — same-origin fetches
+// included — and it cannot be suppressed or forged from a page, so comparing
+// it is the CSRF gate. Before this, a page at any origin could drive the whole
+// pipeline: `getJson` parsed whatever body arrived, so a plain HTML form with
+// `enctype="text/plain"` carrying JSON reached `JSON.parse` with no CORS
+// preflight, and the mutating routes (`run_pipeline`, `export`,
+// `vad_analyze`, …) were all open. 127.0.0.1 binding does not help, because
+// the browser driving that form *is* on this host.
+//
+// Requests with neither `Origin` nor `Referer` are accepted: those are curl, a
+// script or the test suite, and a localhost bind already treats any local
+// process as trusted — the threat closed here is a *remote* page reaching a
+// local service, not a local client.
+const JSON_CT = /^application\/json(?:\s*;|$)/i;
+
+function _within(origin, url) {
+  return url === origin || url.startsWith(origin + "/");
+}
+
+function assertSameOrigin(req, expectedOrigin) {
+  const origin = req.headers.origin;
+  const referer = req.headers.referer;
+  if (origin) {
+    if (!_within(origin, expectedOrigin)) {
+      throw new Error(
+        `refusing a cross-origin POST from ${origin}: this server serves the ` +
+          `page and its API from one origin (${expectedOrigin}) and accepts no other`
+      );
+    }
+    return;
+  }
+  // `Referrer-Policy: no-referrer` on an attacker's page can suppress Referer
+  // but not Origin on a POST, so a Referer check alone would be weaker; it is
+  // the fallback for the browsers and clients that send only it.
+  if (referer && !_within(referer, expectedOrigin)) {
+    throw new Error(`refusing a cross-origin POST referred from ${referer}`);
+  }
+}
+
+function getJson(req, expectedOrigin) {
+  // The Content-Type gate is the other half: it makes the form-POST primitive
+  // above a non-starter, since a form cannot send application/json.
+  const ct = req.headers["content-type"] || "";
+  if (!JSON_CT.test(ct)) {
+    throw new Error(
+      `POST bodies must be application/json (got ${ct || "no Content-Type"}); ` +
+        "a cross-origin HTML form cannot send that, which is the point"
+    );
+  }
   return readBody(req).then((raw) => {
     try {
       return JSON.parse(raw || "{}");
@@ -258,6 +306,7 @@ async function resolveMedia(body) {
 // ── routes ──
 
 async function route(req, res, url, method) {
+  const expectedOrigin = `http://${req.headers.host || url.host}`;
   if ((method === "GET" || method === "POST") && url.pathname === "/api/ping") {
     return sendJson(res, { ok: true, op: "ping", data: await rpcData("ping") });
   }
@@ -269,7 +318,8 @@ async function route(req, res, url, method) {
     });
   }
   if (method === "POST" && url.pathname === "/api/vad_analyze") {
-    const body = await getJson(req);
+    assertSameOrigin(req, expectedOrigin);
+    const body = await getJson(req, expectedOrigin);
     const path = await resolveMedia(body);
     const data = await rpcData("vad_analyze", {
       path,
@@ -281,7 +331,8 @@ async function route(req, res, url, method) {
     return sendJson(res, { ok: true, op: "vad_analyze", data });
   }
   if (method === "POST" && url.pathname === "/api/export") {
-    const body = await getJson(req);
+    assertSameOrigin(req, expectedOrigin);
+    const body = await getJson(req, expectedOrigin);
     const media = await resolveMedia(body);
     const data = await rpcData("audio_analysis", {
       media,
@@ -298,7 +349,8 @@ async function route(req, res, url, method) {
     return sendJson(res, { ok: true, op: "export", data });
   }
   if (method === "POST" && url.pathname === "/api/run_pipeline") {
-    const body = await getJson(req);
+    assertSameOrigin(req, expectedOrigin);
+    const body = await getJson(req, expectedOrigin);
     // A local file must stay inside the project (same guard as /api/file).
     // A URL is fetched by the pipeline itself, which is what the product is
     // for; only the http(s) schemes survive the sidecar's own check.
@@ -340,11 +392,13 @@ async function route(req, res, url, method) {
     });
   }
   if (method === "POST" && url.pathname === "/api/segment") {
-    const body = await getJson(req);
+    assertSameOrigin(req, expectedOrigin);
+    const body = await getJson(req, expectedOrigin);
     return sendJson(res, await rpc("segment", body));
   }
   if (method === "POST" && url.pathname === "/api/cutlist_from_segments") {
-    const body = await getJson(req);
+    assertSameOrigin(req, expectedOrigin);
+    const body = await getJson(req, expectedOrigin);
     return sendJson(res, await rpc("cutlist_from_segments", body));
   }
   if (method === "GET") {

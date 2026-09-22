@@ -79,6 +79,22 @@ def _post(base, op, params):
         return json.loads(r.read())
 
 
+def _raw_post(base, op, params, headers):
+    """A POST whose headers the caller controls, so a test can pose as a browser
+    that did not originate the request — the shape of a CSRF attempt."""
+    req = urllib.request.Request(
+        base + f"/api/{op}",
+        data=json.dumps(params).encode(),
+        headers=headers,
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        return json.loads(e.read())
+
+
 def _expect_ok(base, op, params):
     resp = _post(base, op, params)
     assert resp["ok"] is True, resp
@@ -289,6 +305,83 @@ def test_api_file_rejects_a_sibling_directory(base):
     )
     assert body["ok"] is False, "a sibling directory was served"
     assert "out/web" in body["error"], body
+
+
+def test_a_cross_origin_post_is_refused(base):
+    """The CSRF primitive this test exists for: a page at `evil.example` that
+    the user has open in another tab submits a `fetch` to the local harness.
+    The browser attaches `Origin: https://evil.example` to the POST and the page
+    cannot strip it, so comparing it is the gate. Before the check existed the
+    whole pipeline was drivable this way, and binding to 127.0.0.1 did not help
+    — the browser making the request *is* on this host.
+
+    `vad_analyze` is the cheapest mutating route, so it is the probe; a route
+    that did real work would prove the same thing far more slowly."""
+    resp = _raw_post(
+        base, "vad_analyze", {"sample": True},
+        {"Content-Type": "application/json", "Origin": "https://evil.example"},
+    )
+    assert resp["ok"] is False
+    assert "cross-origin" in resp["error"], resp
+    assert "evil.example" in resp["error"], resp
+
+
+def test_a_cross_origin_referer_is_refused_when_origin_is_absent(base):
+    """A page can set `Referrer-Policy: no-referrer`, but a browser still sends
+    `Origin` on a POST — so a request with a hostile `Referer` and no `Origin`
+    is not a browser POST at all in practice. It is still refused: nothing the
+    harness serves should be reachable from another site's URL, and a client
+    that sends one of the two headers but not the other is not a case to accept
+    silently."""
+    resp = _raw_post(
+        base, "vad_analyze", {"sample": True},
+        {"Content-Type": "application/json", "Referer": "https://evil.example/page"},
+    )
+    assert resp["ok"] is False
+    assert "evil.example" in resp["error"], resp
+
+
+def test_an_own_origin_post_is_accepted(base):
+    """The flip side of the two refusals, and the reason they mean anything: a
+    request that *does* carry the harness's own origin has to work, or the gate
+    is a blanket refusal and both tests above pass against `return null`.
+
+    The origin is built from the request's own `Host`, not from the bind
+    address, because the page is whatever URL the user opened — `localhost:4242`
+    and `127.0.0.1:4242` are the same server and a same-origin fetch from either
+    has to pass."""
+    own = urllib.parse.urlparse(base).geturl().rstrip("/")
+    resp = _raw_post(
+        base, "ping", {},
+        {"Content-Type": "application/json", "Origin": own},
+    )
+    assert resp["ok"] is True, resp
+
+
+def test_a_post_without_any_origin_header_still_works(base):
+    """curl, a script and this suite send neither `Origin` nor `Referer`, and a
+    localhost bind already treats any local process as trusted; the threat the
+    gate closes is a *remote* page reaching a local service. A gate that
+    demanded an `Origin` header would break every non-browser client for no
+    security gain."""
+    resp = _raw_post(base, "ping", {}, {"Content-Type": "application/json"})
+    assert resp["ok"] is True, resp
+
+
+def test_a_json_body_sent_as_text_plain_is_refused(base):
+    """The other half of the primitive: an HTML form with
+    `enctype="text/plain"` carrying JSON needs no CORS preflight, so it sailed
+    past `getJson` straight into `JSON.parse`. A form cannot set
+    `Content-Type: application/json`, so requiring it is what closes that.
+    The `Origin` header here is the harness's own, so the content-type check is
+    the only thing this request trips — if it passes, the gate is missing."""
+    own = urllib.parse.urlparse(base).geturl().rstrip("/")
+    resp = _raw_post(
+        base, "vad_analyze", {"sample": True},
+        {"Content-Type": "text/plain", "Origin": own},
+    )
+    assert resp["ok"] is False
+    assert "application/json" in resp["error"], resp
 
 
 def test_run_pipeline_rejects_an_out_of_project_path(base):

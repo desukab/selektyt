@@ -36,9 +36,12 @@ per-clip checkpointing, a single timecode source of truth, SAR-aware
 reframing, and two purpose-built falsifiable audit tools. The serious problems
 are concentrated in three places, none of them in the algorithms:
 
-1. **The web shell has no authentication, no origin policy, and a prefix-based
-   path jail that is bypassable** (`web/server.mjs`). It accepts arbitrary
-   URLs for the pipeline to fetch and serves any file under the repo root.
+1. **The web shell used to have no authentication, no origin policy, and a
+   prefix-based path jail that was bypassable** (`web/server.mjs`). All three
+   are fixed: a foreign `Origin` is refused before a mutating route parses its
+   body, a non-JSON `Content-Type` never reaches `JSON.parse`, and the jail
+   boundary includes the separator. The residual — no token, local clients
+   trusted — is stated in row #1 and is a product-shape decision, not a defect.
 2. **Credentials are persisted into state and reachable over that
    unauthenticated channel.** `pipeline_state.json` stores the full yt-dlp
    `media_info` blob, which embeds the `Cookie` header, and `/api/file` will
@@ -147,23 +150,59 @@ threaded through the engine. This is the best-factored part of the codebase.
 This is the area that would fail an enterprise review, and it fails not
 because of a subtle bug but because several independent weaknesses combine.
 
-### There is no authentication at any layer — VERIFIED
+### There is no authentication at any layer — VERIFIED, then FIXED at the boundary that mattered
 
-`web/server.mjs:345-360` binds `SELEKYT_HOST || "127.0.0.1"` and listens with
-no bearer token, no session, no `Origin`/`Referer` check, and no CORS policy.
-Every route in the manual router (`:283` onward: `/api/run_pipeline`,
-`/api/file`, `/api/export`, `/api/segment`, `/api/cutlist_from_segments`) is
-open. The Python sidecar's own comment at `selekyt/server.py:108-121` is
-explicit that it is not an authorization boundary, which is a correct local
-design decision — but the HTTP layer in front of it makes no such
-qualification.
+`web/server.mjs` binds `SELEKYT_HOST || "127.0.0.1"` and still listens with no
+bearer token and no session — and deliberately so, because a local single-user
+tool that demands a token has to store it somewhere the page can read, which is
+not an improvement. What it lacked, and what the finding is really about, is
+**no origin policy at all**: every route in the manual router (`/api/run_pipeline`,
+`/api/export`, `/api/vad_analyze`, `/api/segment`, `/api/cutlist_from_segments`)
+accepted a POST from any origin, and the Python sidecar's own comment at
+`selekyt/server.py:108-121` is explicit that it is not an authorization
+boundary — a correct local design decision that the HTTP layer in front of it
+used to make meaningless.
 
-Because `getJson` never inspects the request `Content-Type` (VERIFIED:
-`Content-Type` appears only on *outgoing* responses), a cross-origin
-`text/plain` HTML form POST carrying valid JSON reaches `JSON.parse` with no
-CORS preflight. That is the classic JSON CSRF primitive. Any web page the
-user visits can drive the pipeline, and `127.0.0.1` binding does not stop it —
-the browser is on the same host.
+Because `getJson` never inspected the request `Content-Type` (VERIFIED at the
+time: `Content-Type` appeared only on *outgoing* responses), a cross-origin
+`text/plain` HTML form POST carrying valid JSON reached `JSON.parse` with no
+CORS preflight. That is the classic JSON CSRF primitive, and it needed no
+script and no cooperation from the user beyond loading a page. `127.0.0.1`
+binding did not stop it — the browser is on the same host.
+
+**Fixed**, in the two halves that made the primitive work (`web/server.mjs`):
+
+1. `assertSameOrigin` runs before any mutating route parses a body. A request
+   carrying an `Origin` must match the origin the page was served from, built
+   from the request's own `Host` so `localhost:4242` and `127.0.0.1:4242` both
+   pass; a request carrying only a `Referer` must match it too. The comparison
+   is `origin === expected || origin.startsWith(expected + "/")` — the same
+   boundary reasoning as `guardedPath`, for the same reason.
+2. `getJson` now requires `application/json` before it parses, which an HTML
+   form cannot send. The form-POST primitive is therefore dead regardless of
+   what a future browser does with `Origin`.
+
+Both were mutation-verified against `tests/test_web_harness.py`: disabling the
+origin check fails exactly the two cross-origin tests; disabling the
+content-type check fails exactly the `text/plain` test; a blanket refusal
+fails thirteen, including the two positive tests — so the suite pins the gate
+in both directions rather than only "a refusal happened".
+
+**The desktop shell is untouched by this and needs to be.** Its transport is
+Tauri's `invoke("selekyt_rpc")` (`apps/desktop/ui/app.mjs`), not HTTP; the
+`fetch` fallback below it is only taken in a plain browser, where the page and
+the API share one origin. So a same-origin gate on this harness constrains
+nothing the packaged app does — and a gate loose enough to admit a Tauri
+webview's own origin (`tauri://localhost`, `http://tauri.localhost`) would be
+loose enough to admit an attacker's, which is why it was not loosened that way.
+
+**The residual, stated separately rather than folded into "fixed":** a request
+with neither `Origin` nor `Referer` is accepted, and there is still no token.
+That is the deliberate boundary. The threat model closed here is a *remote*
+page reaching a local service through the user's browser; a local client is
+already inside the trust boundary a localhost bind draws. Adding an
+unforgeable local secret is a real change in product shape (multi-user or
+remote access), and is not claimed here.
 
 ### `guardedPath` is a prefix check and is bypassable — VERIFIED, then FIXED
 
@@ -741,7 +780,7 @@ means the shipped output is wrong and nothing in the system says so.
 
 | # | Severity | Area | File:line | Failure scenario |
 |---|---|---|---|---|
-| 1 | **Critical** | Security | `web/server.mjs:345-360` | No auth, no origin check, `Content-Type`-blind JSON POST. Any web page the user visits drives the pipeline via CSRF. Combined with #2/#3 this is remote credential theft from a localhost service. |
+| 1 | **Critical** | Security | `web/server.mjs` (origin + Content-Type gates) | No auth, no origin check, `Content-Type`-blind JSON POST. Any web page the user visits drives the pipeline via CSRF. Combined with #2/#3 this is remote credential theft from a localhost service. **FIXED 2026-09-22 at the boundary the attack actually used** — every mutating route now calls `assertSameOrigin` before its body is parsed: a request carrying a foreign `Origin` (or a foreign `Referer` when `Origin` is absent) is refused with the offending origin named, and `getJson` refuses any body that is not `application/json`, which kills the no-prefilter `text/plain` form primitive outright. Pinned by four tests in `tests/test_web_harness.py`: the cross-origin POST, the cross-origin-`Referer` POST, and two positive tests (own origin, and no header at all) that make a blanket refusal fail. Mutation-verified both ways. **Residual, deliberately open:** a request with neither `Origin` nor `Referer` is still accepted and there is still no token — that is curl, a script or the test suite, i.e. a process the localhost bind already trusted; an unforgeable local secret is a different product shape (multi-user / remote access). See "There is no authentication at any layer" below. |
 | 2 | **Critical** | Security | `web/server.mjs:203-209` | `guardedPath` prefix bypass. `/tmp/selektyt-backup/secrets` passes the jail. Any sibling directory whose name extends the repo name reads arbitrary files via `/api/file`. The test at `tests/test_web_harness.py:218` passes while the bypass stands. **FIXED —** the boundary is now `ROOT + sep`, and a sibling-prefix regression test (`test_a_sibling_directory_extending_the_project_name_is_rejected`) fails against the old one-liner. The `/api/file` half was a separate defect with a separate boundary, fixed separately below. |
 | 3 | **Critical** | Security | `selekyt/pipeline.py:206` → `web/server.mjs:317` | yt-dlp `media_info` (embedding the `Cookie` header) is persisted to `pipeline_state.json` and served unauthenticated by `/api/file`. `cookies.py` goes out of its way never to print a cookie value; this path prints all of them. **FIXED on both sides —** `media_info` now passes through `_scrub_credentials` before it is ever written, dropping `http_headers`/`cookies`/`_cookies`/`cookie_manager`/`cookiejar`/`cookies_str` at every depth, and `/api/file`'s boundary is now `OUT_WEB + sep` so the state file is not inside it either. Pinned by `tests/test_pipeline_hardening.py::test_scrub_credentials_removes_every_credential_field`. This was a latent defect, never a demonstrated leak — no URL source run on this host was authenticated. |
 | 4 | **High** | Security | `web/server.mjs:288-290`, `selekyt/server.py` | SSRF. `http://169.254.169.254/...` is a valid `source`, fetched from the server's network. No host/port allowlist anywhere. **Partly fixed 2026-09-22 —** `_pipeline_source` now refuses the metadata endpoints (IPv4 `169.254.0.0/16`, IPv6 `fe80::/10`, `fd00:ec2::254`, `metadata.google.internal`, `metadata.azure.com`) before the downloader is handed anything, on the only URL-fetch path the web shell has. **Still open:** this is a boundary check on the URL as written, not egress filtering — DNS rebinding to a link-local address, and any host on any port, are both still reachable. See "SSRF is reachable" below for the full limit. |
@@ -762,8 +801,12 @@ means the shipped output is wrong and nothing in the system says so.
 ## Top 5 findings
 
 1. **No authentication, no origin policy, and a Content-Type-blind JSON
-   parser on a localhost HTTP service** — `web/server.mjs:345-360`, routes at
-   `:283` onward. Any web page can drive the pipeline via CSRF.
+   parser on a localhost HTTP service** — the routes at `:283` onward. Any web
+   page can drive the pipeline via CSRF. **Fixed:** a POST with a foreign
+   `Origin` is refused before its body is parsed, a body that is not
+   `application/json` never reaches `JSON.parse`, and four tests in
+   `tests/test_web_harness.py` pin both gates in both directions. The residual
+   is stated in row #1 above: no token, and no-header requests still accepted.
 2. **`guardedPath` is a `startsWith` prefix check and is bypassable** —
    `web/server.mjs:203-209`. `/repo-backup/secrets` escapes the jail; the
    existing test passed anyway. **Fixed:** the boundary now includes the
@@ -811,16 +854,24 @@ angles, and fixing any one of them alone leaves the chain intact. The
 `127.0.0.1` bind is not a control, because the attacker's code runs in the
 user's browser on that same host.
 
-**Two of the three links are cut as of 2026-09-22, and the chain now depends
-on the first.** The prefix bypass is fixed at `ROOT + sep` / `OUT_WEB + sep`,
-and the cookie material is never written to the state file in the first place,
-so there is no `pipeline_state.json` to serve; the metadata endpoints are
-refused at the URL boundary. What remains is the control plane itself: no
-authentication, no origin check, no Content-Type gate (row #1, still open).
-A crafted page can still drive the pipeline — it just can no longer reach
-credentials or the metadata endpoint while it does. That is a strictly weaker
-attack than the one described above, but it is still an attack, and row #1 is
-what closes it.
+**All three links are cut as of 2026-09-22.** The prefix bypass is fixed at
+`ROOT + sep` / `OUT_WEB + sep`, the cookie material is never written to the
+state file in the first place, so there is no `pipeline_state.json` to serve,
+and the metadata endpoints are refused at the URL boundary. The control plane
+itself is now gated too: a POST that arrives with a foreign `Origin` or
+`Referer` is refused before any route runs, and a body that is not
+`application/json` never reaches `JSON.parse` (row #1, closed).
+
+What the chain relied on was that a page the user merely *visits* could drive
+the pipeline. It no longer can: the browser attaches `Origin` to a POST and a
+page cannot forge it, so the request from `evil.example` is rejected with its
+own origin named in the error. The residual, stated plainly, is that a request
+carrying **neither** `Origin` nor `Referer` is still accepted — that is curl, a
+script or the test suite, i.e. a local process the localhost bind already
+treated as trusted. Closing that too would mean a bearer token or a
+same-process secret, which is a different product shape (multi-user, remote
+access) than a local single-user tool; it is recorded below as the honest
+boundary of this fix, not as a gap I have closed.
 
 ## The thing that would embarrass the company in an enterprise review
 

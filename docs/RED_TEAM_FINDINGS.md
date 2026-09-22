@@ -555,6 +555,39 @@ the happy path.
   credential-bearing fields from `media_info` before `selekyt/pipeline.py:206`
   persists it.
 
+**Resolved, on both sides named above.** `/api/file` now resolves through
+`guardedArtifact`, whose boundary is `OUT_WEB + sep`, so `pipeline_state.json`
+is not inside it; and `media_info` passes through `_scrub_credentials` before it
+is ever written, dropping `http_headers`/`cookies`/`_cookies`/`cookie_manager`/
+`cookiejar`/`cookies_str` at every depth. The latency claim in this finding
+("the mechanism is live") was correct at the time and is the reason the fix was
+applied to the write path as well as the read path — confining the read alone
+would have left the blob on disk for any other consumer. Pinned by
+`tests/test_pipeline_hardening.py::test_scrub_credentials_removes_every_credential_field`.
+
+### R18. Any web page can drive the local pipeline — the CSRF chain is now cut at all three links
+
+- **Claim:** `docs/TECHNICAL_AUDIT.md` defect #1 — the web shell has "no
+  authentication, no origin policy, and a Content-Type-blind JSON POST", which
+  combined with the prefix bypass (#2) and the credential blob (#3) into a
+  chain a remote page could walk to the user's cookies.
+- **What I verified.** I booted the shell and reproduced the primitive: a
+  `text/plain` POST carrying JSON reached `JSON.parse` with no preflight, and
+  no `Origin` or `Referer` was inspected anywhere in `route`. The chain needed
+  all three links; the last one standing was the control plane itself.
+- **What is true now.** `assertSameOrigin` runs before any mutating route
+  parses a body and refuses a foreign `Origin` (or, in its absence, a foreign
+  `Referer`); `getJson` requires `application/json`, which an HTML form cannot
+  send. I probed both as an attacker would and both are refused with the
+  offending origin named.
+- **The honest residual.** A request carrying *neither* header is still
+  accepted, and there is still no token. That is curl or a local script, and
+  the localhost bind already trusts local processes; the threat this finding
+  described was a *remote* page using the user's browser. Closing the local
+  case means an unforgeable local secret, which is a different product. Stated
+  rather than implied, in `docs/TECHNICAL_AUDIT.md` row #1 and the "no
+  authentication" section.
+
 ---
 
 ## CLAIMS THAT SURVIVED THE ATTACK — these are worth keeping
