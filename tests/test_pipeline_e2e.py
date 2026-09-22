@@ -248,7 +248,6 @@ def test_run_produces_the_full_project_tree(patched_pipeline, tmp_path, media):
     assert report["selected_count"] >= 1
     assert report["audio"] == {"enabled": False}, "audio stage is explicitly off"
     assert "fabricated" in report["policy"]
-
     # The corpus layer used to be reachable only by importing engine.corpus
     # directly; the report must now name it, and the path it names must exist.
     corpus = json.loads((project / "editorial_corpus.json").read_text())
@@ -285,6 +284,34 @@ def test_run_produces_the_full_project_tree(patched_pipeline, tmp_path, media):
         k: v for k, v in
         json.loads((project / "transcript.json").read_text())["asr"].items()
         if k in report["transcription"]}
+
+    # The deliverable has to state what made it: an editor handed this tree
+    # cannot reproduce it without the build and the parameters. These fields
+    # have no other home in the report, and engine/report.py shipped for
+    # several commits claiming to produce them while nothing called it.
+    state = json.loads((project / "pipeline_state.json").read_text())
+    prov = report["provenance"]
+    assert prov["source_path"] == str(media)
+    assert prov["source_fingerprint"] == state["fingerprint"]
+    assert prov["started_at"] and prov["finished_at"]
+    assert prov["duration_seconds"] > 0.0
+    assert prov["platform"] and prov["python"]
+    # The report names the build that made the tree. In an exported tarball with
+    # no .git the field is honestly empty; in a checkout it has to be the SHA.
+    expected_sha = subprocess.run(
+        ["git", "rev-parse", "--short", "HEAD"],
+        cwd=_REPO, capture_output=True, text=True,
+    ).stdout.strip()
+    assert prov["git_sha"] == expected_sha, \
+        f"report git_sha {prov['git_sha']!r} != {expected_sha!r}"
+    assert prov["cache_status"] == "transcript-fresh"
+    assert report["config"]["model"] == "small"
+    assert report["config"]["limit"] == 2
+    assert report["config"]["audio_analysis"] is False
+    assert report["config"]["cookies"] is None, "a credentials path is never echoed"
+    # The model and the language stay where the report already had them: a
+    # second copy under provenance is how the two drift apart.
+    assert prov["whisper_model"] == "" and prov["whisper_language"] == ""
 
     # The UI's contract with this tree: the formatters, the SRT grammar, the
     # selections/edit-plan arithmetic and the summary fields, all checked

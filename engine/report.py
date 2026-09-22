@@ -1,8 +1,17 @@
-"""Comprehensive pipeline report generation (report.json + terminal summary).
+"""The provenance and config spine of the pipeline's ``report.json``.
 
-Consumes metadata from every pipeline stage and produces a structured,
-B2B-auditable report with provenance (source/audio fingerprints, model
-versions, VAD backend, config, git SHA, timestamps, cache status).
+``run()`` in ``selekyt/pipeline.py`` assembles ``report.json`` itself, because
+its consumers (the desktop app's sidecar, ``tools/nle_check.py``, the editorial
+audit) read its keys at the top level. This module carries the run-level facts
+those sections do not hold and that the deliverable otherwise cannot state
+about itself: which build made it (git SHA, software version, platform,
+interpreter), when, how long it took, and which parameters were resolved.
+
+The remaining sections this builder can hold — input, analysis, candidates,
+editing, output, qa — are deliberately *not* populated by the pipeline: every
+one of them already has one authoritative home in the report, and a second copy
+of the same fact under a different key is how the two drift. They stay available
+because the report's own tests exercise the builder end to end.
 """
 from __future__ import annotations
 
@@ -111,6 +120,15 @@ class ReportBuilder:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self.sections)
+
+    def provenance_dict(self) -> dict[str, Any]:
+        """The provenance section alone, for merging into a report the caller
+        has already assembled.
+
+        ``report.json`` carries its content sections at the top level its
+        readers depend on; only the provenance comes from here, so this is the
+        one key the pipeline takes rather than the whole structure."""
+        return asdict(self.sections.provenance)
 
     @staticmethod
     def _git_sha() -> str:

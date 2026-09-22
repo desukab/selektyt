@@ -21,6 +21,7 @@ from engine.corpus import build_corpus
 from engine.coverage import check as check_coverage
 from engine.edit_plan import retention_intervals, pacing_report, aggregate_pacing_report
 from engine.qa import write_report
+from engine.report import ReportBuilder
 from engine.render import render_clip
 from engine.timeline_build import timeline_for_candidate
 from engine.nle_export import export as nle_export, validate_edl, validate_fcpxml
@@ -387,7 +388,11 @@ def run(
     fingerprint = _fingerprint(media, source, model, language)
     transcript_path = project / "transcript.json"
     cached = _load_transcript(transcript_path) if state.get("fingerprint") == fingerprint else None
-    if cached and not language:
+    # The cache is only actually reused when no explicit language was asked
+    # for: a cached transcript plus `--language x` falls through and
+    # re-transcribes, so `cached` alone is not the reuse signal.
+    transcript_reused = bool(cached and not language)
+    if transcript_reused:
         transcript, detected = cached
         # Provenance is read back rather than carried in a local: this branch
         # skips transcription entirely, and the report still has to name which
@@ -837,6 +842,48 @@ def run(
     # or an explicit `enabled: False` so a B2B consumer can distinguish
     # "not run" from "failed silently".
     report["audio"] = audio_summary if audio_summary else {"enabled": False}
+    # What made this deliverable, and on what: a clip handed to a reviewer is
+    # reproducible only if the report says which build and which parameters
+    # produced it. Every value below is read from the place the pipeline
+    # already computed it rather than recomputed here, so each fact keeps the
+    # one home it had.
+    report_builder = ReportBuilder()
+    report_builder.set_provenance(
+        source_path=str(media),
+        source_fingerprint=fingerprint,
+        # The transcript is what a resumed run reuses, so the cache state is a
+        # property of it rather than of the render.
+        cache_status="transcript-reused" if transcript_reused else "transcript-fresh",
+    )
+    # Deliberately not populated: the model, the language, the ASR engine and
+    # the VAD backend all already have one home in this report (``transcription``,
+    # ``language``, ``audio``), and a second copy of a fact under a second key is
+    # how the two drift apart. Neither the ASR nor the VAD reports a version
+    # string either, so the version fields stay empty rather than carrying a
+    # model or engine name that would read as one.
+    report_builder.set_config({
+        "model": model,
+        "language": language,
+        "limit": limit,
+        "chunk_minutes": chunk_minutes,
+        "beam_size": beam_size,
+        "cpu_threads": cpu_threads,
+        "audio_analysis": audio_analysis,
+        "vad_backend": vad_backend,
+        "silence_threshold": silence_threshold,
+        "silence_padding": silence_padding,
+        "min_speech_ms": min_speech_ms,
+        "min_silence_ms": min_silence_ms,
+        "keep_pauses": keep_pauses,
+        "remove_filler": remove_filler,
+        "export_fcpxml": export_fcpxml,
+        "skip_coverage_check": skip_coverage_check,
+        "caption_style": caption_style,
+        "ollama_url": ollama_url,
+        "cookies": "<set>" if cookies else None,
+    })
+    report["provenance"] = report_builder.finalize().provenance_dict()
+    report["config"] = report_builder.to_dict()["config"]
     (project / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "render_selection_digest": sel_digest, "selected_count": len(selected), "qa": str(qa_path), "complete": True})
     _save_state(state_path, state)
