@@ -480,3 +480,53 @@ def test_the_independent_nle_audit_passes_a_tree_the_pipeline_just_wrote(
     parsed = [d for n, _o, d in findings if n.endswith("edl independent parse")]
     assert parsed, "no EDL was parsed by an independent reader"
     assert "pycmx" not in parsed[0], parsed[0]
+
+
+def _editorial_audit(project: Path):
+    """``tools/editorial_audit.py`` over a tree this pipeline just wrote."""
+    import importlib
+    import sys
+
+    tools = _REPO / "tools"
+    sys.path.insert(0, str(tools))
+    try:
+        return importlib.import_module("editorial_audit").audit(project)
+    finally:
+        sys.path.remove(str(tools))
+        sys.modules.pop("editorial_audit", None)
+
+
+def test_the_editorial_audit_passes_a_tree_the_pipeline_just_wrote(
+        patched_pipeline, tmp_path, media):
+    """``tools/editorial_audit.py`` scores the shipped clips, and like the NLE
+    audit above it was only ever run by hand or by
+    ``tools/corpus_run.py``. Scheduling it here pins the *editorial engine*
+    rather than committed artifacts: the selections and their retention
+    intervals in this tree did not exist until the selection stage scored and
+    chose them, so a change to scoring, interval construction or rendering that
+    ships a clip ending mid-sentence, shaving a word or carrying a caption the
+    transcript does not contain fails here.
+
+    What this cannot verify is what no test can: that a clip is worth watching.
+    The audit measures falsifiable properties of the render, not editorial
+    judgement, and its silence-share bar deliberately fails a window the
+    measurement says is not dead air, because that still needs a person to
+    listen.
+    """
+    project = patched_pipeline.run(
+        "https://example.com/v", tmp_path, model="small", limit=2,
+    )
+    ok, report = _editorial_audit(project)
+
+    findings = report.get("findings") or []
+    failures = [f"{name}: {detail}" for name, cok, detail in findings if not cok]
+    assert findings, "the audit produced no findings for a tree with two selected clips"
+    assert not failures, (
+        "the editorial audit failed clips this pipeline just selected and "
+        "rendered:\n" + "\n".join(failures))
+    assert ok, "the audit reported a hard failure but no failing finding"
+
+    # The clip checks are the ones that pin the engine; confirm they ran rather
+    # than the audit accepting the tree on a technicality.
+    clips = [name for name, _o, _d in findings if name.startswith("clip")]
+    assert len(clips) == 2, f"expected the two selected clips to be audited, got {clips}"

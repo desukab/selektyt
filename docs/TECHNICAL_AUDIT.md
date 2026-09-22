@@ -52,7 +52,8 @@ are concentrated in three places, none of them in the algorithms:
    present, or that the caption style the user asked for is the one burned
    into the pixels. The repo already contains tools that *would* check these
    — `tools/nle_check.py`, `tools/editorial_audit.py` — and never wires them
-   in.
+   in. **Fixed 2026-09-22:** both are scheduled in the suite, each in two
+   legs; see "CI does not run the tools".
 
 The single most severe risk and the most embarrassing item are both in area
 2, and are stated at the end of this document.
@@ -488,7 +489,7 @@ written against the code as it stood; what each part does now:
   decodes the rendered MP4 frame by frame against an uncaptioned control of
   the same source — a test-time comparison, not a runtime one.
 
-### The falsifiable audit tools are built and never wired in — VERIFIED
+### The falsifiable audit tools are built and never wired in — VERIFIED, then FIXED
 
 `tools/nle_check.py` and `tools/editorial_audit.py` are the best code in the
 repository for catching the classes of bug that survive the test suite.
@@ -505,12 +506,17 @@ said `pycmx` was not installed and not a dependency, reporting
 `ModuleNotFoundError`. That is no longer true and was wrong when the section
 below on CI was written — `pycmx>=1.5` is in the `nle`, `dev` and `all` extras
 and 1.5.1 is installed here, so the independent-parse check is *able* to run.
-The finding that survives is the narrower one: the tool that would catch this
-class of bug is still not invoked by anything automated, so in practice the
-independent parse only ever runs when a human asks for it. Meanwhile the
-pipeline validates its EDL with `engine.nle_export`'s own
-validator (`pipeline.py:442-447`), which is precisely the self-validation
-`nle_check.py` was written to rule out.
+The finding that survived until 2026-09-22 was the narrower one: neither tool
+was invoked by anything automated, so in practice the independent parse only
+ever ran when a human asked for it, while the pipeline validated its EDL with
+`engine.nle_export`'s own validator (`pipeline.py:442-447`) — precisely the
+self-validation `nle_check.py` was written to rule out.
+
+**FIXED 2026-09-22: both tools are scheduled in the suite, each in two legs.**
+See "CI does not run the tools" below for what each leg covers and for the
+mutation record. Wiring the editorial audit is also what surfaced a false
+positive inside it, which is the more interesting result: running a tool over
+real output is a stricter test of the tool than running it over fixtures.
 
 ### Concurrency: there is none, and the design assumes it — VERIFIED
 
@@ -970,15 +976,66 @@ emitted span or clip extent also fail this test, but they fail six other tests
 too because the pipeline's own validation is strict — recorded honestly, since
 "isolation" is not the same claim as "the test detects it".
 
-**Still open:** `tools/editorial_audit.py` is still not scheduled, and the
-relink half of `tools/nle_check.py` still cannot run in CI. Of the seven
-committed trees, five reference their source media by a path that no longer
-exists anywhere, and the other two reference absolute paths that resolve only
-on the machine that generated them — so those findings report NOT RUN here and
-NOT RUN on a CI runner, and the audit's own 36 deferred findings on this corpus
-are the honest count. Verifying relink means re-running the corpus with
-`--keep-media` (the media is not redistributable with the repo) or opening the
-formats in a real NLE, which is B1 below.
+**`tools/editorial_audit.py` is scheduled 2026-09-22, in the same two legs.**
+The corpus leg pins the audit's recorded verdict on the committed trees
+(`tests/test_editorial_audit.py::test_the_audit_verdict_on_the_committed_corpus_is_the_recorded_baseline`):
+five projects clean, four failing on "no selections.json" (transcription
+returned no segments, so selection never ran) and two failing on silence share.
+Those last two are deliberate hard failures — `word_free_finding` records that
+REVIEW is not an acquittal, and the silence-share bar fails a window the
+measurement says is empty of speech without being able to say what is in it, so
+a person still has to listen. The e2e leg pins the engine
+(`tests/test_pipeline_e2e.py::test_the_editorial_audit_passes_a_tree_the_pipeline_just_wrote`):
+run the real pipeline, then audit the tree it just wrote, so every clip the
+selection chose and the render concatenated is checked by something that did
+not help produce it.
+
+**Scheduling the audit is also what fixed a false positive in it.** The
+mid-sentence check derived sentence membership by splitting the candidate's own
+`text` on terminal punctuation, but that text is `" ".join(segment.text)`
+(`engine/editorial.py:210`) and transcript segments often carry no terminal
+punctuation — on pentagon-esper-briefing clip 02 two segments six seconds apart
+join into one "sentence", so a clean cut between utterances read as a
+mid-sentence split. That produced 14 false findings across 5 of the 7 selected
+projects. Fixing only the sentence source would have made things worse:
+under a segment-based definition royal-society-cloke, currently clean, newly
+failed, because every remaining finding was an internal pause removal where the
+words on either side are immediately transcript-adjacent and no word is lost.
+The check now fires only when a sentence *loses a word* to a boundary, which
+is the defect the finding was naming.
+
+**The mutation record, stated plainly.** Five unit tests pin the word-loss
+criterion, and a mutation that makes `kept()` always true fails exactly those
+five. A mutation that ignores the utterance source fails exactly one —
+`test_a_whole_utterance_dropped_between_two_kept_ones_is_not_a_split`. A
+mutation that fires on any same-sentence boundary fails exactly one. The
+sentence source is pinned by a corpus-wide join test: every one of the 1755
+candidate words lands inside exactly one transcript segment, including the 155
+that start precisely at a segment boundary, which is the off-by-one case.
+
+**What no test can reach, and why.** The utterance source changes no verdict
+the corpus or the e2e leg can produce, because a selection's `words` list is
+already the kept set — 1754 of 1755 words lie wholly inside a retention
+interval, measured and pinned by
+`test_the_corpus_candidate_words_are_already_the_kept_set`. An excised
+utterance leaves no trace in that list, so the two words a boundary separates
+are kept and adjacent, which is the pause case. The `kept()` machinery is
+load-bearing for the synthetic unit tests and dead on real pipeline data, and
+mutation K above proves the division: it moves the five unit tests and leaves
+both scheduled legs green. Consequently a clip that *ends* mid-utterance is
+invisible to this check on either leg — its word list ends at the last kept
+word, so there is nothing on the other side of the boundary. The corpus has
+one such clip, and no sentence source fixes it; that is a real gap in what the
+check covers, not a gap in how it is tested.
+
+**Still open:** the relink half of `tools/nle_check.py` still cannot run in CI.
+Of the seven committed trees, five reference their source media by a path that
+no longer exists anywhere, and the other two reference absolute paths that
+resolve only on the machine that generated them — so those findings report NOT
+RUN here and NOT RUN on a CI runner, and the audit's own 36 deferred findings
+on this corpus are the honest count. Verifying relink means re-running the
+corpus with `--keep-media` (the media is not redistributable with the repo) or
+opening the formats in a real NLE, which is B1 below.
 
 ---
 
@@ -1052,9 +1109,10 @@ means the shipped output is wrong and nothing in the system says so.
    failure) and, separately, over a tree the pipeline wrote this run — the
    second is the one that pins the emitter, and is the only test in the repo
    that catches an emitter bumping the FCPXML version past its own
-   self-consistent validation. What remains open is `tools/editorial_audit.py`,
-   still unscheduled, and the relink checks, which need media the repo does not
-   ship.
+   self-consistent validation. What remains open is the relink checks, which
+   need media the repo does not ship, and one class of editorial defect the
+   scheduled audit cannot see — a clip that ends mid-utterance, whose word
+   list ends at the last kept word. Both are stated in that section.
 
 ## The single most severe risk
 
