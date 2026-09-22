@@ -885,6 +885,11 @@ def run(
     report["provenance"] = report_builder.finalize().provenance_dict()
     report["config"] = report_builder.to_dict()["config"]
     (project / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "render_selection_digest": sel_digest, "selected_count": len(selected), "qa": str(qa_path), "complete": True})
+    # No "complete" flag is written here. Nothing in the repo, the web shell or
+    # the tests ever reads one: resume keys off ``renders`` and the caller learns
+    # the run finished from this function returning. A write-only flag is worse
+    # than no signal, because a future reader of pipeline_state.json would take
+    # "complete" as a guarantee that a later, failing step had succeeded.
+    state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "render_selection_digest": sel_digest, "selected_count": len(selected), "qa": str(qa_path)})
     _save_state(state_path, state)
     return project

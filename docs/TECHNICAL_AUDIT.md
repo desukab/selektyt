@@ -579,10 +579,15 @@ question is which of those tests would still pass if the output were wrong.
 - **Four tests assert a literal constant**: `tests/test_content_pack.py:70-72`,
   `tests/test_project_lifecycle.py:275`, `tests/test_unicode_pipeline.py:171`,
   `tests/test_pipeline_e2e.py:161` all assert `pack["source_based"] is True`.
-- **`selekyt/pipeline.py:502`** sets `state["complete"] = True` and nothing in
-  the codebase ever reads it. The resume logic keys off `renders`, not
-  `complete`. A test asserting `state["complete"]` is asserting a write, not
-  a fact.
+- **`selekyt/pipeline.py:502`** (now `:888`) set `state["complete"] = True`
+  and nothing in the codebase ever read it. The resume logic keyed off
+  `renders`, not `complete`. A test asserting `state["complete"]` would have
+  been asserting a write, not a fact. **RESOLVED 2026-09-22:** the write is
+  gone, replaced by a comment at the call site explaining why no such flag is
+  written — a write-only flag invites a future reader of
+  `pipeline_state.json` to treat it as a guarantee that a later, failing step
+  succeeded. Confirmed by grep across the repo, the web shell and the tests
+  before deleting: no reader existed, and no test asserted the field.
 
 ### The repo's own warning, and the tests that answer it
 
@@ -640,7 +645,7 @@ means the shipped output is wrong and nothing in the system says so.
 | 11 | **Medium** | Test quality | `tests/test_render.py:170-176` et al. | The burned-captions test cannot detect a missing caption track; four tests assert a literal `True` constant; `test_audio_analysis.py:133-142` does not test what its name claims; `test_editorial_rank.py:51` disables its own assertion via `or True`. **Mostly resolved 2026-09-22 —** the burned-captions half is closed by a pixel-decoding test; `test_editorial_rank.py` now asserts the retained clips' sorted spans do not overlap instead of `... or True`; `test_reproducible_segmentation_across_runs` now re-runs at the same threshold and compares the persisted regions, and proves the threshold reaches the segmenter (0.3 vs 0.5 straddle the boundary where this fixture's segmentation actually moves; 0.5 vs 0.9 do not, because the fixture's bursts saturate the score at 1.0). Both replacements were mutation-verified. Remaining by deliberate decision: the four `is True` constants (see §"Three more near-vacuous assertions, left in place"). |
 | 12 | **Medium** | Scalability | `selekyt/server.py:476-498`, `web/server.mjs:93-148` | One serial sidecar, FIFO `pending[]` with no request id, no timeout. One slow pipeline blocks `/api/ping`; one crash rejects every queued request; a `stdin.write` failure leaves a promise unresolved forever. |
 | 13 | **Medium** | Scalability | `web/server.mjs:297`, `pipeline_state.json` | No project ID, no per-tenant isolation, hardcoded output directory. Two concurrent web runs clobber one state file. Multi-tenancy is a correctness bug, not a scaling task. |
-| 14 | **Low** | Reliability | `selekyt/pipeline.py:502` | `state["complete"] = True` is written and never read; resume keys off `renders`. Dead state. |
+| 14 | **Low** | Reliability | `selekyt/pipeline.py:502` | `state["complete"] = True` is written and never read; resume keys off `renders`. Dead state. **FIXED 2026-09-22 —** the write is removed (the line is now `:888`, which also records why no completion flag exists). No reader existed anywhere to break. |
 | 15 | **Low** | Scalability | `SileroVADBackend.analyze` (always `NotImplementedError`), `EnergyVAD._read_mono` (full WAV in memory), `make_thoughts` quadratic pre-cap | The documented fallback chain has a leg that cannot fire; one VAD reads a whole file while another in the same package already windows it; the thought cap bounds output, not cost. |
 
 ---
