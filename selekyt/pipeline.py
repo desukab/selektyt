@@ -753,13 +753,20 @@ def run(
             state["renders"] = renders
             _save_state(state_path, state)
         # The editable interchange for this clip. The timeline is built from
-        # the same retention_intervals the render just concatenated and stamped
-        # on the same frame grid, so an NLE relinking these clips gets the cut
-        # that was shipped. tools/nle_check.py is the check that verifies this
-        # agreement to within RENDER_FRAME_TOLERANCE against the rendered
-        # files; it is not invoked here — run it over the project directory, or
-        # tools/corpus_run.py does. The independent EDL parse below is the half
-        # of that audit that needs no media, so it runs on every export.
+        # the same retention_intervals the render just concatenated, so an NLE
+        # relinking these clips gets the cut that was shipped — but note that
+        # this agreement is measured in two legs, not one direct comparison:
+        # validate_edl/validate_fcpxml below check the timeline against the
+        # plan on the frame grid it was written on, and write_report later
+        # probes the rendered MP4s and compares their durations against the
+        # same plan's edited_duration at 1%. The two legs meet at the plan, so
+        # a render that dropped an interval is caught — outside the sub-1%
+        # slop a container muxer can introduce, which is what
+        # tools/nle_check.py's direct render-vs-timeline comparison is for at
+        # its two-frame tolerance. That tool is not invoked here; run it over
+        # the project directory, or tools/corpus_run.py does. The independent
+        # EDL parse below is the half of that audit that needs no media, so it
+        # runs on every export.
         tl = timeline_for_candidate(media, c, fps=source_fps, duration=source_duration)
         exported = nle_export(tl, project / "timeline", stem=f"{idx:02d}")
         # CMX 3600 declares no frame rate, so the list is validated on the grid

@@ -355,22 +355,35 @@ on resume (the cache hits, the timeline re-exports), so it is not a
 data-loss bug. It is a *reporting* bug: the run dies having produced a
 finished, payable deliverable, and the exit code says failure.
 
-### The export-vs-render comment overstates a guarantee — INSPECTED
+### The export-vs-render comment overstates a guarantee — INSPECTED, then measured in two legs
 
-`:433-436` reads:
+The comment at the export site reads that the timeline is built from the same
+retention_intervals the render concatenated, so its duration is the rendered
+file's duration. That was an assumption, not a check: nothing at the export
+site measured the rendered MP4. **The render is measured now**, so the
+finding's sharper form — "the rendered MP4's own duration is never measured
+anywhere in the pipeline" — is no longer true, and the comment has been
+rewritten to say what is actually verified rather than what was assumed.
 
-> The timeline is built from the same retention_intervals the render just
-> concatenated, so its duration is the rendered file's duration
+The agreement is checked in **two legs that meet at the edit plan**, not one
+direct comparison:
 
-This is an assumption, not a check. `:384` probes the source's frame rate and
-nothing else; the rendered MP4's own duration is never measured anywhere in
-the pipeline. The concat of N intervals plus per-interval `-t` clamping plus
-container muxer slop means the shipped file can differ from the timeline by a
-frame or two — which is exactly why `tools/nle_check.py:52-63` documents a
-measured worst case of 0.69 frames (pentagon-esper-briefing clip 04, 28.762 s
-declared against 28.785 s rendered) and carries a two-frame tolerance. The
-finding stands, but it is a *post hoc* audit: it lives in `tools/nle_check.py`,
-not in the pipeline, and it is not run in CI (`docs/METRICS.md` A4.1).
+1. `validate_edl` / `validate_fcpxml` (and, since 2026-09-22, the independent
+   `pycmx` parse) check the *timeline* against the plan on the frame grid it
+   was written on.
+2. `write_report` probes the *rendered MP4s* and compares their durations
+   against the same plan's `edited_duration` at 1% — roughly seven times the
+   worst drift measured across the corpus (0.025 s in 17.08 s).
+
+A render that silently dropped an interval is off by a whole clip and lands
+far outside 1%, so the failure this check exists for is caught. What is still
+not measured directly is sub-1% slop: container muxer clocking plus per-
+interval `-t` clamping can move the shipped file a frame or two from the
+timeline, which is exactly why `tools/nle_check.py:52-63` documents a measured
+worst case of 0.69 frames (pentagon-esper-briefing clip 04, 28.762 s declared
+against 28.785 s rendered) and carries a two-frame tolerance. That direct
+comparison lives in the tool, not the pipeline, and the tool is still not
+scheduled — the open part of top-5 finding #5.
 
 ### QA can pass while the output is wrong — VERIFIED, then partly RESOLVED
 
@@ -695,7 +708,7 @@ means the shipped output is wrong and nothing in the system says so.
 | 7 | **High** | Reliability | `engine/qa.py:19-43`, `:138-209` | QA never checks aspect ratio precisely, duration vs edit plan, or caption presence; `black_frame_pct`/`visual_diversity_score` swallow exceptions and report clean. **Falsifies QA.** **Partly resolved 2026-09-22 —** the aspect ratio *is* checked precisely now (display aspect from SAR, 1% tolerance), the container duration is compared against the edit plan's per-clip `edited_duration` at a 1% tolerance, and the two advisory metrics return `None` on any failure to measure instead of a clean-looking `0.0`/`1.0`. Still open: **caption presence** — no cheap exact signal exists for whether the burn happened, and a sampled-frame heuristic would fail false on real corpus clips, so that verification lives in `tests/test_render.py::test_the_burned_captions_are_in_the_pixels` rather than in runtime QA. |
 | 8 | **High** | Scalability | no cleanup anywhere; `providers/atomic.py:24-34` | ~900 MB retained per project, 92% intermediates, 13 GB free, no GC. At 100× the run dies in `OSError` mid-write after the checkpoint. The fixed `.tmp` name also loses data under concurrent writes to one state file. |
 | 9 | **Medium** | Architecture | `engine/fcpxml.py` vs `engine/nle_export.py`; `selekyt/server.py` (`op_render_fcpxml`) vs `selekyt/pipeline.py` | Two live FCPXML emitters with divergent error policy (raise vs silent fallback) behind two entry points. The web preview and the shipped file can disagree. **The policy half is closed 2026-09-22 —** both `_to_file_uri` functions now raise on an unresolvable path with the path named (the "silently falls back" description was stale), and the alignment is pinned by one test asserting the raise on both emitters. What remains is the maintenance cost the finding was really about: two deliberately separate emitters speaking different vocabularies, a duplicated `Track` dataclass, and the possibility of drift in what the alignment test does not cover. Merging them would rewrite a working export for no user-visible gain, so it is recorded as accepted, not fixed. |
-| 10 | **Medium** | Reliability | `selekyt/pipeline.py:433-452` | Export validation runs after renders are checkpointed, so a bad timeline kills a run that has already produced deliverables. Recovers on resume; reports failure. Also, `:433-436` claims timeline duration == render duration but never measures the render. |
+| 10 | **Medium** | Reliability | `selekyt/pipeline.py` export block | Export validation runs after renders are checkpointed, so a bad timeline kills a run that has already produced deliverables. Recovers on resume; reports failure. Also, the export comment claimed timeline duration == render duration without ever measuring the render. **The second half is resolved 2026-09-22 —** the rendered MP4s *are* measured now (`write_report` probes each one against the plan's `edited_duration` at 1%), and the comment now says what is verified instead of assuming it. The agreement is checked in two legs that meet at the edit plan, not one direct comparison; sub-frame slop between the timeline and the render is still only measured by `tools/nle_check.py`, which remains unscheduled. **The first half is still open by design** — running the media-backed cross-check before the checkpoint would mean discarding payable deliverables on a failure, so the ordering is deliberate and the run recovers on resume. |
 | 11 | **Medium** | Test quality | `tests/test_render.py:170-176` et al. | The burned-captions test cannot detect a missing caption track; four tests assert a literal `True` constant; `test_audio_analysis.py:133-142` does not test what its name claims; `test_editorial_rank.py:51` disables its own assertion via `or True`. **Mostly resolved 2026-09-22 —** the burned-captions half is closed by a pixel-decoding test; `test_editorial_rank.py` now asserts the retained clips' sorted spans do not overlap instead of `... or True`; `test_reproducible_segmentation_across_runs` now re-runs at the same threshold and compares the persisted regions, and proves the threshold reaches the segmenter (0.3 vs 0.5 straddle the boundary where this fixture's segmentation actually moves; 0.5 vs 0.9 do not, because the fixture's bursts saturate the score at 1.0). Both replacements were mutation-verified. Remaining by deliberate decision: the four `is True` constants (see §"Three more near-vacuous assertions, left in place"). |
 | 12 | **Medium** | Scalability | `selekyt/server.py:476-498`, `web/server.mjs:93-148` | One serial sidecar, FIFO `pending[]` with no request id, no timeout. One slow pipeline blocks `/api/ping`; one crash rejects every queued request; a `stdin.write` failure leaves a promise unresolved forever. |
 | 13 | **Medium** | Scalability | `web/server.mjs:297`, `pipeline_state.json` | No project ID, no per-tenant isolation, hardcoded output directory. Two concurrent web runs clobber one state file. Multi-tenancy is a correctness bug, not a scaling task. |
