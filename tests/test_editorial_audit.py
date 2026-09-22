@@ -9,16 +9,25 @@ fix for that, and they pin the semantics rather than the implementation, so a
 check that drifts from what it claims to measure has to delete a stated
 property.
 
-The one case worth reading before changing ``check_cuts_respect_sentences`` is
-``test_a_cut_in_a_gap_between_same_sentence_words_still_splits``. On
-emwcon-panel-2018 clip 01 the audit reports a cut splitting ' was,'/' at' even
-though the cut lands 0.18 s past the end of ' was,' and 1.50 s before ' at'
-begins. That is not a false positive: both words belong to one
-under-punctuated transcript sentence, so a cut between them is mid-sentence by
-the criterion the check exists to enforce. The gap is large, not the words'
-relationship. ``check_cuts_land_between_words`` stays silent on the same
-boundary because 67.09 s is inside neither word — the two checks are testing
-different things, and both are right.
+The one case worth reading before changing ``check_cuts_respect_sentences``
+is ``test_tightening_a_pause_between_two_kept_words_is_not_a_split``. On
+emwcon-panel-2018 clip 01 the audit used to report a cut splitting ' was,'/
+' at' even though the cut lands 0.18 s past the end of ' was,' and 1.50 s
+before ' at' begins, and no word was lost: the two kept intervals drop only
+the 1.44 s gap between two transcript-adjacent words of one utterance, and
+the utterance arrives on screen complete. That was a false positive, and its
+cause was one level up: the sentence structure came from splitting the
+candidate's ``text`` on punctuation, and the transcript segment it was cut
+from carries no terminal punctuation, so two utterances six seconds apart
+were read as one sentence. The check now takes the transcript's own
+utterance spans and fires on the loss of a word, which is what
+``test_dropping_a_word_from_the_middle_of_a_sentence_is_flagged`` pins.
+``check_cuts_land_between_words`` stays silent on the same boundary because
+67.09 s is inside neither word — the two checks are testing different things,
+and both are right.
+``test_a_clean_cut_between_two_unpunctuated_utterances`` is the regression
+test for the source of the sentence structure: it is the pentagon clip 02
+shape, and without the transcript spans it fails.
 """
 from __future__ import annotations
 
@@ -32,6 +41,7 @@ if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
 
 from tools.editorial_audit import (  # noqa: E402
+    _load,
     TOLERANCE_S,
     check_caption_text_is_transcript_text,
     check_cues_fit_the_render,
@@ -101,35 +111,118 @@ def test_a_cut_inside_a_sentence_is_flagged():
     assert any("splits" in b for b in bad)
 
 
-def test_a_cut_in_a_gap_between_same_sentence_words_still_splits():
-    """The check is about sentence membership, not proximity.
+def test_a_clip_ending_mid_sentence_is_flagged():
+    """The clip ends inside a sentence, so the sentence loses its end.
 
-    A boundary can be far from both surrounding words and still split a
-    sentence: this candidate's three words are one sentence, so removing the
-    middle one leaves the clip starting a thought it never began. Composed
-    from the real emwcon clip 01 boundary, where ' was,' ends 0.18 s before
-    the cut and ' at' starts 1.50 s after it.
+    The boundary is 0.18 s past the end of ' was' and 1.50 s before ' at'
+    begins — composed from the real emwcon clip 01 boundary. The words after
+    the clip are dropped, so the sentence loses them and the viewer hears a
+    thought that never finished.
     """
     words = [(0.0, 0.42, "was"), (2.10, 2.10, "at"), (2.15, 2.55, "first")]
     ok, bad = check_cuts_respect_sentences(
         _cand("was at first", words), [(0.0, 0.60)])
-    assert not ok, "a cut between two words of one sentence was not reported"
+    assert not ok, "a clip ending inside a sentence was not reported"
     assert any("'was'" in b and "'at'" in b for b in bad)
+
+
+def test_tightening_a_pause_between_two_kept_words_is_not_a_split():
+    """A boundary that shortens only the gap between two kept words is clean.
+
+    Both words are kept and no word between them exists, so the sentence is
+    intact on screen and the clip goes on. This is the case the check used to
+    flag: all four mid-sentence findings on the committed corpus were it
+    (pentagon clip 04, emwcon clip 01, ooi clip 01, royal-society clip 01,
+    each removing 0.5-1.4 s of gap between transcript-adjacent words). Firing
+    here would make the audit reject every clip that removes a pause.
+    """
+    words = [(0.0, 0.42, "was"), (2.10, 2.40, "at"), (2.45, 2.85, "first")]
+    ok, bad = check_cuts_respect_sentences(
+        _cand("was at first", words), [(0.0, 0.60), (2.00, 2.90)])
+    assert ok, f"removing a gap between two kept words was reported: {bad}"
+
+
+def test_dropping_a_word_from_the_middle_of_a_sentence_is_flagged():
+    """The case the criterion exists for: a hole in the sentence itself.
+
+    ' at' is dropped by the gap between the two kept intervals, so the clip
+    reads ' was first' and the sentence lost a word it should have kept.
+    """
+    words = [(0.0, 0.42, "was"), (0.60, 1.00, "at"), (1.10, 1.50, "first")]
+    ok, bad = check_cuts_respect_sentences(
+        _cand("was at first", words), [(0.0, 0.55), (1.05, 1.60)])
+    assert not ok, "a word dropped from inside a sentence was not reported"
+    assert any("'was'" in b and "'at'" in b for b in bad) or \
+        any("'at'" in b and "'first'" in b for b in bad), bad
 
 
 def test_the_message_does_not_leak_an_fstring_prefix():
     """The start-boundary message used to print 'was'/f'at' — a literal ``f``
     from a misquoted f-string field. The end-boundary message never had it, so
-    a finding from each boundary is needed to cover both formats."""
-    words = [(0.0, 0.42, "was"), (2.10, 2.10, "at"), (2.15, 2.55, "first")]
-    cand = _cand("was at first", words)
-    # start 0.60 splits 'was'/'at'; end 0.60 splits them too, on the other line.
-    _ok, bad = check_cuts_respect_sentences(cand, [(0.0, 0.60), (0.60, 2.60)])
+    a finding from each boundary is needed to cover both formats.
+
+    The interval cuts a sentence at both ends — ' at' is dropped before it and
+    ' now' after it — so a start finding and an end finding both come out.
+    """
+    words = [(0.0, 0.42, "was"), (0.60, 1.00, "at"),
+             (1.10, 1.50, "first"), (1.60, 2.00, "now")]
+    cand = _cand("was at first now", words)
+    _ok, bad = check_cuts_respect_sentences(cand, [(1.05, 1.55)])
     starts = [b for b in bad if b.startswith("start")]
     ends = [b for b in bad if b.startswith("end")]
     assert starts and ends, "need a finding from each boundary to cover both formats"
     for line in starts + ends:
         assert "/f'" not in line, f"literal f-string prefix leaked: {line!r}"
+
+
+def test_a_clean_cut_between_two_unpunctuated_utterances():
+    """The regression test for the pentagon-esper-briefing clip 02 shape.
+
+    The transcript's segments are 'We stay in continuous contact with them' and
+    'What was used to destroy the compound', neither punctuated, and the
+    candidate's text joins them with a space. The interval ends 0.18 s after
+    ' them' and the next starts 0.06 s before ' What', so the cut is between
+    two utterances and no word is lost. This used to be reported as a split,
+    and five of the seven committed projects failed the audit on findings of
+    exactly this shape.
+    """
+    words = [(0.0, 0.30, "We"), (0.30, 0.50, "stay"), (0.50, 0.80, "contact"),
+             (0.80, 1.00, "with"), (1.00, 1.20, "them"),
+             (6.00, 6.30, "What"), (6.30, 6.60, "was"), (6.60, 7.00, "used")]
+    cand = _cand("contact with them What was used", words)
+    intervals = [(0.0, 1.38), (5.94, 7.00)]
+    utterances = [(0.0, 1.20), (6.00, 7.00)]
+
+    ok, bad = check_cuts_respect_sentences(cand, intervals, utterances)
+    assert ok, f"a clean cut between two utterances was reported: {bad}"
+
+
+def test_a_whole_utterance_dropped_between_two_kept_ones_is_not_a_split():
+    """Where the sentence structure is read from is what decides this one.
+
+    Dropping an utterance wholesale between two kept ones is an edit, not a
+    hole: nothing in a kept sentence is lost. The candidate's text has no
+    punctuation between the three utterances, so splitting that text reads
+    them as one long sentence and the dropped middle one looks like a hole in
+    it. The transcript's own utterance spans are the structure that says
+    otherwise — which is why ``audit`` passes them and does not rely on text.
+    """
+    words = [(0.0, 0.30, "We"), (0.30, 0.60, "stay"), (0.60, 0.90, "in"),
+             (0.90, 1.20, "contact"),
+             (2.00, 2.30, "What"), (2.30, 2.60, "was"),
+             (4.00, 4.30, "The"), (4.30, 4.60, "rest")]
+    cand = _cand("We stay in contact What was The rest", words)
+    intervals = [(0.0, 1.38), (3.94, 4.70)]
+    utterances = [(0.0, 1.20), (2.00, 2.60), (4.00, 4.60)]
+
+    ok, bad = check_cuts_respect_sentences(cand, intervals, utterances)
+    assert ok, f"a dropped utterance was reported as a hole in a kept one: {bad}"
+
+    # The text-split fallback still merges the three utterances and so still
+    # fires here. That is the imprecision the utterances exist to remove, and
+    # asserting it keeps the fallback honest rather than quietly dead.
+    fallback_ok, _ = check_cuts_respect_sentences(cand, intervals)
+    assert not fallback_ok, "the fallback no longer merges unpunctuated utterances"
 
 
 def test_one_word_cannot_be_mid_sentence():
@@ -323,6 +416,182 @@ def test_the_whole_corpus_is_auditable_without_keyerror():
         "the audit raised on a committed project instead of reporting it: "
         + "; ".join(unreachable)
     )
+
+
+def test_the_audit_verdict_on_the_committed_corpus_is_the_recorded_baseline():
+    """The audit's verdict over the eleven committed sources, pinned.
+
+    This tool's purpose is to fail CI on a clip that is not publishable, so a
+    corpus leg cannot assert that everything passes: four sources were
+    suppressed by the VAD gate before selection ran and two carry a
+    silence-share finding whose acoustic measurement contradicts dead air —
+    which the tool reports as a hard failure on purpose, because "not digital
+    silence" does not establish that the material belongs in the clip and a
+    person still has to listen.
+
+    What the pin catches instead is the verdict *changing*: a check that
+    silently inverts, a new false positive, or an emitted tree that shifts a
+    clip from clean to failing. A change in either direction has to update
+    this table and say why, which is the property that kept the audit honest.
+
+    Read alongside ``test_every_word_of_the_committed_corpus_lands_in_exactly_one_utterance``:
+    the mid-sentence check used to report failures on five of these seven
+    projects, and every one was a pause removed between two transcript-adjacent
+    words. None are reported now, and the ones that remain are named below.
+    """
+    from tools.editorial_audit import audit
+
+    runs = sorted((TOOLS.parent / "corpus").glob("*_run/project"))
+    assert runs, "no corpus runs found; the test below would pass vacuously"
+
+    # The recorded verdict: which projects are clean and which are not, with the
+    # reason the failing check states. Reasons are matched by prefix so a detail
+    # that gains a figure still pins the same finding.
+    EXPECTED_CLEAN = {
+        "emwcon-panel-2018_run",
+        "hadhazy-protest_run",
+        "ooi-vertical_run",
+        "pentagon-esper-briefing_run",
+        "royal-society-cloke_run",
+    }
+    EXPECTED_FAILURES = {
+        "alice-1903_run": "no selections.json",
+        "hindi-baiga-interview_run": "no selections.json",
+        "nasa360-ep5_run": "silence share",
+        "roman-portrait-trailer_run": "no selections.json",
+        "telugu-launch_run": "no selections.json",
+        "telugu-tutorial_run": "silence share",
+    }
+
+    seen = {}
+    for project in runs:
+        ok, rep = audit(project)
+        hard = [f"{name}: {detail}" for name, cok, detail in rep["findings"] if not cok]
+        seen[project.parent.name] = (ok, hard)
+
+    unexpected = []
+    for name, (ok, hard) in sorted(seen.items()):
+        if name in EXPECTED_CLEAN:
+            if not ok:
+                unexpected.append(f"{name}: expected clean, got {hard}")
+        elif name in EXPECTED_FAILURES:
+            want = EXPECTED_FAILURES[name]
+            if ok:
+                unexpected.append(f"{name}: expected a {want!r} failure, got clean")
+            elif not any(want in h for h in hard):
+                unexpected.append(f"{name}: expected a {want!r} failure, got {hard}")
+        else:
+            unexpected.append(f"{name}: no recorded verdict for this project")
+    for name in sorted(set(EXPECTED_CLEAN) | set(EXPECTED_FAILURES)):
+        if name not in seen:
+            unexpected.append(f"{name}: recorded but not present in the corpus")
+    assert not unexpected, (
+        "the audit's verdict on the committed corpus changed; update the table "
+        "and say why:\n" + "\n".join(unexpected))
+
+
+def test_every_word_of_the_committed_corpus_lands_in_exactly_one_utterance():
+    """The word-to-sentence join is what the mid-sentence check rests on.
+
+    The check attributes a word to the utterance containing its start, so a
+    word the transcript does not cover is a word the check cannot see and a
+    word straddling two is a word it may attribute either way. On the seven
+    committed projects that produced a timeline every word lands inside exactly
+    one segment, so the join is exact rather than approximate — and 155 of the
+    1755 words start precisely at a segment boundary, which is the case an
+    off-by-one in the join misattributes. This pins both.
+    """
+    from tools.editorial_audit import _word_sentence_map, _word_spans
+
+    checked = words_at_boundary = 0
+    for project in sorted((TOOLS.parent / "corpus").glob("*_run/project")):
+        selections = _load(project / "selections.json")
+        transcript = _load(project / "transcript.json")
+        if selections is None or transcript is None:
+            continue
+        segments = transcript.get("segments") or []
+        if not segments:
+            continue
+        utterances = sorted((float(s["start"]), float(s["end"])) for s in segments)
+        starts = {u[0] for u in utterances}
+        for cand in selections:
+            spans = _word_spans(cand)
+            if not spans:
+                continue
+            sent_of = _word_sentence_map(cand, utterances)
+            assert len(sent_of) == len(spans), "the map must answer one index per word"
+            for (st, en, _t), s in zip(spans, sent_of):
+                checked += 1
+                words_at_boundary += st in starts
+                assert s != -1, f"{project.parent.name}: word {st:.3f}s is in no utterance"
+                lo, hi = utterances[s]
+                assert lo <= st and en <= hi + 0.05, (
+                    f"{project.parent.name}: word {st:.3f}-{en:.3f}s is not inside "
+                    f"utterance {lo}-{hi}s")
+    assert checked > 1000, f"only {checked} words checked; the corpus glob is wrong"
+    assert words_at_boundary > 100, (
+        f"only {words_at_boundary} words start exactly at a segment boundary; "
+        "the off-by-one case this guards is no longer represented")
+
+
+def test_the_corpus_candidate_words_are_already_the_kept_set():
+    """Why the utterance source changes no verdict the corpus can reach.
+
+    A selection's ``words`` list is not the transcript's words for that span —
+    it is the words the selection kept. Measured over all seven selected
+    projects, 1754 of the 1755 words lie wholly inside a retention interval.
+    So at an interval boundary the word on each side is kept, every word
+    between them is kept, and the word-loss criterion cannot fire; the
+    sentence source is never the thing that decides the outcome. That is a
+    property of the data, not of the check: a candidate whose word list
+    carried an excised word would still be flagged, and the unit tests build
+    exactly those candidates.
+
+    The one word outside every interval is royal-society-cloke clip 00's last
+    word, which begins exactly at the final interval's end — the boundary
+    excludes it whole rather than shaving it, so it is clean for a different
+    reason: the adjacent-word lookup lands on it twice and the check continues.
+
+    Pinned because it is the fact a reader needs in order to trust the corpus
+    and e2e legs. If a change makes selections carry their excised words, this
+    test fails and the utterance source becomes observable through ``audit`` —
+    at which point the corpus baseline above is the leg that moves.
+    """
+    from engine.edit_plan import retention_intervals
+    from models.core import Candidate, Word
+    from tools.editorial_audit import _word_spans
+
+    def to_cand(cand: dict) -> Candidate:
+        return Candidate(
+            start=cand["start"], end=cand["end"], text=cand.get("text", ""),
+            story_type=cand.get("story_type", ""), hook=cand.get("hook", ""),
+            payoff=cand.get("payoff", ""),
+            editorial_score=cand.get("editorial_score", 0.0),
+            virality_score=cand.get("virality_score", 0.0),
+            context_score=cand.get("context_score", 0.0),
+            confidence=cand.get("confidence", 0.0),
+            reason=cand.get("reason", ""),
+            visual_potential=cand.get("visual_potential", 0.0),
+            words=[Word(**w) for w in cand.get("words", [])])
+
+    total = outside = 0
+    for project in sorted((TOOLS.parent / "corpus").glob("*_run/project")):
+        selections = _load(project / "selections.json")
+        if selections is None:
+            continue
+        for cand in selections:
+            spans = _word_spans(cand)
+            if not spans:
+                continue
+            intervals = retention_intervals(to_cand(cand))
+            for st, en, _t in spans:
+                total += 1
+                outside += not any(a <= st and en <= b for a, b in intervals)
+    assert total > 1000, f"only {total} words checked; the corpus glob is wrong"
+    assert outside <= 1, (
+        f"{outside} of {total} candidate words fall outside every retention "
+        "interval; the corpus now carries excised words, so the utterance "
+        "source is observable through audit() and this test's claim is stale")
 
 
 # --- the caption parser the audit reads through ----------------------------

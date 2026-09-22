@@ -14,9 +14,12 @@ What it measures, and why each one is falsifiable rather than impressionistic:
 
   - mid-word cut      a cut boundary that lands inside a spoken word, which
                        produces a clipped or truncated phoneme on screen
-  - mid-sentence cut  a cut boundary that splits a sentence, so the clip
-                       starts or ends mid-thought (measured against the
-                       transcript's own sentence boundaries)
+  - mid-sentence cut  a cut boundary that drops a word from inside a sentence,
+                       so the clip starts or ends mid-thought or carries a
+                       hole in the speech (measured against the transcript's
+                       own utterance spans, not against the candidate's text:
+                       the text joins under-punctuated segments and reads
+                       clean cuts as splits)
   - short final word  the clip's last spoken word is under 200ms, so the
                        render can shave the tail of a word
   - orphaned cue      a caption cue whose text does not appear anywhere in the
@@ -87,17 +90,48 @@ def check_cuts_land_between_words(cand: dict, intervals: list[tuple[float, float
     return not bad, bad
 
 
-def _word_sentence_map(cand: dict) -> list[int]:
+def _word_sentence_map(cand: dict,
+                       utterances: list[tuple[float, float]] | None = None) -> list[int]:
     """Assign each timestamped word to the index of its sentence.
 
-    Walks the sentence token lists and the word list together in order, so a
-    word is attributed positionally rather than by substring. Substring
-    matching is unreliable here: 'he' matches inside 'the', and a repeated
-    word would bind to its first occurrence and misreport every later one.
+    The sentence structure comes from ``utterances`` — the transcript's own
+    segment spans, sorted — when the caller has them. Each word is placed in
+    the utterance containing its start, which is a lookup by time rather than a
+    match by text, so it cannot desync. On the committed corpus all 1759 words
+    of all seven selected projects land inside exactly one segment, so this
+    join is exact rather than approximate.
+
+    The utterances are what the selection's words were cut from, so they are
+    the structure the check is asking about. A candidate's own ``text`` is not:
+    it is ``" ".join(segment.text)`` (engine/editorial.py) and a transcript
+    segment regularly carries no terminal punctuation — pentagon-esper-briefing
+    clip 02 joins 'We stay in continuous contact with them' to 'What was used
+    to destroy the compound' with nothing between them but a space, so a
+    punctuation split reads two utterances six seconds apart as one sentence
+    and a clean cut between them as a mid-sentence split. Deriving sentences
+    from that text is what made this audit report failures the clips do not
+    have.
+
+    Without utterances the caller gets the punctuation split of ``text`` as a
+    fallback. That is imprecise in exactly the way above and is kept only for
+    direct callers of the check with no transcript in hand; ``audit`` always
+    passes the real one.
     """
     spans = _word_spans(cand)
+    if not spans:
+        return []
+
+    if utterances:
+        import bisect
+        starts = [u[0] for u in utterances]
+        out = []
+        for st, _en, _t in spans:
+            i = bisect.bisect_right(starts, st) - 1
+            out.append(i if i >= 0 else -1)
+        return out
+
     sents = _sentences(cand.get("text", ""))
-    if not spans or not sents:
+    if not sents:
         return [-1] * len(spans)
 
     def toks(s: str) -> list[str]:
@@ -123,18 +157,50 @@ def _word_sentence_map(cand: dict) -> list[int]:
     return out
 
 
-def check_cuts_respect_sentences(cand: dict, intervals: list[tuple[float, float]]) -> tuple[bool, list[str]]:
-    """Each cut boundary must fall at a sentence edge.
+def check_cuts_respect_sentences(cand: dict,
+                                 intervals: list[tuple[float, float]],
+                                 utterances: list[tuple[float, float]] | None = None,
+                                 ) -> tuple[bool, list[str]]:
+    """No cut may take a word out of the middle of a sentence.
 
-    A boundary is mid-sentence when the word just before it and the word just
-    after it belong to the same sentence. Each interval has two such pairs:
-    its own start (the word before vs the first kept word) and its end (the
-    last kept word vs the word after).
+    A boundary damages a sentence when the sentence *loses a word* to it: the
+    word before it is dropped, the word after it is dropped, or a word between
+    the two is dropped. That is the condition that leaves a hole in the speech
+    the viewer hears, and it is what the finding reports.
+
+    A boundary that only shortens the gap between two kept words is not that.
+    It tightens a pause and every word of the sentence is still on screen, so
+    the sentence is intact. This is a real distinction and not a loosening:
+    every mid-sentence finding this check produced on the committed corpus was
+    that case — the four it flagged (pentagon-esper-briefing clip 04, emwcon
+    clip 01, ooi-vertical clip 01, royal-society-cloke clip 01) each removed
+    0.5-1.4 s of gap between two transcript-adjacent words and lost no word at
+    all, and each was reported twice, once per boundary of the removed span.
+    The check now stays quiet on them and still fires on the loss, which the
+    corpus has none of — so the committed trees no longer cover this check, and
+    the tests pin the loss directly instead.
+
+    ``utterances`` are the transcript's segment spans and are the sentence
+    structure; see ``_word_sentence_map``. Without them the check falls back to
+    splitting the candidate's own text, which merges under-punctuated
+    utterances and is the source of the false findings above.
+
+    One limit to state plainly: the utterances only ever change a verdict the
+    word list can show both sides of. A selection's ``words`` are the words it
+    kept — 1754 of 1755 on the committed corpus lie inside a retention interval
+    — so an excised utterance leaves no trace in the list and the two words the
+    boundary separates are kept and adjacent, which is the pause case. On that
+    data the source makes no observable difference to any verdict ``audit``
+    can reach, and the unit tests are what pin it: they build candidates whose
+    word list does carry the loss. The corpus and end-to-end legs cannot, and
+    a clip that ends mid-utterance is invisible to both, because its word list
+    ends at the last kept word. That is a real gap in what this check covers
+    and it is not closed here.
     """
     spans = _word_spans(cand)
     if len(spans) < 2 or not intervals:
         return True, []
-    sent_of = _word_sentence_map(cand)
+    sent_of = _word_sentence_map(cand, utterances)
     if all(s == -1 for s in sent_of):
         return True, []
     starts = [st for st, _en, _t in spans]
@@ -149,13 +215,23 @@ def check_cuts_respect_sentences(cand: dict, intervals: list[tuple[float, float]
         hi = max(0, min(hi, len(spans) - 1))
         return lo, hi
 
+    def kept(i: int) -> bool:
+        """The word is wholly inside a kept interval."""
+        st, en, _t = spans[i]
+        return any(a <= st and en <= b for a, b in intervals)
+
     for a, b in intervals:
-        lo, hi = adjacent(a)
-        if lo != hi and sent_of[lo] != -1 and sent_of[lo] == sent_of[hi]:
-            bad.append(f"start {a:.2f}s splits '{spans[lo][2]}'/'{spans[hi][2]}'")
-        lo, hi = adjacent(b)
-        if lo != hi and sent_of[lo] != -1 and sent_of[lo] == sent_of[hi]:
-            bad.append(f"end {b:.2f}s splits '{spans[lo][2]}'/'{spans[hi][2]}'")
+        for t, edge in ((a, "start"), (b, "end")):
+            lo, hi = adjacent(t)
+            # Different sentences is a clean cut between utterances; -1 is a
+            # word the utterances do not cover, which is not a sentence split.
+            if lo == hi or sent_of[lo] == -1 or sent_of[lo] != sent_of[hi]:
+                continue
+            # Nothing between lo and hi is lost: lo and hi are kept and every
+            # word between them is. An empty between-range is a pause.
+            if kept(lo) and kept(hi) and all(kept(k) for k in range(lo + 1, hi)):
+                continue
+            bad.append(f"{edge} {t:.2f}s splits '{spans[lo][2]}'/'{spans[hi][2]}'")
     return not bad, bad
 
 
@@ -499,6 +575,21 @@ def audit(project: Path) -> tuple[bool, dict]:
     from engine.edit_plan import retention_intervals
     from models.core import Candidate, Word
 
+    # The transcript's segments are the sentence structure the mid-sentence
+    # check needs. Each selection's words were cut from them, and joining a
+    # word to its segment by time is exact on the committed corpus. Without
+    # these the check would fall back to splitting the candidate's own text,
+    # which merges under-punctuated utterances and reports cuts that are clean.
+    transcript = _load(project / "transcript.json")
+    utterances: list[tuple[float, float]] = []
+    if transcript is not None:
+        for seg in transcript.get("segments") or []:
+            try:
+                utterances.append((float(seg["start"]), float(seg["end"])))
+            except (KeyError, TypeError, ValueError):
+                continue
+        utterances.sort()
+
     ok_all = True
     review: list[str] = []
     for i, cand in enumerate(cands, start=1):
@@ -519,7 +610,7 @@ def audit(project: Path) -> tuple[bool, dict]:
         o, d = check_cuts_land_between_words(cand, intervals)
         ok &= o
         detail += d
-        o, d = check_cuts_respect_sentences(cand, intervals)
+        o, d = check_cuts_respect_sentences(cand, intervals, utterances)
         ok &= o
         detail += d
         o, d = check_last_word_is_not_shaved(cand, intervals)
