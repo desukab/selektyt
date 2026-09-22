@@ -191,6 +191,64 @@ def test_pipeline_source_accepts_a_url_and_a_real_file(tmp_path):
     assert _pipeline_source(str(media)) == str(media)
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://169.254.169.254/latest/meta-data/iam/security-credentials/",
+        "https://169.254.169.254/latest/api/token",
+        "http://169.254.10.5/clip.mp4",  # link-local but not the famous address
+        "http://[fd00:ec2::254]/latest/meta-data/",  # AWS IPv6 metadata
+        "http://[fe80::1]/x",  # IPv6 link-local
+        "https://metadata.google.internal/computeMetadata/v1/",
+        "http://metadata.azure.com/metadata/instance?api-version=2021-02-01",
+    ],
+)
+def test_pipeline_source_refuses_a_cloud_metadata_endpoint(url):
+    """The web shell fetches whatever ``source`` it is handed, so a URL the
+    caller did not type themselves is a request to read a host's own
+    credentials. The metadata endpoints are the documented target and they are
+    refused by name — the check sees the URL as written, which is enough for
+    the literal-IP vector and is stated as its limit at the function."""
+    from selekyt.server import _pipeline_source, _url_host
+
+    with pytest.raises(ValueError, match="metadata endpoint") as excinfo:
+        _pipeline_source(url)
+    # The message has to name the host it objected to, or a user whose URL has
+    # nothing to do with any cloud cannot tell what the product refused.
+    assert _url_host(url) in str(excinfo.value)
+
+
+def test_pipeline_source_still_accepts_an_ordinary_url_after_the_metadata_check():
+    """The refusal has to be a refusal of those hosts, not of URLs in general —
+    without this the previous test passes against a guard that rejects
+    everything, and so does the scheme test above it."""
+    from selekyt.server import _pipeline_source
+
+    assert _pipeline_source("https://archive.org/details/episode") == \
+        "https://archive.org/details/episode"
+    assert _pipeline_source("https://example.com/v.mp4") == "https://example.com/v.mp4"
+
+
+@pytest.mark.parametrize(
+    "host",
+    ["169.254.169.254", "169.254.0.1", "fe80::1"],
+)
+def test_is_link_local_recognises_the_metadata_ranges(host):
+    from selekyt.server import _is_link_local
+
+    assert _is_link_local(host)
+
+
+@pytest.mark.parametrize("host", ["example.com", "youtu.be", "192.168.1.5", "::1", ""])
+def test_is_link_local_does_not_match_an_ordinary_host(host):
+    """``::1`` is loopback, not link-local, and 192.168/16 is private — neither
+    is a metadata endpoint, and refusing either would break a real home-lab
+    media URL."""
+    from selekyt.server import _is_link_local
+
+    assert not _is_link_local(host)
+
+
 def test_run_pipeline_writes_a_project_and_reports_its_artifacts(tmp_path, monkeypatch):
     """The op must return the artifacts it actually wrote, not just the
     directories they live in — a UI links to files."""

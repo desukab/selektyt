@@ -225,15 +225,38 @@ returned zero hits. This was a latent defect, not a demonstrated leak, and it
 is now closed on both sides — the blob is never written, and the route that
 would have served it no longer can.
 
-### SSRF is reachable — INSPECTED
+### SSRF is reachable — INSPECTED, then PARTLY FIXED at the boundary
 
 `web/server.mjs:288-290` accepts any `https?://` `source` and hands it to the
-pipeline. `selekyt/server.py:307-325` rejects `file://` but places no
-restriction on host or port, so `http://169.254.169.254/latest/meta-data/`
-(the cloud metadata endpoint) is a valid source, fetched from the server's
+pipeline. `selekyt/server.py`'s `_pipeline_source` rejected `file://` but
+placed no restriction on host or port, so `http://169.254.169.254/latest/meta-data/`
+(the cloud metadata endpoint) was a valid source, fetched from the server's
 network position, and any response error text comes back to the caller. This
 is the highest-impact CSRF target: an attacker does not need to read the
 response, only to make the request.
+
+**Partly fixed 2026-09-22.** `_pipeline_source` now refuses the metadata
+endpoints before the URL is ever handed to the downloader: the whole IPv4
+link-local range `169.254.0.0/16` (which contains 169.254.169.254 for AWS,
+Azure and GCP alike), IPv6 `fe80::/10`, the AWS IPv6 metadata address
+`fd00:ec2::254`, and the DNS names `metadata.google.internal` and
+`metadata.azure.com`. The refusal message names the host it objected to. The
+guard is on the only URL-fetch entry point the web shell has — `/api/export`'s
+`source` is provenance only, since `op_audio_analysis` requires `media` to be
+a regular local file, and `resolveMedia` in `web/server.mjs` never fetches.
+
+**What this does not close, stated plainly:** it is a boundary check on the
+URL as written, not egress filtering on the connection. A hostname that
+resolves to a link-local address — DNS rebinding, or an internal name — is not
+caught here, because yt-dlp resolves at fetch time and this function sees the
+string the caller typed. Port is unrestricted, so a request to a service on
+the local network is still possible. The half it closes is the documented
+vector, which is a literal IP an attacker can type; the other half needs a
+fetch-time check and is not addressed. Pinned by
+`tests/test_server.py::test_pipeline_source_refuses_a_cloud_metadata_endpoint`
+(7 URLs; mutation-verified — disabling the guard fails exactly those 7 and
+nothing else) with a sibling test that ordinary URLs still pass, so the guard
+cannot be a blanket rejection.
 
 ### Subprocess invocation is correct — VERIFIED
 
@@ -634,8 +657,8 @@ means the shipped output is wrong and nothing in the system says so.
 |---|---|---|---|---|
 | 1 | **Critical** | Security | `web/server.mjs:345-360` | No auth, no origin check, `Content-Type`-blind JSON POST. Any web page the user visits drives the pipeline via CSRF. Combined with #2/#3 this is remote credential theft from a localhost service. |
 | 2 | **Critical** | Security | `web/server.mjs:203-209` | `guardedPath` prefix bypass. `/tmp/selektyt-backup/secrets` passes the jail. Any sibling directory whose name extends the repo name reads arbitrary files via `/api/file`. The test at `tests/test_web_harness.py:218` passes while the bypass stands. **FIXED —** the boundary is now `ROOT + sep`, and a sibling-prefix regression test (`test_a_sibling_directory_extending_the_project_name_is_rejected`) fails against the old one-liner. The `/api/file` half was a separate defect with a separate boundary, fixed separately below. |
-| 3 | **Critical** | Security | `selekyt/pipeline.py:206` → `web/server.mjs:317` | yt-dlp `media_info` (embedding the `Cookie` header) is persisted to `pipeline_state.json` and served unauthenticated by `/api/file`. `cookies.py` goes out of its way never to print a cookie value; this path prints all of them. |
-| 4 | **High** | Security | `web/server.mjs:288-290`, `selekyt/server.py:307-325` | SSRF. `http://169.254.169.254/...` is a valid `source`, fetched from the server's network. No host/port allowlist anywhere. |
+| 3 | **Critical** | Security | `selekyt/pipeline.py:206` → `web/server.mjs:317` | yt-dlp `media_info` (embedding the `Cookie` header) is persisted to `pipeline_state.json` and served unauthenticated by `/api/file`. `cookies.py` goes out of its way never to print a cookie value; this path prints all of them. **FIXED on both sides —** `media_info` now passes through `_scrub_credentials` before it is ever written, dropping `http_headers`/`cookies`/`_cookies`/`cookie_manager`/`cookiejar`/`cookies_str` at every depth, and `/api/file`'s boundary is now `OUT_WEB + sep` so the state file is not inside it either. Pinned by `tests/test_pipeline_hardening.py::test_scrub_credentials_removes_every_credential_field`. This was a latent defect, never a demonstrated leak — no URL source run on this host was authenticated. |
+| 4 | **High** | Security | `web/server.mjs:288-290`, `selekyt/server.py` | SSRF. `http://169.254.169.254/...` is a valid `source`, fetched from the server's network. No host/port allowlist anywhere. **Partly fixed 2026-09-22 —** `_pipeline_source` now refuses the metadata endpoints (IPv4 `169.254.0.0/16`, IPv6 `fe80::/10`, `fd00:ec2::254`, `metadata.google.internal`, `metadata.azure.com`) before the downloader is handed anything, on the only URL-fetch path the web shell has. **Still open:** this is a boundary check on the URL as written, not egress filtering — DNS rebinding to a link-local address, and any host on any port, are both still reachable. See "SSRF is reachable" below for the full limit. |
 | 5 | **High** | Reliability | `selekyt/pipeline.py:391-419`, `:117-151` | Caption-style render-cache staleness. Re-run with a different `SELEKYT_CAPTION_STYLE`: the new ASS is written, the old MP4 is shipped. **Falsifies QA.** The cache key omits the style in both `_fingerprint` and `_selection_digest`. **FIXED —** the key now requires a matching `caption_style`, records it back, and treats a record with no style as a miss; pinned by `tests/test_caption_style_cache.py` (5 tests). |
 | 6 | **High** | Scalability | `pyproject.toml` | `faster-whisper` is not a base dependency. Default install cannot transcribe. First-run experience is a crash. **Mostly resolved 2026-09-22 —** the failure was never a traceback: `providers/transcribe.py` runs faster-whisper → sherpa-onnx → a `RuntimeError` naming both pip extras and the sherpa model path, and `selekyt cli --doctor` reports the gap before any work, so the first-run experience is an actionable error. The deliberate design decision that neither ASR engine is a base dependency stands and is documented in `pyproject.toml`; it is what lets the package install on a host with no ctranslate2 wheel. The remaining real residue was *ordering*: for a URL source the download ran to completion before the error fired, so a user on a default install fetched a whole video to be told to run pip. **FIXED —** `run_pipeline` now probes `select_engine` alongside its existing fail-fast parameter block, so the same message arrives before the network. Pinned by `tests/test_pipeline_hardening.py::test_pipeline_reports_a_missing_transcription_engine_before_download` (fails if the probe is removed; the sibling test fails if it is made unconditional). `select_engine` is the one place the choice is made, so the pre-flight cannot drift from the transcription path. |
 | 7 | **High** | Reliability | `engine/qa.py:19-43`, `:138-209` | QA never checks aspect ratio precisely, duration vs edit plan, or caption presence; `black_frame_pct`/`visual_diversity_score` swallow exceptions and report clean. **Falsifies QA.** **Partly resolved 2026-09-22 —** the aspect ratio *is* checked precisely now (display aspect from SAR, 1% tolerance), the container duration is compared against the edit plan's per-clip `edited_duration` at a 1% tolerance, and the two advisory metrics return `None` on any failure to measure instead of a clean-looking `0.0`/`1.0`. Still open: **caption presence** — no cheap exact signal exists for whether the burn happened, and a sampled-frame heuristic would fail false on real corpus clips, so that verification lives in `tests/test_render.py::test_the_burned_captions_are_in_the_pixels` rather than in runtime QA. |
@@ -662,10 +685,14 @@ means the shipped output is wrong and nothing in the system says so.
    original test could not see.
 3. **Cookie credentials persisted into `pipeline_state.json` and served
    unauthenticated** — `selekyt/pipeline.py:206` → `web/server.mjs:317`.
+   **Fixed on both sides:** the blob is scrubbed before it is written, and the
+   route that would have served it no longer serves outside `OUT_WEB`.
 4. **Caption-style render-cache staleness** — `selekyt/pipeline.py:391-419`
    with a style-blind key at `:117-151`. A re-run with a different style
    ships the old video beside the new captions, and no check in the system
-   detects it.
+   detects it. **Fixed:** the key now carries `caption_style`, records it
+   back, and treats a record with no style as a miss (row #5 above; pinned by
+   `tests/test_caption_style_cache.py`).
 5. **QA that cannot detect a wrong output, plus the tools that could are
    unwired** — `engine/qa.py:19-43` never checks aspect, duration-vs-plan, or
    captions; `tools/nle_check.py` (independent `pycmx` parse, render-vs-timeline
@@ -697,6 +724,17 @@ header. All three of the top findings are the same defect viewed from three
 angles, and fixing any one of them alone leaves the chain intact. The
 `127.0.0.1` bind is not a control, because the attacker's code runs in the
 user's browser on that same host.
+
+**Two of the three links are cut as of 2026-09-22, and the chain now depends
+on the first.** The prefix bypass is fixed at `ROOT + sep` / `OUT_WEB + sep`,
+and the cookie material is never written to the state file in the first place,
+so there is no `pipeline_state.json` to serve; the metadata endpoints are
+refused at the URL boundary. What remains is the control plane itself: no
+authentication, no origin check, no Content-Type gate (row #1, still open).
+A crafted page can still drive the pipeline — it just can no longer reach
+credentials or the metadata endpoint while it does. That is a strictly weaker
+attack than the one described above, but it is still an attack, and row #1 is
+what closes it.
 
 ## The thing that would embarrass the company in an enterprise review
 

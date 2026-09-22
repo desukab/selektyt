@@ -20,6 +20,7 @@ import os
 import sys
 from pathlib import Path
 from typing import Any, TextIO
+from urllib.parse import urlparse
 
 from engine.captions import caption_presets
 from engine import cut_algebra
@@ -407,11 +408,71 @@ def op_audio_analysis(params: dict) -> dict:
     return summary
 
 
+def _url_host(raw: str) -> str:
+    """Host of a URL, without port, userinfo or IPv6 brackets.
+
+    ``urlparse`` already lowercases and strips brackets, so the caller can
+    compare against a plain name or address.
+    """
+    return (urlparse(raw).hostname or "").lower()
+
+
+def _is_link_local(host: str) -> bool:
+    """``169.254.0.0/16`` for IPv4 and ``fe80::/10`` for IPv6.
+
+    Link-local is where a cloud host serves its own identity: 169.254.169.254
+    is the metadata endpoint for AWS, Azure and GCP alike. A media URL on a
+    link-local address is vanishingly rare and a metadata one is exactly what
+    an attacker's URL looks like, so the whole range goes.
+    """
+    if host.startswith("169.254."):
+        return True
+    # fe80::/10 fixes the first ten bits, so the third hex digit is 8, 9, a or b
+    return len(host) >= 3 and host[:2] == "fe" and host[2] in "89ab"
+
+
+# The metadata endpoints that do not sit in link-local space: the IPv6 form
+# AWS documents, and the DNS names GCP and Azure answer to. Listed explicitly
+# rather than derived, because a fuzzy rule here would also reject the
+# legitimate hosts that happen to resolve nearby.
+_METADATA_HOSTS = frozenset(
+    {
+        "fd00:ec2::254",  # AWS IPv6 metadata
+        "metadata.google.internal",
+        "metadata.azure.com",
+    }
+)
+
+
+def _refuse_metadata_endpoint(raw: str) -> None:
+    """Refuse a URL that points at a cloud metadata endpoint.
+
+    This is a boundary check, not egress filtering: it inspects the URL the
+    caller typed, not the address the fetch actually connects to, so a
+    hostname that rebinds to a link-local address is not caught here. That is
+    a narrower hole than the one this closes — the documented vector is a
+    literal IP an attacker can type, and closing the other half is a
+    fetch-time concern that does not belong in this function.
+    """
+    host = _url_host(raw)
+    if not host:
+        return
+    if host in _METADATA_HOSTS or _is_link_local(host):
+        raise ValueError(
+            f"refusing to fetch from '{host}': it is a cloud metadata endpoint, "
+            "which serves this host's own credentials to anyone who reaches it. "
+            "Pass a media URL on a network you meant to fetch from."
+        )
+
+
 def _pipeline_source(raw: str) -> str:
     """Accept a local file or an http(s) URL; refuse everything else.
 
     A ``file://`` URL or a bare drive letter is not a source the pipeline
     should fetch, and neither is an operator the shell would have to expand.
+    A cloud metadata endpoint is refused too, because the web shell will fetch
+    whatever ``source`` it is handed — see ``_refuse_metadata_endpoint`` for
+    what that check does and does not cover.
     """
     text = raw.strip()
     if not text:
@@ -420,6 +481,7 @@ def _pipeline_source(raw: str) -> str:
         scheme = text.split("://", 1)[0].lower()
         if scheme not in ("http", "https"):
             raise ValueError(f"unsupported source scheme '{scheme}'")
+        _refuse_metadata_endpoint(text)
         return text
     # A local path, not a URL. Must exist — downloading is the caller's job
     # when they pass a URL, but a nonexistent local file is a user error we
