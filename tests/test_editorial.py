@@ -14,6 +14,70 @@ def test_thought_segmentation_preserves_complete_thoughts():
     assert "real reason" in thoughts[0].text
 
 
+def test_the_thought_cap_is_taken_inside_the_scan_and_truncates_in_start_order():
+    """``make_thoughts`` used to apply its 4000-thought cap as a post-hoc slice
+    after the whole scan, so on a long transcript it paid the full
+    superlinear cost and then threw most of the result away — 6.0 s against
+    1.8 s on an 80-minute source. The cap is now taken inside the loop.
+
+    That is only equivalent because the list is built in non-decreasing start
+    order: a later sentence index can only append a thought that sorts after
+    the truncated tail, so stopping early returns the same list the slice
+    would have. This test pins that invariant, because it is the whole
+    justification for the change — a future reordering of the generation would
+    silently make the early return return the wrong 4000.
+
+    It is not, and cannot be, a performance regression test: the two
+    implementations are output-identical by construction, so no behavioural
+    assertion distinguishes them. The equivalence was checked by running both
+    over every committed corpus transcript (8, all identical), and the timing
+    is recorded in the audit rather than asserted here."""
+    from pathlib import Path
+    import json
+
+    def build(minutes: int):
+        """A transcript long enough to exceed the cap: 4 s sentences with real
+        word timestamps, since empty word lists would not exercise the
+        per-thought word scan the cost comes from."""
+        segs, t = [], 0.0
+        while t < minutes * 60:
+            words = [
+                Word(start=t + j * 0.3, end=t + j * 0.3 + 0.25, text=f"word number {j}")
+                for j in range(12)
+            ]
+            segs.append(Segment(t, t + 4.0, " ".join(w.text for w in words) + ".", words))
+            t += 4.0
+        return segs
+
+    capped = make_thoughts(build(25))
+    assert len(capped) == 4000, \
+        "this fixture has to reach the cap, or the truncation below asserts nothing"
+    starts = [t.start for t in capped]
+    assert starts == sorted(starts), \
+        "the list must be in start order, or an in-loop cap is not equivalent to a slice"
+
+    # Extending the input past the cap cannot change the returned thoughts.
+    longer = make_thoughts(build(120))
+    assert len(longer) == 4000
+    assert [(t.start, t.end, t.text) for t in capped] == \
+           [(t.start, t.end, t.text) for t in longer]
+
+    # The invariant also has to hold on real transcripts, where sentence
+    # lengths and boilerplate breaks vary.
+    for path in sorted(Path("corpus").rglob("transcript.json"))[:8]:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        rows = data["segments"] if isinstance(data, dict) else data
+        segs = [
+            Segment(float(s["start"]), float(s["end"]), s.get("text") or "", [])
+            for s in rows if isinstance(s, dict) and "start" in s
+        ]
+        if not segs:
+            continue
+        real = make_thoughts(segs)
+        rs = [t.start for t in real]
+        assert rs == sorted(rs), f"{path.name} is not in start order"
+
+
 def test_rank_is_deterministic_and_non_overlapping():
     """Three claims that clear the filter (each 20+ words, 8-55 s, distinct
     content), so the ranking has something to choose from.

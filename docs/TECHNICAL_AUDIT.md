@@ -553,10 +553,52 @@ Implementing the backend is still open and is deliberately not done here — it
 needs a model file and an inference path, neither of which this environment
 can exercise, so a claim of parity would be unverifiable.
 
-### `make_thoughts` is quadratic with the cap applied after the work — INSPECTED
+### `make_thoughts` is quadratic with the cap applied after the work — INSPECTED, then FIXED on the cap half
 
-`_words_in` is called per thought; the 4000-thought cap is enforced after the
-quadratic work is done, so it bounds the output, not the cost.
+`_words_in` is called per thought; the 4000-thought cap was enforced *after*
+the work, so it bounded the output, not the cost.
+
+**The cap half is fixed 2026-09-22, and measured first.** The scaling was
+confirmed on a synthetic transcript before anything was changed:
+
+| source length | before | after |
+|---|---|---|
+| 5 min | 128 ms | 130 ms |
+| 10 min | 295 ms | 298 ms |
+| 20 min | 742 ms | 738 ms |
+| 40 min | 1956 ms | 1169 ms |
+| 80 min | 6043 ms | 1822 ms |
+| 160 min | — | 3054 ms |
+
+Below the cap nothing changes — the cap is not reached, so the code paths are
+identical. Above it the cost is now bounded, growing roughly linearly instead
+of superlinearly, and the 80-minute case is 3.3× faster. The cap is also hit
+on real corpus runs, not just synthetic ones: `emwcon-panel-2018` (842
+segments) and `nasa360-ep5` (425 segments) both return exactly 4000 thoughts.
+
+Stopping inside the loop is equivalent to slicing afterwards **only** because
+the list is built in non-decreasing start order, so a thought a later sentence
+index would append sorts after the truncated tail and would have been sliced
+off anyway. That equivalence is the whole justification for the change, so it
+was checked rather than assumed: a differential test ran the old and new
+implementations over all 8 committed corpus transcripts and compared start,
+end, text, word count, coherence and completeness — all identical. The
+invariant is now pinned by
+`tests/test_editorial.py::test_the_thought_cap_is_taken_inside_the_scan_and_truncates_in_start_order`,
+which asserts monotonic ordering on the synthetic fixture and on every corpus
+transcript.
+
+Said plainly, that test is **not** a performance regression test and does not
+try to be: the two implementations are output-identical by construction, so no
+behavioural assertion distinguishes them. What the test pins is the ordering
+invariant that makes the early return correct. The timing numbers above are
+measurements, recorded here rather than asserted in the suite.
+
+**Still open:** `_words_in` itself, which is 11% of the remaining cost at 80
+minutes (620 ms of 5.6 s before this fix). It rescans `all_segs` from the
+front for every thought even though consecutive thoughts share a window, so a
+cursor would make it amortise. Not done — it is a smaller share than the cap,
+and the correctness argument for a cursor is weaker than the one here.
 
 ### Multi-tenancy: state is a single file — VERIFIED
 
@@ -713,7 +755,7 @@ means the shipped output is wrong and nothing in the system says so.
 | 12 | **Medium** | Scalability | `selekyt/server.py:476-498`, `web/server.mjs:93-148` | One serial sidecar, FIFO `pending[]` with no request id, no timeout. One slow pipeline blocks `/api/ping`; one crash rejects every queued request; a `stdin.write` failure leaves a promise unresolved forever. |
 | 13 | **Medium** | Scalability | `web/server.mjs:297`, `pipeline_state.json` | No project ID, no per-tenant isolation, hardcoded output directory. Two concurrent web runs clobber one state file. Multi-tenancy is a correctness bug, not a scaling task. |
 | 14 | **Low** | Reliability | `selekyt/pipeline.py:502` | `state["complete"] = True` is written and never read; resume keys off `renders`. Dead state. **FIXED 2026-09-22 —** the write is removed (the line is now `:888`, which also records why no completion flag exists). No reader existed anywhere to break. |
-| 15 | **Low** | Scalability | `SileroVADBackend.analyze` (always `NotImplementedError`), `EnergyVAD._read_mono` (full WAV in memory), `make_thoughts` quadratic pre-cap | The documented fallback chain has a leg that cannot fire; one VAD reads a whole file while another in the same package already windows it; the thought cap bounds output, not cost. **The first third is fixed 2026-09-22 —** `is_available` no longer reports a backend whose `analyze` raises (it returned True on a host with onnxruntime and a model path), the module docstring now lists the chain as selected — including `EnergyVAD`, which it omitted though it is the effective default — and `--vad-backend silero` now says "not implemented" and names the working backends. The backend itself is still unimplemented; see "One VAD backend cannot work". `EnergyVAD._read_mono` and `make_thoughts` are still open. |
+| 15 | **Low** | Scalability | `SileroVADBackend.analyze` (always `NotImplementedError`), `EnergyVAD._read_mono` (full WAV in memory), `make_thoughts` quadratic pre-cap | The documented fallback chain has a leg that cannot fire; one VAD reads a whole file while another in the same package already windows it; the thought cap bounds output, not cost. **The first third is fixed 2026-09-22 —** `is_available` no longer reports a backend whose `analyze` raises (it returned True on a host with onnxruntime and a model path), the module docstring now lists the chain as selected — including `EnergyVAD`, which it omitted though it is the effective default — and `--vad-backend silero` now says "not implemented" and names the working backends. The backend itself is still unimplemented; see "One VAD backend cannot work". `EnergyVAD._read_mono` is still open, and `make_thoughts` is half-closed: the cap now bounds cost as well as output (3.3× faster at 80 minutes, output-identical on all 8 corpus transcripts), while `_words_in` still rescans from the front per thought. |
 
 ---
 

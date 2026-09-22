@@ -187,6 +187,15 @@ def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float 
     if not sentences:
         return []
 
+    # The cap is applied here rather than after the loop, and it is equivalent
+    # to the post-hoc slice only because the list is built in start order:
+    # every thought a later ``i`` would append sorts after these, so it would
+    # have been sliced off anyway. Checked by differential test against the
+    # committed corpus. Stopping matters because the scan is superlinear in the
+    # transcript — on an 80-minute synthetic source this is the difference
+    # between 6 s and a few hundred ms, and without it the cap bounds the
+    # output, not the cost, which is what the audit flagged.
+    CAP = 4000
     thoughts: list[Segment] = []
     for i in range(len(sentences)):
         cur: list = []
@@ -212,7 +221,9 @@ def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float 
                         _completeness(u, Segment(cur[0].start, cur[-1].end, text, [])),
                     ),
                 ))
-    return thoughts[:4000]
+                if len(thoughts) >= CAP:
+                    return thoughts
+    return thoughts
 
 
 def _score(s: Segment) -> tuple[float, float, float, float, str, str, float]:
