@@ -146,6 +146,57 @@ def caption_width(text: str) -> int:
 _width = caption_width
 
 
+# The canvas the burned-in captions declare, and the safe area inside it. The
+# width budget below is derived from these, so a font size or a margin change
+# reaching one writer and not the other is what makes a cue wider than the
+# screen it is laid out on.
+PLAYRES_X = 1080
+PLAYRES_Y = 1920
+MARGIN_H = 70
+
+# One column, in em, of the font the captions render in. Measured against the
+# lowercase prose ``caption_width`` calibrates a column on (0.5209 em in DejaVu
+# Sans), plus headroom: a real line mixes capitals and lowercase, and a capital
+# is wider than the mean its column was derived from. 0.55 em is the widest
+# plausible per-column cost at ordinary weight; BOLD_WIDENING covers the
+# synthetic-bold presets, whose capitals run ~8% wider still.
+COLUMN_EM = 0.55
+BOLD_WIDENING = 1.08
+
+
+def max_line_width_for(preset: dict, playres_x: int = PLAYRES_X,
+                       margin_h: int = MARGIN_H) -> int:
+    """How many columns fit between the safe-area margins in this preset.
+
+    ``MAX_LINE_WIDTH`` used to be one number that every writer copied and no
+    writer checked against the canvas. Measured, that number is wrong for the
+    two bold presets: a 34-column cue renders as **four** lines under ``punch``
+    and ``spotlight`` where the policy assumes two, because 58 px bold does not
+    fit 34 columns into the 940 px of safe area. libass wraps rather than
+    clipping, so the cue does not run off the frame — it doubles in height,
+    which nothing measures and which also makes the reading-time hold
+    (computed from 34 columns) shorter than what rendered.
+
+    Deriving the budget makes the relation structural: the budget is a function
+    of the font size and the margin, so a preset change cannot outgrow the
+    canvas without the derivation noticing. The derived budgets are
+    intentionally under the measured one-line capacity — 31/27/28/32 columns
+    against measured capacities of 34/30/30/34 — because the calibration is
+    against the resolved font, which is wider on some hosts than others.
+    """
+    usable = playres_x - 2 * margin_h
+    em = preset["fontsize"] * (BOLD_WIDENING if preset.get("bold") else 1.0)
+    return int(usable // (em * COLUMN_EM))
+
+
+# The width budget every caption writer lays out to, and the word count on top
+# of it. ``MAX_LINE_WIDTH`` remains the *measured* budget — the widest line the
+# policy admits on the reference canvas — and the tests below pin it against
+# the derivation so the two cannot drift apart.
+MAX_LINE_WIDTH = 34
+MAX_WORDS = 6
+
+
 def _tokens(words: list[Word]) -> list[str]:
     return [_clean(w.text).lower() for w in words]
 
@@ -183,7 +234,20 @@ def _emphasis(words: list[Word]) -> set[int]:
     return {i for _, i in scores[:limit]}
 
 
-def build_blocks(candidate: Candidate, max_words: int = 6, max_width: int = 34, max_duration: float = 3.2) -> list[CaptionBlock]:
+def build_blocks(candidate: Candidate, max_words: int = MAX_WORDS,
+                 max_width: int | None = None, max_duration: float = 3.2,
+                 preset: dict | None = None) -> list[CaptionBlock]:
+    # ``max_width`` is derived from the preset when a caller does not name a
+    # canvas: the budget is a width relative to the font size and the safe
+    # area, and a fixed 34 was wrong for the bold presets (see
+    # ``max_line_width_for``). Callers that lay out on a different canvas pass
+    # their own. Imported here rather than at module level because
+    # engine.captions imports this module for ``caption_width``.
+    if max_width is None:
+        from engine.captions import caption_geometry, preset_for
+        geo = caption_geometry()
+        max_width = max_line_width_for(preset or preset_for(),
+                                       geo["playres_x"], geo["margin_h"])
     words = sorted((candidate.words or []), key=lambda w: (w.start, w.end))
     words = [w for w in words if _clean(w.text)]
     # A word straddling the selection end belongs to what the speaker said

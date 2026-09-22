@@ -57,7 +57,9 @@ from engine import timecode
 
 # Shared with engine/captions.py so both caption writers agree on emphasis and
 # on how wide a Telugu/Devanagari glyph is.
-from engine.caption_director import _emphasis, _width, style_name
+from engine.captions import caption_geometry, caption_presets, preset_for
+from engine.caption_director import (_emphasis, _width, max_line_width_for,
+                                     style_name)
 from engine.timeline import Clip, Timeline, format_smpte
 from models.core import Word
 
@@ -67,8 +69,18 @@ BREAK_CHARS = set(SENTENCE_END)
 
 @dataclass(frozen=True)
 class CaptionConfig:
-    max_line_width: int = 34
-    """Display columns per line (a wide glyph counts as 2)."""
+    max_line_width: int | None = None
+    """Display columns per line (a wide glyph counts as 2).
+
+    ``None`` derives the budget from the active preset's font size and the
+    canvas below, which is what makes it a width rather than a number: a fixed
+    34 was wrong for the two bold presets, where a 34-column cue renders as
+    four lines because 58 px bold does not fit that many columns into the safe
+    area. Set explicitly only to lay out on a canvas of a different size — see
+    ``write_ass``, which does that for a timeline whose render is narrower than
+    1080. The number is a width only relative to the presets' font sizes and
+    the safe area — ``tests/test_caption_safe_area.py`` burns the widest line
+    this admits and measures where its pixels land."""
     max_lines: int = 2
     max_cue_seconds: float = 6.0
     min_cue_seconds: float = 0.9
@@ -80,9 +92,11 @@ class CaptionConfig:
     """A silence longer than this closes a cue even mid-sentence."""
     inter_cue_gap: float = 0.04
     """Enforced hole between consecutive cues so players never stack them."""
-    playres_x: int = 1080
-    playres_y: int = 1920
-    margin_h: int = 70
+    # Defaults come from the one geometry the burned-in captions declare, so a
+    # canvas change reaches both writers rather than only the one that made it.
+    playres_x: int = caption_geometry()["playres_x"]
+    playres_y: int = caption_geometry()["playres_y"]
+    margin_h: int = caption_geometry()["margin_h"]
     """Safe-area horizontal margin, in script pixels."""
     font: str = ""
     """Overrides the detected font when non-empty."""
@@ -288,30 +302,35 @@ def timeline_words(
 
 
 def _wrap(words: list[TimelineWord], config: CaptionConfig) -> list[str] | None:
-    """Wrap words into at most ``max_lines`` lines of at most
-    ``max_line_width`` display columns.
+    """Wrap words into at most ``max_lines`` lines of at most the config's
+    display columns.
 
     Returns None when the words do not fit — the caller must then split the
     cue. Whitespace between words is not counted (it does not draw), which is
     why the measured width is per glyph.
     """
+    # The budget is a width on this canvas for this preset, not a constant: a
+    # timeline rendered narrower than 1080 has proportionally less safe area,
+    # and a cue sized for the reference canvas would wrap on it.
+    width = config.max_line_width or max_line_width_for(
+        preset_for(), config.playres_x, config.margin_h)
     lines: list[str] = []
     current: list[str] = []
-    width = 0
+    used = 0
     for w in words:
         token = w.text.strip()
         if not token:
             continue
         add = _width(token) + (1 if current else 0)
-        if width + add > config.max_line_width:
+        if used + add > width:
             if len(lines) + 1 >= config.max_lines:
                 return None
             lines.append(" ".join(current))
             current = [token]
-            width = _width(token)
+            used = _width(token)
         else:
             current.append(token)
-            width += add
+            used += add
     if current:
         lines.append(" ".join(current))
     return lines or None
@@ -483,16 +502,13 @@ def _escape_ass(text: str) -> str:
 
 
 def _ass_presets() -> dict:
-    return {
-        "minimal": dict(fontsize=54, primary="&H00FFFFFF", outline="&H99000000",
-                        back="&H00000000", bold=0, outline_w=2, shadow=1, margin_v=170),
-        "punch": dict(fontsize=58, primary="&H00FFFFFF", outline="&HCC000000",
-                      back="&H00000000", bold=1, outline_w=3, shadow=1, margin_v=180),
-        "spotlight": dict(fontsize=56, primary="&H00FFFFFF", outline="&H99000000",
-                          back="&H00000000", bold=1, outline_w=2, shadow=2, margin_v=170),
-        "noir": dict(fontsize=52, primary="&H00EAEAEA", outline="&HCC111111",
-                     back="&H00000000", bold=0, outline_w=2, shadow=2, margin_v=165),
-    }
+    """The same presets the burned-in captions use.
+
+    A second table here would drift from ``engine.captions`` the way the width
+    functions used to, and the drift is invisible until a cue laid out by this
+    writer no longer fits the canvas the other one measured.
+    """
+    return caption_presets()
 
 
 def _ass_karaoke(cue: CaptionCue, config: CaptionConfig) -> str:

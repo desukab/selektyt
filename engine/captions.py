@@ -6,7 +6,8 @@ from pathlib import Path
 
 from models.core import Candidate, Word
 from engine.caption_director import (
-    build_blocks, style_name, CaptionBlock, caption_width,
+    MAX_LINE_WIDTH, MAX_WORDS, PLAYRES_X, PLAYRES_Y, MARGIN_H,
+    build_blocks, style_name, CaptionBlock, caption_width, max_line_width_for,
 )
 from engine.edit_plan import retention_intervals, join_words
 
@@ -25,6 +26,28 @@ def caption_presets() -> dict:
         "spotlight": dict(fontsize=56, primary="&H00FFFFFF", outline="&H99000000", back="&H00000000", bold=1, outline_w=2, shadow=2, margin_v=170),
         "noir": dict(fontsize=52, primary="&H00EAEAEA", outline="&HCC111111", back="&H00000000", bold=0, outline_w=2, shadow=2, margin_v=165),
     }
+
+
+# The canvas the burned-in captions are laid out on, and the safe area inside
+# it. These live with the width policy in ``engine.caption_director`` because
+# ``caption_width``'s column only means something against them: a line of the
+# budget's width has to fit between the two margins at the preset's font size,
+# which is a relation the places that copy a width would otherwise each assume
+# and none of them test. ``tests/test_caption_safe_area.py`` burns the widest
+# line the policy admits and measures where its pixels land.
+__all__ = ["caption_presets", "preset_for", "caption_geometry", "PLAYRES_X",
+           "PLAYRES_Y", "MARGIN_H"]
+
+
+def caption_geometry() -> dict:
+    """The layout the burned-in ASS declares.
+
+    One source of truth for the same reason as the presets: the timeline's ASS
+    writer carries its own copy of these numbers in ``CaptionConfig``, and a
+    change here that did not reach it would lay the same cue out on two
+    different canvases.
+    """
+    return {"playres_x": PLAYRES_X, "playres_y": PLAYRES_Y, "margin_h": MARGIN_H}
 
 
 def preset_for(style: str | None = None) -> dict:
@@ -53,7 +76,13 @@ def _width(text: str) -> int:
     return caption_width(text)
 
 
-def _group_words(words: list[Word], max_words: int = 6, max_width: int = 34) -> list[list[Word]]:
+def _group_words(words: list[Word], max_words: int = MAX_WORDS,
+                 max_width: int | None = None) -> list[list[Word]]:
+    # Derived rather than defaulted, for the same reason ``build_blocks``
+    # derives it: the budget is a width relative to the preset's font size.
+    if max_width is None:
+        geo = caption_geometry()
+        max_width = max_line_width_for(preset_for(), geo["playres_x"], geo["margin_h"])
     groups: list[list[Word]] = []
     cur: list[Word] = []
     for word in words:
@@ -225,8 +254,12 @@ def ass_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
     out.parent.mkdir(parents=True, exist_ok=True)
 
     p = preset_for()
+    # Declared by name, not embedded: libass resolves it through fontconfig, so
+    # the font that actually renders depends on the machine. "Noto Sans" is not
+    # installed on this build host — fontconfig substitutes DejaVu Sans, which
+    # is wider, so a safe-area bound measured here is conservative rather than
+    # optimistic. tests/test_caption_safe_area.py records what resolved.
     font = os.getenv("SELEKYT_FONT", "Noto Sans")
-
     lines: list[str] = []
     blocks = _blocks_for_candidate(c, words_per_line)
     for (st, en), block in zip(_cue_sequence(c, blocks), blocks):
@@ -234,6 +267,7 @@ def ass_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
         if text:
             lines.append(f"Dialogue: 0,{_ts(st)},{_ts(en)},Default,,0,0,0,,{text}")
 
-    content = f"""[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Default,{font},{p['fontsize']},{p['primary']},&H00FFFFFF,{p['outline']},{p['back']},{p['bold']},0,0,0,100,100,0,0,1,{p['outline_w']},{p['shadow']},2,70,70,{p['margin_v']},1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n""" + "\n".join(lines) + "\n"
+    geo = caption_geometry()
+    content = f"""[Script Info]\nScriptType: v4.00+\nPlayResX: {geo['playres_x']}\nPlayResY: {geo['playres_y']}\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Default,{font},{p['fontsize']},{p['primary']},&H00FFFFFF,{p['outline']},{p['back']},{p['bold']},0,0,0,100,100,0,0,1,{p['outline_w']},{p['shadow']},2,{geo['margin_h']},{geo['margin_h']},{p['margin_v']},1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n""" + "\n".join(lines) + "\n"
     out.write_text(content, encoding="utf-8")
     return out
