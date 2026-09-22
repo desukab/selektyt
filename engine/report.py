@@ -90,9 +90,6 @@ class ReportBuilder:
     def set_config(self, config: dict[str, Any]) -> None:
         self.sections.config = config
 
-    def set_input(self, **kw: Any) -> None:
-        self.sections.input.update(kw)
-
     def set_analysis(self, **kw: Any) -> None:
         self.sections.analysis.update(kw)
 
@@ -179,7 +176,7 @@ def terminal_summary(builder: ReportBuilder) -> str:
         f"Cache status      : {p.cache_status or '(none)'}",
         f"Elapsed           : {p.duration_seconds:.1f}s",
     ]
-    if s.input:
+    if s.candidates:
         lines.append(f"Candidate clips  : {s.candidates.get('count', '-')}")
     if s.editing:
         lines.append(

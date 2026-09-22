@@ -158,10 +158,6 @@ def _build_fused_regions(
     return regions
 
 
-def _in_region(t: float, regions: list[SpeechRegion]) -> bool:
-    return any(s.start - 0.05 <= t <= s.end + 0.05 for s in regions)
-
-
 def _word_in_speech(word: Word, speech: list[SpeechRegion]) -> bool:
     """Is this transcribed word corroborated by detected speech?
 

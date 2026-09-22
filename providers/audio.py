@@ -43,20 +43,6 @@ def extract_pcm_wav(media: Path, out: Path, sample_rate: int = 16000) -> Path:
     return out
 
 
-def pcm_s16_file(media: Path, out: Path, sample_rate: int = 16000) -> Path:
-    """Extract raw signed-16-bit mono PCM (for direct numpy consumption)."""
-    out.parent.mkdir(parents=True, exist_ok=True)
-    tmp = out.with_suffix(".pcm.tmp")
-    cmd = [
-        "ffmpeg", "-y", "-i", str(media), "-vn",
-        "-ac", "1", "-ar", str(sample_rate),
-        "-c:a", "pcm_s16le", "-f", "s16le", str(tmp),
-    ]
-    run_capture(cmd, stage="audio-extract-pcm", source=str(media), target=str(out))
-    tmp.replace(out)
-    return out
-
-
 def source_fingerprint(media: Path, source: str) -> str:
     """Fingerprint a media file independent of path (size + mtime + source)."""
     st = media.stat()

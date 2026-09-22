@@ -93,37 +93,6 @@ def _conforming_wav(wav: Path, sample_rate: int) -> Path:
     return converted
 
 
-def _read_mono_samples(wav: Path) -> tuple[np.ndarray, int]:
-    """Read a PCM WAV to mono float32 in [-1, 1], plus its sample rate.
-
-    Shared by the readers that must load a window of audio. Multichannel PCM
-    is averaged to mono; widths other than 16-bit are scaled from their own
-    integer range so 8/24/32-bit files do not clip or wrap.
-    """
-    import wave
-
-    with wave.open(str(wav), "rb") as f:
-        channels = f.getnchannels()
-        rate = f.getframerate()
-        width = f.getsampwidth()
-        n = f.getnframes()
-        if n <= 0:
-            return np.zeros(0, dtype=np.float32), rate
-        raw = f.readframes(n)
-    if width == 2:
-        data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
-    elif width == 1:
-        # 8-bit PCM is unsigned, centred on 128.
-        data = (np.frombuffer(raw, dtype=np.uint8).astype(np.float32) - 128.0) / 128.0
-    elif width == 4:
-        data = np.frombuffer(raw, dtype=np.int32).astype(np.float32) / 2147483648.0
-    else:
-        raise ValueError(f"unsupported PCM sample width: {width * 8}-bit")
-    if channels > 1:
-        data = data.reshape(-1, channels).mean(axis=1)
-    return data, rate
-
-
 # ── Energy-based VAD (pure numpy, deterministic, no deps) ──
 
 class EnergyVAD(VADBackend):

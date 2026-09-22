@@ -109,9 +109,6 @@ class MultiTrackProject:
     tracks: list[TimelineTrack] = field(default_factory=list)
     source_duration: float = 0.0
 
-    def add_track(self, track: TimelineTrack) -> None:
-        self.tracks.append(track)
-
     @property
     def output_duration(self) -> float:
         if not self.tracks:

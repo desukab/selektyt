@@ -197,10 +197,6 @@ MAX_LINE_WIDTH = 34
 MAX_WORDS = 6
 
 
-def _tokens(words: list[Word]) -> list[str]:
-    return [_clean(w.text).lower() for w in words]
-
-
 def _emphasis(words: list[Word]) -> set[int]:
     """Pick a few meaningful words without requiring an LLM.
 

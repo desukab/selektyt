@@ -168,11 +168,6 @@ def retention_intervals(c: Candidate, min_pause: float = 0.70, keep_pause: float
     return intervals
 
 
-def filler_words(c: Candidate) -> list[str]:
-    """Return conservatively recognized filler tokens for reporting/UI."""
-    return [w.text for w in (c.words or []) if _is_filler(w.text)]
-
-
 def pacing_report(c: Candidate, truth: dict | None = None) -> dict:
     """Per-candidate pacing diagnostics.
 

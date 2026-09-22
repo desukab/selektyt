@@ -68,25 +68,6 @@ def probe(path: Path) -> dict:
     return rec
 
 
-def _audio_seconds(path: Path) -> float | None:
-    """Decodable audio length, or None when the container is not readable.
-
-    A structurally damaged container can still play; this is the same decode
-    the pipeline performs, so a source whose audio cannot be decoded is a
-    source the pipeline cannot run on, and that needs to be distinguishable
-    from 'decodes but contains no speech'.
-    """
-    try:
-        out = subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-             "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
-            capture_output=True, text=True, check=True, timeout=300,
-        )
-        return float(out.stdout.strip() or 0.0)
-    except (subprocess.CalledProcessError, ValueError, OSError):
-        return None
-
-
 def fetch(entry: dict, media_dir: Path) -> tuple[Path | None, str | None]:
     """Fetch a source once into media_dir. Returns (path, error)."""
     url = entry.get("url")

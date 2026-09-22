@@ -236,10 +236,6 @@ RE_ILLUSTRATION = _compile(_ILLUSTRATION)
 _TERMINAL_PUNCT = set(".?!।॥？。")
 
 
-def _ends_with_question(text: str) -> bool:
-    return text.strip().endswith("?")
-
-
 def _is_interrogative(text: str) -> bool:
     """A question mark is decisive; a question opener is a strong cue."""
     t = text.strip()
@@ -248,13 +244,6 @@ def _is_interrogative(text: str) -> bool:
     if t[-1] == "?":
         return True
     return bool(RE_QUESTION_OPEN.match(t))
-
-
-def _first_token_lower(text: str) -> str:
-    t = text.strip().split()
-    if not t:
-        return ""
-    return "".join(ch for ch in t[0].lower() if ch.isalnum()).strip()
 
 
 # ── data contract ──────────────────────────────────────────────────────────
@@ -401,20 +390,6 @@ def _unit_cues(text: str) -> tuple[list[str], dict[str, int]]:
             counts[name] = len(found)
             cues.extend(str(f) for f in found[:4])  # bounded evidence
     return cues, counts
-
-
-def _question_signal(unit_sentences: list[list[Sentence]]) -> tuple[bool, str]:
-    """Does this unit ask something, and what does it ask (verbatim)?
-
-    Takes the unit's sentence list (a list of lists, one per unit) so the caller
-    cannot pass a single unit's sentences by mistake; the flat variant below is
-    used where a sentence list is already in hand.
-    """
-    for sents in unit_sentences:
-        for s in sents:
-            if _is_interrogative(s.text):
-                return True, quote(s.text, 110)
-    return False, ""
 
 
 def _flat_question_signal(sentences: list[Sentence]) -> tuple[bool, str]:

@@ -38,15 +38,6 @@ def content_tokens(text: str) -> set[str]:
     return _content_tokens(text)
 
 
-def sentence_terms(text: str) -> list[str]:
-    """Ordered content tokens of a sentence (duplicates kept, order preserved).
-
-    Ordered terms support n-gram restart detection, where position matters; the
-    set form above supports overlap, where it does not.
-    """
-    return [t for t in re.findall(r"\w+", text.lower(), flags=re.UNICODE) if t in content_tokens(text)]
-
-
 def df_table(unit_texts: list[str]) -> Counter:
     """Document frequency of every content token across the units.
 

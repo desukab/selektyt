@@ -43,18 +43,6 @@ def _sentence_end(text: str) -> bool:
     return bool(re.search(r"[.!?।॥？！]$", text.strip()))
 
 
-def _is_semantic_boundary(segments: list[Segment], idx: int) -> bool:
-    """Is position `idx` a good semantic boundary to start a candidate clip?
-
-    A boundary exists at:
-      - The very first segment (always valid)
-      - After the previous segment ended with terminal punctuation (new sentence)
-    """
-    if idx == 0:
-        return True
-    return _sentence_end(segments[idx - 1].text)
-
-
 def _standalone_score(text_lower: str) -> float:
     """1.0 = strong standalone; 0.0 = starts mid-conversation or with connective."""
     words = text_lower.split()
@@ -128,35 +116,6 @@ def _words_in(segs: list[Segment], start: float, end: float) -> list:
             if w.end <= start or w.start >= end:
                 continue
             out.append(w)
-    return out
-
-
-def _spans_from_unit(unit, segs: list[Segment], min_sec: float, max_sec: float) -> list[Segment]:
-    """Every candidate span starting inside one story unit.
-
-    A span may run past the unit's end into the next one — crossing a weak
-    boundary is allowed and penalised later by the coherence score, since a
-    lexically diverse paragraph and a genuine story splice are not the same
-    thing. A span may never include a boilerplate sentence: bylines and
-    section markers are cut points, not content.
-    """
-    sents = unit.sentences
-    out: list[Segment] = []
-    for i in range(len(sents)):
-        cur: list = []
-        for s in sents[i:]:
-            if s.boilerplate:
-                break
-            cur.append(s)
-            duration = cur[-1].end - cur[0].start
-            if duration > max_sec:
-                break
-            if duration >= min_sec and (_sentence_end(s.text) or duration >= max_sec - 2):
-                out.append(Segment(
-                    cur[0].start, cur[-1].end,
-                    " ".join(x.text for x in cur).strip(),
-                    _words_in(segs, cur[0].start, cur[-1].end),
-                ))
     return out
 
 
