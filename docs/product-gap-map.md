@@ -30,7 +30,7 @@ at once.
 | faster-whisper, word timestamps + VAD | complete and verified | real transcription of the real local source |
 | Chunked decode for long sources | complete and verified | the real URL source was decoded and transcribed in chunks (5 × 5 min of genuine two-host human speech), with `chunking`/`chunks` carried in provenance. No boundary artefacts appeared in the transcript or in any downstream cut |
 | sherpa-onnx fallback | not verified | no wheel + model on this host; the fallback is recorded in provenance when it runs, and it does not run here |
-| silero VAD | not verified | model file unavailable; `fallback_reason` reports the energy backend instead |
+| silero VAD | not implemented | the backend is a stub: `analyze` raises and `is_available` reports False whatever the host has. `fallback_reason` reports the energy backend, which is the real default. Asking for `--vad-backend silero` now says "not implemented" and names the backends that work; implementing it needs a model file and an inference path this environment cannot exercise |
 | Forced language (`--language te`) | partially verified | language forcing is exercised through the transcription fixtures, and real non-English audio has since been transcribed — Telugu (OpenSLR SLR66) and Polish (MLS test). The forcing works. The *quality* does not extend to every language: Telugu scores WER 151.08% on `small` / 91.54% on `medium` (0 and 1 of 50 clips inside a 25% bar) where Polish scores 11.01% on that same `small` model. So the gap is language fit, not the forcing path |
 
 The real source used for the final pass is genuine unscripted human speech —

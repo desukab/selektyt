@@ -134,7 +134,10 @@ def main() -> None:
     p.add_argument(
         "--vad-backend", default=None,
         choices=["energy", "ffmpeg", "silero", "whisper"],
-        help="Force VAD backend (default: auto-select best available)",
+        help="Force VAD backend (default: auto-select best available). "
+             "'silero' is listed because the CLI accepts it, not because it "
+             "works: that backend is not implemented and fails with a message "
+             "naming the ones that do.",
     )
     p.add_argument(
         "--silence-threshold", type=float, default=0.5,

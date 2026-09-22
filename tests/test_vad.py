@@ -195,6 +195,32 @@ def test_silero_not_available_unless_onnxruntime():
     assert backend.is_available() is False
 
 
+def test_silero_reports_unavailable_even_when_onnxruntime_is_present(monkeypatch):
+    """The old ``is_available`` asked only whether onnxruntime was importable
+    and whether a model path was supplied — both of which a host can satisfy —
+    while ``analyze`` raised ``NotImplementedError`` regardless. So the backend
+    could report available and then fail at the call. The stub has to say no
+    whatever the environment has, because the inference path does not exist."""
+    import sys, types
+
+    fake = types.ModuleType("onnxruntime")
+    monkeypatch.setitem(sys.modules, "onnxruntime", fake)
+    assert SileroVADBackend(model_path="/nonexistent/silero_v5.onnx").is_available() is False
+
+
+def test_forcing_the_silero_backend_says_it_is_not_implemented():
+    """A user who passes ``--vad-backend silero`` (it is in the CLI help and
+    the runbook) is not served by "backend 'silero' unavailable" — that sends
+    them to install onnxruntime, which cannot help, since the backend is a
+    placeholder. The message has to name the real condition and the backends
+    that do work."""
+    with pytest.raises(RuntimeError) as excinfo:
+        get_vad_backend(force="silero")
+    message = str(excinfo.value)
+    assert "not implemented" in message
+    assert "energy" in message
+
+
 # ── backend selection and persistence ──
 
 def test_get_vad_backend_default_is_energy_or_ffmpeg():

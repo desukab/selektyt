@@ -107,6 +107,9 @@ usage: selekyt [-h] [--out OUT] [--model MODEL] [--language LANGUAGE]
                [--cookies COOKIES] [--doctor] [--ollama-url OLLAMA_URL]
                [--audio-analysis]
                [--vad-backend {energy,ffmpeg,silero,whisper}]
+               # silero is accepted but not implemented — it fails with a
+               # message naming the backends that do work. The real chain is
+               # energy → ffmpeg → whisper.
                [--silence-threshold SILENCE_THRESHOLD]
                ...
                [source]

@@ -501,13 +501,32 @@ volume, with 100 concurrent analyses, that is tens of GB. `providers/sherpa.py:3
 `_WindowedWav` already solves this with windowed reads — the better
 implementation exists in the same package and is not shared.
 
-### One VAD backend cannot work — INSPECTED
+### One VAD backend cannot work — INSPECTED, then FIXED to say so
 
-`SileroVADBackend.analyze` always raises `NotImplementedError` and its
-`is_available` can never return true. It is listed as a fallback in the chain,
-so the fallback chain documents a leg that cannot fire. A user who selects it
-gets a runtime error with no indication that the backend was never
+`SileroVADBackend.analyze` always raised `NotImplementedError`, yet
+`is_available` asked only whether onnxruntime was importable and a model path
+was supplied — both satisfiable on a real host — so the backend could report
+*available* and then raise at the call. It was listed as the preferred leg of
+the chain, so the chain documented a leg that could not fire, and a user who
+selected it got a runtime error with no indication that the backend was never
 implemented.
+
+**Fixed 2026-09-22 by making the stub honest, not by implementing it.**
+`is_available` now returns False whatever the environment has, because the
+inference path does not exist; the class docstring says the backend is not
+implemented and explains why it remains in the registry (so `--vad-backend
+silero` reports "not implemented" rather than "unknown backend"); the module
+docstring now lists the chain as it is actually selected, including EnergyVAD,
+which the old docstring omitted entirely though it is the effective default;
+and forcing silero now names the real condition and the backends that do work,
+instead of "unavailable", which sends a user to install onnxruntime to fix
+something the code does not have. Pinned by
+`tests/test_vad.py::test_silero_reports_unavailable_even_when_onnxruntime_is_present`
+(mutation-verified against the old check) and `::test_forcing_the_silero_backend_says_it_is_not_implemented`.
+
+Implementing the backend is still open and is deliberately not done here — it
+needs a model file and an inference path, neither of which this environment
+can exercise, so a claim of parity would be unverifiable.
 
 ### `make_thoughts` is quadratic with the cap applied after the work — INSPECTED
 
@@ -669,7 +688,7 @@ means the shipped output is wrong and nothing in the system says so.
 | 12 | **Medium** | Scalability | `selekyt/server.py:476-498`, `web/server.mjs:93-148` | One serial sidecar, FIFO `pending[]` with no request id, no timeout. One slow pipeline blocks `/api/ping`; one crash rejects every queued request; a `stdin.write` failure leaves a promise unresolved forever. |
 | 13 | **Medium** | Scalability | `web/server.mjs:297`, `pipeline_state.json` | No project ID, no per-tenant isolation, hardcoded output directory. Two concurrent web runs clobber one state file. Multi-tenancy is a correctness bug, not a scaling task. |
 | 14 | **Low** | Reliability | `selekyt/pipeline.py:502` | `state["complete"] = True` is written and never read; resume keys off `renders`. Dead state. **FIXED 2026-09-22 —** the write is removed (the line is now `:888`, which also records why no completion flag exists). No reader existed anywhere to break. |
-| 15 | **Low** | Scalability | `SileroVADBackend.analyze` (always `NotImplementedError`), `EnergyVAD._read_mono` (full WAV in memory), `make_thoughts` quadratic pre-cap | The documented fallback chain has a leg that cannot fire; one VAD reads a whole file while another in the same package already windows it; the thought cap bounds output, not cost. |
+| 15 | **Low** | Scalability | `SileroVADBackend.analyze` (always `NotImplementedError`), `EnergyVAD._read_mono` (full WAV in memory), `make_thoughts` quadratic pre-cap | The documented fallback chain has a leg that cannot fire; one VAD reads a whole file while another in the same package already windows it; the thought cap bounds output, not cost. **The first third is fixed 2026-09-22 —** `is_available` no longer reports a backend whose `analyze` raises (it returned True on a host with onnxruntime and a model path), the module docstring now lists the chain as selected — including `EnergyVAD`, which it omitted though it is the effective default — and `--vad-backend silero` now says "not implemented" and names the working backends. The backend itself is still unimplemented; see "One VAD backend cannot work". `EnergyVAD._read_mono` and `make_thoughts` are still open. |
 
 ---
 

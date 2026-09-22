@@ -5,10 +5,16 @@ segmentation: raw per-frame probabilities are computed once and cached;
 threshold/hysteresis/padding/min-speech/min-silence are applied later
 without re-running the model.
 
-Backend hierarchy:
-  ├── SileroVADBackend        (preferred, when installable)
+Backend hierarchy as actually selected (see ``get_vad_backend``):
+  ├── SileroVADBackend        (the intended preferred backend; **not
+  |                           implemented**, so this leg never fires and the
+  |                           chain always starts at energy)
+  ├── EnergyVAD               (the effective default on a normal host)
   ├── FFmpegVADBackend        (always available fallback)
   └── WhisperVADBackend       (last-resort, uses transcript word timestamps)
+
+``SileroVADBackend`` is kept in the registry so that asking for it by name
+reports "not implemented" rather than "unknown backend".
 """
 from __future__ import annotations
 
@@ -282,7 +288,20 @@ class WhisperVADBackend(VADBackend):
 
 
 class SileroVADBackend(VADBackend):
-    """Silero V5 via onnxruntime — preferred when the package is installable."""
+    """Silero V5 via onnxruntime — the intended preferred backend, **not
+    implemented**.
+
+    The model is never loaded and ``analyze`` cannot run, so ``is_available``
+    reports False whatever the environment has installed. It stays in the
+    registry for a reason: a user who asks for it by name should hear "not
+    implemented", not "unknown backend", and the selection chain needs
+    something concrete to name when it explains why it fell back.
+
+    Note the asymmetry with the other backends: those are unavailable because
+    of this *host* (no ffmpeg, no transcript), which is fixable by installing
+    something; this one is unavailable because the code does not exist. That
+    is why its forced-selection error carries a different message.
+    """
 
     name = "silero"
     vad_model = "silero-v5"
@@ -291,16 +310,17 @@ class SileroVADBackend(VADBackend):
         self.model_path = model_path
 
     def is_available(self) -> bool:
-        try:
-            import onnxruntime  # noqa: F401
-        except ImportError:
-            return False
-        return self.model_path is not None
+        # Deliberately not "can onnxruntime be imported": the inference path
+        # does not exist, so reporting available here would hand a caller a
+        # backend whose analyze() raises. When the backend is implemented this
+        # becomes the real check against onnxruntime and the model file.
+        return False
 
     def analyze(self, audio: Path) -> VADResult:
         raise NotImplementedError(
-            "SileroVADBackend requires onnxruntime + model file. Not installed on "
-            "this environment; falling back to energy/ffmpeg/whisper backends."
+            "the silero VAD backend is not implemented: analyze() is a "
+            "placeholder. The selection chain falls back to energy, ffmpeg or "
+            "whisper automatically; pass one of those by name to choose."
         )
 
 
@@ -331,6 +351,15 @@ def get_vad_backend(force: str | None = None,
         else:
             instance = backend(fallback_reason="forced")
         if not instance.is_available():
+            if force == "silero":
+                # A different message from the other backends because it is a
+                # different condition: they are missing on this host, this one
+                # is missing from the codebase. Saying "unavailable" here would
+                # send a user to install something that cannot help.
+                raise RuntimeError(
+                    "the silero VAD backend is not implemented; "
+                    "use --vad-backend energy, ffmpeg or whisper"
+                )
             raise RuntimeError(f"VAD backend '{force}' unavailable")
         return instance
 
