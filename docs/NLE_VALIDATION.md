@@ -24,8 +24,12 @@ Two independent, unrelated parsers accept every timeline SelekyT emits:
 Both agree with the ffmpeg render to within `RENDER_FRAME_TOLERANCE` — asserted
 by `tools/nle_check.py`, which compares timeline spans against the rendered
 `.mp4` durations on the frame grid the timelines were stamped on, plus an
-EDL↔FCPXML cross-check. On `nasa360-ep5`, all six clips agree to **0.00 frames**
-against both presets.
+EDL↔FCPXML cross-check. On `nasa360-ep5`, all six clips agree to **within 0.63
+frames** against both presets — five of the six match the render exactly, and
+the worst case is clip 02 at 0.63 frames of a 29.97 fps frame. Full transcript:
+`docs/nle-audit-output.txt`, regenerable with the command above. Twelve checks
+skip, because `corpus_run.py` deletes the source media unless `--keep-media` is
+passed, so media relink cannot be verified from the committed tree.
 
 **What this is worth, honestly:** a library that parses a format is not an NLE.
 `pycmx` accepting the EDL proves the file is a well-formed CMX 3600 document

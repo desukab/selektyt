@@ -322,7 +322,8 @@ code that could not be executed here.
    LZMA over that is slow — the silent install alone takes 69 seconds on the
    runner — and the artifact is 1.5 GB to download. The single biggest lever is
    not ffmpeg or the interpreter: the whisper `small` weights are staged
-   **three times byte-for-byte** (922 MiB of the 2058 MiB total), which is a
+   **three times byte-for-byte** (1383 MiB of the 2057.5 MiB total; compressed,
+   1275 MiB of the 1525.2 MiB package), which is a
    `stage-windows.sh` layout defect, not a packaging one. Fixing it needs a
    Windows run to confirm the interpreter still resolves the weights.
 6. **The GUI has now rendered — but on Linux under xvfb, never on Windows.**
@@ -491,8 +492,8 @@ build succeeded, but built is still not installed.
    still says `Executable="SelekyT.exe"` — the committed copy and the installed
    payload agreed, so no correction fired. Identity matches `tauri.conf.json`
    on all four fields. One real defect found and *not* fixed: the whisper
-   `small` weights are in the package three times byte-for-byte, 922 MiB of a
-   2058 MiB payload. That is a staging-layout problem, and it needs a Windows
+   `small` weights are in the package three times byte-for-byte, 1383 MiB of a
+   2057.5 MiB payload. That is a staging-layout problem, and it needs a Windows
    run to fix safely.
 
    This host has no MakeAppx, no Windows SDK and no PowerShell, and that is

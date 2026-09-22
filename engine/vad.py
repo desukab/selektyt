@@ -240,6 +240,16 @@ class FFmpegVADBackend(VADBackend):
 # ── Whisper timestamps last-resort ──
 
 class WhisperVADBackend(VADBackend):
+    """Speech presence inferred from transcript word timings, not from audio.
+
+    This is a last-resort backend, selected only when silero, energy and ffmpeg
+    are all unavailable. ``analyze`` deliberately does not read its ``audio``
+    argument: it marks a frame as speech iff a transcribed word covers it. It
+    therefore cannot find speech the transcriber missed, and on a source with a
+    music bed under no speech it reports the bed as silence. Both limits are
+    why the backends above are preferred, and both are recorded in the audio
+    summary via ``fallback_reason``.
+    """
     name = "whisper"
     vad_model = "whisper-wordtimestamps"
 

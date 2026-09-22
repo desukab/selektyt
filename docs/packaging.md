@@ -309,7 +309,7 @@ that correction came back 42 bytes early and reported all six assets missing.
 One real finding from the payload, reported not fixed: the whisper `small`
 weights are in the package **three times byte-for-byte** (crc32 `81093b67`,
 483546902 bytes each) — the snapshot `model.bin`, the repo blob, and a
-`models/hub/blobs/42/...` copy. That is 922 MiB of a 2058 MiB payload, ~45%,
+`models/hub/blobs/42/...` copy. That is 1383 MiB of a 2057.5 MiB payload, 67%,
 being one file. It is a staging-layout question in `stage-windows.sh`, not a
 manifest or MakeAppx one, and it is deliberately left alone here: pruning it
 needs a Windows run to confirm the interpreter still resolves the weights, and
@@ -387,8 +387,9 @@ could not be executed here, not a verified result.
    2057.5 MiB uncompressed across 9550 files (1525.2 MiB compressed in the
    package, 1527.4 MB as the runner reported the artifact). The single largest
    component is the whisper `small` weights, and they are in the package
-   **three times** — 922 MiB of the 2058 MiB total is one 461 MiB file
-   duplicated (see "The Store / sideload path"). Fixing that staging layout is
+   **three times** — 1383 MiB of the 2057.5 MiB total is one 461 MiB file
+   duplicated, and compressed those three copies are 1275 MiB of the package's
+   1525.2 MiB (see "The Store / sideload path"). Fixing that staging layout is
    the biggest available size win, and it needs a Windows run to confirm the
    interpreter still finds the weights afterwards. Under NSIS's 2 GB ceiling,
    but LZMA over 2 GB is slow and the artifact is big.

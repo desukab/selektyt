@@ -174,7 +174,7 @@ What sits between them is SelekyT-authored:
 public domain), run end to end through the web shell: 25 artifacts, QA
 `ok: true`, 0 errors. `tools/editorial_audit.py` reported **ALL CHECKS PASS** —
 cuts land between words, no sentence is split, no shaved tail word, cue text
-matches transcript text, cues fit the render, silence share 3.6–14.7%. Pacing:
+matches transcript text, cues fit the render, silence share 3.6–40.8%. Pacing:
 average 19.91s per clip, 3.74 words/sec, hook latency 0.63s, payoff present in
 3/3. The hooks are real sentences a viewer can follow without prior context:
 *"Welcome to the world's largest clean room."* Transcript quality on real human

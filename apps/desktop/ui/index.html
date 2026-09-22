@@ -47,8 +47,8 @@
         <p class="sub">
           SelekyT transcribes your video locally, finds the complete thoughts
           worth keeping, removes dead air, and renders social cuts with
-          word-timed captions — plus an editable timeline you can take into
-          your NLE. Nothing leaves this machine.
+          word-timed captions — plus an editable timeline exported as FCPXML
+          and EDL. Nothing leaves this machine.
         </p>
         <button id="pick" class="primary big">Select Video…</button>
         <p class="hint" id="resume-hint" hidden></p>
@@ -93,9 +93,9 @@
               <label class="field">
                 <span>VAD (speech detection)</span>
                 <select id="opt-vad">
-                  <option value="whisper">whisper — best, if installed</option>
-                  <option value="silero">silero</option>
-                  <option value="ffmpeg">ffmpeg</option>
+                  <option value="silero">silero — neural, needs model</option>
+                  <option value="whisper">whisper — transcript timings only</option>
+                  <option value="ffmpeg">ffmpeg — silencedetect</option>
                   <option value="energy" selected>energy — always available</option>
                 </select>
               </label>

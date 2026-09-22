@@ -321,8 +321,9 @@ then finish all reads inside one window.
 **One real defect found in the payload and deliberately not fixed:** the
 whisper `small` weights are in the package **three times byte-for-byte**
 (crc32 `81093b67`, 483546902 bytes each) — the snapshot `model.bin`, the repo
-blob, and a `models/hub/blobs/42/...` copy. 922 MiB of a 2058 MiB payload, on
-the order of 45%, is one file. This is a `stage-windows.sh` staging-layout
+blob, and a `models/hub/blobs/42/...` copy. 1383 MiB of a 2057.5 MiB payload,
+67%, is one file; compressed, the three copies are 1275 MiB of the package's
+1525.2 MiB, 84%. This is a `stage-windows.sh` staging-layout
 question, not a manifest or MakeAppx one, and pruning it needs a Windows run to
 confirm the interpreter still resolves the weights — which this host cannot
 provide. It is the single highest-value size win available.
@@ -1731,10 +1732,11 @@ selections).
      mode, but SmartScreen reputation still has to be earned, and this is a
      release/distribution problem to state plainly, not a bypass to document.
    - **New, found while verifying the green artifact:** the whisper `small`
-     weights are staged into the payload **three times byte-for-byte** — 922 MiB
-     of a 2058 MiB package is one 461 MiB file. Fixing this in
+     weights are staged into the payload **three times byte-for-byte** — 1383
+     MiB of a 2057.5 MiB package is one 461 MiB file, and compressed the three
+     copies are 1275 MiB of the 1525.2 MiB package. Fixing this in
      `stage-windows.sh` is the largest available size win and would cut the
-     artifact roughly to half, but it must be followed by a Windows run
+     artifact to roughly half, but it must be followed by a Windows run
      confirming the interpreter still resolves the weights, because
      `huggingface_hub`'s cache layout is what it is importing from.
 10. **Audit the preserved worktrees for now-merged or superseded work** and

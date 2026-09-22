@@ -43,11 +43,25 @@ def _title_options(c: Candidate) -> list[str]:
     return list(dict.fromkeys(o for o in options if o))[:3]
 
 
+_TOPICAL = frozenset({
+    "telugu", "india", "technology", "tech", "podcast", "business",
+    "ai", "youtube", "cinema",
+})
+
+
 def _hashtags(c: Candidate) -> list[str]:
-    tags = {"#reels", "#shorts", "#india"}
+    """Format tags plus only the topical tags the source text itself carries.
+
+    ``#reels`` and ``#shorts`` describe the vertical export, which is true of
+    every pack. A topical tag is different in kind: it asserts the clip is
+    *about* something, so it may only follow from a word the speaker said. An
+    unconditional ``#india`` would put that assertion in every pack beside the
+    "no fabricated claims" line, which is exactly what that line denies.
+    """
+    tags = {"#reels", "#shorts"}
     for token in _words(c.text):
         low = token.lower()
-        if low in {"telugu", "india", "technology", "tech", "podcast", "business", "ai", "youtube", "cinema"}:
+        if low in _TOPICAL:
             tags.add("#" + low)
     if c.story_type:
         tags.add("#" + c.story_type)
