@@ -186,9 +186,23 @@ def main() -> None:
         "--server", action="store_true",
         help="Run the Python JSON-RPC sidecar loop instead of the pipeline",
     )
+    p.add_argument(
+        "--clean-project", metavar="DIR",
+        help="Reclaim the intermediates a finished run no longer needs "
+             "(transcription checkpoints and the downloaded source). Refuses "
+             "unless every render the edit plan called for is on disk. Use "
+             "--keep-source to preserve the downloaded media.",
+    )
+    p.add_argument(
+        "--keep-source", action="store_true",
+        help="With --clean-project, keep the downloaded media (what "
+             "tools/nle_check.py probes and a re-render needs)",
+    )
     args = p.parse_args()
     if args.server:
         raise SystemExit(serve_python())
+    if args.clean_project:
+        raise SystemExit(_report_cleanup(Path(args.clean_project), keep_source=args.keep_source))
     if args.source:
         _validate_args(p, args)
     if args.doctor or not args.source:
@@ -222,6 +236,30 @@ def main() -> None:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
         print(f"SelekyT complete: {project}")
+
+
+def _report_cleanup(project: Path, *, keep_source: bool = False) -> int:
+    """Print what ``--clean-project`` removed, or why it refused.
+
+    The bytes are the point of the command, so they are reported in a form a
+    person can read; the exit code is 1 on a refusal so a script can tell a
+    no-op from a success."""
+    from selekyt.pipeline import reclaim_intermediates
+    result = reclaim_intermediates(project, keep_source=keep_source)
+    if not result["ok"]:
+        print(f"not cleaning {project}: {result['reason']}")
+        return 1
+    for row in result["removed"]:
+        mb = row["bytes"] / (1024 * 1024)
+        print(f"removed {row['dir']}/ ({mb:.1f} MB)")
+    if not result["removed"]:
+        print(f"{project} has no regenerable intermediates to reclaim")
+    if result.get("re_download_on_rerun"):
+        print(
+            "the downloaded source is gone; a re-run will fetch it again "
+            "(keep it with --keep-source if you intend to re-render)"
+        )
+    return 0
 
 
 if __name__ == "__main__":

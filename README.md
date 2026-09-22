@@ -84,6 +84,20 @@ Check the local environment:
 selekyt --doctor
 ```
 
+Reclaim the disk a finished run no longer needs. Most of a project's bytes are
+intermediates — the downloaded source and the extracted audio plus transcription
+checkpoints — not the deliverables, and nothing deleted them:
+
+```bash
+selekyt --clean-project out/project           # reports what it removed
+selekyt --clean-project out/project --keep-source   # keep the download to re-render
+```
+
+It refuses unless every render the edit plan called for is on disk, because
+deleting those intermediates mid-run would break resume. `--keep-source`
+preserves the downloaded media, which is what `tools/nle_check.py` probes and a
+re-run renders from.
+
 For URL sources, support depends on the source host and access conditions. Local files are the most reliable path today.
 
 ## Product direction

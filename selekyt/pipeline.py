@@ -933,3 +933,120 @@ def run(
     state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "render_selection_digest": sel_digest, "selected_count": len(selected), "qa": str(qa_path)})
     _save_state(state_path, state)
     return project
+
+
+# ── retention: the bytes a finished run does not need to keep ────────────────
+
+# Directories whose contents the pipeline regenerates on a re-run. ``source`` is
+# the downloaded media (a local source is never copied in, so it is absent on a
+# local-file run) and ``transcription`` is the extracted 16 k mono audio plus
+# the per-chunk ASR checkpoints.
+#
+# ``transcript.json`` is deliberately *not* on this list: a re-run reuses it, so
+# removing it would force a re-transcription on every later invocation. The
+# deliverables (``facebook/``, ``shorts/``, ``timeline/``, ``captions/``,
+# ``content_pack/``) and every report are likewise kept — they are the output.
+REGENERABLE_DIRS = ("source", "transcription")
+
+
+def _rendered_files(project: Path, renders: dict) -> list[Path]:
+    """Every MP4 the state claims to have rendered, by where renders are written.
+
+    Completeness is judged on the conventional location rather than the path
+    recorded in the state, because that path's shape is not stable: the current
+    run records an absolute path (``project`` is resolved before the render
+    loop), but corpus states predating that fix record paths relative to the
+    invocation's cwd. Reading the recorded string would then look for a file
+    relative to this process's cwd and find or miss it depending on where the
+    caller stands — the same ambiguity ``report.json``'s own paths had. The
+    renders are always written to ``<project>/facebook/<idx>.mp4`` and
+    ``<project>/shorts/<idx>.mp4``, so that is what is checked."""
+    out = []
+    for idx in renders:
+        for kind in ("facebook", "shorts"):
+            out.append(project / kind / f"{idx}.mp4")
+    return out
+
+
+def cleanable(project: Path) -> tuple[bool, str]:
+    """Whether it is safe to reclaim this project's intermediates.
+
+    A run is cleanable only when every render the edit plan called for is on
+    disk. Deleting the extracted audio or the downloaded source partway through
+    would break resume: a resumed run needs the source to re-render and the
+    checkpoints to avoid re-transcribing the parts it had finished. Once the
+    renders exist, none of that is needed again unless the run is re-run, and a
+    re-run regenerates both from the source URL or the local path — at the cost
+    of a download, which is the trade the caller is opting into.
+    """
+    project = project.resolve()
+    state_path = project / STATE_NAME
+    if not state_path.is_file():
+        return False, f"{state_path} does not exist; this is not a pipeline project directory"
+    state = _load_state(state_path)
+    renders = state.get("renders") or {}
+    if not renders:
+        return False, "no renders are recorded in pipeline_state.json, so the run has not finished"
+    for path in _rendered_files(project, renders):
+        if not path.is_file():
+            return False, f"{path.name} is recorded as rendered but is missing; the run is incomplete"
+    selected_count = state.get("selected_count")
+    if selected_count is not None and len(renders) < int(selected_count):
+        return False, (
+            f"{len(renders)} of {selected_count} selected clips are rendered; "
+            "the rest are still outstanding"
+        )
+    return True, ""
+
+
+def reclaim_intermediates(project: Path, keep_source: bool = False) -> dict:
+    """Remove the intermediates a finished run no longer needs.
+
+    Returns a description of what was removed and how many bytes it held, so
+    the caller can report it rather than silently deleting a user's download.
+    Refuses (returns ``removed: []`` with a ``reason``) if the run is not
+    complete — see :func:`cleanable` for why.
+
+    ``keep_source`` preserves the downloaded media. Deleting it is where almost
+    all the bytes are, but it is also what ``tools/nle_check.py`` probes to
+    cross-check the render against the timeline, and what a re-render needs. A
+    user who wants to re-run with a different style or limit keeps it; one who
+    only wants the deliverables does not.
+    """
+    project = project.resolve()
+    ok, reason = cleanable(project)
+    if not ok:
+        return {"ok": False, "reason": reason, "removed": [], "bytes": 0}
+
+    names = [d for d in REGENERABLE_DIRS if not (keep_source and d == "source")]
+    removed = []
+    total = 0
+    for name in names:
+        root = project / name
+        if not root.is_dir():
+            continue
+        size = sum(f.stat().st_size for f in root.rglob("*") if f.is_file())
+        # The state's media_path still points into source/ when it is deleted
+        # here; leaving it stale would make a resumed run trust a path that no
+        # longer exists instead of re-downloading. media_info is scrubbed
+        # already, so it carries no credentials either way.
+        shutil.rmtree(root, ignore_errors=False)
+        removed.append({"dir": name, "files": "all", "bytes": size})
+        total += size
+
+    state_path = project / STATE_NAME
+    state = _load_state(state_path)
+    media_path = state.get("media_path")
+    dropped_media = media_path and not Path(media_path).is_file()
+    if dropped_media:
+        state["media_path"] = None
+        _save_state(state_path, state)
+
+    return {
+        "ok": True,
+        "removed": removed,
+        "bytes": total,
+        # Named so a caller reading the report knows a re-run will fetch again
+        # rather than discovering it from a cache miss.
+        "re_download_on_rerun": dropped_media or None,
+    }

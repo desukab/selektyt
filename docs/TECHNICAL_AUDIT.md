@@ -556,7 +556,53 @@ disk before it fails on CPU, and it fails silently, in `OSError` from
 `write_json_atomic`, mid-run, after the checkpoint has already been written.
 
 The fix is not more disk: it is deleting `source/` and `transcription/` once
-the renders validate, which nothing does.
+the renders validate, which nothing did. **As of 2026-09-22 something does.**
+
+`selekyt --clean-project <dir>` reclaims exactly those directories from a
+finished run, and refuses to touch an incomplete one. It is opt-in and
+post-hoc rather than automatic, because the policy question the finding ends
+on — which files are safe to delete mid-run — has a different answer for a run
+that is still going. Deleting the extracted audio would break resume (a
+resumed run needs the checkpoints it already paid for), and deleting the
+downloaded source would break renders that have not happened yet. So the gate
+is completeness: every render the edit plan called for must be on disk, judged
+on the conventional location (`<project>/facebook/<idx>.mp4`,
+`<project>/shorts/<idx>.mp4`) rather than on the path recorded in the state,
+because that path's shape is not stable across versions — the current run
+writes an absolute path, corpus states predating that fix wrote one relative to
+the invocation's cwd, and reading the recorded string would find or miss the
+file depending on where the caller stands.
+
+Measured on copies of the committed corpus (local sources, so `source/` is
+absent — a URL run additionally holds the 843 MB download, which the same
+command removes unless `--keep-source` is given):
+
+| project | before | after | reclaimed |
+|---|---|---|---|
+| `nasa360-ep5` | 115 MB | 54 MB | 60 MB (52%) |
+| `royal-society-cloke` | 120 MB | 86 MB | 34 MB (28%) |
+| `ooi-vertical` | 69 MB | 64 MB | 4 MB (6%) |
+
+The spread is the point of measuring rather than asserting: the fraction
+depends on how much of the source the transcript's chunks cover, and
+`ooi-vertical`'s audio is short enough that the cleanup is nearly a no-op. A
+cleanup that claimed a single figure would be wrong for two of the three.
+
+`transcript.json` is deliberately kept — a re-run reuses it and skips
+transcription, so removing it would trade disk for a re-transcribe on every
+later invocation. So are every deliverable and every report. `--keep-source`
+exists because the download is also what `tools/nle_check.py` probes to
+cross-check the render against the timeline and what a re-render needs; without
+it the command clears `state["media_path"]` rather than leaving it pointing at a
+file that no longer exists, which would have made a resumed run trust a dead
+path instead of re-downloading.
+
+**Still open, and why it is not closed here:** nothing *schedules* the cleanup,
+so `out/` still grows between invocations until somebody runs it. An automatic
+trigger after a successful run is the honest remaining work, and it needs a
+retention policy (how many finished projects to keep, whether the user re-renders)
+that is a product decision, not a function. The `OSError` at 100× is deferred
+rather than solved.
 
 ### Memory: one VAD backend loads the whole WAV — INSPECTED
 
@@ -787,7 +833,9 @@ means the shipped output is wrong and nothing in the system says so.
 | 5 | **High** | Reliability | `selekyt/pipeline.py:391-419`, `:117-151` | Caption-style render-cache staleness. Re-run with a different `SELEKYT_CAPTION_STYLE`: the new ASS is written, the old MP4 is shipped. **Falsifies QA.** The cache key omits the style in both `_fingerprint` and `_selection_digest`. **FIXED —** the key now requires a matching `caption_style`, records it back, and treats a record with no style as a miss; pinned by `tests/test_caption_style_cache.py` (5 tests). |
 | 6 | **High** | Scalability | `pyproject.toml` | `faster-whisper` is not a base dependency. Default install cannot transcribe. First-run experience is a crash. **Mostly resolved 2026-09-22 —** the failure was never a traceback: `providers/transcribe.py` runs faster-whisper → sherpa-onnx → a `RuntimeError` naming both pip extras and the sherpa model path, and `selekyt cli --doctor` reports the gap before any work, so the first-run experience is an actionable error. The deliberate design decision that neither ASR engine is a base dependency stands and is documented in `pyproject.toml`; it is what lets the package install on a host with no ctranslate2 wheel. The remaining real residue was *ordering*: for a URL source the download ran to completion before the error fired, so a user on a default install fetched a whole video to be told to run pip. **FIXED —** `run_pipeline` now probes `select_engine` alongside its existing fail-fast parameter block, so the same message arrives before the network. Pinned by `tests/test_pipeline_hardening.py::test_pipeline_reports_a_missing_transcription_engine_before_download` (fails if the probe is removed; the sibling test fails if it is made unconditional). `select_engine` is the one place the choice is made, so the pre-flight cannot drift from the transcription path. |
 | 7 | **High** | Reliability | `engine/qa.py:19-43`, `:138-209` | QA never checks aspect ratio precisely, duration vs edit plan, or caption presence; `black_frame_pct`/`visual_diversity_score` swallow exceptions and report clean. **Falsifies QA.** **Partly resolved 2026-09-22 —** the aspect ratio *is* checked precisely now (display aspect from SAR, 1% tolerance), the container duration is compared against the edit plan's per-clip `edited_duration` at a 1% tolerance, and the two advisory metrics return `None` on any failure to measure instead of a clean-looking `0.0`/`1.0`. Still open: **caption presence** — no cheap exact signal exists for whether the burn happened, and a sampled-frame heuristic would fail false on real corpus clips, so that verification lives in `tests/test_render.py::test_the_burned_captions_are_in_the_pixels` rather than in runtime QA. |
-| 8 | **High** | Scalability | no cleanup anywhere; `providers/atomic.py` | ~900 MB retained per project, 92% intermediates, 13 GB free, no GC. At 100× the run dies in `OSError` mid-write after the checkpoint. **The concurrency half is fixed 2026-09-22 —** the atomic write no longer uses one fixed `.tmp` name per target. Two writers to the same state file used to share it, so the second write truncated the first's buffer in place and the first's `os.replace` then landed the *second* process's payload, while the second's own replace raised `FileNotFoundError` because its source name had been consumed — state losing a payload with an error that reached the wrong caller. Each write now stages through a unique `mkstemp` name in the same directory (same-directory is what keeps `os.replace` atomic), with cleanup on failure. Pinned by `tests/test_transcription_recovery.py::test_concurrent_writes_to_one_state_file_do_not_share_a_temp_name`, which forces the interleave and was mutation-verified against the old name: it fails with exactly the `FileNotFoundError` described above. **Still open: the disk growth.** No cleanup or GC of intermediates anywhere, so the 900 MB-per-project retention and the `OSError` at 100× remain. That half is a policy decision about which files are safe to delete mid-run, not a one-line fix, and it is not addressed here. |
+| 8 | **High** | Scalability | no cleanup anywhere; `providers/atomic.py` | ~900 MB retained per project, 92% intermediates, 13 GB free, no GC. At 100× the run dies in `OSError` mid-write after the checkpoint. **The concurrency half is fixed 2026-09-22 —** the atomic write no longer uses one fixed `.tmp` name per target. Two writers to the same state file used to share it, so the second write truncated the first's buffer in place and the first's `os.replace` then landed the *second* process's payload, while the second's own replace raised `FileNotFoundError` because its source name had been consumed — state losing a payload with an error that reached the wrong caller. Each write now stages through a unique `mkstemp` name in the same directory (same-directory is what keeps `os.replace` atomic), with cleanup on failure. Pinned by `tests/test_transcription_recovery.py::test_concurrent_writes_to_one_state_file_do_not_share_a_temp_name`, which forces the interleave and was mutation-verified against the old name: it fails with exactly the `FileNotFoundError` described above. Pinned by `tests/test_retention.py` (7 tests): the reclaim, the deliverables that must survive it, the `--keep-source` toggle and the `media_path` clearing, the three refusal shapes, and idempotency. The completeness gate was mutation-verified — disabling the file-existence check fails exactly `test_an_incomplete_run_is_refused_and_keeps_its_intermediates`; the "no renders recorded" check turned out to be unreachable given the file check and is kept as a clearer error message rather than as protection.
+
+**The disk-growth half is addressed 2026-09-22 by an opt-in control, not by automatic cleanup** — `selekyt --clean-project <dir>` removes `source/` and `transcription/` from a finished run, refusing unless every render the plan called for is on disk, and reports the bytes it reclaimed. Measured on the committed corpus: 60 MB of 115 MB (52%), 34 MB of 120 MB (28%) and 4 MB of 69 MB (6%) — the spread is why the claim is a table and not a number. **Still open:** nothing schedules it, so `out/` still grows until a user runs it, and the `OSError` at 100× is deferred rather than solved. See "Disk is the binding constraint" for the measurement and the reasoning about what is and is not safe to delete. |
 | 9 | **Medium** | Architecture | `engine/fcpxml.py` vs `engine/nle_export.py`; `selekyt/server.py` (`op_render_fcpxml`) vs `selekyt/pipeline.py` | Two live FCPXML emitters with divergent error policy (raise vs silent fallback) behind two entry points. The web preview and the shipped file can disagree. **The policy half is closed 2026-09-22 —** both `_to_file_uri` functions now raise on an unresolvable path with the path named (the "silently falls back" description was stale), and the alignment is pinned by one test asserting the raise on both emitters. What remains is the maintenance cost the finding was really about: two deliberately separate emitters speaking different vocabularies, a duplicated `Track` dataclass, and the possibility of drift in what the alignment test does not cover. Merging them would rewrite a working export for no user-visible gain, so it is recorded as accepted, not fixed. |
 | 10 | **Medium** | Reliability | `selekyt/pipeline.py` export block | Export validation runs after renders are checkpointed, so a bad timeline kills a run that has already produced deliverables. Recovers on resume; reports failure. Also, the export comment claimed timeline duration == render duration without ever measuring the render. **The second half is resolved 2026-09-22 —** the rendered MP4s *are* measured now (`write_report` probes each one against the plan's `edited_duration` at 1%), and the comment now says what is verified instead of assuming it. The agreement is checked in two legs that meet at the edit plan, not one direct comparison; sub-frame slop between the timeline and the render is still only measured by `tools/nle_check.py`, which remains unscheduled. **The first half is still open by design** — running the media-backed cross-check before the checkpoint would mean discarding payable deliverables on a failure, so the ordering is deliberate and the run recovers on resume. |
 | 11 | **Medium** | Test quality | `tests/test_render.py:170-176` et al. | The burned-captions test cannot detect a missing caption track; four tests assert a literal `True` constant; `test_audio_analysis.py:133-142` does not test what its name claims; `test_editorial_rank.py:51` disables its own assertion via `or True`. **Mostly resolved 2026-09-22 —** the burned-captions half is closed by a pixel-decoding test; `test_editorial_rank.py` now asserts the retained clips' sorted spans do not overlap instead of `... or True`; `test_reproducible_segmentation_across_runs` now re-runs at the same threshold and compares the persisted regions, and proves the threshold reaches the segmenter (0.3 vs 0.5 straddle the boundary where this fixture's segmentation actually moves; 0.5 vs 0.9 do not, because the fixture's bursts saturate the score at 1.0). Both replacements were mutation-verified. Remaining by deliberate decision: the four `is True` constants (see §"Three more near-vacuous assertions, left in place"). |
