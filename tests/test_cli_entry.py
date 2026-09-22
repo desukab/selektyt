@@ -155,6 +155,13 @@ def test_main_forwards_every_flag(monkeypatch, tmp_path):
         "--export-fcpxml",
     ])
     monkeypatch.setattr("selekyt.cli.run", fake_run)
+    # ``main()`` writes the chosen style into os.environ itself — the render
+    # cache key reads it from there. conftest's autouse fixture now owns the
+    # whole ``SELEKYT_*`` namespace, which is what stops this write from
+    # leaking into every later test in the process: without it, this test left
+    # ``punch`` behind and ``test_valid_cached_render_is_reused`` then saw a
+    # cache built under ``minimal``, decided the render was stale and
+    # re-encoded it, failing an assertion about exactly that.
     cli_mod.main()
     assert seen["source"] == "https://example.com/v"
     assert seen["model"] == "small"

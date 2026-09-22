@@ -43,6 +43,37 @@ _GAP_S = 0.8
 _SEED = 1234
 
 
+@pytest.fixture(autouse=True)
+def _isolate_selekyt_env():
+    """Restore every ``SELEKYT_*`` environment variable after each test.
+
+    Production writes into the process environment and reads it back later —
+    ``selekyt.cli.main`` exports the chosen caption style this way because the
+    render cache key reads it from there, and the sidecar's
+    ``set_caption_style`` does the same and restores the previous value itself.
+    A test that drives ``main()`` in-process therefore mutates the environment
+    of every test after it, and monkeypatch only restores a key it was told
+    about. Two tests were not told.
+
+    That leaked ``SELEKYT_CAPTION_STYLE`` and it silently broke a third test:
+    run after the flag-forwarding one, ``test_valid_cached_render_is_reused``
+    found a cache written under ``minimal`` with the environment still saying
+    ``punch``, concluded the render was stale and re-encoded it, and failed on
+    an assertion about exactly that. The full suite stayed green because its
+    ordering never put the two tests together — the failure only appeared when
+    the module was run on its own. Owning the namespace here is what makes the
+    suite order-independent for this whole class, not just for the one test.
+    """
+    before = {k: v for k, v in os.environ.items() if k.startswith("SELEKYT_")}
+    yield
+    for k in list(os.environ):
+        if k.startswith("SELEKYT_") and k not in before:
+            del os.environ[k]
+    for k, v in before.items():
+        if os.environ.get(k) != v:
+            os.environ[k] = v
+
+
 def _synthetic_speech_pcm(seconds: float, seed: int = _SEED) -> np.ndarray:
     """Deterministic speech-like 16 kHz mono samples."""
     rng = np.random.default_rng(seed)
