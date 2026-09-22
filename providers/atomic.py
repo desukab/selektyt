@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -27,11 +28,32 @@ def write_json_atomic(path: Path, payload: Any, *, indent: int = 2) -> None:
     The temp file lives in the same directory on purpose: ``os.replace`` is
     only atomic within a filesystem, and a cross-device ``/tmp`` would turn
     it into a plain copy.
+
+    Its name is unique per write, not a fixed ``path.name + ".tmp"``. Two
+    processes writing the same state file used to share one temp name, so the
+    second write truncated the first's buffer in place and the first's
+    ``os.replace`` then landed the *second* process's payload — while the
+    second's own replace raised, its source name having been consumed. Both
+    writers believing they succeeded is how state loses one of them without an
+    error anywhere. A unique name gives each writer its own buffer and its own
+    replace, which is the property atomicity was meant to provide.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=indent), encoding="utf-8")
-    os.replace(tmp, path)
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.", suffix=".tmp")
+    tmp = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, ensure_ascii=False, indent=indent)
+        os.replace(tmp, path)
+    except BaseException:
+        # mkstemp does not delete on failure once its fd is handed to fdopen,
+        # and a crash between creation and replace would leave the unique name
+        # behind as an intermediate nobody cleans up.
+        try:
+            tmp.unlink()
+        except FileNotFoundError:
+            pass
+        raise
 
 
 def read_json(path: Path) -> Any | None:

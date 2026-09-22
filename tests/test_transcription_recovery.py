@@ -16,6 +16,7 @@ F5 — provenance must name the model that actually ran, not the one that was
 """
 from __future__ import annotations
 
+import json
 import sys
 import types
 import wave
@@ -316,6 +317,45 @@ def test_write_json_atomic_leaves_no_partial_file(tmp_path):
     assert read_json(target) == {"a": 1}
     # The temp file is gone; only the final payload is on disk.
     assert [p.name for p in tmp_path.iterdir()] == ["state.json"]
+
+
+def test_concurrent_writes_to_one_state_file_do_not_share_a_temp_name(tmp_path, monkeypatch):
+    """Two writers used to share one temp name (``state.json.tmp``), and that
+    name is the hazard: the second write truncates the first's buffer in place,
+    so the first writer's ``os.replace`` lands the *second* process's payload,
+    and one payload is gone while neither writer sees an error about it.
+
+    A unique temp name per write is the fix. This forces the interleaving a
+    shared name makes reachable — both temp files built before either replaces
+    — and checks each writer's own payload survived into its own buffer.
+    Without it, both temp files hold the second payload."""
+    import providers.atomic as atomic_mod
+
+    target = tmp_path / "state.json"
+    payloads = [{"writer": "a", "n": 1}, {"writer": "b", "n": 2}]
+
+    staged: list = []
+    buffers: list = []
+    real_replace = atomic_mod.os.replace
+
+    def stage_before_replacing(src, dst):
+        buffers.append(Path(src).read_text(encoding="utf-8"))
+        staged.append((src, dst))
+        # Both temp files now coexist on disk — the state a fixed name cannot
+        # reach without one write clobbering the other's buffer.
+        if len(staged) == len(payloads):
+            for s, d in staged:
+                real_replace(s, d)
+            staged.clear()
+
+    monkeypatch.setattr(atomic_mod.os, "replace", stage_before_replacing)
+
+    write_json_atomic(target, payloads[0])
+    write_json_atomic(target, payloads[1])
+
+    assert [json.loads(b) for b in buffers] == payloads, \
+        "each writer needs its own buffer; a shared temp name clobbers one"
+    assert read_json(target) in payloads
 
 
 def test_read_json_rejects_empty_and_truncated(tmp_path):
