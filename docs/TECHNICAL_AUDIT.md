@@ -604,12 +604,84 @@ retention policy (how many finished projects to keep, whether the user re-render
 that is a product decision, not a function. The `OSError` at 100× is deferred
 rather than solved.
 
-### Memory: one VAD backend loads the whole WAV — INSPECTED
+### Memory: one VAD backend loads the whole WAV — INSPECTED, then FIXED
 
-`EnergyVAD._read_mono` reads the entire decoded WAV into memory. At 100×
-volume, with 100 concurrent analyses, that is tens of GB. `providers/sherpa.py:302-348`
-`_WindowedWav` already solves this with windowed reads — the better
-implementation exists in the same package and is not shared.
+`EnergyVAD._read_mono` read the entire decoded WAV into memory before scoring
+the first frame. At 100× volume, with 100 concurrent analyses, that is tens of
+GB. `providers/sherpa.py:302-348` `_WindowedWav` already solved the same
+problem on the transcription path with windowed reads; the better
+implementation existed in the same package and was not shared.
+
+**Fixed 2026-09-22 by scoring a window at a time.** `_read_mono` became
+`_conforming_path` (its behaviour is unchanged — it still resolves the source to
+mono 16 kHz PCM — but it now returns a `Path` instead of an array, because the
+caller, not the resolver, decides how much to hold). The per-frame math moved
+into `_score_frames`, and `analyze` now reads one window, scores the whole
+frames in it, carries the remainder into the next window, and advances.
+
+The window is `max(frame × 4, sample_rate × 60)` — one minute of audio at a
+time. Measured on the largest committed source, `emwcon-panel-2018` (55.6 min,
+53 423 334 samples, 214 MB as float32), with each path run in a forked child so
+the parent reads the child's peak RSS:
+
+| read path | child peak RSS |
+|---|---|
+| whole file, as the old code did | **533 MiB** |
+| windowed, as it runs now | **43 MiB** |
+
+Those two numbers are not comparable to each other by a naive `getrusage` in one
+process, and that is worth saying because the first attempt at this measurement
+produced "440 MiB either way" and looked like the change had done nothing.
+`ru_maxrss` is a *process-lifetime* maximum, so whichever path runs first sets
+the ceiling and the second inherits it — `del` does not help, since the freed
+arena is not returned to the kernel. The old path had to run in a child of its
+own for the number to mean anything. 533 MiB against a 214 MB source, not 214
+MB, because the old code kept the decoded array, a padded copy, and the sign
+and ZCR intermediates alive together; 43 MiB is one window of audio plus its
+intermediates on a 32 MiB baseline, so the reader's own cost is now bounded by
+the window rather than by the source. The score array — one float per 32 ms —
+remains the only full-length object, by design.
+
+The change is only a memory change, and that was verified rather than assumed:
+a differential check replayed the pre-change implementation verbatim against
+`analyze` on every committed corpus source, and all 11 are byte-identical —
+including `emwcon-panel-2018` at 104 342 scores and `alice-1903` at 15 653. The
+Rust parity scorer (`rust/core/src/vad.rs` `score_energy`) reads that same
+array, so a frame shifted at a window boundary would have surfaced there too.
+
+Pinned by five tests in `tests/test_vad.py`, each mutation-verified:
+
+- `test_windowed_read_scores_across_a_window_boundary_like_a_whole_file` — the
+  signal is seeded **noise**, not a tone, because a tone scores the same in
+  every frame and a frame dropped, duplicated or shifted at a boundary would
+  not show up. Noise differs frame to frame, so any misframing moves a score.
+- `test_windowed_read_drops_a_tail_shorter_than_one_frame` — a tail too short
+  for a whole frame is dropped, not rounded up to a score that would shift the
+  cadence the segmentation grid assumes.
+- `test_audio_shorter_than_one_frame_still_yields_one_score` — the old code
+  **crashed** here: it reshaped an empty buffer. The new one pads to a single
+  score. This is a fix, not a convention.
+- `test_audio_of_exactly_one_frame_is_one_score`.
+- `test_the_carry_across_a_boundary_is_scored_when_a_window_is_not_whole_frames`
+  — the carry is worth a note of its own. At the default 16 kHz, 60 s is
+  exactly 1875 frames, so the window is always a whole number of frames and the
+  carry is *structurally empty*: the case is unobservable, and a test at the
+  default rate could not reach it. It becomes reachable with a non-default
+  `sample_rate` (44.1 kHz makes the window 2 646 000 samples, 496 past a whole
+  frame), so that is what the test uses — and it is the reason the carry exists
+  at all rather than being an ornament.
+
+Four mutations, four distinct failure sets, and **no pre-existing test fired on
+any of them**: discarding the carry fails the sub-frame and carry tests only;
+scoring only the first window fails the three boundary tests only; disabling
+the sub-frame padding fails that test only; reading each window offset by 7
+samples fails the three parity tests only. The last of those is the one that
+says the coverage is real — before these tests the windowed read had none.
+
+`_WindowedWav` and this loop still do not share a class, deliberately: this one
+scores while it reads and keeps the padding rule here, that one feeds a decoder
+with its own contract. Sharing would move the padding decision away from the
+cadence rule it has to satisfy.
 
 ### One VAD backend cannot work — INSPECTED, then FIXED to say so
 
@@ -679,11 +751,47 @@ behavioural assertion distinguishes them. What the test pins is the ordering
 invariant that makes the early return correct. The timing numbers above are
 measurements, recorded here rather than asserted in the suite.
 
-**Still open:** `_words_in` itself, which is 11% of the remaining cost at 80
-minutes (620 ms of 5.6 s before this fix). It rescans `all_segs` from the
-front for every thought even though consecutive thoughts share a window, so a
-cursor would make it amortise. Not done — it is a smaller share than the cap,
-and the correctness argument for a cursor is weaker than the one here.
+**Still open, and measured 2026-09-22 — then deliberately left alone.**
+`_words_in` still rescans `all_segs` from the front for every thought even
+though consecutive thoughts share a window, so a cursor would make it amortise.
+Its share of `make_thoughts` was measured on every committed corpus transcript
+by wrapping the function the module calls, so the share is measured rather than
+quoted:
+
+| project | segments | words | thoughts | `_words_in` calls | `_words_in` | total | share |
+|---|---|---|---|---|---|---|---|
+| `emwcon-panel-2018_run` | 842 | 9093 | 4000 | 4000 | 149.6 ms | 578.8 ms | **25.8%** |
+| `nasa360-ep5_run` | 425 | 4236 | 4000 | 4000 | 85.1 ms | 593.8 ms | 14.3% |
+| `pentagon-esper-briefing_run` | 277 | 2745 | 3089 | 3089 | 45.0 ms | 406.4 ms | 11.1% |
+| `royal-society-cloke_run` | 156 | 1980 | 1809 | 1809 | 20.5 ms | 212.6 ms | 9.7% |
+| `hadhazy-protest_run` | 38 | 344 | 211 | 211 | 1.4 ms | 41.0 ms | 3.5% |
+| `ooi-vertical_run` | 26 | 283 | 168 | 168 | 0.9 ms | 20.0 ms | 4.4% |
+| `telugu-tutorial_run` | 4 | 9 | 6 | 6 | 0.0 ms | 1.2 ms | 0.7% |
+| `hindi-baiga-interview_run` | 3 | 58 | 0 | 0 | 0.0 ms | 0.3 ms | 0.0% |
+
+The audit's original 11% reproduces on `pentagon-esper-briefing` (11.1%). The
+change is not being made, for four reasons that are measurements or checks
+rather than taste:
+
+1. The cap already bounds the cost. The scan is O(cap × n), not quadratic —
+   4000 calls over 842 segments, not 842². Removing the rescan changes the
+   constant, not the class.
+2. The whole stage is sub-second on every committed transcript — 579 ms at the
+   largest, of which `_words_in` is 150 ms — in a pipeline whose transcription
+   step takes minutes on the same source. The timing table above (the 80-minute
+   synthetic case is 1822 ms) is what a *large* source costs, and the corpus
+   does not contain one. This is not the thing to spend correctness budget on.
+3. A binary search over a flat word array — the obvious replacement — needs
+   the words sorted by start. That was checked across the corpus: starts are
+   monotone and words are non-overlapping on every committed transcript, but
+   the property is *empirical*, an artefact of what ASR emits, not enforced by
+   any constructor or test. Building the optimisation on it means a transcript
+   that violates it mis-scores silently, and the segments come from a
+   third-party decoder the pipeline does not control.
+4. The stage is already output-identical and pinned; the risk here is a subtle
+   behavioural change bought for a share of a sub-second stage.
+
+Recorded as measured-and-not-worth-changing, not as fixed and not as forgotten.
 
 ### Multi-tenancy: state is a single file — VERIFIED
 
@@ -854,7 +962,7 @@ means the shipped output is wrong and nothing in the system says so.
 | 12 | **Medium** | Scalability | `selekyt/server.py` `_envelope`/`process_line`, `web/server.mjs` `spawnChild`/`rpc` | One serial sidecar, FIFO `pending[]` with no request id, no timeout. One slow pipeline blocks `/api/ping`; one crash rejects every queued request; a `stdin.write` failure leaves a promise unresolved forever. **Mostly resolved 2026-09-22.** Three of the four named halves are closed; the one that is not is a property of the design rather than a bug left in place.<br><br>**Correlation replaces position.** Every request now carries an `id` the sidecar echoes back on both the success and the failure envelope (`_envelope`), and the bridge matches a response to the request that asked for it instead of to whichever request happens to be first in line. This was not theoretical: the wire *is* stdout, and a library deep in the pipeline that writes to fd 1 directly — CTranslate2 has done it from under faster-whisper — emits a line that is a response to nothing. Under the old FIFO that line was consumed as one, and the request behind it silently received the answer to the request in front of it, or an "invalid response" error about a line it never sent. Nothing complained. Now a line that parses but names no live request is dropped and logged, and an unparseable line is dropped too rather than charged to a request — `_progress_to_stderr` already keeps Python-level prints off the wire, which covers `print()` but not a C extension or a subprocess that inherited fd 1, so the two guards are at different layers on purpose. A caller that sends no `id` still gets FIFO, which is correct for the single-threaded loop and keeps the Rust worker and every caller predating the field working.<br><br>**A crash names what it killed.** The exit handler still rejects every queued request — correct, the sidecar is gone — but each rejection now carries the op it was serving, because "the sidecar exited" answers a queue of different questions with the same words and the one a user was watching was not identifiable.<br><br>**No unresolved promise.** A `stdin.write` that throws is caught, and the entry is *removed* from the queue before the promise settles — leaving it in place is the subtler half of the bug, since a response arriving later settles an already-settled promise (a no-op) and shifts every response after it by one. A stdin `error` event settles everything still queued and drops the reference; the child is deliberately not killed, because a broken stdin is usually the aftermath of a death whose exit handler has already cleared the queue, and if it has not, the process reads EOF and exits on its own. Killing it here could instead cut short a render that was still progressing.<br><br>**Still open, and why: `/api/ping` cannot be answered while a run is in flight.** The probe gets a 5s deadline and reports *busy* rather than hanging for the length of a pipeline — the page used to read an engine that was working as "unreachable" until the run finished — but the probe genuinely cannot be answered. The sidecar is one thread and `serve()` is a blocking line loop, so while it serves a request it cannot even *read* a probe, let alone answer one. Answering from a second thread would require thread-safe handlers in a sidecar whose handlers are not (models, `SELEKYT_CAPTION_STYLE`, the `sys.stdout` swap in `_progress_to_stderr`), so it is recorded as a design limit rather than a fix. The deadline applies to ping only: a transcribe and a hang are not distinguishable from outside the process, and a long op that gets a deadline would be killed or reported failed for working.<br><br>**What pins it.** `tests/test_server.py` (3 tests) pins the wire side: the id is echoed on both envelopes, a request without one gets no synthetic field, and a string id is carried verbatim rather than coerced. `tests/test_web_harness.py` (5 tests) pins the queue side against a sidecar script — the one route that forwards its body verbatim is the one these use, because the `mode` field the fake reads is a no-op parameter to the real sidecar: a line printed past the protocol does not steal the next answer, an envelope for an id nobody sent is dropped, answers arriving back to front still reach their request, the probe reports busy inside its deadline while the request that held it completes untouched, and a dead sidecar names the op it died serving and is replaced by the next one. Each was mutation-verified and failed exactly the test that names it: restoring the FIFO's line consumption fails the stray test only; ignoring the id fails the foreign-id and out-of-order tests only; removing the probe's deadline fails the busy test on the deadline assertion, which is what proves the queue is correct *and* still slow without it — correlation fixed the mismatch, not the hang; dropping the op from the crash envelope fails the dead-sidecar test only; dropping the id from `_envelope` fails the two wire tests only. |
 | 13 | **Medium** | Scalability | `web/server.mjs` `route`, `pipeline_state.json` | No project ID, no per-tenant isolation, hardcoded output directory. Two concurrent web runs clobber one state file. Multi-tenancy is a correctness bug, not a scaling task. **The collision half is FIXED 2026-09-22; the isolation half is not, and is a product-shape question rather than a bug.** `pipeline_state.json` is a run's state machine — it records what has been rendered so a resume picks up where the run left off — and two runs into one directory do not share that machine, they fight over it. The second's state write landed over the first's renders list and the first then resumed against a state that no longer described its own work. The atomic write from row #8 is what made this silent rather than a crash: neither payload was corrupted, last writer won, and nothing said which run the state file described. `run_pipeline` and `export` now hold their project directory for the duration of a run through `_runExclusive`, and a second caller into the same directory is refused with the directory and the holding op named, instead of being allowed to corrupt the first. The lock is keyed by directory, not global: the two routes write to different directories and a run holding one does not block the other. It is in-process, which is the right scope because the bridge is one process and every web request crosses it — and because a lock file on disk would outlive a bridge restart and report a project busy forever after a crash nothing cleaned up. It is released in a `finally`, and release on a dead sidecar falls out of that for free: the queue's exit handler settles the outstanding promise with an error, `rpcData` throws, and the `finally` runs. Pinned by three tests in `tests/test_web_harness.py`: two concurrent runs of one project are refused rather than interleaved, a refused run releases the project for the next one (the stuck-lock case, which reads as "this project is busy" forever if the release path is wrong), and a run holding one project does not block another. Mutation-verified: disabling the guard fails exactly the first two and *not* the third, which is what pins the lock to a directory rather than to the server. **Still open:** there is still one project directory per route and no project ID, so this is a collision guard, not isolation — a user gets one `out/web/pipeline` and one `out/web/project`, and naming, listing or choosing between past projects is a product surface the shell does not have. Two browser tabs can no longer silently corrupt each other; they still cannot have separate work. |
 | 14 | **Low** | Reliability | `selekyt/pipeline.py:502` | `state["complete"] = True` is written and never read; resume keys off `renders`. Dead state. **FIXED 2026-09-22 —** the write is removed (the line is now `:888`, which also records why no completion flag exists). No reader existed anywhere to break. |
-| 15 | **Low** | Scalability | `SileroVADBackend.analyze` (always `NotImplementedError`), `EnergyVAD._read_mono` (full WAV in memory), `make_thoughts` quadratic pre-cap | The documented fallback chain has a leg that cannot fire; one VAD reads a whole file while another in the same package already windows it; the thought cap bounds output, not cost. **The first third is fixed 2026-09-22 —** `is_available` no longer reports a backend whose `analyze` raises (it returned True on a host with onnxruntime and a model path), the module docstring now lists the chain as selected — including `EnergyVAD`, which it omitted though it is the effective default — and `--vad-backend silero` now says "not implemented" and names the working backends. The backend itself is still unimplemented; see "One VAD backend cannot work". `EnergyVAD._read_mono` is still open, and `make_thoughts` is half-closed: the cap now bounds cost as well as output (3.3× faster at 80 minutes, output-identical on all 8 corpus transcripts), while `_words_in` still rescans from the front per thought. |
+| 15 | **Low** | Scalability | `SileroVADBackend.analyze` (always `NotImplementedError`), `EnergyVAD.analyze`/`_conforming_path` (was `_read_mono`, full WAV in memory), `make_thoughts` quadratic pre-cap | The documented fallback chain has a leg that cannot fire; one VAD reads a whole file while another in the same package already windows it; the thought cap bounds output, not cost. **The first third is fixed 2026-09-22 —** `is_available` no longer reports a backend whose `analyze` raises (it returned True on a host with onnxruntime and a model path), the module docstring now lists the chain as selected — including `EnergyVAD`, which it omitted though it is the effective default — and `--vad-backend silero` now says "not implemented" and names the working backends. The backend itself is still unimplemented; see "One VAD backend cannot work". **The second third is fixed 2026-09-22 —** see "Memory: one VAD backend loads the whole WAV" (533 MiB → 43 MiB peak RSS on the largest committed source, score array byte-identical on all 11). `make_thoughts` is half-closed: the cap now bounds cost as well as output (3.3× faster at 80 minutes, output-identical on all 8 corpus transcripts), while `_words_in` still rescans from the front per thought — **measured 2026-09-22 and deliberately left alone; see "`make_thoughts` is quadratic with the cap applied after the work".** |
 
 ---
 

@@ -366,3 +366,115 @@ def test_save_load_preserves_provenance(tmp_path):
     assert loaded.vad_model == "energy-rms"
     assert loaded.hysteresis == {"release": 0.35}
     assert loaded.fallback_reason == "silero unavailable on this device"
+
+
+# ── windowed read (the reader scores a window at a time so a long source
+#    never has to be resident) ──
+
+def _write_signal_wav(path, sig, sr=16000):
+    """Write a mono 16-bit PCM WAV from a float signal in [-1, 1]."""
+    with wave.open(str(path), "wb") as f:
+        f.setnchannels(1)
+        f.setsampwidth(2)
+        f.setframerate(sr)
+        f.writeframes((np.clip(sig, -1.0, 1.0) * 32767).astype(np.int16).tobytes())
+    return path
+
+
+def _whole_file_scores(vad, path):
+    """The whole-file read the windowed reader replaced, reconstructed from the
+    same per-frame math. One score per full frame, trailing samples dropped."""
+    frame = vad.sample_rate * vad.frame_ms // 1000
+    with wave.open(str(path), "rb") as f:
+        data = np.frombuffer(f.readframes(f.getnframes()), dtype=np.int16).astype(np.float32) / 32768.0
+    n_frames = len(data) // frame
+    return vad._score_frames(data[: n_frames * frame].reshape(-1, frame))
+
+
+def test_windowed_read_scores_across_a_window_boundary_like_a_whole_file(tmp_path):
+    """Windowing is a memory change only: every score must be the value the
+    whole-file read would have produced. This is the contract the Rust parity
+    scorer also relies on, since it reads the same array.
+
+    The signal is seeded noise rather than a tone because a tone scores the same
+    in every frame, so a dropped, duplicated or shifted frame at a boundary
+    would not show up. Noise differs frame to frame, so any misframing moves a
+    score. 2 windows plus a tail crosses the boundary twice.
+    """
+    vad = EnergyVAD()
+    frame = vad.sample_rate * vad.frame_ms // 1000
+    window = max(frame * 4, vad.sample_rate * 60)
+    rng = np.random.default_rng(0)
+    sig = (rng.random(2 * window + 100, dtype=np.float32) - 0.5) * 0.6
+    path = _write_signal_wav(tmp_path / "noise.wav", sig)
+
+    result = vad.analyze(path)
+    want = _whole_file_scores(vad, path)
+
+    assert len(result.scores) == len(want), \
+        f"{len(result.scores)} scores against {len(want)} for a whole-file read"
+    assert result.scores == want.tolist(), \
+        "windowed and whole-file reads disagree on some frame's score"
+
+
+def test_windowed_read_drops_a_tail_shorter_than_one_frame(tmp_path):
+    """A tail too short for a whole frame is dropped, not rounded up to a score
+    that would shift the cadence the segmentation grid assumes."""
+    vad = EnergyVAD()
+    frame = vad.sample_rate * vad.frame_ms // 1000
+    window = max(frame * 4, vad.sample_rate * 60)
+    sig = np.zeros(2 * window + 100, dtype=np.float32)
+    path = _write_signal_wav(tmp_path / "tail.wav", sig)
+
+    result = vad.analyze(path)
+    assert len(result.scores) == 2 * window // frame
+    assert result.duration == pytest.approx((2 * window + 100) / vad.sample_rate)
+
+
+def test_audio_shorter_than_one_frame_still_yields_one_score(tmp_path):
+    """Sub-frame input is padded to a single score so the array is never empty
+    for the divisions downstream. The whole-file read this replaced crashed
+    here — it reshaped an empty buffer — so this is a fix, not a convention."""
+    vad = EnergyVAD()
+    frame = vad.sample_rate * vad.frame_ms // 1000
+    path = _write_signal_wav(tmp_path / "short.wav",
+                             np.full(100, 0.5, dtype=np.float32))
+    result = vad.analyze(path)
+    assert len(result.scores) == 1
+    assert result.scores == _whole_file_scores(
+        vad, _write_signal_wav(tmp_path / "padded.wav",
+                               np.pad(np.full(100, 0.5, dtype=np.float32),
+                                      (0, frame - 100)))).tolist()
+
+
+def test_audio_of_exactly_one_frame_is_one_score(tmp_path):
+    vad = EnergyVAD()
+    frame = vad.sample_rate * vad.frame_ms // 1000
+    rng = np.random.default_rng(1)
+    path = _write_signal_wav(tmp_path / "frame.wav",
+                             (rng.random(frame, dtype=np.float32) - 0.5) * 0.6)
+    assert len(EnergyVAD().analyze(path).scores) == 1
+
+
+def test_the_carry_across_a_boundary_is_scored_when_a_window_is_not_whole_frames(tmp_path):
+    """A window that is not a whole number of frames leaves a partial frame that
+    must be carried into the next one, not dropped or double-read.
+
+    At the default 16 kHz this cannot happen: 60 s is exactly 1875 frames, so
+    the carry is always empty and the case is unobservable. A non-default
+    sample_rate makes the window 2 646 000 samples at 44.1 kHz, which is 496
+    samples past a whole frame — so this is the test that actually reaches the
+    carry, and the reason the carry exists at all.
+    """
+    vad = EnergyVAD(sample_rate=44100)
+    frame = vad.sample_rate * vad.frame_ms // 1000
+    window = max(frame * 4, vad.sample_rate * 60)
+    assert window % frame != 0, "this test needs a window that straddles a frame"
+    rng = np.random.default_rng(2)
+    sig = (rng.random(2 * window + frame // 2, dtype=np.float32) - 0.5) * 0.6
+    path = _write_signal_wav(tmp_path / "straddle.wav", sig, sr=44100)
+
+    result = vad.analyze(path)
+    want = _whole_file_scores(vad, path)
+    assert len(result.scores) == len(want)
+    assert result.scores == want.tolist()

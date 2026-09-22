@@ -123,8 +123,8 @@ class EnergyVAD(VADBackend):
         self.zcr_max = zcr_max
         self.fallback_reason = fallback_reason
 
-    def _read_mono(self, audio: Path) -> np.ndarray:
-        """Read mono PCM at the expected rate, converting any other PCM WAV.
+    def _conforming_path(self, audio: Path) -> Path:
+        """Resolve ``audio`` to a mono ``sample_rate`` Hz 16-bit PCM WAV.
 
         The pipeline always extracts 16 kHz mono itself, but a WAV handed in
         directly (the web shell, a user drop) is routinely stereo or 44.1/48
@@ -136,15 +136,20 @@ class EnergyVAD(VADBackend):
             probe = wav.parent / f"{wav.stem}_probe.wav"
             extract_pcm_wav(audio, probe, self.sample_rate)
             wav = probe
-        wav = _conforming_wav(wav, self.sample_rate)
-        import wave
-        with wave.open(str(wav), "rb") as f:
-            raw = f.readframes(f.getnframes())
-        data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
-        return data
+        return _conforming_wav(wav, self.sample_rate)
+
+    def _score_frames(self, frames: np.ndarray) -> np.ndarray:
+        """Score full frames: one value per row, the cadence contract below."""
+        rms = np.sqrt(np.mean(frames.astype(np.float32) ** 2, axis=1) + 1e-8)
+        signs = np.signbit(frames)
+        zcr_full = np.abs(np.diff(signs.astype(np.int8), axis=1)).sum(axis=1)
+        zcr = zcr_full / max(1, frames.shape[1] - 1)
+        scores = np.clip((rms - self.base_threshold) / (self.speech_ceiling - self.base_threshold), 0.0, 1.0)
+        scores[(zcr < self.zcr_min) | (zcr > self.zcr_max)] *= 0.3
+        return scores
 
     def analyze(self, audio: Path) -> VADResult:
-        data = self._read_mono(audio)
+        wav = self._conforming_path(audio)
         frame = int(self.sample_rate * self.frame_ms / 1000)
         # Cadence contract (docs/autocut-parity.md): one score per 512-sample
         # (32ms) chunk, trailing samples short of a full chunk are dropped —
@@ -152,24 +157,48 @@ class EnergyVAD(VADBackend):
         # reads either scorer's output identically. Only a sub-frame input
         # (<32ms) is padded up to a single frame so the score array is never
         # empty for downstream division.
-        n_frames = max(1, len(data) // frame)
-        if n_frames * frame > len(data):
-            data = np.pad(data, (0, n_frames * frame - len(data)))
-        frames = data[: n_frames * frame].reshape(n_frames, frame)
-        rms = np.sqrt(np.mean(frames.astype(np.float32) ** 2, axis=1) + 1e-8)
-        signs = np.signbit(frames)
-        zcr_full = np.abs(np.diff(signs.astype(np.int8), axis=1)).sum(axis=1)
-        zcr = zcr_full / max(1, frame - 1)
-        scores = np.clip((rms - self.base_threshold) / (self.speech_ceiling - self.base_threshold), 0.0, 1.0)
-        low_zcr = zcr < self.zcr_min
-        high_zcr = zcr > self.zcr_max
-        scores[low_zcr | high_zcr] *= 0.3
+        import wave
+
+        # Scoring a window at a time rather than reading the file first: the
+        # whole point of chunked transcription is that a long source never has
+        # to be resident, and reading it end to end made the decoded audio the
+        # biggest allocation in the process. Measured (forked children, peak
+        # RSS) on the largest committed source, 55.6 min / 214 MB of float32:
+        # the old whole-file read peaked at 533 MiB and this reader at 43 MiB.
+        # The score array is one float per 32 ms, so it stays the only
+        # full-length object; the audio in memory is bounded by one window plus
+        # one frame of carry. ``_WindowedWav`` in providers/sherpa.py exists for
+        # the same reason on the transcription path, and the two deliberately do
+        # not share a class — this one scores while it reads and keeps the
+        # padding rule here.
+        window = max(frame * 4, self.sample_rate * 60)
+        scores: list[float] = []
+        carry = np.zeros(0, dtype=np.float32)
+        total = 0
+        with wave.open(str(wav), "rb") as f:
+            total = f.getnframes()
+            pos = 0
+            while pos < total:
+                want = min(window, total - pos)
+                f.setpos(pos)
+                raw = f.readframes(want)
+                data = np.concatenate([carry, np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0])
+                usable = (len(data) // frame) * frame
+                if usable:
+                    scores.extend(self._score_frames(data[:usable].reshape(-1, frame)).tolist())
+                carry = data[usable:]
+                pos += want
+        if total < frame:
+            # Sub-frame input: padded to one score, as above.
+            scores = self._score_frames(
+                np.pad(carry, (0, frame - len(carry))).reshape(1, frame)
+            ).tolist()
         return VADResult(
-            scores=scores.tolist(),
+            scores=scores,
             sample_rate=self.sample_rate,
             backend=self.name,
             frame_ms=self.frame_ms,
-            duration=len(data) / self.sample_rate,
+            duration=total / self.sample_rate,
             vad_model=self.vad_model,
             fallback_reason=self.fallback_reason,
         )
