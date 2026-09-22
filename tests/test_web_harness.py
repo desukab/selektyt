@@ -590,6 +590,14 @@ for line in sys.stdin:
         sys.stderr.write("fake sidecar: dying on purpose\\n")
         sys.stderr.flush()
         raise SystemExit(1)
+    elif op == "run_pipeline":
+        # Held long enough that a second request into the same project
+        # directory arrives while the first still owns it.
+        time.sleep(6)
+        answer(req, {"project": "out/web/pipeline", "renders": 3})
+    elif op == "audio_analysis":
+        time.sleep(6)
+        answer(req, {"project": "out/web/project", "compression_ratio": 1.0})
     else:
         answer(req, {"segments": []})
 ''' % {"slow": _SLOW_S}
@@ -716,3 +724,74 @@ def test_a_dead_sidecar_names_the_op_it_died_serving_and_is_replaced(fake_base):
     # request is written to a pipe nothing is reading.
     data = _expect_ok(fake_base, "ping", {})
     assert data["engine"] == "fake"
+
+
+# ── one project directory, one run at a time ──
+#
+# ``pipeline_state.json`` is a run's state machine: it records what has been
+# rendered so a resume picks up where the run left off. Two runs into one
+# directory do not share that machine, they fight over it — the second's state
+# write lands over the first's renders list, and the first then resumes against
+# a state that no longer describes its own work. The atomic write means neither
+# payload is corrupted, which is exactly what made this silent: last writer
+# wins and nothing says which run the state file describes.
+
+def test_two_concurrent_runs_of_one_project_are_refused_not_interleaved(fake_base):
+    box = {}
+
+    def _first():
+        box["resp"] = _post_or_error(fake_base, "run_pipeline", {"path": "README.md"})
+
+    worker = threading.Thread(target=_first)
+    worker.start()
+    time.sleep(0.75)
+    second = _post_or_error(fake_base, "run_pipeline", {"path": "README.md"})
+    assert second["ok"] is False, "a second run into the same project was accepted"
+    assert "already running" in second["error"], second
+    assert "pipeline" in second["error"], second
+    # The first run is undisturbed and completes.
+    worker.join(timeout=30)
+    assert worker.is_alive() is False, "the holding run was disturbed"
+    assert box["resp"]["ok"] is True, box["resp"]
+
+
+def test_a_refused_run_releases_the_project_for_the_next_one(fake_base):
+    """The lock has to come back when a run finishes, and — the case that is
+    easy to get wrong — when a run is refused it must not take the lock with
+    it. A stuck lock turns a collision guard into a permanent outage of that
+    project, and the failure reads as "the project is busy" forever."""
+    first = []
+
+    def _hold():
+        first.append(_post_or_error(fake_base, "run_pipeline", {"path": "README.md"}))
+
+    worker = threading.Thread(target=_hold)
+    worker.start()
+    time.sleep(0.5)
+    refused = _post_or_error(fake_base, "run_pipeline", {"path": "README.md"})
+    assert refused["ok"] is False
+    worker.join(timeout=30)
+    assert first[0]["ok"] is True
+    # The lock is back, so a fresh run proceeds instead of being told the
+    # project is still busy.
+    data = _expect_ok(fake_base, "run_pipeline", {"path": "README.md"})
+    assert data["renders"] == 3
+
+
+def test_a_run_holding_one_project_does_not_block_another(fake_base):
+    """``export`` and ``run_pipeline`` write to different directories, so a run
+    holding one must not refuse the other. A single global lock would be
+    simpler and would serialise every job on the box for no reason."""
+    box = {}
+
+    def _run():
+        box["resp"] = _post_or_error(fake_base, "run_pipeline", {"path": "README.md"})
+
+    worker = threading.Thread(target=_run)
+    worker.start()
+    time.sleep(0.75)
+    export = _post_or_error(fake_base, "export", {"sample": True})
+    worker.join(timeout=30)
+    assert export["ok"] is True, \
+        "a run in one project directory must not block another directory"
+    assert box["resp"]["ok"] is True

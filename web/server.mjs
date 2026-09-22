@@ -396,6 +396,42 @@ async function resolveMedia(body) {
 
 // ── routes ──
 
+// A project directory is a run's state machine: pipeline_state.json records
+// what has been rendered so a resume picks up where it left off. Two runs into
+// one directory do not share that machine, they fight over it — the second's
+// state write lands over the first's renders list, and the first then resumes
+// against a state that no longer describes its own work. The atomic write means
+// neither payload is corrupted, which is what made this a silent disagreement
+// instead of a crash: last writer wins, and nothing says which run's answer the
+// state file describes. Holding a directory while a run owns it makes the
+// second caller fail loudly instead.
+const runsByDir = new Map();
+
+function _acquireRun(dir, op) {
+  if (runsByDir.has(dir)) {
+    throw new Error(
+      `a ${runsByDir.get(dir)} is already running in ${dir}; wait for it to ` +
+        `finish before starting another. Two runs into one project directory ` +
+        `each overwrite the other's state, so the second was refused rather ` +
+        `than allowed to corrupt the first.`
+    );
+  }
+  runsByDir.set(dir, op);
+}
+
+function _releaseRun(dir) {
+  runsByDir.delete(dir);
+}
+
+async function _runExclusive(dir, op, fn) {
+  _acquireRun(dir, op);
+  try {
+    return await fn();
+  } finally {
+    _releaseRun(dir);
+  }
+}
+
 async function route(req, res, url, method) {
   const expectedOrigin = `http://${req.headers.host || url.host}`;
   if ((method === "GET" || method === "POST") && url.pathname === "/api/ping") {
@@ -436,18 +472,21 @@ async function route(req, res, url, method) {
     assertSameOrigin(req, expectedOrigin);
     const body = await getJson(req, expectedOrigin);
     const media = await resolveMedia(body);
-    const data = await rpcData("audio_analysis", {
-      media,
-      project: join(OUT_WEB, "project"),
-      source: body.source || String(media),
-      min_speech_ms: body.min_speech_ms,
-      min_silence_ms: body.min_silence_ms,
-      silence_threshold: body.silence_threshold,
-      silence_padding: body.silence_padding,
-      keep_pauses: body.keep_pauses,
-      remove_filler: body.remove_filler,
-      export_fcpxml: body.export_fcpxml !== false,
-    });
+    const project = join(OUT_WEB, "project");
+    const data = await _runExclusive(project, "export", () =>
+      rpcData("audio_analysis", {
+        media,
+        project,
+        source: body.source || String(media),
+        min_speech_ms: body.min_speech_ms,
+        min_silence_ms: body.min_silence_ms,
+        silence_threshold: body.silence_threshold,
+        silence_padding: body.silence_padding,
+        keep_pauses: body.keep_pauses,
+        remove_filler: body.remove_filler,
+        export_fcpxml: body.export_fcpxml !== false,
+      })
+    );
     return sendJson(res, { ok: true, op: "export", data });
   }
   if (method === "POST" && url.pathname === "/api/run_pipeline") {
@@ -465,24 +504,27 @@ async function route(req, res, url, method) {
     } else {
       throw new Error("provide 'path' (a file inside the project) or an http(s) 'source' URL");
     }
-    const data = await rpcData("run_pipeline", {
-      source,
-      out: join(OUT_WEB, "pipeline"),
-      model: body.model,
-      language: body.language,
-      limit: body.limit,
-      chunk_minutes: body.chunk_minutes,
-      beam_size: body.beam_size,
-      cpu_threads: body.cpu_threads,
-      caption_style: body.caption_style || undefined,
-      audio_analysis: body.audio_analysis ?? false,
-      export_fcpxml: body.export_fcpxml ?? true,
-      // A cookies file is a path the pipeline hands to yt-dlp; it is never read
-      // here, never echoed into a response, and deliberately NOT confined to
-      // the project — a cookie file inside the repo is one `git add` away from
-      // being leaked, so the user's own home is where it belongs.
-      cookies: body.cookies || undefined,
-    });
+    const out = join(OUT_WEB, "pipeline");
+    const data = await _runExclusive(out, "run_pipeline", () =>
+      rpcData("run_pipeline", {
+        source,
+        out,
+        model: body.model,
+        language: body.language,
+        limit: body.limit,
+        chunk_minutes: body.chunk_minutes,
+        beam_size: body.beam_size,
+        cpu_threads: body.cpu_threads,
+        caption_style: body.caption_style || undefined,
+        audio_analysis: body.audio_analysis ?? false,
+        export_fcpxml: body.export_fcpxml ?? true,
+        // A cookies file is a path the pipeline hands to yt-dlp; it is never read
+        // here, never echoed into a response, and deliberately NOT confined to
+        // the project — a cookie file inside the repo is one `git add` away from
+        // being leaked, so the user's own home is where it belongs.
+        cookies: body.cookies || undefined,
+      })
+    );
     return sendJson(res, { ok: true, op: "run_pipeline", data });
   }
   if (method === "GET" && url.pathname === "/api/file") {
