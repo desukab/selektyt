@@ -117,60 +117,77 @@ def test_probe_opens_the_source_exactly_once(tmp_path, monkeypatch):
     assert opened[0] == str(video)
 
 
-def test_face_cascade_is_loaded_once_per_process(tmp_path, monkeypatch):
-    """F16 (IO half): the Haar XML is the same for every clip and every 9:16
-    render, so re-reading it per call is duplicated work on a constrained host.
-    """
-    import engine.reframe as reframe_mod
+def test_the_detector_is_loaded_once_per_process(tmp_path, monkeypatch):
+    """F16 (IO half): the detector's weights are the same for every clip and
+    every 9:16 render, so re-parsing the model per call is duplicated work on a
+    constrained host -- which was the point when the detector was Haar and is
+    the same point now that it is YuNet.
 
-    # Some opencv builds (this host's, among others) ship without the Haar
-    # class at all, in which case the code takes the edge-density fallback and
-    # never loads anything. Inject a stub so the memo is testable everywhere.
+    Counts model *constructions* on the primary backend rather than stubbing a
+    legacy one, because that is the path every render actually takes.
+    """
+    import engine.reframe_perception as perception_mod
+
     constructed = []
 
-    class _StubCascade:
-        def __init__(self, path):
-            constructed.append(str(path))
+    class _StubDetector:
+        def __init__(self, *a, **kw):
+            constructed.append(a)
 
         def empty(self):
             return False
 
-        def detectMultiScale(self, *a, **kw):
-            return []
+        def setInputSize(self, size):
+            pass
 
-    monkeypatch.setattr(reframe_mod.cv2, "CascadeClassifier", _StubCascade,
-                         raising=False)  # not every build ships the class
+        def detect(self, frame):
+            return True, np.zeros((0, 15))
+
+    monkeypatch.setattr(perception_mod.cv2, "FaceDetectorYN_create", _StubDetector,
+                         raising=False)
+    monkeypatch.setattr(perception_mod.cv2, "FaceDetectorYN", _StubDetector,
+                         raising=False)
     # Drop the process-level memo so the count is this test's alone.
-    monkeypatch.setattr(reframe_mod, "_CACHED_CASCADE", False)
+    monkeypatch.setattr(perception_mod, "_SINGLETON", None)
 
-    video = _moving_square_video(tmp_path / "square2.mp4")
-    for _ in range(3):
+    videos = [_moving_square_video(tmp_path / f"square2_{i}.mp4") for i in range(3)]
+    for video in videos:
         crop_x_expression(video, start=0.0, end=1.8)
     assert len(constructed) == 1, (
-        f"the cascade must be loaded once and reused, loaded {len(constructed)}"
+        f"the model must be loaded once and reused, loaded {len(constructed)}"
     )
     # the memo survives later calls in the same process
-    crop_x_expression(video, start=0.0, end=1.8)
+    crop_x_expression(videos[0], start=0.0, end=1.8)
     assert len(constructed) == 1
 
 
-def test_absent_cascade_data_falls_back_without_crashing(tmp_path, monkeypatch):
-    """A headless build without cv2.data must still produce a crop expression
-    rather than raising — the edge-density tracker takes over."""
-    import engine.reframe as reframe_mod
+def test_no_usable_backend_still_reframes(tmp_path, monkeypatch):
+    """A host with no usable perception backend -- OpenCV 5.x, where the Haar
+    class is gone, plus a build or container without the model file -- must
+    still produce a crop expression rather than raising. The edge-density
+    tracker takes over."""
+    import engine.reframe_perception as perception_mod
 
     class _Boom:
         def __init__(self, *a, **kw):
-            raise AttributeError("cv2.data is not available on this build")
+            raise AttributeError("this build has no face detector at all")
 
-    monkeypatch.setattr(reframe_mod, "_CACHED_CASCADE", False)
-    monkeypatch.setattr(reframe_mod.cv2, "CascadeClassifier", _Boom,
+    monkeypatch.setattr(perception_mod, "_SINGLETON", None)
+    monkeypatch.setattr(perception_mod.cv2, "FaceDetectorYN_create", _Boom,
+                         raising=False)  # not every build ships the symbol
+    monkeypatch.setattr(perception_mod.cv2, "FaceDetectorYN", _Boom,
+                         raising=False)
+    monkeypatch.setattr(perception_mod.cv2, "CascadeClassifier", _Boom,
                          raising=False)
 
     video = _moving_square_video(tmp_path / "square3.mp4")
+    detector = perception_mod.FaceDetector()
+    assert detector.available is False, (
+        f"with no backend the detector must report unavailable, got {detector.kind}"
+    )
     expr = crop_x_expression(video, start=0.0, end=1.8)
-    assert expr, "an unusable cascade must not prevent reframing"
-    assert reframe_mod._load_face_cascade() is None
+    assert expr, "an unusable backend must not prevent reframing"
+    assert "if(lt(t," in expr, "without a detector the fallback must still move the crop"
 
 
 # ── anamorphic sources: the 9:16 crop must be 9:16 in *display* space ──

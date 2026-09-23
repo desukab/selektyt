@@ -1,6 +1,6 @@
 # Product gap map
 
-Where SelekyT is a finished product and where it is not, as of `3fc11e1`.
+Where SelekyT is a finished product and where it is not, as of `5e44599`.
 
 The distinction this map exists to keep clear: **a stage whose code exists and
 whose unit tests pass is not the same as a stage a user can rely on.** Each row
@@ -68,7 +68,7 @@ real analytics. Channel-specific learning remains on the roadmap.
 | --- | --- | --- |
 | 16:9 Facebook cut | complete and verified | real MP4 decoded by ffprobe: duration, dimensions, frame rate and audio/video streams all checked |
 | 9:16 vertical cut | complete and verified, after one geometry fix | the real source's vertical render was read back with ffprobe and was **not** 9:16: the source is anamorphic (720×486, SAR 8:9, DAR 320:243) and a crop of `ih*9/16` pixels is only 9:16 for square pixels, so the output displayed at 1088:2187 ≈ 1:2. The crop width is now scaled by the sample aspect ratio so the *display* ratio is 9:16; re-verified on the real source (308×486 SAR 8:9 → 1232:2187 = 0.5633 vs a 0.5625 target). Pinned end to end by `tests/test_render.py` |
-| Subject-aware reframing | usable with limitations | the real source exercised the active-region estimation path; face tracking is unit-tested but whether a source yields a detectable face is source-dependent, and a scene with no clear subject can still reframe poorly. The wider anamorphic crop is not re-measured for subject framing on sources with real motion |
+| Subject-aware reframing | complete and verified on the corpus, with measured limits | **was** genuinely broken, and the break was silent. The old face path (`cv2.CascadeClassifier`) is gone in OpenCV 5, which `opencv-python-headless>=4.9` resolves to on a clean install, so every vertical output fell back to the Canny edge-density centroid — which on a two-shot lands in the empty middle between the speakers. The corpus's own short04 is the evidence: two speakers detected at 0.94 confidence for the whole clip while the crop sat on nobody, 151 of 178 sampled frames losing *every* face. The path is now a YuNet detector via `cv2.FaceDetectorYN` (survives OpenCV 5), Apache-2.0 weights from `opencv_zoo`, 232 KB, loaded lazily and optional — absent weights fall back to the edge path rather than failing. Two further defects were found only by rendering the deliverable, because source-space metrics could not see either: the crop expression was offset from the planner's fraction by up to a full crop width (406 px) — the instrument reported a centred subject while the shipped frame held nobody — and the speed limiter's duplicate-drop collapsed a held note into a linear ramp, so the crop began sliding toward a speaker who had not started talking. Both pinned by `tests/test_reframe_regression.py`, whose rendered tests use an oracle detector deliberately separate from the planner's so a shared blind spot cannot become a shared pass. After the fix, on the five corpus shorts: rendered face presence 0.053→1.000, 0.905→0.989, 0.295→0.968, 1.000, 0.962→1.000; short04's source-space framed fraction 0.007→1.000 with 151→0 all-faces-lost frames. Numbers and method: `corpus/wer/runs/reframe-before-after-2026-09-23.json`. **Limits that remain, stated as limits:** one source video (a single briefing, 1280×720) was exercised, so behaviour on handheld footage, whip pans, crowds and close interviews is inferred, not measured; the frames were *measured*, never *viewed* — this environment cannot read images, so visual QA is a frame-level detector score and nothing is claimed about composition aesthetics; the oracle shares YuNet's 48 px floor, so a face rendered smaller than that counts as absent and a genuinely-too-tight crop would read as a miss for the wrong reason; multi-speaker switching and hard cuts are tested on synthetic trajectories, the corpus having no shot change of its own; and the wider anamorphic crop is still not re-measured for subject framing on sources with real motion |
 | Render caching, quarantine, `.bak` recovery | complete and verified | interrupted renders recover and only the missing clip is re-rendered |
 
 ## EXPORT
@@ -117,11 +117,18 @@ un-artifacted session note, not evidence the path works. A user on a
 residential IP should be unaffected; a user on a cloud VM will need
 `--cookies`. That is the one input path this environment cannot verify.
 
-Two further honest limits. The editorial gate has one observed failure mode
-worth knowing about: a source with no detectable speech is rejected with
-"No complete standalone stories passed the editorial/context gate" rather than
-a message naming the actual cause (an empty transcript). That was hit on
+Two further honest limits. The editorial gate used to have one observed
+failure mode worth knowing about: a source with no detectable speech was
+rejected with "No complete standalone stories passed the editorial/context
+gate" rather than a message naming the actual cause. That was hit on
 archive.org's `SVS-1335`, whose audio is digital silence (-91 dB); the empty
-transcript and the rejection were both correct, but the error does not tell a
-user that their file has no speech track. And no NLE on this host has opened an
-exported timeline, so format validity is claimed, not import compatibility.
+transcript and the rejection were both correct, but the error did not tell a
+user that their file had no speech track. **It is fixed and no longer a
+limit:** an empty transcript now fails before ranking, and the message is
+chosen by what the audio actually showed — a peak-level measurement separates
+a genuinely silent source from a damaged container, and reports the number so
+the diagnosis is checkable rather than merely confident. Pinned by
+`tests/test_speechless_source.py`, which asserts the expensive downstream
+stages are never reached and that the wording does not imply the gate judged
+anything. And no NLE on this host has opened an exported timeline, so format
+validity is claimed, not import compatibility.
