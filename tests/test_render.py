@@ -544,3 +544,249 @@ def test_render_multi_part_is_frame_accurate(tmp_path):
             f"{expected}: an NLE relinking this cut would not get the file that "
             f"was shipped"
         )
+
+
+# ── the committed corpus: is the burn in the pixels we actually shipped? ──────
+
+_REPO = Path(__file__).resolve().parent.parent
+_CORPUS = _REPO / "corpus"
+
+# The runs whose source media is at hand when this runs. Comparing a shipped
+# MP4 against the frames it was cut from needs the original, and neither the
+# renders nor the media are committed — .gitignore keeps only the corpus's
+# text artifacts, because the binary is regenerable and very large. The other
+# runs' media was discarded after rendering; re-fetching it is 1.3 GB across
+# four hosts, so for those the control is simply absent and the test skips
+# rather than substituting a stand-in for it.
+_MEDIA_FOR_PROJECT = {
+    "pentagon-esper-briefing": "pentagon-esper-briefing.mp4",
+    "royal-society-cloke": "royal-society-cloke.webm",
+    "telugu-tutorial": "telugu-tutorial.webm",
+}
+
+# A change only counts as ink past this many levels. The synthetic-control test
+# above uses 20 against a flat uncaptioned render; 20 is not enough here, where
+# the control is the original source and the shipped MP4 is a re-encode of it.
+# Measured on these ten clips: at 20 the re-encode's own contribution to the
+# top of the caption band is 1.0-2.0% of pixels on five of them, indistinguish
+# able from a faint mis-burn; at 60 it falls to at most 0.19% while the ink
+# itself stays 0.53-1.61%. The ink is what survives the higher bar.
+_INK_LEVEL = 60
+
+# The floors, all measured on the committed artifacts rather than chosen to
+# pass (see the survey notes in the docstring below):
+#   - ink inside the safe area, per clip, median over its cues: 0.53%-1.61%.
+#     The highest change found in the caption band at a moment no cue was
+#     displayed was 0.037%, so 0.15% sits 4x above the no-caption baseline and
+#     3.5x below the faintest real burn measured.
+_BURN_FLOOR = 1.5e-3
+#   - ink outside the horizontal safe area the ASS style declares: 0.0% at the
+#     median on every clip measured, so the same floor read as "quiet" works.
+_SAFE_SHARE_FLOOR = 0.9
+_PAIRING_RATIO = 4.0
+# Every cue would be a stronger sample, but the clips carry up to 33 of them
+# and one frame seeked per cue is the bulk of the runtime; the floors above
+# were set against per-clip medians, and an evenly spaced slice keeps such a
+# sample spanning the whole clip.
+_MAX_CUES_PER_CLIP = 9
+
+
+@pytest.mark.parametrize("project", sorted(_MEDIA_FOR_PROJECT))
+def test_the_committed_renders_carry_the_burn(project):
+    """The corpus's shipped MP4s really do have captions in their pixels.
+
+    ``docs/RED_TEAM_FINDINGS.md`` R11 established the burn by hand, comparing
+    one render against its source frame, and ``docs/product-gap-map.md`` priced
+    the capability on that single comparison. Nothing in the suite made the
+    same measurement, so the renders the corpus's metrics cite were covered by
+    a check that only asserted the files were non-empty. This test makes R11's
+    measurement over every clip of every run whose source media is at hand,
+    including the Telugu run, which is the one place a burn can fail for a
+    reason other than a dropped filter (a font with no glyphs for the script
+    produces ink too — empty boxes — so a legibility claim is *not* what is
+    asserted here; presence and position are).
+
+    Where it can run, and where it cannot. The renders and the source media are
+    deliberately not in the repository: ``.gitignore`` commits only the corpus's
+    text artifacts, because several hundred megabytes of regenerable binary per
+    run would make the repo unclonable for no evidentiary gain. So this test
+    skips in a bare clone and runs only where the corpus was actually produced —
+    it is a reproducible measurement for that environment, not a CI guard. It
+    does not pretend to be the latter, and the skip message names the tool that
+    regenerates what it needs.
+
+    Each rendered clip is the kept intervals concatenated, so a cue's midpoint
+    in render time is mapped back through the edit plan to the source second
+    it was cut from, and the shipped frame is diffed against that frame. The
+    assertions are on the *shape* of the difference rather than its size, which
+    is what makes them portable across footage and font sizes: ink appears in
+    the bottom band, inside the horizontal margins the caption style declares,
+    and nowhere else. A burn in the wrong place — the failure mode of a
+    mis-set alignment or a PlayResX that disagrees with the render width — is
+    what the margins and band bounds catch; a stale *style* burned into the
+    pixels is not, and is pinned separately by ``test_caption_style_cache.py``.
+
+    Thresholds were set from a survey of all ten clips (both ink levels, every
+    cue) before the assertions were written, and the ink floor is calibrated
+    against a negative control built from the real artifacts rather than from a
+    synthetic fixture: re-cutting pentagon's clip from its source with no
+    subtitles filter measures 0.047% of the band changed, the floor sits at
+    0.15%, and the faintest real burn measured 0.53%. The unburned re-cut is
+    the failure this test exists to catch, and it does fail on it.
+    """
+    import json
+    import subprocess
+
+    import numpy as np
+
+    source = _CORPUS / "media" / _MEDIA_FOR_PROJECT[project]
+    if not source.is_file():
+        pytest.skip(
+            f"the source media for {project} is not present — the renders and "
+            f"media are not committed (see .gitignore); tools/corpus_run.py "
+            f"regenerates them")
+    project_dir = _CORPUS / f"{project}_run" / "project"
+    if not project_dir.is_dir():
+        pytest.skip(f"the {project} run is not in this checkout")
+
+    edit_plan = {e["index"]: e
+                 for e in json.loads((project_dir / "edit_plan.json").read_text())}
+    assert edit_plan, f"{project} has no clips to measure"
+
+    shape_cache: dict[Path, tuple[int, int]] = {}
+
+    def _shape(path: Path) -> tuple[int, int]:
+        """(width, height), cached: the probe is the second subprocess in a
+        frame lookup and it never changes mid-run."""
+        if path not in shape_cache:
+            out = subprocess.run(
+                ["ffprobe", "-v", "error", "-select_streams", "v:0",
+                 "-show_entries", "stream=width,height", "-of", "csv=p=0",
+                 str(path)],
+                capture_output=True, text=True, check=True,
+            )
+            shape_cache[path] = tuple(int(x) for x in out.stdout.strip().split(","))
+        return shape_cache[path]
+
+    def _frame_at(path: Path, t: float) -> "np.ndarray | None":
+        """One grayscale frame, sought rather than decoded in full: the corpus
+        sources run to 158 MB and this samples a handful of times per clip."""
+        raw = subprocess.run(
+            ["ffmpeg", "-v", "error", "-ss", f"{t:.3f}", "-i", str(path),
+             "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+            capture_output=True,
+        )
+        if not raw.stdout:
+            return None
+        w, h = _shape(path)
+        if len(raw.stdout) != w * h:
+            return None
+        return np.frombuffer(raw.stdout, np.uint8).reshape(h, w)
+
+    measured = 0
+    for index in sorted(edit_plan):
+        render = project_dir / "facebook" / f"{index:02d}.mp4"
+        ass = project_dir / "captions" / f"{index:02d}.ass"
+        if not (render.is_file() and ass.is_file()):
+            continue
+
+        cues = [
+            (_ass_stamp(line.split(",", 9)[1]),
+             _ass_stamp(line.split(",", 9)[2]))
+            for line in ass.read_text(encoding="utf-8").splitlines()
+            if line.startswith("Dialogue:")
+        ]
+        if not cues:
+            continue
+
+        # Every cue would be a stronger sample, but the clips carry up to 33 of
+        # them and the median over a spread sample is what the floors were set
+        # against; an evenly spaced slice keeps the sample spanning the clip.
+        if len(cues) > _MAX_CUES_PER_CLIP:
+            stride = len(cues) / _MAX_CUES_PER_CLIP
+            sampled = [cues[int(i * stride)] for i in range(_MAX_CUES_PER_CLIP)]
+        else:
+            sampled = cues
+
+        inside, outside, above, ink_px, margin_px = [], [], [], [], []
+        for start, end in sampled:
+            t = (start + end) / 2
+            source_t = _render_time_to_source(edit_plan[index]["intervals"], t)
+            if source_t is None:
+                continue
+            shipped, control = _frame_at(render, t), _frame_at(source, source_t)
+            if shipped is None or control is None:
+                continue
+            if shipped.shape != control.shape:
+                pytest.fail(
+                    f"{project} facebook/{index:02d}.mp4 is {shipped.shape[1]}x"
+                    f"{shipped.shape[0]} against a {control.shape[1]}x"
+                    f"{control.shape[0]} source, so the two cannot be compared "
+                    f"frame to frame")
+            changed = np.abs(shipped.astype(np.int16) - control.astype(np.int16))
+            band = changed > _INK_LEVEL
+            h, w = shipped.shape
+            band_top = int(_CAPTION_BAND_TOP * h)
+            margin = int(MARGIN_H / PLAYRES_X * w)
+            in_band = band[band_top:, margin:w - margin]
+            out_band = np.concatenate(
+                [band[band_top:, :margin], band[band_top:, w - margin:]], axis=1)
+            inside.append(in_band)
+            outside.append(out_band)
+            above.append(band[:band_top])
+            ink_px.append(int(in_band.sum()))
+            margin_px.append(int(out_band.sum()))
+
+        if not inside:
+            continue
+        measured += 1
+
+        def _median_changed(masks: "list") -> float:
+            return float(np.median([m.mean() for m in masks]))
+
+        ink = _median_changed(inside)
+        share = float(np.median([
+            a / (a + b) for a, b in zip(ink_px, margin_px) if a + b
+        ])) if any(a + b for a, b in zip(ink_px, margin_px)) else 0.0
+
+        assert ink >= _BURN_FLOOR, (
+            f"{project} facebook/{index:02d}.mp4: the caption band changes "
+            f"{ink:.4%} of its pixels against the source at the cue times its "
+            f"sidecar declares, below the {_BURN_FLOOR:.4%} a real burn "
+            f"measures — the shipped file may carry no captions, or the cues "
+            f"may not line up with the cut")
+        assert ink >= _PAIRING_RATIO * _median_changed(above), (
+            f"{project} facebook/{index:02d}.mp4: the caption band changes "
+            f"{ink:.4%} but the 70% of the frame above it changes "
+            f"{_median_changed(above):.4%}, so the 'ink' is a re-encode or a "
+            f"seek mismatch rather than a caption, and the comparison above is "
+            f"not measuring anything")
+        assert share >= _SAFE_SHARE_FLOOR, (
+            f"{project} facebook/{index:02d}.mp4: only {share:.1%} of the ink "
+            f"in the caption band falls inside the horizontal margins its ASS "
+            f"style declares ({MARGIN_H}/{PLAYRES_X}), so the burn is wider "
+            f"than the layout that claims it")
+
+    assert measured, (
+        f"{project} has {len(edit_plan)} clip(s) in its edit plan but no "
+        f"facebook render paired with a cues-bearing ASS sidecar was measured")
+
+
+def _ass_stamp(stamp: str) -> float:
+    """An ASS ``h:mm:ss.cc`` cue time, as seconds."""
+    hours, minutes, rest = stamp.split(":")
+    return int(hours) * 3600 + int(minutes) * 60 + float(rest)
+
+
+def _render_time_to_source(intervals: list, t: float) -> "float | None":
+    """Where in the source the render's clock points at ``t``.
+
+    A rendered clip is the kept intervals concatenated in order, so render time
+    walks them; a jump cut is exactly the discontinuity this skips over. ``None``
+    means ``t`` falls past the end, which a truncated sidecar can ask for."""
+    elapsed = 0.0
+    for start, end in intervals:
+        if elapsed <= t < elapsed + (end - start):
+            return start + (t - elapsed)
+        elapsed += end - start
+    return None
