@@ -478,11 +478,28 @@ def test_every_committed_corpus_project_passes_the_independent_audit():
     source media unless ``--keep-media`` is passed, so a finding that the media
     is absent is a property of the audit's evidence, not of the export, and it
     is accepted here as NOT RUN rather than as a failure. Worth knowing about
-    the committed trees: five reference their media by a path that no longer
-    exists anywhere, and the other two reference absolute paths that resolve
-    only on the machine that generated them — so the relink check passes here
-    and reports NOT RUN everywhere else, CI included. Both are accepted; what
-    is not accepted is a finding that ran and failed.
+    the committed trees: the four runs whose media was discarded still reference
+    it by a path that no longer exists anywhere, and the three whose media is
+    retained reference absolute paths that resolve only on the machine that
+    generated them — so the relink check passes here and reports NOT RUN
+    everywhere else, CI included. Both are accepted; what is not accepted is a
+    finding that ran and failed.
+
+    The distinction is not academic, and the telugu run is how it was learned.
+    Its media was retained long after the run, and the moment it appeared on
+    disk this check turned from NOT RUN into a hard failure: the EDL it had
+    shipped carried ``FROM CLIP: corpus/media/telugu-tutorial.webm``, a path
+    relative to the pipeline's working directory, which an NLE opening the EDL
+    from its own timeline directory resolves to a file that is not there. Every
+    clip would have imported offline on a machine that had the media right
+    there. The exporter had already been fixed (``engine/nle_export.py``
+    ``_from_clip_path`` makes the path absolute and refuses to ship one it
+    cannot resolve) — the committed artifact simply predated the fix, and no
+    audit could see it while the media it needed was missing. Re-emitting the
+    timeline with ``tools/regenerate_timelines.py`` changed exactly one line,
+    the path base, and the finding now passes. That is the shape of defect this
+    test catches by running at all, and the reason a NOT RUN is reported rather
+    than silently counted clean.
     """
     _require_independent_validator()
     roots = sorted((ROOT / "corpus").glob("*_run/project"))

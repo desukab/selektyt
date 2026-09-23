@@ -27,9 +27,32 @@ by `tools/nle_check.py`, which compares timeline spans against the rendered
 EDL↔FCPXML cross-check. On `nasa360-ep5`, all six clips agree to **within 0.63
 frames** against both presets — five of the six match the render exactly, and
 the worst case is clip 02 at 0.63 frames of a 29.97 fps frame. Full transcript:
-`docs/nle-audit-output.txt`, regenerable with the command above. Twelve checks
-skip, because `corpus_run.py` deletes the source media unless `--keep-media` is
-passed, so media relink cannot be verified from the committed tree.
+`docs/nle-audit-output.txt`, regenerable with the command above.
+
+Across the seven audited projects the current count is **435 findings passing,
+34 deferred, none failing** (regenerable with the loop in §6; the earlier figure
+of twelve deferred checks on this page was stale — the corpus grew). Deferral is
+not silence: a deferred finding is one whose *evidence* is absent rather than one
+that passed. `corpus_run.py` deletes the source media unless `--keep-media` is
+passed, so the four runs that did not retain theirs cannot have their relink
+checked from the committed tree, and the three that did retain it carry absolute
+paths that resolve only on the machine that generated them.
+
+The telugu run is why that distinction is written down rather than assumed. Its
+media was retained long after the run, and the moment it appeared on disk the
+EDL's relink finding stopped deferring and **failed**: the shipped EDL carried
+`FROM CLIP: corpus/media/telugu-tutorial.webm`, a path relative to the pipeline's
+working directory, which an NLE opening the EDL from its own timeline directory
+resolves to a file that is not there — every clip would have imported offline on
+a machine that had the media right there. The exporter had already been fixed
+(`engine/nle_export.py::_from_clip_path` makes the path absolute and refuses to
+ship one it cannot resolve); the committed artifact predated the fix, and no
+audit could see it while the media it needed was missing. Re-emitting with
+`tools/regenerate_timelines.py` changed exactly one line, the path base, and the
+finding now passes. The four remaining relative-path EDLs are the same defect at
+a lower confidence: they are stale emitters' output too, and re-emitting them
+needs their sources (1.3 GB across four hosts), so they stay deferred rather
+than being rewritten to point at files this repo does not have.
 
 **What this is worth, honestly:** a library that parses a format is not an NLE.
 `pycmx` accepting the EDL proves the file is a well-formed CMX 3600 document
@@ -214,4 +237,15 @@ PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py \
 .venv/bin/python tools/corpus_run.py corpus/manifest.json --only royal-society-cloke --keep-media
 PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py \
   corpus/royal-society-cloke_run/project
+
+# The count above, over every audited project (435 pass / 34 deferred / 0 fail)
+for d in corpus/*_run/project; do
+  [ -d "$d/timeline" ] || continue
+  PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py "$d"
+done | grep -c ' PASS '
+
+# Re-emitting a stale timeline after an emitter-side fix, without a re-run.
+# The media must be present — the tool refuses to write an EDL pointing at
+# nothing, because that would recreate the defect it is repairing.
+.venv/bin/python tools/regenerate_timelines.py corpus/telugu-tutorial_run/project
 ```
