@@ -1,9 +1,18 @@
 """Report system tests."""
 import json
+import os
+import subprocess
 import time
+from pathlib import Path
+
+import pytest
+
+from engine import report as report_module
 from engine.report import (
     ReportBuilder, write_report_json, terminal_summary, write_terminal_summary,
 )
+
+_REPO = Path(report_module.__file__).resolve().parent.parent
 
 
 def test_report_all_sections():
@@ -84,3 +93,91 @@ def test_unknown_setter_ignored():
     b.set_provenance(not_a_real_field=1)
     d = b.to_dict()
     assert "not_a_real_field" not in d["provenance"]
+
+
+# ── the build identity follows the code, not the launch directory ─────────────
+
+
+def _repo_sha() -> str:
+    return subprocess.run(
+        ["git", "-C", str(_REPO), "rev-parse", "--short", "HEAD"],
+        capture_output=True, text=True, encoding="utf-8",
+    ).stdout.strip()
+
+
+def test_git_sha_is_resolved_from_the_package_not_the_cwd(tmp_path, monkeypatch):
+    """``git_sha`` names the build that produced the tree, so it has to follow
+    the code that ran. The pipeline is a CLI and can be launched from anywhere;
+    resolving it with plain ``git rev-parse`` made the field silently empty for
+    anyone not standing inside the repo, and an empty SHA reads to whoever finds
+    the report as "this came from an unreleased build".
+
+    Regression-pinned: this test fails at the equality below when ``_git_sha``
+    runs ``git rev-parse`` without ``-C``, because the cwd here is deliberately
+    outside the repo.
+    """
+    monkeypatch.chdir(tmp_path)
+    assert _repo_sha(), "the checkout the tests run in has no SHA to compare with"
+    assert report_module.ReportBuilder._git_sha() == _repo_sha()
+
+
+def test_git_sha_is_empty_when_no_checkout_is_reachable(tmp_path, monkeypatch):
+    """A tarball export has no ``.git`` anywhere above the package, and there the
+    honest value is an empty string.
+
+    The package is relocated under ``tmp_path`` and given a ``.git`` directory
+    with no commits, which is what an unpacked-but-not-initialised tree looks
+    like to the walk: present enough to stop it, empty enough to answer nothing.
+    """
+    for ancestor in [tmp_path, *tmp_path.parents]:
+        if (ancestor / ".git").exists():
+            pytest.skip(
+                f"the tmp tree sits inside a checkout ({ancestor}); the empty "
+                "case cannot be isolated there")
+    package = tmp_path / "checkout" / "engine"
+    package.mkdir(parents=True)
+    (package.parent / ".git").mkdir()
+    monkeypatch.setattr(report_module, "__file__", str(package / "report.py"))
+    monkeypatch.chdir(tmp_path)
+    assert report_module.ReportBuilder._git_sha() == ""
+
+
+def test_git_sha_ignores_a_checkout_the_package_was_vendored_into(
+        tmp_path, monkeypatch):
+    """A checkout above the package that does not track the running file is not
+    this code's history.
+
+    This is the pip-install-into-someone-else's-repo shape: the package is
+    dropped into a project it has nothing to do with, and that project has a
+    perfectly good HEAD. Reporting that SHA would attribute the deliverable to a
+    build that never produced it, which is a harder error to catch later than an
+    empty field, because it looks like a real answer.
+
+    Mutation-verified: dropping the ``ls-files --error-unmatch`` guard fails here
+    with the unrelated checkout's SHA where the assertion expects an empty
+    string.
+    """
+    unrelated = tmp_path / "unrelated"
+    package = unrelated / "engine"
+    package.mkdir(parents=True)
+    # A real checkout with a real commit, tracking nothing of ours.
+    env = {k: v for k, v in os.environ.items()
+           if k.startswith(("GIT_AUTHOR_", "GIT_COMMITTER_")) is False}
+    env.update(GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@example.invalid",
+               GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@example.invalid")
+    for args in (
+        ["git", "init", "-q", str(unrelated)],
+        ["git", "-C", str(unrelated), "commit", "-q", "--allow-empty", "-m", "x"],
+    ):
+        proc = subprocess.run(args, capture_output=True, text=True, env=env)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+    unrelated_sha = subprocess.run(
+        ["git", "-C", str(unrelated), "rev-parse", "--short", "HEAD"],
+        capture_output=True, text=True, encoding="utf-8").stdout.strip()
+    assert unrelated_sha, "the fixture checkout has no commit to misattribute"
+
+    monkeypatch.setattr(report_module, "__file__", str(package / "report.py"))
+    monkeypatch.chdir(tmp_path)
+    assert report_module.ReportBuilder._git_sha() == "", (
+        f"the report attributed a vendored copy to an unrelated checkout "
+        f"({unrelated_sha}) that does not track it")

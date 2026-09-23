@@ -129,12 +129,74 @@ class ReportBuilder:
 
     @staticmethod
     def _git_sha() -> str:
+        """The short SHA of the checkout this code was imported from.
+
+        Resolved by walking up from this file rather than from the process's
+        working directory: the report names the build that produced the tree,
+        and a user launching the pipeline from their home directory is running
+        exactly the same code as one launching it from the repo root. Reading
+        the cwd instead made the field silently empty for one of the two, and
+        an empty SHA reads as "unreleased build" to whoever finds the report.
+
+        A checkout found above the package is only accepted if it actually
+        tracks this file. A vendored or pip-installed copy of the package
+        sitting inside an unrelated project would otherwise be reported as a
+        build of that project, which is worse than saying nothing.
+
+        In an exported tarball there is no ``.git`` anywhere above the package,
+        and the honest value really is empty.
+        """
+        try:
+            here = Path(__file__).resolve()
+        except OSError:
+            here = None
+        roots = []
+        if here is not None:
+            # __file__ is <root>/engine/report.py, so the checkout is the parent.
+            for candidate in [here.parent.parent, *here.parent.parents]:
+                roots.append(candidate)
+                if (candidate / ".git").exists():
+                    break
+        # The cwd is a last resort, and behaves as it always did: it may be the
+        # only checkout in reach for an installed copy of the package.
+        roots.append(Path.cwd())
+        for root in roots:
+            sha = ReportBuilder._sha_at(root, here)
+            if sha:
+                return sha
+        return ""
+
+    @staticmethod
+    def _sha_at(root: Path, here: Path | None) -> str:
+        """The short HEAD SHA of ``root``, but only if ``root`` is this code's
+        own history.
+
+        When ``here`` sits under ``root``, that is checked by asking the index
+        whether it tracks the running file — a checkout that does not is a
+        project the package was copied into, not the package's own repository.
+        When it does not (the cwd fallback for an installed copy), no such
+        question is meaningful and the checkout is taken at face value.
+        """
         try:
             out = subprocess.run(
-                ["git", "rev-parse", "--short", "HEAD"],
+                ["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
                 capture_output=True, text=True, timeout=5, encoding="utf-8",
             )
-            return out.stdout.strip() if out.returncode == 0 else ""
+            if out.returncode != 0 or not out.stdout.strip():
+                return ""
+            if here is not None:
+                try:
+                    rel = here.relative_to(root)
+                except ValueError:
+                    return out.stdout.strip()
+                tracked = subprocess.run(
+                    ["git", "-C", str(root), "ls-files", "--error-unmatch",
+                     str(rel)],
+                    capture_output=True, text=True, timeout=5, encoding="utf-8",
+                )
+                if tracked.returncode != 0:
+                    return ""
+            return out.stdout.strip()
         except Exception:
             return ""
 

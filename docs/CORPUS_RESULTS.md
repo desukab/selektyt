@@ -150,6 +150,35 @@ So: the caption-straddle fix is confirmed on two sources. The word-split fix is
 confirmed on one (`royal-society-cloke`, fully re-run). **The other three still
 need real re-runs**, and no claim in this document says otherwise.
 
+
+**The committed captions are themselves a snapshot three days behind the
+emitter**, measured 2026-09-22. Regenerating from the persisted
+`selections.json` rewrites **79 of the 81** committed caption files: the
+corpus's captions were written 2026-09-19, before the one-width-policy caption
+work of 2026-09-21/22, so the committed cue breaks and emphasis marks are not
+what the current code would write. `tools/regenerate_captions.py` is not wrong
+— its byte-identity claim is against *a fresh run*, and that was verified by
+running the pipeline and regenerating into the tree it wrote: byte-identical,
+`0 of 2 caption track(s) changed`. The committed *pixels* still match the
+committed sidecars (OCR of `royal-society-cloke` clip 01 at 3.4 s reads "it's
+going to happen more often," as one cue, which the current emitter would have
+split after "more" at 3.252 s), so the corpus is self-consistent — just three
+days old. Regenerating the sidecars without re-rendering would break that
+agreement, which is worse than leaving them, and re-rendering needs media the
+repo does not redistribute. The regenerated captions still pass the audit on
+every source, so this is a freshness gap, not a defect.
+
+Both figures in that paragraph are pinned by tests, and both guards were
+mutation-verified rather than assumed: removing the one-frame gap between
+cues moves the count 79 → 80 and fails
+`tests/test_corpus_reproducibility.py::test_the_committed_captions_are_what_the_current_emitter_writes`
+at `assert 80 <= 79`; wiring `time.time()` into the emitted cue text fails
+`tests/test_pipeline_e2e.py::test_regenerating_captions_is_byte_identical_to_a_fresh_run`
+at `0 of 2 caption track(s) changed`. A mutation to the cue tail's 0.08 s
+floor changes nothing on this corpus and passes both — correctly, because
+that floor is dominated by the clamp to the following cue's start on every
+clip here, so it is a no-op against this data rather than a test that cannot
+
 ## The finding that matters more than the pass rate
 
 **Two of the seven "OK" sources have transcripts this repository cannot stand
