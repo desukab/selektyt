@@ -57,7 +57,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 
 from engine.vad import EnergyVAD, segment_with_meta
-from providers.audio import extract_pcm_wav
+from providers.audio import extract_pcm_wav, _read_mono_pcm, AudioReadError
 
 FRAME_MS = 32  # EnergyVAD's fixed window; the score grid the segments read.
 
@@ -99,23 +99,20 @@ def _read_mono(path: Path, sample_rate: int = 16000) -> tuple[list[float], int]:
     Reuses ``EnergyVAD``'s conforming reader indirectly by reading the same way
     it does, so the frames measured here are the frames the VAD scores rather
     than a second, slightly different extraction of the same source.
+
+    The WAV itself is read through :func:`providers.audio._read_mono_pcm`, the
+    single place that turns stdlib reader failures into ``AudioReadError``.
+    Coverage is an audit, not a decode: an extraction that cannot be parsed has
+    to become ``not_measured`` here, not a crash, because crashing the run would
+    replace an honest "I could not check this" with a stack trace the user
+    cannot act on.
     """
-    import wave
-
-    import numpy as np
-
     wav = path
     if wav.suffix.lower() != ".wav":
         probe = wav.parent / f"{wav.stem}_probe.wav"
         extract_pcm_wav(wav, probe, sample_rate)
         wav = probe
-    with wave.open(str(wav), "rb") as fh:
-        raw = fh.readframes(fh.getnframes())
-        channels = fh.getnchannels()
-        rate = fh.getframerate()
-    data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
-    if channels > 1:
-        data = data.reshape(-1, channels).mean(axis=1)
+    data, rate = _read_mono_pcm(wav)
     if rate != sample_rate:
         raise ValueError(f"{path} is {rate} Hz, expected {sample_rate}; the "
                          "fractions would be computed on the wrong grid")
@@ -192,7 +189,7 @@ def check(audio: Path, segments: list[dict]) -> CoverageReport:
         return CoverageReport(0.0, 0.0, 0.0, 0.0, 0.0, "not_measured",
                               "the extracted audio is missing, so coverage "
                               "could not be measured")
-    except (OSError, ValueError) as exc:
+    except (OSError, ValueError, AudioReadError) as exc:
         return CoverageReport(0.0, 0.0, 0.0, 0.0, 0.0, "not_measured",
                               f"coverage could not be measured: {type(exc).__name__}: {exc}")
 

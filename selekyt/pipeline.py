@@ -10,7 +10,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from providers.atomic import read_json, write_json_atomic
-from providers.audio import peak_dbfs
+from providers.audio import peak_dbfs, AudioReadError
 
 from engine.editorial import make_thoughts, rank
 from engine.captions import ass_for_candidate, srt_for_candidate
@@ -241,7 +241,7 @@ def _selection_digest(selected: list) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def _no_speech_diagnosis(peak: float | None) -> str:
+def _no_speech_diagnosis(peak: float | None, unreadable: str | None = None) -> str:
     """The message for an empty transcript, chosen by what the audio showed.
 
     Every empty transcript used to get the same answer — the source has no
@@ -249,7 +249,18 @@ def _no_speech_diagnosis(peak: float | None) -> str:
     whose container had lost its audio. The peak level of the extraction is
     what separates them, and it is reported back to the user because a number
     is what makes the diagnosis checkable rather than merely confident.
+
+    ``unreadable`` covers the third case, which peak level cannot express: the
+    extraction exists but will not parse. That is not silence and it is not a
+    loud-but-undecodable file, so it gets its own wording. ``None`` for the
+    peak still means the file is absent.
     """
+    if unreadable:
+        return (
+            f"the extracted audio could not be read ({unreadable}), so its "
+            "level is unknown rather than low — the extraction itself is "
+            "damaged. Try re-muxing or re-encoding the source by hand."
+        )
     if peak is not None and math.isfinite(peak) and peak > SILENT_PEAK_DBFS:
         return (
             f"the extracted audio is not silent (peak {peak:.1f} dBFS) but no "
@@ -486,8 +497,20 @@ def run(
         # The extraction is the thing to ask first, because it is cheap and it
         # settles it: digital silence cannot be repaired by any container fix,
         # while real level with no transcript points at the decode.
-        peak = peak_dbfs(project / "transcription" / "audio.wav")
-        if peak is not None and math.isfinite(peak) and peak > SILENT_PEAK_DBFS:
+        audio_path = project / "transcription" / "audio.wav"
+        try:
+            peak = peak_dbfs(audio_path)
+        except AudioReadError as exc:
+            # Not measurable is not the same as silent. A file that is there
+            # and cannot be parsed is a decode that went wrong, which is the
+            # damaged-container case below — reporting it as silence would send
+            # a user looking for an audio track their file does have.
+            peak = None
+            unreadable = str(exc)
+        else:
+            unreadable = None
+        if unreadable or (peak is not None and math.isfinite(peak)
+                          and peak > SILENT_PEAK_DBFS):
             recovered = _recover_from_a_damaged_container(
                 media, project / "source",
                 transcribe=lambda m: transcribe_auto(
@@ -531,9 +554,20 @@ def run(
         # minutes later as "no complete standalone stories passed the gate",
         # which tells a user nothing they can act on. Hit on a real URL whose
         # audio track was digital silence.
+        # Re-measured on purpose: the recovery above may have remuxed the
+        # source and re-extracted the audio, in which case the peak taken
+        # before it describes a file that no longer exists. Measured here
+        # instead of hoisted, because before this point the peak was a
+        # decision and here it is a report, and only the report needs to
+        # survive an extraction that still will not parse.
+        try:
+            peak = peak_dbfs(project / "transcription" / "audio.wav")
+            unreadable = None
+        except AudioReadError as exc:
+            peak, unreadable = None, str(exc)
         raise RuntimeError(
             "Transcription produced no speech: the source has no audible "
-            f"spoken content. {_no_speech_diagnosis(peak_dbfs(project / 'transcription' / 'audio.wav'))}"
+            f"spoken content. {_no_speech_diagnosis(peak, unreadable)}"
         )
 
     # The near-empty case: a transcript that is well-formed, non-empty and in

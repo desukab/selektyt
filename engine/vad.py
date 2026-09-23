@@ -27,7 +27,7 @@ from pathlib import Path
 
 import numpy as np
 
-from providers.audio import extract_pcm_wav
+from providers.audio import extract_pcm_wav, AudioReadError
 from providers.ffmpeg import run_capture
 
 log = logging.getLogger(__name__)
@@ -175,19 +175,28 @@ class EnergyVAD(VADBackend):
         scores: list[float] = []
         carry = np.zeros(0, dtype=np.float32)
         total = 0
-        with wave.open(str(wav), "rb") as f:
-            total = f.getnframes()
-            pos = 0
-            while pos < total:
-                want = min(window, total - pos)
-                f.setpos(pos)
-                raw = f.readframes(want)
-                data = np.concatenate([carry, np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0])
-                usable = (len(data) // frame) * frame
-                if usable:
-                    scores.extend(self._score_frames(data[:usable].reshape(-1, frame)).tolist())
-                carry = data[usable:]
-                pos += want
+        try:
+            with wave.open(str(wav), "rb") as f:
+                total = f.getnframes()
+                pos = 0
+                while pos < total:
+                    want = min(window, total - pos)
+                    f.setpos(pos)
+                    raw = f.readframes(want)
+                    data = np.concatenate([carry, np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0])
+                    usable = (len(data) // frame) * frame
+                    if usable:
+                        scores.extend(self._score_frames(data[:usable].reshape(-1, frame)).tolist())
+                    carry = data[usable:]
+                    pos += want
+        except (OSError, ValueError, EOFError, wave.Error) as exc:
+            # The same damage ``peak_dbfs`` survives: a truncated or headerless
+            # extraction raises one of these, and none is an OSError, so a
+            # caller that degrades on OSError would crash here instead. Routed
+            # through AudioReadError so every reader of an extraction reports
+            # the same thing for the same damage.
+            raise AudioReadError(f"cannot read {wav.name} as a WAV: "
+                                 f"{type(exc).__name__}: {exc}") from exc
         if total < frame:
             # Sub-frame input: padded to one score, as above.
             scores = self._score_frames(

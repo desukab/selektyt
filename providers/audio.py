@@ -59,6 +59,53 @@ def audio_fingerprint(wav: Path) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
+class AudioReadError(RuntimeError):
+    """A WAV that exists but that the stdlib reader cannot parse.
+
+    The stdlib ``wave`` module does not raise ``OSError`` for most of what a
+    damaged extraction produces: a headerless or truncated file raises
+    ``wave.Error`` or ``EOFError``, and a file whose data chunk is not a whole
+    number of samples raises ``ValueError`` from ``frombuffer``. None of those
+    is an ``OSError``, so a caller that catches ``OSError`` to degrade
+    gracefully still dies. This type lets a caller distinguish "unreadable"
+    from "absent", which the no-speech diagnosis needs: a file that cannot be
+    read is not evidence of silence.
+    """
+
+
+def _read_mono_pcm(wav: Path) -> tuple[np.ndarray, int]:
+    """Mono float32 PCM and the source's sample rate, or an error.
+
+    Raises :class:`AudioReadError` for anything the stdlib reader rejects, so
+    every reader of an extraction reports the same thing for the same damage
+    instead of a caller having to know three exception types. ``AudioReadError``
+    is the one type this module's callers have to catch; the stdlib's own
+    ``wave.Error``, ``EOFError`` and ``ValueError`` stop here.
+    """
+    import wave
+
+    try:
+        with wave.open(str(wav), "rb") as fh:
+            channels = fh.getnchannels()
+            rate = fh.getframerate()
+            raw = fh.readframes(fh.getnframes())
+    except (OSError, ValueError, EOFError, wave.Error) as exc:
+        raise AudioReadError(f"cannot read {wav.name} as a WAV: "
+                             f"{type(exc).__name__}: {exc}") from exc
+    import numpy as np
+
+    try:
+        data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+        if channels > 1:
+            # A truncated multichannel file leaves a partial final frame, which
+            # reshape rejects the same way frombuffer rejects an odd byte count.
+            data = data[: (len(data) // channels) * channels].reshape(
+                -1, channels).mean(axis=1)
+    except ValueError as exc:
+        raise AudioReadError(f"{wav.name} cannot be turned into samples: {exc}") from exc
+    return data, rate
+
+
 def peak_dbfs(wav: Path) -> float | None:
     """Loudest sample of the mono PCM extraction, in dBFS; ``None`` if absent.
 
@@ -67,23 +114,23 @@ def peak_dbfs(wav: Path) -> float | None:
     recover, while a source with real level and no transcript is a decode or
     container problem. A corpus source at 95.5% speech energy was reported to
     a user as "no audible spoken content" because that test did not exist.
+
+    An unreadable extraction raises :class:`AudioReadError` rather than
+    returning ``None``: ``None`` means the file is not there, and a file that
+    is there but cannot be parsed is a different diagnosis — it is not
+    evidence that the source is silent. Conflating them would send a user
+    looking for a missing audio track in a file that has one.
     """
     import math
-    import wave
+
+    import numpy as np
 
     if not wav.is_file():
         return None
-    with wave.open(str(wav), "rb") as fh:
-        channels = fh.getnchannels()
-        raw = fh.readframes(fh.getnframes())
-    if not raw:
+    data, _rate = _read_mono_pcm(wav)
+    if not data.size:
         return None
-    import numpy as np
-
-    data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
-    if channels > 1:
-        data = data.reshape(-1, channels).mean(axis=1)
-    peak = float(np.max(np.abs(data))) if data.size else 0.0
+    peak = float(np.max(np.abs(data)))
     if peak <= 0.0:
         return -math.inf
     return 20.0 * math.log10(peak)
