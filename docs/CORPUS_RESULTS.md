@@ -4,8 +4,11 @@
 a historical record, not a current status: two of the seven sources it lists
 as delivering would no longer ship under the current code, because the
 confidence gate now measures a signal the earlier version filled in with a
-constant. For whether a given run still reproduces — and the named cause when
-it does not — read `docs/CORPUS_BENCHMARK_STATUS.md` and run
+constant, and two more still deliver the same *number* of clips but ship
+different ones, because the candidate scan that made the committed selection
+stopped at a fixed cap and never searched the back half of a long source. For
+whether a given run still reproduces — and the named cause when it does not —
+read `docs/CORPUS_BENCHMARK_STATUS.md` and run
 `tools/corpus_reproducibility.py`, which checks this against the current code
 instead of trusting this page.
 

@@ -27,8 +27,14 @@ from tools.corpus_reproducibility import (
 )
 
 _REPO = Path(__file__).resolve().parent.parent
-_RUN = _REPO / "corpus" / "nasa360-ep5_run"
-_HAVE_CORPUS = (_REPO / "corpus" / "nasa360-ep5_run" / "project" / "selections.json").is_file()
+# Fixture for the tool-behaviour tests below. pentagon-esper-briefing is a
+# delivering run that still reproduces, so it is a valid stand-in for a
+# committed selection the current code agrees with. nasa360-ep5 used to hold
+# this role but no longer can: the candidate-scan fix described in
+# docs/CORPUS_BENCHMARK_STATUS.md let its tail generate candidates for the
+# first time, so its committed selection is now an intentional drift.
+_RUN = _REPO / "corpus" / "pentagon-esper-briefing_run"
+_HAVE_CORPUS = (_REPO / "corpus" / "pentagon-esper-briefing_run" / "project" / "selections.json").is_file()
 
 pytestmark = pytest.mark.skipif(
     not _HAVE_CORPUS,
@@ -62,22 +68,33 @@ def test_every_run_with_selections_is_auditable():
                 assert "unknown" in wc["provenance"]
 
 
-def test_committed_selections_reproduce_except_two_named_low_confidence_runs():
+def test_committed_selections_reproduce_except_four_named_changed_runs():
     """The editorial judgement is reproducible: spans, story types and scores
     come out identical for every run that ships today.
 
-    Two runs are the documented exception — hadhazy-protest and
-    telugu-tutorial — whose transcriber measured below the confidence gate's
-    floor. Their committed selections.json records 0.9 for them, the
-    pre-measurement literal that the gate could never fail, so the current
-    code correctly declines to ship the same clips. That is the confidence
-    fix doing its job, not the editorial judgement moving: the spans still
-    score byte-identically (asserted below).
+    Four runs are the documented exception, in two distinct kinds:
 
-    This test fails if any *other* run stops reproducing, or if either named
-    run's scores change — either would mean the benchmark describes a version
-    of the product that no longer exists, and docs/METRICS.md has to move
-    with it.
+    - **hadhazy-protest and telugu-tutorial** whose transcriber measured below
+      the confidence gate's floor. Their committed selections.json records 0.9
+      for them, the pre-measurement literal that the gate could never fail, so
+      the current code correctly declines to ship the same clips. That is the
+      confidence fix doing its job, not the editorial judgement moving: the
+      spans still score byte-identically (asserted below).
+    - **emwcon-panel-2018 and nasa360-ep5** whose committed selection was made
+      with a candidate scan that stopped at a fixed cap. Candidates are built
+      in start order, so the cap meant the tail of a long source generated
+      nothing and could never be selected. The scan now spends its budget on
+      even coverage instead, and on both runs the newly reachable tail
+      outcompeted earlier clips the truncated scan had settled for. Measured:
+      every span the current code ships that the committed artifact does not
+      starts *past* the old scan's reach, and every span it dropped starts
+      within it — a blind spot closing, not a scorer moving. See
+      docs/CORPUS_BENCHMARK_STATUS.md for the numbers.
+
+    This test fails if any *other* run stops reproducing, or if any named
+    run's scores change in a way the docs do not record — either would mean
+    the benchmark describes a version of the product that no longer exists,
+    and docs/METRICS.md has to move with it.
     """
     report = audit_corpus(_REPO)
     drifted = [
@@ -85,7 +102,8 @@ def test_committed_selections_reproduce_except_two_named_low_confidence_runs():
         if r["status"] == "drift"
         or (r["status"] == "count_drift" and r.get("dropped"))
     ]
-    assert drifted == ["hadhazy-protest_run", "telugu-tutorial_run"], (
+    assert drifted == ["emwcon-panel-2018_run", "hadhazy-protest_run",
+                       "nasa360-ep5_run", "telugu-tutorial_run"], (
         "the corpus's reproducibility state changed: these runs no longer "
         "reproduce from their committed transcripts for a reason the "
         "documentation does not record — update the corpus and docs together"

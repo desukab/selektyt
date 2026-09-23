@@ -14,31 +14,31 @@ def test_thought_segmentation_preserves_complete_thoughts():
     assert "real reason" in thoughts[0].text
 
 
-def test_the_thought_cap_is_taken_inside_the_scan_and_truncates_in_start_order():
-    """``make_thoughts`` used to apply its 4000-thought cap as a post-hoc slice
-    after the whole scan, so on a long transcript it paid the full
-    superlinear cost and then threw most of the result away — 6.0 s against
-    1.8 s on an 80-minute source. The cap is now taken inside the loop.
+def test_the_scan_bounds_its_cost_without_truncating_the_tail():
+    """``make_thoughts`` used to bound its work by *returning* at a fixed cap,
+    and since candidates are built in start order that did not bound the cost —
+    it deleted the tail. On a long source nothing after the cap's reach was
+    ever generated, let alone selected: measured on the committed corpus as the
+    last 35.6% of one source and 30.3% of another, and at the product's 1-3
+    hour target the cut landed near the 18 minute mark of a 3 hour source.
 
-    That is only equivalent because the list is built in non-decreasing start
-    order: a later sentence index can only append a thought that sorts after
-    the truncated tail, so stopping early returns the same list the slice
-    would have. This test pins that invariant, because it is the whole
-    justification for the change — a future reordering of the generation would
-    silently make the early return return the wrong 4000.
+    The bound is now a coverage budget spent on strided starting positions, so
+    the property the old early return relied on — the list is in start order —
+    still has to hold, and the defect it caused has to be provably gone. Both
+    are pinned here, and the fixture deliberately carries real word timestamps:
+    empty word lists would not exercise the per-thought word scan the cost
+    actually comes from, which is the work the bound exists to limit.
 
-    It is not, and cannot be, a performance regression test: the two
-    implementations are output-identical by construction, so no behavioural
-    assertion distinguishes them. The equivalence was checked by running both
-    over every committed corpus transcript (8, all identical), and the timing
-    is recorded in the audit rather than asserted here."""
+    ``tests/test_editorial_coverage.py`` pins the same two properties at the
+    scale where the budget's stride actually engages; this one pins them on the
+    fixture that would have hit the old cap."""
     from pathlib import Path
     import json
 
     def build(minutes: int):
-        """A transcript long enough to exceed the cap: 4 s sentences with real
-        word timestamps, since empty word lists would not exercise the
-        per-thought word scan the cost comes from."""
+        """4 s sentences with word timestamps — long enough to exceed the old
+        4000-thought cap at 25 minutes, which is what makes the assertions
+        below assertions rather than tautologies."""
         segs, t = [], 0.0
         while t < minutes * 60:
             words = [
@@ -49,18 +49,38 @@ def test_the_thought_cap_is_taken_inside_the_scan_and_truncates_in_start_order()
             t += 4.0
         return segs
 
-    capped = make_thoughts(build(25))
-    assert len(capped) == 4000, \
-        "this fixture has to reach the cap, or the truncation below asserts nothing"
-    starts = [t.start for t in capped]
-    assert starts == sorted(starts), \
-        "the list must be in start order, or an in-loop cap is not equivalent to a slice"
+    # The defect: 25 minutes of this fixture exceeded the old cap, so the scan
+    # used to stop at 4000 thoughts well before the end. It must not stop any
+    # more, and the proof that it searched the whole source is a thought in it.
+    twenty_five = make_thoughts(build(25))
+    assert len(twenty_five) > 4000, \
+        "this fixture exceeds the old cap, so a shorter list means the scan is still truncating"
+    end25 = twenty_five[-1].end
+    assert end25 > 0.95 * 25 * 60, \
+        f"a 25 minute source's last thought ends at {end25 / 60:.1f} min; the tail is not being searched"
 
-    # Extending the input past the cap cannot change the returned thoughts.
-    longer = make_thoughts(build(120))
-    assert len(longer) == 4000
-    assert [(t.start, t.end, t.text) for t in capped] == \
-           [(t.start, t.end, t.text) for t in longer]
+    # The bound: the fix is not "remove the cap". A transcript dense enough to
+    # trip the budget still has to stay bounded — this fixture is not dense
+    # enough to trip it, so this is the shape of the claim, and the density
+    # that does trip it is covered in test_editorial_coverage.py.
+    two_hours = make_thoughts(build(120))
+    assert len(two_hours) <= 60_000, \
+        f"the scan ran away to {len(two_hours)} thoughts on a 2 hour source"
+
+    # The invariant that made the change safe to ship: at normal transcript
+    # density the stride is 1, so a prefix of the source produces the prefix of
+    # the result — extending the source cannot change what the shorter scan
+    # already found, only add to the end. Thoughts within one max_sec window of
+    # the boundary are excluded, because a window that would run past the end of
+    # the shorter source is shorter there: that is the source being truncated,
+    # not the scan.
+    margin = 55.0
+    short = [(t.start, t.end, t.text)
+             for t in twenty_five if t.end <= 25 * 60 - margin]
+    long = [(t.start, t.end, t.text)
+            for t in two_hours if t.end <= 25 * 60 - margin]
+    assert long == short, \
+        "extending the source changed thoughts the shorter scan had already emitted"
 
     # The invariant also has to hold on real transcripts, where sentence
     # lengths and boilerplate breaks vary.

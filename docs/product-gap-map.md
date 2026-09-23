@@ -1,6 +1,7 @@
 # Product gap map
 
-Where SelekyT is a finished product and where it is not, as of `5e44599`.
+Where SelekyT is a finished product and where it is not, as of `a1e9150`
+(this section's rows describe work through the reframe fix that followed it).
 
 The distinction this map exists to keep clear: **a stage whose code exists and
 whose unit tests pass is not the same as a stage a user can rely on.** Each row
@@ -50,6 +51,7 @@ timing, but it is not a measure of accuracy on real studio audio.
 | Story-unit grouping (complete thoughts, not fixed windows) | complete and verified | `engine/story_units.py`, exercised by the real run |
 | Pause-aware retention intervals | complete and verified | single source of both the render and the timeline; pinned by `test_cue_times_account_for_removed_pauses` |
 | Ollama LLM editorial metadata | wired, untestable | CLI → pipeline → `attach_metadata`; ollama is absent, so it degrades to deterministic scoring by design. The web shell does not expose the URL at all — a UI gap, not a broken path |
+| Candidate scan covers the whole source | complete and verified, after one structural defect | the scan used to `return` at a fixed candidate cap, and candidates are built in start order, so the cap deleted the tail outright rather than bounding the cost: the last 35.6% of `nasa360-ep5` and 30.3% of `emwcon-panel-2018` generated **zero** candidates, and at the product's 1–3 hour target the cut landed near the 18-minute mark of a 3-hour source — most of the video was never searched. The cap is now a coverage budget spent on strided starting positions, so degradation went from "the tail is unreachable" to "coverage is coarser everywhere". Measured: both affected sources go 4000 → 5782 / 6758 candidates at 64.4% / 69.7% reach → 100%, and on normal transcript density the stride is 1, so the output is a strict superset of the old one. Pinned by `tests/test_editorial_coverage.py`, which holds both properties at once — a 93-minute source must yield candidates in its final 10%, and a sub-second-segment transcript must stay bounded *and* still reach its tail. What this does **not** establish is that the newly reachable clips are better editorially; the corpus has no ground truth for that |
 
 Retention is encoded as editorial principles, not learned from a channel's
 real analytics. Channel-specific learning remains on the roadmap.

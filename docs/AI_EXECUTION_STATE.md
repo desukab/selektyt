@@ -157,6 +157,76 @@ every line below was true on this host at that point.
 
 ## Completed work
 
+### This session — the candidate scan was deleting the back half of every long source
+
+`make_thoughts` carried `CAP = 4000` and `return`ed once it had emitted that
+many candidates. Candidates are built in start order, so on a long source that
+cap did not bound the cost — it **deleted the tail**. Nothing past the cap's
+reach could generate a candidate, so nothing there could ever be selected, and
+no editor would ever see a story from it. On the committed corpus that hid the
+last **35.6%** of `nasa360-ep5` (reach 941.2 s of 1462.0 s) and **30.3%** of
+`emwcon-panel-2018` (2323.6 s of 3332.8 s). At the product's stated 1–3 hour
+target the cut landed near the 18-minute mark of a 3-hour source: most of the
+video was never searched, by construction.
+
+**Why the cap existed.** ASR on fast or noisy audio can emit sub-second
+segments, and 30 minutes of those yields hundreds of thousands of overlapping
+windows (measured: 541,874 candidates, 305 s). The cap was the wrong answer to
+a real problem — bounding the cost by *not searching the tail* reintroduces the
+defect under a different name.
+
+**The fix** (`engine/editorial.py`) spends the budget on even coverage instead.
+The explosion is driven by how many sentences can *end* within one `max_sec`
+window, so that fan-out is measured with a sliding two-pointer (both ends
+advance monotonically, so it is O(starts)), and only when
+`starts × fan_out` exceeds the budget are starting positions strided:
+`stride = ceil(starts × fan_out / BUDGET)`. Degradation goes from "the tail is
+unreachable" to "coverage is coarser everywhere", and at normal transcript
+density the stride is 1, so the output is a strict superset of the old one.
+
+**Measured, before/after**: all 11 committed runs run at stride 1 — the new
+code's first 4000 candidates are identical to the old code's entire output, so
+on real media the change is purely additive and no selection made within the
+old reach can move. The two sources that exceeded the cap go 4000 → 5782
+candidates (64.4% → 100.0% coverage) and 4000 → 6758 (69.7% → 100.0%). The
+pathological cases stay bounded *and* complete: 30 min at 0.4 s segments,
+1365 candidates, 1.64 s, 99.8% of the source covered. Both measurements are
+reproducible: the "before" side is `a1e9150:engine/editorial.py` exec'd under a
+throwaway module name, and the probe asserts the `CAP = 4000` marker is present
+at that revision so it fails loudly rather than comparing the new code against
+itself. The probes are session scratch, not committed artifacts — the
+committed evidence is `tests/test_editorial_coverage.py` (the properties) and
+`tools/corpus_reproducibility.py` (the state).
+
+**Effect on the corpus, and why it is attributable rather than incidental.**
+Those two runs stop reproducing. Their committed selections were made by the
+truncated scan, so the newly reachable tail outcompeted earlier clips it had
+settled for. Both keep their clip count (5 and 6). Every span the current code
+ships that the committed artifact does not **starts past the old scan's reach**,
+and every span it dropped starts within it — e.g. `nasa360-ep5` now ships
+1023.2→1044.1, 1069.7→1099.0 and 1330.8→1341.9 against a reach of 941.2 s, and
+dropped 327.9→346.3, 507.1→516.2, 606.0→620.0. A blind spot closing, not a
+scorer moving. This is *not* more shipped coverage — clip count is fixed, so
+the union of intervals barely moves (6.9% → 8.2% and 3.7% → 3.6%); what moves
+is *which* minutes ship, with the span extending to 1342 s and 3129 s.
+
+**Disposition: recorded, not regenerated.** The corpus is frozen as historical
+benchmark evidence, and the media for both runs is not committed, so
+re-rendering is impossible here and regenerating only the JSON sidecars would
+break their agreement with the committed pixels. `tests/test_corpus_reproducibility.py`
+now names all four non-reproducing runs in one expectation — the two confidence
+runs and the two scan runs, with the distinction stated in the docstring — and
+its `_RUN` fixture moved from `nasa360-ep5` to `pentagon-esper-briefing`, which
+still reproduces and is one of the two runs whose media *is* committed.
+`docs/CORPUS_BENCHMARK_STATUS.md` carries the numbers above and now reads
+**3 of 7** delivering runs reproduce exactly.
+
+Regression tests: `tests/test_editorial_coverage.py` pins both properties at
+once — a 93-minute synthetic source must yield candidates in its final 10%
+(that source exceeds the old cap, so the test means what it says), and a
+sub-second-segment transcript must stay under 60,000 candidates *and* still
+reach its tail.
+
 ### This session — the MSIX job went green on the fifth run, and the artifact was verified off the runner
 
 The `msix` job existed to verify a manifest that had never been packed

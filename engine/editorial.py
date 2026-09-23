@@ -187,17 +187,36 @@ def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float 
     if not sentences:
         return []
 
-    # The cap is applied here rather than after the loop, and it is equivalent
-    # to the post-hoc slice only because the list is built in start order:
-    # every thought a later ``i`` would append sorts after these, so it would
-    # have been sliced off anyway. Checked by differential test against the
-    # committed corpus. Stopping matters because the scan is superlinear in the
-    # transcript — on an 80-minute synthetic source this is the difference
-    # between 6 s and a few hundred ms, and without it the cap bounds the
-    # output, not the cost, which is what the audit flagged.
-    CAP = 4000
+    # The scan needs a bound, but a fixed candidate cap that *returns* is the
+    # wrong shape: candidates are built in start order, so reaching the cap
+    # made everything after it generate nothing. On the committed corpus that
+    # hid the last 36% of nasa360 and 30% of emwcon, and at the product's 1-3
+    # hour target the cut landed near the 18 minute mark of a 3 hour source.
+    # The bound is therefore spent on even coverage rather than a prefix: when
+    # a source would explode the budget, starting positions are strided so the
+    # last hour is sampled exactly like the first. Degradation goes from "the
+    # tail is unreachable" to "coverage is coarser everywhere".
+    #
+    # The explosion is real, not hypothetical: ASR on fast or noisy audio can
+    # emit sub-second segments, and 30 minutes of those yields hundreds of
+    # thousands of overlapping windows. It is driven by how many sentences can
+    # end within one max_sec window, so that is what is measured — with a
+    # sliding two-pointer, since both ends advance monotonically.
+    BUDGET = 40_000
+    starts = len(sentences)
+    fan_out = 1
+    j = 0
+    for i in range(starts):
+        if j < i:
+            j = i
+        while j < starts and sentences[j][0].end - sentences[i][0].start <= max_sec:
+            j += 1
+        if j - i > fan_out:
+            fan_out = j - i
+    stride = ((starts * fan_out + BUDGET - 1) // BUDGET
+              if starts * fan_out > BUDGET else 1)
     thoughts: list[Segment] = []
-    for i in range(len(sentences)):
+    for i in range(0, starts, stride):
         cur: list = []
         for s, u in sentences[i:]:
             if s.boilerplate:
@@ -221,8 +240,6 @@ def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float 
                         _completeness(u, Segment(cur[0].start, cur[-1].end, text, [])),
                     ),
                 ))
-                if len(thoughts) >= CAP:
-                    return thoughts
     return thoughts
 
 

@@ -1,10 +1,10 @@
 # Corpus benchmark status and provenance
 
-**Date: 2026-09-21.** This records what `corpus/*_run/` is, whether it still
-reproduces, and what a reader may and may not conclude from it. It is the
-deliberate disposition the corpus was waiting for: until it existed, the
-committed benchmark evidence had no stated expiry date and no check against
-the current code.
+**Date: 2026-09-21; state updated 2026-09-23.** This records what
+`corpus/*_run/` is, whether it still reproduces, and what a reader may and may
+not conclude from it. It is the deliberate disposition the corpus was waiting
+for: until it existed, the committed benchmark evidence had no stated expiry
+date and no check against the current code.
 
 It is companion to two files rather than a replacement for either:
 `docs/CORPUS_RESULTS.md` (what the first corpus run found, written when it ran)
@@ -48,15 +48,15 @@ Exit code is nonzero while any run with clips fails to reproduce, so it is
 suitable for CI. `tests/test_corpus_reproducibility.py` pins the current state
 and fails on any change to it.
 
-**Current result — 5 of 7 delivering runs reproduce exactly:**
+**Current result — 3 of 7 delivering runs reproduce exactly:**
 
 | Run | Language | Clips | Status |
 | --- | --- | --- | --- |
-| `emwcon-panel-2018` | en | 5 / 5 | reproduces |
-| `nasa360-ep5` | en | 6 / 6 | reproduces |
 | `ooi-vertical` | en | 3 / 3 | reproduces |
 | `pentagon-esper-briefing` | en | 5 / 5 | reproduces |
 | `royal-society-cloke` | en | 4 / 4 | reproduces |
+| `emwcon-panel-2018` | en | 5 shipped / 5 now | **moved** (scan reached the tail) |
+| `nasa360-ep5` | en | 6 shipped / 6 now | **moved** (scan reached the tail) |
 | `hadhazy-protest` | hu | 3 shipped / 1 now | **no longer ships** |
 | `telugu-tutorial` | te | 1 shipped / 0 now | **no longer ships** |
 
@@ -66,7 +66,7 @@ and have nothing to reproduce.
 
 ### What "reproduces" means here
 
-The five reproducing runs come back with **the same spans to the millisecond,
+The three reproducing runs come back with **the same spans to the millisecond,
 the same story types and the same scores**. Two fields differ on every clip —
 `confidence` and `reason` — and both are fields a later commit rewrote on
 purpose.
@@ -112,26 +112,87 @@ OpenSLR SLR66, and `hadhazy-protest`'s accuracy is not established by anything
 in this repo. The confidence gate now refuses them for the same reason those
 sections give, which is two independent arguments reaching one conclusion.
 
+### The two whose selection moved when the scan stopped truncating
+
+`emwcon-panel-2018` and `nasa360-ep5` still ship the same *number* of clips —
+5 and 6 — but the clips themselves moved. Their committed selections were made
+by a candidate scan that stopped once it had emitted a fixed number of
+candidates. Candidates are built in start order, so on a long source that cap
+did not bound the *cost*, it deleted the tail: nothing after the cap's reach
+could generate a candidate, so nothing there could ever be selected. At the
+product's 1–3 hour target the cut landed near the 18-minute mark of a 3-hour
+source.
+
+The fix spends the budget on even coverage instead — when a source would
+explode the budget, starting positions are strided so the last hour is sampled
+like the first — which means these two runs' tails were reachable for the
+first time. The measured effect on the committed transcripts:
+
+| | `emwcon-panel-2018` | `nasa360-ep5` |
+| --- | --- | --- |
+| Source length | 55.5 min | 24.4 min |
+| Old scan — candidates / reach | 4000 / 2323.6 s (69.7%) | 4000 / 941.2 s (64.4%) |
+| New scan — candidates / reach | 6758 / 3332.8 s (100.0%) | 5782 / 1462.0 s (100.0%) |
+
+The attribution is not an inference. Every span the current code ships that the
+committed artifact does not **starts past the old scan's reach**, and every
+span it dropped starts within it:
+
+| | shipped now, past the old reach | dropped, inside the old reach |
+| --- | --- | --- |
+| `emwcon-panel-2018` | 2471.9→2488.8, 3027.5→3038.4, 3098.8→3129.2 | 205.8→234.5, 793.7→813.6, 1168.5→1181.6 |
+| `nasa360-ep5` | 1023.2→1044.1, 1069.7→1099.0, 1330.8→1341.9 | 327.9→346.3, 507.1→516.2, 606.0→620.0 |
+
+Three clips in and three clips out on each run, and the swap is entirely a
+blind spot closing rather than a scorer moving. On both runs one committed
+clip keeps its span exactly and differs only in the re-measured `confidence`.
+
+Two things this is *not*, stated because both would be the wrong reading:
+
+- **It is not more coverage.** Clip count is fixed by the request, so the union
+  of shipped intervals barely moves — `nasa360-ep5` 6.9% → 8.2%,
+  `emwcon-panel-2018` 3.7% → 3.6%. What changed is *which* minutes ship: the
+  selected span now extends into the tail (`nasa360-ep5` last clip 671 s →
+  1342 s; `emwcon-panel-2018` 1182 s → 3129 s).
+- **It is not evidence that the new clips are better editorially.** The corpus
+  has no ground truth for that. What it is evidence of is that the selection is
+  no longer structurally prevented from considering the back half of a long
+  source — and for a product whose stated input is 1–3 hours, that is the
+  property that matters.
+
+**These runs are not regenerated.** The corpus is frozen, and their media is
+not committed (see [§Media availability](#media-availability-and-the-validation-that-follows-from-it)),
+so re-rendering is not possible in this environment and regenerating only the
+JSON sidecars would break their agreement with the committed pixels. The
+selection they record is the one the truncated scan made, which is itself part
+of the evidence — it is what a 4000-candidate prefix-truncation looks like on
+real media.
+
 ---
 
 ## What a reader may and may not conclude
 
 **May.** That the editorial selection layer is deterministic and reproducible:
-given the same transcript, the current code selects the same clips. That five
-real sources across documentary, news, podcast, panel and magazine genres
-produce shippable spans under the current scoring. That the confidence gate
-rejects low-confidence transcripts rather than passing them silently.
+given the same transcript, the current code selects the same clips. That three
+real sources across documentary, news and magazine genres produce shippable
+spans under the current scoring. That the confidence gate rejects
+low-confidence transcripts rather than passing them silently. That selection is
+no longer structurally prevented from reaching the back half of a long source —
+measured on two runs whose committed selections predate the fix.
 
 **May not.** That the rendered outputs in `hadhazy-protest` and
 `telugu-tutorial` are current deliverables — the current code would not ship
-them. That clip counts from the corpus are stable across versions of the
-editorial code; they are stable *within* the committed state and the audit
+them. That the renders and NLE files for `emwcon-panel-2018` and `nasa360-ep5`
+reflect the current selection — they were rendered from the committed
+selection, which the scan fix has since moved, and cannot be re-rendered
+without media. That clip counts from the corpus are stable across versions of
+the editorial code; they are stable *within* the committed state and the audit
 says when they are not. That any of this measures editorial *quality* — it
 measures reproducibility and gate behaviour, which is what a benchmark of a
 deterministic engine can measure.
 
 **May not, and specifically about the renders:** the committed renders and
-NLE files for the five reproducing runs were produced by the code as it stood
+NLE files for the three reproducing runs were produced by the code as it stood
 on 2026-09-19 and have not been re-rendered since. Selection reproduces from
 the transcript; the render path is not covered by this audit, because
 re-rendering needs media that is not committed (see below).
@@ -160,9 +221,12 @@ The exact commands to close that gap are in
 
 Ordered by what unblocks the most.
 
-1. **Re-download the nine absent sources and re-run** so that the five
+1. **Re-download the nine absent sources and re-run** so that the
    reproducing runs' renders and interchange files are regenerated by the
-   current code, and the NLE relink audit runs against media that exists:
+   current code, and the NLE relink audit runs against media that exists.
+   For `emwcon-panel-2018` and `nasa360-ep5` this would also re-render the
+   moved selection and close the gap recorded in [§The two whose selection
+   moved](#the-two-whose-selection-moved-when-the-scan-stopped-truncating):
 
    ```sh
    .venv/bin/python tools/corpus_run.py corpus/manifest.json --only nasa360-ep5,emwcon-panel-2018,ooi-vertical,hadhazy-protest,telugu-tutorial --keep-media
