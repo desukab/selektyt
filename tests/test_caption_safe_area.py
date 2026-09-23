@@ -332,19 +332,23 @@ def test_the_widest_telugu_line_renders_as_one_line(tmp_path, style, resolved):
 
     What this can and cannot measure on a given host, stated because the gap is
     easy to overread as a pass: the render is only evidence about Telugu type
-    if the host has a Telugu-capable font. This build host does not —
-    ``fc-list :lang=te`` is empty, and libass draws ``.notdef`` placeholder
-    boxes, which were verified byte-identical to a deliberately-missing
-    private-use glyph. A box is full em wide, far wider than a Telugu syllable,
-    so a probe that wraps as boxes says nothing about the clusters the policy
-    was calibrated on. On such a host the test measures the policy's arithmetic
-    instead — that the widest Telugu line the policy admits really is at the
-    budget, and is carried by whole syllable clusters, not by the code points
-    the pre-cluster rule overcharged — and records that the pixel measurement
-    is still outstanding.
+    if the host has a Telugu-capable font. If it does not, libass draws
+    ``.notdef`` placeholder boxes, which were verified byte-identical to a
+    deliberately-missing private-use glyph. A box is full em wide, far wider
+    than a Telugu syllable, so a probe that wraps as boxes says nothing about
+    the clusters the policy was calibrated on. On such a host the test
+    measures the policy's arithmetic instead — that the widest Telugu line the
+    policy admits really is at the budget, and is carried by whole syllable
+    clusters, not by the code points the pre-cluster rule overcharged — and
+    records that the pixel measurement is still outstanding.
 
-    On a host that *does* carry a Telugu font the assertion is the real one and
-    this comment is stale; the coverage probe is what keeps the two honest.
+    On a host that *does* carry a Telugu font the assertion is the real one;
+    the branch probe below is what keeps the two honest, so no host is silently
+    measuring the wrong thing. (This probe was written when the build host had
+    no Telugu font; ``fonts-noto-core`` has since been installed and the pixel
+    branch is the one taken here. The guard in ``engine/render`` now refuses a
+    burn that would come out as boxes, so a host in that state fails loudly
+    elsewhere instead of producing a measurement here.)
     """
     budget = max_line_width_for(preset_for(style))
     line = _widest_line(_TELUGU, budget)

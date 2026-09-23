@@ -1,7 +1,9 @@
 from __future__ import annotations
 import math
+import re
 import shutil
 import subprocess
+import unicodedata
 from pathlib import Path
 from models.core import Candidate
 from engine.reframe import landscape_filter, vertical_crop_filter
@@ -12,6 +14,122 @@ from engine.captions import ass_for_candidate
 def require_ffmpeg() -> None:
     if shutil.which("ffmpeg") is None:
         raise RuntimeError("ffmpeg is required and must be on PATH")
+
+
+# ── script coverage: the burn must not draw placeholder boxes ─────────────
+#
+# libass resolves the ASS's declared font through fontconfig and falls back to
+# the ``.notdef`` glyph for every codepoint no installed font carries. That
+# fallback still puts ink in the frame — a row of identical hollow rectangles,
+# one per codepoint, combining marks included — so every measurement that asks
+# "is there caption ink?" passes on a deliverable nobody can read. This was not
+# hypothetical: the shipped Telugu corpus render was produced on a host with no
+# Telugu font, and its cue band is 13 even-pitched boxes (verified against a
+# burn of the same text with a deliberately-missing font, byte-identical).
+#
+# The only fix is at the source: refuse to burn text the host cannot draw.
+_COVERED: set[int] | None = None
+_TAGS = re.compile(r"\{[^}]*\}")
+_SCRIPT_WORD = re.compile(r"^([A-Z][A-Za-z'-]+) ")
+
+
+def _covered_codepoints() -> set[int] | None:
+    """Every codepoint any installed font can draw, or ``None`` if unknown.
+
+    fontconfig is the same resolver libass uses, so its answer is the right
+    one. Without it there is no answer to give and the caller must not guess:
+    ``None`` means "unchecked", not "covered". The scan is a single subprocess
+    over the installed set and is memoised for the process.
+    """
+    global _COVERED
+    if _COVERED is not None:
+        return _COVERED
+    fc_list = shutil.which("fc-list")
+    if fc_list is None:
+        return None
+    try:
+        proc = subprocess.run(
+            [fc_list, "--format", "%{charset}\n"], capture_output=True,
+            text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    covered: set[int] = set()
+    for line in proc.stdout.splitlines():
+        for item in line.split():
+            # Each item is a hex codepoint or a closed hex range ("0c00-0c7f").
+            lo, _, hi = item.partition("-")
+            try:
+                a, b = int(lo, 16), int(hi or lo, 16)
+            except ValueError:
+                continue
+            covered.update(range(a, b + 1))
+    _COVERED = covered
+    return covered
+
+
+def _script_name(cp: int) -> str:
+    """A readable name for the block a codepoint belongs to.
+
+    ``unicodedata`` gives "TELUGU LETTER NA", and the leading word is the
+    script — enough to name the missing font family in the error without a
+    table that would have to track every block.
+    """
+    try:
+        name = unicodedata.name(chr(cp))
+    except ValueError:
+        return f"U+{cp:04X}"
+    m = _SCRIPT_WORD.match(name)
+    return f"{m.group(1)} (U+{cp:04X})" if m else f"U+{cp:04X}"
+
+
+def uncovered_script(text: str) -> list[str]:
+    """Scripts in ``text`` that no installed font can render.
+
+    Empty means the burn will draw real glyphs (or that fontconfig is absent
+    and the question cannot be answered, which the caller reports as
+    "unchecked" rather than as a pass).
+    """
+    covered = _covered_codepoints()
+    if covered is None:
+        return []
+    missing = sorted({cp for cp in (ord(c) for c in text) if cp not in covered})
+    return [_script_name(cp) for cp in missing]
+
+
+def _check_caption_coverage(ass: Path) -> None:
+    """Refuse to burn captions the host's fonts cannot draw.
+
+    Called for every burn, so it has to stay cheap: one fontconfig scan per
+    process and a set lookup per codepoint.
+    """
+    covered = _covered_codepoints()
+    if covered is None:
+        # No fontconfig (a Windows ffmpeg build resolves through DirectWrite
+        # instead). The burn may still be tofu, but this code cannot tell, and
+        # failing here would break every render on a platform it cannot
+        # diagnose. The question stays open rather than being answered wrong.
+        return
+    text = ""
+    for line in ass.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("Dialogue:"):
+            continue
+        text += _TAGS.sub("", line.split(",", 9)[-1]).replace("\\N", " ")
+    missing = sorted({cp for cp in (ord(c) for c in text) if cp not in covered})
+    if not missing:
+        return
+    by_script: dict[str, int] = {}
+    for cp in missing:
+        by_script[_script_name(cp)] = by_script.get(_script_name(cp), 0) + 1
+    detail = "; ".join(f"{name}: {n} codepoint(s)" for name, n in
+                       sorted(by_script.items(), key=lambda kv: -kv[1])[:4])
+    raise RuntimeError(
+        f"the captions in {ass.name} contain script no installed font can "
+        f"render — libass would draw placeholder boxes into the deliverable "
+        f"instead of text, and the result looks like a successful burn while "
+        f"being unreadable ({detail}). Install a font covering the script "
+        f"(for example the 'fonts-noto-core' package, which provides Noto "
+        f"Sans Telugu and the other Indic families) and re-render. "
+        f"Refusing to ship captions nobody can read.")
 
 
 def _frame_count(start: float, end: float, fps: float) -> tuple[int, float]:
@@ -112,6 +230,8 @@ def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None 
     require_ffmpeg(); out.parent.mkdir(parents=True, exist_ok=True)
     intervals = retention_intervals(candidate)
     if not intervals: raise RuntimeError("candidate has no renderable intervals")
+    if ass is not None:
+        _check_caption_coverage(ass)
     tmp = out.parent / f".{out.stem}_parts"; tmp.mkdir(parents=True, exist_ok=True)
     parts: list[Path] = []
     for i, (start, end) in enumerate(intervals):

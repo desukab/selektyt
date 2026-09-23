@@ -25,7 +25,9 @@ Meta's Reels guidance emphasizes native 9:16 creative, audio and keeping key mes
 
 ## Regional languages
 
-The default transcription path preserves the detected source language. Users can force a language with `--language te`, `--language hi`, `--language ta`, etc. The caption renderer should use a Unicode font with Indic coverage when available; language-specific font profiles will be expanded in the next milestone.
+The default transcription path preserves the detected source language. Users can force a language with `--language te`, `--language hi`, `--language ta`, etc.
+
+The burn does not fall back to a language-specific font profile: the ASS declares a single font by name and libass resolves it through fontconfig, so the glyphs that actually appear depend on the machine doing the render. libass draws its `.notdef` placeholder — a hollow box — for every codepoint no installed font carries, and those boxes are *ink*: a deliverable that is entirely unreadable still passes every "is there caption ink?" check. This was observed, not theorised — a Telugu render produced on a host with no Telugu font shipped 13 evenly-pitched boxes where its cue text should be. The pipeline therefore refuses rather than shipping that: `engine/render._check_caption_coverage` scans fontconfig once per process and raises before any encoder runs, naming the uncovered script and the package that covers it (`fonts-noto-core` provides Noto Sans Telugu and the other Indic families). Install that package on any host that renders non-Latin captions.
 
 ## Future learning loop
 

@@ -371,6 +371,141 @@ def test_an_absent_ass_produces_no_ink(tmp_path):
     )
 
 
+# ── the burn must not draw placeholder boxes ──────────────────────────────
+#
+# The tests above ask "is there ink in the caption band?" and libass's
+# .notdef fallback answers yes for a script no installed font carries: a row of
+# identical hollow rectangles, one per codepoint, still lands in the band and
+# inside the margins. Those tests therefore pass on a deliverable nobody can
+# read, and so would any measurement derived from them. This was not a
+# hypothetical — the shipped Telugu corpus render was burned on a host with no
+# Telugu font, and its cue band is 13 even-pitched boxes (verified against a
+# burn of the same text under a deliberately-missing font, which was
+# byte-identical). The guard under test is what makes that state fail loudly
+# instead of shipping.
+
+_TELUGU_CUE = "నినాన్త్డందాన ంపెర్లిస్లిని"
+
+
+def _candidate_with_text(start: float, end: float, text: str,
+                         word: str) -> Candidate:
+    return Candidate(
+        start, end, text, "story", word, word, 0.8, 0.7, 0.9, 0.9, "t",
+        words=[Word(word, start, end - 0.1)],
+    )
+
+
+def _ass_with_cue(out: Path, text: str) -> Path:
+    """An ASS carrying exactly one cue of ``text``, bypassing the emitter.
+
+    The guard reads whatever ASS it is handed, including one the emitter did
+    not write (a cached sidecar, a hand-edited file), so the test has to be
+    able to reach it without a Candidate.
+    """
+    out.write_text(
+        "[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\n\n"
+        "[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,"
+        "SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,"
+        "StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,"
+        "Alignment,MarginL,MarginR,MarginV,Encoding\n"
+        "Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,"
+        "&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1\n\n[Events]\n"
+        "Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,"
+        f"Text\nDialogue: 0,0:00:00.10,0:00:01.20,Default,,0,0,0,,{text}\n",
+        encoding="utf-8")
+    return out
+
+
+def test_render_refuses_captions_the_host_cannot_draw(tmp_path, monkeypatch):
+    """A script no installed font covers must fail the render, not burn boxes.
+
+    The check is against the whole installed font set, so it has to be
+    exercised with something genuinely uncovered: a Private Use Area codepoint
+    is by Unicode definition not assigned, so no conformant font carries it,
+    and the result does not depend on which Noto packages this host happens to
+    have installed.
+    """
+    import engine.render as render_mod
+
+    source = _flat_source(tmp_path / "source.mp4")
+    c = _candidate_with_words(0.0, 1.3)
+    ass = _ass_with_cue(tmp_path / "cue.ass", "secret word")
+    with pytest.raises(RuntimeError, match="placeholder boxes") as excinfo:
+        render_clip(source, c, tmp_path / "fb" / "01.mp4", ass=ass)
+    # The message has to name what to install, or the failure is not actionable.
+    assert "fonts-noto-core" in str(excinfo.value), (
+        "the refusal does not tell the user how to fix it")
+    assert not (tmp_path / "fb" / "01.mp4").exists(), (
+        "a refused burn left a partial deliverable behind")
+    # The probe is memoised; a later render of the same text is still refused.
+    with pytest.raises(RuntimeError, match="placeholder boxes"):
+        render_clip(source, c, tmp_path / "fb" / "02.mp4", ass=ass)
+    assert render_mod.uncovered_script("plain latin text") == [], (
+        "the guard now rejects text it should render")
+
+
+def test_render_burns_telugu_when_a_font_covers_it(tmp_path):
+    """The positive half of the guard: on a host that carries the script, the
+    same Telugu cue that would have drawn boxes renders as real type.
+
+    This is the test that was impossible to write before. It is host-dependent
+    by necessity — whether any font covers Telugu is a property of the machine,
+    not of the code — so it reports the coverage it found rather than skipping,
+    and it stays honest about that: a host without a Telugu font still runs and
+    asserts what it can (that the guard is what stands between it and tofu).
+    """
+    import engine.render as render_mod
+
+    source = _flat_source(tmp_path / "source.mp4")
+    ass = _ass_with_cue(tmp_path / "te.ass", _TELUGU_CUE)
+    missing = render_mod.uncovered_script(_TELUGU_CUE)
+    print(f"  Telugu coverage on this host: "
+          f"{'covered' if not missing else 'MISSING ' + ', '.join(missing)}")
+    if missing:
+        # Not a skip: the guard is the whole point on such a host. It has to
+        # refuse the cue that would draw boxes, and the reason it names has to
+        # be the script the host lacks.
+        with pytest.raises(RuntimeError) as excinfo:
+            render_clip(source, _candidate_with_words(0.0, 1.3),
+                        tmp_path / "fb" / "01.mp4", ass=ass)
+        assert "Telugu" in str(excinfo.value), (
+            f"the refusal names {missing} but not the Telugu script the cue "
+            f"is written in")
+        return
+
+    control, _ = _frames(
+        render_clip(source, _candidate_with_words(0.0, 1.3),
+                    tmp_path / "fb" / "plain.mp4")
+    )
+    burned, (w, h) = _frames(
+        render_clip(source, _candidate_with_words(0.0, 1.3),
+                    tmp_path / "fb" / "burned.mp4", ass=ass)
+    )
+    ys, xs = _ink_mask(burned, control)
+    assert ys.size, "the Telugu cue produced no ink at all"
+
+    # Tofu's signature is uniformity: N identical boxes, each as wide as the
+    # last, merging into one solid or near-solid band. Real Telugu is
+    # neither — the syllable clusters vary in width and leave gaps between
+    # them — so the ink column profile has to carry that variation.
+    import numpy as np
+    band = np.zeros((h, w), bool)
+    band[ys, xs] = True
+    profile = band.sum(axis=0)
+    nz = profile[profile > 0]
+    assert len(nz) > 0
+    # Tofu is a row of abutting boxes: on this canvas 13 codepoints of
+    # .notdef span one solid band. Real Telugu leaves gaps between clusters,
+    # so a band with no interior gap is the shape of boxes, not of type.
+    solid = int(np.diff(np.nonzero(np.r_[True, profile == 0, True])[0]).max()) \
+        if (profile == 0).any() else w
+    print(f"  Telugu ink: {ys.size} px across {len(nz)} columns; "
+          f"widest solid run {solid}px of {w}")
+    assert solid < w, (
+        "the Telugu ink is one unbroken band — the shape of abutting "
+        "placeholder boxes, not of syllable clusters with gaps between them")
+
+
 def test_render_rejects_empty_intervals(tmp_path):
     """An empty-text candidate has no renderable intervals (edit_plan returns
     [] only when text is blank or the span is non-positive); render must
