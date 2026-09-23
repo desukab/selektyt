@@ -73,6 +73,23 @@ pre-fix behaviour for R14/S9 and restored; `git diff` confirms it matches HEAD.
   Three of the seven need real re-runs with the word-split fix, which
   `docs/CORPUS_RESULTS.md:97-99` already says and does not overclaim.
 
+> **Postscript, 2026-09-22: this finding's three failures were false
+> positives, and R1's conclusion is withdrawn.** The finding above was
+> accurate as a measurement — the audit really did report those three sources
+> as FAIL at `6345270` — but the check itself was wrong. It derived sentence
+> membership by splitting the candidate's own `text` on terminal punctuation,
+> and that text is `" ".join(segment.text)`, so transcript segments carrying
+> no terminal punctuation merge into one "sentence"; a clean cut between two
+> such utterances then reads as a mid-sentence split. Every one of the three
+> failures above was that case: a cut between two transcript-adjacent words
+> with 0.5–1.4 s of removed gap and **no word lost**. The check now fires only
+> when a sentence loses a word to a boundary, and all seven sources audit
+> clean. The 4-of-7 pass rate this finding reported was real at the time and
+> is not the pass rate now; the two `nle_check` relink halves of the finding
+> stand unchanged, because they are a property of which media the repo
+> redistributes and not of the check. See `docs/TECHNICAL_AUDIT.md`, "CI does
+> not run the tools", for the diagnosis and the mutation record.
+
 ### R2. The corpus failure rate is 36%, and the permitted "honest" statement hides it
 
 - **Claim:** `docs/TIME_SAVINGS.md:752-755` (§10.11, the *permitted* statement)

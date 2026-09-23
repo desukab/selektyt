@@ -75,10 +75,21 @@ rather than from a separate path in `pipeline_state.json`, which carried the
 same working-directory assumption.
 
 `tools/editorial_audit.py` **failed on four of the seven** — `emwcon-panel-2018`,
-`ooi-vertical`, `pentagon-esper-briefing`, `royal-society-cloke` — every one of
-them a selection bound landing inside a word (`end 115.86s splits ' arrays,'
-/ ' traveling'`). That is a real defect, and it is fixed in `engine/edit_plan.py`
-(both bounds now snap back to the enclosing word boundary).
+`ooi-vertical`, `pentagon-esper-briefing`, `royal-society-cloke`. Two different
+defects were mixed in that count, and only one of them was real:
+
+- **Selection bounds landing inside a word** — a real defect, fixed in
+  `engine/edit_plan.py` (both bounds now snap back to the enclosing word
+  boundary). `end 115.86s splits ' arrays,'/' traveling'` was *not* this
+  defect, though this paragraph once attributed it here: the boundary at
+  115.86 s is inside neither word.
+- **Cuts reported as splitting a sentence** — four of the failures were that,
+  and **all four were false positives**, corrected 2026-09-22. The check read
+  sentence membership off the candidate's own `text`, which is
+  `" ".join(segment.text)` and merges under-punctuated segments, so a clean
+  cut between two utterances six seconds apart read as a hole in one
+  sentence. Every one of the four removed a pause and lost no word. See
+  `docs/TECHNICAL_AUDIT.md`, "CI does not run the tools".
 
 **That fix has since been confirmed on one of the four**, and the confirmation
 exposed a second defect the first audit could not see.
@@ -126,30 +137,41 @@ the audit passes 62/62 for real: `01 edl media exists … 3 clip path(s)`, no
 both rendered presets to 0.53 frames, and EDL↔FCPXML to 0.00 frames.
 
 **What is still not established by this.** The other three sources were
-re-audited, and they **still fail** — for a reason that is worth being precise
-about, because it separates two different fixes:
+re-audited, and they no longer fail — but the reason they *used* to is worth
+being precise about, because it separates two different fixes:
 
 | Source | After re-emit | Remaining failure |
 |---|---|---|
-| `emwcon-panel-2018` | clips 01, 05 FAIL | `end 67.09s splits ' was,'/' at'`; `end 225.13s splits ' comes'/' I'` |
-| `ooi-vertical` | clip 01 FAIL | `end 115.86s splits ' arrays,'/' traveling'` |
-| `pentagon-esper-briefing` | clip 02 FAIL | `end 461.50s splits ' them'/' What'`; `end 472.82s splits ' compound'/' Also,'` |
+| `emwcon-panel-2018` | — | none |
+| `ooi-vertical` | — | none |
+| `pentagon-esper-briefing` | — | none |
 
-These are word-split failures, and the word-split fix lives in
-`engine/edit_plan.py:: _word_aligned`, which runs **upstream** of where
-`selections.json` is written — it moves the selection bounds themselves. The
-`selections.json` on disk for these three still holds the pre-fix bounds, so
-re-emitting captions from it reproduces the pre-fix captions byte-for-byte
-(hence `unchanged` on all of `emwcon-panel-2018` and `ooi-vertical`). The
-straddle fix, by contrast, is purely caption-side, which is why it *was*
-recoverable this way — `pentagon-esper-briefing` clip 04 was rewritten and now
-passes, its last word ` U` spanning 922.120–922.960 s against an end of
-922.862 s.
+**These three rows used to report mid-sentence split failures, and those
+findings were false.** The audit derived sentence membership by splitting the
+candidate's own `text` on terminal punctuation, but that text is
+`" ".join(segment.text)` and transcript segments often carry no terminal
+punctuation — on `pentagon-esper-briefing` clip 02 two segments six seconds
+apart join into one "sentence", so a clean cut between utterances read as a
+mid-sentence split. The check now fires only when a sentence *loses a word* to
+a boundary, which none of these cuts does: each removed 0.5–1.4 s of gap
+between two transcript-adjacent words and lost no word at all. The three
+sources are re-audited green as of 2026-09-22, in the suite rather than by hand
+(`tests/test_editorial_audit.py::test_the_audit_verdict_on_the_committed_corpus_is_the_recorded_baseline`).
+The false-positive diagnosis and the mutation record are in
+`docs/TECHNICAL_AUDIT.md` under "CI does not run the tools".
+
+The distinction that paragraph made is unaffected and still stands: the
+word-split fix lives in `engine/edit_plan.py::_word_aligned`, which runs
+**upstream** of where `selections.json` is written, so a selection committed
+before that fix still holds the pre-fix bounds and re-emitting captions from it
+reproduces the pre-fix captions byte-for-byte. The straddle fix, by contrast,
+is purely caption-side, which is why it *was* recoverable this way —
+`pentagon-esper-briefing` clip 04 was rewritten and passes, its last word ` U`
+spanning 922.120–922.960 s against an end of 922.862 s.
 
 So: the caption-straddle fix is confirmed on two sources. The word-split fix is
 confirmed on one (`royal-society-cloke`, fully re-run). **The other three still
 need real re-runs**, and no claim in this document says otherwise.
-
 
 **The committed captions are themselves a snapshot three days behind the
 emitter**, measured 2026-09-22. Regenerating from the persisted
@@ -178,6 +200,7 @@ at `0 of 2 caption track(s) changed`. A mutation to the cue tail's 0.08 s
 floor changes nothing on this corpus and passes both — correctly, because
 that floor is dominated by the clamp to the following cue's start on every
 clip here, so it is a no-op against this data rather than a test that cannot
+see it.
 
 ## The finding that matters more than the pass rate
 

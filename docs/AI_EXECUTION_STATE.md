@@ -894,17 +894,25 @@ to the wrong stage. Six checks that had no test are pinned on semantics rather
 than implementation, plus a corpus sweep test asserting the audit raises on none
 of the eleven projects.
 
-**2. A finding that looked like a false positive was correct.**
+**2. A finding that looked like a false positive *was* a false positive —
+corrected 2026-09-22.**
 `check_cuts_respect_sentences` reported emwcon clip 01 splitting `' was,'`/`' at'`
-across a gap of 1.68 s — 0.18 s past one word's end, 1.50 s before the next
-began. Both words belong to one under-punctuated transcript sentence ("…we had
-earlier was, at first, we were handing out wikis…"), so a cut between them is
-mid-sentence by the criterion the check exists to enforce. The gap is large, not
-the words' relationship, and `check_cuts_land_between_words` correctly stays
-silent on the same boundary because it is inside neither word. Pinned as a test
-rather than tuned away. Clip 05 is the same shape ("once everybody comes" [1.66 s
-pause] "I wanted to add"), so all six flagged cut edges are ASR under-punctuation,
-not audit error.
+across a gap of 1.68 s. The paragraph below argued it was correct on the
+grounds that both words belong to one under-punctuated transcript sentence, so
+a cut between them is mid-sentence by the criterion the check exists to
+enforce. That reasoning is right about the *text* and wrong about the *criterion*:
+the sentence membership was derived from the candidate's `text`, which is
+`" ".join(segment.text)` and merges under-punctuated segments, so the "one
+sentence" the argument rests on is an artifact of the join rather than a fact
+about the transcript. Two segments six seconds apart were read as one sentence
+and a clean cut between them as a hole in it. The check now takes sentence
+membership from the transcript's own segment spans, joined by word start time,
+and fires only when a sentence *loses a word* to a boundary. All six of the
+flagged cut edges were ASR under-punctuation read through that join, not audit
+error and not a real mid-sentence cut — no word was lost at any of them.
+Corrected in `docs/TECHNICAL_AUDIT.md`, "CI does not run the tools", which
+carries the diagnosis and the mutation record; the corpus baseline test pins
+the corrected verdict.
 
 **3. The f-string prefix was real.** Chasing the suspected false positive turned
 up an actual typo: the start-boundary message printed `'was'/f'at'` — a literal
@@ -1315,12 +1323,14 @@ of the seven** (`emwcon-panel-2018`, `ooi-vertical`, `pentagon-esper-briefing`,
 `royal-society-cloke`), every failure a selection bound landing inside a word —
 a real defect, fixed in `engine/edit_plan.py`. **That fix took effect:** the
 sweep as of 2026-09-20 reports `royal-society-cloke` passing every check, and
-`hadhazy-protest` with it — 2 of the 11 committed projects are clean. The three
-still-failing sources fail on *editorial* findings, not on mid-word cuts:
-`emwcon-panel-2018` splits sentences at six cut edges (all six are the same ASR
-under-punctuation shape — "…we had earlier was, at first, we were handing out
-wikis…" written as one sentence, so a cut in the 1.68 s pause inside it is
-mid-sentence by the transcript's own account), `nasa360-ep5` and
+`hadhazy-protest` with it — 2 of the 11 committed projects are clean. ~~The
+three still-failing sources fail on *editorial* findings~~ — **corrected
+2026-09-22: those three editorial findings were false positives** (the
+under-punctuation join described above), so the failing population is the two
+silence-share findings plus the four with no transcript, and the five sources
+with selections audit clean. The passage that followed named
+`emwcon-panel-2018` as splitting sentences at six cut edges; none of those six
+lost a word. `nasa360-ep5` and
 `telugu-tutorial` each carry one clip over the 30% word-free bar (40.8% and
 46.3%), and the four sources with no transcript at all are reported as
 findings rather than raising. Mid-word cuts are gone from the corpus. There were
