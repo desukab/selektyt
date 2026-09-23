@@ -530,3 +530,43 @@ def test_the_editorial_audit_passes_a_tree_the_pipeline_just_wrote(
     # than the audit accepting the tree on a technicality.
     clips = [name for name, _o, _d in findings if name.startswith("clip")]
     assert len(clips) == 2, f"expected the two selected clips to be audited, got {clips}"
+
+
+def test_regenerating_captions_is_byte_identical_to_a_fresh_run(
+        patched_pipeline, tmp_path):
+    """``tools/regenerate_captions.py`` re-earns caption evidence without a
+    re-transcode, and its byte-identity claim is against *this*.
+
+    The committed corpus captions are a snapshot three days older than the
+    caption emitter (79 of 81 files differ on re-emit; pinned in
+    ``tests/test_corpus_reproducibility.py``), so the corpus cannot test this
+    claim — only a tree the pipeline just wrote can. Regeneration must be
+    byte-exact against it, which also pins ``srt_for_candidate`` and
+    ``ass_for_candidate`` as pure functions of the candidate: a render or a
+    transcript read here would be a latent nondeterminism in a deliverable.
+
+    Mutation-verified: wiring ``time.time()`` into the emitted cue text fails
+    here at ``0 of 2 caption track(s) changed``. A mutation to the cue tail's
+    0.08 s floor passes, because both sides of this comparison share the same
+    code — this test pins agreement between two runs, not agreement with the
+    committed corpus, which is what the corpus freshness test is for.
+    """
+    project = patched_pipeline.run(
+        "https://example.com/v", tmp_path, model="small", limit=2,
+    )
+    captions = project / "captions"
+    before = {f.name: f.read_bytes() for f in sorted(captions.iterdir())}
+    assert before, "the run wrote no caption files"
+
+    proc = subprocess.run(
+        [str(_REPO / ".venv" / "bin" / "python"),
+         str(_REPO / "tools" / "regenerate_captions.py"), str(project)],
+        capture_output=True, text=True)
+    assert proc.returncode == 0, f"regeneration failed: {proc.stderr}"
+    assert "0 of 2 caption track(s) changed" in proc.stdout, (
+        f"regeneration changed captions a fresh run just wrote:\n{proc.stdout}")
+
+    after = {f.name: f.read_bytes() for f in sorted(captions.iterdir())}
+    assert before == after, (
+        "regeneration is not byte-identical to a fresh run: "
+        + ", ".join(sorted(set(before) | set(after))))

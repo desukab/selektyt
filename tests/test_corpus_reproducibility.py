@@ -230,3 +230,68 @@ def test_a_reason_measurement_change_reads_as_drift():
         "any sentence at all. Structural editorial score: "
         + before.split("Structural editorial score: ", 1)[1])
 
+
+
+# ── the committed captions are a snapshot, not a live output ───────────────
+
+
+def test_the_committed_captions_are_what_the_current_emitter_writes(tmp_path):
+    """The regenerate tools' byte-identity claim, measured rather than assumed.
+
+    ``tools/regenerate_captions.py`` documents that re-emitting from a
+    committed ``selections.json`` is byte-identical to what a fresh run would
+    write. That is a claim about the *current* code, and it is only true if the
+    committed captions and the committed code are the same age — which on this
+    corpus they are not. The captions were written 2026-09-19 and the
+    one-width-policy caption work landed 2026-09-21/22, so re-emitting rewrites
+    most of them. Measured: 79 of 81 files.
+
+    That is a freshness gap and not a defect: the committed sidecars still
+    agree with the committed *pixels*, which were burned from the same
+    2026-09-19 captions, so the corpus is self-consistent. Regenerating the
+    sidecars without re-rendering would break that agreement, and re-rendering
+    needs media the repo does not redistribute. The regenerated captions still
+    pass the audit. This test exists because the number is quoted in
+    ``docs/CORPUS_RESULTS.md`` and would otherwise be unverifiable prose; if
+    the corpus is ever re-run, the count drops to zero and this test says so.
+
+    The guard is mutation-verified: removing the one-frame gap between cues
+    (``next_start - 0.033`` → ``next_start``) moves the count 79 → 80 and
+    fails here at ``assert changed <= 79``. A mutation to the cue tail's
+    ``st + 0.08`` floor changes nothing on this corpus and passes — correctly,
+    since that floor is dominated by the clamp on every clip here, so against
+    this data the mutation is a no-op rather than a blind spot.
+    """
+    import shutil
+    import subprocess
+
+    from engine.captions import ass_for_candidate, srt_for_candidate
+    from models.core import Candidate, Word
+
+    stems = sorted((_REPO / "corpus").glob("*_run/project/selections.json"))
+    assert stems, "no corpus selections found; the test below would pass vacuously"
+
+    changed = total = 0
+    venv = str(_REPO / ".venv" / "bin" / "python")
+    tool = str(_REPO / "tools" / "regenerate_captions.py")
+    for selections in stems:
+        project = selections.parent
+        scratch = tmp_path / project.parent.name
+        shutil.copytree(project, scratch, symlinks=True)
+        captions = scratch / "captions"
+        before = {f.name: f.read_bytes() for f in sorted(captions.glob("*"))}
+        proc = subprocess.run([venv, tool, str(scratch)],
+                              capture_output=True, text=True)
+        assert proc.returncode == 0, f"regenerate failed on {scratch}: {proc.stderr}"
+        after = {f.name: f.read_bytes() for f in sorted(captions.glob("*"))}
+        total += len(before)
+        changed += sum(1 for k in set(before) | set(after)
+                       if before.get(k) != after.get(k))
+
+    assert total > 40, f"only {total} caption files found; the corpus glob is wrong"
+    assert changed <= 79, (
+        f"{changed} of {total} committed caption files now differ from what the "
+        "current emitter writes. If the corpus was re-run the count should be "
+        "near zero and the docs quoting 79 are stale; if it was not, this is a "
+        "caption change the committed corpus no longer reflects — update "
+        "docs/CORPUS_RESULTS.md to the new figure.")
