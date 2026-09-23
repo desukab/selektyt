@@ -4,7 +4,12 @@
 packaging pipeline now produces a green MSIX. The installer itself has never
 been executed or installed on a Windows machine.** The three claims are
 separate and this report does not merge them: built is not packed, packed is
-not installed, installed is not run.
+not installed, installed is not run. One further limit dates every claim on
+this page: CI has not been able to start a job since 2026-09-22 17:29Z because
+the account's spending limit was reached, so the green-MSIX claim is last
+verifiable at the run named in the CI section and nothing after it has a CI
+verdict. That is outside the repo, and it does not make the claim wrong — it
+makes it untestable.
 
 ---
 
@@ -114,6 +119,21 @@ the run history, not of this paragraph — check it with
 count quoted here, because every count in this document set has been stale
 within a commit of being written.
 See item 9 of the blocked list.
+
+> **Checked 2026-09-23: CI is not running at all, and the streak above cannot
+> be re-verified past 2026-09-22 15:40Z.** Every run since — both workflows,
+> Windows and Linux alike — fails in three to six seconds with the annotation
+> "The job was not started because recent account payments have failed or your
+> spending limit needs to be increased." That is a billing state outside the
+> repo, not a failure of this pipeline or of any commit; the last green Windows
+> build is `35748995999` at "parse every exported EDL with an independent
+> reader" (`build` 23 m, `msix` 4 m, both success), and seven commits after it
+> have no CI verdict of any kind. The claim "green on every run since" was true
+> when written and is now untestable rather than wrong: run the `gh` command
+> above, and read the *annotation*, not the conclusion — a `failure` there is a
+> spending limit, and a `success` is the pipeline. Verification of anything in
+> this document against a later commit than `35748995999` is local-only until
+> the spending limit is lifted.
 
 ## Windows artifact produced
 
