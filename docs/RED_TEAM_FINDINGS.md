@@ -913,6 +913,25 @@ added so that a reader can tell which findings above were accepted and which
 still stand. Every line was re-checked by re-running the named tool, not by
 reading the doc.
 
+> **Re-reconciled 2026-09-22: the R1 line below is stale, and the number in it
+> is the one this document now corrects.** The "5 FAILURES PRESENT" it reports
+> was real on 2026-09-20, but three of those five were the false positives R1's
+> postscript describes: `check_cuts_respect_sentences` derived sentence
+> membership from the candidate's joined text and so read a clean cut between
+> two under-punctuated utterances as a hole in one sentence. The check fires on
+> word loss now, and re-running `tools/editorial_audit.py` over the seven
+> projects that ship selections gives **5 ALL CHECKS PASS**
+> (`emwcon-panel-2018`, `hadhazy-protest`, `ooi-vertical`,
+> `pentagon-esper-briefing`, `royal-society-cloke`) and **2 FAILURES PRESENT**
+> (`nasa360-ep5` and `telugu-tutorial`, each one clip over the silence-share
+> bar and awaiting human review). The four remaining projects
+> (`alice-1903_run`, `hindi-baiga-interview_run`, `roman-portrait-trailer_run`,
+> `telugu-launch_run`) ship no `selections.json` and report no auditable
+> artifacts. The bullet is left standing unedited for the same reason the
+> "STALE RATHER THAN FALSE" list is: it is the measurement as taken, and the
+> correction is meaningless without it. The per-source counts that follow it
+> below were not re-checked line by line and are the 2026-09-20 figures.
+
 - **R1's "7 clean through both audits" — the claim it criticised is gone from
   `AI_EXECUTION_STATE.md`, but the underlying audit result has moved and not in
   one direction.** Re-running `tools/editorial_audit.py` over all seven OK
