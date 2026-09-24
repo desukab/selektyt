@@ -417,6 +417,224 @@ def test_run_pipeline_rejects_a_missing_source(base):
     assert isinstance(resp["error"], str)
 
 
+# ── video upload: the "here is my long video" intake ─────────────────────────
+
+FFMPEG = shutil.which("ffmpeg")
+
+
+def _multipart(fields: dict, boundary: str = "selektyt-test-boundary") -> bytes:
+    """Build a multipart/form-data body by hand. ``urllib`` has no multipart
+    helper and this suite is stdlib-only by design, so the few parts the tests
+    need are framed directly — which also means a test can build a *malformed*
+    body, which a helper would not let it do."""
+    crlf = b"\r\n"
+    out = b""
+    for name, value in fields.items():
+        if isinstance(value, bytes):
+            payload, filename = value, name
+        else:
+            payload, filename = value.encode(), name
+        out += (
+            f"--{boundary}{crlf.decode()}".encode()
+            + f'Content-Disposition: form-data; name="file"; filename="{filename}"{crlf.decode()}'.encode()
+            + f"Content-Type: application/octet-stream{crlf.decode()}".encode()
+            + crlf
+            + payload
+            + crlf
+        )
+    return out + f"--{boundary}--{crlf.decode()}".encode()
+
+
+def _post_multipart(base, body: bytes, headers: dict) -> dict:
+    req = urllib.request.Request(
+        base + "/api/upload", data=body, headers=headers, method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        return json.loads(e.read())
+
+
+def _uploads() -> list:
+    return sorted(p.name for p in (ROOT / "out" / "web" / "uploads").glob("*"))
+
+
+@pytest.fixture
+def clean_uploads():
+    """The uploads directory is shared with whatever a real user has dropped in,
+    and a test that asserted on its contents would be measuring that. Only the
+    files this suite created are removed."""
+    before = set(_uploads())
+    yield before
+    for name in _uploads():
+        if name not in before:
+            (ROOT / "out" / "web" / "uploads" / name).unlink(missing_ok=True)
+
+
+def test_upload_round_trips_a_real_video(base, clean_uploads):
+    """The intake the gap map named ``missing``: a video had to be placed inside
+    the project tree by hand and referenced by relative path, because no route
+    accepted one. This is the round trip that closes it — a real MP4 rather than
+    bytes labelled ``.mp4``, because the route probes with ffprobe and a file
+    ffprobe cannot read is refused."""
+    if FFMPEG is None:
+        pytest.skip("ffmpeg not on PATH; the route's probe needs it")
+    probe = ROOT / "out" / "web" / "uploads" / "selektyt-test-probe.mp4"
+    probe.parent.mkdir(parents=True, exist_ok=True)
+    # A black 3 s frame with a tone: enough for ffprobe to report a video *and*
+    # an audio stream, and small enough not to matter on a full disk.
+    subprocess.run(
+        [FFMPEG, "-y", "-loglevel", "error", "-f", "lavfi",
+         "-i", "color=c=black:s=320x240:d=3", "-f", "lavfi",
+         "-i", "sine=frequency=440:duration=3", "-c:v", "libx264", "-c:a", "aac",
+         "-shortest", str(probe)],
+        check=True, capture_output=True, timeout=180,
+    )
+    try:
+        body = _multipart({"intake-test.mp4": probe.read_bytes()})
+        resp = _post_multipart(
+            base, body,
+            {"Content-Type": "multipart/form-data; boundary=selektyt-test-boundary"},
+        )
+    finally:
+        probe.unlink(missing_ok=True)
+    assert resp["ok"] is True, resp
+    data = resp["data"]
+    assert data["name"] == "intake-test.mp4"
+    assert data["video"] is True and data["audio"] is True
+    # The route answers with the path the page posts back as a pipeline source,
+    # so it has to be one guardedPath admits — this is the whole point of
+    # storing under out/web rather than widening the jail.
+    assert data["path"].replace("\\", "/").startswith("out/web/uploads/")
+    assert (ROOT / data["path"]).exists()
+    assert (ROOT / "out" / "web" / "uploads" / data["name"]).exists()
+    # Duration comes from the probe, not from the request, so a client cannot
+    # declare a 90-minute master over a 3-second file.
+    assert 2.0 < data["duration"] < 4.0
+
+
+def test_upload_rejects_a_file_that_is_not_media(base, clean_uploads):
+    """The probe is what makes the rejection meaningful: ffprobe cannot read a
+    text file, and a route that stored it would leave a document in the uploads
+    directory that the next caller hands to the transcriber."""
+    body = _multipart({"notes.txt": b"this is not a video, it is prose"})
+    resp = _post_multipart(
+        base, body,
+        {"Content-Type": "multipart/form-data; boundary=selektyt-test-boundary"},
+    )
+    assert resp["ok"] is False, resp
+    assert "not a media file" in resp["error"], resp
+    assert not (ROOT / "out" / "web" / "uploads" / "notes.txt").exists(), \
+        "a rejected upload left a file behind"
+
+
+def test_upload_de_clobbers_a_repeated_name(base, clean_uploads):
+    """Two uploads of ``intake-test.mp4`` overwriting each other would look like
+    the first upload's selection coming from the second video's timings, so the
+    second is stored under a new name instead."""
+    if FFMPEG is None:
+        pytest.skip("ffmpeg not on PATH; the route's probe needs it")
+    probe = ROOT / "out" / "web" / "uploads" / "selektyt-test-probe.mp4"
+    probe.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        [FFMPEG, "-y", "-loglevel", "error", "-f", "lavfi",
+         "-i", "color=c=black:s=320x240:d=2", "-c:v", "libx264", str(probe)],
+        check=True, capture_output=True, timeout=180,
+    )
+    bytes_ = probe.read_bytes()
+    probe.unlink(missing_ok=True)
+    headers = {"Content-Type": "multipart/form-data; boundary=selektyt-test-boundary"}
+    try:
+        first = _post_multipart(base, _multipart({"dupe.mp4": bytes_}), headers)
+        second = _post_multipart(base, _multipart({"dupe.mp4": bytes_}), headers)
+    finally:
+        pass
+    assert first["ok"] and second["ok"], (first, second)
+    assert first["data"]["name"] == "dupe.mp4"
+    assert second["data"]["name"] != first["data"]["name"], "the second upload clobbered the first"
+    assert second["data"]["name"].startswith("dupe-") and second["data"]["name"].endswith(".mp4")
+    assert (ROOT / "out" / "web" / "uploads" / first["data"]["name"]).exists()
+    assert (ROOT / "out" / "web" / "uploads" / second["data"]["name"]).exists()
+
+
+def test_upload_rejects_a_cross_origin_post(base, clean_uploads):
+    """A hostile page cannot post a form body at this route and land a file on
+    disk: the same gate as the other mutating routes, and the multipart body is
+    exactly what an HTML form sends, so without it the new route would be the
+    one place a cross-site request has a side effect."""
+    body = _multipart({"evil.mp4": b"\x00\x00\x00 ftypisom"}
+    )
+    resp = _post_multipart(
+        base, body,
+        {"Content-Type": "multipart/form-data; boundary=selektyt-test-boundary",
+         "Origin": "https://evil.example"},
+    )
+    assert resp["ok"] is False
+    assert "cross-origin" in resp["error"], resp
+    assert not any(p.name == "evil.mp4" for p in (ROOT / "out" / "web" / "uploads").glob("*"))
+
+
+def test_upload_demands_a_multipart_content_type(base, clean_uploads):
+    """A JSON client posting to the new route gets a message that names the
+    content type it needs, not a silent empty-body failure."""
+    req = urllib.request.Request(
+        base + "/api/upload", data=b"{}",
+        headers={"Content-Type": "application/json"}, method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=30) as r:
+        resp = json.loads(r.read())
+    assert resp["ok"] is False
+    assert "multipart/form-data" in resp["error"], resp
+
+
+def test_a_truncated_upload_leaves_no_partial_file(base, clean_uploads):
+    """The scanner writes as it goes, so a transfer that dies mid-file has
+    already written bytes to disk. The route has to delete them: a partial file
+    is indistinguishable from a master by name alone, and the next caller would
+    transcribe half a video and report timing for the whole thing.
+
+    This is a raw socket rather than ``urllib`` because the truncation has to be
+    real — the connection has to close mid-body, which a client library that
+    computes ``Content-Length`` for you cannot be made to do."""
+    import socket
+
+    host = urllib.parse.urlparse(base).hostname
+    port = urllib.parse.urlparse(base).port
+    body = _multipart({"truncated.mp4": b"\x00" * 1024 * 1024})
+    # Claim the whole body and send a third of it, then close the write side.
+    cut = len(body) // 3
+    head = (
+        "POST /api/upload HTTP/1.1\r\n"
+        f"Host: {host}:{port}\r\n"
+        "Content-Type: multipart/form-data; boundary=selektyt-test-boundary\r\n"
+        f"Content-Length: {len(body)}\r\n"
+        "Connection: close\r\n\r\n"
+    ).encode() + body[:cut]
+    with socket.create_connection((host, port), timeout=30) as sock:
+        sock.sendall(head)
+        sock.shutdown(socket.SHUT_WR)
+        chunks = []
+        while True:
+            data = sock.recv(4096)
+            if not data:
+                break
+            chunks.append(data)
+    raw = b"".join(chunks).decode("utf8", "replace")
+    # The answer comes from the transport layer rather than the route: the parser
+    # is what notices the body is short, and the route's own rejection would be
+    # writing to a socket the ``clientError`` handler already answered. Either
+    # way it has to be a failure the client can read, never an acceptance.
+    payload = raw.split("\r\n\r\n", 1)[-1]
+    assert "400" in raw.split("\r\n", 1)[0], f"server never answered: {raw[:200]!r}"
+    resp = json.loads(payload)
+    assert resp["ok"] is False, "a truncated body was accepted as a complete file"
+    assert "did not arrive complete" in resp["error"], resp
+    leftovers = [p.name for p in (ROOT / "out" / "web" / "uploads").glob("*")
+                 if "truncated" in p.name or p.suffix == ".part"]
+    assert not leftovers, f"a truncated upload left partial files: {leftovers}"
+
+
 def test_run_pipeline_requires_a_source(base):
     resp = _post_or_error(base, "run_pipeline", {})
     assert resp["ok"] is False

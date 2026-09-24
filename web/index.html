@@ -42,6 +42,10 @@
     </div>
     <div class="cuts-controls">
       <input id="cuts-source" type="text" placeholder="out/web/uploads/name.mp4 — or https://youtu.be/…" />
+      <label class="file" title="Upload a video or audio file; it lands in out/web/uploads and the path fills in above.">
+        <input type="file" id="cuts-file" accept="video/*,audio/*" hidden />
+        <span>or upload a file</span>
+      </label>
       <label class="slider">clips
         <input type="number" id="cuts-limit" min="1" max="20" step="1" value="6" style="width:5ch" />
       </label>

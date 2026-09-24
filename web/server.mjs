@@ -11,12 +11,17 @@
 import { createServer } from "node:http";
 import { spawn, spawnSync } from "node:child_process";
 import {
+  closeSync,
   existsSync,
   mkdirSync,
+  openSync,
   readFileSync,
+  renameSync,
+  unlinkSync,
   writeFileSync,
+  writeSync,
 } from "node:fs";
-import { basename, dirname, extname, join, normalize, resolve, sep } from "node:path";
+import { basename, dirname, extname, join, normalize, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   encodeWav,
@@ -30,6 +35,15 @@ const UPLOADS = join(OUT_WEB, "uploads");
 const SAMPLE_NAME = "sample.wav";
 const SAMPLE_PATH = join(OUT_WEB, SAMPLE_NAME);
 const MAX_BODY = 32 * 1024 * 1024;
+// A source the user points the shell at is the product's input, and a 1-3 hour
+// master is single-digit gigabytes, so the JSON body cap above cannot apply to
+// it — that cap exists to keep a hostile or buggy client from making the server
+// buffer a body in memory, and the upload route streams to disk instead. The
+// guard that replaces it is a cap on what lands on disk, and it is generous by
+// default and overridable rather than silently unbounded: filling this host's
+// only volume is a real failure mode, and an upload that never ends should not
+// be able to cause it.
+const MAX_UPLOAD_BYTES = Number(process.env.SELEKYT_MAX_UPLOAD_GB || 32) * 1024 ** 3;
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".mjs": "text/javascript; charset=utf-8",
@@ -334,9 +348,9 @@ function getJson(req, expectedOrigin) {
   });
 }
 
-function sanitizeName(name) {
-  const base = String(name || "upload.wav").replace(/[^\w.\-]/g, "_");
-  return base.length > 0 && !base.startsWith(".") ? base : "upload.wav";
+function sanitizeName(name, fallback = "upload.wav") {
+  const base = String(name || fallback).replace(/[^\w.\-]/g, "_");
+  return base.length > 0 && !base.startsWith(".") ? base : fallback;
 }
 
 function guardedPath(raw) {
@@ -363,6 +377,212 @@ function guardedArtifact(raw) {
     return candidate;
   }
   throw new Error("path must be an artifact under out/web");
+}
+
+// ── video upload: multipart streamed to disk ──
+
+// The shell's intake used to be "type a path inside the project", which is not
+// something a consumer of the desktop shell can do — the path has to be one the
+// shell itself wrote, and nothing could write one. The route below is that
+// writer. It lands the file under out/web/uploads, which is inside the project
+// root, so the existing `guardedPath` check admits it as a pipeline source with
+// no widening of that boundary: an uploaded file gets exactly the same treatment
+// as one the user found on disk.
+//
+// The body is never buffered. A 32 MB JSON cap is not a sane cap for a master,
+// and buffering gigabytes would make the shell unusable on the machine it is
+// serving, so the part is scanned off the wire one chunk at a time and only the
+// tail needed to recognise a boundary is held back.
+
+function _dispositionFilename(headers) {
+  // `filename` is quoted and may itself contain an escaped quote; the basename
+  // is all that survives sanitisation anyway, so a permissive match is right.
+  const disp = headers.find((h) => h.startsWith("Content-Disposition:"));
+  if (!disp) return null;
+  const m = /filename\s*=\s*(?:"([^"]*)"|([^;\s]+))/i.exec(disp);
+  return m ? (m[1] ?? m[2]) : null;
+}
+
+function _partHeaders(block) {
+  // The header block ends at the first blank line; the bytes after it are body.
+  const at = block.indexOf("\r\n\r\n");
+  if (at < 0) return null;
+  const raw = block.slice(0, at).split("\r\n");
+  return {
+    headers: raw,
+    filename: _dispositionFilename(raw),
+    bodyFrom: at + 4,
+  };
+}
+
+// Streams the first file part of a multipart body to `target`, resolving with
+// the number of bytes written and the filename the sending browser announced
+// for it. Everything after the part's closing delimiter is discarded, which is
+// why the caller's form is expected to carry one file field.
+function _streamFilePart(req, boundary, target, maxBytes) {
+  return new Promise((resolvePromise, reject) => {
+    const delim = Buffer.concat([Buffer.from("\r\n--"), Buffer.from(boundary)]);
+    // A delimiter may straddle a chunk, so the tail that could still be the
+    // start of one is withheld from every write and reconsidered with the next
+    // chunk. This is the whole reason the scanner is incremental.
+    let pending = Buffer.alloc(0);
+    let headers = null;
+    let total = 0;
+    let fd = null;
+    let done = false;
+
+    const finish = (err) => {
+      if (done) return;
+      done = true;
+      req.removeListener("data", onData);
+      req.removeListener("end", onEnd);
+      req.removeListener("error", onErr);
+      if (fd !== null) closeSync(fd);
+      if (err) {
+        // A rejected upload leaves a partial file behind, and a partial file is
+        // indistinguishable from a master by name alone — the next caller would
+        // transcribe half a video and report timing for the whole thing.
+        try {
+          unlinkSync(target);
+        } catch {
+          /* already gone */
+        }
+        reject(err);
+      } else {
+        resolvePromise({ bytes: total, filename: headers?.filename || null });
+      }
+    };
+
+    const onEnd = () =>
+      finish(new Error("upload ended before the file part was complete"));
+
+    const onErr = (e) => finish(new Error(String(e.message || e)));
+
+    const onData = (chunk) => {
+      if (done) return;
+      pending = Buffer.concat([pending, chunk]);
+      if (!headers) {
+        const head = _partHeaders(pending.toString("latin1"));
+        if (!head) return; // headers not fully received yet
+        headers = head;
+        if (!head.filename) {
+          return finish(
+            new Error(
+              "the uploaded form field is not a file; send the video as a " +
+                "file input, not a text field"
+            )
+          );
+        }
+        pending = pending.slice(head.bodyFrom);
+      }
+
+      while (!done) {
+        // No delimiter so far: write everything except the tail that might be
+        // the beginning of one.
+        let at = pending.indexOf(delim);
+        if (at < 0) {
+          const keep = Math.min(pending.length, delim.length - 1);
+          const writeable = pending.subarray(0, pending.length - keep);
+          if (writeable.length) {
+            if (total + writeable.length > maxBytes) {
+              return finish(
+                new Error(
+                  `upload exceeds the ${Math.round(maxBytes / 1024 ** 3)} GiB cap; ` +
+                    "raise SELEKYT_MAX_UPLOAD_GB to accept a longer master"
+                )
+              );
+            }
+            if (fd === null) fd = openSync(target, "w");
+            writeSync(fd, writeable);
+            total += writeable.length;
+          }
+          pending = pending.subarray(pending.length - keep);
+          return;
+        }
+        // Delimiter found: everything up to it is the file, and the rest of the
+        // body is other parts, which this shell does not use.
+        const writeable = pending.subarray(0, at);
+        if (writeable.length) {
+          if (total + writeable.length > maxBytes) {
+            return finish(new Error("upload exceeds the size cap"));
+          }
+          if (fd === null) fd = openSync(target, "w");
+          writeSync(fd, writeable);
+          total += writeable.length;
+        }
+        req.removeListener("data", onData);
+        return finish(null);
+      }
+    };
+
+    req.on("data", onData);
+    req.on("end", onEnd);
+    req.on("error", onErr);
+  });
+}
+
+function _boundary(contentType) {
+  const m = /boundary\s*=\s*(?:"([^"]+)"|([^;\s]+))/i.exec(contentType || "");
+  return m ? m[1] ?? m[2] : null;
+}
+
+// An upload should be rejected as "not a video" here rather than five minutes
+// into a transcribe, and the probe that decides it is the one the encoder
+// family already provides — ffprobe is a documented requirement of the
+// pipeline, not a new dependency.
+//
+// Two failures look identical in ``spawnSync``'s output and have opposite
+// correct answers, so they are separated here: an absent ffprobe is the host
+// missing a requirement and the pipeline probes the source itself and reports
+// the same problem from its own side, whereas a *present* ffprobe that cannot
+// read the bytes is a file that is not media, and keeping it would leave a
+// document in the uploads directory that the next caller transcribes. ``null``
+// means "could not check" and an object means "checked, and this is the answer".
+function _probeMedia(path) {
+  try {
+    const probe = spawnSync(
+      "ffprobe",
+      ["-v", "error", "-print_format", "json", "-show_format", "-show_streams", path],
+      { stdio: ["ignore", "pipe", "ignore"], encoding: "utf8", timeout: 30000 }
+    );
+    if (probe.error) return null;
+    if (probe.status !== 0 || !probe.stdout) return { duration: 0, video: false, audio: false };
+    const parsed = JSON.parse(probe.stdout);
+    const streams = Array.isArray(parsed.streams) ? parsed.streams : [];
+    return {
+      duration: Number(parsed.format?.duration || 0) || 0,
+      video: streams.some((s) => s.codec_type === "video"),
+      audio: streams.some((s) => s.codec_type === "audio"),
+    };
+  } catch {
+    return null;
+  }
+}
+
+// The page posts this string back as a pipeline source, and it is the same form
+// the path-typing control has always used (`out/web/uploads/...`), so the two
+// intake paths produce interchangeable values. `guardedPath` resolves it from
+// the server's working directory either way.
+function _relativeToRoot(abs) {
+  return relative(ROOT, abs).split(sep).join("/");
+}
+
+function _storedName(original) {
+  // The sanitiser strips directory components and anything a shell would
+  // interpret, so a hostile `filename` cannot place the upload outside the
+  // uploads directory. A collision is de-duplicated rather than clobbered: two
+  // uploads of `interview.mp4` silently overwriting each other would look like
+  // the first upload's selection coming from the second video's timings.
+  const base = sanitizeName(original, "upload.mp4");
+  let name = base;
+  let n = 1;
+  while (existsSync(join(UPLOADS, name))) {
+    const ext = extname(base) || "";
+    const stem = basename(base, ext);
+    name = `${stem}-${n}${ext}`;
+    n += 1;
+  }
+  return name;
 }
 
 function ensureSample() {
@@ -453,6 +673,74 @@ async function route(req, res, url, method) {
     return send(res, 200, readFileSync(SAMPLE_PATH), {
       "Content-Type": "audio/wav",
       "Content-Length": readFileSync(SAMPLE_PATH).length,
+    });
+  }
+  if (method === "POST" && url.pathname === "/api/upload") {
+    // This is the "here is my long video" intake, and it is the one route that
+    // cannot use getJson: a 1-3 hour master is single-digit gigabytes of
+    // multipart body, and getJson would buffer all of it into memory before it
+    // could be refused. The body is streamed to disk instead — see
+    // _streamFilePart, which never holds more than a chunk in memory — and the
+    // same-origin gate that closes the CSRF hole on the other POSTs applies
+    // here too, so a hostile page cannot make the browser post a form body at
+    // this route and land a file on disk.
+    assertSameOrigin(req, expectedOrigin);
+    const boundary = _boundary(req.headers["content-type"] || "");
+    if (!boundary) {
+      throw new Error(
+        "expected multipart/form-data with a boundary; set the request's " +
+          "Content-Type to multipart/form-data"
+      );
+    }
+    mkdirSync(UPLOADS, { recursive: true });
+    // The filename the browser announces arrives inside the body, not in the
+    // request headers, so the part is streamed under a scratch name and the
+    // stored name is taken from what the scanner parsed out of the first chunk.
+    const part = join(UPLOADS, `.upload-${process.pid}-${Date.now()}.part`);
+    // A transfer that dies at the transport layer is reported to the
+    // ``clientError`` handler, which sees the socket but not this route — and
+    // the parser never delivers the ``error`` event this route would need to
+    // clean up after itself, so the path is handed to the socket. Without this a
+    // dropped connection leaves a .part behind that the next caller would
+    // transcribe as though it were a whole master.
+    req.socket.__uploadPart = part;
+    let stored, probed;
+    try {
+      const { filename } = await _streamFilePart(req, boundary, part, MAX_UPLOAD_BYTES);
+      // Everything is written to a .part and only renamed once the stream is
+      // whole and the probe has confirmed it is media: a truncated or non-video
+      // upload leaves no file behind, so nothing incomplete can later be picked
+      // up as a pipeline source by its name alone.
+      const name = _storedName(filename);
+      probed = _probeMedia(part);
+      if (probed && !probed.video && !probed.audio) {
+        throw new Error(
+          `${name} is not a media file ffprobe can read; the upload was not kept`
+        );
+      }
+      stored = join(UPLOADS, name);
+      renameSync(part, stored);
+      // The transfer arrived whole, so the socket no longer has a partial to
+      // clean up on this route's behalf.
+      delete req.socket.__uploadPart;
+    } catch (err) {
+      if (existsSync(part)) unlinkSync(part);
+      delete req.socket.__uploadPart;
+      throw err;
+    }
+    // The stored path is what the page puts back into the cuts control, and it
+    // is inside ROOT, so guardedPath admits it as a pipeline source without the
+    // upload route having to widen any boundary.
+    return sendJson(res, {
+      ok: true,
+      op: "upload",
+      data: {
+        path: _relativeToRoot(stored),
+        name: basename(stored),
+        duration: probed?.duration ?? null,
+        video: probed?.video ?? null,
+        audio: probed?.audio ?? null,
+      },
     });
   }
   if (method === "POST" && url.pathname === "/api/vad_analyze") {
@@ -566,8 +854,50 @@ function main() {
   const server = createServer((req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
     route(req, res, url, req.method).catch((err) => {
+      // A request that failed at the transport layer — a body that ended early —
+      // has already been answered by the `clientError` handler, and writing to
+      // that socket again would throw inside this catch and take the server down
+      // with it. Nothing this process can tell the client would reach it anyway.
+      if (res.headersSent || res.writableEnded || res.socket?.writableEnded) return;
       sendJson(res, { ok: false, op: url.pathname, error: String(err.message || err) });
     });
+  });
+  // A transfer that dies mid-body — the connection dropped, or the user closed
+  // the tab — is caught by Node's HTTP parser, not by the route, and Node's
+  // default answer is a bare 400 with no body the page can read. Answering with
+  // the same envelope every other route uses means the browser shows what
+  // actually happened instead of a generic network failure it cannot tell apart
+  // from the server having vanished.
+  server.on("clientError", (err, socket) => {
+    // ``err.message`` here is the parser's own ("Parse Error"), which says
+    // nothing a user could act on, and the one thing that distinguishes a
+    // truncated upload from a genuinely malformed request is not in the
+    // message. The claim this can make is the one that matters: nothing was
+    // kept from a request that did not arrive whole.
+    const body = JSON.stringify({
+      ok: false,
+      op: "upload",
+      error: "the request did not arrive complete; the upload was not kept",
+    });
+    // The route cannot clean up after a transport-level failure — the parser
+    // does not hand it the event — so it left the path on the socket for this
+    // handler to find.
+    const part = socket.__uploadPart;
+    if (part) {
+      try {
+        unlinkSync(part);
+      } catch {
+        /* already gone */
+      }
+      delete socket.__uploadPart;
+    }
+    socket.end(
+      "HTTP/1.1 400 Bad Request\r\n" +
+        "Content-Type: application/json; charset=utf-8\r\n" +
+        `Content-Length: ${Buffer.byteLength(body)}\r\n` +
+        "Connection: close\r\n\r\n" +
+        body,
+    );
   });
   server.listen(port, host, () => {
     const addr = server.address();

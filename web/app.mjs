@@ -204,6 +204,53 @@ async function exportCut() {
   }
 }
 
+// A multi-gigabyte master is the product's input, so it needs progress
+// reporting `fetch` cannot give and it must never be held in memory: the route
+// streams the body to disk, and so does this. The server answers with the path
+// it stored the file under, which goes into the same field a typed path uses —
+// an upload and a path are interchangeable from there on.
+function uploadVideo(file) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/upload");
+    const summary = $("cuts-summary");
+    summary.classList.remove("error");
+    summary.textContent = `uploading ${file.name}…`;
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable) {
+        summary.textContent =
+          `uploading ${file.name} · ${Math.round((100 * e.loaded) / e.total)}%`;
+      }
+    });
+    xhr.addEventListener("load", () => {
+      let json;
+      try {
+        json = JSON.parse(xhr.responseText);
+      } catch {
+        reject(new Error(`upload returned a non-JSON response (HTTP ${xhr.status})`));
+        return;
+      }
+      if (!json.ok) {
+        reject(new Error(json.error || "upload failed"));
+        return;
+      }
+      // Reporting what landed is what makes the upload trustworthy: a duration
+      // that is not the file's says the transfer or the probe went wrong before
+      // a transcribe spends ten minutes on it.
+      const d = json.data;
+      summary.textContent = d.duration
+        ? `uploaded ${d.name} · ${fmt(d.duration)} · ${d.video ? "video" : "audio"}`
+        : `uploaded ${d.name} · ffprobe unavailable, not validated`;
+      resolve(d);
+    });
+    xhr.addEventListener("error", () => reject(new Error("upload failed: network error")));
+    xhr.addEventListener("abort", () => reject(new Error("upload aborted")));
+    const form = new FormData();
+    form.append("file", file);
+    xhr.send(form);
+  });
+}
+
 async function runCuts() {
   // The full product path: transcribe → select → cut → render. Until this
   // existed the shell could analyse audio and export a cutlist but could not
@@ -299,6 +346,22 @@ async function init() {
   $("threshold").addEventListener("input", resegment);
   $("pad").addEventListener("change", renderCutlist);
   $("cuts-run").addEventListener("click", runCuts);
+  $("cuts-file").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const data = await uploadVideo(file);
+      $("cuts-source").value = data.path;
+    } catch (err) {
+      const summary = $("cuts-summary");
+      summary.textContent = `upload failed: ${err.message}`;
+      summary.classList.add("error");
+    } finally {
+      // Clearing the input means choosing the same file again re-fires change;
+      // without it a re-upload of a corrected master looks like a no-op.
+      e.target.value = "";
+    }
+  });
   draw();
 }
 
