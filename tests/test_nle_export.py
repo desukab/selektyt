@@ -21,6 +21,7 @@ from engine.nle_export import (
     export,
     export_edl,
     independent_parse_edl,
+    independent_parse_fcpxml,
     render_edl,
     render_fcpxml,
     validate_edl,
@@ -295,6 +296,145 @@ def test_fcpxml_is_well_formed_and_valid(tl_name):
     assert validate_fcpxml(xml) == [], validate_fcpxml(xml)
     # And it agrees with the model that produced it.
     assert validate_fcpxml(xml, tl) == [], validate_fcpxml(xml, tl)
+
+
+# ── the independent reader: a second parser on the same text ─────────────
+
+@pytest.mark.parametrize("tl_name", ["two_clip", "gapped", "multitrack", "telugu"])
+def test_the_exported_fcpxml_is_read_by_an_independent_reader(tl_name):
+    """``validate_fcpxml`` and ``render_fcpxml`` are one grammar: whatever the
+    emitter writes, the validator is built to accept, so an FCPXML that passes
+    it has been checked by nobody but its author. The vendored OpenTimelineIO
+    adapter is an independent reader, so a real export must parse under it too.
+
+    Acceptance here is deliberately more than "it parsed". The adapter resolves
+    an asset's media through ``<media-rep kind="original-media">``, which is
+    where the emitter writes ``src``; the OpenTimelineIO project's own copy of
+    the same adapter reads ``src`` off the ``<asset>`` element and returns every
+    clip as a ``MissingReference``. That parse succeeds and drops every media
+    reference, so it would pass a bare "it parsed" gate while landing every cut
+    offline in an NLE. Each clip must therefore come back as an
+    ``ExternalReference`` with a target URL.
+    """
+    otio = pytest.importorskip(
+        "opentimelineio",
+        reason="the nle extra supplies the independent FCPXML reader",
+    )
+    tl = {
+        "two_clip": two_clip_timeline,
+        "gapped": gapped_timeline,
+        "multitrack": multitrack_timeline,
+        "telugu": telugu_timeline,
+    }[tl_name]()
+    text = render_fcpxml(tl)
+    ran, problems = independent_parse_fcpxml(text)
+    assert ran, "importorskip above means the reader must be present"
+    assert problems == [], (
+        f"the FCPXML reader rejected a document our own validator passed: "
+        f"{problems}"
+    )
+    # The property the problems list exists to guard, asserted directly so a
+    # function that always returned an empty list cannot pass this test.
+    from third_party.otio_fcpxml_adapter.fcpxml import FcpxXml
+
+    clips = list(FcpxXml(text).to_otio().find_children(otio.schema.Clip))
+    assert clips, "the reader parsed the document but returned no clips"
+    assert all(
+        isinstance(c.media_reference, otio.schema.ExternalReference)
+        and c.media_reference.target_url
+        for c in clips
+    )
+
+
+def test_a_media_rep_blind_reader_is_caught_by_the_check(monkeypatch):
+    """The failure mode this check exists for is not a malformed document but a
+    *successful* parse that resolves no media — which is what the
+    OpenTimelineIO project's own copy of this adapter produces on SelekyT's
+    output, because it reads ``src`` off the ``<asset>`` element and SelekyT
+    writes it on the ``<media-rep>``. This makes that reader's behaviour
+    explicit on a document our own validator passes, so the gate is known to
+    fire on the real false positive rather than only on synthetic breakage."""
+    pytest.importorskip("opentimelineio", reason="the reader under test is not installed")
+    text = render_fcpxml(two_clip_timeline())
+    assert validate_fcpxml(text) == [], (
+        "the fixture must be a document our own validator accepts, or this "
+        "test is not demonstrating what its name claims"
+    )
+
+    # Strip every media-rep, leaving the asset elements and the spine intact:
+    # well-formed, schema-shaped, and pointing at no media at all.
+    import xml.etree.ElementTree as ET
+
+    root = ET.fromstring(text)
+    stripped = sum(1 for _ in root.iter("media-rep"))
+    assert stripped, "the emitter must write media-rep for this test to mean anything"
+    for rep in list(root.iter("media-rep")):
+        for parent in root.iter():
+            if rep in list(parent):
+                parent.remove(rep)
+                break
+    blind = ET.tostring(root, encoding="unicode")
+
+    ran, problems = independent_parse_fcpxml(blind)
+    assert ran, "the reader must still be present"
+    assert problems, (
+        "a document whose clips resolve to no media must be reported as a "
+        f"problem, not passed: {problems!r}"
+    )
+
+
+def test_a_fcpxml_our_validator_accepts_but_a_reader_rejects_is_caught(monkeypatch):
+    """The independent parse has to be able to fire when our own validator
+    finds nothing — that is the entire reason it exists. A document that is
+    well-formed XML and passes the vocabulary list is still rejected by a real
+    reader if the FCPXML structure underneath is wrong, so this breaks the
+    structure in a way ``validate_fcpxml`` cannot see."""
+    pytest.importorskip("opentimelineio", reason="the reader under test is not installed")
+    text = render_fcpxml(two_clip_timeline())
+    assert validate_fcpxml(text) == [], (
+        "the fixture must be a document our own validator accepts, or this "
+        "test is not demonstrating what its name claims"
+    )
+    monkeypatch.setattr(
+        "third_party.otio_fcpxml_adapter.fcpxml.FcpxXml",
+        _ExplodingFcpxmlReader,
+    )
+    ran, problems = independent_parse_fcpxml(text)
+    assert ran and problems, \
+        "a reader that rejects the document must report a problem, not pass"
+
+
+class _ExplodingFcpxmlReader:
+    """Stand in for a reader that rejects the document at the read, which is
+    where a genuinely malformed FCPXML would fail."""
+
+    def __init__(self, text):
+        pass
+
+    def to_otio(self):
+        raise ValueError("malformed FCPXML input")
+
+
+def test_a_missing_fcpxml_reader_is_reported_as_not_run_not_as_a_defect(monkeypatch):
+    """``opentimelineio`` is an optional extra, and the vendored reader imports
+    it. A base install must still be able to export, so absence is
+    ``(False, [])`` — not a problem. The runtime pipeline turns that into an
+    advisory line; ``tools/nle_check.py`` turns it into a FAIL, and that
+    difference is deliberate and documented at the function."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def refuse(name, *a, **k):
+        if name == "opentimelineio" or name.startswith("opentimelineio.") \
+                or name == "third_party.otio_fcpxml_adapter.fcpxml":
+            raise ImportError("simulated: the nle extra is not installed")
+        return real_import(name, *a, **k)
+
+    monkeypatch.setattr(builtins, "__import__", refuse)
+    ran, problems = independent_parse_fcpxml("<fcpxml></fcpxml>")
+    assert ran is False, "the reader's absence is not a defect in this FCPXML"
+    assert problems == []
 
 
 def test_fcpxml_declares_one_asset_per_source_media():

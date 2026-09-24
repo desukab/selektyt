@@ -916,6 +916,65 @@ def independent_parse_edl(text: str) -> tuple[bool, list[str]]:
     return True, []
 
 
+def independent_parse_fcpxml(text: str) -> tuple[bool, list[str]]:
+    """Parse an FCPXML with a third-party reader, not our own.
+
+    The mirror of ``independent_parse_edl``. Returns (ran, problems): ``ran``
+    is False when the reader is absent, which is a property of this install
+    rather than a defect in this file, so the runtime pipeline reports it as an
+    advisory instead of failing an export on a base install.
+    ``tools/nle_check.py`` takes the opposite stance for the same reason it
+    does for pycmx: invoked by name on a finished project, a check that passes
+    while its validator is missing proves nothing, so it FAILs there.
+
+    The reader is the OpenTimelineIO FCPXML adapter, vendored under
+    ``third_party/otio_fcpxml_adapter/`` (Apache-2.0, see
+    ``third_party/PROVENANCE.md``). It was chosen over the stale upstream
+    adapter for one specific reason: it resolves an asset's media through
+    ``<media-rep kind="original-media">`` rather than reading ``src`` off the
+    ``<asset>`` element, and SelekyT writes ``src`` on the media-rep. A reader
+    that only checks the attribute parses the whole spine and resolves no media
+    at all, which is the worst possible outcome — a parse that looks successful
+    and lands offline.
+
+    That is why the checks below are what they are rather than a bare "it
+    parsed". A document that reads back as clips with ``MissingReference``
+    media has not been validated; it has been read by a library while the thing
+    an editor actually needs — the file each cut points at — was dropped. So a
+    spine with no clips is a problem, and so is any clip whose media reference
+    is not an ``ExternalReference`` with a non-empty target.
+    """
+    try:
+        import opentimelineio as otio  # type: ignore[import-not-found]
+        from third_party.otio_fcpxml_adapter.fcpxml import FcpxXml
+    except ImportError:
+        return False, []
+    try:
+        obj = FcpxXml(text).to_otio()
+        clips = list(obj.find_children(otio.schema.Clip))
+    except Exception as exc:  # an independent reader rejecting it is the point
+        return True, [f"the FCPXML reader rejected the document: "
+                      f"{type(exc).__name__}: {exc}"]
+    problems: list[str] = []
+    if not clips:
+        problems.append("the reader parsed the document but found no clips, so "
+                        "no cut in it was read back by an independent parser")
+    unlinked = []
+    for clip in clips:
+        ref = clip.media_reference
+        if isinstance(ref, otio.schema.ExternalReference) and ref.target_url:
+            continue
+        unlinked.append(repr(clip.name))
+    if unlinked:
+        problems.append(
+            f"{len(unlinked)} of {len(clips)} clip(s) did not resolve to a "
+            f"media reference with a target URL: {unlinked}. The reader parsed "
+            "the spine but the media the cuts point at did not come back, "
+            "which means the export lands offline in an NLE"
+        )
+    return True, problems
+
+
 def _sep_rate(sep: str) -> float:
     """Rate implied by a timecode separator. ``;`` is read as 29.97 drop-frame;
     a 59.94 drop-frame EDL is not distinguished by this validator and is a

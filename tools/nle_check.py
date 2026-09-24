@@ -21,12 +21,18 @@ rather than against the exporter's own idea of what it wrote.
     python tools/nle_check.py out/url-e2e/project
 
 It reads only the artifacts a normal run already writes, plus ffprobe on the
-rendered media. The EDL is parsed by ``pycmx``, an independent CMX 3600 reader,
-rather than by SelekyT's own emitter: validating our output with our own parser
-proves nothing. If pycmx is not installed that check FAILS — it does not skip —
+rendered media. Both halves are parsed by readers SelekyT did not write rather
+than by SelekyT's own emitter: the EDL by ``pycmx`` (an independent CMX 3600
+reader) and the FCPXML by the vendored OpenTimelineIO FCPXML adapter, which is
+the only third-party FCPXML reader found that resolves an asset's ``src`` from
+``<media-rep>`` — where SelekyT writes it — instead of from the ``<asset>``
+element. Validating our output with our own parser proves nothing: a writer and
+a validator drawn from the same regexes and the same element vocabulary are
+self-consistent by construction and cannot see each other's mistakes. If either
+reader is not installed the corresponding check FAILS rather than skipping,
 because a check that passes while its validator is absent is how a
 self-consistent-but-wrong emitter ships unchallenged. Install the ``nle`` extra
-(``pip install -e '.[nle]'``) to make it execute. The exit code is nonzero if
+(``pip install -e '.[nle]'``) to make them execute. The exit code is nonzero if
 any hard check fails, so this composes with CI like
 ``tools/editorial_audit.py``.
 """
@@ -496,6 +502,61 @@ def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float,
         findings.append((f"{stem} fcpxml well-formed", False, f"XML parse error: {exc}"))
         return findings
     findings.append((f"{stem} fcpxml well-formed", True, "parsed"))
+
+    # Independent parse: a third-party FCPXML reader must read the document back
+    # as clips whose media actually resolves. As with pycmx above, a missing
+    # reader is a FAIL rather than a SKIP, for the same reason and with the same
+    # fix (`pip install -e '.[nle]'`). The reader is vendored under
+    # third_party/otio_fcpxml_adapter/ because it resolves an asset's media
+    # through <media-rep>, which is where SelekyT writes the src; a reader that
+    # only looks at the <asset> element parses the spine and reports every clip
+    # as unlinked. A document that comes back as clips with no media reference
+    # has not been validated, so that case fails rather than passing on the
+    # strength of a successful parse.
+    try:
+        import opentimelineio as otio  # type: ignore[import-not-found]
+        from third_party.otio_fcpxml_adapter.fcpxml import FcpxXml
+    except ImportError:
+        findings.append((f"{stem} fcpxml independent parse", False,
+                         "the FCPXML reader is not installed (it needs "
+                         "opentimelineio), so this document was never parsed "
+                         "by an independent reader. Install the `nle` extra: "
+                         "pip install -e '.[nle]'"))
+    else:
+        try:
+            obj = FcpxXml(fcpxml.read_text(encoding="utf-8")).to_otio()
+            clips = list(obj.find_children(otio.schema.Clip))
+            unlinked = [
+                repr(c.name) for c in clips
+                if not (isinstance(c.media_reference, otio.schema.ExternalReference)
+                        and c.media_reference.target_url)
+            ]
+        except Exception as exc:  # a real reader rejecting the file is the point
+            findings.append((f"{stem} fcpxml independent parse", False,
+                             f"the FCPXML reader rejected the document: "
+                             f"{type(exc).__name__}: {exc}"))
+        else:
+            if not clips:
+                findings.append((f"{stem} fcpxml independent parse", False,
+                                 "the reader parsed the document but found no "
+                                 "clips, so no cut in it was read back by "
+                                 "independent code"))
+            elif unlinked:
+                findings.append((f"{stem} fcpxml independent parse", False,
+                                 f"{len(unlinked)} of {len(clips)} clip(s) did not "
+                                 f"resolve to a media reference with a target URL: "
+                                 f"{unlinked}. The reader parsed the spine but the "
+                                 "media the cuts point at did not come back, so the "
+                                 "export would land offline in an NLE"))
+            else:
+                total = sum(
+                    (c.source_range or otio.opentime.TimeRange())
+                    .duration.to_seconds()
+                    for c in clips
+                )
+                findings.append((f"{stem} fcpxml independent parse", True,
+                                 f"{len(clips)} clip(s), every clip resolves to an "
+                                 f"ExternalReference, {total:.3f}s of source read back"))
 
     version = root.get("version", "")
     findings.append((f"{stem} fcpxml version", version == "1.11", f'version="{version}"'))

@@ -28,6 +28,7 @@ from engine.timeline_build import timeline_for_candidate
 from engine.nle_export import (
     export as nle_export,
     independent_parse_edl,
+    independent_parse_fcpxml,
     validate_edl,
     validate_fcpxml,
 )
@@ -966,6 +967,23 @@ def run(
         fcpxml_problems = validate_fcpxml(
             exported["fcpxml"].read_text(encoding="utf-8"), tl
         )
+        # The same standard applied to the other half: our FCPXML grammar is
+        # the emitter's own, so a document it accepts is not thereby a document
+        # an NLE can read. The vendored OTIO adapter resolves each clip's media
+        # through <media-rep>, where we write it; a parse that comes back with
+        # unlinked clips is reported as a problem rather than a pass. Absent the
+        # reader this stays advisory, exactly as the EDL half does above.
+        fcpxml_text = exported["fcpxml"].read_text(encoding="utf-8")
+        ran_fcpxml, indep_fcpxml_problems = independent_parse_fcpxml(fcpxml_text)
+        if ran_fcpxml:
+            fcpxml_problems += indep_fcpxml_problems
+        else:
+            print(
+                "[export] the FCPXML reader is not installed, so the FCPXML was "
+                "not parsed by an independent reader; install the 'nle' extra "
+                "to verify it",
+                flush=True,
+            )
         if edl_problems or fcpxml_problems:
             raise RuntimeError(
                 f"clip {idx:02d} exported an interchange file that failed its own "

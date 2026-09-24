@@ -164,9 +164,9 @@ In ascending order of cost. None of these has been done.
 2. **DaVinci Resolve on a display-capable host.** Same three questions, run by
    us. Needs a machine with a display and ~5 GB of spare disk, and the free
    tier. No spend.
-3. **Building OpenTimelineIO's C++ adapters** — would add a *second independent
-   reader*, which raises confidence in the file format but does not cross the
-   library→NLE line. Listed only so the distinction is explicit.
+3. **A second FCPXML reader** — would raise confidence in the file format but
+   does not cross the library→NLE line, and both halves already have one
+   independent reader each. Listed only so the distinction is explicit.
 
 ---
 
@@ -176,20 +176,32 @@ Said, because it is verifiable in the repo:
 
 - SelekyT emits CMX 3600 EDL and FCPXML 1.11 whose timelines agree with the
   rendered output to within `RENDER_FRAME_TOLERANCE` — asserted on every corpus
-  project by `tools/nle_check.py`. **The independence is asymmetric and travels
-  with the claim:** the EDL is accepted by `pycmx`, a third-party CMX 3600
-  reader; the FCPXML is parsed by SelekyT's own `ElementTree` reader against a
-  vocabulary list SelekyT wrote, which is a self-consistency check and not an
-  independent one. Both halves agree with each other and with the render, but
-  only one half has been read by software that does not share this codebase.
-  See `docs/NLE_COMPATIBILITY.md` for the two wrong-format readers that were
-  tried and rejected.
+  project by `tools/nle_check.py`. **Both halves are read by software that does
+  not share this codebase, and neither reader is a mirror of the emitter:** the
+  EDL by `pycmx`, a third-party CMX 3600 reader; the FCPXML by the
+  OpenTimelineIO FCPXML adapter, vendored under `third_party/otio_fcpxml_adapter/`
+  (Apache-2.0, origin and commit recorded in `third_party/PROVENANCE.md`). The
+  FCPXML half was self-checked until that reader was found — parsed by
+  SelekyT's own `ElementTree` reader against a vocabulary list SelekyT wrote,
+  which is a self-consistency check and not an independent one — and the gap
+  was recorded here as a gap rather than averaged away. The reader that closed
+  it was chosen for one specific property: it resolves an asset's media through
+  `<media-rep kind="original-media">`, which is where SelekyT writes `src`. A
+  reader that reads `src` off the `<asset>` element instead parses the whole
+  spine and returns every clip unlinked, which is a false positive in the exact
+  shape a validator must not produce. So the check is not "it parsed": a
+  document that comes back with no clips fails, and so does any clip whose
+  media reference is not an `ExternalReference` with a non-empty target URL —
+  because that is the failure mode a media-rep-blind reader produces, and
+  "parsed by a library while every cut lands offline" is not a validation.
+  See `docs/NLE_COMPATIBILITY.md` for the readers that were tried and rejected.
 - Every one of the 27 committed EDL/FCPXML pairs is swept end to end by
-  `tests/test_corpus_interchange.py`: `pycmx` accepts each EDL, the emitter's
-  own validators are clean on each pair, and **each** `<asset-clip>` carries
-  the same offset/start/duration as its EDL event to within 1.5 frames (worst
-  measured deviation across the whole corpus: exactly 1.000 frame, the expected
-  grid-snapping artefact).
+  `tests/test_corpus_interchange.py`: `pycmx` accepts each EDL, the vendored
+  FCPXML reader reads each FCPXML back as clips whose media resolves, the
+  emitter's own validators are clean on each pair, and **each** `<asset-clip>`
+  carries the same offset/start/duration as its EDL event to within 1.5 frames
+  (worst measured deviation across the whole corpus: exactly 1.000 frame, the
+  expected grid-snapping artefact).
 - Each format is also compared against the ground truth of what the render
   actually kept, interval by interval and in order, by `tools/nle_check.py` —
   all **44 retained intervals across the 27 clips**, in both formats, with the
@@ -210,7 +222,12 @@ Said, because it is verifiable in the repo:
 - That DaVinci Resolve, Premiere Pro, Final Cut Pro, or any other NLE imports,
   relinks, or plays these timelines. Nothing in this repository claims an NLE
   has ever opened a SelekyT artifact. Where earlier docs implied otherwise, they
-  have been corrected.
+  have been corrected. A third-party reader that resolves every clip's media is
+  *not* an NLE import, and the two are not exchanged for each other anywhere on
+  this page: the reader proves the document is machine-readable by code that
+  does not share this codebase and that its media references point at real
+  files. It says nothing about an NLE's import path, its relink dialog, or its
+  playback.
 - That the exported cut matches what an editor intended — that is a human
   editorial question, not an interchange question, and it belongs in
   `docs/HUMAN_EDITORIAL_EVALUATION.md`.

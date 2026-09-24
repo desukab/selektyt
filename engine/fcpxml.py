@@ -7,13 +7,21 @@ permission — see docs/autocut-provenance.md) so a cutlist rendered on either
 side of the hybrid produces the same XML.
 
 Verification status: the EDL half of each pair is structurally validated by
-`pycmx`, an independent CMX 3600 reader, and both halves are checked against the
+`pycmx`, an independent CMX 3600 reader, and the FCPXML half by the
+OpenTimelineIO FCPXML adapter, vendored under
+`third_party/otio_fcpxml_adapter/` (Apache-2.0; see
+`third_party/PROVENANCE.md`). Both halves are also checked against the
 rendered media (see tools/nle_check.py, docs/NLE_COMPATIBILITY.md). The FCPXML
-half has no independent reader: the check on it is this project's own
-ElementTree parse against a vocabulary list, which is a self-consistency check
-and is labelled as one. No NLE has yet imported one of these documents in this
+reader is chosen for one property: it resolves an asset's media through
+`<media-rep kind="original-media">`, which is where this emitter writes `src`;
+the OpenTimelineIO project's own copy of the same adapter reads `src` off the
+`<asset>` element instead, parses the whole spine, and returns every clip
+unlinked — a false positive in the exact shape a validator must not produce, so
+the check is not "it parsed" but "every clip came back as an ExternalReference
+with a target URL". No NLE has yet imported one of these documents in this
 project's history — do not state that FCP, Resolve or Premiere accept these
-files until that import has actually been observed.
+files until that import has actually been observed. An independent reader is
+not an NLE import and the two are not exchanged for each other.
 
 The critical detail, carried over from AutoCut: DaVinci binds an asset to its
 source media by THREE checks (path, source-media start TC, frame rate

@@ -214,45 +214,71 @@ Cut Pro. Record the NLE, the exact version, and the result for each in this
 file, and move the line from "RESEARCHED" to "VERIFIED" — or delete the claim.
 
 Until then, every external statement about NLE compatibility should say what
-this page says: the EDL half structurally validated by an independent reader,
+this page says: both halves structurally validated by independent readers,
 both halves duration-verified against the render, **never opened in an NLE**.
 
-The FCPXML half is not validated by an independent reader for its *spine*, and
-the reason is not that nobody looked. Two candidates were checked and both are
-the wrong format despite the name: PyPI's `fcpxml` 0.0.2 and GitHub's
-`tin2tin/fcpxml_import` both parse Final Cut Pro 7 *xmeml* — they look for
-`clipitem`, `track`, `file/pathurl` and `rate/timebase`, none of which appears
-in any of the 27 committed documents. Run against an FCPXML 1.11 file, the
-Blender add-on matches the `sequence` tag, falls back to its defaults, finds
-zero tracks, and then reports *"FCPXML import successful."* That is a false
-positive rather than a validation, so it is not counted as one. Apple's
-published DTD for FCPXML 1.11 was the remaining independent grammar, and the
-two public URLs that carried it now return HTML and 404.
+The FCPXML half is now read by an independent reader, and the reader that
+finally worked is worth naming because it is not the obvious one. The
+OpenTimelineIO project's own `otio-fcpx-xml-adapter` was tried first and is
+wrong for SelekyT in a way that would have produced a *false pass*: it reads
+an asset's `src` off the `<asset>` element, and SelekyT writes `src` on the
+`<media-rep kind="original-media">` child, as FCPXML 1.9+ requires. That
+reader parses the whole spine, resolves no media, and returns every clip as a
+`MissingReference` — a document that reads back as a clean timeline with every
+cut offline. The reader that does work is the same adapter's maintained fork at
+`latenitefilms/otio-fcpx-xml-adapter`, branch `fcpxml-v1-14-support` (upstream
+PR #7 by the adapter's maintainer, not an arbitrary fork), which resolves
+media through the `media-rep`. It is Apache-2.0, has no PyPI release, and is
+vendored verbatim under `third_party/otio_fcpxml_adapter/` with its origin,
+commit and licence recorded in `third_party/PROVENANCE.md`.
 
-What *is* independently read on the FCPXML half is its resource block, which is
-the part an NLE argues with before it ever looks at a cut: `ffprobe` reads the
-actual container and its duration and frame rate are compared against every
-committed `<asset>` and `<format>` for the two sources whose media happen to be
-on this host (`tests/test_fcpxml_vs_real_container.py`). That is the check
+Two other candidates were checked and both are the wrong format despite the
+name: PyPI's `fcpxml` 0.0.2 and GitHub's `tin2tin/fcpxml_import` both parse
+Final Cut Pro 7 *xmeml* — they look for `clipitem`, `track`, `file/pathurl` and
+`rate/timebase`, none of which appears in any of the 27 committed documents.
+Run against an FCPXML 1.11 file, the Blender add-on matches the `sequence`
+tag, falls back to its defaults, finds zero tracks, and then reports *"FCPXML
+import successful."* That is a false positive rather than a validation, so it
+is not counted as one. Apple's published DTD for FCPXML 1.11 was the remaining
+independent grammar, and the two public URLs that carried it now return HTML
+and 404; the DTD also carries no redistribution grant, so it could not have
+shipped as a check that runs on every install.
+
+Because the media-rep failure mode is the one a validator must not silently
+produce, the check is deliberately stronger than "the reader accepted the
+document". A document that parses to zero clips fails. So does any clip whose
+media reference is not an `ExternalReference` with a non-empty target URL,
+which is exactly what a media-rep-blind reader would have left behind while
+still reporting a successful parse. All 27 committed documents come back with
+every clip linked.
+
+What remains independently read only on the FCPXML half is its resource block,
+which is the part an NLE argues with before it ever looks at a cut: `ffprobe`
+reads the actual container and its duration and frame rate are compared against
+every committed `<asset>` and `<format>` for the two sources whose media happen
+to be on this host (`tests/test_fcpxml_vs_real_container.py`). That is the check
 `nle_check.py` cannot make, because it measures clip extent against the
 duration the document itself declares — a writer that derives its asset
 duration from its own clips agrees with itself and disagrees with the media,
 and nothing in that loop notices. `ffprobe` is not SelekyT's reader, so the
-disagreement cannot hide there. This covers the resource block and nothing
-else: the spine, the cut positions, and everything an editor would call the
-edit remain self-checked.
+disagreement cannot hide there. This covers the resource block only; the
+reader above covers the spine, but neither of them is an NLE.
 
 ---
 
 ## Reproducing
 
 ```sh
-# The audit. pycmx is an independent CMX 3600 reader, declared as an optional
-# extra (`nle = ["pycmx>=1.5"]` in pyproject.toml) rather than a core
-# dependency, so it does not travel with every install. If it is absent the
-# EDL check FAILS rather than skipping — an unvalidated EDL is not a pass —
-# and the remaining checks still run. Prepending /tmp/nlelibs is optional; it
-# pins a reader outside the venv when you want the isolation explicit.
+# The audit. pycmx is an independent CMX 3600 reader and the vendored
+# otio_fcpxml_adapter is an independent FCPXML reader; both are declared as
+# the optional extra `nle` in pyproject.toml rather than core dependencies,
+# so they do not travel with every install (opentimelineio ships compiled
+# C++ extensions, which is why it stays out of the base and Termux install).
+# If either is absent the corresponding check FAILS rather than skipping —
+# an unvalidated EDL or FCPXML is not a pass — and the remaining checks still
+# run. Prepending /tmp/nlelibs is optional; it pins pycmx outside the venv
+# when you want the isolation explicit. The FCPXML reader is vendored, so it
+# needs no such pin; it is in the tree at third_party/otio_fcpxml_adapter/.
 PYTHONPATH=/tmp/nlelibs:tools .venv/bin/python tools/nle_check.py \
     corpus/nasa360-ep5_run/project
 
