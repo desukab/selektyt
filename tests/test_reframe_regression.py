@@ -38,6 +38,7 @@ from engine.reframe import (
     plan_crop,
     track_subject_center,
     vertical_crop_width,
+    vertical_reframe_filter,
 )
 from engine.reframe_perception import FaceDetector
 
@@ -902,14 +903,10 @@ def _score_source_space(video: Path, start: float, end: float,
 
 
 def _make_filter(video: Path, start: float, end: float) -> str:
-    from engine import reframe as reframe_mod
-
-    expr = reframe_mod.crop_x_expression(video, start, end)
-    sar_w, sar_h = probe_sar(video)
-    h = _height(video)
-    crop_w = min(vertical_crop_width(h, sar_w, sar_h), _width(video))
-    return (f"crop={crop_w}:{h}:x='{expr}':y=0,"
-            f"scale=min(1080\\,iw):-2:flags=lanczos,setsar=1")
+    # The pipeline's own chain, verbatim — engine.render's vertical branch is
+    # exactly this string. A hand-composed copy here is where the 1080x1918
+    # defect hid, reproducing it in the one test that renders the deliverable.
+    return vertical_reframe_filter(video, start, end)
 
 
 def _width(video: Path) -> int:
@@ -1048,8 +1045,9 @@ class TestRenderedOutputKeepsTheSpeaker:
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
         w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
         h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
-        assert (w, h) == (406, 720), (
-            f"encoded geometry {(w, h)} -- expected the 406x720 crop"
+        assert (w, h) == (406, 722), (
+            f"encoded geometry {(w, h)} -- expected 406x722, the exact 9:16 "
+            f"frame the reframe builds from this 720-high source"
         )
         assert total > 600, f"only {total} frames encoded; the clip is ~884"
 

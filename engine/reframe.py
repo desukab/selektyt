@@ -655,8 +655,14 @@ def vertical_crop_width(height: int, sar_w: int, sar_h: int) -> int:
     units, so the pixel width that *displays* as 9:16 is
     ``h * 9/16 * sar_h / sar_w`` -- wider in pixels than the square-pixel
     answer when the pixels themselves are wide. Rounding to even keeps the
-    scaler and libx264 happy; the ratio is within a frame of exact either way,
-    which is as close as an integer pixel grid gets.
+    scaler and libx264 happy.
+
+    The rounding is NOT where the delivered ratio is settled: an integer pixel
+    grid cannot hold 9:16 exactly (2160 px is 1215 wide at 9:16, which has to
+    become the even 1216, and 1216x2160 is 0.08% off). That residue is absorbed
+    later by :func:`vertical_scale_filter`, which scales the crop onto a frame
+    whose *display* ratio is 9:16 by construction, so the crop staying a
+    fraction wide does not reach the deliverable.
     """
     width = height * 9 * sar_h / (16 * sar_w)
     return max(2, int(width / 2 + 0.5) * 2)
@@ -763,6 +769,57 @@ def vertical_crop_filter(video: Path, start: float, end: float) -> str:
     sar_w, sar_h = probe_sample_aspect(video)
     crop_w = min(vertical_crop_width(h, sar_w, sar_h), w)
     return f"crop={crop_w}:{h}:x='{_x_expression(w, crop_w, points)}':y=0"
+
+
+def vertical_scale_filter(crop_w: int, sar_w: int, sar_h: int,
+                          max_width: int = 1080) -> str:
+    """The ffmpeg ``scale`` that lands the 9:16 crop on a frame measuring 9:16.
+
+    The defect this replaces: the crop is cut at the pixel width that *displays*
+    as 9:16, but the integer grid forces it a fraction wide (2160 px is 1215 at
+    9:16 and has to round to the even 1216). Scaling that crop by width with an
+    even height — ``scale=min(1080,iw):-2`` — preserves the fraction instead of
+    correcting it, and the residue is amplified by the scale: a 1216x2160 crop
+    became a **1080x1918** deliverable, not 1080x1920. Found by rendering a
+    3840x2160 source and measuring the short; it is off at every source height
+    (a 1280x720 source ships 406x720, which is 0.25% from 9:16) and QA did not
+    ring because its display-aspect tolerance is 1%.
+
+    Deriving the height explicitly instead — as ``landscape_filter`` already
+    does for 16:9 — puts the residue into a sub-0.1% squeeze the eye cannot see
+    and delivers a frame that measures exactly 9:16, which is the contract the
+    render advertises.
+
+    The height is derived in *display* space through the source's sample aspect:
+    a 9:16 pixel count is only 9:16 for square pixels, so an anamorphic source's
+    deliverable keeps its SAR and the math accounts for it. Never enlarge: the
+    width is capped at the crop's own width, not just at 1080.
+    """
+    frame_w = _even(min(crop_w, max_width))
+    frame_h = _even(frame_w * sar_w * 16 / (9 * sar_h))
+    return f"scale={frame_w}:{frame_h}:flags=lanczos"
+
+
+def vertical_reframe_filter(video: Path, start: float, end: float) -> str:
+    """The complete 9:16 reframe for one interval: crop, then the scale that
+    lands it on an exact frame.
+
+    Owns both stages for the same reason ``vertical_crop_filter`` owns the crop
+    width and the tracked x together: the scale's target height is a function
+    of the crop width and the source's sample aspect, and recomposing it at the
+    call site is a second place to get one geometry wrong. Callers that need to
+    compose their own chain (the benchmark, scoring an old trajectory against a
+    new one) still have ``vertical_crop_filter`` and ``crop_x_expression``.
+    """
+    w, h, points = _probe_and_track(video, start, end)
+    if not w or not h:
+        w, h = 1920, 1080
+    sar_w, sar_h = probe_sample_aspect(video)
+    crop_w = min(vertical_crop_width(h, sar_w, sar_h), w)
+    return (
+        f"crop={crop_w}:{h}:x='{_x_expression(w, crop_w, points)}':y=0,"
+        f"{vertical_scale_filter(crop_w, sar_w, sar_h)}"
+    )
 
 
 def crop_x_expression(video: Path, start: float, end: float) -> str:

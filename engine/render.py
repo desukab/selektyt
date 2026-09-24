@@ -6,7 +6,7 @@ import subprocess
 import unicodedata
 from pathlib import Path
 from models.core import Candidate
-from engine.reframe import landscape_filter, vertical_crop_filter
+from engine.reframe import landscape_filter, vertical_reframe_filter
 from engine.edit_plan import retention_intervals, join_words
 from engine.captions import ass_for_candidate
 
@@ -175,15 +175,12 @@ def _has_audio(path: Path) -> bool:
 def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | None, vertical: bool, fps: float) -> None:
     vf: list[str] = []
     if vertical:
-        # Cap at 1080 wide rather than always scaling to it: upscaling a
-        # sub-1080p source adds no detail, costs encode time and softens the
-        # image. The crop already produced an exact 9:16 frame in display
-        # space, so scaling by width with an even height keeps the aspect
-        # without enlarging.
-        vf += [
-            vertical_crop_filter(source, start, end),
-            r"scale=min(1080\,iw):-2:flags=lanczos",
-        ]
+        # The complete 9:16 reframe: a tracked crop, then a scale onto a frame
+        # whose display ratio is 9:16 by construction. Scaling by width with an
+        # even height instead leaves the crop's integer-rounding residue in the
+        # deliverable, and a 3840x2160 source shipped 1080x1918 that way --
+        # 0.1% from the ratio the package advertises.
+        vf.append(vertical_reframe_filter(source, start, end))
     else:
         # Landscape fits the whole source into an exact 16:9 frame, padding
         # rather than cropping: a 4:3 source becomes a 640x486 square-pixel

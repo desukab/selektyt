@@ -584,7 +584,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="also render the vertical output and score the deliverable")
     ap.add_argument("--filter", default=None,
                     help="filtergraph for --render; default is the current "
-                         "vertical_crop_filter")
+                         "vertical_reframe_filter")
     ap.add_argument("--dump-frames", type=Path, default=None,
                     help="write sampled rendered frames here for visual inspection")
     ap.add_argument("--max-samples", type=int, default=180)
@@ -592,7 +592,7 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     from engine.reframe import (track_subject_center, vertical_crop_width,
-                                crop_x_expression)
+                                crop_x_expression, vertical_reframe_filter)
     from providers.ffmpeg import probe_sample_aspect
 
     sar_w, sar_h = probe_sample_aspect(args.video)
@@ -627,10 +627,13 @@ def main(argv: list[str] | None = None) -> int:
         max_samples=args.max_samples)
 
     if args.render:
+        # The default is the pipeline's own chain, not a hand-composed copy of
+        # it: a copy here would silently keep shipping 1080x1918 after
+        # engine.render moved to vertical_reframe_filter.
         filt = args.filter
         if filt is None:
-            filt = (f"crop={crop_w}:{h}:x='{crop_x_expression(args.video, args.start, args.end)}'"
-                    f":y=0,scale=min(1080\\,iw):-2:flags=lanczos,setsar=1")
+            filt = vertical_reframe_filter(args.video, args.start, args.end) \
+                + ",setsar=1"
         clip = args.video.parent / f".reframe_bench_{args.start:.0f}.mp4"
         t0 = time.perf_counter()
         render_vertical(args.video, args.start, args.end, filt, clip)

@@ -193,7 +193,8 @@ def test_no_usable_backend_still_reframes(tmp_path, monkeypatch):
 # ── anamorphic sources: the 9:16 crop must be 9:16 in *display* space ──
 
 
-def _anamorphic_video(out: Path, sar: str = "8/9", size: str = "720x486") -> Path:
+def _anamorphic_video(out: Path, sar: str = "8/9", size: str = "720x486",
+                      duration: str = "2") -> Path:
     """A real NTSC-shaped source: 720x486 pixels at SAR 8:9, so DAR 320:243.
 
     Built with ffmpeg rather than cv2 because OpenCV cannot write a sample
@@ -207,7 +208,7 @@ def _anamorphic_video(out: Path, sar: str = "8/9", size: str = "720x486") -> Pat
 
     subprocess.run(
         ["ffmpeg", "-y", "-f", "lavfi",
-         f"-i", f"testsrc=size={size}:rate=12:duration=2",
+         f"-i", f"testsrc=size={size}:rate=12:duration={duration}",
          "-vf", f"setsar={sar}", "-c:v", "libx264", "-preset", "veryfast",
          "-crf", "28", "-pix_fmt", "yuv420p", str(out)],
         check=True, capture_output=True,
@@ -250,33 +251,37 @@ def test_an_anamorphic_source_renders_to_a_genuinely_9_16_frame(tmp_path):
     """The defect this pins: a real 720x486 SAR 8:9 source passed through the
     vertical filter came out 272x486 SAR 8:9, which displays at 1088:2187 —
     nearer 1:2 than 9:16. Content was never distorted; the ratio was simply
-    wrong, because a 9:16 *pixel* count is only 9:16 for square pixels."""
-    from engine.reframe import vertical_crop_filter
+    wrong, because a 9:16 *pixel* count is only 9:16 for square pixels.
+
+    This burns the shipped chain — :func:`vertical_reframe_filter` — rather than
+    a recomposition of it, so it moves when the reframe moves.
+    """
+    from engine.reframe import vertical_crop_filter, vertical_reframe_filter
 
     video = _anamorphic_video(tmp_path / "ntsc.mp4")
-    filt = vertical_crop_filter(video, start=0.0, end=1.5)
+    filt = vertical_reframe_filter(video, start=0.0, end=1.5)
     assert filt.startswith("crop=308:486:x='"), filt
+    # the scale stage carries the SAR into the target height: the frame is
+    # 308x486 *pixels*, which is only 9:16 because it keeps SAR 8:9
+    assert "scale=308:486" in filt, filt
 
     out = tmp_path / "vertical.mp4"
-    subprocess.run(
-        ["ffmpeg", "-y", "-i", str(video), "-t", "1",
-         "-vf", f"{filt},scale=min(1080\\,iw):-2:flags=lanczos",
-         "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
-         "-pix_fmt", "yuv420p", str(out)],
-        check=True, capture_output=True,
+    dar, w, h = _rendered_dar(video, filt, out)
+    assert (w, h) == (308, 486), (
+        f"the anamorphic crop is already sub-1080, so it must not be "
+        f"rescaled, got {w}x{h}"
     )
-    w, h, sar_w, sar_h = _probe_geometry(out)
-    dar = w * sar_w / (h * sar_h)
     assert abs(dar - 9 / 16) < 0.005, (
-        f"the vertical output must display at 9:16, got {w}x{h} SAR "
-        f"{sar_w}:{sar_h} -> DAR {dar:.4f}"
+        f"the vertical output must display at 9:16, got {w}x{h} -> DAR {dar:.4f}"
     )
 
 
-def _rendered_dar(video: Path, filt: str, out: Path) -> tuple[float, int, int]:
+def _rendered_dar(video: Path, filt: str, out: Path,
+                  extra: list[str] | None = None) -> tuple[float, int, int]:
     """Run one filter and report the output's display aspect and pixel size."""
     subprocess.run(
-        ["ffmpeg", "-y", "-i", str(video), "-t", "1", "-vf", filt,
+        ["ffmpeg", "-y", "-i", str(video), *(extra if extra is not None else ["-t", "1"]),
+         "-vf", filt,
          "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
          "-pix_fmt", "yuv420p", str(out)],
         check=True, capture_output=True,
@@ -297,6 +302,38 @@ def test_an_anamorphic_source_renders_to_a_genuinely_16_9_frame(tmp_path):
     assert abs(dar - 16 / 9) < 0.005, (
         f"the landscape output must display at 16:9, got {w}x{h} -> DAR {dar:.4f}"
     )
+
+
+def test_a_4k_source_renders_to_exactly_1080x1920(tmp_path):
+    """The defect this file exists for, measured on the deliverable: a 3840x2160
+    source through the vertical reframe used to ship **1080x1918**. The crop at
+    that height is 1215 px, which the even constraint rounds to 1216, and
+    ``scale=min(1080,iw):-2`` preserved that 0.08% instead of correcting it —
+    amplified by the scale to a 0.1% deficit in a frame the package advertises
+    as 9:16. QA's display-aspect tolerance is 1%, so nothing rang.
+
+    A real 4K burn takes minutes on four cores, so this builds the smallest
+    source that carries the property: a 2160-high frame whose crop hits the
+    same 1216. The arithmetic does not care about the width.
+    """
+    from engine.reframe import vertical_reframe_filter
+
+    video = _anamorphic_video(tmp_path / "uhd.mp4", sar="1:1",
+                              size="1440x2160", duration="1")
+    filt = vertical_reframe_filter(video, start=0.0, end=0.9)
+    assert filt.startswith("crop=1216:2160:x='"), filt
+    assert "scale=1080:1920" in filt, (
+        f"the scale must land the 1216-wide crop on an exact 9:16 frame; "
+        f"got {filt}"
+    )
+
+    out = tmp_path / "vertical.mp4"
+    dar, w, h = _rendered_dar(video, filt, out)
+    assert (w, h) == (1080, 1920), (
+        f"a 2160-high source must deliver 1080x1920, got {w}x{h} — the "
+        f"1080x1918 defect is back"
+    )
+    assert abs(dar - 9 / 16) < 0.001
 
 
 def test_a_16_9_source_is_left_alone(tmp_path):
@@ -345,24 +382,60 @@ def test_a_source_wider_than_16_9_is_letterboxed_not_cropped(tmp_path):
 def test_a_square_pixel_source_is_unchanged_by_the_aspect_correction(tmp_path):
     """The fix has to be a no-op for the common case: a square-pixel source
     must still render to 9:16 with its pixels undistorted."""
-    from engine.reframe import vertical_crop_filter
+    from engine.reframe import vertical_reframe_filter
 
     video = _anamorphic_video(tmp_path / "square_px.mp4", sar="1:1",
                               size="640x480")
-    filt = vertical_crop_filter(video, start=0.0, end=1.5)
-    # 480 * 9/16 = 270 -> rounded to even
+    filt = vertical_reframe_filter(video, start=0.0, end=1.5)
+    # 480 * 9/16 = 270 -> rounded to even, and 270 * 16/9 = 480 exactly
     assert filt.startswith("crop=270:480:x='"), filt
+    assert "scale=270:480" in filt, filt
 
     out = tmp_path / "vertical.mp4"
-    subprocess.run(
-        ["ffmpeg", "-y", "-i", str(video), "-t", "1", "-vf",
-         f"{filt},scale=min(1080\\,iw):-2:flags=lanczos",
-         "-c:v", "libx264", "-preset", "veryfast", "-crf", "28",
-         "-pix_fmt", "yuv420p", str(out)],
-        check=True, capture_output=True,
-    )
-    w, h, sar_w, sar_h = _probe_geometry(out)
-    assert abs(w * sar_w / (h * sar_h) - 9 / 16) < 0.005
+    dar, w, h = _rendered_dar(video, filt, out)
+    assert (w, h) == (270, 480), f"the crop is exact here; got {w}x{h}"
+    assert abs(dar - 9 / 16) < 0.005
+
+
+def test_the_vertical_scale_lands_on_an_exact_9_16_display_ratio():
+    """The unit form of the defect: the scale's target height is derived in
+    *display* space, so the delivered frame measures 9:16 whatever the source's
+    sample aspect — square pixels, NTSC's wide ones, and the 4K height that
+    exposed the bug, where the crop is forced a fraction wide by the even
+    constraint and the scale has to absorb that residue.
+    """
+    from engine.reframe import vertical_scale_filter
+
+    cases = [
+        # (crop_w, sar_w, sar_h, expected frame)
+        (270, 1, 1, (270, 480)),    # 480 * 9/16 is exact
+        (274, 1, 1, (274, 488)),    # 274 * 16/9 = 487.1 -> 488
+        (308, 8, 9, (308, 486)),    # NTSC: the SAR cancels the crop's own width
+        (406, 1, 1, (406, 722)),    # 720-high source: 406 * 16/9 = 721.8 -> 722
+        (1216, 1, 1, (1080, 1920)), # 4K: the crop rounds to 1216, the frame is exact
+        (720, 1, 1, (720, 1280)),   # portrait passes through untouched
+    ]
+    for crop_w, sar_w, sar_h, expect in cases:
+        filt = vertical_scale_filter(crop_w, sar_w, sar_h)
+        got = tuple(int(p) for p in filt.removeprefix("scale=").split(":")[:2])
+        assert got == expect, (
+            f"crop {crop_w} SAR {sar_w}:{sar_h} -> {filt}, expected {expect}"
+        )
+        dar = got[0] * sar_w / (got[1] * sar_h)
+        assert abs(dar - 9 / 16) < 0.002, (
+            f"crop {crop_w} SAR {sar_w}:{sar_h} -> {got} displays at {dar:.4f}, "
+            f"not 9:16 (0.5625); the residue must stay under 0.4%"
+        )
+
+
+def test_the_vertical_scale_does_not_widen_a_sub_1080_crop():
+    """``min(1080, iw)`` was there to stop upscaling; deriving the width in
+    Python has to keep that property, or a 720-wide source ships blown up to
+    1080 and softer than its source for the extra encode time."""
+    from engine.reframe import vertical_scale_filter
+
+    assert vertical_scale_filter(406, 1, 1).startswith("scale=406:")
+    assert vertical_scale_filter(1216, 1, 1).startswith("scale=1080:")
 
 
 def test_a_source_already_narrower_than_9_16_is_not_dropped(tmp_path):
