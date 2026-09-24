@@ -16,7 +16,7 @@ systematically picks the wrong place, and nothing in the pipeline reported it.
 
 ``cv2.FaceDetectorYN`` has been compiled in since OpenCV 4.5 and survives 5.0,
 so it is the primary on every supported version. It needs an ONNX weight file,
-which is vendored (232 KB, Apache License 2.0, from ``opencv/opencv_zoo``) so a
+which is vendored (232 KB, MIT-licensed by Shiqi Yu, from ``opencv/opencv_zoo``) so a
 local-first tool does not need the network at render time; a user-placed copy in
 ``~/.selektyt/models`` overrides the vendored one. If the weights are missing or
 the symbol is absent, the chain degrades to Haar on the OpenCV 4.x hosts that

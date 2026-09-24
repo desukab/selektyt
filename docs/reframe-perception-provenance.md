@@ -11,10 +11,22 @@ the perception layer can be replaced or re-licensed later without archaeology.
 
 - **Source:** [`opencv/opencv_zoo`](https://github.com/opencv/opencv_zoo),
   `models/face_detection_yunet`.
-- **Licence:** Apache License 2.0. The full text is committed alongside the
-  weights as `engine/models/face_detection_yunet.LICENSE`. Apache-2.0 is
-  permissive and compatible with this project; the notice is preserved as the
-  licence requires.
+- **Licence:** MIT, `Copyright (c) 2020 Shiqi Yu <shiqi.yu@gmail.com>`. The full
+  text is committed alongside the weights as
+  `engine/models/face_detection_yunet.LICENSE`, copied from the upstream
+  `models/face_detection_yunet/LICENSE` so the notice travels with the weights
+  as MIT requires. MIT is permissive and compatible with this project.
+
+  *Correction:* this record previously said Apache-2.0, and so did the
+  docstring in `engine/reframe_perception.py` and the vendored licence file,
+  which held unfilled Apache-2.0 boilerplate (`Copyright [yyyy] [name of
+  copyright owner]`). Neither claim was checked against upstream. The file
+  `opencv/opencv_zoo` actually ships at that path **is** MIT. The mistake was
+  harmless in one direction — Apache-2.0 was being *asserted* where MIT was
+  granted, so nothing was ever distributed under terms the project did not
+  have — but an attribution record that disagrees with upstream is exactly
+  the failure mode this document exists to prevent, and it is now fixed at all
+  three sites. The weights themselves are unchanged.
 - **Provenance:** the weights were obtained from the opencv_zoo repository, not
   regenerated, and are unmodified — the sha256 above is the check against
   tampering or accidental truncation.
@@ -76,7 +88,7 @@ grounds, either of which alone would be sufficient:
    distributed as a desktop application; the interaction between AGPL's
    network-use clause and a shipped application that a user runs on their own
    machine is genuinely uncertain, and resolving it would need counsel. YuNet is
-   Apache-2.0 and needs no such resolution.
+   MIT and needs no such resolution.
 2. **Footprint versus value.** The failure being fixed was not an accuracy
    failure. A 232 KB detector that opens in OpenCV already takes the rendered
    face-presence measurement from 0.053 to 1.000 on the worst corpus clip. The
@@ -101,7 +113,7 @@ right tool and the hysteresis is not.
 
 ## Licensing position of this layer
 
-Nothing in the reframe stack is viral. The perception weights are Apache-2.0, the
+Nothing in the reframe stack is viral. The perception weights are MIT-licensed, the
 inference is OpenCV's, and the planner, tracker, scorer and trajectory code is
 original to this repository. If the perception layer is ever swapped for a
 stronger detector, `engine/reframe_perception.py` is the only file that has to
