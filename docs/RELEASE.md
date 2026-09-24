@@ -341,11 +341,16 @@ code that could not be executed here.
    2057.5 MiB uncompressed / 1525.2 MiB in the package, across 9550 files. NSIS
    LZMA over that is slow — the silent install alone takes 69 seconds on the
    runner — and the artifact is 1.5 GB to download. The single biggest lever is
-   not ffmpeg or the interpreter: the whisper `small` weights are staged
+   not ffmpeg or the interpreter: the whisper `small` weights were staged
    **three times byte-for-byte** (1383 MiB of the 2057.5 MiB total; compressed,
-   1275 MiB of the 1525.2 MiB package), which is a
-   `stage-windows.sh` layout defect, not a packaging one. Fixing it needs a
-   Windows run to confirm the interpreter still resolves the weights.
+   1275 MiB of the 1525.2 MiB package), a `stage-windows.sh` layout defect
+   rather than a packaging one. **Fixed** — `stage_model()` collapses the cache
+   to one real file per snapshot entry, verified by asking the installed
+   `huggingface_hub` to resolve a collapsed cache offline on this host (see
+   `tests/test_collapse_hub_cache.py`). The size win is predicted, not yet
+   measured: no Windows run has staged through the new step, so a real
+   `build-windows.yml` run should be watched for the payload to fall to
+   roughly 1135 MiB uncompressed.
 6. **The GUI has now rendered — but on Linux under xvfb, never on Windows.**
    This is the item that moved this session, and it moved in a way that
    strengthens the case for the rest of the list: running the window is what
@@ -511,10 +516,13 @@ build succeeded, but built is still not installed.
    `SelekyT.exe` and all six `Assets\*.png` are present, and the packed manifest
    still says `Executable="SelekyT.exe"` — the committed copy and the installed
    payload agreed, so no correction fired. Identity matches `tauri.conf.json`
-   on all four fields. One real defect found and *not* fixed: the whisper
-   `small` weights are in the package three times byte-for-byte, 1383 MiB of a
-   2057.5 MiB payload. That is a staging-layout problem, and it needs a Windows
-   run to fix safely.
+   on all four fields. One real defect found in the payload: the whisper
+   `small` weights were in the package three times byte-for-byte, 1383 MiB of a
+   2057.5 MiB payload — a staging-layout problem, since fixed in
+   `stage_model()` by collapsing the cache to one real file per snapshot entry.
+   The fix is verified against the installed `huggingface_hub` on this host
+   (offline resolution of a collapsed cache), but the *size* effect is not
+   measured until a Windows run stages through it.
 
    This host has no MakeAppx, no Windows SDK and no PowerShell, and that is
    the whole point of the history above: five runs, four defects and then a

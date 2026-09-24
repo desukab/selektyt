@@ -74,6 +74,10 @@ jobs:
         # pyyaml is the same shape for the release workflows:
         # tests/test_desktop_packaging.py reads build-windows.yml to pin the
         # signed/unsigned artifact label, and errors at setup without it.
+        # huggingface_hub, also in the dev extra, is what
+        # tests/test_collapse_hub_cache.py asks to resolve a collapsed staged
+        # cache offline — the check only means something against the real
+        # library, so it stays installed here rather than skipping.
         run: pip install -e ".[dev,llm,nle]"
       - name: Node (for the web shell harness tests)
         run: node --version

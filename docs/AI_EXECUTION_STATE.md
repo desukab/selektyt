@@ -475,15 +475,32 @@ length from the header. Separately, the signed Azure blob URL behind the
 artifacts API **expires about 10 minutes after issue** — resolve the redirect,
 then finish all reads inside one window.
 
-**One real defect found in the payload and deliberately not fixed:** the
-whisper `small` weights are in the package **three times byte-for-byte**
+**One real defect found in the payload, and FIXED on this host:** the whisper
+`small` weights were in the package **three times byte-for-byte**
 (crc32 `81093b67`, 483546902 bytes each) — the snapshot `model.bin`, the repo
 blob, and a `models/hub/blobs/42/...` copy. 1383 MiB of a 2057.5 MiB payload,
-67%, is one file; compressed, the three copies are 1275 MiB of the package's
-1525.2 MiB, 84%. This is a `stage-windows.sh` staging-layout
-question, not a manifest or MakeAppx one, and pruning it needs a Windows run to
-confirm the interpreter still resolves the weights — which this host cannot
-provide. It is the single highest-value size win available.
+67%, was one file; compressed, the three copies were 1275 MiB of the package's
+1525.2 MiB, 84%. A `stage-windows.sh` staging-layout question, not a manifest or
+MakeAppx one.
+
+`stage_model()` now runs `apps/desktop/collapse_hub_cache.py` after staging, on
+every invocation and *outside* the reuse guard that protects the download. The
+step materialises each snapshot entry as a real file and prunes any blob whose
+sha256 matches a shipped file — content-driven, because the number of copies
+depends on the runner's symlink privilege (symlinks on POSIX, byte copies where
+`_create_symlink` falls back to `shutil.copyfile`). Verified on this host in
+both layouts by asking the installed `huggingface_hub` to resolve the collapsed
+cache offline: `tests/test_collapse_hub_cache.py` (7 tests) builds both layouts,
+checks resolution, idempotence, and that a weight-sized blob which is not a copy
+of any shipped file fails the build. Writing that test found a genuine gap in
+the step: a blob whose *size* matched a shipped file but whose *content* did not
+fell through the prune and would have been silently shipped — so the hard error
+only ever fired on a size mismatch. It now fires on a content mismatch at
+weight scale.
+
+Still UNVERIFIED: the size win is predicted (~2057.5 → ~1135 MiB uncompressed)
+and not measured, because no Windows run has staged through the new step. That
+is the next thing a real `build-windows.yml` run settles.
 
 **What remains UNVERIFIED, and this is now the whole remaining gap:**
 everything *after* the pack. The MSIX has never been installed, the app has
@@ -1908,14 +1925,19 @@ selections).
      an Azure Trusted Signing cert makes the package install without developer
      mode, but SmartScreen reputation still has to be earned, and this is a
      release/distribution problem to state plainly, not a bypass to document.
-   - **New, found while verifying the green artifact:** the whisper `small`
-     weights are staged into the payload **three times byte-for-byte** — 1383
-     MiB of a 2057.5 MiB package is one 461 MiB file, and compressed the three
-     copies are 1275 MiB of the 1525.2 MiB package. Fixing this in
-     `stage-windows.sh` is the largest available size win and would cut the
-     artifact to roughly half, but it must be followed by a Windows run
-     confirming the interpreter still resolves the weights, because
-     `huggingface_hub`'s cache layout is what it is importing from.
+   - **New, found while verifying the green artifact, and FIXED:** the whisper
+     `small` weights were staged into the payload **three times byte-for-byte**
+     — 1383 MiB of a 2057.5 MiB package was one 461 MiB file, and compressed the
+     three copies were 1275 MiB of the 1525.2 MiB package. `stage_model()` now
+     collapses the cache to one real file per snapshot entry
+     (`apps/desktop/collapse_hub_cache.py`, run on every invocation and outside
+     the reuse guard). The mechanism is verified against the installed
+     `huggingface_hub` on this host rather than assumed — see
+     `tests/test_collapse_hub_cache.py` — including that a blob matching a
+     shipped file's size but not its content fails the build, which the first
+     draft of the step missed. What remains is measurement, not correctness: the
+     predicted ~1135 MiB payload needs a Windows run that stages through the new
+     step, and `huggingface_hub`'s cache layout is what it imports from.
 10. **Audit the preserved worktrees for now-merged or superseded work** and
     record the verdict in `docs/agent-worktrees.md`. **DONE** — and it paid off.
     The timeline worktree is confirmed fully superseded (`0328858` on `main`

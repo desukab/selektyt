@@ -306,14 +306,35 @@ artifact zip stores the MSIX with method 0 — so **artifact offsets are MSIX
 offsets plus 42** (30-byte local header + 12-byte name). Every range read before
 that correction came back 42 bytes early and reported all six assets missing.
 
-One real finding from the payload, reported not fixed: the whisper `small`
-weights are in the package **three times byte-for-byte** (crc32 `81093b67`,
-483546902 bytes each) — the snapshot `model.bin`, the repo blob, and a
-`models/hub/blobs/42/...` copy. That is 1383 MiB of a 2057.5 MiB payload, 67%,
-being one file. It is a staging-layout question in `stage-windows.sh`, not a
-manifest or MakeAppx one, and it is deliberately left alone here: pruning it
-needs a Windows run to confirm the interpreter still resolves the weights, and
-this host cannot provide one.
+One real finding from the payload, **fixed and verified on this host**: the
+whisper `small` weights were in the package **three times byte-for-byte**
+(crc32 `81093b67`, 483546902 bytes each) — the snapshot `model.bin`, the repo
+blob, and a `models/hub/blobs/42/...` copy. That was 1383 MiB of a 2057.5 MiB
+payload, 67%, being one file. It was a staging-layout question in
+`stage-windows.sh`, not a manifest or MakeAppx one.
+
+`stage_model()` now runs `apps/desktop/collapse_hub_cache.py` after staging, on
+every invocation — deliberately outside the `[[ -d .../snapshots ]]` guard that
+prevents re-downloading, because a tree staged before the step existed is
+exactly the tree that needs collapsing, and guarding both the same way would
+skip the collapse forever. The step materialises each snapshot entry as a real
+file at its own path, then deletes any blob whose sha256 matches a shipped file.
+Content-driven rather than layout-driven because the number of copies depends on
+the runner's symlink privilege: on POSIX the two hops above the payload are
+symlinks and there is one copy, on a host without the privilege each hop is a
+byte copy and there are three. Idempotent, so a second run reports nothing to do.
+
+Verified without a Windows runner by building the cache in both layouts and
+asking the installed `huggingface_hub` to resolve it offline (`tests/
+test_collapse_hub_cache.py`): resolution returns the snapshot with one real file
+per entry, `refs/` and `trees/` intact, and no re-download. Resolution only ever
+reads the snapshot path — `file_download.py` returns early with "Pointer already
+exists" on both the online and offline path — which is what makes deleting the
+blob safe. The same test found a real gap in the step's own guard: a blob whose
+*size* matches a shipped file but whose *content* does not fell through the
+prune and was silently shipped, so the hard error only ever fired on a size
+mismatch. A weight-sized blob that is not a copy of any shipped file now fails
+the build; metadata-sized leftovers are warned about only.
 
 **What is still not verified:** the package has never been installed or run.
 Schema-valid and structurally consistent is not installable. No Windows machine
@@ -338,8 +359,8 @@ the installer without the ~500 MB weights download (smoke runs).
   `Sidecar::spawn_in`, not by the UI relay), and six tests for
   `selekyt_delete_project` covering each escape route its path validation
   guards.
-- `1287 passed, 13 skipped` across the full Python suite (re-measured
-  2026-09-21, 260.7 s, at the commit this file ships in), including the sidecar
+- `1515 passed, 13 skipped` across the full Python suite (re-measured
+  2026-09-24, 540.8 s, at the commit this file ships in), including the sidecar
   envelope contract, the desktop shell ops (`probe_media`, `read_artifact`,
   `stat_artifact`) and the **20** packaging tests that pin the workflow, the
   signing hook, the MakeAppx architecture selection, the MSIX manifest and the
@@ -386,14 +407,18 @@ could not be executed here, not a verified result.
 5. **Installer size.** Measured, not estimated: the green MSIX payload is
    2057.5 MiB uncompressed across 9550 files (1525.2 MiB compressed in the
    package, 1527.4 MB as the runner reported the artifact). The single largest
-   component is the whisper `small` weights, and they are in the package
-   **three times** — 1383 MiB of the 2057.5 MiB total is one 461 MiB file
-   duplicated, and compressed those three copies are 1275 MiB of the package's
-   1525.2 MiB (see "The Store / sideload path"). Fixing that staging layout is
-   the biggest available size win, and it needs a Windows run to confirm the
-   interpreter still finds the weights afterwards. Under NSIS's 2 GB ceiling,
-   but LZMA over 2 GB is slow and the artifact is big.
-   `SELEKYT_SKIP_MODEL=1` or a `tiny`/`base` model are the levers.
+   component is the whisper `small` weights, which were in the package
+   **three times** — 1383 MiB of the 2057.5 MiB total was one 461 MiB file
+   duplicated, and compressed those three copies were 1275 MiB of the package's
+   1525.2 MiB (see "The Store / sideload path"). **Fixed**: `stage_model()` now
+   collapses the cache to one real file per snapshot entry
+   (`collapse_hub_cache.py`), so a fresh stage should ship one 461 MiB copy and
+   the payload should fall from 2057.5 to roughly 1135 MiB uncompressed, with
+   roughly 460 MiB compressed for the weights instead of 1275. Those figures
+   are *predicted*, not measured — no Windows run has staged through the new
+   step yet, so it needs a real `build-windows.yml` run to confirm. Under
+   NSIS's 2 GB ceiling either way, but LZMA over 2 GB is slow and the artifact
+   is big. `SELEKYT_SKIP_MODEL=1` or a `tiny`/`base` model are the levers.
 6. **MSIX installation and activation.** Largely resolved — see "The Store /
    sideload path" above. `package-msix.ps1` and `AppxManifest.xml` have now run
    end to end on a real runner (run `35555583046`): MakeAppx packed them with

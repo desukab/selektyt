@@ -33,7 +33,12 @@ nle = ["pycmx>=1.5", "opentimelineio>=0.17.0"]
 # CI for a dependency reason. opentimelineio is here for the same reason as
 # pycmx: the corpus interchange sweep importorskips the readers, and a CI that
 # skips them is a CI that never exercised the independent FCPXML parse.
-dev = ["pytest>=8", "pycmx>=1.5", "opentimelineio>=0.17.0", "pyyaml>=6"]
+# huggingface_hub is the library whose cache layout the staged installer ships,
+# and tests/test_collapse_hub_cache.py asks the installed library to resolve a
+# collapsed cache offline — a fixture imitating the format would only ever test
+# the imitation, so this extra keeps that check live in CI instead of skipping.
+dev = ["pytest>=8", "pycmx>=1.5", "opentimelineio>=0.17.0", "pyyaml>=6",
+       "huggingface_hub>=0.23"]
 all = ["faster-whisper>=1.1", "sherpa-onnx>=1.10", "requests>=2.31", "pycmx>=1.5",
        "opentimelineio>=0.17.0"]
 

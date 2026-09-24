@@ -37,10 +37,13 @@
       schema-valid is not installable, and this host has no Windows machine to
       install on. Only a Store submission validates the 720x1080 store logo.
     * Payload note, observed in the green artifact: the whisper `small` weights
-      are in the package three times byte-for-byte (crc32 `81093b67`,
+      were in the package three times byte-for-byte (crc32 `81093b67`,
       483546902 bytes each) — the snapshot file, the repo blob, and a
-      `models/hub/blobs/` copy. That is 922 MiB of a 2058 MiB payload, and it is
-      a staging-layout question, not a manifest one; it is left alone here.
+      `models/hub/blobs/` copy. That was 922 MiB of redundant payload in a
+      2058 MiB package, a staging-layout question rather than a manifest one.
+      Fixed in `stage-windows.sh` (collapse of the cache to one real file per
+      snapshot entry); this manifest carries no weights, so the fix is visible
+      here only as a smaller package on the next green artifact.
 
   How the payload is built: apps/desktop/package-msix.ps1 runs the NSIS
   installer produced by `tauri build` (bundles: nsis) silently into an empty

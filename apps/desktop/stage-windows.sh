@@ -217,23 +217,34 @@ PY
 # ── 3. the faster-whisper weights ────────────────────────────────────────────
 stage_model() {
   local cache="$RES/models/hub"
-  if [[ -d "$cache/$WHISPER_CACHE_DIR" ]]; then
+  if [[ -d "$cache/$WHISPER_CACHE_DIR/snapshots" ]]; then
     log "reusing the staged $WHISPER_REPO snapshot"
-    return 0
-  fi
-  mkdir -p "$cache"
-  if [[ "$SKIP_MODEL" == "1" ]]; then
-    printf '[stage] WARNING: skipping the whisper download (SELEKYT_SKIP_MODEL=1);\n[stage] WARNING: the installer will build but transcription will need the network.\n' >&2
-    return 0
-  fi
-  log "staging $WHISPER_REPO into the huggingface cache layout"
-  HF_HOME="$(WIN "$RES/models")" "$(WIN "$RES/python/python.exe")" - "$WHISPER_REPO" <<'PY' \
-    || die "could not stage the faster-whisper model"
+  else
+    mkdir -p "$cache"
+    if [[ "$SKIP_MODEL" == "1" ]]; then
+      printf '[stage] WARNING: skipping the whisper download (SELEKYT_SKIP_MODEL=1);\n[stage] WARNING: the installer will build but transcription will need the network.\n' >&2
+      return 0
+    fi
+    log "staging $WHISPER_REPO into the huggingface cache layout"
+    HF_HOME="$(WIN "$RES/models")" "$(WIN "$RES/python/python.exe")" - "$WHISPER_REPO" <<'PY' \
+      || die "could not stage the faster-whisper model"
 import sys
 from huggingface_hub import snapshot_download
 
 print(snapshot_download(sys.argv[1]))
 PY
+  fi
+
+  # The hub cache keeps each file at the end of a chain whose last hop holds the
+  # bytes, and on a runner that cannot create symlinks each hop can be a byte
+  # copy. Collapse the chain to one real file per snapshot entry before the
+  # payload is measured and packed, or the installer ships the same weights two
+  # or three times. Idempotent, so it runs on every invocation — including a
+  # reuse of a tree staged before this step existed.
+  "$(WIN "$RES/python/python.exe")" "$SRC_TAURI/../collapse_hub_cache.py" \
+    "$(WIN "$cache")" "$WHISPER_CACHE_DIR" \
+    || die "could not collapse the staged $WHISPER_REPO cache to one copy per file"
+
   local weights
   weights="$(find "$cache/$WHISPER_CACHE_DIR" -name model.bin -print -quit)"
   [[ -n "$weights" && -s "$weights" ]] \
