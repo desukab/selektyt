@@ -95,7 +95,8 @@ transcript and died with "No complete standalone stories passed the
 editorial/context gate" — indistinguishable from an editorial rejection and
 giving the user nothing to act on. The pipeline now fails as soon as the empty
 transcript is in hand, naming the missing speech. Pinned by
-`tests/test_speechless_source.py` (3 tests).
+`tests/test_speechless_source.py` (7 tests), which since this was written also
+grew the four refusal-shape tests described in item 6.
 
 **5. The vertical render was not 9:16 on an anamorphic source.** Found while
 writing this record, by reading back the rendered geometry rather than
@@ -115,19 +116,54 @@ source (0.4975 → fail, 0.5633 → pass), and by four geometry tests in
 `tests/test_reframe.py`. Re-verified on the real source by re-rendering clip 01
 vertically through the fixed path: 308×486 SAR 8:9 → 0.5633.
 
+**6. A transcript with no terminal punctuation was never searched at all.** The
+corpus's Hindi interview is the case: faster-whisper emitted no Devanagari danda,
+no `.` and no `?` anywhere in it, so the candidate scan had no signal that a
+thought had ended. Every whole ASR segment became one "sentence", the
+accumulating span reached 52.76 s, and the scan's relief valve sits at
+`max_sec - 2` = 53.00 s — 0.24 s short, so **no candidate span was ever
+constructed** from 53 s of real speech. The run then reported that no story
+"passed the editorial/context gate", describing a judgement that never ran,
+because nothing existed to be judged. This is a different defect from item 4
+with the same misleading message: item 4 has no transcript, this one has a full
+transcript that the scan could not search. The scan now falls back to closing a
+span at the length and word floors when no terminal mark is available, so the
+source is searched instead of failing structurally. Verified against the actual
+committed transcript by executing `HEAD:engine/editorial.py` alongside the
+working tree: **0 candidates → 6**, and the count was confirmed by
+re-instrumenting every emission point on the pre-fix code, all six reporting the
+valve untriggered. Pinned by three tests in `tests/test_unicode_pipeline.py`
+(the unpunctuated fixture really carries no terminal mark; it still yields
+rankable, guard-passing, script-pure candidates; and punctuating the same
+transcript cannot lose a span the fallback found) and by four in
+`tests/test_speechless_source.py` that pin which of the distinct refusal causes
+a given transcript leads to — nothing was constructed, nothing was long enough,
+or the gate measured low confidence, each with its own message rather than one
+sentence for all three.
+
+The user-visible outcome for that corpus source is **unchanged: it still ships
+no clips.** The scan now finds 6 spans, 5 clear the length and word floors, and
+every one is refused by the guard for low factual confidence — best measured
+0.53 against the 0.75 floor. What changed is that the refusal is now true and
+checkable rather than a structural failure dressed as a verdict; see
+`docs/CORPUS_BENCHMARK_STATUS.md`.
+
 ## Test counts
 
-Full suite: **1034 passed, 12 skipped** (113 s), re-run 2026-09-20. The 12
-skips are none of the
-optional backends — they are all `tests/test_proxy_validation.py` gated on
-the `SELEKYT_PROXY_MEDIA` env var, i.e. opt-in real-media measurements that
-no-op on every run. (An earlier version of this note said the skips were
-sherpa/silero/ollama; that was wrong, and the count has moved 10 → 7 since.)
+Full suite: **1473 passed, 13 skipped** (537 s), re-run 2026-09-24. The 13
+skips are none of the optional backends — they are all
+`tests/test_proxy_validation.py` gated on the `SELEKYT_PROXY_MEDIA` env var,
+i.e. opt-in real-media measurements that no-op on every run. (An earlier
+version of this note said the skips were sherpa/silero/ollama; that was wrong,
+and the count has moved 10 → 12 → 13 as opt-in tests were added.)
 
 New this pass: `tests/test_edl_record_advance.py` (4),
-`tests/test_youtube_download.py` (3), `tests/test_speechless_source.py` (3),
+`tests/test_youtube_download.py` (3), `tests/test_speechless_source.py` (3→7),
 plus 1 new test in `tests/test_server.py`, 4 new tests in
-`tests/test_reframe.py` and 1 in `tests/test_render.py`. Total +16.
+`tests/test_reframe.py`, 1 in `tests/test_render.py`, 3 in
+`tests/test_unicode_pipeline.py` and 6 in `tests/test_web_harness.py` for the
+`/api/upload` route. Total +16 over the 1034 baseline, then +7 and +6 in the
+two sessions since.
 
 ## What remains before this is a production-ready v1
 

@@ -101,6 +101,86 @@ def test_scoring_reason_string_survives_telugu():
     assert REPLACEMENT not in c.reason
 
 
+# ── a transcript with no terminal punctuation ──
+#
+# The Telugu fixture above is fully punctuated, so it proves the multilingual
+# path only for transcripts that carry sentence marks. This section covers the
+# other case: real ASR on Hindi can emit no Devanagari danda at all, which
+# leaves the scan with no signal that a thought ended. The committed corpus
+# shipped exactly that source producing zero candidates, and the user was told
+# no story *passed the editorial gate* — a judgement that never ran, because
+# nothing was ever constructed to be judged.
+
+_DEVANAGARI_RE = re.compile(r"[ऀ-ॿ]")
+
+
+def test_the_unpunctuated_fixture_really_has_no_terminal_mark():
+    transcript = fx.hindi_unpunctuated_transcript()
+    assert transcript, "fixture must produce segments"
+    for s in transcript:
+        assert not re.search(r"[.!?।॥？！]$", s.text.strip()), (
+            f"segment {s.start} carries a terminal mark; the fixture would no "
+            f"longer exercise the unpunctuated path: {s.text[-12:]!r}"
+        )
+        assert _DEVANAGARI_RE.search(s.text), "the script must be Devanagari"
+    # the whole source is shorter than the scan's max_sec - 2 relief valve, so
+    # the valve cannot close a span either — nothing but the fallback can
+    total = transcript[-1].end
+    assert total < 55.0 - 2.0, (
+        f"fixture runs {total:.1f} s and would reach the relief valve, so it "
+        f"would stop testing the punctuation fallback"
+    )
+
+
+def test_an_unpunctuated_transcript_still_yields_rankable_candidates():
+    """The regression: a transcript with no terminal mark must still be
+    searched, and its thoughts must still be ranked and shipped, rather than
+    collapsing to an empty candidate set."""
+    from engine.context_guard import validate
+    from engine.editorial import make_thoughts, rank
+
+    transcript = fx.hindi_unpunctuated_transcript()
+    source_text = _norm(" ".join(s.text for s in transcript))
+
+    thoughts = make_thoughts(transcript)
+    assert thoughts, (
+        "an unpunctuated transcript produced no candidate spans at all — the "
+        "scan searched nothing, and a refusal message about an editorial gate "
+        "would be describing a step that never ran"
+    )
+    for t in thoughts:
+        assert REPLACEMENT not in t.text
+        assert _DEVANAGARI_RE.search(t.text), "Devanagari did not survive the scan"
+        assert _norm(t.text) in source_text
+
+    ranked = rank(thoughts, limit=4)
+    assert ranked, "an eligible unpunctuated source must still produce clips"
+    for c in ranked:
+        ok, why = validate(c)
+        assert ok, f"a clip the pipeline would ship failed the guard: {why}"
+        assert _DEVANAGARI_RE.search(c.text)
+        assert REPLACEMENT not in c.hook and REPLACEMENT not in c.payoff
+
+
+def test_punctuation_is_not_needed_but_is_never_regretted():
+    """The fallback is strictly additive: giving the same transcript terminal
+    marks cannot lose a span the unpunctuated scan already found, so a
+    punctuated source — the common case — is scanned exactly as before."""
+    from engine.editorial import make_thoughts
+
+    unpunctuated = make_thoughts(fx.hindi_unpunctuated_transcript())
+    punctuated = make_thoughts(
+        fx.build_transcript([s + "।" for s in fx.HINDI_STORIES])
+    )
+    assert unpunctuated and punctuated
+
+    by_span = lambda spans: {(round(x.start, 2), round(x.end, 2)) for x in spans}
+    assert by_span(punctuated) <= by_span(unpunctuated), (
+        "punctuating the transcript lost a span the unpunctuated scan had "
+        "found; the fallback must only ever add, never remove"
+    )
+
+
 # ── captions ──
 
 

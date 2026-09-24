@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import shutil
 import sys
 from dataclasses import asdict
@@ -12,7 +13,7 @@ from pathlib import Path
 from providers.atomic import read_json, write_json_atomic
 from providers.audio import peak_dbfs, AudioReadError
 
-from engine.editorial import make_thoughts, rank
+from engine.editorial import make_thoughts, rank, score_candidate
 from engine.captions import ass_for_candidate, srt_for_candidate
 from engine.caption_director import caption_metadata, style_name
 from engine.content_pack import build_content_pack
@@ -272,6 +273,140 @@ def _no_speech_diagnosis(peak: float | None, unreadable: str | None = None) -> s
         "the extracted audio track is digital silence, so a silent or "
         "music-only source has nothing to select; check that the file has an "
         "audio track at all."
+    )
+
+
+def _no_story_diagnosis(
+    thoughts, ranked, gate_results, rejection_reasons,
+) -> str:
+    """The message when nothing was selected, chosen by where the chain stopped.
+
+    "No complete standalone stories passed the editorial/context gate" was
+    written for one case — candidates existed and the gate judged them — and it
+    was returned for every other case too, including ones where no candidate
+    was ever constructed. Those are not the same claim, and a user cannot act
+    on a difference the message hides: a transcript too short to hold a
+    complete thought is a length problem, a low-confidence transcript is a
+    transcription problem an editor can re-run with a bigger model, and a gate
+    rejection is an editorial judgement an editor can challenge. Naming which
+    one happened is what makes the refusal checkable instead of merely
+    confident, the same standard ``_no_speech_diagnosis`` already holds.
+    """
+    # The scan could not build a single span. With the punctuation fallback in
+    # make_thoughts this needs a transcript with no sentences at all, so it is
+    # now the rare case rather than the common one — but it still must not be
+    # reported as a judgement the engine made.
+    if not thoughts:
+        return (
+            "no candidate spans could be built from the transcript at all, so "
+            "nothing was searched and nothing was rejected: selection saw no "
+            "material it could evaluate. A transcript this short, or this "
+            "degenerate, has no complete thought to extract."
+        )
+    # Spans existed but not one survived to a scored candidate. Rank drops a
+    # span in one of two places that mean different things, and only the
+    # survivors of the first are worth reporting a length for: its 8 s / 20 word
+    # floor removes spans that cannot stand alone, and its own gate call removes
+    # ones that can. The gate counts are all zero here, so a message about the
+    # gate would be describing a step that did not happen for these spans.
+    if not ranked:
+        eligible = [
+            t for t in thoughts
+            if 8 <= t.duration <= 55
+            and len(re.findall(r"\w+", t.text, flags=re.UNICODE)) >= 20
+        ]
+        if not eligible:
+            shortest = min(t.duration for t in thoughts)
+            densest = max(len(re.findall(r"\w+", t.text, flags=re.UNICODE)) for t in thoughts)
+            return (
+                f"{len(thoughts)} candidate span(s) were found, but none was long "
+                f"enough and word-dense enough to stand alone as a clip (shortest "
+                f"{shortest:.1f} s against an 8 s floor, most words {densest} "
+                f"against 20). The source has speech, but no complete thought in "
+                f"it is long enough to carry one."
+            )
+        return _refused_while_ranking(eligible)
+    # The case the old message was written for: candidates survived ranking and
+    # were then refused at the final gate. Rank already passed these through
+    # validate once, so reaching here means the two passes disagreed — the gate
+    # is deterministic given a candidate, so in practice this is a patched or
+    # non-deterministic gate, not a transcript property. The dominant reason is
+    # named because it is the one an editor can act on, and a low-confidence
+    # refusal carries the measured number for the same reason a peak level does.
+    dominant = max(rejection_reasons, key=rejection_reasons.get) if rejection_reasons else "unknown"
+    n = len(gate_results)
+    if dominant == "low factual confidence":
+        confs = [c.confidence for c, ok, _r in gate_results if not ok and c.confidence is not None]
+        measured = f" measured {min(confs):.2f}" if confs else ""
+        return (
+            f"{n} candidate(s) were scored and every one was refused by the "
+            f"editorial/context gate, most often for low factual confidence "
+            f"(mean per-word probability{measured}, against a 0.75 floor). The "
+            f"transcription is probably wrong rather than the stories being "
+            f"weak — re-run with a larger model, or with --language set if the "
+            f"detected language is not the one spoken."
+        )
+    return (
+        f"{n} candidate(s) were scored and every one was refused by the "
+        f"editorial/context gate, most often for: {dominant}."
+    )
+
+
+def _refused_while_ranking(eligible) -> str:
+    """Why nothing survived ranking, for spans that were otherwise eligible.
+
+    Rank discards the gate's reason (it only needs the boolean), so it is
+    re-derived here on scored candidates — the same ``score_candidate`` rank
+    itself uses, so the confidence and context numbers in the message are the
+    ones the gate actually saw. This is a third pass over the gate, but it runs
+    only on a path that is already a failure and only over the eligible spans;
+    the alternative is a message that says a refusal happened and cannot say
+    what it was, which is the defect this whole helper exists to close.
+    """
+    reasons: dict[str, int] = {}
+    confs: list[float] = []
+    n_refused = 0
+    for t in eligible:
+        candidate = score_candidate(t)
+        outcome = validate(candidate)
+        ok = bool(outcome[0])
+        reason = str(outcome[1]) if len(outcome) > 1 else "rejected"
+        if ok:
+            continue
+        n_refused += 1
+        reasons[reason] = reasons.get(reason, 0) + 1
+        if reason == "low factual confidence":
+            confs.append(float(candidate.confidence))
+    if not reasons:
+        # Every eligible span clears the gate but none survived ranking's own
+        # diversity limits — too similar to an already-chosen clip, or one more
+        # of a story type rank has already taken two of. That is a budget
+        # constraint on variety, not a judgement on any single span, and saying
+        # otherwise would misdescribe the only reason a clip is missing here.
+        return (
+            f"{len(eligible)} span(s) were long enough, word-dense enough and "
+            f"clear the editorial/context gate, but ranking set every one aside "
+            f"to keep the selection varied — none was refused on its merits. "
+            f"Raise --limit to see more of them."
+        )
+    dominant = max(reasons, key=reasons.get)
+    measured = f" (best measured {max(confs):.2f}, against a 0.75 floor)" if confs else ""
+    remedy = ""
+    if dominant == "low factual confidence":
+        # The confidence number alone is not actionable: an editor reading 0.50
+        # has no way to tell a transcription defect from weak material, so the
+        # remedy travels with the diagnosis for the same reason it does on the
+        # post-ranking refusal above.
+        remedy = (
+            " The transcription is probably wrong rather than the stories being "
+            "weak — re-run with a larger model, or with --language set if the "
+            "detected language is not the one spoken."
+        )
+    return (
+        f"{n_refused} eligible span(s) were scored, but every one was refused "
+        f"by the editorial/context gate while ranking, most often for: "
+        f"{dominant}{measured}.{remedy} No clip was lost to a budget — every one "
+        f"was refused on its merits."
     )
 
 
@@ -624,7 +759,10 @@ def run(
     # the candidates themselves and the count is a claim the artifact backs.
     bench = [c.to_bench_dict() for c in passed[limit:]]
     if not selected:
-        raise RuntimeError("No complete standalone stories passed the editorial/context gate.")
+        raise RuntimeError(
+            "No complete standalone stories were selected. "
+            + _no_story_diagnosis(thoughts, ranked, gate_results, rejection_reasons)
+        )
     if ollama_url:
         selected = [attach_metadata(c, ollama_url) for c in selected]
     (project / "selections.json").write_text(

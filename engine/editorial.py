@@ -215,23 +215,38 @@ def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float 
             fan_out = j - i
     stride = ((starts * fan_out + BUDGET - 1) // BUDGET
               if starts * fan_out > BUDGET else 1)
-    thoughts: list[Segment] = []
-    for i in range(0, starts, stride):
-        cur: list = []
-        for s, u in sentences[i:]:
-            if s.boilerplate:
-                break
-            cur.append(s)
-            duration = cur[-1].end - cur[0].start
-            if duration > max_sec:
-                break
-            if duration >= min_sec and (_sentence_end(s.text) or duration >= max_sec - 2):
+
+    def _scan(require_terminal: bool) -> list[Segment]:
+        """The candidate scan, parameterised on whether a span must end on
+        punctuation.
+
+        ``require_terminal`` is the normal mode: a clip that stops mid-sentence
+        cuts a thought in half, so a terminal mark is the signal a complete one
+        ended. The ``max_sec - 2`` clause is the relief valve for a long
+        unpunctuated run, which has no punctuation to end on anywhere.
+        """
+        out: list[Segment] = []
+        for i in range(0, starts, stride):
+            cur: list = []
+            for s, u in sentences[i:]:
+                if s.boilerplate:
+                    break
+                cur.append(s)
+                duration = cur[-1].end - cur[0].start
+                if duration > max_sec:
+                    break
+                if duration < min_sec:
+                    continue
+                if (require_terminal
+                        and not _sentence_end(s.text)
+                        and duration < max_sec - 2):
+                    continue
                 text = " ".join(x.text for x in cur).strip()
                 # A clip crossing a unit boundary is judged on both ends by
                 # the units it actually spans: the opening unit decides
                 # whether it starts inside a story, the closing one whether
                 # it finishes one.
-                thoughts.append(Segment(
+                out.append(Segment(
                     cur[0].start, cur[-1].end, text,
                     _words_in(all_segs, cur[0].start, cur[-1].end),
                     coherence=coherence_score(text),
@@ -240,7 +255,23 @@ def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float 
                         _completeness(u, Segment(cur[0].start, cur[-1].end, text, [])),
                     ),
                 ))
-    return thoughts
+        return out
+
+    thoughts = _scan(require_terminal=True)
+    if thoughts or not sentences:
+        return thoughts
+    # A transcript with no terminal mark anywhere is not a hypothetical: the
+    # committed corpus's Hindi interview is one, and faster-whisper emits no
+    # Devanagari danda for it. Every one of its 50 s of speech became a single
+    # 52.76 s "sentence", which is 0.24 s short of the relief valve above, so
+    # the scan constructed no candidate at all — and the user was then told no
+    # story *passed the editorial gate*, a message about a judgement that never
+    # happened. Sentence boundaries are the only boundaries available, so those
+    # are what the clip ends on; the coherence and context scorers still judge
+    # the result, and the confidence gate can still refuse it for a real
+    # reason. This pass runs only when the normal one found nothing, so a
+    # transcript with any punctuation is scanned exactly as before.
+    return _scan(require_terminal=False)
 
 
 def _score(s: Segment) -> tuple[float, float, float, float, str, str, float]:

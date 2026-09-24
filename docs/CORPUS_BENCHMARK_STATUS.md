@@ -60,9 +60,46 @@ and fails on any change to it.
 | `hadhazy-protest` | hu | 3 shipped / 1 now | **no longer ships** |
 | `telugu-tutorial` | te | 1 shipped / 0 now | **no longer ships** |
 
-The four runs with no selections (`hindi-baiga-interview`, `telugu-launch`,
-`alice-1903`, `roman-portrait-trailer`) recorded failures in `results.jsonl`
-and have nothing to reproduce.
+The four runs with no selections fall into two different kinds of failure, and
+only one of them is a selection outcome worth discussing:
+
+| Run | `results.jsonl` status | Segments | Kind |
+| --- | --- | --- | --- |
+| `alice-1903` | `NO_SPEECH_DETECTED` | 0 | no speech — correct rejection |
+| `roman-portrait-trailer` | `NO_SPEECH_DETECTED` | 0 | no speech — correct rejection |
+| `telugu-launch` | `NO_SPEECH_DETECTED` | 0 | no speech — correct rejection |
+| `hindi-baiga-interview` | `NO_STORIES_PASSED` | 3 | real speech, no clip |
+
+Three are silent sources: transcription returned zero segments, the run failed
+before ranking, and there is nothing to reproduce. The fourth is the only one
+where speech was transcribed and nothing was selected — 53.8 s of Hindi in 3
+segments — and its recorded failure message was wrong in a way that hid the
+cause.
+
+`hindi-baiga-interview` is the corpus's unpunctuated-transcript case.
+faster-whisper emitted no Devanagari danda for it, and the candidate scan then
+had no signal that a thought had ended: every whole segment became one
+"sentence", and the longest fell 0.24 s short of the scan's relief valve, so
+**zero candidate spans were ever constructed**. The run reported
+`NO_STORIES_PASSED` — "No complete standalone stories passed the
+editorial/context gate" — describing an editorial judgement that never ran,
+because nothing existed to be judged.
+
+That is fixed: the scan now falls back to closing a span at the length and word
+floors when no terminal mark is available, so the source is searched instead of
+structurally failing to construct anything. Re-scoring its committed transcript
+yields 6 candidate spans, 5 of them long and dense enough to stand alone — and
+every one is then refused by the context guard for **low factual confidence,
+best measured 0.53 against the 0.75 floor**.
+
+**The user-visible outcome for this source is unchanged: it still ships no
+clips.** What changed is that the refusal is now true. The transcript measures
+low per-word confidence, the same property that retired `hadhazy-protest` and
+`telugu-tutorial` below, and the message now names that measurement and the
+remedy (a larger model, or `--language` if the detected one is not the one
+spoken) rather than implying the stories were judged and found weak. That makes
+the refusal checkable instead of merely confident, and it means a real
+unpunctuated source that *is* well transcribed no longer fails silently.
 
 ### What "reproduces" means here
 

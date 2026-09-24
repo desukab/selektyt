@@ -8,49 +8,56 @@ every line below was true on this host at that point.
 * Repository: `/home/azureuser/selektyt`, on `main`. Working tree state
   **changes within a session by design** — verify with `git status` rather than
   trusting "clean" here.
-  Local `main` is **3 commits ahead of `origin/main`**: `55e6a06` and
-  `f4f90e2` (docs-only, held back while the MSIX run was in flight so the run
-  built from one coherent commit) plus this file's own commit. The green run
-  `35555583046` was built from `d428c78`, which was `origin/main` at the time —
-  confirmed by the packed manifest's own header comment still carrying the
-  pre-`f4f90e2` wording, so no mixed-state build happened.
+  Local `main` tracks `origin/main` — verify with `git log --oneline
+  origin/main..HEAD` and `git log --oneline HEAD..origin/main`, both of which
+  should be empty after a push, rather than trusting "in sync" here.
   Nothing stashed, nothing in `git stash list`.
   The two untracked leftovers noted by the previous checkpoint are resolved:
   `tools/caption_ocr.py` was already tracked and clean, and the WER run record
   `corpus/wer/runs/nasa-c4-small.json` was committed at `59e5327` alongside its
   tracked siblings.
-* **The Windows desktop application is the current line of work.** See
-  `docs/RELEASE.md` for the acceptance position, which keeps three claims
-  strictly separate: the engine path is proven on a real file through the
-  shipped sidecar binary; the Windows build pipeline now *produces* installers
-  **and a green MSIX** on `windows-latest` (the whole run is 27m10s end to end);
-  and **no installer has ever been installed or run on a Windows desktop.**
-  Built is not packed, packed is not installed, installed is not run, and a
-  green `build-windows` badge is not a Windows validation.
-  The last substantive commit is `d428c78` (the 64-bit MakeAppx selection,
-  which made the `msix` job green on run `35555583046`). Earlier relevant:
-  `baf46a8` and `2d8be2d` (the two pack-script arithmetic fixes),
-  `ba7d8e5` (the sixth asset — the store logo lives in a `<Logo>` *element*,
-  not an attribute), `61ce51f` (the per-step env fix), `74d148d` (the MSIX
-  scaffolding), `59e5327` (cancellation, contract-tested UI, honest signing),
-  `b5078e5` (the Tauri 2 shell).
+* **The current line of work is the autonomous product/R&D loop**, not the
+  desktop shell: identify the highest-value weakness in the gap map, make the
+  smallest change that fixes it, pin it with a real test, and update
+  `docs/product-gap-map.md`. The most recent substantive commits are
+  `92005ae` (the editorial scan now covers the whole source instead of
+  `return`ing at a candidate cap, which had silently made the last ~35% of two
+  corpus sources unreachable) and `a1e9150` (the vertical reframe keeps the
+  active speaker, with the rendered output itself as the test).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
-* Test suite: **1287 passed, 13 skipped** (2026-09-21, 260.7 s) — measured by
+  Before this loop, the line of work was the **Windows desktop application**,
+  and its acceptance position in `docs/RELEASE.md` is still the authority on it.
+  Three claims are kept strictly separate there and should not be blurred here:
+  the engine path is proven on a real file through the shipped sidecar binary;
+  the Windows build pipeline *produces* installers **and a green MSIX** on
+  `windows-latest`; and **no installer has ever been installed or run on a
+  Windows desktop.** Built is not packed, packed is not installed, installed is
+  not run, and a green `build-windows` badge is not a Windows validation. That
+  work is paused, not finished — it is the natural next thing to resume if the
+  product loop returns to distribution.
+* Test suite: **1473 passed, 13 skipped** (2026-09-24, 537.21 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work", and the
-  disk note above: a concurrent `cargo test` + `pytest` pair hit 100% disk and
-  both died reporting success-shaped exit codes). The
-  prior baseline was 1240/13; the growth is entirely
-  `tests/test_desktop_packaging.py`, which went 9 → 20 over the packaging work:
-  eleven contracts added since `011ec03`, the last three of them this session —
-  the manifest anchor, the payload path round-trip, and the 64-bit MakeAppx
-  selection, each mutation-verified against the pre-fix code. The remaining
-  seven include the three that pin the workflow's context-availability,
-  artifact-name and sign-input rules, the one that keeps the PowerShell
-  pack script's asset parsing honest against the canonical parser, and the one
-  that resolves its path arithmetic against the real tree. No
-  regressions, no engine changes.
+  disk note above: a concurrent `cargo test` + `pytest` pair once hit 100% disk
+  and both died reporting success-shaped exit codes).
+  The prior baseline was 1466/13; the growth is exactly the seven new tests
+  behind the unpunctuated-transcript fix — four in
+  `tests/test_speechless_source.py` (the three distinct refusal shapes, plus one
+  naming a transcript the scan could not search) and three in
+  `tests/test_unicode_pipeline.py` (the fixture really carries no terminal mark
+  and cannot reach the relief valve; an unpunctuated transcript still yields
+  rankable, guard-passing, script-pure candidates; punctuating the same
+  transcript cannot lose a span the fallback found). No regressions.
+  Earlier: 1460/13 at `92005ae`, growing by exactly the six
+  new `/api/upload` tests in `tests/test_web_harness.py` (which alone runs
+  42/42 in ~48 s): a real video round-trip, a non-media rejection, name
+  de-clobbering, a cross-origin rejection, a multipart content-type demand, and
+  a truncated transfer that must leave no partial file behind. No regressions.
+  That number is the suite, not the product — the honest limits of the new
+  intake are written in `docs/product-gap-map.md`: the 32 GiB body cap has never
+  been approached, and the route has only ever been exercised with a 3 s file,
+  never a genuine 1–3 hour master end to end.
   **18 Rust unit tests** in `apps/desktop/src-tauri` pass, including
   `cancel_unblocks_a_call_in_flight` (0.15 s — see the note below about why its
   fake sidecar is a shell builtin loop, not `sleep`),
@@ -226,6 +233,86 @@ once — a 93-minute synthetic source must yield candidates in its final 10%
 (that source exceeds the old cap, so the test means what it says), and a
 sub-second-segment transcript must stay under 60,000 candidates *and* still
 reach its tail.
+
+### This session — a transcript with no punctuation was never searched, and every refusal said the same thing
+
+Two defects with one symptom. Both made a run end with no clips and both
+reported it as "No complete standalone stories passed the editorial/context
+gate", which is a sentence about an editorial judgement — so a user could not
+tell a file with no speech, a transcript too short to clip, a transcript the
+scan could not search, and a transcript the gate genuinely refused apart from
+each other, and the message implied a judgement that in three of the four cases
+never ran.
+
+**The structural one, found in the committed corpus.** `hindi-baiga-interview`
+has 53.8 s of real Hindi in 3 segments and **no terminal punctuation anywhere**
+— no danda, no period, no question mark. `_sentence_end` can never fire on text
+carrying no terminal mark, so the scan's only remaining way to close a span was
+the `max_sec - 2` relief valve. Every whole ASR segment became one "sentence",
+the accumulated span measured 52.76 s, and the valve sits at 53.00 s — **0.24 s
+short, so zero candidate spans were ever constructed.** Nothing was scored and
+nothing was judged; the source was never searched.
+
+Verified rather than inferred. The span length matters and is easy to get wrong
+— reading only the last segment's `end` (53.74) against the valve gives a false
+"short by 0.74 s"; the span is measured from the *first* sentence's start
+(0.98), so it is 53.74 − 0.98. The pre-fix result was confirmed by executing
+`HEAD:engine/editorial.py` under a throwaway module name against the committed
+transcript: **0 candidates pre-fix, 6 post-fix.** An earlier probe that patched
+`_sentence_end` to return False was **invalid** and initially looked like a
+contradiction of the conclusion — the new fallback calls `_scan(False)`, which
+ignores `_sentence_end` entirely, so it still emitted 6. Load the old module;
+do not try to recreate the old behaviour by patching the new one.
+
+**The fix** (`engine/editorial.py`) extracts the scan into a nested
+`_scan(require_terminal)` and, only when that returns nothing *and* sentences
+exist, re-runs it as `_scan(False)` — closing a span at the length and word
+floors instead of waiting for a mark that will not come. The fallback is
+strictly additive: a punctuated transcript is scanned exactly as before, and
+punctuation can only ever lose a span the fallback found, never gain one. That
+property is asserted, because a fallback that regressed the common case would
+be worse than the defect.
+
+**The user-visible outcome for this source is unchanged: it still ships no
+clips.** The 6 spans include 5 that clear rank's length and word floors, and
+every one is refused by the context guard for **low factual confidence, best
+measured 0.53 against the 0.75 floor** — mean per-word confidence 0.399, the
+same property that retired `hadhazy-protest` (0.639) and `telugu-tutorial`
+(0.319). What changed is that the refusal is now true and checkable instead of
+a structural failure dressed as a verdict. This is the point worth holding: a
+fix can be correct and still not change any shipped output, and the honest
+record of it says so.
+
+**The message one.** `selekyt/pipeline.py` gained `_no_story_diagnosis`, which
+picks the message by what actually happened rather than one sentence for all
+cases: no candidate spans were built at all; spans were built but none cleared
+the length/word floors (the measured duration and word count travel with it);
+spans were eligible and every one was refused, naming the dominant reason and,
+for confidence, the measured number; or the ranking set clips aside for
+variety. A defect was found while writing the tests: the confidence remedy —
+"re-run with a larger model, or with `--language`" — existed only on the
+post-ranking refusal, while the during-ranking refusal, which is the branch
+this corpus source actually hits, gave the number with no actionable next step.
+An editor reading 0.50 cannot tell a transcription defect from weak material,
+so the remedy now travels with both.
+
+**What the corpus now says.** `docs/CORPUS_BENCHMARK_STATUS.md` replaced its
+two-line dismissal of the four no-selection runs with the split that matters:
+three are `NO_SPEECH_DETECTED` with 0 segments (correct rejections, nothing to
+reproduce) and one is `NO_STORIES_PASSED` with 3 segments — real speech, and
+the only run in the corpus where the editorial layer was reached and nothing
+was selected. That distinction was previously invisible in the document set,
+and the four runs were all implied to be the same kind of nothing.
+
+Tests: `tests/test_unicode_pipeline.py` 7 → 10 (the fixture really carries no
+terminal mark *and* is short enough that the relief valve cannot fire either,
+so nothing but the fallback is exercised; an unpunctuated transcript still
+yields rankable, guard-passing, script-pure candidates; punctuating cannot lose
+a span). `tests/test_speechless_source.py` 3 → 7, pinning each refusal shape
+against its own message and asserting the wording never claims a gate ran when
+one did not. One of those tests stubs nothing below the transcription boundary
+— `make_thoughts`, `rank` and `validate` are the real ones, so it exercises the
+refusal path a user would actually get.
 
 ### This session — the MSIX job went green on the fifth run, and the artifact was verified off the runner
 
@@ -1786,7 +1873,15 @@ selections).
 8. **Resolve the web-shell / CLI input disagreement** (G3). Decide between
    exposing a video upload route or documenting the project-root confinement —
    the previous session decided URL-first with no code change, which is why
-   upload is still missing.
+   upload was missing. **DONE — the route is built, but the disagreement is only
+   narrowed, not closed.** `/api/upload` streams a multipart body to disk
+   instead of buffering it, so the web shell now accepts a master the same way
+   the CLI does, and the six tests named in the suite note above pin it. What
+   remains is scale, not shape: the 32 GiB cap has never been approached and the
+   route has only ever been exercised with a 3 s file (see
+   `docs/product-gap-map.md`), so a genuine 1–3 hour master through this route
+   is still **UNVERIFIED**, and the intake still cannot accept a file outside
+   the project tree, which the CLI allows.
 9. **Complete one real Windows install.** This was previously ranked low
    ("package the Tauri shell once, or record that v1 ships CLI + web shell
    only"), and the founder's directive overrides that ranking: the Windows
@@ -1836,10 +1931,17 @@ selections).
 
 ## Important decisions
 
-* **URL-first web UX, no code change.** The web shell already accepts a URL in
-  the same field and dispatches it to the same sidecar path as the CLI, so a
-  separate video-upload route was judged redundant work. This is *why* the
-  upload gap in G3 was left open deliberately, not overlooked.
+* **URL-first web UX — superseded by a streamed upload route.** The web shell
+  already accepted a URL in the same field and dispatched it to the same sidecar
+  path as the CLI, so a separate video-upload route was first judged redundant
+  work, which is why the G3 gap was left open deliberately rather than
+  overlooked. That judgement was reversed once it was tested against a real
+  intake: a URL is not a substitute for a master a user already has on disk, and
+  requiring the file to be inside the project tree meant the web shell could not
+  do the one thing the CLI could. `/api/upload` now streams the multipart body
+  to disk rather than buffering it, so the 32 GiB cap costs memory only on the
+  kernel side. The route is built and pinned; only its scale behaviour is
+  unverified (see task 8 above).
 * **The 9:16 fix keeps the frame anamorphic rather than emitting square
   pixels.** Scaling the crop width by SAR gives a correct display ratio with
   zero resampling. The alternative (`setsar=1`) gets the ratio right only by

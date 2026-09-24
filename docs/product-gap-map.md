@@ -94,7 +94,7 @@ has opened them.
 | CLI | complete and verified | `--doctor` verified both pass and fail paths; every flag forwarded, pinned by tests |
 | Web shell, local-file path | complete and verified | caption style, audio analysis and cookies now exposed; two styles produced genuinely different burned-in styling through `process_line` |
 | Web shell, URL path | complete and verified, except YouTube | same code path as the CLI, exercised end to end against a real archive.org URL. Two real defects were found and fixed on this path, both specific to serving a download behind a JSON-RPC sidecar: yt-dlp's progress wrote to fd 1 and corrupted the wire (the caller saw `sidecar sent a non-JSON line`), and a source delivered as MPEG-PS `.mpg` was rejected because `--merge-output-format mp4` only applies when yt-dlp actually merges. Both pinned by `tests/test_youtube_download.py` and by a child-process wire test in `tests/test_server.py`. YouTube itself remains unfetchable from this host — see the INPUT row |
-| Web shell, video upload | missing | only `/api/vad_analyze` accepts an uploaded file, and it is WAV-only. A video must be placed inside the project tree and referenced by relative path, because `guardedPath` deliberately confines local media to the project root. The CLI has no such restriction, so the two entry points disagree about what a user can point at |
+| Web shell, video upload | complete and verified for intake, not for a full-length source | `/api/upload` now streams a real video or audio file into `out/web/uploads` and hands back the path the cuts control already used, so an upload and a typed path are interchangeable from there on. The body is never buffered (a multi-GB master goes straight to a `.part`, renamed only once the transfer is whole), `guardedPath` admits the result as a source with **no boundary widening**, and ffprobe gates the file: a text file is refused rather than left for the next caller to transcribe. Verified against a real ffmpeg-generated MP4 carrying both streams, plus the failure paths — non-media refused, a repeated name de-clobbered, a cross-origin POST rejected, and a connection that dies mid-body leaving no partial behind. Two things this does **not** establish: the largest body the route will accept is unmeasured here (the 32 GiB cap has never been approached — disk has ~1.3 GB free for most of this work), and the new intake has never been exercised with a genuine 1–3 hour master end to end through the pipeline, only with a 3 s file through the route itself |
 | Desktop shell (Tauri) | incomplete, by environment | compiles and passes clippy, but no binary has been packaged on any platform and the webview has never rendered (no webkit2gtk). See `docs/agent-worktrees.md` |
 
 ## The critical path
@@ -132,5 +132,22 @@ a genuinely silent source from a damaged container, and reports the number so
 the diagnosis is checkable rather than merely confident. Pinned by
 `tests/test_speechless_source.py`, which asserts the expensive downstream
 stages are never reached and that the wording does not imply the gate judged
-anything. And no NLE on this host has opened an exported timeline, so format
+anything.
+
+A second failure mode with the same misleading message, found in the committed
+corpus rather than on a live run: the Hindi interview carries **no terminal
+punctuation anywhere** — no danda, no period, no question mark — so the
+candidate scan had no signal that a thought had ended and closed no span at all
+(52.76 s accumulated against a 53.00 s relief valve). The source reported that
+no story passed the gate, when in fact nothing had been constructed to be
+judged. **Also fixed:** the scan falls back to closing a span at its length and
+word floors when no terminal mark is present, so the source is searched instead
+of failing structurally. Verified against the committed transcript by executing
+the pre-fix module alongside the current one (0 candidates → 6). The source
+still ships no clips — the spans it now finds measure 0.53 best confidence
+against a 0.75 floor, and are refused for a stated, measurable reason rather
+than a structural one. Recorded in `docs/CORPUS_BENCHMARK_STATUS.md` and pinned
+in `tests/test_unicode_pipeline.py`.
+
+And no NLE on this host has opened an exported timeline, so format
 validity is claimed, not import compatibility.

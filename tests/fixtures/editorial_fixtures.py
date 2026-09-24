@@ -246,6 +246,39 @@ def telugu_transcript() -> list[Segment]:
     return build_transcript(TELUGU_STORIES)
 
 
+# ── a transcript with no terminal punctuation at all ─────────────────────────
+#
+# faster-whisper emits no Devanagari danda for the committed Hindi corpus
+# source, and _sentence_end can never fire on text that carries no terminal
+# mark, so the candidate scan's only remaining way to close a span is the
+# max_sec - 2 relief valve. Below, the whole source is shorter than that valve,
+# which is the exact shape the real transcript has: every complete thought is
+# present, and none of it can become a clip. Keep the total under 53 s or the
+# fixture stops exercising the fallback and starts exercising the valve.
+
+HINDI_STORIES = [
+    "यह एक लंबा साक्षात्कार है जिसमें हम गाँव के जीवन की बात करेंगे बहुत विस्तार से",
+    "यहाँ के लोग अपने खेतों में काम करते हैं और साल भर परिवार के साथ रहते हैं",
+    "बुजुर्ग बताते हैं कि सुबह चार बजे उठना पड़ता है और पूरा दिन खेत में बीत जाता है",
+    "बारिश का मौसम आने पर सबको बहुत तैयारी करनी पड़ती है घर में और खेत दोनों में",
+    "बच्चे स्कूल जाते हैं और शाम को बड़े बुजुर्ग उन्हें पुरानी कहानियाँ सुनाते हैं",
+    "यही वह जगह है जहाँ परंपरा और आधुनिकता एक साथ मिलकर रहती हैं गाँव के हर घर में",
+]
+
+
+def hindi_unpunctuated_transcript() -> list[Segment]:
+    """Devanagari transcript carrying no terminal mark anywhere.
+
+    Real ASR output, not a synthetic edge case: the committed corpus's Hindi
+    interview is exactly this shape. Every segment is a complete thought with
+    no ``.``, ``?`` or danda to end it, so nothing in the text marks where a
+    clip may stop. Word confidence is 1.0 throughout — the point here is the
+    missing punctuation, not a decoding-quality problem, so a clip that the
+    scan constructs also clears the confidence gate and ships.
+    """
+    return build_transcript(HINDI_STORIES)
+
+
 # ── long-form content (20-40 minute scale) ───────────────────────────────────
 
 _CITIES = [
@@ -408,9 +441,11 @@ def run_fixture_pipeline(
 __all__ = [
     "ENGLISH_STORIES",
     "HAVE_FFMPEG",
+    "HINDI_STORIES",
     "TELUGU_STORIES",
     "build_transcript",
     "english_transcript",
+    "hindi_unpunctuated_transcript",
     "long_stories",
     "long_transcript",
     "media_for",
