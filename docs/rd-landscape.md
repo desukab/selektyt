@@ -165,13 +165,48 @@ Two findings worth recording from the REJECT rows:
 | chireiden/python-ass | 46 | MIT | 2025-11-29 | Rejected — its unmaintained renderer is a trap |
 
 None of these are current dependencies. `pysubs2` is the row that matters:
-zero-dep, ASS-native, actively maintained. SeleKyT currently emits positioned
-captions through ffmpeg/libass, which is correct for rendering but means the
-*editable* caption document is not round-trippable in a library — an editor's
-cue repositioning does not read back. That is the specific gap `ass_tag_parser`
-and `pysubs2` would close, and it lines up with the product requirement that the
-editorial package be a first-class editable artefact rather than a render
-by-product.
+zero-dep, ASS-native, actively maintained. SeleKyT emits positioned captions
+through ffmpeg/libass, which is correct for rendering, but the *editable*
+caption document is not yet round-trippable in a library — an editor's cue
+repositioning cannot be read back and re-applied by code.
+
+This is a live defect, not a hypothetical, and it is **closed** as of
+2026-09-24 — in-tree, without `pysubs2`. The shipped `.ass` is a render input:
+`selekyt/pipeline.py` hands it to `render_clip`, which burns it in via
+`subtitles=` at `engine/render.py:199`. Before that date the pipeline rewrote
+the `.ass` unconditionally on every run, clobbering the edit before the cache
+was consulted; the per-clip render cache key omitted the document's contents, so
+a preserved edit still shipped the cached MP4 with the old cue burned in; and the
+per-part ASS for a multi-interval candidate was *regenerated* from a
+sub-candidate, so an editor's retime on a multi-cut clip was preserved on disk
+and then discarded by the render. All three are fixed:
+`engine.captions.ship_captions` keeps a document that is neither the fresh
+generation nor our own last write and re-projects the sidecar from it; the
+record carries an `ass_digest` that joins the cache key (pinned by
+`tests/test_caption_handoff.py` and `tests/test_caption_style_cache.py`); and
+`engine.captions.slice_ass` keeps the cues overlapping a window, clips a
+straddling cue to the window's edges, and shifts the survivors onto part-local
+time, so the shipped document is what every part is burned from
+(`tests/test_caption_multi_part.py`).
+
+`pysubs2` was the nominated dependency for the slicing, and the reason it ranks
+first below. That specific reason no longer applies: the operation turned out to
+be 35 lines of in-tree code on the dialect this module already owns, because the
+only thing a part needs from the document is cue selection and time retargeting —
+an editor's text and override tags are passed through verbatim. The verdict's
+*remaining* half is what keeps the row alive and is not yet addressed: the
+document is still not round-trippable in a library, because reading an editor's
+cue *repositioning* back and re-applying it requires a parser for ASS override
+tags. That is `ass_tag_parser`'s exact scope, and it would be the dependency to
+reach for if that capability is ever needed — `pysubs2` for the document model,
+`ass_tag_parser` if only the tag reading is.
+
+The dependency discipline this row ended up exercising is worth recording: a
+recommendation made on a real defect was satisfied without the dependency, and
+the recommendation survived the fix because its other half was stated precisely
+enough to see. Verdicts written as "nice to have" would not have behaved that
+way.
+
 
 Two deliberate non-features of `ttconv` are recorded here so they are not
 rediscovered as bugs: it does **not** parse or validate timecodes and does
@@ -231,9 +266,11 @@ Recorded so the gaps are not mistaken for search failures:
 
 Ordered by real user value × fit, with the dependency cost stated:
 
-1. **`pysubs2` for the caption document** — closes a stated product requirement
-   (editable editorial package) with a zero-dep MIT library. Not yet in the
-   tree.
+1. **`pysubs2` (or `ass_tag_parser`) for reading an edited document back** —
+   the multi-interval slicing it was originally nominated for is now in-tree
+   (`engine.captions.slice_ass`), so the remaining case is narrower and still
+   open: an editor's cue repositioning cannot be parsed back and re-applied by
+   code. Zero-dep MIT, either way. See [Reframe and captions](#reframe-and-captions).
 2. **`slhck/ffmpeg-quality-metrics` for sampled per-frame SSIM** between a
    rendered preview and expected frames. MIT, library-shaped, and it
    strengthens `engine/qa.py` with a metric that is currently absent.

@@ -164,6 +164,104 @@ every line below was true on this host at that point.
 
 ## Completed work
 
+### This session — an editor's hand on the shipped ASS was overwritten, and then ignored
+
+The shipped `.ass` is a **render input**, not just a deliverable:
+`selekyt/pipeline.py` hands it to `render_clip`, which burns it in via
+`subtitles=` at `engine/render.py:199`. That makes the caption document part of
+the render contract, and it had three coupled defects, each of which alone would
+have left the package internally inconsistent:
+
+1. `selekyt/pipeline.py` wrote the `.ass` **unconditionally on every run**, so an
+   editor's moved cue was overwritten before the render cache was even
+   consulted.
+2. The per-clip render cache key omitted the ASS **contents**, so even a
+   preserved edit shipped the cached MP4 with the old cue burned in.
+3. `srt_for_candidate` regenerated the sidecar from the candidate, so a
+   preserved edit left the package carrying two caption documents that
+   disagreed.
+
+**The fix.** `engine.captions.ship_captions(c, ass_path, srt_path,
+prev_digest)` is the guard for 1 and 3; the `ass_digest` now recorded in the
+render record is the guard for 2. The preserve-vs-regenerate rule is the part
+that has to be right, and it keys on the recorded digest: the on-disk document is
+preserved verbatim only when it differs from a fresh generation **and** differs
+from what we wrote there last time — a change that is neither ours nor the
+clip's is someone else's, so the SRT is re-projected from the ASS rather than
+independently regenerated. A document that differs from fresh but *matches* the
+recorded digest was not edited by an editor; the **clip** changed under it, so
+the captions are regenerated to match the clip's new words. Absent `prev_digest`
+— every `pipeline_state.json` written before this fix — the difference cannot be
+attributed, so the documents regenerate, prioritising "never ship a caption
+document that does not match the clip's words" over "never lose a hand edit once
+on upgrade". That is the same call the `caption_style` precedent made
+(`tests/test_caption_style_cache.py`: absence reads as unknown, the clip
+re-renders once).
+
+**A format constraint found while writing the tests, not assumed.** ASS stores
+centiseconds and SubRip milliseconds, so `srt_from_ass(ass_content(c))` is
+lossy against `srt_for_candidate(c)` by up to 5 ms in the last digit
+(`_ts(2.367)` → `0:00:02.37` → 370 ms; `_srt_ts(2.367)` → 367 ms). Byte
+equality is therefore **not** a valid invariant for the round trip, and
+asserting it would have been wrong in a way that invites a silent fudge; the
+pinned invariant is cue-for-cue text and index equality with times agreeing to
+the ASS's own resolution (`tests/test_caption_handoff.py`).
+
+**The multi-interval half, now closed.** The defect above had a second surface
+that the first fix did not reach: a candidate keeping more than one retention
+interval renders as a concatenation of parts, and the per-part ASS was
+*regenerated* from a sub-candidate instead of sliced from the shipped document —
+so on a multi-cut clip an editor's retime was preserved on disk and then
+ignored, and the shipped MP4 disagreed with the file beside it in a way that was
+invisible, because both were valid ASS. `engine.captions.slice_ass(text, start,
+end)` is the replacement: it keeps the cues that overlap a window, clips a
+straddling cue to the window's edges, shifts the survivors onto part-local time,
+and passes every non-`Dialogue` line through untouched — an editor's text and
+override tags are carried, only the times are retargeted. `engine/render.py`
+slices the shipped document on the timeline the document itself keeps, which for
+a shipped ASS is the *edited* one (`ass_content` already emits through
+`_source_to_edited`, with every removed gap closed), so part `i`'s window is
+`[offset, offset + duration)` with `offset` the sum of the durations before it —
+not the interval's source time. `pysubs2` was the nominated dependency for this
+(`docs/rd-landscape.md` ranking #1); it is no longer needed, and the operation
+is 35 lines in-tree rather than a dependency.
+
+Pinned by `tests/test_caption_multi_part.py` (new): six unit tests on the slice
+itself (shift and duration preserved, cues wholly outside dropped, cues
+straddling an edge clipped, editor text and tags byte-identical, header passed
+through, a cue crossing a part boundary burned in both parts), the invariant
+that slicing every part's window and re-offsetting recovers exactly the
+document's declared cue spans, a spy that captures what each part is handed
+(`render_clip` deletes its parts directory on the way out, so the ASS is read
+inside the spy) and asserts the editor's cues reach the burn and the
+transcript's words do not, and a pixel-level burn test asserting each cue lights
+a contiguous run wholly inside its own part, of exactly its own duration in
+frames, with the concatenation seam staying clean.
+
+**Recorded, not fixed — and deliberately left alone.** One timing detail the
+pixel test surfaced and was investigated rather than asserted away: input
+seeking (`-ss` before `-i`) opens a part on the first source frame at or after
+the cut, so a part whose interval starts at 1.94 s on a 15 fps grid opens on the
+frame at 2.00 s and the container *labels* that frame 0.066 s rather than 0.
+libass times the cue against the media the part actually holds, so the burn
+lands on the frames carrying the speech the cue describes and the pixels are
+right — only the container's own frame labels are a frame off, and the concat
+demuxer renormalises the deliverable's presentation times onto a clean
+contiguous grid, so a viewer sees the subtitle with the speech. Aligning
+`retention_intervals` to the frame grid would make the labels agree, but it
+ripples into the EDL/FCPXML export and the frame-accuracy tests this module
+already pins, for a defect nobody can see. The tests therefore measure run
+length and part containment, not absolute frame indices.
+
+Regression tests: `tests/test_caption_handoff.py` (new) pins `ship_captions`
+semantics and the SRT projection — a hand edit kept verbatim, the sidecar
+re-projected from a preserved ASS, regeneration when the clip changed and when
+the recorded digest is absent, stability on an unedited run, tag stripping and
+cue renumbering in the projection, and an empty sidecar for a cue-stripped
+document. `tests/test_caption_style_cache.py` gains the integration half: an
+edited ASS invalidates the render cache, and the record carries the style and
+digest actually burned in.
+
 ### This session — the candidate scan was deleting the back half of every long source
 
 `make_thoughts` carried `CAP = 4000` and `return`ed once it had emitted that
@@ -1869,14 +1967,24 @@ selections).
 3. **Fix the no-speech misdiagnosis** (Outstanding work item 7): remux to a
    clean container and retry before reporting "no audible spoken content", so
    an unreadable container stops being described as a speechless source.
+   **DONE — `945ba98` (Gap E).** The diagnosis now separates a genuinely silent
+   extraction from one with real level and no transcript, and only the latter
+   reaches for the container. Pinned by `tests/test_container_recovery.py`,
+   whose docstring records the corpus source it was found on (95.5% speech
+   energy rejected as speechless; a clean remux of the same file transcribed to
+   11 segments).
 4. **Score WER against `corpus/manifest.json`'s C10 non-English audio-only
    corpora** (`docs/EVALUATION.md` §2.2) — the ground truth the video sources
-   lack. The English half (C9, LibriSpeech test-clean) is **done**: 3.38% WER
-   on `small`, three runs, production decode parameters (`tools/wer_bench.py`,
-   `corpus/wer/runs/`). P9 — non-English — has never been measured, and the
-   corpus's non-English findings are still impressions from reading
-   transcripts, not scores. That is now the specific hole, not "WER in
-   general".
+   lack. **DONE, and the criterion is met with two to spare: 5 of the 6 C10
+   languages are measured and all five pass the ≤25% bar** on the same `small`
+   model that scores 3.38% English — Polish 11.01%, Italian 20.11%, Spanish
+   8.58%, German 10.66%, French 13.59% (`docs/EVALUATION.md` P9). The failure
+   that survived is bounded and named: Telugu is not one of the six and scores
+   WER 151.08% on `small`, localising the gap to Indic. Dutch is registered
+   and not run, and all five measured languages are clean-read audiobook
+   prose, so the claim stays "P9 holds on the five measured languages", not
+   "transcription is multilingual". The English in-domain half (video with
+   official captions) is still never measured.
 5. **Get a *second* YouTube fetch observed** to establish whether the
    intermittent block is per-video, per-hour, or random. One success is not
    reliability. Use `--cookies` / a browser cookie file, a residential proxy,

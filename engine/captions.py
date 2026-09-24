@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import os
 import re
 from pathlib import Path
@@ -99,6 +100,12 @@ def _group_words(words: list[Word], max_words: int = MAX_WORDS,
 
 def _escape(text: str) -> str:
     return text.replace("{", "(").replace("}", ")").replace("\\", "")
+
+
+# The override and karaoke blocks this module writes. ``engine.render`` carries
+# its own copy of the same pattern: it only needs the stripped text, and
+# importing the writer from the render path would pull the whole module in.
+_TAGS = re.compile(r"\{[^}]*\}")
 
 
 def _karaoke_text(words: list[Word], emphasis: set[int]) -> str:
@@ -245,14 +252,14 @@ def srt_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
     return out
 
 
-def ass_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
-    """Write Replix-inspired, word-timed ASS captions locally.
+def ass_content(c: Candidate, words_per_line: int = 6) -> str:
+    """The ASS document for a candidate, as a string.
 
-    Features: multilingual-safe grouping, active-word karaoke timing, keyword
-    emphasis, and compact visual presets selected by SELEKYT_CAPTION_STYLE.
+    Separated from :func:`ass_for_candidate` so a caller can hold what it
+    *would* write beside what is already on disk, without touching the file.
+    That comparison is how the shipped document is protected from being
+    clobbered — see :func:`ship_captions`.
     """
-    out.parent.mkdir(parents=True, exist_ok=True)
-
     p = preset_for()
     # Declared by name, not embedded: libass resolves it through fontconfig, so
     # the font that actually renders depends on the machine. "Noto Sans" is not
@@ -268,6 +275,141 @@ def ass_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
             lines.append(f"Dialogue: 0,{_ts(st)},{_ts(en)},Default,,0,0,0,,{text}")
 
     geo = caption_geometry()
-    content = f"""[Script Info]\nScriptType: v4.00+\nPlayResX: {geo['playres_x']}\nPlayResY: {geo['playres_y']}\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Default,{font},{p['fontsize']},{p['primary']},&H00FFFFFF,{p['outline']},{p['back']},{p['bold']},0,0,0,100,100,0,0,1,{p['outline_w']},{p['shadow']},2,{geo['margin_h']},{geo['margin_h']},{p['margin_v']},1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n""" + "\n".join(lines) + "\n"
-    out.write_text(content, encoding="utf-8")
+    return f"""[Script Info]\nScriptType: v4.00+\nPlayResX: {geo['playres_x']}\nPlayResY: {geo['playres_y']}\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Default,{font},{p['fontsize']},{p['primary']},&H00FFFFFF,{p['outline']},{p['back']},{p['bold']},0,0,0,100,100,0,0,1,{p['outline_w']},{p['shadow']},2,{geo['margin_h']},{geo['margin_h']},{p['margin_v']},1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n""" + "\n".join(lines) + "\n"
+
+
+def ass_for_candidate(c: Candidate, out: Path, words_per_line: int = 6) -> Path:
+    """Write Replix-inspired, word-timed ASS captions locally.
+
+    Features: multilingual-safe grouping, active-word karaoke timing, keyword
+    emphasis, and compact visual presets selected by SELEKYT_CAPTION_STYLE.
+
+    This always (re)writes the generated document. Use :func:`ship_captions`
+    from the pipeline instead when the file may already have been hand-edited.
+    """
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(ass_content(c, words_per_line), encoding="utf-8")
     return out
+
+
+def srt_from_ass(text: str) -> str:
+    """Project an ASS document onto a plain SubRip track.
+
+    The ASS is the master caption document — it is what the render burns in —
+    so the SRT shipped beside it must be *derived* from it once the ASS has been
+    edited. Regenerating the SRT from the candidate instead would describe the
+    cues the editor started from, and the package would carry two caption
+    documents that do not agree.
+
+    Only the dialect this module emits is supported: one ``Dialogue`` line per
+    cue, fields in the documented order. That is the whole point of owning the
+    format — the projection stays a few lines rather than a general ASS parser.
+    """
+    cues: list[str] = []
+    for line in text.splitlines():
+        if not line.startswith("Dialogue:"):
+            continue
+        fields = line.split(",", 9)
+        if len(fields) < 10:
+            continue
+        body = _TAGS.sub("", fields[9])
+        body = body.replace("\\N", " ").replace("\\n", " ").replace("\\h", " ").strip()
+        if not body:
+            continue
+        start, end = _ass_to_srt_ts(fields[1]), _ass_to_srt_ts(fields[2])
+        cues.append(f"{len(cues) + 1}\n{start} --> {end}\n{body}")
+    return ("\n\n".join(cues) + "\n") if cues else ""
+
+
+def _ass_to_srt_ts(field: str) -> str:
+    """``H:MM:SS.cc`` (ASS) to ``H:MM:SS,mmm`` (SubRip)."""
+    h, m, rest = field.strip().split(":", 2)
+    s, _, cs = rest.partition(".")
+    return f"{int(h)}:{int(m):02d}:{int(s):02d},{min(999, int(cs.ljust(3, '0')[:3])):03d}"
+
+
+_ASS_TS = re.compile(r"\A(\d+):(\d+):(\d+)\.(\d+)\Z")
+
+
+def _ass_to_sec(field: str) -> float:
+    """``H:MM:SS.cc`` to seconds — the inverse of :func:`_ts`."""
+    m = _ASS_TS.match(field.strip())
+    if m is None:
+        raise ValueError(f"not an ASS timestamp: {field!r}")
+    h, mi, s, cs = m.groups()
+    return int(h) * 3600 + int(mi) * 60 + int(s) + int(cs) / 100.0
+
+
+def slice_ass(text: str, start: float, end: float) -> str:
+    """Keep only the cues inside ``[start, end]`` and shift them to start at 0.
+
+    A candidate keeping more than one interval renders as a concatenation of
+    parts, and each part is burned with its own subtitle stream at part-local
+    time. Regenerating the per-part ASS from the sub-candidate — the old
+    behaviour in ``engine/render.py`` — replaced the document the editor may
+    have retimed with one built from the clip's words, so the shipped MP4
+    disagreed with the file beside it. Slicing the shipped document instead
+    keeps the editor's cues, text and tags and only retargets the times.
+
+    The window is on the timeline the document itself keeps, which for a shipped
+    ASS is the *edited* one: :func:`ass_content` emits cues through
+    ``_source_to_edited``, with every removed gap already closed, so part `i`
+    of the render begins at the sum of the durations before it — not at the
+    interval's source time.
+
+    A cue straddling a window edge is clipped to it, so one an editor let run
+    across a removed gap appears in both parts that touch it, for as long as
+    each part holds the media. A cue lying wholly outside the window is dropped,
+    as it must be: the part does not contain the speech it describes.
+    """
+    out: list[str] = []
+    for line in text.splitlines():
+        if not line.startswith("Dialogue:"):
+            out.append(line)
+            continue
+        fields = line.split(",", 9)
+        if len(fields) < 10:
+            out.append(line)
+            continue
+        a, b = _ass_to_sec(fields[1]), _ass_to_sec(fields[2])
+        if b <= start or a >= end or b <= a:
+            continue
+        a, b = max(a, start), min(b, end)
+        out.append(f"{fields[0]},{_ts(a - start)},{_ts(b - start)},"
+                   + ",".join(fields[3:]))
+    return "\n".join(out) + "\n"
+
+
+def _digest(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def ship_captions(c: Candidate, ass_path: Path, srt_path: Path,
+                  prev_digest: str | None = None) -> tuple[Path, str]:
+    """Write the caption documents for a clip, keeping a hand edit.
+
+    Returns the shipped ASS path and the digest of what is now on it. The
+    render cache keys on that digest, because the ASS is burned into the MP4 —
+    without it a moved cue re-renders nothing and the deliverable keeps the old
+    burn while the document beside it says the new one.
+
+    ``prev_digest`` is what this build left on the file last run, and it is what
+    separates an editor's change from our own: a file that differs from the
+    fresh generation *and* from that digest was rewritten by someone else, so
+    it is kept verbatim and its SRT is projected from it. A file that differs
+    from the fresh generation but still matches the digest means the *clip*
+    changed, so the document is regenerated. No digest at all is a state older
+    than this guard; the difference cannot be attributed, so the document is
+    regenerated rather than risk shipping captions that no longer match the
+    clip's words.
+    """
+    fresh = ass_content(c)
+    if ass_path.is_file():
+        on_disk = ass_path.read_text(encoding="utf-8")
+        if on_disk != fresh and prev_digest and _digest(on_disk) != prev_digest:
+            srt_path.parent.mkdir(parents=True, exist_ok=True)
+            srt_path.write_text(srt_from_ass(on_disk), encoding="utf-8")
+            return ass_path, _digest(on_disk)
+    ass_for_candidate(c, ass_path)
+    srt_for_candidate(c, srt_path)
+    return ass_path, _digest(fresh)

@@ -7,6 +7,7 @@ from models.core import Candidate, Segment, Word
 
 
 from selekyt.pipeline import _selection_digest
+from engine.captions import _digest, ass_content
 
 
 def _fake_transcript():
@@ -61,7 +62,6 @@ def test_pipeline_reuses_downloaded_media(tmp_path):
          patch("selekyt.pipeline.make_thoughts", return_value=[Segment(10, 20, "hello", [])]), \
          patch("selekyt.pipeline.rank", return_value=[_fake_candidate()]), \
          patch("selekyt.pipeline.validate", return_value=(True, "ok")), \
-         patch("selekyt.pipeline.ass_for_candidate"), \
          patch("selekyt.pipeline.caption_metadata", return_value={"style": "minimal"}), \
          patch("selekyt.pipeline.build_content_pack", return_value={"pack": True}), \
          patch("selekyt.pipeline.attach_metadata", side_effect=lambda c, *a, **kw: c), \
@@ -107,14 +107,20 @@ def test_pipeline_skips_render_when_clips_exist(tmp_path):
     fp = "test-fingerprint"
     cand = _fake_candidate()
     digest = _selection_digest([cand])
+    # What the previous run would have left on disk: the ASS it burned in, and
+    # the digest of it it recorded. A cached render without these two is a
+    # record from before the caption guard, and must read as a miss.
+    ass = ass_content(cand)
     state = {"source": "https://example.com/v", "media_path": str(media),
              "media_info": {"title": "t"}, "fingerprint": fp,
              "render_fingerprint": fp,
              "render_selection_digest": digest,
              "renders": {"01": {"fingerprint": fp, "selection_digest": digest,
                                 "caption_style": "minimal",
+                                "ass_digest": _digest(ass),
                                 "facebook": str(project / "facebook" / "01.mp4"),
                                 "shorts": str(project / "shorts" / "01.mp4")}}}
+    (project / "captions" / "01.ass").write_text(ass, encoding="utf-8")
     (project / "pipeline_state.json").write_text(json.dumps(state), encoding="utf-8")
     (project / "transcript.json").write_text(json.dumps({
         "language": "en",
@@ -129,7 +135,6 @@ def test_pipeline_skips_render_when_clips_exist(tmp_path):
          patch("selekyt.pipeline.make_thoughts", return_value=[Segment(10, 20, "hello", [])]), \
          patch("selekyt.pipeline.rank", return_value=[_fake_candidate()]), \
          patch("selekyt.pipeline.validate", return_value=(True, "ok")), \
-         patch("selekyt.pipeline.ass_for_candidate"), \
          patch("selekyt.pipeline.caption_metadata", return_value={"style": "minimal"}), \
          patch("selekyt.pipeline.build_content_pack", return_value={"pack": True}), \
          patch("selekyt.pipeline.attach_metadata", side_effect=lambda c, *a, **kw: c), \
@@ -167,7 +172,6 @@ def test_pipeline_writes_editorial_and_pacing_reports(tmp_path):
          patch("selekyt.pipeline.make_thoughts", return_value=[Segment(10, 20, "hello", [])]), \
          patch("selekyt.pipeline.rank", return_value=[_fake_candidate()]), \
          patch("selekyt.pipeline.validate", return_value=(True, "ok")), \
-         patch("selekyt.pipeline.ass_for_candidate"), \
          patch("selekyt.pipeline.caption_metadata", return_value={"style": "minimal"}), \
          patch("selekyt.pipeline.build_content_pack", return_value={"pack": True}), \
          patch("selekyt.pipeline.attach_metadata", side_effect=lambda c, *a, **kw: c), \

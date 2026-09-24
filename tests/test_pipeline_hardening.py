@@ -29,6 +29,7 @@ import pytest
 
 from models.core import Candidate, Segment, Word
 from selekyt.pipeline import run as pipeline_run, _selection_digest
+from engine.captions import _digest, ass_content
 from providers.transcribe import _ENGINE_INSTALLED_MESSAGE
 
 
@@ -66,7 +67,6 @@ def _pipeline_patches(tmp_path, candidates, gate_results=None):
                                return_value=[Segment(10, 20, "hello", [])]),
         "rank": patch("selekyt.pipeline.rank", return_value=candidates),
         "validate": patch("selekyt.pipeline.validate", side_effect=gate_results),
-        "ass_for_candidate": patch("selekyt.pipeline.ass_for_candidate"),
         "caption_metadata": patch("selekyt.pipeline.caption_metadata",
                                   return_value={"style": "minimal"}),
         "build_content_pack": patch("selekyt.pipeline.build_content_pack",
@@ -389,11 +389,17 @@ def test_valid_cached_render_is_reused(tmp_path):
     _real_video(project_dir / "facebook" / "01.mp4", "640x360")
     _real_video(project_dir / "shorts" / "01.mp4", "360x640")
     fp = "test-fingerprint"
+    # The cached render implies the previous run burned in the ASS it also left
+    # on disk and recorded the digest of — without those two the record is from
+    # before the caption guard and would not be the render of today's captions.
+    ass = ass_content(cands[0])
+    (project_dir / "captions" / "01.ass").write_text(ass, encoding="utf-8")
     (project_dir / "pipeline_state.json").write_text(json.dumps({
         "source": "https://example.com/v", "media_path": str(media),
         "media_info": {"title": "t"}, "fingerprint": fp,
         "renders": {"01": {"fingerprint": fp, "selection_digest": digest,
                            "caption_style": "minimal",
+                           "ass_digest": _digest(ass),
                            "facebook": str(project_dir / "facebook" / "01.mp4"),
                            "shorts": str(project_dir / "shorts" / "01.mp4")}},
     }), encoding="utf-8")

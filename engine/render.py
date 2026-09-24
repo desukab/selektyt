@@ -7,8 +7,8 @@ import unicodedata
 from pathlib import Path
 from models.core import Candidate
 from engine.reframe import landscape_filter, vertical_reframe_filter
-from engine.edit_plan import retention_intervals, join_words
-from engine.captions import ass_for_candidate
+from engine.edit_plan import retention_intervals
+from engine.captions import slice_ass
 
 
 def require_ffmpeg() -> None:
@@ -218,11 +218,6 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
                        check=True)
 
 
-def _subcandidate(c: Candidate, start: float, end: float) -> Candidate:
-    words = [w for w in (c.words or []) if w.end >= start and w.start <= end]
-    return Candidate(start, end, join_words(words), c.story_type, c.hook, c.payoff, c.editorial_score, c.virality_score, c.context_score, c.confidence, c.reason, c.visual_potential, words)
-
-
 def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None = None, vertical: bool = False, fps: float = 30.0) -> Path:
     require_ffmpeg(); out.parent.mkdir(parents=True, exist_ok=True)
     intervals = retention_intervals(candidate)
@@ -232,13 +227,23 @@ def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None 
     tmp = out.parent / f".{out.stem}_parts"; tmp.mkdir(parents=True, exist_ok=True)
     parts: list[Path] = []
     for i, (start, end) in enumerate(intervals):
-        sub = _subcandidate(candidate, start, end)
         part_ass = None
         if ass:
             if len(intervals) == 1:
                 part_ass = ass
             else:
-                part_ass = ass_for_candidate(sub, tmp / f"{i:03d}.ass")
+                # The shipped document is on the edited timeline, where part i
+                # begins at the sum of the durations before it — not at this
+                # interval's source time. Slicing it keeps an editor's cues and
+                # tags and retargets only the times; regenerating from the
+                # sub-candidate would discard them, and the shipped MP4 would
+                # then disagree with the document beside it.
+                offset = sum(b - a for a, b in intervals[:i])
+                part_ass = tmp / f"{i:03d}.ass"
+                part_ass.write_text(
+                    slice_ass(ass.read_text(encoding="utf-8"),
+                              offset, offset + (end - start)),
+                    encoding="utf-8")
         part = tmp / f"{i:03d}.mp4"
         _render_one(source, start, end, part, part_ass, vertical, fps)
         parts.append(part)

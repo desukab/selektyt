@@ -83,7 +83,6 @@ def test_pipeline_audio_off_by_default(tmp_path):
          patch("selekyt.pipeline.make_thoughts", return_value=[Segment(0, 10, "hello", [])]), \
          patch("selekyt.pipeline.rank", return_value=[cand]), \
          patch("selekyt.pipeline.validate", return_value=(True, "ok")), \
-         patch("selekyt.pipeline.ass_for_candidate"), \
          patch("selekyt.pipeline.caption_metadata", return_value={}), \
          patch("selekyt.pipeline.build_content_pack", return_value={}), \
          patch("selekyt.pipeline.aggregate_pacing_report", return_value={"total_candidates": 1}):
@@ -130,7 +129,6 @@ def test_pipeline_audio_on_writes_artifacts(tmp_path):
          patch("selekyt.pipeline.make_thoughts", return_value=[Segment(0, 10, "hello", [])]), \
          patch("selekyt.pipeline.rank", return_value=[cand]), \
          patch("selekyt.pipeline.validate", return_value=(True, "ok")), \
-         patch("selekyt.pipeline.ass_for_candidate"), \
          patch("selekyt.pipeline.caption_metadata", return_value={}), \
          patch("selekyt.pipeline.build_content_pack", return_value={}), \
          patch("selekyt.pipeline.aggregate_pacing_report", return_value={"total_candidates": 1}), \
@@ -217,7 +215,6 @@ def test_pipeline_audio_passes_thresholds_to_engine(tmp_path):
          patch("selekyt.pipeline.make_thoughts", return_value=[Segment(0, 10, "hello", [])]), \
          patch("selekyt.pipeline.rank", return_value=[cand]), \
          patch("selekyt.pipeline.validate", return_value=(True, "ok")), \
-         patch("selekyt.pipeline.ass_for_candidate"), \
          patch("selekyt.pipeline.caption_metadata", return_value={}), \
          patch("selekyt.pipeline.build_content_pack", return_value={}), \
          patch("selekyt.pipeline.aggregate_pacing_report", return_value={"total_candidates": 1}), \

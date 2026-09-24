@@ -14,7 +14,7 @@ from providers.atomic import read_json, write_json_atomic
 from providers.audio import peak_dbfs, AudioReadError
 
 from engine.editorial import make_thoughts, rank, score_candidate
-from engine.captions import ass_for_candidate, srt_for_candidate
+from engine.captions import ship_captions
 from engine.caption_director import caption_metadata, style_name
 from engine.content_pack import build_content_pack
 from engine.context_guard import validate
@@ -881,8 +881,17 @@ def run(
     renders = state.get("renders", {})
     for idx, c in enumerate(selected, 1):
         intervals = retention_intervals(c)
-        caption = ass_for_candidate(c, project / "captions" / f"{idx:02d}.ass")
-        srt_for_candidate(c, project / "captions" / f"{idx:02d}.srt")
+        # The ASS is a render input, not a by-product: it is the document burned
+        # into the MP4, so it must be written through the guard that keeps an
+        # editor's hand on it. Writing it unconditionally here would overwrite a
+        # moved cue before the cache below is even consulted, and the moved cue
+        # would never reach the render.
+        caption, ass_digest = ship_captions(
+            c,
+            project / "captions" / f"{idx:02d}.ass",
+            project / "captions" / f"{idx:02d}.srt",
+            renders.get(f"{idx:02d}", {}).get("ass_digest"),
+        )
         (project / "captions" / f"{idx:02d}.json").write_text(
             json.dumps(caption_metadata(c), ensure_ascii=False, indent=2),
             encoding="utf-8",
@@ -901,12 +910,18 @@ def run(
         # this selection of this source AND ffprobe can confirm it is a
         # complete, correctly-oriented video. A truncated file from a killed
         # run, or a 5-byte stub, would otherwise be shipped as a finished clip.
+        # The ASS digest is in the key for the same reason the selection digest
+        # is: the burned-in captions are part of what the cached MP4 *is*, so a
+        # changed cue must invalidate the render even when nothing else about
+        # the clip moved. It also makes a hand edit self-invalidating — a
+        # preserved ASS arrives with a digest that no cached render carries.
         cached = renders.get(f"{idx:02d}")
         if (
             cached
             and cached.get("fingerprint") == fingerprint
             and cached.get("selection_digest") == sel_digest
             and cached.get("caption_style") == caption_style
+            and cached.get("ass_digest") == ass_digest
             and _render_is_valid(fb, vertical=False, source=media)
             and _render_is_valid(sh, vertical=True, source=media)
         ):
@@ -918,6 +933,7 @@ def run(
                 "fingerprint": fingerprint,
                 "selection_digest": sel_digest,
                 "caption_style": caption_style,
+                "ass_digest": ass_digest,
                 "facebook": str(fb),
                 "shorts": str(sh),
             }
