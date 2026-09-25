@@ -5,10 +5,10 @@ export default async function handler(req,res){
   let body;
   try{body=typeof req.body==="object"?req.body:JSON.parse(req.body||"{}")}catch{return res.status(400).json({ok:false,error:"invalid JSON"})}
   const source=String(body.source||"").trim();
-  let u;
-  try{u=new URL(source)}catch{return res.status(400).json({ok:false,error:"invalid source URL"})}
-  if(!/^https?:$/.test(u.protocol)) return res.status(400).json({ok:false,error:"only http(s) video URLs are allowed"});
-  const payload={source,model:"small",limit:4,chunk_minutes:5,beam_size:1,caption_style:"minimal",audio_analysis:false,export_fcpxml:true};
+  const path=String(body.path||"").trim();
+  if(!source && !path) return res.status(400).json({ok:false,error:"source or path required"});
+  if(source){let u;try{u=new URL(source)}catch{return res.status(400).json({ok:false,error:"invalid source URL"})}if(!/^https?:$/.test(u.protocol)) return res.status(400).json({ok:false,error:"only http(s) video URLs are allowed"});}
+  const payload={...(path?{path}:{source}),model:"small",limit:4,chunk_minutes:5,beam_size:1,caption_style:"minimal",audio_analysis:false,export_fcpxml:true};
   try{
     const r=await fetch(ORIGIN.replace(/\/$/,"")+"/api/run_pipeline",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
     const data=await r.json();
