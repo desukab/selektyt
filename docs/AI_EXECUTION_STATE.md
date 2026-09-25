@@ -20,9 +20,11 @@ every line below was true on this host at that point.
   desktop shell: identify the highest-value weakness in the gap map, make the
   smallest change that fixes it, pin it with a real test, and update
   `docs/product-gap-map.md`. The most recent substantive commits are
-  `92005ae` (the editorial scan now covers the whole source instead of
-  `return`ing at a candidate cap, which had silently made the last ~35% of two
-  corpus sources unreachable) and `a1e9150` (the vertical reframe keeps the
+  `7223d30` (the story graph stopped being write-only — an edit is generated
+  from it), then the **source-acquisition fix** in its own section below, and
+  before that `92005ae` (the editorial scan now covers the whole source instead
+  of `return`ing at a candidate cap, which had silently made the last ~35% of
+  two corpus sources unreachable) and `a1e9150` (the vertical reframe keeps the
   active speaker, with the rendered output itself as the test).
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
@@ -36,19 +38,20 @@ every line below was true on this host at that point.
   not run, and a green `build-windows` badge is not a Windows validation. That
   work is paused, not finished — it is the natural next thing to resume if the
   product loop returns to distribution.
-* Test suite: **1473 passed, 13 skipped** (2026-09-24, 537.21 s) — measured by
+* Test suite: **1716 passed, 14 skipped** (2026-09-25, 567.19 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work", and the
   disk note above: a concurrent `cargo test` + `pytest` pair once hit 100% disk
   and both died reporting success-shaped exit codes).
-  The prior baseline was 1466/13; the growth is exactly the seven new tests
-  behind the unpunctuated-transcript fix — four in
-  `tests/test_speechless_source.py` (the three distinct refusal shapes, plus one
-  naming a transcript the scan could not search) and three in
-  `tests/test_unicode_pipeline.py` (the fixture really carries no terminal mark
-  and cannot reach the relief valve; an unpunctuated transcript still yields
-  rankable, guard-passing, script-pure candidates; punctuating the same
-  transcript cannot lose a span the fallback found). No regressions.
+  The prior baseline was 1675/14 at `7223d30` (the story-memory commit); the
+  growth is exactly the **41 tests in `tests/test_youtube_format_selection.py**`,
+  the source-acquisition policy covered in the session section below. No
+  regressions.
+  The count this file carried before that was itself stale — **1473/13**, quoted
+  2026-09-24 — because the 41 tests behind the story-memory commit and the
+  acquisition work landed after it without the line being refreshed. Treat the
+  number here as a self-checkpoint that drifts by design, and re-run
+  `.venv/bin/python -m pytest -q` rather than trusting it.
   Earlier: 1460/13 at `92005ae`, growing by exactly the six
   new `/api/upload` tests in `tests/test_web_harness.py` (which alone runs
   42/42 in ~48 s): a real video round-trip, a non-media rejection, name
@@ -58,6 +61,11 @@ every line below was true on this host at that point.
   intake are written in `docs/product-gap-map.md`: the 32 GiB body cap has never
   been approached, and the route has only ever been exercised with a 3 s file,
   never a genuine 1–3 hour master end to end.
+  The same caveat applies to the acquisition tests added this session: they pin
+  the policy against format ladders modelled on the real one, not against the
+  network, because the network is unreachable from this host. A green suite
+  here is **not** the 720p download the fix exists for — see the session
+  section for the verification that has not run.
   **18 Rust unit tests** in `apps/desktop/src-tauri` pass, including
   `cancel_unblocks_a_call_in_flight` (0.15 s — see the note below about why its
   fake sidecar is a shell builtin loop, not `sleep`),
@@ -1673,6 +1681,92 @@ but its errors would produce links with no checkable evidence, and the layer's
 whole contract is that a link cites what caused it). The view is a document, not
 an interface: the brief's "the user sees the story, not the graph" is satisfied by
 `story.md`.
+
+### This session — the baseline's quality complaint was one upstream format decision
+
+The clean Termux run shipped six verticals at **~202×360 and 110–140 kbps of
+video**, soft, with the speaker over-cropped and the slides cropped away. Those
+are rendering symptoms, and the first instinct — reframe, re-encode, re-anything
+in the render — was wrong. The source it was all built from was **640×360 H.264
+at ~65 kbps**. For a video that also offers native 854×480 and 1280×720.
+
+The arithmetic is mechanical. 360 source lines go through
+`vertical_crop_width(360)` = 360×9/16 = 202.5, even-rounded to **202**. A frame
+that small at CRF 20 simply emits ~120 kbps. No encoder setting was wrong and no
+reframing bug was needed to produce either reported number. Fixing the render
+would have produced a sharper 202×360.
+
+**The acquisition defect, reproduced offline.** `providers/youtube.py` sent
+yt-dlp `-f bv*+ba/b` — its own default. That clause does not *lose* to a better
+stream; on this ladder it matches **nothing**, because yt-dlp cannot find ffmpeg
+to mux the two halves (or because the player response came back degraded), and
+selection falls to `/b`: the best stream carrying both video and audio, which on
+YouTube is itag 18 at 640×360. Proven rather than assumed, by driving yt-dlp's
+own `build_format_selector` against the ladder the user's `yt-dlp -F` reported:
+
+| spec | resolves to | best height |
+|---|---|---|
+| `bv*+ba/b` (what was sent) | itag `18` alone | 360 |
+| the new policy's first arm | `136+140` | 720 |
+
+The failure is inaudible — the download succeeds and the file looks complete
+until it is measured, which is why nothing reported the loss.
+
+**The fix.** The metadata lookup the download already performs now picks an
+explicit format instead of asking yt-dlp to rank implicitly: the tallest
+*native* (not AI-upscaled) stream the local ffmpeg can decode, at or under 1080,
+with the video and audio halves joined only when a merge is actually possible.
+Arms are ordered best-first with `/` and always end in the legacy default, so
+metadata this code cannot read still downloads. H.264 ranks above VP9 and AV1 at
+equal resolution — phones decode it in hardware and it muxes into MP4 untouched.
+YouTube's `xtags=sr` marker is read to exclude the upscaled 1080p streams, which
+carry no more detail than the 720p they were made from; `SELEKYT_ALLOW_SUPER_RESOLUTION=1`
+opts in. The ceiling comes from `SELEKYT_MAX_SOURCE_HEIGHT` and is a preference,
+not a refusal — a 1440p-only source still downloads, at the best it has.
+
+Two real bugs surfaced while writing the policy and are fixed and pinned: there
+was no `mp4a → aac` alias, so YouTube's AAC audio (`mp4a.40.2` — the container
+name, not the codec) looked undecodable and the policy silently reproduced the
+exact 360p fallback it exists to prevent; and the "ffmpeg is not on PATH" note
+was only emitted on the no-specs path, so a host without a muxer got a
+low-resolution file with no indication that a higher one existed and was
+unreachable. Both are now covered in `tests/test_youtube_format_selection.py`,
+which pins the choice against format ladders modelled on the real one rather
+than against the network — **41 tests**, including the two that resolve specs
+through yt-dlp's own engine so a spec this module emits that yt-dlp cannot read
+fails in the suite rather than silently falling through on a real run.
+
+**What is not established, and this host cannot establish it.** The live
+re-download of `https://youtu.be/fxbCHn6gE3U` has not run. Every player client
+returns "Sign in to confirm you're not a bot" from this datacentre IP range and
+no cookies exist on the host. Independently, this machine has **node v18.19.1**
+while `yt_dlp/utils/_jsruntime.py` sets `NodeJsRuntime.MIN_SUPPORTED_VERSION =
+(22, 0, 0)` — so there is no supported JavaScript runtime here either, and
+yt-dlp warns "some formats may be missing". That warning is likely the
+contributing cause on Termux as well, which is why `download()` now records it
+in the project state as an actionable diagnosis (install deno, or node ≥ 22)
+when the format list it came with has nothing usable — the state file was the
+only place the cause could be read from, since the download succeeds anyway.
+The user's verification step must run on the Termux device that produced the
+baseline, where the ladder was fully visible:
+
+```
+.venv/bin/yt-dlp -f "$(the policy's spec)" --merge-output-format mp4 \
+  -o source.mp4 https://youtu.be/fxbCHn6gE3U
+ffprobe -v error -select_streams v:0 -show_entries stream=width,height,codec_name \
+  -of default=noprint_wrappers=1 source.mp4
+```
+
+A 1280×720 readout is what closes this; anything else is a new format ladder to
+reason about, not a rendering defect.
+
+**The reframing question is deliberately untouched.** The brief was explicit:
+evaluate 202×360 only after acquisition is corrected, and only if a
+high-quality-source run proves the render independently defective. Note for that
+future session that `vertical_scale_filter` never enlarges, so a 720p source
+ships a **406×720** vertical and a 1080p source a **608×1080** one — a
+deliberate source-preserving choice, but the one that decides whether a 720p
+acquisition alone produces a phone-watchable Short.
 
 ## Outstanding work
 
