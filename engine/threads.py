@@ -345,9 +345,13 @@ class ThreadResult:
     beats: list[DramaticBeat]
     links: list[SetupPayoffLink]
     broll: list[BrollMarker]
-    unit_thread: list[int | None]
+    unit_thread: list[int | None]     # one primary thread, or None
     unit_beat: list[int | None]
-    note: str
+    # every thread each unit belongs to, indexed by unit position. A unit may
+    # close one story and open another, so unlike ``unit_thread`` this is a
+    # list. Empty for the degenerate returns, which hold no threads at all.
+    unit_threads: list[list[int]] = field(default_factory=list)
+    note: str = ""
 
 
 # ── rhythm bridge ──────────────────────────────────────────────────────────
@@ -614,7 +618,7 @@ def build_threads(
     """
     n = len(unit_texts)
     if n == 0:
-        return ThreadResult([], [], [], [], [], [], "no units to thread")
+        return ThreadResult([], [], [], [], [], [], note="no units to thread")
     if n == 1:
         beats = build_beats(unit_texts, unit_sentences, unit_starts, unit_ends,
                             rhythm=rhythm)
@@ -647,11 +651,16 @@ def build_threads(
         if RE_SOLUTION.search(text):
             unit_openers["solution"].append(i)
 
-    # Each unit claims its best forward link; each target honours only the
-    # strongest claim. This keeps chains simple disjoint paths — a unit has at
-    # most one predecessor and one successor — which is what an editor can
-    # actually verify against the source.
-    claims: dict[int, tuple[float, int, str, str]] = {}  # j -> (strength, i, kind, reason)
+    # Every forward link that clears the evidence bar is kept. A passage can
+    # stand in a setup->payoff relation to more than one partner — it may close
+    # one story and open another — so unlike a simple path a unit may hold
+    # several successors and several predecessors. What stays bounded is chain
+    # *membership*, enforced in the walk below, not the edge set: the edge set
+    # is at most one per (unit, forward partner) pair, so it stays O(U * W).
+    links: list[SetupPayoffLink] = []
+    # Each unit's strongest qualifying successor is the one a chain follows;
+    # the weaker links are still reported, they just do not shape the chain.
+    best_succ: dict[int, int] = {}
     for i in range(n):
         best = (0.0, -1, "", "")
         for j in range(i + 1, min(n, i + 1 + window_units)):
@@ -660,49 +669,59 @@ def build_threads(
             kind, strength, reason = _link_candidates(
                 i, j, unit_texts, bags, idf, unit_questions, unit_openers, topics
             )
+            if strength >= min_strength:
+                links.append(
+                    SetupPayoffLink(
+                        setup_unit=i, payoff_unit=j, kind=kind,
+                        strength=round(strength, 3),
+                        setup_start=unit_starts[i], setup_end=unit_ends[i],
+                        payoff_start=unit_starts[j], payoff_end=unit_ends[j],
+                        confidence=round(min(0.95, strength), 3),
+                        reason=reason,
+                        evidence=[quote(unit_texts[i], 110),
+                                  quote(unit_texts[j], 110)],
+                    )
+                )
             if strength > best[0]:
                 best = (strength, j, kind, reason)
-        if best[0] < min_strength or best[1] < 0:
-            continue
-        j = best[1]
-        prev = claims.get(j)
-        if prev is None or best[0] > prev[0]:
-            claims[j] = (best[0], i, best[2], best[3])
+        if best[0] >= min_strength and best[1] >= 0:
+            best_succ[i] = best[1]
 
-    links: list[SetupPayoffLink] = []
-    successor_of: dict[int, int] = {}
-    predecessor_of: dict[int, int] = {}
-    for j, (strength, i, kind, reason) in sorted(claims.items()):
-        successor_of[i] = j
-        predecessor_of[j] = i
-        links.append(
-            SetupPayoffLink(
-                setup_unit=i, payoff_unit=j, kind=kind, strength=round(strength, 3),
-                setup_start=unit_starts[i], setup_end=unit_ends[i],
-                payoff_start=unit_starts[j], payoff_end=unit_ends[j],
-                confidence=round(min(0.95, strength), 3),
-                reason=reason,
-                evidence=[quote(unit_texts[i], 110), quote(unit_texts[j], 110)],
-            )
-        )
-
-    # Chains start at units nobody claims.
-    starts = [i for i in range(n) if i not in predecessor_of]
+    # Chains start at units no link points into, and follow each unit's
+    # strongest successor. A unit may be an *interior* member of at most one
+    # chain — that is what keeps total membership O(U) — but it may be the
+    # *terminal* member of several, which is how one moment closes a story
+    # while opening the next.
+    has_predecessor = {lk.payoff_unit for lk in links}
+    starts = [i for i in range(n) if i not in has_predecessor]
     threads: list[StoryThread] = []
     unit_thread: list[int | None] = [None] * n
+    unit_threads: list[list[int]] = [[] for _ in range(n)]
+    interior: set[int] = set()
     for tid, start in enumerate(starts):
         chain = [start]
         cur = start
-        while cur in successor_of:
-            nxt = successor_of[cur]
+        while cur in best_succ:
+            nxt = best_succ[cur]
             if nxt in chain:      # defensive: never loop, even on hostile input
                 break
             chain.append(nxt)
+            if nxt in interior:
+                # Already carrying a story forward, so it cannot also carry this
+                # one. It still closes this chain, which is the role a shared
+                # payoff plays.
+                break
+            interior.add(nxt)
             cur = nxt
         for u in chain:
-            unit_thread[u] = tid
-        chain_links = [lk for lk in links if lk.setup_unit in set(chain)
-                       and lk.payoff_unit in set(chain)]
+            if unit_thread[u] is None:
+                # Chains are enumerated in ascending opening order, so the
+                # primary thread is the earliest story a moment belongs to.
+                unit_thread[u] = tid
+            unit_threads[u].append(tid)
+        chain_set = set(chain)
+        chain_links = [lk for lk in links
+                       if lk.setup_unit in chain_set and lk.payoff_unit in chain_set]
         lo = unit_starts[chain[0]]
         hi = unit_ends[chain[-1]]
         share = (hi - lo) / duration if duration > 0 else 0.0
@@ -767,15 +786,22 @@ def build_threads(
             peak_bi = max(t.beat_indices, key=lambda bi: (beats[bi].intensity, -bi))
             beats[peak_bi].is_thread_peak = True
 
+    memberships = sum(len(ids) for ids in unit_threads)
+    shared = sum(1 for ids in unit_threads if len(ids) > 1)
     orphan = sum(1 for x in unit_thread if x is None)
     linked = sum(1 for t in threads if t.links)
     note = (
         f"{len(threads)} chain(s) over {n} unit(s); {linked} carry at least one "
-        f"setup->payoff link; {orphan} unit(s) had no inferable relation and are "
-        f"reported as standalone passages. {len(links)} link(s) total."
+        f"setup->payoff link; {memberships} membership(s) across all chains, of "
+        f"which {shared} unit(s) belong to more than one (a moment may close one "
+        f"story while opening another); {orphan} unit(s) had no inferable "
+        f"relation and are reported as standalone passages. {len(links)} "
+        f"link(s) total."
     )
     broll = mark_broll(unit_sentences, beats, rhythm)
-    return ThreadResult(threads, beats, links, broll, unit_thread, unit_beat, note)
+    return ThreadResult(threads=threads, beats=beats, links=links, broll=broll,
+                        unit_thread=unit_thread, unit_beat=unit_beat,
+                        unit_threads=unit_threads, note=note)
 
 
 # ── B-roll markers ─────────────────────────────────────────────────────────

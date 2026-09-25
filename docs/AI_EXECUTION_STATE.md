@@ -1619,6 +1619,61 @@ rather than left as a possibility. What is established is mechanical
 self-consistency across containers, frame rates, aspect ratios and languages —
 which is necessary and is not sufficient.
 
+### This session — the story graph stopped being write-only, and one scale test had been measuring nothing
+
+`editorial_corpus.json` is now read back. Three modules ship —
+`engine/corpus_io.py` (the reader, schema `1.0` and `1.1`), `engine/story_path.py`
+(the join from a corpus thread to an ordered selection of `Candidate`s) and
+`engine/story_view.py` (writes `story_view.json` and `story.md`). The design is
+`docs/story-memory-design.md`; the research it was built on is the new "Story
+memory" section of `docs/rd-landscape.md`. **No dependency was added** — networkx
+was the one unimpeachably-licensed candidate (BSD-3-Clause, zero deps) and was
+still rejected, because the graph is structurally bounded and the two operations
+it needs are twenty lines of indexed list code.
+
+The premise this session corrected is the one the prior session had just pinned.
+Above, this document records that `docs/corpus-model.md` "now states plainly that
+nothing consumes it" and that `tests/test_corpus_model_measured.py` pinned that
+claim. That pin was correct and the claim was false-by-construction once the
+story-memory work landed, so both flipped: the doc now names what consumes the
+layer, and the test now asserts it names them **and** still refuses to convert
+wiring into a quality claim. The hedge survived — "something consumes this layer
+now" is followed by "that would need blind A/B comparison against real sources,
+which has not been done." Consumption is established; improved edits are not.
+
+**The thread recount.** The corpus table in `docs/corpus-model.md` was re-run
+against all 11 committed transcripts after the schema `1.1` change, and the thread
+counts moved: `emwcon-panel-2018` 69→51, `nasa360-ep5` 59→45,
+`royal-society-cloke` 15→11, `hadhazy-protest` 5→4 — **211 → 174 threads**. Units,
+topics and redundancy groups are unchanged. Schema `1.1` keeps every forward link
+that clears the evidence bar instead of letting each unit claim one best link, so
+chains run their full length and fewer, longer stories result. The doc now states
+this where the table prints it. The 211 figure above is left in place as the
+record of the pre-`1.1` measurement.
+
+**A defect found by benchmarking, outside the layer's own scope.**
+`tests/test_corpus.py::test_three_hour_scale_completes_in_bounded_time_and_memory`
+was degenerate: its fixture shared boilerplate, so `segment_story_units`
+collapsed 2000 segments into **one unit** spanning 23,993 s, with 0 threads and 0
+edges, and the test asserted `units <= rng_units`, which held vacuously. It
+passed while measuring nothing. It now uses the shared `tests/story_fixtures.py`
+generator and asserts `units == 2000`, `threads > 1`, `links > 1`. **Any earlier
+wall-clock number that test reported was the cost of building one unit and should
+not be quoted as a 2000-segment measurement.** The real numbers, measured for the
+first time at that size: 1.878 s build, 3495 edges, 251 topics, 252 stories,
+11.4 MB peak. Edges per unit measured 1.725 at every size against the structural
+bound of 6, and a 180 s budget selects 22 moments at 200, 800 and 2000 units alike.
+
+**What is not established.** Everything above is synthetic transcripts with known
+ground truth — no real video was analysed for this layer, and the reconstruction
+round trip is proven on fixtures, not footage. The five implemented relationship
+kinds are lexical; speech that connects ideas by pronoun and prosody will be
+under-linked, and `fastcoref` was the rejected remedy (MIT code, MIT weights, CPU —
+but its errors would produce links with no checkable evidence, and the layer's
+whole contract is that a link cites what caused it). The view is a document, not
+an interface: the brief's "the user sees the story, not the graph" is satisfied by
+`story.md`.
+
 ## Outstanding work
 
 In rough order of how much it would cost a user (fuller list in

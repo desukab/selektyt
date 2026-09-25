@@ -98,7 +98,7 @@ from engine.threads import (
 from engine.topics import Topic, TopicResult, cluster_topics
 from models.core import Segment
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
 
 _PUNCT = "।॥？！.,;:—-–\"'()[]{}"
 _TERMINAL_PUNCT = set(".?!।॥？。")
@@ -188,6 +188,9 @@ class EditorialCorpus:
     rhythm: RhythmProfile
     # editorial read
     arc_summary: str
+    # every thread each unit belongs to, indexed by unit position; a unit may
+    # be one story's payoff and another's setup, so membership is a list
+    unit_threads: list[list[int]] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -599,6 +602,7 @@ def build_corpus(
         broll=threads.broll,
         rhythm=rhythm,
         arc_summary=_arc_summary(corpus_units, threads, topics, redundancy, rhythm, dur, detected),
+        unit_threads=threads.unit_threads,
         notes=notes,
     )
     return corpus
@@ -662,12 +666,23 @@ def _arc_summary(
             f"passage(s) that could be removed without losing a point"
         )
     if rhythm.available:
-        parts.append(
-            f"speech rate {rhythm.speech_rate_wpm:.0f} wpm over voiced time "
-            f"({rhythm.filler_count} filler marker(s), "
-            f"{rhythm.false_start_count} false start(s), "
-            f"{rhythm.incomplete_count} truncated passage(s))"
-        )
+        # ``available`` means word objects exist, not that any voiced time could
+        # be measured — a transcript whose every word carries zero duration has
+        # a rate of None, and that must read as unmeasured rather than crash.
+        if rhythm.speech_rate_wpm is None:
+            parts.append(
+                f"word timing is present but no measurable voiced time, so the "
+                f"speech rate is unmeasured ({rhythm.filler_count} filler "
+                f"marker(s), {rhythm.false_start_count} false start(s), "
+                f"{rhythm.incomplete_count} truncated passage(s))"
+            )
+        else:
+            parts.append(
+                f"speech rate {rhythm.speech_rate_wpm:.0f} wpm over voiced time "
+                f"({rhythm.filler_count} filler marker(s), "
+                f"{rhythm.false_start_count} false start(s), "
+                f"{rhythm.incomplete_count} truncated passage(s))"
+            )
     if detected:
         parts.append(f"scripts detected: {', '.join(detected)}")
     return ". ".join(parts) + "."

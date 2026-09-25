@@ -480,29 +480,34 @@ def test_three_hour_scale_completes_in_bounded_time_and_memory():
     and asserts every analysis produced a bounded result. It does not assert
     timing thresholds (CI machines vary), but a quadratic regression in topic
     or thread construction makes this test visibly slow.
+
+    The transcript comes from ``tests.story_fixtures``, whose passages are shaped
+    to the segmenter: adjacent passages are about unrelated subjects, so the
+    lexical containment at every seam collapses and the splitter actually
+    breaks. A fixture whose passages share boilerplate does not exercise the
+    layer at all — it collapses into one unit spanning the whole source, with
+    one topic, no threads and no edges, and every bound below then holds
+    vacuously. Splitting is asserted for that reason, not assumed.
     """
     import time
 
+    from tests.story_fixtures import duration_for, transcript
+
     rng_units = 2000
-    segs: list[Segment] = []
-    t = 0.0
-    vocab = ["satellite", "antenna", "telemetry", "agency", "rescue",
-             "orbit", "signal", "vendor", "fleet", "launch"]
-    for i in range(rng_units):
-        # Deterministic pseudo-random text with real repetition, so topics and
-        # redundancy have something to find without being degenerate.
-        a, b = vocab[(i * 7) % len(vocab)], vocab[(i * 13) % len(vocab)]
-        c_word = vocab[(i * 29) % len(vocab)]
-        text = f"The {a} report on the {b} system. The {c_word} findings were conclusive."
-        segs.append(seg(t, text))
-        t += 12.0
+    segs = transcript(rng_units)
     start = time.monotonic()
-    corpus = build_corpus(segs, duration=t, language="en")
+    corpus = build_corpus(segs, duration=duration_for(rng_units), language="en")
     elapsed = time.monotonic() - start
-    assert len(corpus.units) <= rng_units
+    assert len(corpus.units) == rng_units, (
+        f"{len(corpus.units)} unit(s) from {rng_units} segments — the "
+        f"transcript collapsed, so this test measures nothing")
     assert len(corpus.topics) <= len(corpus.units)
     assert len(corpus.threads) <= len(corpus.units)
     assert len(corpus.beats) == len(corpus.units)
+    # The analyses the cost model is about: a real transcript of this length
+    # forms hundreds of stories and thousands of edges, not none.
+    assert len(corpus.threads) > 1
+    assert len(corpus.links) > 1
     # Evidence lists are bounded per artifact, so memory is bounded per artifact.
     for art in corpus.topics + corpus.threads + corpus.redundancy_groups:
         assert len(art.evidence) <= 3

@@ -8,10 +8,12 @@ the VAD retry's justification was arithmetically wrong. This module recomputes
 the table from the transcripts the docs name, so a doc edit that drifts off the
 measurement fails here rather than shipping.
 
-The layer is not wired into the pipeline (the doc says so), so this is not
-testing product behaviour. It is testing that the doc's numbers are the numbers
-the corpus gives — which is the weaker but still useful claim, and the one that
-was wrong last time.
+The layer was long unwired into the pipeline, and the doc said so; it is now read
+by the story-memory layer (`engine/story_path.py`, `engine/story_view.py`), so
+this module checks both numbers. It is not testing product behaviour — it is
+testing that the doc's numbers are the numbers the corpus gives, and that the
+doc's claim about consumption matches the consumption that actually exists. Both
+are the weaker but still useful claim, and both were wrong last time.
 """
 from __future__ import annotations
 
@@ -126,11 +128,33 @@ def test_the_quoted_judgement_names_a_real_unit():
         )
 
 
-def test_the_doc_admits_the_layer_is_unused():
-    """The doc must not imply the pipeline consumes this layer. Overclaiming
-    that is the failure mode this whole module exists to prevent, so the
-    disclaimer is checked rather than assumed."""
+def test_the_doc_states_who_consumes_the_layer_and_does_not_overclaim():
+    """The doc must name what reads this layer, and must not convert that wiring
+    into a quality claim.
+
+    The layer was once consumed by nothing, and the previous version of this test
+    pinned that plainly: overclaiming consumption was the failure mode this whole
+    module exists to prevent. The story-memory layer changed the premise —
+    ``engine/story_path.py`` and ``engine/story_view.py`` now read the corpus back
+    through ``engine/corpus_io.py`` — so the honest assertion flipped with it. What
+    did *not* flip is the second half: reaching the pipeline is not the same as
+    improving an edit, and the doc must keep saying so.
+    """
     text = DOC.read_text(encoding="utf-8")
-    assert "Nothing consumes this layer yet" in text, (
-        "the doc must state plainly that no pipeline path reads this layer"
+    assert "Something consumes this layer now" in text, (
+        "the doc must state plainly that the layer is now read, and name what "
+        "reads it"
+    )
+    assert "engine/story_path.py" in text and "engine/corpus_io.py" in text, (
+        "the doc must name the consuming modules, not just assert consumption"
+    )
+    # The claim the doc is still not allowed to make: that wiring improved an
+    # edit. This is the sentence a reader would quote, and it must stay hedged.
+    assert "does **not** establish" in text, (
+        "the doc must still say the table does not establish that acting on it "
+        "improves an edit; wiring is not evidence"
+    )
+    assert "has not been done" in text, (
+        "the doc must name the blind A/B comparison as the missing evidence "
+        "rather than leaving the hedge vague"
     )

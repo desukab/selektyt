@@ -204,8 +204,21 @@ def test_beats_corpus_peak_is_marked_once():
     assert beats[1].kind == "revelation"
 
 
-# ── redundancy: which passage to keep, and why ─────────────────────────────
+def test_arc_summary_says_when_the_speech_rate_is_unmeasured():
+    """``rhythm.available`` means word objects exist, not that voiced time could
+    be measured. A transcript whose every word carries zero duration has a rate
+    of None, which must read as unmeasured — it used to crash the builder."""
+    from models.core import Word
+    segs = [Segment(0.0, 8.0, "The harbour was rebuilt. The lamp was replaced.",
+                    [Word(w, 0.0, 0.0, 0.9) for w in
+                     ["The", "harbour", "was", "rebuilt"]])]
+    c = build_corpus(segs, duration=15.0)
+    assert c.rhythm.available
+    assert c.rhythm.speech_rate_wpm is None
+    assert "unmeasured" in c.arc_summary
 
+
+# ── redundancy: which passage to keep, and why ─────────────────────────────
 
 def test_redundancy_representative_is_complete_over_truncated():
     """A full-stop version beats a truncated one even when slightly shorter."""

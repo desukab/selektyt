@@ -154,6 +154,87 @@ Two findings worth recording from the REJECT rows:
 
 ---
 
+## Story memory: graphs, links, narrative structure
+
+Researched for the linked story-memory layer (`docs/story-memory-design.md`,
+shipped as `engine/story_path.py`, `engine/story_view.py`,
+`engine/corpus_io.py`). The headline result of this section is a negative one and
+it shaped the whole design: **no dependency was added.**
+
+| Repo / project | Stars | Licence | Last push | Status for SeleKyT |
+|---|---|---|---|---|
+| google/open-knowledge-format | 588 | Apache-2.0 | 2026-09 | **Pattern, not dependency** — see below |
+| AcademySoftwareFoundation/OpenTimelineIO | 1,987 | Apache-2.0 | 2026-09-22 | **Already a build dep**; the graph lives *outside* it — see below |
+| networkx | 16,300 | BSD-3-Clause | 2026-09-24 | **Deliberately not added** — see below |
+| shon-akermiss/fastcoref | 265 | MIT (code) | 2026-08 | **Deliberately not integrated** — see below |
+| isanlp/isanlp_rst | — | MIT (code) / **CC-BY-NC-4.0 (weights)** | — | **REJECT — the trap in this domain** |
+| igraph, graph-tool, leidenalg, netgraph, grandalf | — | GPL-2.0 / GPL-3.0 / LGPL-3.0 | — | **REJECT — copyleft** |
+| schema.org | — | **CC-BY-SA 3.0** | — | **REJECT — share-alike on the vocabulary itself** |
+
+**OKF is the right pattern and the wrong format.** Open Knowledge Format is real,
+vendor-neutral, Apache-2.0 and at v0.2 — it is not vapour. But its links are
+explicitly **untyped**: a document can say "these two moments are connected" and
+cannot say "this one sets up that one." A typed `sets_up → pays_off` edge is the
+entire substance of a story graph, so importing OKF would mean importing a
+structure that cannot express the one thing the layer exists to express. What was
+taken instead is the *shape* of it: source-grounded nodes, per-edge provenance,
+and a bundle layout a consumer can walk without understanding the analyser. The
+directive's "do not blindly implement OKF or become dependent on a Google system"
+is satisfied by that distinction — SeleKyT keeps its own canonical representation,
+and `docs/story-memory-design.md` §8 records the comparison in full.
+
+**OpenTimelineIO is a tree, and the story graph is not.** An OTIO timeline is a
+nested `Stack → Track → Clip` structure; a story is a graph where one moment
+belongs to several stories with different roles. The graph therefore lives
+outside OTIO, keyed by the source ranges OTIO clips are built from, and every
+generated timeline stays traceable back to story nodes and original source
+ranges. What was taken from OTIO is its persistence discipline —
+`Schema{name,version}` plus a type registry plus an `unknownSchema` fallback, so
+a file written by a newer SeleKyT stays readable by an older one for everything
+the older one understands. `tests/test_corpus_io.py` pins that behaviour.
+
+**networkx was the one candidate with an unimpeachable licence** (BSD-3-Clause,
+zero further dependencies), and it is still not a dependency. The graph this
+layer holds is small and structurally bounded — `engine/threads.py` emits edges
+with `for j in range(i + 1, min(n, i + 1 + window_units))`, so the edge set is
+O(U × W) and never O(U²) — and the operations the layer performs are a window
+walk and a chain walk, which are clearer as twenty lines of indexed list code
+than as a library call. Adding a general graph library to express two bounded
+loops is exactly the "dependency because it is interesting" the brief rules out.
+`tests/test_story_bench.py` asserts the bound rather than trusting it.
+
+**fastcoref is MIT code with MIT weights on Hugging Face, runs on CPU, and was
+not integrated.** Coreference would let a link follow a pronoun back to its
+antecedent rather than requiring lexical overlap. It was not added because the
+implemented link kinds are all *evidence-grounded by construction* — each cites
+the lexical overlap, the question form, or the result connective that caused it —
+and a coreference resolver's errors would produce links with no checkable
+evidence. `tests/test_story_memory.py` pins the refusal: a transcript with two
+unrelated passages about satellites produces **no** link, not a weak one. If
+coreference is ever added, it belongs in the evidence layer with its own
+confidence, not as a silent replacement for lexical overlap.
+
+**isanlp_rst is the trap this domain sets.** MIT code, RST discourse parsing —
+exactly the "how does this moment relate to the next" question the layer asks —
+and weights under **CC-BY-NC-4.0**, non-commercial. The licence is on the
+artefact the code is useless without, so shipping it pollutes the product. This
+is recorded because the attractive half (MIT code) is what a licence scan that
+only reads `LICENSE` would report.
+
+**schema.org is rejected on its vocabulary.** The terms are share-alike
+(CC-BY-SA 3.0), so adopting the vocabulary would put licence obligations on
+SeleKyT's own data model. The five implemented relationship kinds are SeleKyT's
+own names, declared at `engine/threads.py:262`.
+
+**What no repo in this domain solves, and SeleKyT therefore implements itself:**
+typed setup→payoff edges grounded in transcript evidence (not discourse-parse
+labels), per-story role assignment that a human editor can override, and the
+round trip — analyse once, export, re-import into a clean process, and generate
+the same edits. That last one is `tests/test_story_memory.py`, and it is the test
+the brief calls the most important of the seventeen.
+
+---
+
 ## Reframe and captions
 
 | Repo | Stars | Licence | Last push | Status for SeleKyT |
@@ -249,7 +330,9 @@ Recorded so the gaps are not mistaken for search failures:
 1. **Editorial judgement.** No project scores a story's hook, setup, turn and
    payoff. That is `engine/editorial.py` and `engine/story_units.py`, and the
    sweep produced nothing to import there — only references for what a
-   coherence scorer could measure.
+   coherence scorer could measure. The linked-memory layer narrows this gap
+   further but does not close it: it consumes the judgements the corpus already
+   made rather than producing new ones (see [Story memory](#story-memory-graphs-links-narrative-structure)).
 2. **DaVinci Resolve EDL dialect.** No open-source tool treats Resolve as a
    first-class target (see above).
 3. **Cut-vs-pan discrimination on the sample grid.** Available from

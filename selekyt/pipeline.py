@@ -793,17 +793,19 @@ def run(
         json.dumps(editorial_report, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
-    # The corpus layer (topics, threads, redundancy groups, rhythm) is a
-    # finished, tested analysis that nothing in the pipeline consumed: it was
-    # reachable only by importing engine.corpus directly, so an editor running
-    # the product never saw the redundancy groups it had already computed and
-    # never saw a topic spine at all. It is deterministic, pure and 0.2 s on an
-    # 8.9-minute source, so writing it alongside the other reports costs
-    # nothing and it degrades to a valid corpus with explanatory notes on a
-    # transcript too short or too sparse to analyse. A failure here must not
-    # take down a run whose clips are already selected and rendered, so the
-    # write reports rather than raises. The report then names the path only if
-    # the file landed: a key pointing at a missing artifact is worse than an
+    # The corpus layer (topics, threads, redundancy groups, rhythm) is the
+    # story-memory layer's input. It was originally a finished, tested analysis
+    # that nothing consumed — reachable only by importing engine.corpus, so an
+    # editor never saw the redundancy groups already computed and never saw a
+    # topic spine at all. This file is what changed that: engine.story_path and
+    # engine.story_view read it back through engine.corpus_io, so a run writes
+    # the canonical graph the story view is derived from. It is deterministic,
+    # pure and 0.2 s on an 8.9-minute source, so writing it alongside the other
+    # reports costs nothing and it degrades to a valid corpus with explanatory
+    # notes on a transcript too short or too sparse to analyse. A failure here
+    # must not take down a run whose clips are already selected and rendered, so
+    # the write reports rather than raises. The report then names the path only
+    # if the file landed: a key pointing at a missing artifact is worse than an
     # absent key, because a UI resolving it fails loudly and an editor reads
     # that as a broken run.
     corpus_path = project / "editorial_corpus.json"
