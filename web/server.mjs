@@ -654,6 +654,11 @@ async function _runExclusive(dir, op, fn) {
 
 async function route(req, res, url, method) {
   const expectedOrigin = `http://${req.headers.host || url.host}`;
+  const corsOrigin = process.env.SELEKYT_CORS_ORIGIN || "";
+  const corsAllowed = corsOrigin && req.headers.origin === corsOrigin;
+  if (method === "OPTIONS" && corsAllowed) {
+    return send(res, 204, "", { "Access-Control-Allow-Origin": corsOrigin, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Max-Age": "600", "Vary": "Origin" });
+  }
   if ((method === "GET" || method === "POST") && url.pathname === "/api/ping") {
     // Ping is the page's liveness probe and is the one request that cannot
     // wait for the pipeline: the sidecar is a single thread, so while it
@@ -684,7 +689,7 @@ async function route(req, res, url, method) {
     // same-origin gate that closes the CSRF hole on the other POSTs applies
     // here too, so a hostile page cannot make the browser post a form body at
     // this route and land a file on disk.
-    assertSameOrigin(req, expectedOrigin);
+    if (!corsAllowed) assertSameOrigin(req, expectedOrigin);
     const boundary = _boundary(req.headers["content-type"] || "");
     if (!boundary) {
       throw new Error(
@@ -731,6 +736,10 @@ async function route(req, res, url, method) {
     // The stored path is what the page puts back into the cuts control, and it
     // is inside ROOT, so guardedPath admits it as a pipeline source without the
     // upload route having to widen any boundary.
+    if (corsAllowed) {
+      res.setHeader("Access-Control-Allow-Origin", corsOrigin);
+      res.setHeader("Vary", "Origin");
+    }
     return sendJson(res, {
       ok: true,
       op: "upload",
