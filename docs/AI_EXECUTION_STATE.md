@@ -20,10 +20,13 @@ every line below was true on this host at that point.
   desktop shell: identify the highest-value weakness in the gap map, make the
   smallest change that fixes it, pin it with a real test, and update
   `docs/product-gap-map.md`. The most recent substantive commits are
-  `7223d30` (the story graph stopped being write-only — an edit is generated
-  from it), then the **source-acquisition fix** in its own section below, and
-  before that `92005ae` (the editorial scan now covers the whole source instead
-  of `return`ing at a candidate cap, which had silently made the last ~35% of
+  `56253b5` (the vertical deliverable was re-mastered from `-preset veryfast
+  -crf 20` to `-preset slow -crf 18` after measuring a ladder against a `-crf 0`
+  reference on real corpus footage — its own section below), then `7223d30`
+  (the story graph stopped being write-only — an edit is generated from it),
+  then the **source-acquisition fix** in its own section below, and before that
+  `92005ae` (the editorial scan now covers the whole source instead of
+  `return`ing at a candidate cap, which had silently made the last ~35% of
   two corpus sources unreachable) and `a1e9150` (the vertical reframe keeps the
   active speaker, with the rendered output itself as the test).
   Run `git log -1` for the current hash rather than trusting a hash printed
@@ -38,13 +41,20 @@ every line below was true on this host at that point.
   not run, and a green `build-windows` badge is not a Windows validation. That
   work is paused, not finished — it is the natural next thing to resume if the
   product loop returns to distribution.
-* Test suite: **1716 passed, 14 skipped** (2026-09-25, 567.19 s) — measured by
+* Test suite: **1721 passed, 14 skipped** (2026-09-25, 572.03 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work", and the
   disk note above: a concurrent `cargo test` + `pytest` pair once hit 100% disk
-  and both died reporting success-shaped exit codes).
-  The prior baseline was 1675/14 at `7223d30` (the story-memory commit); the
-  growth is exactly the **41 tests in `tests/test_youtube_format_selection.py**`,
+  and both died reporting success-shaped exit codes). This run was taken *after*
+  the `7f9833c` merge, so it covers the demo work as well as `56253b5`.
+  The prior baseline was 1716/14 before the encoder re-measurement; the growth
+  is exactly the five tests the render commit added — the encoder settings pin,
+  the shipped pixel format decode, the concat stream-level A/V alignment, and
+  the two slide-geometry mutual-exclusion proofs in `tests/test_reframe.py`.
+  No regressions.
+  Before that the baseline was 1675/14 at `7223d30` (the story-memory commit);
+  that growth was exactly the **41 tests in
+  `tests/test_youtube_format_selection.py**`,
   the source-acquisition policy covered in the session section below. No
   regressions.
   The count this file carried before that was itself stale — **1473/13**, quoted
@@ -1760,13 +1770,86 @@ ffprobe -v error -select_streams v:0 -show_entries stream=width,height,codec_nam
 A 1280×720 readout is what closes this; anything else is a new format ladder to
 reason about, not a rendering defect.
 
-**The reframing question is deliberately untouched.** The brief was explicit:
-evaluate 202×360 only after acquisition is corrected, and only if a
-high-quality-source run proves the render independently defective. Note for that
-future session that `vertical_scale_filter` never enlarges, so a 720p source
-ships a **406×720** vertical and a 1080p source a **608×1080** one — a
-deliberate source-preserving choice, but the one that decides whether a 720p
-acquisition alone produces a phone-watchable Short.
+### This session — the render *was* independently defective, and two of its own published numbers were wrong (`56253b5`)
+
+The brief's condition was met without the network: the corpus file
+`corpus/media/pentagon-esper-briefing.mp4` (1280×720, 29.97 fps) is exactly the
+profile the vertical path targets, so the render could be measured against a
+high-quality source on this host. It was, and the encoder was the defect.
+
+Measured against a `-crf 0` reference of the *same filter chain* — the crop, the
+scale and the captions all applied, so the ladder scores the encode alone — 240
+frames through the tracked 406×722 crop:
+
+    preset      crf    kbps    SSIM     PSNR    wall
+    veryfast     20    837.9  0.9991    40.54    1.04 s
+    medium       20    962.5  0.9994    41.92    1.95 s
+    slow         20    929.6  0.9994    41.93    2.60 s
+    slow         18   1211.9  0.9995    43.18    2.89 s   <- shipped
+    slow         16   1576.9  0.9996    44.43    3.23 s
+
+The old setting, `-preset veryfast -crf 20`, is the **lowest-quality entry on the
+ladder**, 2.64 dB behind what now ships. That is a visible softness on a
+phone-held Short, not a chart artefact. It is also the *cheapest* entry, so the
+change is an honest quality purchase rather than a free one: +2.64 dB for +44%
+bitrate and +1.85 s of wall clock on 8 s of footage. That matters because the
+pipeline also runs on the Termux/ARM host, where the encode stays tolerable.
+`crf 16` buys one more dB for another 30% bitrate and is not worth carrying.
+
+`-pix_fmt yuv420p` is now explicit. Without it, a 4:2:2 or 4:4:4 master would
+carry its chroma subsampling into an MP4 that half the decoders in the world
+refuse to open — a playback defect, not a quality one, and invisible in any
+metric that reads the file with the same ffmpeg that wrote it.
+
+**Two conclusions this work published first were wrong, and both reversed.** Both
+came from a synthetic bench source in the job's scratch dir that was silently
+overwritten mid-session, so the table being quoted described a file that no
+longer existed. (1) veryfast/crf20 was reported as 172.6 kbps and "the worst
+entry on both axes at once"; it reproduces at 16.9 kbps on the overwritten file
+and 837.9 on real footage, where it is the cheapest entry, not the most
+expensive. (2) Pre-upscaling the 406×722 crop to 1080×1920 was reported as
+*strictly worse* (44.59 vs 49.25 dB at 3.2× bitrate); on real footage it is
+*genuinely better* (45.97 vs 43.43 dB) but at 4.3× the bitrate (5219 vs 1212
+kbps). The pipeline still ships the source-preserving crop — now restated as a
+**cost** decision, not a quality one, since the same perceptual budget buys far
+more in the encoder than in a pre-upscale the player performs for free. The
+reversal is recorded in the `_encoder_args` docstring so it is not mistaken for a
+settled result, and the standing instruction for any future edit there is in the
+memory file: re-run the bench and update both that docstring and
+`test_encoder_settings_are_the_measured_ones`, whose docstring carries the same
+table. **Never trust a bench table whose source file lives in a scratch dir.**
+
+**Phase 5 (slides) is documented rather than pretended.** The reframe election is
+subject-centred and has no notion of a second content class, so for the common
+speaker-left / slide-right lecture layout the 406 px window cannot hold both:
+enumerating all 1280 legal crop centres on such a frame found **zero** positions
+that keep the speaker's face and at least half the slide's text in frame at once.
+This is geometry, not tuning — the fix is a perception change (slide or text
+detection in the election, and a two-region objective), not a width, which would
+break the 9:16 contract, and not a bias, which would flip which region is
+discarded. Recorded in `_reframe_track`'s known-limitation paragraph in
+`engine/reframe.py` where the choice is actually made, with the geometry asserted
+as a mutual-exclusion proof in `tests/test_reframe.py`.
+
+**Phase 7's "non-monotonic DTS" alarm was closed as a measurement artefact**, not
+a defect. `ffprobe -show_entries packet=dts_time,pts_time` prints the columns in
+`AVPacket`'s internal field order — pts then dts — regardless of the order
+requested, so a correct B-frame decode-order sequence reads back as scrambled.
+Re-measured via `-show_packets`: DTS is monotonic, and audio/video head and tail
+drift are 0.000 s across 1/2/3/5 concatenated parts. Nothing was suppressed; the
+trap is documented on the test helper so it is not rediscovered, and the real
+invariant is pinned instead.
+
+**The reframing width is still deliberately untouched**, and the reason is now
+sharper than when the last session left it. `vertical_scale_filter` never
+enlarges, so a 720p source ships a **406×720** vertical and a 1080p source a
+**608×1080** one. That is a deliberate source-preserving choice, and the
+encoder re-measurement above is the argument for it: the bits that a pre-upscale
+would consume buy 2.5 dB more actual detail when spent on the encode instead.
+Whether a 406×720 deliverable reads as sharp on a phone is a question the ladder
+cannot answer — it measures fidelity to the source, not perceived sharpness at
+viewing size — and it stays open until a real 720p acquisition is available to
+judge against.
 
 ## Outstanding work
 
@@ -1982,6 +2065,23 @@ In rough order of how much it would cost a user (fuller list in
     29.97 fps. 23.976, 50 and 59.94 remain untested, and no 4K/H.265 source was
     attempted — still the largest unquantified risk in `docs/BUSINESS_MODEL.md`
     §9.
+13. **The vertical encoder is measured now; the slide layout is not solved, and
+    geometry says it cannot be.** The encoder ladder in the session section
+    above is closed. The speaker-left / slide-right lecture layout is not, and
+    the reason it is recorded rather than tuned is a measured fact: on a
+    1280-wide frame with the speaker and slide ~560 px apart centre-to-centre,
+    **all 1280 legal crop centres leave either the speaker's face or at least
+    half the slide's text out of frame** — zero positions hold both. The
+    election picks whichever side carries more structure and does not know it is
+    choosing, so such a clip can ship with the speaker cropped out, the slide
+    half-cut, or both, and nothing reports it. The fix is a perception change (a
+    second content class in the election, plus a two-region objective), and a
+    width increase is not an option because it breaks the 9:16 deliverable.
+    **This is the single highest-leverage remaining quality gap in the render**,
+    and it is named here rather than in the gap map because the gap map measures
+    what *has* shipped, and no corpus run has shipped a lecture-with-slides clip
+    through the vertical path yet — so it is an unmeasured failure mode, not an
+    observed one.
 
 **One OPEN finding that is noise, recorded so it is not mistaken for a defect
 later.** `tools/editorial_audit.py`'s `check_cuts_respect_sentences` flags six
