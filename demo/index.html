@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050505">
+<title>SeleKyT — Try the editorial engine</title>
+<style>
+:root{--bg:#050505;--fg:#f4f4ef;--muted:#8e9188;--lime:#d9ff4a;--line:#24251f}
+*{box-sizing:border-box}html{background:var(--bg);color:var(--fg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}body{margin:0;min-height:100vh;background:radial-gradient(circle at 70% 10%,#171b0c 0,transparent 35%),var(--bg)}
+.wrap{width:min(1120px,92vw);margin:auto}.nav{height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);font-size:13px}.brand{letter-spacing:.08em;font-weight:800}.dot{color:var(--lime)}.back{color:var(--muted);text-decoration:none}.hero{padding:76px 0 34px}.eyebrow{font-size:11px;letter-spacing:.18em;color:var(--lime);font-weight:700}.hero h1{font-size:clamp(44px,8vw,92px);line-height:.92;letter-spacing:-.065em;margin:18px 0;max-width:900px}.hero p{font-size:18px;line-height:1.55;color:#b7b9b1;max-width:650px}.panel{border:1px solid #303129;background:linear-gradient(145deg,#0d0e0b,#070807);border-radius:22px;padding:22px;box-shadow:0 30px 100px #000}.inputrow{display:flex;gap:10px}.inputrow input{flex:1;min-width:0;background:#10110e;border:1px solid #36382f;color:#fff;padding:17px 18px;border-radius:12px;font-size:15px;outline:none}.inputrow input:focus{border-color:var(--lime)}button{border:0;border-radius:12px;padding:0 22px;background:var(--lime);color:#080900;font-weight:800;cursor:pointer;min-height:52px}button:disabled{opacity:.45;cursor:wait}.hint{font-size:12px;color:var(--muted);margin:12px 2px 0}.stages{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:22px}.stage{height:6px;background:#20221b;border-radius:10px;overflow:hidden}.stage.on{background:var(--lime)}.status{margin-top:20px;color:#c8cbc1;min-height:24px}.status b{color:var(--lime)}.result{margin-top:18px;border-top:1px solid var(--line);padding-top:22px;display:none}.result.show{display:block}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{border:1px solid var(--line);border-radius:15px;padding:16px;background:#090a08}.label{font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}.value{font-size:25px;margin-top:7px}.files{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}.files a{color:var(--lime);text-decoration:none;border:1px solid #34372a;border-radius:9px;padding:9px 11px;font-size:12px}.note{margin-top:20px;padding:14px;border-left:2px solid var(--lime);color:#aeb1a7;font-size:12px;line-height:1.5}.footer{padding:45px 0;color:#66695f;font-size:12px}@media(max-width:700px){.inputrow{flex-direction:column}.inputrow button{width:100%}.stages{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}.hero{padding-top:52px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="nav"><div class="brand">SELEKY<span class="dot">T</span></div><a class="back" href="https://desukab.github.io/">← selekyt.ai experience</a></nav>
+<main>
+<section class="hero"><div class="eyebrow">LIVE PRODUCT DEMO</div><h1>Long-form video.<br><span class="dot">The first pass, automated.</span></h1><p>Paste a public video URL. SeleKyT acquires the source, understands the transcript, finds story moments, shapes a first-pass edit and returns the editorial package.</p></section>
+<section class="panel">
+<div class="inputrow"><input id="source" placeholder="Paste a YouTube URL…" autocomplete="off"><button id="run">TRY SELEKYT →</button></div>
+<div class="hint">Demo mode · small transcription model · up to 4 selected clips · editable timeline export</div>
+<div class="stages" id="stages"><i class="stage"></i><i class="stage"></i><i class="stage"></i><i class="stage"></i><i class="stage"></i><i class="stage"></i></div>
+<div class="status" id="status">Ready. Give SeleKyT a long-form source.</div>
+<div class="result" id="result">
+<div class="grid">
+<div class="card"><div class="label">Story candidates</div><div class="value" id="candidates">—</div></div>
+<div class="card"><div class="label">Selected moments</div><div class="value" id="selected">—</div></div>
+<div class="card"><div class="label">Language</div><div class="value" id="language">—</div></div>
+<div class="card"><div class="label">Outputs</div><div class="value" id="outputs">—</div></div>
+</div>
+<div class="files" id="files"></div>
+<div class="note">The MP4s are previews. The editorial package carries the selections, report and editable timeline so an editor can continue the work.</div>
+</div>
+</section>
+</main>
+<footer class="footer">SeleKyT · AI-native editorial engine · human editor remains in control</footer>
+</div>
+<script>
+const $=s=>document.querySelector(s), stages=[...document.querySelectorAll(".stage")];
+const labels=["ACQUIRING SOURCE","TRANSCRIBING","BUILDING VIDEO MEMORY","FINDING STORY THREADS","RANKING MOMENTS","BUILDING FIRST PASS"];
+let timer;
+function setStage(n){stages.forEach((x,i)=>x.classList.toggle("on",i<n))}
+function status(s){$("#status").innerHTML=s}
+function validUrl(v){try{const u=new URL(v);return /^https?:$/.test(u.protocol)}catch{return false}}
+async function ping(){try{const r=await fetch("/api/ping");return r.ok}catch{return false}}
+async function run(){
+ const source=$("#source").value.trim(), btn=$("#run");
+ if(!validUrl(source)){status("Paste a valid <b>http(s)</b> video URL.");return}
+ btn.disabled=true; $("#result").classList.remove("show"); setStage(1);
+ let i=1; timer=setInterval(()=>{if(i<5){setStage(++i);status(labels[i-1]+"…")}},12000);
+ try{
+   const r=await fetch("/api/run",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({source})});
+   const data=await r.json(); if(!r.ok||!data.ok) throw new Error(data.error||"pipeline failed");
+   clearInterval(timer); setStage(6); status("<b>FIRST PASS READY.</b> SeleKyT found the story and built the package.");
+   const rep=data.data.report||{}; $("#candidates").textContent=rep.candidate_count??"—"; $("#selected").textContent=rep.selected_count??"—"; $("#language").textContent=rep.language??"—"; $("#outputs").textContent=(data.data.artifacts||[]).length;
+   const box=$("#files"); box.innerHTML="";
+   for(const a of (data.data.artifacts||[])){const el=document.createElement("a");el.href=a.url;el.textContent=a.label;el.download="";box.appendChild(el)}
+   $("#result").classList.add("show");
+ }catch(e){clearInterval(timer);setStage(0);status("Demo failed: "+String(e.message||e))}
+ finally{btn.disabled=false}
+}
+$("#run").addEventListener("click",run);$("#source").addEventListener("keydown",e=>{if(e.key==="Enter")run()});
+ping().then(ok=>{if(!ok)status("Demo API is waking up…")});
+</script>
+</body>
+</html>
