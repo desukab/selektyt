@@ -578,6 +578,25 @@ def _reframe_track(video: Path, start: float, end: float, samples: int = 28
     tracks a subject's position. Detections being empty and detections being
     impossible are the same problem from the crop's point of view, so they share
     one path.
+
+    Known limitation -- slides. The crop is subject-centred, and there is no
+    notion in this pass of a second region of interest such as a slide or a
+    chart. For the common lecture layout (speaker left, slides right, each in
+    its own half of a 1280-wide frame) the window is simply too narrow to hold
+    both, and this is geometry rather than tuning: the crop at 720-tall source
+    is 406 px, the speaker and the slide are ~560 px apart centre-to-centre, and
+    enumerating every legal crop centre on such a frame found *zero* positions
+    that keep the speaker's face and at least half the slide's text in frame at
+    once. The pass does not know it is choosing between them, and what it picks
+    is whichever side carries more structure -- the face detector when one is
+    found, otherwise the edge-dense half, which for dense slide text is the
+    slide and not the speaker. So on such a clip the deliverable can ship with
+    the speaker cropped out, the slide half-cut, or both, and nothing here
+    reports it. Extending the election to a second content class (text/slide
+    detection) and a two-region objective is the real fix; that is a perception
+    change, not a parameter one, and it is deliberately not papered over with a
+    width or a bias here -- a wider crop would break the 9:16 deliverable, and a
+    bias toward one side would be a guess that is wrong as often as it is right.
     """
     key = _ReframeCacheKey(str(video), video.stat().st_size, video.stat().st_mtime_ns,
                            round(start, 3), round(end, 3), samples)

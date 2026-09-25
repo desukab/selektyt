@@ -172,6 +172,48 @@ def _has_audio(path: Path) -> bool:
         return False
 
 
+def _encoder_args() -> list[str]:
+    """The x264 settings the deliverable is mastered with.
+
+    These were chosen by measurement, not by taste. The ladder below is scored
+    against a -crf 0 reference of the same filter chain, on real corpus footage
+    (the 1280x720, 29.97 fps pentagon briefing -- the profile the vertical path
+    actually targets), 240 frames through the tracked 406x722 crop:
+
+        preset      crf    kbps    SSIM     PSNR
+        veryfast     20    837.9  0.9991    40.54
+        medium       20    962.5  0.9994    41.92
+        slow         20    929.6  0.9994    41.93
+        slow         18   1211.9  0.9995    43.18
+        slow         16   1576.9  0.9996    44.43
+
+    veryfast/crf20, the old setting, is the lowest-quality entry: 2.64 dB behind
+    slow/crf18, which is a real softness on a phone-held Short rather than a
+    chart artefact. It happens to be the cheapest entry too, so the move to
+    slow/crf18 is a deliberate quality purchase -- +2.64 dB for +44% bitrate and
+    +1.85 s of wall clock on 8 s of footage, tolerable on the Termux/ARM host the
+    pipeline also runs on. crf16 buys another +1.25 dB for another +30% bitrate,
+    past the point where the extra is worth carrying.
+
+    Note that the resolution is *not* a lever here: a 9:16 crop of a 16:9 source
+    is 406 px wide at 720 tall by arithmetic. Pre-upscaling that to 1080x1920
+    before the encoder was measured to be genuinely *better* at a common display
+    size on this footage (PSNR 45.97 vs 43.43 dB, both compared at 1080x1920) --
+    but at 5219 kbps against 1212 kbps, 4.3x the deliverable for +2.5 dB. The
+    pipeline ships the source-preserving crop and lets the player do that upscale
+    for free; the encoder spend is where the same perceptual budget buys far
+    more. See ``engine.reframe.vertical_scale_filter`` -- the frame is never
+    enlarged. This is a cost decision rather than a free win, and it is recorded
+    here because the opposite was once believed from a synthetic bench source
+    that was later overwritten.
+    """
+    # yuv420p is the only plan every player and every platform accepts. ffmpeg
+    # picks it for most sources anyway, but a 4:2:2 or 4:4:4 master (common for
+    # pro footage) would otherwise carry its chroma subsampling into an MP4
+    # that half the decoders in the world refuse to open.
+    return ["-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p"]
+
+
 def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | None, vertical: bool, fps: float) -> None:
     vf: list[str] = []
     if vertical:
@@ -198,7 +240,7 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
         safe = safe.replace(":", "\\:")
         vf.append(f"subtitles='{safe}'")
     common = ["-frames:v", str(frames), "-t", f"{span:.6f}",
-              "-vf", ",".join(vf), "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+              "-vf", ",".join(vf), "-c:v", "libx264", *_encoder_args(),
               "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(out)]
 
     # Input seeking (``-ss`` before ``-i``) is the fast path: ffmpeg seeks

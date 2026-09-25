@@ -131,6 +131,147 @@ def test_render_vertical_clip_is_9_16(tmp_path):
     assert h / w == pytest.approx(16 / 9, abs=0.02)
 
 
+def test_encoder_settings_are_the_measured_ones():
+    """The deliverable's x264 settings were chosen by measurement, and a silent
+    change back to the old pair would look like a tidy small-file improvement
+    while costing 2.6 dB of picture quality.
+
+    On real corpus footage (the 1280x720, 29.97 fps pentagon briefing) scored
+    against a -crf 0 reference of the same filter chain, 240 frames through the
+    tracked 406x722 crop:
+
+        preset     crf    kbps    SSIM     PSNR
+        veryfast    20    837.9  0.9991    40.54   <- the old settings
+        slow        18   1211.9  0.9995    43.18   <- current
+
+    veryfast/crf20 is the lowest-quality entry on the ladder; it is also the
+    cheapest, so slow/crf18 is a deliberate quality purchase rather than a
+    free win (+2.64 dB for +44% bitrate). Any edit that drops one of these three
+    flags has to re-run that bench and update the docstring in ``_encoder_args``,
+    not just the assertion.
+    """
+    from engine.render import _encoder_args
+
+    args = _encoder_args()
+    assert "-preset" in args and args[args.index("-preset") + 1] == "slow", \
+        "preset is not 'slow'; the measured quality floor no longer holds"
+    assert "-crf" in args and args[args.index("-crf") + 1] == "18", \
+        "CRF is not 18; re-measure before changing this"
+    assert "-pix_fmt" in args and args[args.index("-pix_fmt") + 1] == "yuv420p", \
+        "yuv420p is the only plan every player accepts; a 4:2:2/4:4:4 master " \
+        "would otherwise ship chroma subsampling half the decoders refuse"
+
+
+def _video_with_audio(out: Path, duration: float = 4.0) -> Path:
+    """A 1280x720 source with a genuine AAC track.
+
+    The cv2 helper writes video-only, and half the properties worth testing about
+    a delivered MP4 only exist when there is a second stream to be in sync *with*
+    — chiefly whether the cut list shifted the picture relative to the sound.
+    """
+    import subprocess
+
+    subprocess.run(
+        ["ffmpeg", "-y", "-f", "lavfi",
+         "-i", f"testsrc=size=1280x720:rate=30:duration={duration}",
+         "-f", "lavfi", "-i", f"sine=frequency=440:duration={duration}",
+         "-c:v", "libx264", "-preset", "veryfast", "-crf", "24",
+         "-pix_fmt", "yuv420p",
+         "-c:a", "aac", "-b:a", "128k", "-shortest", str(out)],
+        check=True, capture_output=True,
+    )
+    return out
+
+
+def _stream_start_and_duration(path: Path, stream: str) -> tuple[float, float]:
+    """``start_time`` and ``duration`` of one stream, honouring edit lists.
+
+    Use this rather than reading packet timestamps directly. ``ffprobe
+    -show_entries packet=dts_time,pts_time`` prints the two columns in the
+    AVPacket struct's internal field order, which is pts *then* dts regardless of
+    the order requested on the command line — the columns are silently swapped,
+    and a monotonic decode-order DTS sequence reads back as a scrambled PTS one.
+    That misreading once produced a "non-monotonic DTS" alarm that was entirely
+    an artefact of the probe. ``start_time`` is what the muxer reports after
+    applying edit lists, so it is the view a player actually gets.
+    """
+    import subprocess
+
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", stream,
+         "-show_entries", "stream=start_time,duration", "-of",
+         "csv=p=0", str(path)],
+        capture_output=True, text=True, check=True,
+    )
+    start, duration = probe.stdout.strip().split(",")
+    return float(start), float(duration)
+
+
+def test_the_shipped_frame_is_8bit_420(tmp_path):
+    """``yuv420p`` is asserted in the argument list, but the argument list can
+    lie — the encoder could reject it, or a source with unusual chroma could
+    override it. Decoding the deliverable is what actually gets shipped."""
+    import subprocess
+
+    source = _video(tmp_path / "source.mp4")
+    out = render_clip(
+        source, _candidate_with_words(0.0, 1.3),
+        tmp_path / "sh" / "01.mp4", vertical=True,
+    )
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=pix_fmt", "-of",
+         "default=noprint_wrappers=1:nokey=1", str(out)],
+        capture_output=True, text=True, check=True,
+    )
+    assert probe.stdout.strip() == "yuv420p", \
+        f"shipped pixel format is {probe.stdout.strip()!r}, not yuv420p"
+
+
+def test_concatenated_parts_keep_audio_and_video_aligned(tmp_path):
+    """A multi-part deliverable must not drift between its streams.
+
+    Each part is encoded independently and then copied through the concat
+    demuxer, so every part boundary is an opportunity for the muxer to offset the
+    picture from the sound by a frame or two. A two-frame error is inaudible in
+    isolation but compounds across a 15-part supercut, and the deliverable would
+    still open, play, and look fine — nothing in the pipeline would notice.
+    Measured at 1/2/3/5 parts: head and tail drift both 0.000 s throughout, so
+    this is a property worth pinning rather than a defect being patched.
+    """
+    source = _video_with_audio(tmp_path / "audio_source.mp4")
+
+    # Three intervals, so the render goes through the concat path rather than the
+    # single-part shutil.move shortcut.
+    words = [
+        Word("one", 0.10, 0.40), Word("two", 0.90, 1.20),
+        Word("three", 2.00, 2.30),
+    ]
+    candidate = Candidate(
+        0.05, 2.40, "one two three", "story", "one", "three",
+        editorial_score=0.8, virality_score=0.7, context_score=0.9,
+        confidence=0.9, reason="t", words=words,
+    )
+    out = render_clip(
+        source, candidate, tmp_path / "av" / "concat.mp4", vertical=True,
+    )
+
+    v_start, v_dur = _stream_start_and_duration(out, "v:0")
+    a_start, a_dur = _stream_start_and_duration(out, "a:0")
+
+    assert v_start == pytest.approx(a_start, abs=0.04), (
+        f"the picture starts {v_start - a_start:+.3f} s from the sound; a cut "
+        f"list shifted one stream and not the other"
+    )
+    assert v_dur == pytest.approx(a_dur, abs=0.04), (
+        f"video is {v_dur:.3f} s but audio is {a_dur:.3f} s; the two streams "
+        f"disagree about how long this clip is, so the tail drifts out of sync"
+    )
+    # The deliverable must still carry audio at all: a part that came out
+    # video-only would make the comparison above vacuously pass.
+    assert a_dur > 0.0, "the deliverable has no audio stream"
+
+
 def _anamorphic_video(out: Path, size: str = "720x486", sar: str = "8/9") -> Path:
     """720x486 pixels at SAR 8:9, i.e. DAR 320:243 — real NTSC DV shape.
 

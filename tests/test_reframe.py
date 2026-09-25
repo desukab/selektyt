@@ -90,6 +90,118 @@ def test_crop_expression_is_bounded_and_time_keyed(tmp_path):
     )
 
 
+# ── Phase 5: slides. A documented limitation, pinned with the geometry that
+# makes it a limitation and not a tuning problem.
+
+def _speaker_and_slide_video(out: Path) -> Path:
+    """A lecture layout: a head-and-shoulders subject on the left, dense slide
+    text on the right, each occupying its own half of a 1280-wide frame.
+
+    This is the layout the vertical reframe cannot serve, and the reason it
+    cannot is read off the geometry this clip sets up, so the assertion below
+    is about positions and widths rather than about how the output looks.
+    """
+    import cv2
+    import numpy as np
+
+    width, height, frames = 1280, 720, 24
+    frames_arr: list[np.ndarray] = []
+    for _ in range(frames):
+        frame = np.full((height, width, 3), 40, np.uint8)
+        # Subject, centred around x=282.
+        cv2.ellipse(frame, (282, 300), (70, 95), 0, 0, 360, (210, 190, 170), -1)
+        cv2.rectangle(frame, (190, 400), (374, 660), (190, 170, 150), -1)
+        # Slide text, occupying x=666..1228.
+        for row in range(12):
+            cv2.putText(frame, f"slide line {row:02d} of twelve",
+                        (680, 90 + row * 45), cv2.FONT_HERSHEY_SIMPLEX,
+                        1.1, (235, 235, 235), 3)
+        frames_arr.append(frame)
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    writer = cv2.VideoWriter(str(out), fourcc, 12, (width, height))
+    try:
+        for frame in frames_arr:
+            writer.write(frame)
+    finally:
+        writer.release()
+    return out
+
+
+def test_no_legal_crop_holds_both_speaker_and_slide(tmp_path):
+    """The limitation the Phase 5 documentation describes, as a number.
+
+    For a 1280x720 source the crop is 406 px wide, and the speaker and the slide
+    sit in opposite halves ~560 px apart centre-to-centre. Enumerating *every*
+    legal crop centre found none that keeps the speaker in frame and retains at
+    least half the slide text. This is why the shipped vertical crop cannot
+    serve a lecture clip by adjustment: the window is too narrow for the layout,
+    and the choice is between the two regions, not between two settings.
+
+    The assertion is deliberately on the geometry rather than on the shipped
+    expression's output. A change that made this test pass by widening the crop
+    would break the 9:16 contract that the rest of this module pins, and a
+    change that biased the crop one way would flip which of the two regions is
+    thrown away. The correct fix is a second content class in the election, and
+    this test exists so that fix is visibly implemented rather than assumed.
+    """
+    from engine.reframe import vertical_crop_width
+
+    source = _speaker_and_slide_video(tmp_path / "lecture.mp4")
+    width = 1280
+    crop_w = vertical_crop_width(720, 1, 1)
+    assert crop_w == 406, "the geometry below is only meaningful at this width"
+
+    subject_x, slide_lo, slide_hi = 282, 666, 1228
+
+    def keeps_the_subject(cx: float) -> bool:
+        return cx - crop_w / 2 <= subject_x <= cx + crop_w / 2
+
+    def slide_retained(cx: float) -> float:
+        overlap = min(cx + crop_w / 2, slide_hi) - max(cx - crop_w / 2, slide_lo)
+        return max(0.0, overlap) / (slide_hi - slide_lo)
+
+    legal = [cx for cx in range(0, width) if keeps_the_subject(cx)]
+    assert legal, "the subject must be holdable by *some* legal crop"
+    best = max(slide_retained(cx) for cx in legal)
+    assert best < 0.5, (
+        f"holding the subject keeps {best:.0%} of the slide text, so speaker and "
+        f"slide are mutually exclusive inside a {crop_w} px window -- if this now "
+        f"reads >=50%, the crop geometry changed and the Phase 5 limitation note "
+        f"in ``_reframe_track`` is out of date"
+    )
+
+    # And the converse: a window centred on the slide throws the subject away
+    # entirely, which is what the edge-density fallback selects when the slide
+    # is the denser half.
+    on_slide = max(range(0, width), key=slide_retained)
+    assert not keeps_the_subject(on_slide), (
+        "centring on the slide should exclude the subject; if it does not, the "
+        "layout this clip encodes no longer represents the lecture case"
+    )
+
+
+def test_the_slide_layout_is_reframed_rather_than_rejected(tmp_path):
+    """The gap is a quality gap, not a crash: a lecture clip must still produce a
+    9:16 expression. The election picks one region, and this pins that the
+    choice is made and the render proceeds -- the deliverable exists, it just
+    cannot show both regions, which is what the docstring in
+    :func:`_reframe_track` records.
+    """
+    from engine.reframe import crop_x_expression, vertical_reframe_filter
+    import subprocess
+
+    source = _speaker_and_slide_video(tmp_path / "lecture2.mp4")
+    expr = crop_x_expression(source, start=0.0, end=2.0)
+    assert expr, "a mixed layout must still be reframed"
+    # The expression has to survive the parser in the shipped position, or the
+    # documented limitation would be moot -- the render would fail outright.
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(source), "-vf",
+         vertical_reframe_filter(source, 0.0, 2.0), "-f", "null", "-"],
+        check=True, capture_output=True,
+    )
+
+
 # ── F16: the source is decoded once, not once per question asked of it ──
 
 
