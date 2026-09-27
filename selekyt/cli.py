@@ -135,9 +135,9 @@ def main() -> None:
         "--vad-backend", default=None,
         choices=["energy", "ffmpeg", "silero", "whisper"],
         help="Force VAD backend (default: auto-select best available). "
-             "'silero' is listed because the CLI accepts it, not because it "
-             "works: that backend is not implemented and fails with a message "
-             "naming the ones that do.",
+             "Auto-selection prefers silero, then ffmpeg, then energy, then "
+             "whisper; forcing a backend is for comparison and for a host "
+             "where the preferred one is absent.",
     )
     p.add_argument(
         "--silence-threshold", type=float, default=0.5,

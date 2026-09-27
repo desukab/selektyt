@@ -1,6 +1,8 @@
 """VAD backend tests — unit tests use synthetic signals (deterministic,
 no media files); integration tests use the local WAV corpus when present."""
 import wave
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -187,46 +189,104 @@ def test_whisper_backend_uses_word_timestamps(tmp_path):
     assert abs(regions[1].start - 4.0) < 0.1
 
 
-# ── Silero (never available here) ──
+# ── Silero (implemented; available only where the model file resolves) ──
 
-def test_silero_not_available_unless_onnxruntime():
-    backend = SileroVADBackend()
-    # on this environment onnxruntime is not installed → unavailable
-    assert backend.is_available() is False
+def test_silero_is_unavailable_without_a_model_file():
+    """``is_available`` is not "can onnxruntime be imported": weights are
+    needed too, and a path that does not resolve must report unavailable even
+    on a host that has onnxruntime."""
+    assert SileroVADBackend(model_path="/nonexistent/silero_v6.onnx").is_available() is False
 
 
-def test_silero_reports_unavailable_even_when_onnxruntime_is_present(monkeypatch):
-    """The old ``is_available`` asked only whether onnxruntime was importable
-    and whether a model path was supplied — both of which a host can satisfy —
-    while ``analyze`` raised ``NotImplementedError`` regardless. So the backend
-    could report available and then fail at the call. The stub has to say no
-    whatever the environment has, because the inference path does not exist."""
+def test_silero_is_unavailable_when_only_onnxruntime_is_present(monkeypatch):
+    """The mirror case: onnxruntime importable, no weights. The old stub inverted
+    this — it reported unavailable on every host because the inference path did
+    not exist, which was correct for the wrong reason."""
     import sys, types
 
     fake = types.ModuleType("onnxruntime")
     monkeypatch.setitem(sys.modules, "onnxruntime", fake)
-    assert SileroVADBackend(model_path="/nonexistent/silero_v5.onnx").is_available() is False
+    assert SileroVADBackend(model_path="/nonexistent/silero_v6.onnx").is_available() is False
 
 
-def test_forcing_the_silero_backend_says_it_is_not_implemented():
-    """A user who passes ``--vad-backend silero`` (it is in the CLI help and
-    the runbook) is not served by "backend 'silero' unavailable" — that sends
-    them to install onnxruntime, which cannot help, since the backend is a
-    placeholder. The message has to name the real condition and the backends
-    that do work."""
+def test_silero_is_available_where_the_vendored_model_ships():
+    """The model is vendored under ``engine/models`` so a checkout is runnable
+    without a download step. This is the assertion that keeps it that way: if
+    the file stops shipping, this test fails rather than the first real run."""
+    here = Path(__file__).resolve().parent.parent / "engine" / "models" / SileroVADBackend._MODEL_NAME
+    if not here.is_file():
+        pytest.skip(f"{here.name} absent from this checkout")
+    assert SileroVADBackend().is_available() is True
+    assert here in SileroVADBackend()._candidate_paths()
+
+
+def test_silero_user_copy_takes_precedence_over_the_vendored_one(tmp_path, monkeypatch):
+    """An operator who drops a model into ``~/.selektyt/models`` has chosen it
+    deliberately, and that choice must outrank the shipped file — the same
+    resolution order the YuNet face model uses."""
+    user = (tmp_path / "selektyt-home" / ".selektyt" / "models"
+            / SileroVADBackend._MODEL_NAME)
+    user.parent.mkdir(parents=True)
+    user.write_bytes(b"not really an onnx model")
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "selektyt-home"))
+    paths = SileroVADBackend()._candidate_paths()
+    assert paths[0] == user
+
+
+def test_forcing_silero_without_the_model_names_the_real_condition(monkeypatch):
+    """The backend is implemented, so "not implemented" would now be a lie.
+    What can still fail is the model file or onnxruntime, and the message has to
+    say that and name the backends that do work — the same contract the stub's
+    message held, applied to the real condition."""
+    monkeypatch.setattr(SileroVADBackend, "_resolve_model", lambda self: None)
     with pytest.raises(RuntimeError) as excinfo:
         get_vad_backend(force="silero")
     message = str(excinfo.value)
-    assert "not implemented" in message
+    assert "not implemented" not in message
+    assert "silero_vad_v6.onnx" in message
     assert "energy" in message
 
 
 # ── backend selection and persistence ──
 
-def test_get_vad_backend_default_is_energy_or_ffmpeg():
+def test_get_vad_backend_prefers_silero_where_the_model_resolves():
+    """Silero is the preferred backend: it scores learned speech probability and
+    is level-invariant, where the energy scorer compares RMS against fixed
+    absolute thresholds and is blind to a quiet source (see
+    ``tests/test_vad_silero.py``). Where the model resolves it is selected;
+    where it does not the chain still lands on a backend that works and says
+    why it fell back."""
+    if SileroVADBackend().is_available():
+        assert get_vad_backend().name == "silero"
+    else:
+        backend = get_vad_backend()
+        assert backend.name in ("energy", "ffmpeg", "whisper")
+        assert backend.is_available()
+        assert backend.fallback_reason is not None
+        assert "silero" in backend.fallback_reason
+
+
+def test_ffmpeg_outranks_energy_in_the_fallback_chain(monkeypatch):
+    """The order is measured, not assumed. On all three corpus sources ffmpeg
+    beats energy on word recall and on words clipped, and energy fails outright
+    on two — its fixed absolute thresholds score a quiet source entirely silent
+    (0/331 words on hadhazy-protest, 12/2727 on pentagon-esper-briefing). Energy
+    still outranks whisper because it needs nothing but numpy, so a host without
+    ffmpeg keeps a working backend; it simply is not the default where ffmpeg
+    exists. See ``docs/AI_EXECUTION_STATE.md`` for the table.
+
+    This pins the order so it cannot revert silently: with both available and
+    silero out of the picture, ffmpeg is selected and says why."""
+    monkeypatch.setattr(SileroVADBackend, "is_available", lambda self: False)
+    if not (FFmpegVADBackend().is_available() and EnergyVAD().is_available()):
+        pytest.skip("needs ffmpeg and numpy both present to compare the two")
+
     backend = get_vad_backend()
-    assert backend.name in ("energy", "ffmpeg")
-    assert backend.is_available()
+    assert backend.name == "ffmpeg"
+    assert backend.fallback_reason is not None
+    assert "silero" in backend.fallback_reason
+    assert "energy" not in backend.fallback_reason, \
+        "ffmpeg was selected, so the reason must not blame energy"
 
 
 def test_get_vad_backend_force_energy():
@@ -349,7 +409,9 @@ def test_energy_backend_reports_model_and_fallback_reason(tmp_path):
 
 def test_default_backend_reports_fallback_reason():
     backend = get_vad_backend()
-    # This device never has silero; the selected backend must say so.
+    # Where the vendored model and onnxruntime are present the chain prefers
+    # silero and there is no fallback to explain; where either is absent the
+    # selected backend must say which preferred backend it is standing in for.
     if backend.name != "silero":
         assert backend.fallback_reason is not None
         assert "silero" in backend.fallback_reason

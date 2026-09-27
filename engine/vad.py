@@ -6,15 +6,14 @@ threshold/hysteresis/padding/min-speech/min-silence are applied later
 without re-running the model.
 
 Backend hierarchy as actually selected (see ``get_vad_backend``):
-  ├── SileroVADBackend        (the intended preferred backend; **not
-  |                           implemented**, so this leg never fires and the
-  |                           chain always starts at energy)
-  ├── EnergyVAD               (the effective default on a normal host)
-  ├── FFmpegVADBackend        (always available fallback)
+  ├── SileroVADBackend        (the preferred backend where the model file is
+  |                           present; needs onnxruntime + the vendored
+  |                           ``engine/models/silero_vad_v6.onnx``)
+  ├── FFmpegVADBackend        (the fallback when the model is absent — outranks
+  |                           energy on every corpus source measured)
+  ├── EnergyVAD               (numpy-only fallback where ffmpeg is absent too;
+  |                           blind to quiet sources, see ``SileroVADBackend``)
   └── WhisperVADBackend       (last-resort, uses transcript word timestamps)
-
-``SileroVADBackend`` is kept in the registry so that asking for it by name
-reports "not implemented" rather than "unknown backend".
 """
 from __future__ import annotations
 
@@ -99,6 +98,23 @@ def _conforming_wav(wav: Path, sample_rate: int) -> Path:
     return converted
 
 
+def _conforming_path(wav: Path, sample_rate: int) -> Path:
+    """Resolve ``wav`` to a mono ``sample_rate`` Hz 16-bit PCM WAV.
+
+    The pipeline always extracts 16 kHz mono itself, but a WAV handed in
+    directly (the web shell, a user drop) is routinely stereo or 44.1/48
+    kHz. Downmixing and resampling is correct; refusing used to fail the
+    whole analysis on a perfectly good file. A non-WAV container is decoded
+    to a sibling probe file rather than rejected.
+    """
+    wav = Path(str(wav))
+    if wav.suffix.lower() != ".wav":
+        probe = wav.parent / f"{wav.stem}_probe.wav"
+        extract_pcm_wav(wav, probe, sample_rate)
+        wav = probe
+    return _conforming_wav(wav, sample_rate)
+
+
 # ── Energy-based VAD (pure numpy, deterministic, no deps) ──
 
 class EnergyVAD(VADBackend):
@@ -124,19 +140,9 @@ class EnergyVAD(VADBackend):
         self.fallback_reason = fallback_reason
 
     def _conforming_path(self, audio: Path) -> Path:
-        """Resolve ``audio`` to a mono ``sample_rate`` Hz 16-bit PCM WAV.
-
-        The pipeline always extracts 16 kHz mono itself, but a WAV handed in
-        directly (the web shell, a user drop) is routinely stereo or 44.1/48
-        kHz. Downmixing and resampling is correct; refusing used to fail the
-        whole analysis on a perfectly good file.
-        """
-        wav = Path(str(audio))
-        if wav.suffix.lower() != ".wav":
-            probe = wav.parent / f"{wav.stem}_probe.wav"
-            extract_pcm_wav(audio, probe, self.sample_rate)
-            wav = probe
-        return _conforming_wav(wav, self.sample_rate)
+        """Delegates to the module-level reader shared by every PCM-based
+        backend, so stereo and resampled input is handled identically."""
+        return _conforming_path(audio, self.sample_rate)
 
     def _score_frames(self, frames: np.ndarray) -> np.ndarray:
         """Score full frames: one value per row, the cadence contract below."""
@@ -326,40 +332,226 @@ class WhisperVADBackend(VADBackend):
 
 
 class SileroVADBackend(VADBackend):
-    """Silero V5 via onnxruntime — the intended preferred backend, **not
-    implemented**.
+    """Silero VAD v6 via onnxruntime — the preferred backend where the model
+    is present.
 
-    The model is never loaded and ``analyze`` cannot run, so ``is_available``
-    reports False whatever the environment has installed. It stays in the
-    registry for a reason: a user who asks for it by name should hear "not
-    implemented", not "unknown backend", and the selection chain needs
-    something concrete to name when it explains why it fell back.
+    Unlike the energy backend this scores *learned* speech probability, so it
+    is level-invariant: the energy scorer compares frame RMS against fixed
+    absolute thresholds (0.02 to 0.08), which makes it blind to any quiet
+    source. Measured on ``corpus/wer/hq_media_hadhazy-protest.wav`` (RMS 0.008,
+    331 transcribed words in 126 s) the energy backend emits **zero** speech
+    regions and the pipeline reports ``dead_air_ratio`` 1.0; this backend
+    scores the same audio normally. Quiet recordings are not exotic — they are
+    what a poorly-gained source or an aggressive normalization pass produces.
 
-    Note the asymmetry with the other backends: those are unavailable because
-    of this *host* (no ffmpeg, no transcript), which is fixable by installing
-    something; this one is unavailable because the code does not exist. That
-    is why its forced-selection error carries a different message.
+    Contract, verified against the model file (see ``engine/models/
+    silero_vad_v6.PROVENANCE.md``): input ``input`` float ``['seq_len', 576]``
+    and recurrent state ``h``/``c`` float ``[1, 1, 128]``; output ``speech_probs``
+    float, one row of the batch. The 576-wide window is **512 new samples plus
+    64 of left context**, so one inference consumes 512 samples = 32 ms, which
+    is exactly ``FRAME_MS`` and the grid the Rust scorer emits. ``segment_from_scores``
+    therefore reads silero output exactly as it reads energy output, and no
+    downstream code had to learn a new cadence.
+
+    Streaming. ``analyze`` reads the WAV a window at a time, builds each row's
+    left context from the previous row's tail, and threads ``h`` and ``c``
+    across both the ORT batch boundaries *and* the read windows — so a long
+    source is one continuous stream, and a caller never has to hand it a whole
+    file to get correct scores. Read windows are 60 s, the same bound as the
+    energy backend, so the decoded audio stays bounded in memory: 60 s is
+    1 875 rows × 576 samples × 4 bytes ≈ 4.3 MB, and only the score array is
+    full-length.
+
+    Where the reference driver in ``faster_whisper/vad.py`` differs, verified
+    rather than assumed (see ``tests/test_vad_silero.py``): it builds the whole
+    context array at once with ``np.roll``, so row 0 gets zero context and the
+    rest the previous row's tail — exactly what the incremental construction
+    here produces, frame for frame, on every row but the last. Its ``context``
+    is a *view* of the audio array, so the ``context[-1] = 0`` that zeroes row
+    0's context also zeroes the **final row's own last 64 samples** in the array
+    it then scores; that one frame is scored against corrupted input, and this
+    driver does not replicate it. The reference also resets ``h``/``c`` to zeros
+    on every call, which a caller chunking a long file would feel as a recurrent
+    reset at each chunk.
     """
 
     name = "silero"
-    vad_model = "silero-v5"
+    vad_model = "silero-v6"
+    _MODEL_NAME = "silero_vad_v6.onnx"
 
-    def __init__(self, model_path: str | None = None):
+    _STEP = 512        # new samples consumed per inference
+    _CONTEXT = 64      # samples of left context appended to them
+    _WIDTH = _STEP + _CONTEXT
+    _STATE = (1, 1, 128)
+    # The graph unrolls the batch itself, so one ORT call scores many frames.
+    _ORT_BATCH = 10_000
+    _WINDOW_S = 60
+
+    def __init__(self, model_path: str | None = None,
+                 sample_rate: int = 16000,
+                 frame_ms: int = FRAME_MS,
+                 fallback_reason: str | None = None):
         self.model_path = model_path
+        self.sample_rate = sample_rate
+        self.frame_ms = frame_ms
+        self.fallback_reason = fallback_reason
+        self._session = None
+
+    def _candidate_paths(self) -> list[Path]:
+        here = Path(__file__).resolve().parent / "models" / self._MODEL_NAME
+        user = Path.home() / ".selektyt" / "models" / self._MODEL_NAME
+        # The user copy takes precedence: it is the operator's explicit choice,
+        # and matches how the YuNet face model is resolved.
+        return [user, here]
+
+    def _resolve_model(self) -> Path | None:
+        """The model file that would load, or None. An explicit ``model_path``
+        wins and must exist; otherwise the candidate list is searched."""
+        if self.model_path:
+            p = Path(self.model_path)
+            return p if p.is_file() else None
+        for p in self._candidate_paths():
+            if p.is_file():
+                return p
+        return None
 
     def is_available(self) -> bool:
-        # Deliberately not "can onnxruntime be imported": the inference path
-        # does not exist, so reporting available here would hand a caller a
-        # backend whose analyze() raises. When the backend is implemented this
-        # becomes the real check against onnxruntime and the model file.
-        return False
+        """True only when onnxruntime imports **and** the model file resolves.
+
+        Both halves matter. onnxruntime without the weights cannot score, and
+        weights without onnxruntime cannot run; reporting available on either
+        alone would hand a caller a backend whose ``analyze`` raises.
+        """
+        try:
+            import onnxruntime  # noqa: F401
+        except ImportError:
+            return False
+        return self._resolve_model() is not None
+
+    def _load(self):
+        if self._session is None:
+            import onnxruntime
+
+            path = self._resolve_model()
+            if path is None:
+                raise RuntimeError(
+                    f"the silero VAD model {self._MODEL_NAME!r} was not found; "
+                    f"looked in "
+                    + ", ".join(str(p) for p in self._candidate_paths())
+                    + (f" and the explicit path {self.model_path!r}"
+                       if self.model_path else "")
+                )
+            # The reference driver's session options, kept because they are
+            # what the model was shipped against: single-threaded intra-op so a
+            # scoring pass does not contend with the transcription threads the
+            # caller is likely running beside it, and the memory arena off so a
+            # long source does not reserve an arena it will not fill.
+            opts = onnxruntime.SessionOptions()
+            opts.inter_op_num_threads = 1
+            opts.intra_op_num_threads = 1
+            opts.enable_cpu_mem_arena = False
+            opts.log_severity_level = 4
+            self._session = onnxruntime.InferenceSession(
+                str(path),
+                providers=["CPUExecutionProvider"],
+                sess_options=opts,
+            )
+        return self._session
+
+    def _run(self, block: np.ndarray, h: np.ndarray, c: np.ndarray):
+        """Score one block of rows, returning (probs, h, c). ``speech_probs``
+        is one float per row, verified against the model rather than assumed."""
+        probs, hn, cn = self._load().run(None, {"input": block, "h": h, "c": c})
+        return np.asarray(probs, dtype=np.float32).reshape(-1), hn, cn
 
     def analyze(self, audio: Path) -> VADResult:
-        raise NotImplementedError(
-            "the silero VAD backend is not implemented: analyze() is a "
-            "placeholder. The selection chain falls back to energy, ffmpeg or "
-            "whisper automatically; pass one of those by name to choose."
+        import wave
+
+        wav = _conforming_path(Path(audio), self.sample_rate)
+        step = self._STEP
+        window = max(step * 4, self.sample_rate * self._WINDOW_S)
+
+        scores: list[float] = []
+        # Left context for the first row of the next block. Zero at the start
+        # of the file (there is nothing before sample 0) and afterwards the tail
+        # of the previous row, carried across read windows as well as rows.
+        ctx = np.zeros(self._CONTEXT, dtype=np.float32)
+        h = np.zeros(self._STATE, dtype=np.float32)
+        c = np.zeros(self._STATE, dtype=np.float32)
+        carry = np.zeros(0, dtype=np.float32)
+        total = 0
+        try:
+            with wave.open(str(wav), "rb") as f:
+                total = f.getnframes()
+                pos = 0
+                while pos < total:
+                    want = min(window, total - pos)
+                    f.setpos(pos)
+                    raw = f.readframes(want)
+                    data = np.concatenate([
+                        carry,
+                        np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0,
+                    ])
+                    usable = (len(data) // step) * step
+                    if usable:
+                        # The state comes back and must be handed to the next
+                        # window; dropping it here would silently reset the
+                        # recurrent state at every 60 s boundary, which on the
+                        # corpus source made speech probability collapse from
+                        # 0.99 to 0.24 at exactly 60.00 s.
+                        probs, h, c, ctx = self._score_block(data[:usable], ctx, h, c)
+                        scores.extend(probs.tolist())
+                    carry = data[usable:]
+                    pos += want
+        except (OSError, ValueError, EOFError, wave.Error) as exc:
+            # The same damage the energy reader survives, reported the same way.
+            raise AudioReadError(f"cannot read {wav.name} as a WAV: "
+                                 f"{type(exc).__name__}: {exc}") from exc
+
+        # A tail short of a full step is padded to one row rather than dropped.
+        # Dropping it — the energy reader's rule — would discard up to 31 ms at
+        # the end of every source, and the last thing an editor wants is a cut
+        # that eats the final syllable. The frame's region may therefore end up
+        # to one frame past ``duration``; ``silence_from_speech`` already
+        # tolerates a region ending at or beyond the duration, and callers that
+        # bound by ``duration`` clip it. ``h``/``c`` are discarded here because
+        # nothing follows.
+        if len(carry):
+            padded = np.pad(carry, (0, step - len(carry)))
+            probs = self._score_block(padded, ctx, h, c)[0]
+            scores.extend(probs.tolist())
+
+        return VADResult(
+            scores=scores,
+            sample_rate=self.sample_rate,
+            backend=self.name,
+            frame_ms=self.frame_ms,
+            duration=total / self.sample_rate,
+            vad_model=self.vad_model,
+            fallback_reason=self.fallback_reason,
         )
+
+    def _score_block(self, flat: np.ndarray, ctx, h, c) -> tuple:
+        """Score a contiguous run of whole steps: build each row's 64-sample
+        left context, run the batch, and thread the recurrent state through.
+
+        Returns ``(probs, h, c, next_ctx)``: the scores, the recurrent state to
+        hand the next ORT call, and the left context the *next* block's first
+        row needs — so a caller spanning read windows sees the same
+        continuation as rows within one window.
+        """
+        rows = flat.reshape(-1, self._STEP)
+        left = np.zeros((rows.shape[0], self._CONTEXT), dtype=np.float32)
+        left[1:] = rows[:-1, -self._CONTEXT:]
+        left[0] = ctx
+        block = np.concatenate([left, rows], axis=1)
+
+        out: list[np.ndarray] = []
+        for i in range(0, block.shape[0], self._ORT_BATCH):
+            probs, h, c = self._run(block[i:i + self._ORT_BATCH], h, c)
+            out.append(probs)
+        return (np.concatenate(out) if out else np.zeros(0, np.float32),
+                h, c, rows[-1, -self._CONTEXT:].copy())
 
 
 _BACKENDS: dict[str, type[VADBackend]] = {
@@ -375,8 +567,21 @@ def get_vad_backend(force: str | None = None,
                     duration: float = 0.0) -> VADBackend:
     """Instantiate the best available backend.
 
-    Preference: silero → energy (best available on this device) → ffmpeg
-    → whisper. `force` overrides to a specific named backend.
+    Preference: silero → ffmpeg → energy → whisper, in that order. `force`
+    overrides to a specific named backend.
+
+    The silero→ffmpeg→energy order is measured, not assumed — see
+    ``docs/AI_EXECUTION_STATE.md`` for the table. On three corpus sources
+    (126 s / 626 s / 1014 s) ffmpeg beat energy on word recall *and* on words
+    clipped at a cut point in all three, and energy failed outright in two:
+    its scorer compares frame RMS against fixed absolute thresholds, so a quiet
+    source falls entirely below the base and the backend scores the whole file
+    silent. On ``hq_media_hadhazy-protest.wav`` that is 0/331 words kept
+    (0.0000 recall, every word clipped) and on ``pentagon-esper-briefing`` 12/2727.
+    Energy remains the fallback above whisper because it needs nothing but
+    numpy, so a host without ffmpeg still gets a working backend; its latency
+    advantage (0.01-0.05 s against ffmpeg's 0.16-0.57 s on the same sources)
+    does not offset scoring a source silent that is not.
     """
     if force:
         if force not in _BACKENDS:
@@ -392,11 +597,14 @@ def get_vad_backend(force: str | None = None,
             if force == "silero":
                 # A different message from the other backends because it is a
                 # different condition: they are missing on this host, this one
-                # is missing from the codebase. Saying "unavailable" here would
-                # send a user to install something that cannot help.
+                # is missing the model file or onnxruntime. "Unimplemented" used
+                # to be right; now it would send a user hunting for code that
+                # exists.
                 raise RuntimeError(
-                    "the silero VAD backend is not implemented; "
-                    "use --vad-backend energy, ffmpeg or whisper"
+                    "the silero VAD backend is unavailable: onnxruntime and "
+                    "the model engine/models/silero_vad_v6.onnx are both "
+                    "required. Use --vad-backend energy, ffmpeg or whisper "
+                    "until they are present"
                 )
             raise RuntimeError(f"VAD backend '{force}' unavailable")
         return instance
@@ -404,15 +612,15 @@ def get_vad_backend(force: str | None = None,
     if SileroVADBackend().is_available():
         log.info("selecting Silero VAD backend")
         return SileroVADBackend()
-    if EnergyVAD().is_available():
-        reason = "silero unavailable: onnxruntime/model not present"
-        log.info("selecting energy VAD backend (%s)", reason)
-        return EnergyVAD(fallback_reason=reason)
     if FFmpegVADBackend().is_available():
-        reason = "silero and energy unavailable"
+        reason = "silero unavailable: onnxruntime/model not present"
         log.info("selecting FFmpeg silencedetect VAD backend (%s)", reason)
         return FFmpegVADBackend(fallback_reason=reason)
-    reason = "silero, energy and ffmpeg unavailable"
+    if EnergyVAD().is_available():
+        reason = "silero and ffmpeg unavailable"
+        log.info("selecting energy VAD backend (%s)", reason)
+        return EnergyVAD(fallback_reason=reason)
+    reason = "silero, ffmpeg and energy unavailable"
     log.info("selecting Whisper-timestamp VAD backend (last resort: %s)", reason)
     return WhisperVADBackend(words or [], duration=duration, fallback_reason=reason)
 

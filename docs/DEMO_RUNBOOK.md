@@ -107,9 +107,10 @@ usage: selekyt [-h] [--out OUT] [--model MODEL] [--language LANGUAGE]
                [--cookies COOKIES] [--doctor] [--ollama-url OLLAMA_URL]
                [--audio-analysis]
                [--vad-backend {energy,ffmpeg,silero,whisper}]
-               # silero is accepted but not implemented — it fails with a
-               # message naming the backends that do work. The real chain is
-               # energy → ffmpeg → whisper.
+               # The chain is silero → ffmpeg → energy → whisper, in order of
+               # measured quality. silero needs the vendored model + onnxruntime;
+               # where either is absent ffmpeg is preferred over energy, which
+               # is blind to quiet sources.
                [--silence-threshold SILENCE_THRESHOLD]
                ...
                [source]
