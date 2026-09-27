@@ -585,11 +585,21 @@ function _storedName(original) {
   return name;
 }
 
+// The sample is regenerated on every call rather than cached by existence. A
+// cache keyed on nothing but "the file is there" can never be invalidated: an
+// edit to sample.mjs — a fix to a signal the backends scored as non-speech —
+// would never reach a host that had already generated one, and that host would
+// keep reporting "no speech found" on its own demo audio. The synthesis is
+// ~128k samples, i.e. milliseconds, and the handful of callers are not hot
+// paths, so regenerating is cheaper than keeping a version key in step with the
+// generator. It is written to a .part and renamed so a reader that arrives
+// mid-write sees the old sample whole rather than a truncated header — the same
+// contract as the upload path below.
 function ensureSample() {
-  if (!existsSync(SAMPLE_PATH)) {
-    mkdirSync(OUT_WEB, { recursive: true });
-    writeFileSync(SAMPLE_PATH, makeSampleWav());
-  }
+  mkdirSync(OUT_WEB, { recursive: true });
+  const part = `${SAMPLE_PATH}.part`;
+  writeFileSync(part, makeSampleWav());
+  renameSync(part, SAMPLE_PATH);
 }
 
 async function resolveMedia(body) {
@@ -675,9 +685,10 @@ async function route(req, res, url, method) {
   }
   if (method === "GET" && url.pathname === "/api/sample.wav") {
     ensureSample();
-    return send(res, 200, readFileSync(SAMPLE_PATH), {
+    const wav = readFileSync(SAMPLE_PATH);
+    return send(res, 200, wav, {
       "Content-Type": "audio/wav",
-      "Content-Length": readFileSync(SAMPLE_PATH).length,
+      "Content-Length": wav.length,
     });
   }
   if (method === "POST" && url.pathname === "/api/upload") {

@@ -26,6 +26,21 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 NODE = shutil.which("node")
 
+# backend name -> the model string that backend reports. Each VAD backend owns
+# its own ``vad_model`` (energy-rms, silencedetect, silero-v6,
+# whisper-wordtimestamps), so a payload claiming one with the other is a real
+# inconsistency rather than a cosmetic label.
+_BACKEND_MODELS = {
+    "energy": "energy-rms",
+    "ffmpeg": "silencedetect",
+    "silero": "silero-v6",
+    "whisper": "whisper-wordtimestamps",
+}
+
+# The sample's voiced bursts, in seconds. A segmentation that finds speech is
+# expected to find it here and nowhere else.
+_SAMPLE_BURSTS = [(0.4, 2.1), (3.0, 4.6), (5.6, 7.1)]
+
 pytestmark = pytest.mark.skipif(NODE is None, reason="node not on PATH")
 
 
@@ -166,10 +181,53 @@ def test_sample_wav_is_valid_16k_mono(base):
     assert len(wav) == 44 + n_bytes
 
 
+def _render_sample_with_node():
+    """Render the shipped generator directly, so the served bytes can be
+    compared against what ``web/sample.mjs`` produces today rather than against
+    a shape that a stale cached file would still satisfy."""
+    proc = subprocess.run(
+        [
+            NODE,
+            "--input-type=module",
+            "-e",
+            "process.stdout.write(Buffer.from("
+            "(await import('./sample.mjs')).makeSampleWav()"
+            "))",
+        ],
+        cwd=str(ROOT / "web"),
+        capture_output=True,
+    )
+    assert proc.returncode == 0, proc.stderr.decode()
+    return proc.stdout
+
+
+def test_served_sample_is_the_generators_current_output(base):
+    """The served sample must be what the generator emits now, not a file
+    written once and kept.
+
+    ensureSample used to write ``out/web/sample.wav`` only if it was absent,
+    which is a cache with no invalidation: a change to the sample — for
+    instance to a signal the VAD backends actually score as speech — would
+    never reach a host that had already generated one, and that host would keep
+    reporting "no speech found" on its own demo audio while every other host
+    behaved correctly. Comparing against the generator's current output fails
+    on exactly that host and nowhere else."""
+    served = _get(base, "/api/sample.wav")
+    expected = _render_sample_with_node()
+    assert served == expected
+
+
 def test_vad_analyze_sample_reports_provenance(base):
     data = _expect_ok(base, "vad_analyze", {"sample": True})
-    assert data["backend"] == "energy"
-    assert data["vad_model"] == "energy-rms"
+    # Which backend is auto-selected depends on what this host has installed —
+    # silero where the vendored model and onnxruntime are present, ffmpeg or
+    # energy otherwise. Asserting a specific one made this test pass on a bare
+    # CI host and fail on one with the model, i.e. it asserted the host rather
+    # than the contract. What has to hold everywhere is that the backend and
+    # the model string are a consistent pair, and that the rest of the payload
+    # is shaped the way every backend reports it.
+    assert data["backend"] in _BACKEND_MODELS, data["backend"]
+    assert data["vad_model"] == _BACKEND_MODELS[data["backend"]]
     assert data["frame_ms"] == 32
     assert data["sample_rate"] == 16000
     assert abs(data["duration"] - 8.0) < 0.2
@@ -198,6 +256,35 @@ def test_segment_error_envelope(base):
     resp = _post(base, "segment", {"scores": "not-an-array"})
     assert resp["ok"] is False
     assert isinstance(resp["error"], str)
+
+
+def test_sample_wav_is_voiced_to_every_available_backend(base):
+    """The demo's own sample is the first thing a user analyses, so it has to
+    look like speech to the backend the chain actually selects.
+
+    This is a regression pin with a history. The sample used to be a 300 Hz
+    tone with two harmonics and a shallow amplitude modulation. The energy and
+    ffmpeg backends scored it 60% / 57% voiced; silero scored it at a maximum
+    of 0.31 across the whole 8 s — correctly, because it is a speech model and
+    a tone is not speech. The chain preferring silero therefore made the demo
+    report "no speech found" on a signal that is plainly audible, and every
+    downstream test that needed a selection fell over with it. The sample is
+    now a low-fundamental harmonic stack with a deep syllable envelope, which
+    every available backend segments into the three bursts the sample emits.
+
+    It runs against whichever backend this host selects rather than forcing
+    one, because the failure mode was exactly a backend the test's host did
+    not have. Whichever it is, three bursts must produce three segments and
+    each must land on a burst — nothing in between, and nothing extra."""
+    data = _expect_ok(base, "vad_analyze", {"sample": True, "threshold": 0.5})
+    assert data["backend"] in _BACKEND_MODELS
+    segments = data["segments"]
+    assert len(segments) == len(_SAMPLE_BURSTS), segments
+    for seg in segments:
+        centre = (seg["start"] + seg["end"]) / 2
+        assert any(a <= centre <= z for a, z in _SAMPLE_BURSTS), \
+            f"segment {seg} does not sit on one of the sample's bursts"
+    assert data["duration"] > 0
 
 
 def test_upload_wav_is_analyzed(base):
@@ -240,7 +327,7 @@ def test_cutlist_pad_widens_keeps(base):
 
 def test_export_produces_downloadable_artifacts(base):
     data = _expect_ok(base, "export", {"sample": True})
-    assert data["vad_backend"] == "energy"
+    assert data["vad_backend"] in _BACKEND_MODELS, data["vad_backend"]
     assert data["compression_ratio"] > 0
     assert data["fcpxml"], "export must produce an FCPXML path"
     cut = _get(base, f"/api/file?path={urllib.parse.quote(data['cutlist'])}")
