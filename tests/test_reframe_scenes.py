@@ -381,10 +381,18 @@ def composed(tmp_path, monkeypatch):
     key that ignored its ``tail`` would otherwise hand a later call this
     fixture's graph.
     """
+    import engine.reframe as rf
     import engine.reframe_scenes as rs
 
-    monkeypatch.setattr(rs, "get_detector", lambda *a, **kw: _MarkerDetector())
+    # The detector is patched on ``reframe`` rather than on ``reframe_scenes``:
+    # perception moved to ``_perceive_window`` when it became a cached layer, so
+    # this is the name the inference resolves. One instance, not a fresh one per
+    # ask, because the perception cache keys on detector identity -- a new
+    # marker every call would be correct but would make every ask a miss.
+    _marker = _MarkerDetector()
+    monkeypatch.setattr(rf, "get_detector", lambda *a, **kw: _marker)
     monkeypatch.setattr(rs, "_SCENE_CACHE", {})
+    rf._clear_frame_cache()
     return _lecture_video(tmp_path / "lecture.mp4")
 
 
@@ -394,10 +402,13 @@ def changing(tmp_path, monkeypatch):
 
     Shares the ``composed`` fixture's cache handling for the same reason.
     """
+    import engine.reframe as rf
     import engine.reframe_scenes as rs
 
-    monkeypatch.setattr(rs, "get_detector", lambda *a, **kw: _MarkerDetector())
+    _marker = _MarkerDetector()
+    monkeypatch.setattr(rf, "get_detector", lambda *a, **kw: _marker)
     monkeypatch.setattr(rs, "_SCENE_CACHE", {})
+    rf._clear_frame_cache()
     return _changing_video(tmp_path / "changing.mp4")
 
 

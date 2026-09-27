@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path
 import subprocess
@@ -491,6 +492,55 @@ class _ReframeCacheKey:
 
 _REFAME_CACHE: dict[_ReframeCacheKey, tuple[int, int, list[tuple[float, float]]]] = {}
 
+# Frames, not just the trajectory derived from them. ``analyse_scene`` reads a
+# window and then the composition pass -- or the plain ``_probe_and_track``
+# trajectory -- reads *the same* window a second time, and before this cache
+# that second read re-ran the whole seek-and-decode pass. On the corpus AV1
+# source one read is 248 ms/frame * 28 samples = 6.9 s, so a single
+# ``scene_filter`` call spent roughly half its perception budget re-reading a
+# window it had just read. The key already carries size and mtime, so an
+# externally modified file does not get a stale window.
+#
+# Bounded to a handful of entries, never unbounded: one 1080p window is
+# 28 * 1920 * 1080 * 3 bytes = 174 MB. Callers must treat the arrays as
+# read-only -- the detectors copy into their own buffers, cv2.cvtColor makes
+# a new array, and the differ only reads -- so sharing them between consumers
+# is safe, but a future caller that writes in place would corrupt the next
+# consumer of the same window.
+#
+# Entry layout: [times, frames, w, h, perception]. The perception is the
+# detector's boxes per sample plus the shot boundaries, filled on first ask by
+# ``_perceive_window`` and left ``None`` by a caller that only wanted the
+# pixels. ``analyse_scene`` perceives a window to decide the layout and then the
+# composition pass -- or the plain ``_probe_and_track`` trajectory -- perceives
+# *the same frames* again, and before the fifth slot existed the second pass
+# re-ran 28 YuNet inferences at 1080p (1.73 s) plus the boundary diff (60 ms).
+# Most readers want only the pixels, and an inference pass they never ask for is
+# a cost they must not pay, so the slot is filled lazily rather than always.
+#
+# Keeping the perception on the frame entry means one key, one bound and one
+# eviction, so a perception can never outlive or out-grow the window it
+# describes. An earlier pass of this work kept them in two ``OrderedDict``s that
+# shared a key and a bound by convention; a fourth consumer would have had to
+# learn the convention.
+#
+# The entry is a mutable list so the perception can be filled in place, which is
+# why ``_sample_frames`` returns a tuple of its first four slots rather than the
+# entry itself: a caller of the reader gets the frames and no handle on the slot,
+# so it cannot store into a cache it never asked about.
+#
+# The perception carries the detector that built it: ``get_detector`` is a
+# process singleton, but a test may replace it with a different model, and boxes
+# the retired model produced must not be served as though the live one agreed.
+_FRAME_CACHE: "OrderedDict[_ReframeCacheKey, list]" = OrderedDict()
+_FRAME_CACHE_MAX_ENTRIES = 4
+
+
+def _clear_frame_cache() -> None:
+    """Drop every cached window, perception included. Tests use this so a
+    measurement cannot be satisfied by another test's decode or inference."""
+    _FRAME_CACHE.clear()
+
 
 def _sample_frames(video: Path, start: float, end: float, samples: int
                    ) -> tuple[list[float], list[np.ndarray | None], int, int]:
@@ -511,6 +561,17 @@ def _sample_frames(video: Path, start: float, end: float, samples: int
     so the fallback only changes results on codecs OpenCV cannot read at all,
     which is the only case it exists for.
     """
+    key = _ReframeCacheKey(video=str(video), size=video.stat().st_size,
+                           mtime=video.stat().st_mtime_ns,
+                           start=round(start, 3), end=round(end, 3),
+                           samples=samples)
+    hit = _FRAME_CACHE.get(key)
+    if hit is not None:
+        _FRAME_CACHE.move_to_end(key)
+        # The four slots, not the entry: the fifth holds the perception, which a
+        # caller of the reader neither asked for nor should be able to reach.
+        return hit[0], hit[1], hit[2], hit[3]
+
     cap = cv2.VideoCapture(str(video))
     if cap.isOpened():
         w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1920)
@@ -524,8 +585,75 @@ def _sample_frames(video: Path, start: float, end: float, samples: int
             out_f.append(frame if ok else None)
         cap.release()
         if any(f is not None for f in out_f):
+            _stash_frame_cache(key, out_t, out_f, w, h)
             return out_t, out_f, w, h
-    return _sample_frames_ffmpeg(video, start, end, samples)
+    out_t, out_f, w, h = _sample_frames_ffmpeg(video, start, end, samples)
+    _stash_frame_cache(key, out_t, out_f, w, h)
+    return out_t, out_f, w, h
+
+
+def _stash_frame_cache(key, times, frames, w, h) -> None:
+    """Store one window and keep the cache at its entry bound.
+
+    ``move_to_end`` before eviction makes this a least-recently-used window, so
+    a caller interleaving two windows keeps both and a caller hammering one
+    window never grows the cache past the bound. The perception slot starts
+    empty and is filled by ``_perceive_window`` on the same entry.
+    """
+    _FRAME_CACHE[key] = [times, frames, w, h, None]
+    _FRAME_CACHE.move_to_end(key)
+    while len(_FRAME_CACHE) > _FRAME_CACHE_MAX_ENTRIES:
+        _FRAME_CACHE.popitem(last=False)
+
+
+def _perceive_window(video: Path, start: float, end: float, samples: int
+                     ) -> tuple[list[float], list[np.ndarray | None], int, int,
+                                list[list[tuple[float, float, float, float, float]]],
+                                frozenset[int]]:
+    """Read one window and perceive it once, even when two callers ask.
+
+    ``analyse_scene`` perceives a window to decide the layout and the
+    composition pass perceives it again to plan the trajectories; the frame
+    cache made the second read free but the second *inference* still ran, and
+    28 YuNet inferences at 1080p are 1.73 s -- the larger part of what remained
+    of the clip's perception budget once the duplicate read was gone. The key
+    is the frame cache's key, so the same file-edit and window identity rules
+    apply and a perception can never belong to a window other than the one the
+    caller holds.
+
+    Boundaries come back as a frozen set: every consumer does membership tests
+    and set arithmetic, never mutation, and a mutable shared set would let one
+    consumer's cut change the next consumer's verdict.
+
+    The perception is filled into the frame cache's own entry, so the window and
+    what was derived from it are cached or evicted together -- there is no
+    second cache whose bound could drift out of step. Recomputing the key costs
+    two ``stat`` calls against a file the caller already opened, and the
+    alternative, threading the entry out of ``_sample_frames``, would hand every
+    reader a handle on the slot this function fills.
+    """
+    times, frames, w, h = _sample_frames(video, start, end, samples)
+    key = _ReframeCacheKey(video=str(video), size=video.stat().st_size,
+                           mtime=video.stat().st_mtime_ns,
+                           start=round(start, 3), end=round(end, 3),
+                           samples=samples)
+    detector = get_detector()
+    entry = _FRAME_CACHE.get(key)
+    if entry is not None and entry[4] is not None and entry[4][0] is detector:
+        _FRAME_CACHE.move_to_end(key)
+        return times, frames, w, h, entry[4][1], entry[4][2]
+    per_frame: list[list[tuple[float, float, float, float, float]]] = []
+    if detector.available:
+        per_frame = [detector.detect(f) if f is not None else [] for f in frames]
+    boundaries = frozenset(find_shot_boundaries(frames))
+    if entry is not None:
+        # Fill in place: the frames are already shared by every consumer of this
+        # window, and the perception belongs with them. A caller holding the
+        # four-tuple from ``_sample_frames`` is unaffected, having been handed a
+        # copy of the slots rather than the entry.
+        entry[4] = (detector, per_frame, boundaries)
+        _FRAME_CACHE.move_to_end(key)
+    return times, frames, w, h, per_frame, boundaries
 
 
 def _sample_frames_ffmpeg(video: Path, start: float, end: float, samples: int
@@ -731,7 +859,14 @@ def _reframe_track(video: Path, start: float, end: float, samples: int = 28
     if hit is not None:
         return hit
 
-    times, frames, w, h = _sample_frames(video, start, end, samples)
+    # Perceived through the shared layer: ``scene_filter`` has already perceived
+    # this window in ``analyse_scene`` to decide that this is a plain speaker
+    # shot, and re-inferring here doubled the detector's work on the most common
+    # clip there is -- 56 inferences for 28 frames, 1.34 s, on the corpus's
+    # talking-head source. The trajectory this returns is what that cache serves
+    # back, so a repeated call still costs nothing.
+    times, frames, w, h, per_frame, boundaries = _perceive_window(video, start,
+                                                                 end, samples)
     if not times:
         # Zeros, not max(w, 1): a reader that decoded nothing has no geometry to
         # report, and clamping to 1x1 here used to mask it -- ``_probe_dims``
@@ -743,11 +878,6 @@ def _reframe_track(video: Path, start: float, end: float, samples: int = 28
         _REFAME_CACHE[key] = result
         return result
 
-    detector = get_detector()
-    per_frame: list[list[tuple[float, float, float, float, float]]] = []
-    if detector.available:
-        for frame in frames:
-            per_frame.append(detector.detect(frame) if frame is not None else [])
     if not per_frame or not any(per_frame):
         # No usable detections anywhere: the heuristic path, on either host state.
         centers: list[tuple[float, float]] = []
@@ -765,7 +895,7 @@ def _reframe_track(video: Path, start: float, end: float, samples: int = 28
     sar_w, sar_h = probe_sample_aspect(video)
     crop_w = min(vertical_crop_width(h, sar_w, sar_h), w)
 
-    boundaries = set(find_shot_boundaries(frames))
+    boundaries = set(boundaries)
     # Frames that failed to decode contribute neither detections nor boundaries;
     # they are dropped here rather than threaded through as empty detections,
     # which would let a track time its evidence against a frame that has none.

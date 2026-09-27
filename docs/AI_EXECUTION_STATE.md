@@ -41,13 +41,20 @@ every line below was true on this host at that point.
   not run, and a green `build-windows` badge is not a Windows validation. That
   work is paused, not finished — it is the natural next thing to resume if the
   product loop returns to distribution.
-* Test suite: **1721 passed, 14 skipped** (2026-09-25, 572.03 s) — measured by
+* Test suite: **1758 passed, 16 skipped** (2026-09-27, 608.33 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work", and the
   disk note above: a concurrent `cargo test` + `pytest` pair once hit 100% disk
-  and both died reporting success-shaped exit codes). This run was taken *after*
-  the `7f9833c` merge, so it covers the demo work as well as `56253b5`.
-  The prior baseline was 1716/14 before the encoder re-measurement; the growth
+  and both died reporting success-shaped exit codes). This run covers the
+  perception-cache work in the session section below, on top of `ad6bd4d`.
+  The prior baseline was 1721/14 at `56253b5`; the growth is exactly the
+  fourteen tests the two window caches added — six in
+  `tests/test_reframe_frame_cache.py` (a window is not decoded twice) and eight
+  in `tests/test_reframe_perception_cache.py` (a window is not perceived twice,
+  and the properties that keep the win honest). The two extra skips are the
+  environment-gated desktop-shell and ollama tests, not work removed.
+  No regressions.
+  Before that the baseline was 1716/14 before the encoder re-measurement; the growth
   is exactly the five tests the render commit added — the encoder settings pin,
   the shipped pixel format decode, the concat stream-level A/V alignment, and
   the two slide-geometry mutual-exclusion proofs in `tests/test_reframe.py`.
@@ -181,6 +188,158 @@ every line below was true on this host at that point.
   a measurement is impossible.
 
 ## Completed work
+
+### This session — half the perception time was a re-read of a window just read
+
+`scene_filter` asks for the same 28-sample window twice in one call:
+`analyse_scene` reads it to decide the layout, and the composition pass reads
+it again — on the plain-speaker path, `_probe_and_track` re-reads it through a
+third name. `_sample_frames` had no memory of the *frames*: `_REFAME_CACHE`
+holds only the trajectory derived from them, `_SCENE_CACHE` only the resulting
+filter string. So the second ask re-ran the whole seek-and-decode pass. This
+was not inferred from the call graph — it was found by counting reader calls,
+and then measured against the clock.
+
+**Baseline, on the corpus AV1 source** (`telugu-tutorial.webm`, 1920×1080):
+248 ms per sample, so one 28-sample window is 6.9 s, and one
+`scene_filter(30.0-45.0)` call took **18.64 s across two byte-identical read
+requests — one redundant pass, ~half the time**. Where the per-sample cost
+sits, from a component breakdown: ffmpeg process startup 43 ms; a
+per-invocation fixed cost ≈306 ms of seek-plus-decode-from-keyframe;
+marginal frames only ≈7 ms each; sequential AV1 software decode 96.6 fps.
+
+**The fix**: a bounded LRU frame cache keyed on the existing
+`_ReframeCacheKey` (video, size, mtime, start, end, samples) at that one choke
+point, so every consumer is repaired at once rather than threading one
+caller's frames through another's signature. The size/mtime in the key mean an
+externally edited file is never served a stale window. **Measured before →
+after on the same window, best of three, same process** (bound 0 evicting on
+insert reproduces the pre-change behaviour exactly):
+18.43 s → **11.17 s, 1.65×, saving 7.26 s per clip**, one ffmpeg decode pass
+instead of two, and **the shipped filter is byte-identical** — the cache
+changes nothing about what the editor receives, only how much of it is
+recomputed. Pinned by `tests/test_reframe_frame_cache.py`, whose three
+load-bearing tests were verified to *fail* with the cache disabled (the defect
+pin reproduces "2 source opens for 1 distinct window"), and which separately
+pin the properties the win could be used to break: distinct windows are not
+served from each other, a restamped file is not served stale, and the cache
+never grows past its own entry bound. The bound is 4 entries ≈ 700 MB at
+1080p, deliberately not unbounded — one window is 174 MB.
+
+**Three optimizations were measured and rejected, and the record matters as
+much as the one that shipped:**
+
+1. `-hwaccel none` to skip the failing hardware negotiation: **1.01×**, i.e.
+   noise. The hardware-decode warnings on stderr ("Your platform doesn't
+   support hardware accelerated AV1 decoding") look like a cost centre and are
+   cosmetic — suppressed at `-loglevel error`, timing unchanged.
+2. Batching many samples into one ffmpeg invocation: a **net loss**. The
+   per-invocation fixed cost is the seek (154 ms), and two samples sit 1.07 s
+   apart at the default 28 samples, so decoding between them costs ≈224 ms —
+   more than just seeking again. The current one-process-per-sample shape is
+   already the cheaper one.
+3. One seek plus a sequential decode of the window: 29 s for a 30 s window,
+   far worse than 28 targeted seeks. Sequential AV1 decode is 96.6 fps but
+   the window is sparse by construction.
+
+**The same defect one layer up.** The frame cache made the second *read* free,
+but the perception derived from those frames was still computed twice:
+`analyse_scene` runs the detector over all 28 frames, and the composition pass
+runs it over the same frames again. Found the same way — by counting, not by
+reading the call graph: one `scene_filter` call made **56 detector calls for 28
+frames**, and one inference pass measures 1.73 s at 1080p (plus 60 ms of
+`find_shot_boundaries`, recomputed by the same two callers).
+
+**The fix**: a second bounded LRU at the same choke point, `_perceive_window`,
+which reads once and perceives once, returning the frames alongside the boxes
+and the boundaries. Both duplicate sites in `reframe_scenes` now go through it,
+which removed `get_detector` and `find_shot_boundaries` from that module's
+imports entirely — the perception layer now lives in one place rather than
+being invoked from two. The entry carries the detector that built it, because
+`get_detector` is a process singleton that a caller may replace with a
+different model; the identity check makes that a miss rather than serving boxes
+the live model does not agree with. Boundaries come back frozen, since every
+consumer does membership tests and set arithmetic over them and a shared
+mutable set would let one consumer's arithmetic change the next consumer's
+shot count.
+
+**Measured before → after on the same window, best of three, same process**
+(the perception cache disabled in-place while the frame cache stays live, so
+the two wins are isolated rather than conflated):
+11.14 s → **9.33 s, 1.19×, saving 1.81 s per clip, 28 inferences instead of
+56**, and again **byte-identical filter**. Cumulative from the 18.64 s
+baseline: **1.99×, 9.31 s saved per clip**. Pinned by
+`tests/test_reframe_perception_cache.py`, whose load-bearing tests were
+verified to fail with the cache dead — the defect pin reproduces
+"16 inferences for 8 samples" — and which separately pin distinct windows
+being perceived separately, a replaced detector invalidating the entry, the
+bound not being exceeded, and the boundaries being frozen.
+
+**The same duplicate at a third site, on the path the legacy chain was built
+for.** `scene_filter` decides a shot is a plain speaker from
+`analyse_scene`'s segments — which already perceived the window — and then
+calls `_probe_and_track`, which perceived it again with its own detector loop
+and its own `find_shot_boundaries`. So the talking-head clip, the common case,
+still did 56 inferences for 28 frames after the fix above. Found by
+instrumenting `scene_filter` on the corpus's `pentagon-esper-briefing.mp4`
+with all three caches cleared (an earlier pass of the measurement missed it
+because `_REFAME_CACHE` survived between iterations and short-circuited the
+probe before it could infer — the duplicate only shows up on a cold cache).
+`_probe_and_track` now perceives through the shared layer too. **Measured
+before → after, same process: 5.04 s → 4.18 s, 1.21×, saving 0.86 s per
+clip, 28 inferences instead of 56, filter byte-identical.** Pinned by
+`test_the_plain_speaker_path_does_not_re_infer`, which builds a one-region
+clip so the classifier sees a single SPEAKER class and the plain path is the
+one taken — the composed-path test cannot reach this code, and a test that
+only exercised the SPLIT path would have left the common case regressed.
+
+
+**Where the remaining time goes, measured rather than assumed.** Of the 9.33 s:
+7.23 s is one decode pass, 1.73 s is one inference pass, 0.37 s is planning,
+composition and probe calls. The decode is 77% of the residual, and at a fixed
+sample count it is now irreducible — the sample count *is* the perception
+budget, and cutting it changes what the editor sees. That is a
+results-affecting decision, not an efficiency one, so it is left here as a
+measured boundary rather than attacked. Two `test_reframe_scenes.py` fixtures
+had to follow the perception layer into `engine.reframe` (they patched
+`rs.get_detector`, which no longer exists there); the fixtures now pin one
+shared detector instance, because the identity key means a fresh marker per ask
+would be correct but would make every ask a miss.
+
+**What this cost, stated honestly.** The perception is computed eagerly where it
+used to be computed only when a caller wanted boxes: the no-detections fallback
+path in `_probe_and_track` now also pays for `find_shot_boundaries`, roughly
+60 ms it does not use. That is about 1% of a path that already decoded 28
+frames, and it is the reason the fix is one line rather than a lazily-computed
+perception object.
+
+**The caches are one cache.** The first pass of this work had `_FRAME_CACHE`
+and `_PERCEPTION_CACHE` as two `OrderedDict`s sharing a key and a bound by
+convention — correct, but a fourth consumer would have had to learn the
+convention, and the two could drift. They are now a single entry:
+`[times, frames, w, h, perception]`, with the perception filled in place on
+first ask and left `None` by the readers that only want pixels (most of them —
+28 YuNet inferences are 1.73 s, which a caller that never asks for boxes must
+not pay). `_sample_frames` returns a tuple of the first four slots rather than
+the entry, so a reader gets no handle on the slot `_perceive_window` fills.
+`_clear_frame_cache` is now the only clearing point, and the earlier
+`_PERCEPTION_CACHE` name is gone from the module. Re-measured after the
+unification: composed path 9.35 s at 28 inferences, plain path 4.23 s at 28,
+both filters byte-identical to before it.
+
+
+
+**Limits stated as limits.** The speedup is measured on one window of one
+source; the redundancy it removes is structural (two requests, identical
+arguments) and therefore source-independent, but the *magnitude* scales with
+per-frame decode cost, so a cheap codec gains proportionally less. The 11.17 s
+that remains is not all decode: one pass is ~7 s and the residual ~4 s is
+detection and planning across 28 1080p frames — that is the next measured
+target, not yet investigated. The cache shares arrays between consumers,
+which is safe only because every consumer reads (`YuNet.detect` copies into
+its own buffer, `cv2.cvtColor` returns a new array, the differ only reads);
+a future caller that writes in place would corrupt the next consumer of the
+same window, and the comment at the cache says so.
 
 ### This session — an editor's hand on the shipped ASS was overwritten, and then ignored
 

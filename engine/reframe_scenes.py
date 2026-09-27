@@ -95,12 +95,11 @@ import numpy as np
 
 from engine.reframe import (
     _even,
-    _sample_frames,
+    _perceive_window,
     _x_expression,
     plan_crop,
     vertical_crop_width,
 )
-from engine.reframe_perception import find_shot_boundaries, get_detector
 from providers.ffmpeg import probe_sample_aspect
 
 
@@ -872,7 +871,9 @@ def analyse_scene(video: Path, start: float, end: float, samples: int = 28
     source dimensions. Public so a caller can answer "why was this clip
     composed this way" without rebuilding the filter.
     """
-    times, frames, w, h = _sample_frames(video, start, end, samples)
+    times, frames, w, h, per_frame, boundaries = _perceive_window(video,
+                                                                 start, end,
+                                                                 samples)
     if not times:
         # Zeros, not max(w, 1): a caller checks this to decide whether the
         # source was readable at all, and a clamped geometry used to become a
@@ -882,11 +883,6 @@ def analyse_scene(video: Path, start: float, end: float, samples: int = 28
     sar_w, sar_h = probe_sample_aspect(video)
     crop_w = min(vertical_crop_width(h, sar_w, sar_h), w)
 
-    detector = get_detector()
-    per_frame: list[list[tuple[float, float, float, float, float]]] = []
-    if detector.available:
-        per_frame = [detector.detect(f) if f is not None else [] for f in frames]
-    boundaries = set(find_shot_boundaries(frames))
     kept = [(i, t, f) for i, (t, f) in enumerate(zip(times, frames))
             if f is not None]
     if not kept:
@@ -896,6 +892,7 @@ def analyse_scene(video: Path, start: float, end: float, samples: int = 28
         # above -- an editor needs to know the file is the problem.
         return [], [], 0, 0
 
+    boundaries = set(boundaries)
     per_shot, all_slides = _frame_area_slides(frames, w, h, boundaries, kept)
 
     # One representative face per sample: the detector's top-ranked box. The
@@ -1020,14 +1017,13 @@ def scene_filter(video: Path, start: float, end: float, tail: tuple[str, ...] = 
 
     # Two trajectories per segment: the tracker's, planned against the crop the
     # deliverable uses, and the speaker band's, planned against the wider window
-    # a SPLIT gives the speaker. Both come from the same detection stream, so
-    # the perception cost is paid once.
-    times, frames, _w, _h = _sample_frames(video, start, end, samples)
-    detector = get_detector()
-    per_frame: list[list[tuple[float, float, float, float, float]]] = []
-    if detector.available:
-        per_frame = [detector.detect(f) if f is not None else [] for f in frames]
-    boundaries = set(find_shot_boundaries(frames))
+    # a SPLIT gives the speaker. Both come from the same detection stream, and
+    # that stream is the one ``analyse_scene`` already ran: perceiving the same
+    # frames a second time was 1.73 s of a clip's budget for byte-identical
+    # boxes. The perception cache hands it back; the frames are the same arrays.
+    times, frames, _w, _h, per_frame, boundaries = _perceive_window(video,
+                                                                   start, end,
+                                                                   samples)
     kept = [(i, t, f) for i, (t, f) in enumerate(zip(times, frames))
             if f is not None]
     kept_times = [t for _, t, _ in kept]
