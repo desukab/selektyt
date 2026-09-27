@@ -15,35 +15,37 @@ right words — only a speaker of the language can — but it can tell that the
 transcript claims a small fraction of audio that demonstrably carries speech.
 
 Measured across all 11 corpus sources (``tools/coverage_measure.py``,
-``corpus/wer/runs/coverage-2026-09-19.json``), the ratio of transcript coverage
+``corpus/wer/runs/coverage-2026-09-27.json``), the ratio of transcript coverage
 to speech-energy fraction separates the one failure cleanly:
 
-    telugu-tutorial   vad 72.6%  asr  4.5%  ratio 0.062   <- the failure
-    royal-society-... vad 71.7%  asr 93.3%  ratio 1.302   <- lowest good source
+    telugu-tutorial   vad 77.4%  asr  4.5%  ratio 0.058   <- the failure
+    hadhazy-protest   vad 94.1%  asr 87.1%  ratio 0.925   <- lowest good source
 
-Nothing lies between them; the margin is 21x. A cut point anywhere in that gap
+Nothing lies between them; the margin is 16x. A cut point anywhere in that gap
 works, and ``COLLAPSE_RATIO`` is placed conservatively inside it with 4x of
-room below and 5x above. With one failure and nine good sources this is not a
+room below and 4x above. With one failure and seven good sources this is not a
 calibrated threshold and is not presented as one — it is a cut point inside a
 measured empty interval.
 
 Two properties the measurement forced on the design:
 
 * **It is one-directional.** The ratio is only meaningful when the transcript
-  covers *less* than the speech energy. ``hadhazy-protest`` returns a VAD
-  fraction of 0% against an ASR coverage of 87% — the energy VAD's absolute
-  threshold is blind to a mean of −43.3 dBFS, so the VAD is the broken
-  instrument there, not the transcript. A symmetric check would have failed a
-  source whose transcript is fine. ``pentagon-esper-briefing`` is the same
-  shape at 0.4% VAD against 82% ASR.
+  covers *less* than the speech energy. ``hadhazy-protest`` is the case that
+  makes it so: mean −43.3 dBFS, transcript covering 87% of it, and a level-blind
+  energy VAD scoring it 0% speech — so the VAD is the broken instrument there,
+  not the transcript, and a symmetric check would have failed a source whose
+  transcript is fine. Routing the gate through the chain removes that particular
+  failure (silero scores the same source 94% speech), but the asymmetry stays:
+  a transcript that covers *more* than the audio's speech fraction is not
+  evidence of anything, and the check has no business failing it.
 * **It degrades instead of passing.** Below ``MIN_VAD_FRACTION`` the VAD found
   too little speech to be a denominator, so the ratio is meaningless. The
   verdict becomes ``not_computable`` and is recorded as such — a check that
   reports *pass* when it could not measure anything is the failure mode this
   module exists to remove.
 
-What this still cannot see: an energy VAD cannot tell speech from music, so a
-source that is mostly score with a little dialogue has a high speech-energy
+What this still cannot see: no backend in the chain can tell speech from music,
+so a source that is mostly score with a little dialogue has a high speech
 fraction and a legitimately low transcript coverage and would be flagged. The
 error cost is asymmetric and intentionally so — a false positive is a loud
 message asking the user to verify, while a false negative ships wrong captions
@@ -53,22 +55,85 @@ empty-transcript guard does.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from engine.vad import EnergyVAD, segment_with_meta
-from providers.audio import extract_pcm_wav, _read_mono_pcm, AudioReadError
+from engine.vad import (
+    EnergyVAD,
+    FFmpegVADBackend,
+    SileroVADBackend,
+    segment_with_meta,
+)
+from providers.audio import AudioReadError, _read_mono_pcm, extract_pcm_wav
 
-FRAME_MS = 32  # EnergyVAD's fixed window; the score grid the segments read.
+FRAME_MS = 32  # The 32 ms score grid every backend emits and the segments read.
+
+# The coverage gate's "audio truth" must come from a backend that *listens*.
+# Whisper is excluded on purpose: it infers speech from transcript word
+# timings, so the gate would compare the transcript against itself, the ratio
+# would sit near 1.0 by construction, and a collapse would become
+# undetectable. The other three read the audio, and this is the same measured
+# order `get_vad_backend` prefers — silero first, then ffmpeg, then energy.
+# See `docs/AI_EXECUTION_STATE.md` for the table that ordered them.
+_COVERAGE_BACKENDS = (
+    ("silero", SileroVADBackend),
+    ("ffmpeg", FFmpegVADBackend),
+    ("energy", EnergyVAD),
+)
+
+
+def _select_backend(force: str | None = None):
+    """The backend the coverage gate trusts, mirroring the pipeline's chain.
+
+    Energy used to be hardcoded here, and it is the one backend the chain ranks
+    last: its scorer compares frame RMS against fixed absolute thresholds, so a
+    quiet source scores entirely silent. That is precisely the case the gate
+    exists to catch, so a gate that cannot see a quiet source is a gate that
+    declines to compute on exactly the sources where a transcript is most
+    likely to have collapsed. Measured across the corpus, routing the gate
+    through this chain changed two verdicts — ``hadhazy-protest`` and
+    ``pentagon-esper-briefing`` — both from ``not_computable`` to ``ok``,
+    because ffmpeg and silero hear speech in sources energy scored at 0.0% and
+    0.4%. No verdict moved the other way, and the one real collapse
+    (``telugu-tutorial``, 4.5% transcript against 73% speech) is detected by
+    every backend in the chain.
+    """
+    if force is not None:
+        for name, cls in _COVERAGE_BACKENDS:
+            if name == force:
+                instance = cls(fallback_reason="forced") if cls is not EnergyVAD else cls()
+                if instance.is_available():
+                    return instance
+                raise RuntimeError(
+                    f"the '{force}' VAD backend is unavailable, so coverage "
+                    "cannot be measured with it; drop --vad-backend or choose "
+                    "one that is installed"
+                )
+        raise RuntimeError(
+            f"the '{force}' VAD backend cannot measure coverage: whisper infers "
+            "speech from transcript word timings, so the gate would compare the "
+            "transcript against itself. Use silero, ffmpeg or energy"
+        )
+    for _name, cls in _COVERAGE_BACKENDS:
+        instance = cls()
+        if instance.is_available():
+            return instance
+    # Whisper is unreachable here by construction — energy needs nothing but
+    # numpy, so it is available wherever the pipeline runs at all.
+    return EnergyVAD()
 
 # A VAD fraction below this leaves the ratio without a trustworthy denominator.
-# Measured: the two sources in this regime (hadhazy-protest 0.0%,
-# pentagon-esper-briefing 0.4%) both have good transcripts and broken VAD
-# reads, so declining to compute is the correct answer, not a pass.
+# The floor is a property of the instrument, not of the corpus: a source that
+# carries a real transcript can still score under it when the backend cannot
+# hear the level (energy on the −43 dBFS ``hadhazy-protest``, where it reads
+# 0.0%), and in that regime declining to compute is the correct answer rather
+# than a pass. The chain now selects a backend that can hear such a source, so
+# this is the case that remains when *none* of them can — silence, or a level
+# no instrument in the chain resolves.
 MIN_VAD_FRACTION = 0.10
 
 # Transcript coverage below this multiple of the speech-energy fraction is a
-# collapse. Sits inside the measured empty interval [0.062, 1.302].
+# collapse. Sits inside the measured empty interval [0.058, 0.925].
 COLLAPSE_RATIO = 0.25
 
 
@@ -141,12 +206,17 @@ def _union_span(spans: list[tuple[float, float]]) -> float:
     return total
 
 
-def measure(audio: Path, segments: list[dict]) -> dict:
+def measure(audio: Path, segments: list[dict],
+            vad_backend: str | None = None) -> dict:
     """The raw numbers, with no verdict attached.
 
     ``segments`` are ``transcript.json`` records carrying ``start``/``end``.
     Kept free of any pass/fail judgement so ``tools/coverage_measure.py`` can
     report the distribution across a corpus without inheriting a threshold.
+
+    ``vad_backend`` selects which backend supplies the audio truth. It defaults
+    to the chain the pipeline prefers, never whisper — see
+    ``_select_backend`` for why that exclusion is load-bearing.
     """
     data, rate = _read_mono(audio)
     duration = len(data) / rate
@@ -154,7 +224,8 @@ def measure(audio: Path, segments: list[dict]) -> dict:
     peak = max(rms) if rms else 0.0
     mean = sum(rms) / len(rms) if rms else 0.0
 
-    vad = EnergyVAD().analyze(audio)
+    backend = _select_backend(vad_backend)
+    vad = backend.analyze(audio)
     _regions, meta = segment_with_meta(vad.scores, sample_rate=rate, frame_ms=FRAME_MS,
                                        threshold=0.5, min_speech_ms=150,
                                        min_silence_ms=100)
@@ -176,15 +247,19 @@ def measure(audio: Path, segments: list[dict]) -> dict:
     }
 
 
-def check(audio: Path, segments: list[dict]) -> CoverageReport:
+def check(audio: Path, segments: list[dict],
+          vad_backend: str | None = None) -> CoverageReport:
     """Compare what the transcript claims against what the audio contains.
 
     Raises nothing; the caller decides whether a ``coverage_collapse`` verdict
     aborts the run. The pipeline aborts, matching the empty-transcript guard,
     because a silent wrong deliverable is worse than a loud objection.
+
+    ``vad_backend`` forwards to :func:`measure` — see ``_select_backend`` for
+    which backends may supply the audio truth.
     """
     try:
-        m = measure(audio, segments)
+        m = measure(audio, segments, vad_backend=vad_backend)
     except FileNotFoundError:
         return CoverageReport(0.0, 0.0, 0.0, 0.0, 0.0, "not_measured",
                               "the extracted audio is missing, so coverage "
@@ -192,6 +267,11 @@ def check(audio: Path, segments: list[dict]) -> CoverageReport:
     except (OSError, ValueError, AudioReadError) as exc:
         return CoverageReport(0.0, 0.0, 0.0, 0.0, 0.0, "not_measured",
                               f"coverage could not be measured: {type(exc).__name__}: {exc}")
+    except RuntimeError:
+        # _select_backend raises this when a forced backend is unavailable or is
+        # whisper. The forced path is an explicit user request, so the caller
+        # sees the error rather than a silent fallback to a different backend.
+        raise
 
     ratio = m["coverage_ratio"]
     vad_frac = m["vad_speech_frac"]
@@ -205,9 +285,9 @@ def check(audio: Path, segments: list[dict]) -> CoverageReport:
         # Not a pass. Recording it as one is exactly the green-without-measuring
         # failure the rest of the audit is about; the verdict says why.
         verdict = "not_computable"
-        detail = (f"the energy VAD found {vad_frac * 100:.1f}% speech, below the "
-                  f"{MIN_VAD_FRACTION * 100:.0f}% floor, so the ratio has no "
-                  "trustworthy denominator — the VAD is likely blind to a quiet "
+        detail = (f"the {m['vad_backend']} VAD found {vad_frac * 100:.1f}% speech, "
+                  f"below the {MIN_VAD_FRACTION * 100:.0f}% floor, so the ratio has "
+                  "no trustworthy denominator — the VAD is likely blind to a quiet "
                   "source, not the transcript empty")
     elif ratio < COLLAPSE_RATIO:
         verdict = "coverage_collapse"

@@ -32,7 +32,16 @@ every line below was true on this host at that point.
   `92005ae` (the editorial scan now covers the whole source instead of
   `return`ing at a candidate cap, which had silently made the last ~35% of
   two corpus sources unreachable) and `a1e9150` (the vertical reframe keeps the
-  active speaker, with the rendered output itself as the test).
+  active speaker, with the rendered output itself as the test), then the silero
+  VAD work in its own section below (`909ca9e` implementing the neural backend
+  and re-ordering the chain by measurement, `2884a1d` fixing the demo sample that
+  its own backend scored "no speech found"), then the **coverage-gate fix** in
+  the session section below — the pipeline's one hard transcript-vs-audio guard
+  was reading its audio from `EnergyVAD()`, the chain's last-choice, level-blind
+  backend, so it passed the corpus's only shipped failure while scoring a real
+  human voice at 0% speech and reporting "not computable" in both directions.
+  The fix routes the gate through the same backend chain as the selection and is
+  measured, not thresholded, in the section below.
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
   Before this loop, the line of work was the **Windows desktop application**,
@@ -45,13 +54,23 @@ every line below was true on this host at that point.
   not run, and a green `build-windows` badge is not a Windows validation. That
   work is paused, not finished — it is the natural next thing to resume if the
   product loop returns to distribution.
-* Test suite: **1773 passed, 16 skipped** (2026-09-27, 613.60 s) — measured by
+* Test suite: **1778 passed, 16 skipped** (2026-09-27, 612.53 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work", and the
   disk note above: a concurrent `cargo test` + `pytest` pair once hit 100% disk
   and both died reporting success-shaped exit codes). This run covers the
-  silero work and the sample/fixture work in the two session sections below, on
-  top of `042f400`.
+  coverage-gate fix in the session section below, on top of the silero and
+  fixture work.
+  The prior baseline was 1773/16, and the growth of five is exactly accounted
+  for: `tests/test_coverage.py` went 11 → 16 tests as the gate's contract was
+  pinned (the collapse, the quiet source never failed, the chain's probe order,
+  the whisper refusal, the union arithmetic and two pipeline tests at the
+  corpus's own 340 s scale). `tests/test_audio_analysis.py` is the same count
+  with its fixture now shared from `tests/speech_fixtures.py`.
+  No regressions. The skip count is unchanged at 16 — the two new
+  coverage tests that are host-gated are gated *on* a listening backend being
+  present, so on a host with neither silero nor ffmpeg they report the honest
+  weaker property rather than failing.
   The prior baseline was 1758/16 at `042f400`, and the growth of fifteen is
   exactly accounted for: ten in the new `tests/test_vad_silero.py` (the
   reference parity, the contrast, the state-carry regression and the PCM
@@ -202,6 +221,141 @@ every line below was true on this host at that point.
   a measurement is impossible.
 
 ## Completed work
+
+### This session — the coverage gate was blind on the sources it existed for
+
+The pipeline has exactly one *hard* guard that compares the transcript against
+the audio it claims to describe: `engine.coverage`, which raises on
+`coverage_collapse`. It exists because `telugu-tutorial` shipped as an OK
+deliverable with a transcript covering **4.5%** of a 339.6 s file that is 73%
+speech-energy audio, and every other audit in the pipeline compared the
+transcript against itself, the selection or the render — never the audio — so
+nothing objected. A user would have shipped wrong captions and read a success
+message.
+
+**The guard itself was the defect.** It constructed `EnergyVAD()` directly,
+hardcoded. Energy is the backend the chain ranks **last**, for the measured
+reason that its scorer clips frame RMS into fixed absolute thresholds
+[0.02, 0.08), so a quiet source falls entirely below the base and the whole
+file scores silent. That is precisely the regime the gate exists to inspect, so
+the gate declined to compute on exactly the sources where a transcript is most
+likely to have collapsed — and it declined by reporting `not_computable`,
+which is honest, but it meant the gate's coverage of the corpus was the
+*complement* of its purpose. Measured on `hadhazy-protest` (mean −43.3 dBFS,
+transcript covering 87.1%): energy reads **0.0% speech**, so the ratio had no
+denominator. A gate that cannot hear a quiet source is a gate that cannot catch
+a collapse on one.
+
+**The fix routes the gate through the same chain the pipeline prefers** —
+silero, then ffmpeg, then energy — via a new `vad_backend` argument on
+`measure`/`check` and `_select_backend`, and the pipeline forwards its own
+`vad_backend` to it, so the instrument that decided what counts as speech for
+the selection also supplies the gate's audio truth. Whisper is the one value
+that cannot be forwarded: `WhisperVADBackend.analyze` ignores its audio argument
+and marks a frame speech iff a transcribed word covers it, so the gate would
+compare the transcript against itself, the ratio would sit at ≈1.0 by
+construction, and a collapse would become undetectable. `_select_backend`
+*refuses* it with an error rather than silently substituting, and a forced
+backend that is not installed is refused the same way — `--vad-backend` must not
+agree to a measurement taken with something else. A `--vad-backend whisper`
+selection run still works: the pipeline forwards `None` in that case and the
+gate falls back to its own chain, with the backend that actually ran recorded in
+`report.json`.
+
+**Re-measured across all 11 corpus sources** through the chain
+(`corpus/wer/runs/coverage-2026-09-27.json`, `tools/coverage_measure.py` now
+defaults to the same chain, so the survey and the production check cannot drift
+apart):
+
+| source | dur s | vad % | asr % | ratio | mean dBFS |
+| --- | --- | --- | --- | --- | --- |
+| ooi-vertical | 152.0 | 70.5 | 85.3 | 1.209 | −25.8 |
+| hindi-baiga-interview | 53.8 | 85.6 | 93.0 | 1.087 | −29.6 |
+| emwcon-panel-2018 | 3339.0 | 80.6 | 85.1 | 1.056 | −28.8 |
+| pentagon-esper-briefing | 1013.9 | 77.9 | 82.2 | 1.056 | −38.8 |
+| nasa360-ep5 | 1469.7 | 75.4 | 79.3 | 1.052 | −30.5 |
+| royal-society-cloke | 626.0 | 93.7 | 93.3 | 0.996 | −19.7 |
+| hadhazy-protest | 126.0 | 94.1 | 87.1 | **0.926** | −43.3 |
+| **telugu-tutorial** | 339.6 | 77.4 | **4.5** | **0.058** | −19.4 |
+| alice-1903 / roman-portrait-trailer / telugu-launch | — | 0.0 | 0.0 | n/a | no transcript and no speech |
+
+The ratio separates the one failure from the seven good sources with **nothing
+between them**: 0.058 against a lowest-good 0.926, a 16× margin. `COLLAPSE_RATIO`
+0.25 sits inside that empty interval with 4× of room below and 4× above. With
+one failure and seven good sources this is **not a calibrated threshold and is
+not presented as one** — it is a cut point inside a measured empty interval.
+The two verdict changes the fix delivers are both in it: `hadhazy-protest` and
+`pentagon-esper-briefing` move `not_computable` → `ok`, because silero hears
+94.1% and 77.9% speech where energy read 0.0% and 0.4%. No verdict moved the
+other way, and the real collapse is caught by every backend in the chain.
+
+**Two properties the measurement forced on the design, both now pinned:**
+
+* **One-directional.** The ratio is only meaningful when the transcript covers
+  *less* than the speech energy. `hadhazy-protest` is the case that makes it so:
+  a level-blind instrument scored it 0% speech against a good transcript, so a
+  symmetric check would have failed a source whose transcript was fine. The
+  chain removes that particular failure, but the asymmetry stays as a principle
+  — a transcript covering more than the audio's speech fraction is not evidence
+  of anything.
+* **Degrades instead of passing.** Below `MIN_VAD_FRACTION` (0.10) the ratio has
+  no trustworthy denominator, so the verdict is `not_computable` and the detail
+  names the backend that ran and why. A check that reports *pass* when it could
+  not measure anything is the failure mode this module exists to remove; a
+  `not_measured` verdict covers the case where the extraction is absent on a
+  resumed run, and it does not break the run.
+
+**The fixtures had to be re-derived, and the design space is now measured once
+in a shared module.** A test needing a collapse needs audio the chain scores as
+speech *and* a transcript covering a small fraction of it — arithmetic that the
+collapse threshold makes narrower than it looks: a transcript covering 16 s of a
+100 s file that is 50% speech is ratio 0.32, **above** the 0.25 threshold. The
+old 220 Hz tone fixture scored 100% speech on energy and collapsed; the gated
+voiced fixture scores ~50%, so the same test would have stopped collapsing and
+failed for the right reason. Two things came out of measuring the replacement:
+
+```
+shape                              energy   ffmpeg   silero
+220 Hz tone                           100%     100%      0.0%   <- scored, never segmented
+continuous voiced stack                 8.8%     46.5%      0.2%
++ 4 Hz syllable envelope                8.8%     46.5%      8.8%
++ 0.5 s on / 0.5 s off gating          49.6%     43.5%     52.5%   <- the fixture
+
+amp 0.9      mean -18 dBFS   energy 49.6%  ffmpeg 43.5%  silero 52.5%
+amp 0.004    mean -65 dBFS   energy  0.0%  ffmpeg  0.0%  silero 60.8%
+amp 0.0001   mean -97 dBFS   energy  0.0%  ffmpeg  0.0%  silero  0.0%
+```
+
+Only the gated shape is speech to all three backends at once, and the gating is
+a genuine cue rather than a hack — bursty speech with inter-syllable pauses is
+closer to what a VAD is for than a continuous drone. The `amp` dial is the
+quiet-source stand-in and separates the backends cleanly: one level heard by all
+three, one heard only by a model that listens (the corpus's quiet-source shape,
+and the whole reason the fix matters), one heard by none — the one
+host-independent way to reach "no denominator". Each test asserts the property
+that holds on every host rather than one that pins the machine: the quiet source
+is never *failed* everywhere and is `ok` only where a listening backend exists;
+the inaudible source is `not_computable` regardless. The measured tables live in
+`tests/speech_fixtures.py`, which `test_audio_analysis.py` now shares instead of
+carrying its own copy.
+
+Pinned by `tests/test_coverage.py` (16 tests, 16 s): the collapse fires and its
+detail carries the numbers; a covering transcript passes; the quiet source is
+never failed; the chain probes in the pipeline's preference order with energy
+last, never first; whisper is refused; an unavailable forced backend is refused;
+a wrong sample rate is rejected rather than confidently miscounted; the span
+arithmetic unions instead of sums; and two pipeline tests exercise the guard
+through `run` at the corpus's own scale (a 340 s extraction against a 16 s
+transcript, ratio ≈0.094) proving it aborts **before** selection and render and
+that `--skip-coverage-check` still records the measurement.
+
+**What this still cannot see**, stated as a limit: no backend in the chain can
+tell speech from music, so a source that is mostly score with a little dialogue
+has a high speech fraction and a legitimately low transcript coverage and would
+be flagged. The error cost is asymmetric and intentionally so — a false positive
+is a loud message asking the editor to verify, a false negative ships wrong
+captions silently. The check is therefore overridable, and the override leaves
+the measurement in the report rather than deleting the evidence.
 
 ### This session — silero VAD landed, and the fallback chain was re-ordered by measurement
 

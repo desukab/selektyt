@@ -713,8 +713,20 @@ def run(
     # selection, never against the audio — the corpus shipped exactly this as
     # an OK deliverable (4.5% of a 73%-speech-energy source). Runs before
     # selection and render, which are the parts that cost time.
+    # The coverage gate needs a backend that reads the audio, so the pipeline's
+    # own `vad_backend` is forwarded to it: the same instrument that decided what
+    # counts as speech for the selection should supply the gate's audio truth.
+    # Whisper is the one choice that cannot be forwarded — it infers speech from
+    # transcript word timings, so the gate would compare the transcript against
+    # itself and a collapse would sit at ratio 1.0 by construction
+    # (`engine.coverage._select_backend` refuses it for that reason). Falling
+    # back to the gate's own chain here keeps a `--vad-backend whisper` selection
+    # run working while the audit still comes from an instrument that listened;
+    # the backend that actually ran is recorded in `coverage` below.
+    gate_backend = None if vad_backend == "whisper" else vad_backend
     coverage = check_coverage(project / "transcription" / "audio.wav",
-                              [{"start": s.start, "end": s.end} for s in transcript])
+                              [{"start": s.start, "end": s.end} for s in transcript],
+                              vad_backend=gate_backend)
     if coverage.verdict == "coverage_collapse" and not skip_coverage_check:
         raise RuntimeError(
             f"Transcription coverage collapse: {coverage.detail}. Re-run with a "

@@ -426,11 +426,22 @@ Criterion P13 holds on a real re-run, not only in the unit test.
 
 ## Exact next actions, in priority order
 
-1. **The Telugu coverage collapse is caught in code; confirm it on the real
-   source.** The check fires on the retained extraction, but the pipeline path
-   — abort before render, `--skip-coverage-check` override, the measurement in
-   `report.json` — has only been exercised on synthetic media. One re-run of
-   `telugu-tutorial` with `--keep-media` closes that, and it is the single
+1. **The Telugu coverage collapse is caught in code, and the gate's own
+   blindness is fixed; what remains is a real end-to-end run.** Two things
+   changed. First, the pipeline path — abort before render,
+   `--skip-coverage-check` override, the measurement in `report.json` — is now
+   pinned by `tests/test_coverage.py` at the corpus's own scale (a 340 s
+   extraction against a 16 s transcript, the real failure's 339.6 s / 4.5%),
+   not only by a check on the retained extraction. Second, the gate itself was
+   defective: it hardcoded the energy VAD, the chain's last-choice, level-blind
+   backend, so on `hadhazy-protest` (−43.3 dBFS) its own instrument read 0.0%
+   speech and the verdict was `not_computable` on a source whose transcript
+   covers 87.1% of it. The gate now takes its audio truth from the same chain
+   the pipeline prefers; re-measured across all 11 sources, the two quiet
+   sources move `not_computable` → `ok` and nothing moves the other way
+   (`corpus/wer/runs/coverage-2026-09-27.json`). **Still open:** no real
+   end-to-end run has hit the abort on the real source — that needs one
+   re-run of `telugu-tutorial` with `--keep-media`, and it remains the single
    highest-confidence-per-byte action open.
 2. Fix the no-speech error to distinguish an unreadable container from a
    speechless source — remux to a clean container and retry before reporting

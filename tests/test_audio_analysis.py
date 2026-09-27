@@ -9,64 +9,17 @@ model.
 from __future__ import annotations
 
 import json
-import wave
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from engine.audio_analysis import run_audio_analysis
+from tests.speech_fixtures import write_speech_wav as _speech_wav
 
-_SR = 16000
-
-# The fixture is a *voiced excitation*, not a tone, and the distinction
-# matters. The chain prefers a neural speech model, and a speech
-# model is entitled to score a pure tone as non-speech: the previous fixture was
-# a 220 Hz sine gated on and off, and silero scores it at a maximum of 0.503 —
-# which sounds close to the default 0.5 threshold but yields **zero speech
-# regions at every threshold**, so the cutlist was empty and any test that
-# needed a selection died with "nothing to keep: the cutlist removes the whole
-# timeline". The energy and ffmpeg backends scored that same tone 1.0
-# throughout, so the fixture passed for as long as one of them was preferred.
-# The properties this suite pins (provenance, cache keying, resume, threshold
-# reach) are about the plumbing, not about one backend's notion of speech, so
-# the fixture has to look like speech to every backend. A 120 Hz fundamental
-# with eight harmonics and a 4 Hz syllable envelope at depth 0.8 sits in the
-# plateau where all three segment both bursts; the design space and its
-# boundaries are recorded in `docs/AI_EXECUTION_STATE.md`.
-_F0_HZ = 120.0
-_HARMONICS = 8
-_SYLLABLE_HZ = 4.0
-_SYLLABLE_DEPTH = 0.8
-
-
-def _speech_wav(path: Path, seconds: float = 2.0, amp: float = 0.9) -> Path:
-    """Deterministic 16kHz mono WAV: 0.5s voiced bursts separated by silence."""
-    n = int(seconds * _SR)
-    t = np.arange(n, dtype=np.float32) / _SR
-    v = np.zeros(n, dtype=np.float32)
-    for k in range(1, _HARMONICS + 1):
-        v += np.sin(2 * np.pi * k * _F0_HZ * t)
-    v /= _HARMONICS
-    v *= 1.0 - _SYLLABLE_DEPTH + _SYLLABLE_DEPTH * np.sin(
-        2 * np.pi * _SYLLABLE_HZ * t
-    )
-    gate = (np.floor(t * 2) % 2 == 0).astype(np.float32)  # 0.5s on / 0.5s off
-    samples = v * gate
-    # Peak-normalise: the harmonic stack's peak is not predictable from the
-    # harmonic count, and the energy backend compares RMS against fixed absolute
-    # thresholds, so an unnormalised level leaves whether this fixture yields a
-    # selection to chance on the one host whose default backend is level-blind.
-    peak = float(np.max(np.abs(samples)))
-    if peak > 0:
-        samples = samples * (amp / peak)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with wave.open(str(path), "wb") as f:
-        f.setnchannels(1)
-        f.setsampwidth(2)
-        f.setframerate(_SR)
-        f.writeframes((samples * 32767.0).astype(np.int16).tobytes())
-    return path
+# The fixture is a *voiced excitation*, not a tone — a tone is legitimate
+# non-speech to a neural speech model, and the design space that makes one
+# voiced to every backend in the chain is measured and recorded once in
+# ``tests/speech_fixtures.py`` rather than re-derived here.
 
 
 @pytest.fixture

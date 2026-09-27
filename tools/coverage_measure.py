@@ -26,6 +26,7 @@ nothing, instead of passing.
 
 Usage:
     .venv/bin/python tools/coverage_measure.py [--root corpus] [--json out.json]
+                                                [--vad-backend energy]
 """
 from __future__ import annotations
 
@@ -37,7 +38,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from engine.coverage import COLLAPSE_RATIO, measure  # noqa: E402
+from engine.coverage import _COVERAGE_BACKENDS, COLLAPSE_RATIO, measure
 
 
 def discover(root: Path) -> list[tuple[str, Path, Path]]:
@@ -60,6 +61,16 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--root", default="corpus", type=Path)
     ap.add_argument("--json", type=Path, help="write the full record here")
+    ap.add_argument(
+        "--vad-backend", default=None,
+        choices=[n for n, _cls in _COVERAGE_BACKENDS],
+        help=("Which backend supplies the audio truth. Defaults to the chain the "
+              "pipeline prefers (silero, then ffmpeg, then energy); forcing one "
+              "re-measures the corpus against a different instrument. Whisper is "
+              "absent from the choices on purpose — it infers speech from the "
+              "transcript's own word timings, so the ratio would be ~1.0 by "
+              "construction and a collapse invisible."),
+    )
     args = ap.parse_args(argv)
 
     rows = []
@@ -68,7 +79,8 @@ def main(argv: list[str] | None = None) -> int:
             record = json.loads(tr.read_text(encoding="utf-8"))
             rows.append({"source": name,
                          "asr_segments": len(record.get("segments") or []),
-                         **measure(audio, record.get("segments") or [])})
+                         **measure(audio, record.get("segments") or [],
+                                   vad_backend=args.vad_backend)})
         except Exception as exc:  # a source that cannot be measured is a result
             rows.append({"source": name, "error": f"{type(exc).__name__}: {exc}"})
 
