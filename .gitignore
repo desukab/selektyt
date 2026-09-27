@@ -17,6 +17,16 @@ apps/desktop/src-tauri/target/
 .coverage*
 htmlcov/
 
+# Agent/session scratch, not product source: installed skill bundles and their
+# lockfile, the Claude tooling tree (its worktrees dir is listed again below for
+# the same reason), and rendered brag artifacts. Nothing here is runnable by a
+# checkout, and none of it belongs in a commit.
+.agents/
+.claude/
+skills-lock.json
+brag-output/
+brag-output-*/
+
 # Windows desktop staging: apps/desktop/stage-windows.sh downloads an
 # interpreter, ffmpeg and the whisper weights (~1 GB total) into these trees.
 # None of it is source, and committing it would make the repo unclonable.

@@ -20,11 +20,15 @@ every line below was true on this host at that point.
   desktop shell: identify the highest-value weakness in the gap map, make the
   smallest change that fixes it, pin it with a real test, and update
   `docs/product-gap-map.md`. The most recent substantive commits are
-  `56253b5` (the vertical deliverable was re-mastered from `-preset veryfast
-  -crf 20` to `-preset slow -crf 18` after measuring a ladder against a `-crf 0`
-  reference on real corpus footage — its own section below), then `7223d30`
-  (the story graph stopped being write-only — an edit is generated from it),
-  then the **source-acquisition fix** in its own section below, and before that
+  `042f400` (the perception layer caches the frames *and* the perception
+  derived from them at the one choke point, measured 1.99× on a composed clip)
+  and `ad6bd4d` (scene-aware vertical composition, plus an ffmpeg decode
+  fallback for AV1 that OpenCV cannot read), then `56253b5` (the vertical
+  deliverable was re-mastered from `-preset veryfast -crf 20` to
+  `-preset slow -crf 18` after measuring a ladder against a `-crf 0` reference
+  on real corpus footage — its own section below), then `7223d30` (the story
+  graph stopped being write-only — an edit is generated from it), then the
+  **source-acquisition fix** in its own section below, and before that
   `92005ae` (the editorial scan now covers the whole source instead of
   `return`ing at a candidate cap, which had silently made the last ~35% of
   two corpus sources unreachable) and `a1e9150` (the vertical reframe keeps the
@@ -41,23 +45,33 @@ every line below was true on this host at that point.
   not run, and a green `build-windows` badge is not a Windows validation. That
   work is paused, not finished — it is the natural next thing to resume if the
   product loop returns to distribution.
-* Test suite: **1758 passed, 16 skipped** (2026-09-27, 608.33 s) — measured by
+* Test suite: **1773 passed, 16 skipped** (2026-09-27, 613.60 s) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work", and the
   disk note above: a concurrent `cargo test` + `pytest` pair once hit 100% disk
   and both died reporting success-shaped exit codes). This run covers the
-  perception-cache work in the session section below, on top of `ad6bd4d`.
-  The prior baseline was 1721/14 at `56253b5`; the growth is exactly the
-  fourteen tests the two window caches added — six in
+  silero work and the sample/fixture work in the two session sections below, on
+  top of `042f400`.
+  The prior baseline was 1758/16 at `042f400`, and the growth of fifteen is
+  exactly accounted for: ten in the new `tests/test_vad_silero.py` (the
+  reference parity, the contrast, the state-carry regression and the PCM
+  conformance), three net in `tests/test_vad.py` (seven real backend tests
+  replaced four stubs), and two in `tests/test_web_harness.py` (the served
+  sample is the generator's current output, and it is voiced to every available
+  backend). `tests/test_audio_analysis.py` is the same count with a rewritten
+  fixture and a threshold-reach test that no longer depends on one backend's
+  saturation point.
+  No regressions. This run is also the first that exercises the chain in its
+  shipped order on a host where the vendored model is present — the three
+  failures the first pass of it found (an empty cutlist on a tone fixture) are
+  the session section below, and are the reason the fixtures are voiced
+  excitations now.
+  Before that the baseline was 1721/14 at `56253b5`; the growth there was
+  exactly the fourteen tests the two window caches added — six in
   `tests/test_reframe_frame_cache.py` (a window is not decoded twice) and eight
   in `tests/test_reframe_perception_cache.py` (a window is not perceived twice,
   and the properties that keep the win honest). The two extra skips are the
   environment-gated desktop-shell and ollama tests, not work removed.
-  No regressions.
-  Before that the baseline was 1716/14 before the encoder re-measurement; the growth
-  is exactly the five tests the render commit added — the encoder settings pin,
-  the shipped pixel format decode, the concat stream-level A/V alignment, and
-  the two slide-geometry mutual-exclusion proofs in `tests/test_reframe.py`.
   No regressions.
   Before that the baseline was 1675/14 at `7223d30` (the story-memory commit);
   that growth was exactly the **41 tests in
@@ -188,6 +202,248 @@ every line below was true on this host at that point.
   a measurement is impossible.
 
 ## Completed work
+
+### This session — silero VAD landed, and the fallback chain was re-ordered by measurement
+
+Two things happened, in this order: the silero backend was implemented and
+validated, and the measurement that validated it revealed that the *fallback
+chain was ordered backwards*. The second is the more consequential finding,
+because it changed what every host without the model gets by default.
+
+**Silero is implemented, not stubbed.** `SileroVADBackend` drives
+`silero_vad_v6.onnx` (vendored at `engine/models/`, sha256 prefix `4cbf549b`,
+1 245 151 bytes) through onnxruntime. The model's contract is 512 new samples
++ 64 of left context per row, with `h`/`c` recurrent state of shape
+`[1,1,128]`; one inference is exactly 32 ms, so `segment_from_scores` reads
+silero's output on the same grid it reads the energy scorer's. State is
+threaded across both ORT batch boundaries *and* 60 s read windows, so a long
+source is one continuous stream.
+
+**Validated against faster-whisper's own driver of the same model file**, not
+against a paper description. On a source fitting one read window with a whole
+number of steps, every frame but the last agrees **bit-exactly** (max|diff|
+0.0). The last frame differs, and the cause is a defect in the reference, not
+here: its context array is a *view* of the audio, so `context[-1] = 0` —
+written to give row 0 zero context — also zeroes the final row's own last 64
+samples in the array it then scores. Proven by running the model on the
+reference's block with and without that mutation: it moves exactly one score,
+the last, 0.0327 vs 0.0312, and no other. The test asserts bit-exact on
+`[:-1]` and a bounded, explained difference on the last frame.
+
+An earlier version of my own docstring claimed the reference "loses the raw
+context at each 10 000-row boundary". **That was false** — the roll is computed
+once over the whole array, so context carries correctly across batch
+boundaries. What is true is only that the reference resets `h`/`c` per call.
+The docstring was rewritten to state what was verified, which is the
+discipline this repo holds itself to.
+
+**Quality, measured against word-timestamped transcripts** on three corpus
+sources (126 s / 331 words, 626 s / 1970 words, 1014 s / 2727 words).
+Word recall and words clipped at a cut point — the two figures that decide
+whether a cut is usable:
+
+| source | backend | regions | word_recall | clipped % | analyze s |
+| --- | --- | --- | --- | --- | --- |
+| hadhazy | energy | 0 | 0.0000 | 100.00 | 0.013 |
+| hadhazy | ffmpeg | 71 | 0.6461 | 37.31 | 0.164 |
+| hadhazy | **silero** | 21 | **0.9755** | **3.02** | 0.231 |
+| cloke | energy | 569 | 0.7623 | 20.15 | 0.034 |
+| cloke | ffmpeg | 117 | 0.9428 | 2.97 | 0.372 |
+| cloke | **silero** | 114 | **0.9582** | **2.64** | 1.062 |
+| pentagon | energy | 17 | 0.0045 | 99.41 | 0.052 |
+| pentagon | ffmpeg | 365 | 0.8126 | 12.85 | 0.567 |
+| pentagon | **silero** | 335 | **0.8976** | **6.34** | 1.735 |
+
+Silero leads on both figures on all three. The energy column is where the
+second finding came from.
+
+**The fallback chain was ordered backwards.** `get_vad_backend` preferred
+energy over ffmpeg — "energy (best available on this device)". Measured,
+ffmpeg beats energy on **every** source, and energy fails outright on two:
+its scorer clips frame RMS into a fixed absolute window [0.02, 0.08), so a
+quiet source falls entirely below the base and the whole file scores silent.
+On hadhazy that is **0 of 331 words kept**, every word clipped, zero speech
+regions — and no error raised; the pipeline reports `dead_air_ratio` 1.0 and
+the editor sees a source with nothing in it. Pentagon is 12 of 2727. On cloke,
+where the level is healthy, energy still loses (0.76 vs 0.94 recall).
+
+The chain is now **silero → ffmpeg → energy → whisper**, and the reason is in
+the docstring with the table. Energy keeps its slot above whisper because it
+needs nothing but numpy — a host with neither the model nor ffmpeg still gets a
+working backend — and its latency advantage (0.01–0.05 s vs ffmpeg's
+0.16–0.57 s on the same sources) does not offset scoring a source silent that
+is not. `extract_pcm_wav` already requires ffmpeg, so energy's no-ffmpeg niche
+is conforming WAVs only.
+
+**Four adaptive scoring rules were prototyped and measured, and none was
+shipped.** This is recorded because the negative result is the point: the
+obvious fix — derive thresholds from the source's own RMS distribution — was
+not assumed to work, it was measured.
+
+* `p10/p90` adaptive anchors: rescues hadhazy (0.00→0.51) and pentagon
+  (0.0045→0.55) but **regresses cloke** (0.78→0.62), because on a loud source
+  the p10 anchor is itself loud and the raised floor swallows real speech.
+* Reference-level gain normalization: improves all three, but at 17× gain on
+  hadhazy `speech_frac` reaches 0.982 — the noise floor is amplified past the
+  speech threshold and silence detection is destroyed. Recall looks wonderful;
+  the edit is useless.
+* The **degenerate case is the real blocker**. Probed directly: a uniform
+  noise bed has p5≈p95, so any percentile-derived gain explodes and scores it
+  **99.2% speech** where the fixed curve correctly scores 0%. Dead-air
+  detection would invert. Digital silence and a 16-bit dither floor behave the
+  same. The guard that stops this is *descriptive, not tuned*: amplify only
+  when the source's p5/p95 range proves two modes exist (silence spans two
+  orders of magnitude, a noise bed spans ~1.1×).
+* That guarded rule is safe on every degenerate input and lifts pentagon
+  0.0045→0.87 and cloke 0.78→0.88 — but **hadhazy stays at 0.0000**, because
+  its dynamic range is 5.1×, below the two-mode threshold. A source with no
+  speech/silence structure cannot be recovered by any linear gain, and that is
+  exactly what the model is for.
+
+So the scorer was left alone and the routing was fixed instead. Shipping the
+guarded rule would also have forced a coordinated Python + Rust rewrite —
+`rust/core/src/fallback.rs` documents its fixed curve as an intentional
+decision so parity tests can assert exact numbers, and the sidecar parity
+suite (66 tests) runs green here, so the coupling is live, not theoretical.
+The measured boundary, and the reason each candidate was rejected, is recorded
+in `docs/product-gap-map.md` so the next session does not re-derive it.
+
+**Synthetic speech is not speech — a testing finding worth keeping.** Silero
+was trained on voices. A 220 Hz sine scores in-speech mean 0.090 against
+silence 0.006: no usable contrast, so any test built on a tone is vacuous. A
+six-harmonic stack at 120 Hz reaches 0.40; adding a 4 Hz syllable-rate
+amplitude envelope reaches 0.94 against silence 0.035. The envelope modulation
+is a genuine cue to syllable rate, not a hack to defeat the test. The tests
+therefore assert the *contrast* between speech and silence frames, never an
+absolute threshold.
+
+**Level invariance, the defect the energy backend has:** scaling the whole
+source down must not flatten the speech/silence gap. Silero holds it at every
+level — at scale 0.01 the gap is +0.879 (speech 0.935, silence 0.057) — while
+the energy backend collapses: at scale 0.05 and 0.01 it emits speech 0.000,
+silence 0.000, gap 0.000, silently, with no error.
+
+Pinned by `tests/test_vad_silero.py` (10 tests, 0.50 s): the contrast, the
+segmentation, windowed reads agreeing with a single window to 1e-5 (the
+regression test for a state-carry bug that reset `h`/`c` at every read
+window), the tail-padding rule, sub-step input, PCM conformance of stereo
+48 kHz, and the reference parity. Plus `tests/test_vad.py` gains the test that
+pins the measured chain order, so it cannot revert silently.
+
+### This session — the demo's own sample scored "no speech found", and its cache kept it that way
+
+Shipping silero as the preferred backend had a victim the corpus could not have
+revealed: **the demo itself.** `web/sample.mjs` generated the 8 s clip served by
+`GET /api/sample.wav`, and it was a 300 Hz fundamental with two harmonics and a
+shallow 15% amplitude modulation. The energy and ffmpeg backends scored it 60%
+and 57% voiced; silero scored it at a **maximum of 0.31 across the whole 8 s**,
+mean 0.0047. Silero is correct — a tone is not speech, and it was trained on
+voices — but the consequence is that the chain preferring silero made the
+demo report *no speech found* on a signal that is plainly audible, and every
+downstream test that needed a selection fell over with it. Eight tests failed;
+six of them had nothing wrong with them at all.
+
+This is why the change is a product fix and not a test fix. The analysis path is
+for speech, so the sample the demo ships has to be something a speech model
+recognizes — otherwise the first thing every user does demonstrates the
+product's central failure mode.
+
+**The replacement was designed by measurement, not by guess.** The design space
+was swept (fundamental × harmonic count × syllable modulation depth × spectral
+tilt × noise floor) with each candidate scored through all three backends, and
+two properties turned out to be what silero keys on. Fundamental frequency and
+harmonic count alone barely move it; **syllable modulation depth is decisive**
+(0.2 depth → 0.04 voiced, 0.8 depth → 0.60). The plateau, f0 100–140 Hz with 8
+equal harmonics and a depth of 0.4–0.9, gives 3 segments from *all three*
+backends; f0 160 Hz and above falls off (0.01/1 segment at depth 0.4), and a
+noise floor above roughly −50 dB makes ffmpeg score the whole file speech
+(−40 dB → 1.00 voiced, 1 region), so the silence between bursts is left
+digital. The shipped design — f0 100 Hz (seed varies it 100/120/140), 8
+harmonics, 4 Hz syllable envelope at depth 0.8, peak-normalized to 0.9 — sits
+in the middle of that plateau.
+
+```
+f0  am_depth ->  silero:voiced/nseg  energy:..  ffmpeg:..
+100 d0.4=si:0.59/3 en:0.60/3 ff:0.57/3 | d0.8=si:0.61/3 en:0.60/3 ff:0.57/3 | d0.9=si:0.60/3 en:0.60/3 ff:0.57/3
+140 d0.4=si:0.57/3 en:0.60/3 ff:0.57/3 | d0.8=si:0.61/3 en:0.59/3 ff:0.57/3 | d0.9=si:0.61/3 en:0.60/3 ff:0.57/3
+160 d0.4=si:0.01/1 en:0.60/3 ff:0.57/3 | d0.8=si:0.56/3 en:0.60/3 ff:0.57/3 | d0.9=si:0.58/3 en:0.60/3 ff:0.57/3
+
+noise floor sweep at f0=120 d=0.7
+  noise=None: si:0.60/3 en:0.55/3 ff:0.57/3
+  noise=-50:  si:0.61/3 en:0.55/3 ff:0.60/3
+  noise=-40:  si:0.61/3 en:0.55/3 ff:1.00/1
+```
+
+The peak normalization is load-bearing, not cosmetic: the harmonic sum's peak is
+not predictable from the harmonic count, and the energy backend compares RMS
+against fixed absolute thresholds, so an unnormalized level leaves the demo's
+behaviour to chance on the one host whose default backend is level-blind.
+
+**Validated against the shipped artifact, not a replica.** The JS module itself
+was invoked for seeds 0/1/2/42 and each output scored through all three
+backends — 3 segments from each, every segment landing on one of the three
+bursts. The numpy prototype agreeing was not the evidence; the file the server
+actually serves was.
+
+**Then the tests still failed, and the second defect was worse than the first.**
+`ensureSample()` in `web/server.mjs` wrote `out/web/sample.wav` **only if it was
+absent** — a cache with no invalidation. Any host that had already generated the
+sample would keep serving the old tone forever, and no edit to `web/sample.mjs`
+would ever reach it. A fix to the demo's central signal would be silently
+undeliverable to every existing user while working perfectly for every new one.
+It now regenerates on every call (the synthesis is ~128k samples, milliseconds,
+and the callers are not hot paths) and writes through a `.part` +
+`renameSync` so a concurrent reader sees the old file whole rather than a
+truncated header — the same contract the upload path already holds.
+
+Pinned by two tests in `tests/test_web_harness.py`. The first renders
+`web/sample.mjs` with node and asserts the served bytes are byte-identical to
+the generator's current output, which fails on exactly a stale cache and nowhere
+else; the second asserts three bursts produce three segments under whichever
+backend the host selects, with each segment sitting on a burst. Both were
+verified to fail against a stale cache and pass after the fix — the negative
+case was run, not assumed.
+
+Two other tests were corrected rather than added: they asserted
+`backend == "energy"` and `vad_model == "energy-rms"`, which was latently
+host-dependent and would have failed on any host with the model. They now assert
+the *contract* — the backend and its model string are a consistent pair — so
+they pin what must hold everywhere rather than which machine they ran on.
+
+**The same defect was in the Python-side suite, and it exposed a third one.**
+`tests/test_audio_analysis.py`'s fixture was a 220 Hz sine gated on and off —
+scored by the probe alongside a speech-like alternative:
+
+| fixture | backend | peak | segments at every threshold 0.3–0.9 |
+| --- | --- | --- | --- |
+| tone 220 Hz | silero | 0.503 | **0** |
+| tone 220 Hz | ffmpeg / energy | 1.000 | 2 |
+| speech-like | silero | 0.981 | 2 |
+| speech-like | ffmpeg / energy | 1.000 | 2 |
+
+The tone's 0.503 is the trap: it reads as "just above the default 0.5 threshold"
+but yields zero regions at *every* threshold, so three tests died with
+`nothing to keep: the cutlist removes the whole timeline`. The fixture is now
+the same voiced excitation design as the web sample, and the three tests pass on
+whichever backend the host selects.
+
+The third defect was in the test that survived the fixture change by luck.
+`test_reproducible_segmentation_across_runs` hard-coded thresholds 0.3 and 0.5
+and its docstring claimed they "straddle the boundary where the segmentation
+actually moves" — but the measurement above shows why no fixed pair can: **every
+backend's score series on a voiced fixture is bimodal** (frames are either near
+zero or near the peak), so any two thresholds inside that gap give identical
+regions. The old pair only appeared to straddle because one backend's peak sat at
+0.503, i.e. the test was measuring a knife-edge on one host's preferred backend.
+It now derives `lo` and `hi` from the scores the first run actually cached — `lo`
+below the peak so speech survives, `hi` above it so none does — which is a real
+difference on every backend by construction, and asserts as a guard that the
+fixture scored speech at all, which is the part that broke last time. `hi` is
+deliberately allowed above 1.0: the segmenter's test is `s >= threshold`, so
+capping `hi` at 1.0 on a backend that saturates at exactly 1.0 makes it inclusive
+and gives the same regions as `lo` — the failure mode would have been invisible
+until a host without silero ran it. Verified to straddle and to reproduce on
+silero, ffmpeg and energy forced in turn (2 regions vs 0, identical on re-run).
 
 ### This session — half the perception time was a re-read of a window just read
 
@@ -2179,8 +2435,11 @@ In rough order of how much it would cost a user (fuller list in
    tested and its *Linux rendering* is now observed; its *Windows installation*
    is not, and running the window once is exactly what proves that gap is worth
    closing.
-5. **Optional backends untested here** — sherpa-onnx, silero, ollama are wired
-   and degrade cleanly by design, but unit-tested only.
+5. **Optional backends untested here** — sherpa-onnx and ollama are wired and
+   degrade cleanly by design, but unit-tested only. **Silero no longer belongs
+   on this list**: it is implemented, vendored, validated bit-exactly against
+   faster-whisper's own driver, and quality-measured against transcripts on
+   three corpus sources — see the session section above.
 6. **Editorial judgement is unmeasured at scale — and the corpus proved the
    mechanical audits cannot substitute.** Two of the seven "OK" sources have
    transcripts this repo cannot stand behind, and they are different kinds of
