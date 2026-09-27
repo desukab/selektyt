@@ -36,10 +36,11 @@ every line below was true on this host at that point.
   VAD work in its own section below (`909ca9e` implementing the neural backend
   and re-ordering the chain by measurement, `2884a1d` fixing the demo sample that
   its own backend scored "no speech found"), then the **coverage-gate fix** in
-  the session section below — the pipeline's one hard transcript-vs-audio guard
-  was reading its audio from `EnergyVAD()`, the chain's last-choice, level-blind
-  backend, so it passed the corpus's only shipped failure while scoring a real
-  human voice at 0% speech and reporting "not computable" in both directions.
+  the session section below (`4a25594`) — the pipeline's one hard
+  transcript-vs-audio guard was reading its audio from `EnergyVAD()`, the
+  chain's last-choice, level-blind backend, so it passed the corpus's only
+  shipped failure while scoring a real human voice at 0% speech and reporting
+  "not computable" in both directions.
   The fix routes the gate through the same backend chain as the selection and is
   measured, not thresholded, in the section below.
   Run `git log -1` for the current hash rather than trusting a hash printed
