@@ -277,8 +277,37 @@ def _no_speech_diagnosis(peak: float | None, unreadable: str | None = None) -> s
     )
 
 
+def _coverage_corroboration(coverage, *, bypassed: bool) -> str:
+    """What the coverage gate already measured, when it measured the same defect.
+
+    The two guards are independent by construction: one compares the transcript
+    against the audio, the other scores the words the transcript contains. When
+    both refuse the same run for the same underlying reason — a collapsed
+    transcript is collapsed whether you measure it in audio covered or in
+    per-word probability — the editor should hear it once, as one diagnosis
+    backed by two measurements, rather than as two refusals that do not
+    reference each other. ``coverage.detail`` is reused verbatim so the numbers
+    in this sentence cannot drift from the gate's own.
+    """
+    if coverage is None or coverage.verdict != "coverage_collapse":
+        return ""
+    # The detail is a full sentence; only its wording is wanted here, not its
+    # terminal period — the sentence this clause is spliced into supplies that.
+    own = coverage.detail.rstrip()
+    if own.endswith("."):
+        own = own[:-1]
+    clause = f"The coverage gate measured this independently: {own}."
+    if bypassed:
+        clause += (
+            " --skip-coverage-check was passed, so the run continued past that "
+            "gate to reach this one."
+        )
+    return " " + clause
+
+
 def _no_story_diagnosis(
     thoughts, ranked, gate_results, rejection_reasons,
+    coverage=None, coverage_bypassed: bool = False,
 ) -> str:
     """The message when nothing was selected, chosen by where the chain stopped.
 
@@ -326,7 +355,9 @@ def _no_story_diagnosis(
                 f"against 20). The source has speech, but no complete thought in "
                 f"it is long enough to carry one."
             )
-        return _refused_while_ranking(eligible)
+        return _refused_while_ranking(
+            eligible, coverage=coverage, coverage_bypassed=coverage_bypassed,
+        )
     # The case the old message was written for: candidates survived ranking and
     # were then refused at the final gate. Rank already passed these through
     # validate once, so reaching here means the two passes disagreed — the gate
@@ -346,6 +377,7 @@ def _no_story_diagnosis(
             f"transcription is probably wrong rather than the stories being "
             f"weak — re-run with a larger model, or with --language set if the "
             f"detected language is not the one spoken."
+            + _coverage_corroboration(coverage, bypassed=coverage_bypassed)
         )
     return (
         f"{n} candidate(s) were scored and every one was refused by the "
@@ -353,7 +385,7 @@ def _no_story_diagnosis(
     )
 
 
-def _refused_while_ranking(eligible) -> str:
+def _refused_while_ranking(eligible, coverage=None, *, coverage_bypassed: bool = False) -> str:
     """Why nothing survived ranking, for spans that were otherwise eligible.
 
     Rank discards the gate's reason (it only needs the boolean), so it is
@@ -402,6 +434,7 @@ def _refused_while_ranking(eligible) -> str:
             " The transcription is probably wrong rather than the stories being "
             "weak — re-run with a larger model, or with --language set if the "
             "detected language is not the one spoken."
+            + _coverage_corroboration(coverage, bypassed=coverage_bypassed)
         )
     return (
         f"{n_refused} eligible span(s) were scored, but every one was refused "
@@ -774,7 +807,10 @@ def run(
     if not selected:
         raise RuntimeError(
             "No complete standalone stories were selected. "
-            + _no_story_diagnosis(thoughts, ranked, gate_results, rejection_reasons)
+            + _no_story_diagnosis(
+                thoughts, ranked, gate_results, rejection_reasons,
+                coverage=coverage, coverage_bypassed=skip_coverage_check,
+            )
         )
     if ollama_url:
         selected = [attach_metadata(c, ollama_url) for c in selected]

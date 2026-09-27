@@ -55,19 +55,25 @@ every line below was true on this host at that point.
   not run, and a green `build-windows` badge is not a Windows validation. That
   work is paused, not finished — it is the natural next thing to resume if the
   product loop returns to distribution.
-* Test suite: **1778 passed, 16 skipped** (2026-09-27, 612.53 s) — measured by
+* Test suite: **1783 passed, 16 skipped** (2026-09-27) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work", and the
   disk note above: a concurrent `cargo test` + `pytest` pair once hit 100% disk
   and both died reporting success-shaped exit codes). This run covers the
-  coverage-gate fix in the session section below, on top of the silero and
-  fixture work.
-  The prior baseline was 1773/16, and the growth of five is exactly accounted
-  for: `tests/test_coverage.py` went 11 → 16 tests as the gate's contract was
-  pinned (the collapse, the quiet source never failed, the chain's probe order,
+  coverage-gate fix and the diagnosis-convergence fix in the session sections
+  below, on top of the silero and fixture work.
+  The prior baseline was 1778/16, and the growth of five since is exactly
+  accounted for: `tests/test_coverage.py` went 11 → 16 tests as the gate's contract
+  was pinned (the collapse, the quiet source never failed, the chain's probe order,
   the whisper refusal, the union arithmetic and two pipeline tests at the
   corpus's own 340 s scale). `tests/test_audio_analysis.py` is the same count
   with its fixture now shared from `tests/speech_fixtures.py`.
+  On top of that, two further additions: one report test in
+  `tests/test_coverage.py` (now 17 tests) for the backend-naming fix below, and
+  four in `tests/test_speechless_source.py` (7 → 11) for the
+  diagnosis-convergence fix — two parametrized cases over the bypass flag, and
+  one each for an `ok` coverage report and a missing one, so the corroboration
+  clause is proven absent as well as present.
   No regressions. The skip count is unchanged at 16 — the two new
   coverage tests that are host-gated are gated *on* a listening backend being
   present, so on a host with neither silero nor ffmpeg they report the honest
@@ -263,6 +269,61 @@ selection run still works: the pipeline forwards `None` in that case and the
 gate falls back to its own chain, with the backend that actually ran recorded in
 `report.json`.
 
+**Hit for real on the source it was written for.** The corpus survey measures
+the *retained extraction*; the abort had only been pinned on synthetic media at
+the corpus's scale. A resumed run over the real `corpus/media/telugu-tutorial.webm`
+— cached transcript and cached extraction, so no re-transcription and no
+re-extract, the exact shape of an editor re-running a finished project — reaches
+the gate and aborts:
+
+    RuntimeError: Transcription coverage collapse: the transcript covers 4.5% of
+    a 340s source that the silero VAD scores 77.4% speech (ratio 0.058, below
+    0.25). The transcript is well-formed, which is why nothing else flagged it —
+    verify it against the audio before shipping anything cut from this run.
+
+The numbers are the survey's numbers. The bypass does not reach a deliverable
+either: with `--skip-coverage-check` the same run is refused one stage later by
+the editorial confidence gate — 5 eligible spans, every one refused, best factual
+confidence 0.39 against a 0.75 floor, and its message names the transcription
+rather than the stories as the suspect. Two independent guards converge on the
+same source by different routes, so bypassing the coverage gate moves the
+failure instead of removing it. That was not designed as a pair; it is a
+measurement that happened to come out that way, and it is recorded rather than
+claimed as a guarantee.
+
+**The two guards now say so in one message.** They converged but did not
+reference each other: the confidence refusal advised "re-run with a larger
+model" without mentioning that the pipeline had already *measured* exactly
+that defect three stages earlier, so an editor who hit the bypass got two
+refusals about one transcription and no indication they were the same finding.
+`_coverage_corroboration` appends the coverage gate's own measurement to the
+confidence refusal, but only when that verdict is `coverage_collapse` — an `ok`
+coverage report is never quoted into a confidence complaint, because reading it
+there would imply corroboration the pipeline does not have. The clause quotes
+the gate's `detail` verbatim rather than re-approximating its numbers, so a
+figure in the refusal cannot drift from the figure the gate raised on. When the
+bypass was used, the clause says so, which is the one case where the two guards
+are visible to the editor in a single run.
+
+The real source confirms the merged message end-to-end (`corpus/rerun_telugu_gate.log`):
+
+    RuntimeError: No complete standalone stories were selected. 5 eligible span(s)
+    were scored, but every one was refused by the editorial/context gate while
+    ranking, most often for: low factual confidence (best measured 0.39, against
+    a 0.75 floor). The transcription is probably wrong rather than the stories
+    being weak — re-run with a larger model, or with --language set if the
+    detected language is not the one spoken. The coverage gate measured this
+    independently: the transcript covers 4.5% of a 340s source that the silero
+    VAD scores 77.4% speech (ratio 0.058, below 0.25). The transcript is
+    well-formed, which is why nothing else flagged it — verify it against the
+    audio before shipping anything cut from this run. --skip-coverage-check was
+    passed, so the run continued past that gate to reach this one. No clip was
+    lost to a budget — every one was refused on its merits.
+
+This is a message-coherence fix, not a new guard: no run that passed before is
+refused now, and no refusal is added or removed. It is pinned by four tests in
+`tests/test_speechless_source.py` including the two negative cases.
+
 **Re-measured across all 11 corpus sources** through the chain
 (`corpus/wer/runs/coverage-2026-09-27.json`, `tools/coverage_measure.py` now
 defaults to the same chain, so the survey and the production check cannot drift
@@ -340,15 +401,28 @@ the inaudible source is `not_computable` regardless. The measured tables live in
 `tests/speech_fixtures.py`, which `test_audio_analysis.py` now shares instead of
 carrying its own copy.
 
-Pinned by `tests/test_coverage.py` (16 tests, 16 s): the collapse fires and its
+Pinned by `tests/test_coverage.py` (17 tests, 16 s): the collapse fires and its
 detail carries the numbers; a covering transcript passes; the quiet source is
 never failed; the chain probes in the pipeline's preference order with energy
 last, never first; whisper is refused; an unavailable forced backend is refused;
 a wrong sample rate is rejected rather than confidently miscounted; the span
-arithmetic unions instead of sums; and two pipeline tests exercise the guard
+arithmetic unions instead of sums; the report's `as_dict()` carries the backend
+that measured it; and two pipeline tests exercise the guard
 through `run` at the corpus's own scale (a 340 s extraction against a 16 s
 transcript, ratio ≈0.094) proving it aborts **before** selection and render and
 that `--skip-coverage-check` still records the measurement.
+
+**Two traceability gaps the real run exposed, both fixed.** The abort message
+said the source "is 77.4% *speech-energy* audio" while silero was the instrument
+that measured it — wording inherited from the energy-only era that misdescribed
+its own evidence, and exactly the confusion the gate exists to remove. The
+collapse and pass details now name the backend that scored the speech, as the
+`not_computable` detail already did. And `CoverageReport.as_dict()` omitted the
+backend entirely, so `report.json` could say `ok` without saying which
+instrument earned it — an `ok` from a neural model and an `ok` from fixed RMS
+thresholds are not the same claim, particularly on a host where silero is
+absent. The field is now carried through, which also makes the pipeline comment
+that promised it true.
 
 **What this still cannot see**, stated as a limit: no backend in the chain can
 tell speech from music, so a source that is mostly score with a little dialogue
@@ -356,7 +430,10 @@ has a high speech fraction and a legitimately low transcript coverage and would
 be flagged. The error cost is asymmetric and intentionally so — a false positive
 is a loud message asking the editor to verify, a false negative ships wrong
 captions silently. The check is therefore overridable, and the override leaves
-the measurement in the report rather than deleting the evidence.
+the measurement in the report rather than deleting the evidence. A second limit:
+both abort paths end before `report.json` is written, so on the corpus the
+`vad_backend` field is verified by unit test only — a *successful* run on a real
+source has not yet been observed carrying it.
 
 ### This session — silero VAD landed, and the fallback chain was re-ordered by measurement
 

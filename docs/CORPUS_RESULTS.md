@@ -400,11 +400,13 @@ Criterion P13 holds on a real re-run, not only in the unit test.
   read speech says nothing about an outdoor Hindi interview. Until P8/P9 are
   run against a non-English ground-truth corpus, "the `small` model is
   inadequate for non-English" is an observation, not a measurement.
-- **The Telugu container bug is fixed; the Telugu *coverage* bug is not.** The
-  misdiagnosis is repaired as described above. `telugu-tutorial` is a separate
-  and still-open failure: its transcript covers 6% of the energy-VAD speech
-  region, which the coverage check now catches and refuses, but the check
-  detects the symptom and the model choice is the probable cause.
+- **The Telugu container bug is fixed, and the Telugu *coverage* failure is now
+  caught on the real source.** The misdiagnosis is repaired as described above.
+  `telugu-tutorial`'s transcript covers 4.5% of a source the silero VAD scores
+  77.4% speech; the coverage check catches and refuses it — measured on the
+  retained extraction, reproduced by a resumed pipeline run, and independently
+  refused again by the editorial confidence gate when bypassed (item 1 above).
+  The check detects the symptom; the model choice remains the probable cause.
 - **Frame rate coverage is still narrow.** The corpus added 25 fps
   (`royal-society-cloke`, `hindi-baiga-interview`, `emwcon-panel-2018`), 30 fps
   and 29.97 fps. 23.976, 50 and 59.94 remain untested, and no 4K/H.265 source
@@ -426,23 +428,40 @@ Criterion P13 holds on a real re-run, not only in the unit test.
 
 ## Exact next actions, in priority order
 
-1. **The Telugu coverage collapse is caught in code, and the gate's own
-   blindness is fixed; what remains is a real end-to-end run.** Two things
-   changed. First, the pipeline path — abort before render,
-   `--skip-coverage-check` override, the measurement in `report.json` — is now
-   pinned by `tests/test_coverage.py` at the corpus's own scale (a 340 s
+1. **The Telugu coverage collapse is caught in code, caught on the real source,
+   and the gate's own blindness is fixed.** The pipeline path — abort before
+   render, `--skip-coverage-check` override, the measurement in `report.json` —
+   is pinned by `tests/test_coverage.py` at the corpus's own scale (a 340 s
    extraction against a 16 s transcript, the real failure's 339.6 s / 4.5%),
-   not only by a check on the retained extraction. Second, the gate itself was
-   defective: it hardcoded the energy VAD, the chain's last-choice, level-blind
-   backend, so on `hadhazy-protest` (−43.3 dBFS) its own instrument read 0.0%
-   speech and the verdict was `not_computable` on a source whose transcript
-   covers 87.1% of it. The gate now takes its audio truth from the same chain
-   the pipeline prefers; re-measured across all 11 sources, the two quiet
-   sources move `not_computable` → `ok` and nothing moves the other way
-   (`corpus/wer/runs/coverage-2026-09-27.json`). **Still open:** no real
-   end-to-end run has hit the abort on the real source — that needs one
-   re-run of `telugu-tutorial` with `--keep-media`, and it remains the single
-   highest-confidence-per-byte action open.
+   and it has now been hit for real: a resumed run over the retained
+   `corpus/media/telugu-tutorial.webm` (cached transcript, cached extraction, so
+   no re-transcription) aborts with
+   `Transcription coverage collapse: the transcript covers 4.5% of a 340s source
+   that the silero VAD scores 77.4% speech (ratio 0.058, below 0.25)` — the same
+   numbers the corpus survey measured on the retained extraction. The gate
+   itself was defective: it hardcoded the energy VAD, the chain's last-choice,
+   level-blind backend, so on `hadhazy-protest` (−43.3 dBFS) its own instrument
+   read 0.0% speech and the verdict was `not_computable` on a source whose
+   transcript covers 87.1% of it. The gate now takes its audio truth from the
+   same chain the pipeline prefers; re-measured across all 11 sources, the two
+   quiet sources move `not_computable` → `ok` and nothing moves the other way
+   (`corpus/wer/runs/coverage-2026-09-27.json`).
+   The bypass does not reach a deliverable either: with `--skip-coverage-check`
+   the same run is refused one stage later by the editorial confidence gate —
+   5 eligible spans, all refused, best factual confidence 0.39 against a 0.75
+   floor, with the error naming the transcription rather than the stories as the
+   suspect. Two independent guards converge on the same source by different
+   routes, which is the useful part: bypassing the coverage gate moves the
+   failure, it does not remove it. Since that measurement, the two guards
+   reference each other — the confidence refusal now quotes the coverage gate's
+   own numbers in the same message, and says so only when that verdict is a
+   collapse (an `ok` coverage report is never quoted into a complaint it does
+   not corroborate).
+   **Still open:** the `coverage` block's `vad_backend` field (which backend
+   measured the gate — an `ok` from silero and an `ok` from fixed RMS thresholds
+   are not the same claim) is only written into `report.json` on a run that
+   *completes*; both abort paths end before that write, so on the corpus it is
+   pinned by unit test only, not by a real run's report.
 2. Fix the no-speech error to distinguish an unreadable container from a
    speechless source — remux to a clean container and retry before reporting
    "no audible spoken content". `telugu-launch` is the case: 95.5%

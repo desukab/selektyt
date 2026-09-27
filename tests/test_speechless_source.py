@@ -207,3 +207,116 @@ def test_a_gate_refusal_that_is_not_confidence_names_its_actual_reason(tmp_path)
     assert "starts mid-conversation" in message, message
     assert "confidence" not in message, message
 
+
+def _collapse_report() -> "CoverageReport":
+    from engine.coverage import CoverageReport
+    return CoverageReport(
+        duration_s=339.6, vad_speech_s=262.5, vad_speech_frac=0.774,
+        asr_speech_s=15.3, asr_speech_frac=0.045, verdict="coverage_collapse",
+        detail="the transcript covers 4.5% of a 340s source that the silero VAD "
+               "scores 77.4% speech (ratio 0.058, below 0.25).",
+        coverage_ratio=0.058, vad_backend="silero",
+    )
+
+
+@pytest.mark.parametrize("bypassed", [False, True])
+def test_a_collapsed_transcript_is_reported_as_one_finding_not_two(bypassed):
+    """When the coverage gate already measured the collapse the confidence
+    refusal is complaining about, the editor should hear the two as one
+    diagnosis. The corroboration is the coverage gate's own wording, so a number
+    in this sentence cannot drift from the number the gate raised on."""
+    from tests.fixtures import editorial_fixtures as fx
+
+    transcript = fx.build_transcript(
+        ["The district library reopened after eighteen months of renovation work. "
+         "Volunteers sorted nine thousand donated books onto fresh wooden "
+         "shelves. The reading room gained better lighting and a quiet corner."]
+    )
+    for seg_ in transcript:
+        for w in seg_.words:
+            w.confidence = 0.5
+    # The spans rank sees: make_thoughts re-segments the transcript into
+    # standalone units, and only those carry the 8 s / 20 word standing-alone
+    # floor the eligibility branch applies.
+    eligible = [
+        t for t in pipeline_mod.make_thoughts(transcript)
+        if 8 <= t.duration <= 55
+    ]
+    assert eligible, "the fixture must yield eligible spans, or it tests nothing"
+
+    message = pipeline_mod._refused_while_ranking(
+        eligible, coverage=_collapse_report(), coverage_bypassed=bypassed,
+    )
+    assert "low factual confidence" in message, message
+    assert "0.75 floor" in message, message
+    assert "coverage gate measured this independently" in message, message
+    # The gate's own numbers, quoted rather than re-approximated.
+    assert "4.5%" in message, message
+    assert "77.4%" in message, message
+    assert "silero" in message, message
+    assert message.count("0.058") == 1, (
+        "the ratio belongs to the gate's own sentence; a second copy in this "
+        f"message would be a re-approximation that could drift: {message}"
+    )
+    if bypassed:
+        assert "--skip-coverage-check was passed" in message, message
+    else:
+        assert "--skip-coverage-check" not in message, (
+            "the bypass was not passed, so the message must not claim it was: "
+            f"{message}"
+        )
+
+
+def test_a_transcript_that_covered_the_audio_needs_no_second_opinion():
+    """An `ok` coverage report must not be quoted in a confidence refusal —
+    those are independent findings and an editor would read the clause as the
+    pipeline having corroborated a complaint it never made."""
+    from tests.fixtures import editorial_fixtures as fx
+
+    transcript = fx.build_transcript(
+        ["The district library reopened after eighteen months of renovation work. "
+         "Volunteers sorted nine thousand donated books onto fresh wooden "
+         "shelves. The reading room gained better lighting and a quiet corner."]
+    )
+    for seg_ in transcript:
+        for w in seg_.words:
+            w.confidence = 0.5
+    eligible = [
+        t for t in pipeline_mod.make_thoughts(transcript)
+        if 8 <= t.duration <= 55
+    ]
+    ok = _collapse_report()
+    ok.verdict = "ok"
+    ok.detail = "transcript covers 92.0% against 94.0% speech (ratio 0.979)."
+
+    message = pipeline_mod._refused_while_ranking(
+        eligible, coverage=ok, coverage_bypassed=False,
+    )
+    assert "coverage gate measured this independently" not in message, message
+    assert "re-run with a larger model" in message, message
+
+
+def test_no_coverage_report_leaves_the_refusal_message_as_it_was():
+    """The pipeline reaches the no-story refusal without a coverage report only
+    on paths that never measured the audio; the message must not claim a
+    measurement that does not exist."""
+    from tests.fixtures import editorial_fixtures as fx
+
+    transcript = fx.build_transcript(
+        ["The district library reopened after eighteen months of renovation work. "
+         "Volunteers sorted nine thousand donated books onto fresh wooden "
+         "shelves. The reading room gained better lighting and a quiet corner."]
+    )
+    for seg_ in transcript:
+        for w in seg_.words:
+            w.confidence = 0.5
+    eligible = [
+        t for t in pipeline_mod.make_thoughts(transcript)
+        if 8 <= t.duration <= 55
+    ]
+
+    message = pipeline_mod._refused_while_ranking(eligible)
+    assert "coverage gate" not in message, message
+    assert "low factual confidence" in message, message
+
+

@@ -75,7 +75,11 @@ def test_the_measured_collapse_fires_loudly(speech_source):
     assert report.verdict == "coverage_collapse"
     assert report.coverage_ratio is not None
     assert report.coverage_ratio < COLLAPSE_RATIO
-    # The detail must carry the numbers a user would need to judge it.
+    # The detail must carry the numbers a user would need to judge it, and name
+    # the instrument: a collapse read by silero and one read by the level-blind
+    # energy thresholds are not the same claim about the audio.
+    assert report.vad_backend, "the report does not say what measured it"
+    assert report.vad_backend in report.detail
     assert "4.5" in report.detail or "speech" in report.detail
 
 
@@ -87,6 +91,19 @@ def test_a_transcript_covering_the_speech_passes(speech_source):
     assert report.verdict == "ok"
     assert report.coverage_ratio is not None
     assert report.coverage_ratio > COLLAPSE_RATIO
+    # An `ok` is only as trustworthy as the backend behind it, so the pass has
+    # to name its instrument too.
+    assert report.vad_backend in report.detail
+
+
+def test_the_report_carries_the_backend_that_measured_it(speech_source):
+    """``report.json`` repeats this gate's numbers verbatim, so it has to repeat
+    the backend as well — otherwise an editor reading an `ok` cannot tell
+    whether it came from a neural model or from fixed RMS thresholds."""
+    report = check(speech_source, _segments([1.0]))
+    as_dict = report.as_dict()
+    assert as_dict["vad_backend"] == report.vad_backend
+    assert as_dict["vad_backend"] in ("silero", "ffmpeg", "energy")
 
 
 def test_a_quiet_source_with_a_good_transcript_is_never_failed(tmp_path):

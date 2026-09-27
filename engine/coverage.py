@@ -132,8 +132,8 @@ def _select_backend(force: str | None = None):
 # no instrument in the chain resolves.
 MIN_VAD_FRACTION = 0.10
 
-# Transcript coverage below this multiple of the speech-energy fraction is a
-# collapse. Sits inside the measured empty interval [0.058, 0.925].
+# Transcript coverage below this multiple of the speech fraction is a collapse.
+# Sits inside the measured empty interval [0.058, 0.925].
 COLLAPSE_RATIO = 0.25
 
 
@@ -147,6 +147,12 @@ class CoverageReport:
     verdict: str  # ok | coverage_collapse | not_computable | not_measured
     detail: str
     coverage_ratio: float | None = None
+    # The instrument the numbers above came from. An `ok` from silero and an
+    # `ok` from the energy thresholds are not the same claim — the latter is
+    # level-blind on quiet sources, which is why the chain prefers the former.
+    # Reported to the pipeline's report.json so an editor challenging the gate
+    # can see which of those they are looking at.
+    vad_backend: str = ""
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -292,16 +298,17 @@ def check(audio: Path, segments: list[dict],
     elif ratio < COLLAPSE_RATIO:
         verdict = "coverage_collapse"
         detail = (f"the transcript covers {asr_frac * 100:.1f}% of a "
-                  f"{m['duration_s']:.0f}s source that is {vad_frac * 100:.1f}% "
-                  f"speech-energy audio (ratio {ratio:.3f}, below "
-                  f"{COLLAPSE_RATIO}). The transcript is well-formed, which is why "
-                  "nothing else flagged it — verify it against the audio before "
-                  "shipping anything cut from this run")
+                  f"{m['duration_s']:.0f}s source that the "
+                  f"{m['vad_backend']} VAD scores {vad_frac * 100:.1f}% speech "
+                  f"(ratio {ratio:.3f}, below {COLLAPSE_RATIO}). The transcript "
+                  "is well-formed, which is why nothing else flagged it — verify "
+                  "it against the audio before shipping anything cut from this run")
     else:
         verdict = "ok"
         detail = (f"transcript covers {asr_frac * 100:.1f}% against "
-                  f"{vad_frac * 100:.1f}% speech energy (ratio {ratio:.3f})")
+                  f"{vad_frac * 100:.1f}% speech heard by the "
+                  f"{m['vad_backend']} VAD (ratio {ratio:.3f})")
 
     return CoverageReport(m["duration_s"], m["vad_speech_s"], vad_frac,
                           m["asr_speech_s"], asr_frac, verdict, detail,
-                          coverage_ratio=ratio)
+                          coverage_ratio=ratio, vad_backend=m["vad_backend"])
