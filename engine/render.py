@@ -1,14 +1,16 @@
 from __future__ import annotations
-import math
+
 import re
 import shutil
 import subprocess
 import unicodedata
 from pathlib import Path
-from models.core import Candidate
-from engine.reframe import landscape_filter, vertical_reframe_filter
-from engine.edit_plan import retention_intervals
+
 from engine.captions import slice_ass
+from engine.edit_plan import retention_intervals
+from engine.reframe import landscape_filter, vertical_reframe_filter
+from engine.reframe_scenes import is_composed
+from models.core import Candidate
 
 
 def require_ffmpeg() -> None:
@@ -216,14 +218,7 @@ def _encoder_args() -> list[str]:
 
 def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | None, vertical: bool, fps: float) -> None:
     vf: list[str] = []
-    if vertical:
-        # The complete 9:16 reframe: a tracked crop, then a scale onto a frame
-        # whose display ratio is 9:16 by construction. Scaling by width with an
-        # even height instead leaves the crop's integer-rounding residue in the
-        # deliverable, and a 3840x2160 source shipped 1080x1918 that way --
-        # 0.1% from the ratio the package advertises.
-        vf.append(vertical_reframe_filter(source, start, end))
-    else:
+    if not vertical:
         # Landscape fits the whole source into an exact 16:9 frame, padding
         # rather than cropping: a 4:3 source becomes a 640x486 square-pixel
         # picture inside an 864x486 frame. Without this the deliverable
@@ -231,6 +226,7 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
         # 16:9, and nothing in the pipeline would ever notice.
         vf.append(landscape_filter(source))
     frames, span = _frame_count(start, end, fps)
+    sub: list[str] = []
     if ass:
         safe = ass.as_posix().replace("'", "\\'")
         # A Windows drive letter ("C:/...") puts a bare ":" in the filtergraph,
@@ -238,9 +234,35 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
         # "Invalid argument". Escaping it as "\:" is the documented way to pass
         # a literal colon inside a filter value.
         safe = safe.replace(":", "\\:")
-        vf.append(f"subtitles='{safe}'")
+        sub.append(f"subtitles='{safe}'")
+    if vertical:
+        # The complete 9:16 reframe: a tracked crop, then a scale onto a frame
+        # whose display ratio is 9:16 by construction. Scaling by width with an
+        # even height instead leaves the crop's integer-rounding residue in the
+        # deliverable, and a 3840x2160 source shipped 1080x1918 that way --
+        # 0.1% from the ratio the package advertises.
+        #
+        # The subtitles are passed as a *tail* rather than appended here: a
+        # speaker+slide scene is composed from several chains joined by
+        # xfade/vstack and has no single outside to append to, so the
+        # composition owns the tail and folds it into its own final chain.
+        graph = vertical_reframe_filter(source, start, end, tail=tuple(sub))
+        if is_composed(graph):
+            # A SPLIT, or several scenes joined by a transition, is a labelled
+            # multi-chain description ending in [v]. ffmpeg rejects that under
+            # -vf ("Error initializing a simple filtergraph", measured), so it
+            # runs through -filter_complex -- which also means the default
+            # stream mapping stops applying and audio has to be mapped
+            # explicitly or the part ships silent.
+            video_opt = ["-filter_complex", graph, "-map", "[v]", "-map", "0:a?"]
+        else:
+            vf.append(graph)
+            video_opt = ["-vf", ",".join(vf)]
+    else:
+        vf.extend(sub)
+        video_opt = ["-vf", ",".join(vf)]
     common = ["-frames:v", str(frames), "-t", f"{span:.6f}",
-              "-vf", ",".join(vf), "-c:v", "libx264", *_encoder_args(),
+              *video_opt, "-c:v", "libx264", *_encoder_args(),
               "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(out)]
 
     # Input seeking (``-ss`` before ``-i``) is the fast path: ffmpeg seeks

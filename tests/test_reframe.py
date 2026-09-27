@@ -366,16 +366,39 @@ def test_an_anamorphic_source_renders_to_a_genuinely_9_16_frame(tmp_path):
     wrong, because a 9:16 *pixel* count is only 9:16 for square pixels.
 
     This burns the shipped chain — :func:`vertical_reframe_filter` — rather than
-    a recomposition of it, so it moves when the reframe moves.
+    a recomposition of it, so it moves when the reframe moves. ``testsrc`` is
+    static and structured enough that the scene planner holds it as a SLIDE, so
+    the chain here is the composed slide layout and the pins below are its
+    invariants rather than a transcription of its text.
+
+    The frame is 308x486 *pixels*, which is only 9:16 because it keeps SAR 8:9,
+    so two things have to hold at once: the SAR survives the composition, and
+    the source window the layout cuts has the same *pixel* aspect as the frame
+    it is scaled onto. The second is the no-squeeze condition, and it is the one
+    that silently broke when the band geometry carried a sample-aspect factor
+    that only a square-pixel band would need (see
+    ``test_an_anamorphic_slide_is_not_squeezed``).
     """
-    from engine.reframe import vertical_crop_filter, vertical_reframe_filter
+    from engine.reframe import vertical_reframe_filter
 
     video = _anamorphic_video(tmp_path / "ntsc.mp4")
     filt = vertical_reframe_filter(video, start=0.0, end=1.5)
-    assert filt.startswith("crop=308:486:x='"), filt
-    # the scale stage carries the SAR into the target height: the frame is
-    # 308x486 *pixels*, which is only 9:16 because it keeps SAR 8:9
+    assert filt.startswith("crop="), filt
+    crop = filt.split(",")[0][len("crop="):]
+    cw_s, ch_s = crop.split(":")[:2]
+    cw, ch = int(cw_s), int(ch_s)
+
+    # the SAR is carried into the delivered frame: without this the same pixel
+    # count measures DAR 0.6337 instead of 0.5625
+    assert filt.endswith("setsar=8/9"), filt
+    # the scale stage lands on the SAR-aware target height
     assert "scale=308:486" in filt, filt
+    # the window's pixel aspect matches the frame's, so the scale onto it is a
+    # pure resize and the content is not squeezed sideways
+    assert abs(cw / ch - 308 / 486) < 0.01, (
+        f"the slide window {cw}x{ch} must have the frame's pixel aspect, got "
+        f"{cw / ch:.4f} vs {308 / 486:.4f}"
+    )
 
     out = tmp_path / "vertical.mp4"
     dar, w, h = _rendered_dar(video, filt, out)
@@ -383,9 +406,101 @@ def test_an_anamorphic_source_renders_to_a_genuinely_9_16_frame(tmp_path):
         f"the anamorphic crop is already sub-1080, so it must not be "
         f"rescaled, got {w}x{h}"
     )
+    pw, ph, sar_w, sar_h = _probe_geometry(out)
+    assert (sar_w, sar_h) == (8, 9), (
+        f"the delivered frame must keep the source's SAR 8:9, got {sar_w}:{sar_h}"
+    )
     assert abs(dar - 9 / 16) < 0.005, (
         f"the vertical output must display at 9:16, got {w}x{h} -> DAR {dar:.4f}"
     )
+
+
+def test_an_anamorphic_slide_is_not_squeezed(tmp_path):
+    """The second defect the anamorphic source exposed, measured in pixels
+    rather than in ratios.
+
+    The slide layout cuts a source window and scales it onto the delivered
+    band. The band keeps the source's SAR, so the SAR appears on both sides of
+    the no-squeeze condition and cancels: the window needs the band's *pixel*
+    aspect, ``out_w/out_h``, and no aspect factor. Carrying the factor the
+    other way — ``out_w * sar_h / (out_h * sar_w)`` — is the shape a
+    *square-pixel* band would need, and on a 720x486 SAR 8:9 source it squeezes
+    the content about 11% sideways: a square in the frame comes out a tall
+    rectangle.
+
+    A source holding one white square on black, long enough for the slide
+    detector to hold it, is rendered and the delivered blob's width/height is
+    read back out. A square in must be a square out. Both sides of the
+    comparison carry the same SAR, so it cancels in the measurement too, and
+    the assertion is on the content rather than on the container.
+    """
+    import cv2
+    import numpy as np
+
+    from engine.reframe import vertical_reframe_filter
+
+    w, h = 720, 486
+    fps = 25
+    seconds = 4
+    # A square in source pixels, clear of the frame edges: the exact-aspect
+    # window the layout cuts around it is centred on the box, so a box clear of
+    # the edges is clear of the window.
+    b0, b1 = (250, 120), (470, 340)
+    blob_w, blob_h = b1[0] - b0[0] + 1, b1[1] - b0[1] + 1
+
+    frame = np.zeros((h, w, 3), np.uint8)
+    cv2.rectangle(frame, b0, b1, (255, 255, 255), -1)
+    raw = tmp_path / "square.rgb"
+    raw.write_bytes(frame.tobytes())
+    video = tmp_path / "square.mp4"
+    subprocess.run(
+        ["ffmpeg", "-y", "-stream_loop", "-1", "-f", "rawvideo",
+         "-pix_fmt", "bgr24", "-s", f"{w}x{h}", "-r", str(fps), "-i", str(raw),
+         "-frames:v", str(fps * seconds), "-vf", "setsar=8/9",
+         "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+         "-pix_fmt", "yuv420p", str(video)],
+        check=True, capture_output=True,
+    )
+
+    # The source is held as a slide: the chain is the composed slide layout,
+    # which is where the squeezed geometry lived.
+    from engine.reframe_scenes import analyse_scene, SceneClass
+
+    segments, _slides, _sw, _sh = analyse_scene(video, 0.0, 3.0)
+    assert segments and all(s.cls is SceneClass.SLIDE for s in segments), (
+        "the synthetic square must be held as a slide for this test to "
+        f"exercise the slide layout, got {[(s.cls, s.slide) for s in segments]}"
+    )
+
+    filt = vertical_reframe_filter(video, start=0.0, end=3.0)
+    out = tmp_path / "squeezed.mp4"
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(video), "-t", "0.6", "-vf", filt,
+         "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+         "-pix_fmt", "yuv420p", str(out)],
+        check=True, capture_output=True,
+    )
+
+    cap = cv2.VideoCapture(str(out))
+    ok, delivered = cap.read()
+    cap.release()
+    assert ok, "the render produced no frame to measure"
+    gray = cv2.cvtColor(delivered, cv2.COLOR_BGR2GRAY)
+    ys, xs = np.where(gray > 127)
+    delivered_w = xs.max() - xs.min() + 1
+    delivered_h = ys.max() - ys.min() + 1
+
+    pw, ph, sar_w, sar_h = _probe_geometry(out)
+    assert (pw, ph, sar_w, sar_h) == (308, 486, 8, 9), (
+        f"the anamorphic deliverable is {pw}x{ph} SAR {sar_w}:{sar_h}, "
+        "expected 308x486 SAR 8:9"
+    )
+    squeeze = (delivered_w / delivered_h) / (blob_w / blob_h)
+    assert abs(squeeze - 1.0) < 0.02, (
+        f"a {blob_w}x{blob_h} square came out {delivered_w}x{delivered_h} px, "
+        f"a squeeze of {squeeze:.4f} (1.0000 is undistorted)"
+    )
+
 
 
 def _rendered_dar(video: Path, filt: str, out: Path,
@@ -493,15 +608,33 @@ def test_a_source_wider_than_16_9_is_letterboxed_not_cropped(tmp_path):
 
 def test_a_square_pixel_source_is_unchanged_by_the_aspect_correction(tmp_path):
     """The fix has to be a no-op for the common case: a square-pixel source
-    must still render to 9:16 with its pixels undistorted."""
+    must still render to 9:16 with its pixels undistorted.
+
+    Pinned on invariants rather than on one crop size: this fixture is a static
+    structured pattern, so the scene analysis holds it as a slide and cuts the
+    exact-aspect window around the detected region instead of taking the full
+    frame. Which window that is is the slide layout's business and moves with
+    the detector; the aspect correction's business is that whatever window is
+    cut has the delivered frame's pixel aspect, so the scale is a pure resize.
+    """
     from engine.reframe import vertical_reframe_filter
 
     video = _anamorphic_video(tmp_path / "square_px.mp4", sar="1:1",
                               size="640x480")
     filt = vertical_reframe_filter(video, start=0.0, end=1.5)
-    # 480 * 9/16 = 270 -> rounded to even, and 270 * 16/9 = 480 exactly
-    assert filt.startswith("crop=270:480:x='"), filt
-    assert "scale=270:480" in filt, filt
+    assert filt.startswith("crop="), filt
+    crop = filt.split(",")[0][len("crop="):]
+    cw, ch = (int(p) for p in crop.split(":")[:2])
+    scale = filt.split(",scale=")[1].split(":")[0:2]
+    sw, sh = int(scale[0]), int(scale[1].split(":")[-1])
+    # 480 * 9/16 = 270, and 270 * 16/9 = 480 exactly, so the delivered frame is
+    # square-pixel and the SAR the graph declares has to be 1/1 to match.
+    assert (sw, sh) == (270, 480), f"the frame is 270x480 by construction; got {sw}x{sh}"
+    assert filt.endswith("setsar=1/1"), filt
+    # The no-squeeze condition: the window's pixel aspect is the frame's.
+    assert abs(cw / ch - sw / sh) < 0.01, (
+        f"crop {cw}x{ch} scaled onto {sw}x{sh} squeezes a square-pixel source "
+        f"by {cw / ch / (sw / sh):.4f}")
 
     out = tmp_path / "vertical.mp4"
     dar, w, h = _rendered_dar(video, filt, out)

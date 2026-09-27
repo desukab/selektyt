@@ -1819,17 +1819,115 @@ memory file: re-run the bench and update both that docstring and
 `test_encoder_settings_are_the_measured_ones`, whose docstring carries the same
 table. **Never trust a bench table whose source file lives in a scratch dir.**
 
-**Phase 5 (slides) is documented rather than pretended.** The reframe election is
-subject-centred and has no notion of a second content class, so for the common
-speaker-left / slide-right lecture layout the 406 px window cannot hold both:
-enumerating all 1280 legal crop centres on such a frame found **zero** positions
-that keep the speaker's face and at least half the slide's text in frame at once.
-This is geometry, not tuning — the fix is a perception change (slide or text
-detection in the election, and a two-region objective), not a width, which would
-break the 9:16 contract, and not a bias, which would flip which region is
-discarded. Recorded in `_reframe_track`'s known-limitation paragraph in
-`engine/reframe.py` where the choice is actually made, with the geometry asserted
-as a mutual-exclusion proof in `tests/test_reframe.py`.
+**Phase 5 (slides) is shipped and measured on real footage, after one measured
+regression was caught by the same measurement.** The reframe election was
+subject-centred with no notion of a second content class, and the reason it was
+documented rather than tuned was a measured fact: on a 1280-wide frame with the
+speaker and slide ~560 px apart centre-to-centre, all 1280 legal crop centres
+left either the speaker's face or at least half the slide's text out of frame.
+That geometry is unchanged — it is a property of a 406 px window, and widening it
+breaks the 9:16 contract. What changed is that the election now *answers* it.
+
+`engine/reframe_scenes.py` adds the second content class the gap called for.
+Slide regions are found by per-cell temporal staticness plus edge-or-brightness;
+each sample is classified SPEAKER / SLIDE / SPLIT / TRANSITION on the (face,
+slide) pair; the question "can one crop hold both" is answered in closed form by
+intersecting the face window with the slide's own window, so a shot composes to
+one tracking crop when they overlap and to two stacked bands when they do not.
+Class changes are joined with an `xfade` cascade on segment-local clocks.
+
+Measured on the one real corpus source that exercises it
+(`corpus/media/royal-society-cloke.webm`, 1920x1080 VP9 — a tight head shot
+alternating with a wide shot holding a speaker whose face is 52-66 px wide beside
+a static region covering up to 98% of the frame):
+
+- The composition **keeps the speaker on 26 of 26 samples** in every interval
+  where the source has a face, against 25 of 26 for the pre-composition reframe
+  on the same samples. Rendered `face_present` is 1.000 on all four intervals
+  scored with the benchmark's YuNet oracle.
+- The talking-head path is **byte-identical** to the pre-existing implementation
+  on all five real cut intervals of the pentagon briefing, so the gain on lecture
+  footage costs nothing on footage that has no slides.
+- The rule that regressed was found by this measurement, not by reasoning:
+  `classify_scene` returned SLIDE for any region covering 80% of the frame
+  *before consulting the face*, so the wide shot planned a crop centred on the
+  slide and the speaker left the deliverable on 6 of 26 samples in one interval
+  and 5 of 26 in another (rendered `face_present` 0.750 and 0.765, versus the
+  legacy chain's 1.000). Removing the short-circuit — classifying on the pair and
+  letting the closed-form geometry decide — closed it to zero losses. Pinned in
+  `tests/test_reframe_scenes_real_media.py`, which fails at 35% delivered face
+  presence under the old rule and passes at 100% under the fix; the synthetic
+  geometry in `tests/test_reframe_scenes.py` alone could not have caught it,
+  because the rule was geometrically self-consistent and wrong only about real
+  footage.
+- **The one trade-off, stated rather than hidden:** in the wide shots the speaker
+  renders smaller than the legacy chain would deliver (minimum rendered face
+  width 33.5 px against 53.3 px on one interval), because a two-band layout uses
+  a wider source window scaled to the same output width. Presence was bought with
+  size, deliberately — a smaller speaker is an editorial choice, a missing one is
+  a defect.
+
+**What remains unmeasured, said plainly.** No corpus clip is a lecture whose slide
+is captured alongside a *foreground* speaker at lecture scale, so the two-band
+path is proven on synthetic geometry and on one interview's wide shot, not on a
+screen-shared tutorial. The codec gap that the same measurement exposed is now
+**closed**, and the two are worth keeping apart — one is an editorial coverage
+limit, the other was a hard defect:
+
+**The perception layer's AV1 blindness is fixed and measured.** OpenCV 5.0.0's
+bundled ffmpeg negotiates a hardware AV1 pixel format the host cannot supply, so
+*every* frame of an AV1 source fails with `Failed to get pixel format` while
+`engine.render` decodes the same file with the same binary. Confirmed as
+codec-level rather than file-level: two independent AV1 encoders (libsvtav1 and
+libaom-av1) both decode 0 frames, as does the corpus's own AV1 source. The
+planner then held a non-empty sample list in which *every* frame was `None`,
+elected nothing, and shipped the static centred default without reporting it.
+
+`engine.reframe._sample_frames` now falls through to an ffmpeg rawvideo path when
+OpenCV yields no frame, reached through one choke point that already serves
+`track_subject_center`, `_probe_dims`, `analyse_scene`, `scene_filter` and the
+benchmark — so four downstream consumers were repaired by one reader. Measured,
+before → after:
+
+| source | OpenCV alone | with the fallback |
+|---|---|---|
+| corpus h264 briefing | 5/5, 0.79 s | 5/5, 0.79 s (path not taken) |
+| corpus VP9 interview | 5/5, 0.73 s | 5/5, 0.73 s (path not taken) |
+| corpus AV1 tutorial | **0/5**, 0.01 s | **5/5**, 1.29 s |
+
+Where both paths work they agree: 0.00 mean absolute difference on VP9, at most
+2.41 on an MPEG-4 Part 2 source, and the per-sample pattern is exact zeros
+alternating with a small constant — two timestamps landing one frame apart, not
+two decoders disagreeing about layout. So the fallback changes results only on
+codecs OpenCV cannot read, which is the only case it exists for.
+
+**The outcome it fixed, end to end.** A source the perception layer cannot read
+used to ship a content-blind crop; on a generated AV1 clip whose static content
+covers the right half, the centred default straddled both halves and the
+delivered frame read mean brightness 113 against a panel of 210. With the
+fallback the composition centres on the content region and delivers 209 — the
+crop moved because the planner saw the frames. Pinned by
+`tests/test_reframe_decode_fallback.py`, which generates its AV1 at run time
+rather than depending on corpus media, so it ships with the repo.
+
+**The same defect also had a second, worse shape.** A source *neither* reader can
+decode used to reach the renderer as `crop=1:0:x='0':y=0,scale=2:4`, which ffmpeg
+rejects while configuring the crop pad — exit 234, a zero-byte output file, and
+nothing in the message naming the source as the problem. That points an editor at
+the render instead of the ingest, which is the worst place for a diagnostic to
+land. `engine.reframe_scenes.UnreadableSource` now raises at the geometry
+decision instead, keeping the two failures apart: "no subject detected" is a
+composition question answered with a centred crop, "no frame decoded" is an
+ingest question composition cannot answer. The landscape path is deliberately
+*not* made to raise — it has a documented 1080p default for unreadable geometry,
+which the pre-fix `max(w, 1)` clamping had made dead code (measured:
+`_probe_dims` returned 1×1 and the deliverable rendered 2×2). Both are now what
+their comments say.
+
+**What remains a limit, rather than a defect:** the gap sits at OpenCV's build of
+ffmpeg, so a host with a differently built OpenCV may not exhibit it, and the
+control test in the new module is written to fail loudly if that day comes, so
+the second decode path does not outlive its reason.
 
 **Phase 7's "non-monotonic DTS" alarm was closed as a measurement artefact**, not
 a defect. `ffprobe -show_entries packet=dts_time,pts_time` prints the columns in
@@ -2065,23 +2163,33 @@ In rough order of how much it would cost a user (fuller list in
     29.97 fps. 23.976, 50 and 59.94 remain untested, and no 4K/H.265 source was
     attempted — still the largest unquantified risk in `docs/BUSINESS_MODEL.md`
     §9.
-13. **The vertical encoder is measured now; the slide layout is not solved, and
-    geometry says it cannot be.** The encoder ladder in the session section
-    above is closed. The speaker-left / slide-right lecture layout is not, and
-    the reason it is recorded rather than tuned is a measured fact: on a
-    1280-wide frame with the speaker and slide ~560 px apart centre-to-centre,
-    **all 1280 legal crop centres leave either the speaker's face or at least
-    half the slide's text out of frame** — zero positions hold both. The
-    election picks whichever side carries more structure and does not know it is
-    choosing, so such a clip can ship with the speaker cropped out, the slide
-    half-cut, or both, and nothing reports it. The fix is a perception change (a
-    second content class in the election, plus a two-region objective), and a
-    width increase is not an option because it breaks the 9:16 deliverable.
-    **This is the single highest-leverage remaining quality gap in the render**,
-    and it is named here rather than in the gap map because the gap map measures
-    what *has* shipped, and no corpus run has shipped a lecture-with-slides clip
-    through the vertical path yet — so it is an unmeasured failure mode, not an
-    observed one.
+13. **The slide layout is solved and shipped, and the codec gap it exposed is
+    closed.** The speaker-left / slide-right layout is no longer an unsolved
+    geometry problem — the election now has a second content class and answers
+    the geometry in closed form (see the Phase 5 paragraph above), measured at
+    26-of-26 speaker retention on the real source that exercises it, with the
+    regression the same measurement caught pinned to a test that fails at 35%
+    under the old rule. What that work surfaced was a narrower and more
+    actionable defect, and it is now fixed rather than open: the whole reframe
+    perception read frames through OpenCV, which decoded **0 of 5 frames** of the
+    corpus's AV1 source (`telugu-tutorial.webm`) while the ffmpeg render path
+    decoded it fine, so on that codec the planner was blind —
+    `track_subject_center`, `analyse_scene` and `scene_filter` all saw no frames,
+    the benchmark could not score the source, and the pipeline silently fell back
+    to a default crop with nothing reporting it. `_sample_frames` now falls
+    through to an ffmpeg rawvideo path, measured 0/5 → 5/5 on the AV1 source
+    while h264 and VP9 are untouched on the path they already used; a generated
+    AV1 source whose content is off-centre now composes onto its content region
+    (delivered brightness 113 → 209 against a panel of 210) instead of onto the
+    static default. The same fix removed a second, worse failure shape: a source
+    *neither* reader decodes used to ship `crop=1:0:...`, which ffmpeg rejects at
+    configure time (exit 234, zero bytes written), so it now raises
+    `engine.reframe_scenes.UnreadableSource` at the geometry decision instead.
+    Both are pinned by `tests/test_reframe_decode_fallback.py`, which builds its
+    AV1 at run time rather than depending on corpus media. **The residual is a
+    coverage limit, not a defect:** the gap sits at OpenCV's build of ffmpeg, so
+    a differently built OpenCV may not exhibit it, and 4K/H.265 (item 12) is
+    still unattempted.
 
 **One OPEN finding that is noise, recorded so it is not mistaken for a defect
 later.** `tools/editorial_audit.py`'s `check_cuts_respect_sentences` flags six
