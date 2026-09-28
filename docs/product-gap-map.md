@@ -1,6 +1,6 @@
 # Product gap map
 
-Where SelekyT is a finished product and where it is not, as of `30337f1`.
+Where SelekyT is a finished product and where it is not, as of `aa63985`.
 
 The distinction this map exists to keep clear: **a stage whose code exists and
 whose unit tests pass is not the same as a stage a user can rely on.** Each row
@@ -15,8 +15,13 @@ reports it OPTIONAL. ollama and sherpa-onnx are not installed here; silero **is*
 on this host the chain's preferred backend is a neural model, and the
 energy-only case below is reached by forcing it or by running on a host without
 the model.
-Disk held ~15 GB free across this pass, enough to keep two real sources on disk
-at once.
+Disk held ~15 GB free across most of this pass, and **2.1 GB at its end** (93%
+of a 29 GB volume). That last figure is the one that constrains the next pass,
+not the earlier one: it is enough to keep one real source on disk but not two,
+and it is why the reference run's own 720×486 source was deleted after its
+measurements were committed to `corpus/`. Any further real-media work has to
+budget its intermediates against 2 GB, not against the 15 GB the earlier rows
+of this map were written under.
 
 ## INPUT
 
