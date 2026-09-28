@@ -364,7 +364,8 @@ contradicts several of its numbers. This document uses the corrected values thro
 | 9:16 coded geometry | 272×486, SAR 8:9, DAR 1088:2187 | **308×486, SAR 8:9, DAR 1232:2187** | **CONTRADICTED** |
 | 16:9 output | "720×486 → cap 1080 wide" | **864×486 square-pixel** (the 4:3 content is padded into an exact 16:9 frame; it is never upscaled to 1080) | **CONTRADICTED** |
 | Transcription RTF | 0.1651 | **0.1505** (my cross-check) | corroborated, 8.8% more pessimistic than reality |
-| Render RTF 16:9 | 0.1232 | **0.1276** (my cross-check) | corroborated, 3.6% optimistic |
+| Render RTF 16:9 | 0.875 (shipped `slow`/crf18, 1280×720 source, MEASURED 2026-09-28) | **0.1276** (my cross-check) | **superseded on both sides** — see the note below |
+| Render RTF 9:16 | 0.358 (shipped `slow`/crf18, 406×722 tracked crop, MEASURED 2026-09-28) | not cross-checked | — |
 | Editorial + export RTF | 0.01 combined (ASSUMPTION) | **0.00243 measured** | the assumption is **4.1× more pessimistic** than measured — safe direction |
 
 Note the direction: the two contradicted *measure* rows (duration, yield, bytes, geometry) are the
@@ -372,6 +373,22 @@ ones that changed when the artifacts were regenerated with 6 clips instead of 3;
 *assumption* row (editorial cost) was simply conservative. Nothing here makes the cost story worse —
 measured editorial cost is 4.1× cheaper than assumed. But **no document in this repo should quote
 the old 116.95 s / 7.96% / 9.9 MB figures again; they describe a run that no longer exists.**
+
+**The render row deserves its own note, because it is the one row in this table whose cross-check is
+not merely stale but *detached*.** My 0.1276 was measured against `docs/BUSINESS_MODEL.md`'s 0.1232
+and agreed with it to 3.6%, which read as corroboration. It was not. Both figures describe the
+`libx264 -preset veryfast -crf 20` encoder that `engine/render.py` shipped before commit `56253b5`
+(2026-09-25), measured on the 720×486 SD reference source — a configuration that no longer ships on
+either count. `56253b5` replaced the encoder with `-preset slow -crf 18`, and the reference source
+used for the original measurement is no longer on this host, so the 2026-09-28 re-measurement in
+`docs/BUSINESS_MODEL.md` is on the corpus's 1280×720 pentagon briefing instead and reads **0.875**
+(16:9) / **0.358** (9:16) — a 7× move on 16:9, of which 3.16× is the encoder measured head-to-head
+on one file and ~2.6× is the resolution change. My cross-check is therefore still a valid measurement
+of the retired configuration, and its agreement with 0.1232 is still real evidence that *that* number
+was right; what it is not is evidence about the shipped encoder. The honest reading is that render
+RTF was the least-cross-checked quantity in the cost model at the exact moment it became the most
+model-sensitive one, and the lesson is that a cross-check which reproduces a figure's *measurement
+conditions* rather than its *current conditions* corroborates the wrong thing.
 
 `docs/AI_EXECUTION_STATE.md` is known-stale and was not used as a source for anything in this
 document.

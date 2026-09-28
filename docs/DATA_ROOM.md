@@ -171,9 +171,12 @@ unit-economics *modelling*, which is a different thing:
   2026-09-19, pricing tiers designed, sensitivity analysis. This is analysis, not
   a financial record.
 - Measured compute rates (VERIFIED — `docs/BUSINESS_MODEL.md` §1, benchmarked on
-  the real artifacts of the reference run on this 4-core host): transcription
-  0.165 RTF CPU with `small`/int8; render 0.1232 RTF; all-in planning cost
-  $0.00104–$0.00476 per source-minute depending on delivery mode.
+  the real artifacts of the reference run on this 4-core host, render re-measured
+  2026-09-28): transcription 0.165 RTF CPU with `small`/int8; render **0.875 RTF
+  16:9 / 0.358 RTF 9:16** with the shipped `slow`/crf18 encoder (the 0.1232 this
+  row quoted until 2026-09-28 was measured against the pre-`56253b5`
+  `veryfast`/crf20 encoder and was stale by 7×); all-in planning cost
+  $0.00104–$0.00496 per source-minute depending on delivery mode.
 
 A diligence team asking for "the financials" today would receive a cost model
 with zero dollars of history behind it. That is the correct thing to give them,

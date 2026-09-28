@@ -277,6 +277,102 @@ every line below was true on this host at that point.
 
 ## Completed work
 
+### This session — the cost model's largest measured term was stale by 7×, and the encoder is why
+
+`56253b5` bought +2.64 dB of render quality by switching the encoder from
+`libx264 -preset veryfast -crf 20` to `-preset slow -crf 18`, and **the cost row
+in `docs/BUSINESS_MODEL.md` was never re-run after it.** Every downstream figure
+traced to that one row was wrong by the same factor, in a document whose whole
+purpose is that its numbers are measured. This session found it by noticing the
+shipped 9:16 render measurement disagreed with the encoder ladder `56253b5`
+itself had published, and closed it.
+
+Re-measured 2026-09-28 on `corpus/media/pentagon-esper-briefing.mp4`
+(1280×720, 29.97 fps), 30 s, best of 2, with a real ASS from the run burned in:
+
+    16:9, shipped slow/crf18, 1280×720 output   0.875 RTF
+    9:16, shipped slow/crf18, 406×722 crop      0.358 RTF
+    16:9, pre-56253b5 veryfast/crf20            0.277 RTF (computed: 0.875 ÷ 3.16)
+
+The 9:16 figure cross-validates against `56253b5`'s own ladder entry for
+slow/crf18 (2.89 s for 240 frames = **0.361**) to within 1%, which is what
+identified the stale figure in the first place. The old number's
+**0.1232** is the pre-encoder-change measurement, and it is consistent with the
+ladder's veryfast/crf20 entry (1.04 s for 240 frames = **0.130**).
+
+**Attribution, because a 7× move needs two factors not one:** encoder alone,
+measured head-to-head on identical 1080p footage and an identical filter chain
+(900 frames: 10.13 s veryfast/crf20 vs 32.01 s slow/crf18) = **3.16×**. Source
+resolution SD 720×486 → HD 1280×720 ≈ **2.6×**. Product
+0.1232 × 3.16 × 2.63 ≈ **1.02** against a measured **0.875**, with the
+over-prediction explained by `landscape_filter` padding rather than scaling. The
+controlled variable is the 3.16× encoder term; the resolution term is an
+explanation of the gap, not a controlled measurement, and the original NASA
+reference source is no longer on this host, so the re-measurement could not be
+done on the same file. Stated as a limitation in the doc.
+
+**The encoder was not reverted.** Re-measured at 1080p, the quality purchase is
+real: PSNR **51.445** / SSIM **0.997573** for slow/crf18 against **47.987** /
+**0.995991** for veryfast/crf20 = **+3.46 dB**. Correct the cost figure, not the
+encoder. Captions are provably excluded as a cause — burning a real ASS moved
+16:9 from 0.869 → 0.875 and 9:16 from 0.356 → 0.358, under 1%.
+
+**The two presets can no longer share one figure**, and this is the geometry
+finding the stale row concealed: the 16:9 deliverable from a 1280×720 source is a
+1280×720 frame (0.92 M px, `landscape_filter` never enlarges and a 16:9 source
+needs no padding), while the 9:16 deliverable is a 406×722 crop (0.29 M px) —
+3.2× apart. Modelling them as one number would understate 16:9 by 3.6× while
+overstating 9:16 by 2.4×.
+
+**The move is 23% on the end-to-end cost, not 7×**, because the render terms are
+multiplied by the 6.753% clip yield before they enter the model. Total RTF
+0.2917 → **0.3584**; `small` on `c7i.xlarge` $0.000868 → **$0.00107** per
+source-minute; the API mode $0.00476 → **$0.00496**. **That is why the stale
+figure survived: it was invisible in the only number anyone would check.**
+
+**What the correction actually changed.** The render term is now 23% of the model
+— the largest term after transcription, and already past the 0.10 decode term
+that is still an assumption. It is the only large term that is a *product
+decision rather than an accuracy-gated* one: the ladder shows `veryfast`/crf20
+costs 3.16× less for −3.46 dB, at no accuracy and no architecture cost. So a
+per-run quality/speed toggle, or a two-pass preview-fast/master-slow workflow, is
+a genuine 3.16× throughput lever that the stale figure hid — at 0.1232 the two
+render rows were 5.7% of the model and not worth a setting. Recorded in
+`docs/BUSINESS_MODEL.md` §4(b) as an option, **not implemented speculatively.**
+And the planning figure used for pricing, $0.004/source-min, no longer covers the
+API mode ($0.00496, 24% underwater) — the one place the correction bites a
+decision rather than a number. Stated in the doc; not silently repriced.
+
+**The meta-finding, and the reason this propagated to six documents.** The
+quantity least cross-checked in the cost model was the one that had become most
+model-sensitive. `docs/EVALUATION.md` and `docs/TIME_SAVINGS.md` each carried an
+independent 0.1276 "cross-check" that agreed with 0.1232 to 3.6% and was read as
+corroboration — but both reproduced the *measurement conditions* (same retired
+encoder, same SD source) rather than the *current conditions*, so they
+corroborated the wrong thing. Their agreement is still real evidence that 0.1232
+was right for what it measured; it is not evidence about the shipped encoder.
+`docs/RED_TEAM_FINDINGS.md` R13 has the same shape one layer up: it correctly
+caught an arithmetic inconsistency in `$0.021–$0.024` and the row was fixed — but
+neither the auditor nor the fix noticed that the RTF underneath was stale. Both
+rows are re-characterised rather than re-numbered, with the rule stated: **verify
+the measurement conditions, not just the arithmetic that consumes them.**
+
+Propagation, all on `main` and uncommitted until the commit that follows this
+entry: `BUSINESS_MODEL.md` (§1 measurement table split into three rows, the
+attribution note, §3 throughput table and model-size ladder, §4(a) cost table,
+§4(b) GPU table restated on one stated rule plus its break-even arithmetic, §4(c)
+render charge and API table, the all-in planning table, the §9 cost summary);
+`EVALUATION.md` §6; `TIME_SAVINGS.md` §3 and §5; `DATA_ROOM.md`; `USE_OF_FUNDS.md`;
+`RED_TEAM_FINDINGS.md` R13; `TRACTION_DASHBOARD.md` §B.
+
+**Validation ladder for this work:** implemented n/a (a measurement and a
+documentation correction, not code) → **real-media validated** (renders measured
+on real corpus footage with a real burned-in ASS, cross-validated three ways:
+against `56253b5`'s own encoder ladder, against the uncaptioned/captioned delta,
+and against the two-factor product) → document-corrected. **Not** human
+evaluated. No code changed, so no tests were added; the full suite from the
+previous entry (1814 passed, 16 skipped) is unmodified and still stands.
+
 ### This session — the sentence splitter, the tracker, and the real-media re-run that closed every clip-level defect
 
 The re-run the previous section called for has been run, and it did what a
@@ -3302,7 +3398,14 @@ selections).
    source would exercise transcription, render and export on that wrapper.
 7. **Add a 23.976, a 50 and a 59.94 source, and one 4K/H.265 source.** The
    corpus covered 25/30/29.97; the rest is untested and is the largest
-   unquantified risk named in `docs/BUSINESS_MODEL.md` §9.
+   unquantified risk named in `docs/BUSINESS_MODEL.md` §9. **DONE — 2026-09-28,
+   `cb65bb8`.** All four built as real transcodes of corpus speech footage and
+   run through the production pipeline; the export grid is correct at every
+   rate (canonical `frameDuration` rationals, 0.81-frame interval agreement),
+   and the 4K cost the model had no number for is now measured — 135% of
+   realtime, 79% of it decode. See the gap map's EXPORT row and
+   `docs/BUSINESS_MODEL.md` A13. The task also found and fixed two defects in
+   the auditor itself that made the measurement unrunnable.
 8. **Resolve the web-shell / CLI input disagreement** (G3). Decide between
    exposing a video upload route or documenting the project-root confinement —
    the previous session decided URL-first with no code change, which is why

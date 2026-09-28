@@ -102,11 +102,11 @@ All rates below are measured or computed in `docs/BUSINESS_MODEL.md` (retrieved
 | Quantity | Value | Basis |
 |---|---|---|
 | Transcription, faster-whisper `small` int8 | 0.165 RTF | measured on the real source |
-| Render, both presets | 0.1232 RTF | measured on the real source |
+| Render, 16:9 / 9:16 | **0.875 / 0.358 RTF** | measured 2026-09-28 on the real source with the shipped `slow`/crf18 encoder. The single 0.1232 RTF this row quoted until then was measured against the pre-`56253b5` `veryfast`/crf20 encoder and on a lower-resolution source, and was stale by 7× — see the correction note in `docs/BUSINESS_MODEL.md` §1 |
 | Reference cloud instance | AWS `c7i.xlarge`, 4 vCPU, $0.1785/hr on-demand | CITED in `docs/BUSINESS_MODEL.md` §2 |
 | Always-on cost | $180/mo ($130 compute + $50 control plane, the latter ASSUMED) | `docs/BUSINESS_MODEL.md` A9 |
-| All-in, CPU self-hosted, delete source after run | **$0.001035 / source-min** | computed |
-| All-in, transcription API + CPU render, 7-day staging | **$0.004764 / source-min** | computed |
+| All-in, CPU self-hosted, delete source after run | **$0.001233 / source-min** | computed |
+| All-in, transcription API + CPU render, 7-day staging | **$0.004962 / source-min** | computed |
 
 Now the arithmetic on what this round's evidence programme actually consumes:
 

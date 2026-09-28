@@ -195,7 +195,8 @@ myself today on the same real artifacts:
 | Quantity | `BUSINESS_MODEL.md` | My measurement | Agreement |
 | --- | --- | --- | --- |
 | Transcription RTF, `small` | 0.1651 | **0.1505** | corroborated — the published figure is 8.8% pessimistic |
-| Render RTF, 16:9 | 0.1232 | **0.1276** | corroborated — the published figure is 3.6% optimistic |
+| Render RTF, 16:9 | 0.875 (shipped `slow`/crf18, 1280×720, 2026-09-28) | **0.1276** (2026-09-19 conditions) | **detached** — my measurement reproduced the retired `veryfast`/crf20 encoder on the SD source, so it corroborates 0.1232 and says nothing about 0.875. See `docs/EVALUATION.md` §6 |
+| Render RTF, 9:16 | 0.358 (shipped `slow`/crf18, 406×722 crop, 2026-09-28) | not cross-checked | — |
 | Editorial + export RTF | 0.01 (ASSUMPTION) | **0.00243 measured** | the assumption was 4.1× more pessimistic than reality — safe direction |
 
 **But the reference artifacts were regenerated at 2026-09-19 07:36, after `BUSINESS_MODEL.md` was
@@ -268,10 +269,10 @@ Two caveats that cut **against** the claim, stated because they matter more than
 | Human-editor time for the equivalent work | **2–8 h** | **ASSUMPTION — no editor was ever timed** |
 | **Ratio** | **18× to 73×** | **COMPUTED from one measurement and one assumption** |
 | Human labour at $36.26/h | **$72.52 – $290.08 per tape** | COMPUTED from RESEARCHED rate × ASSUMED time |
-| Cloud compute for the same job, `small` model | **$0.0195 at the stated RTF of 0.2678** | COMPUTED from `docs/BUSINESS_MODEL.md` §4 (AWS `c7i.xlarge` $0.1785/h), but **the arithmetic printed here did not check out and has been corrected**: $0.1785/h × 0.2678 × 1469.77 s / 3600 = **$0.0195**, not the $0.021–$0.024 quoted before. $0.021 is `BUSINESS_MODEL.md` §4(a)'s figure, which is derived from that doc's *own* RTF of **0.2917** (0.1785 × 0.2917 × 1469.77 / 3600 = $0.0213); $0.024 corresponded to nothing in either document and may have been the corpus-wide 0.330 RTF (→ $0.024) applied to the reference source's duration. The spread is now reported as the two defensible values, **$0.0195–$0.0213, depending on which RTF is used**, and the choice between them must be stated wherever the number is quoted |
+| Cloud compute for the same job, `small` model | **$0.0195–$0.0261, depending on which RTF is used** | COMPUTED from `docs/BUSINESS_MODEL.md` §4 (AWS `c7i.xlarge` $0.1785/h). The spread now spans three RTFs and each must be named where the number is quoted: **$0.0195** at this document's own component-sum RTF of **0.2678** ($0.1785 × 0.2678 × 1469.77 s / 3600); **$0.0213** at `BUSINESS_MODEL.md`'s pre-correction RTF of **0.2917**; and **$0.0261** at its post-correction RTF of **0.3584** (re-measured 2026-09-28, when the render RTF was found stale by 7× — the move is 23% on the total, not 7×, because render is multiplied by the 6.753% clip yield). The $0.024 that appeared in an earlier draft of this row corresponded to nothing in either document and has been dropped. Note the direction: this row has moved *up* three times as the render measurement became real, and it is still ~1,100× below the assumed human labour |
 
-The arithmetic spread is absurd on purpose: **$70–290 of assumed human labour against ~$0.02 of
-measured compute is a 3,000–14,000× value-to-COGS ratio.** When a ratio is that favourable, the
+The arithmetic spread is absurd on purpose: **$70–290 of assumed human labour against $0.02–0.03 of
+measured compute is a ≈2,800–14,900× value-to-COGS ratio.** When a ratio is that favourable, the
 ratio is not the finding — the finding is that **the entire claim rests on whether the deliverable
 is usable at all**, which is a question this venture has never tested with a human being.
 
