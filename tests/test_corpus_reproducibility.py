@@ -27,14 +27,17 @@ from tools.corpus_reproducibility import (
 )
 
 _REPO = Path(__file__).resolve().parent.parent
-# Fixture for the tool-behaviour tests below. pentagon-esper-briefing is a
-# delivering run that still reproduces, so it is a valid stand-in for a
-# committed selection the current code agrees with. nasa360-ep5 used to hold
-# this role but no longer can: the candidate-scan fix described in
-# docs/CORPUS_BENCHMARK_STATUS.md let its tail generate candidates for the
-# first time, so its committed selection is now an intentional drift.
-_RUN = _REPO / "corpus" / "pentagon-esper-briefing_run"
-_HAVE_CORPUS = (_REPO / "corpus" / "pentagon-esper-briefing_run" / "project" / "selections.json").is_file()
+# Fixture for the tool-behaviour tests below. ooi-vertical is a delivering run
+# that still reproduces, so it is a valid stand-in for a committed selection the
+# current code agrees with. nasa360-ep5 used to hold this role but no longer
+# can: the candidate-scan fix described in docs/CORPUS_BENCHMARK_STATUS.md let
+# its tail generate candidates for the first time, so its committed selection is
+# now an intentional drift. pentagon-esper-briefing held it after that, and
+# lost it for the same kind of reason: the word-boundary fix in
+# engine/edit_plan.py moved one of its clips, which is the named exception
+# below.
+_RUN = _REPO / "corpus" / "ooi-vertical_run"
+_HAVE_CORPUS = (_REPO / "corpus" / "ooi-vertical_run" / "project" / "selections.json").is_file()
 
 pytestmark = pytest.mark.skipif(
     not _HAVE_CORPUS,
@@ -68,11 +71,11 @@ def test_every_run_with_selections_is_auditable():
                 assert "unknown" in wc["provenance"]
 
 
-def test_committed_selections_reproduce_except_four_named_changed_runs():
+def test_committed_selections_reproduce_except_six_named_changed_runs():
     """The editorial judgement is reproducible: spans, story types and scores
     come out identical for every run that ships today.
 
-    Four runs are the documented exception, in two distinct kinds:
+    Six runs are the documented exception, in three distinct kinds:
 
     - **hadhazy-protest and telugu-tutorial** whose transcriber measured below
       the confidence gate's floor. Their committed selections.json records 0.9
@@ -90,6 +93,18 @@ def test_committed_selections_reproduce_except_four_named_changed_runs():
       starts *past* the old scan's reach, and every span it dropped starts
       within it — a blind spot closing, not a scorer moving. See
       docs/CORPUS_BENCHMARK_STATUS.md for the numbers.
+    - **pentagon-esper-briefing and royal-society-cloke**, the two runs whose
+      committed clips the editorial audit's edge check found opening and
+      closing mid-sentence. That was traced to two lines in the engine and
+      fixed (see docs/product-gap-map.md, EDITORIAL INTELLIGENCE), and the fix
+      is what makes them drift: pentagon clip 04's opening bound moves 0.34 s
+      forward onto the word boundary its sentence estimate was already sitting
+      on, which changes that clip's text, and cloke clip 01 keeps its span but
+      drops the half-cut closing word from its word list, which re-measures
+      the reason. Attribution is isolated, not inferred: running this audit
+      with the two fixes patched off in one process returns *both* runs to
+      ``reproduces`` and changes no other run, so the drift is the fix and not
+      the corpus's pre-existing non-reproducibility leaking into a new place.
 
     This test fails if any *other* run stops reproducing, or if any named
     run's scores change in a way the docs do not record — either would mean
@@ -103,7 +118,8 @@ def test_committed_selections_reproduce_except_four_named_changed_runs():
         or (r["status"] == "count_drift" and r.get("dropped"))
     ]
     assert drifted == ["emwcon-panel-2018_run", "hadhazy-protest_run",
-                       "nasa360-ep5_run", "telugu-tutorial_run"], (
+                       "nasa360-ep5_run", "pentagon-esper-briefing_run",
+                       "royal-society-cloke_run", "telugu-tutorial_run"], (
         "the corpus's reproducibility state changed: these runs no longer "
         "reproduce from their committed transcripts for a reason the "
         "documentation does not record — update the corpus and docs together"

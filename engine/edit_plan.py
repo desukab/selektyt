@@ -4,6 +4,14 @@ import re
 from collections import Counter
 from models.core import Candidate, Segment, Word
 
+# A bound within this of a word's end is on the boundary, not inside the word.
+# Sentence bounds are estimated to character span while word timing is
+# measured, so the two routinely disagree in the last ulp (see
+# ``_word_aligned`` for the shipped case it caused). Kept as a twin of
+# ``editorial._BOUND_EPS`` rather than imported, because ``editorial`` imports
+# this module.
+_BOUND_EPS = 1e-6
+
 
 _FILLER_TEXTS = frozenset({
     "um", "uh", "erm", "hmm", "hm", "you know", "i mean",
@@ -30,9 +38,22 @@ def _word_aligned(t: float, words: list[Word]) -> float:
     Measured on a real selection, a candidate ending 235.237 s clipped 143 ms
     off a word spanning 235.220-235.380 s, and the shipped render cut the
     speaker mid-word. This is what prevents that.
+
+    A bound sitting *on* a word's end is not inside it, but the comparison
+    below says it is when the two disagree in the last ulp: sentence bounds are
+    estimated proportionally to character span while word timing is measured,
+    so on the committed pentagon source a sentence starting at 364.84 met a
+    word ending at 364.84000000000003. Snapping there pulled the bound 340 ms
+    backward and made the clip open on the previous sentence's last word. A
+    bound within ``_BOUND_EPS`` of a word's end is a boundary and is left
+    alone; the two functions must agree, because ``editorial._words_in``
+    decides whether a word is in the clip at all and this decides where its
+    bound then sits.
     """
     for w in words:
         if w.start < t < w.end:
+            if w.end - t < _BOUND_EPS:
+                continue
             return w.start
     return t
 
@@ -68,10 +89,11 @@ def join_words(words: list[Word]) -> str:
     return " ".join("".join(parts).split())
 
 
-def align_span(start: float, end: float, words: list[Word], text: str) -> tuple[float, float, str]:
+def align_span(start: float, end: float, words: list[Word], text: str) -> tuple[float, float, str, list[Word]]:
     """Make a span's bounds, text and word list describe the same clip.
 
-    A candidate's bounds are estimated proportionally to character span (see
+    Returns ``(start, end, text, words)``, all four agreeing. A candidate's
+    bounds are estimated proportionally to character span (see
     ``story_units._segment_sentences``), not read off word timing, so a bound
     can land inside a word. The word list, by contrast, is real timing, and
     ``retention_intervals`` snaps to it. A candidate built on an estimated
@@ -83,7 +105,10 @@ def align_span(start: float, end: float, words: list[Word], text: str) -> tuple[
     Snapping both bounds here and rebuilding the text from the words kept
     inside them makes the candidate identical to the interval that ships:
     ``retention_intervals`` then sees already-aligned bounds and its snap is a
-    no-op rather than a repair.
+    no-op rather than a repair. The word list is returned for the same reason:
+    a caller that keeps the list it was handed while adopting the snapped
+    bounds ships a clip whose words disagree with its own text, and every
+    emitter downstream of the candidate burns that disagreement.
 
     Measured on the committed corpus, 3 of 27 candidates with word timing had
     a text that did not agree with the words the shipped captions are built
@@ -93,14 +118,14 @@ def align_span(start: float, end: float, words: list[Word], text: str) -> tuple[
     other twenty-four byte-identical.
     """
     if not words or end <= start:
-        return start, end, text
+        return start, end, text, []
     a = _word_aligned(start, words)
     b = _word_aligned(end, words)
     if b <= a:
-        return start, end, text
-    kept = [w for w in words if w.start >= a - 1e-6 and w.end <= b + 1e-6]
+        return start, end, text, []
+    kept = [w for w in words if w.start >= a - _BOUND_EPS and w.end <= b + _BOUND_EPS]
     if not kept:
-        return start, end, text
+        return start, end, text, []
     # ``join_words`` is the only correct way to rebuild text from whisper
     # tokens: the naive ``" ".join(w.text.strip() ...)`` strips the leading
     # space that carries the gluing and re-corrupts what the snap just fixed.
@@ -108,17 +133,21 @@ def align_span(start: float, end: float, words: list[Word], text: str) -> tuple[
     # actually starts.
     rebuilt = join_words(kept)
     if not rebuilt:
-        return start, end, text
+        return start, end, text, []
     # Rebuilding is only warranted when the kept words are not the words the
     # text already carries. On the committed corpus that is three candidates
     # in 27 — two that closed inside a word the text kept, and one that opened
     # on a word the text omitted. A fourth differed only in where a lone
     # punctuation token picked up its space, which is a gluing artefact rather
     # than a content change, so its text is left as the segment produced it.
+    # The bounds are left untouched for the same reason, and the returned word
+    # list is the words inside *those* bounds rather than the snapped ones.
     key = lambda s: [t.strip(",.!?;:\"'") for t in s.split()]
     if key(rebuilt) == key(text):
-        return start, end, text
-    return a, b, rebuilt
+        return start, end, text, \
+            [w for w in words if w.start >= start - _BOUND_EPS
+             and w.end <= end + _BOUND_EPS]
+    return a, b, rebuilt, kept
 
 
 def retention_intervals(c: Candidate, min_pause: float = 0.70, keep_pause: float = 0.18, keep_edge: float = 0.06) -> list[tuple[float, float]]:

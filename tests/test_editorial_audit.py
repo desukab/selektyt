@@ -31,6 +31,7 @@ shape, and without the transcript spans it fails.
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -42,11 +43,13 @@ if str(TOOLS) not in sys.path:
 
 from tools.editorial_audit import (  # noqa: E402
     _load,
+    _terminal_punct,
     TOLERANCE_S,
     check_caption_text_is_transcript_text,
     check_cues_fit_the_render,
     check_cuts_land_between_words,
     check_cuts_respect_sentences,
+    check_edges_respect_sentences,
     check_last_word_is_not_shaved,
     check_no_duplicate_sentences,
 )
@@ -229,6 +232,244 @@ def test_one_word_cannot_be_mid_sentence():
     ok, bad = check_cuts_respect_sentences(
         _cand("hello", [(0.0, 0.5, "hello")]), [(0.0, 0.5)])
     assert ok and not bad
+
+
+# --- edges that drop speech ------------------------------------------------
+
+
+def _seg(start: float, words: list[tuple[float, float, str]]) -> tuple[
+        tuple[float, float], list[tuple[float, float, str]]]:
+    """An utterance span and its own word list, as the audit builds them.
+
+    ``check_edges_respect_sentences`` reads the transcript's words, not the
+    candidate's: a clip that begins partway into an utterance keeps only its
+    own half of that speech, so the words it dropped live in the transcript and
+    nowhere in the candidate. This helper keeps the two lists it joins parallel.
+    """
+    return (start, words[-1][1]), words
+
+
+def test_a_clip_opening_mid_sentence_is_flagged():
+    """The pentagon-esper-briefing clip 04 shape, distilled.
+
+    The utterance is 'You mentioned the oil fields and securing the oil fields in
+    the east of Syria.' and the clip opens on ' Syria.', dropping the 12 words
+    before it. Nothing in the candidate says so: its word list starts at
+    ' Syria.' and looks complete.
+    """
+    utterance = _seg(0.0, [
+        (0.00, 0.20, "You"), (0.20, 0.40, "mentioned"),
+        (0.40, 0.60, "the"), (0.60, 0.80, "oil"),
+        (2.20, 2.40, "east"), (2.40, 2.60, "of"),
+        (2.60, 2.80, "Syria."),
+    ])
+    cand = _cand("Syria.", [(2.60, 2.80, "Syria.")])
+
+    ok, _review, bad = check_edges_respect_sentences(
+        cand, [utterance[0]], [utterance[1]])
+    assert not ok, "a clip opening mid-sentence was not reported"
+    assert any("opens mid-sentence" in b and "Syria." in b for b in bad), bad
+
+
+def test_a_clip_opening_on_a_completed_sentence_is_clean():
+    """The four other clips that open mid-utterance, and why they are not defects.
+
+    Dropping the tail of a finished sentence is an edit, not a hole: the speech
+    that remains starts a new one. The discriminator is the terminal punctuation
+    of what was dropped, not the utterance boundary the clip opened inside.
+    """
+    utterance = _seg(0.0, [
+        (0.00, 0.20, "it"), (0.20, 0.40, "rained."),
+        (0.40, 0.60, "Then"), (0.60, 0.80, "we"),
+        (0.80, 1.00, "left."),
+    ])
+    cand = _cand("Then we left.", [(0.40, 0.60, "Then"),
+                                   (0.60, 0.80, "we"), (0.80, 1.00, "left.")])
+
+    ok, review, bad = check_edges_respect_sentences(
+        cand, [utterance[0]], [utterance[1]])
+    assert ok and not review, f"opening after a sentence end was reported: {bad}"
+
+
+def test_a_clip_opening_its_own_utterance_is_clean():
+    """Dropping nothing means the boundary is the utterance's own start."""
+    utterance = _seg(0.0, [(0.00, 0.20, "hello"), (0.20, 0.40, "world.")])
+    cand = _cand("hello world.", [(0.00, 0.20, "hello"), (0.20, 0.40, "world.")])
+
+    ok, review, bad = check_edges_respect_sentences(
+        cand, [utterance[0]], [utterance[1]])
+    assert ok and not review, f"an utterance's own opening was reported: {bad}"
+
+
+def test_a_clip_closing_mid_sentence_is_flagged():
+    """The royal-society-cloke clip 01 shape, distilled.
+
+    The transcript is '...a day in advance. Somebody says, you know, actually
+    tomorrow' and the clip ends on 'Somebody'. The sentence it started goes out
+    under the cut, and again nothing in the candidate says so: 'Somebody' is its
+    last kept word and looks like an end.
+    """
+    utterance = _seg(5.0, [
+        (5.00, 5.20, "day"), (5.20, 5.40, "in"),
+        (5.40, 5.60, "advance."), (5.60, 5.80, "Somebody"),
+        (5.80, 6.00, "says,"), (6.00, 6.20, "you"),
+        (6.20, 6.40, "know,"), (6.40, 6.60, "actually"),
+        (6.60, 6.80, "tomorrow"),
+    ])
+    cand = _cand("Somebody", [(5.60, 5.80, "Somebody")])
+
+    ok, _review, bad = check_edges_respect_sentences(
+        cand, [utterance[0]], [utterance[1]])
+    assert not ok, "a clip closing mid-sentence was not reported"
+    assert any("closes mid-sentence" in b and "Somebody" in b for b in bad), bad
+
+
+def test_the_close_edge_uses_the_utterance_the_clip_ends_in():
+    """Why the probes that found the open defect missed the close one.
+
+    The real clip opens in segment 178.7 s and closes in segment 232.9 s, so the
+    words that follow its last kept word are in a *different* utterance from the
+    one it opened in. Keying the close edge on the first utterance puts them out
+    of reach and the defect reads as clean. This is the shape that hides it.
+    """
+    a = _seg(0.0, [
+        (0.00, 0.20, "it"), (0.20, 0.40, "rained."),
+        (0.40, 0.60, "then"), (0.60, 0.80, "we"), (0.80, 1.00, "left."),
+    ])
+    b = _seg(5.0, [
+        (5.00, 5.20, "day"), (5.20, 5.40, "in"),
+        (5.40, 5.60, "advance."), (5.60, 5.80, "Somebody"),
+        (5.80, 6.00, "says,"), (6.00, 6.20, "you"),
+        (6.20, 6.40, "know,"), (6.40, 6.60, "actually"),
+        (6.60, 6.80, "tomorrow"),
+    ])
+    # Opens in the first utterance, closes in the second.
+    cand = _cand("then Somebody", [(0.40, 0.60, "then"), (5.60, 5.80, "Somebody")])
+
+    ok, _review, bad = check_edges_respect_sentences(
+        cand, [a[0], b[0]], [a[1], b[1]])
+    assert not ok, "the close edge read the utterance the clip opened in, not ended in"
+    assert any("closes mid-sentence" in b for b in bad), bad
+
+
+def test_an_utterance_with_no_sentence_marks_is_review_not_fail():
+    """34-47% of the English segments on this corpus carry no terminal
+    punctuation at all, so on such a segment every edge is consistent with
+    mid-sentence and none is distinguishable from a clean one.
+
+    That is unmeasured, not failed: the finding goes to review so the exit code
+    still fails on it, and no unearned PASS is recorded. Guessing would either
+    flag every clip cut from an unpunctuated segment or excuse every one.
+    """
+    utterance = _seg(0.0, [(0.00, 0.20, "we"), (0.20, 0.40, "stay"),
+                           (0.40, 0.60, "in"), (0.60, 0.80, "contact")])
+    cand = _cand("in contact", [(0.40, 0.60, "in"), (0.60, 0.80, "contact")])
+
+    ok, review, bad = check_edges_respect_sentences(
+        cand, [utterance[0]], [utterance[1]])
+    assert ok, "an undecidable edge was reported as a hard failure"
+    assert review, "an undecidable edge did not go to human review"
+    assert any("undecidable" in b for b in bad), bad
+
+
+def test_a_hard_failure_and_an_undecidable_edge_are_reported_separately():
+    """One real defect and one unmeasurable edge on the same clip.
+
+    The review flag must not swallow the hard failure, and the hard failure must
+    not retire the edge: they are different kinds of statement about the clip.
+    """
+    a = _seg(0.0, [(0.00, 0.20, "we"), (0.20, 0.40, "stay")])          # unpunctuated
+    b = _seg(5.0, [(5.00, 5.20, "day"), (5.20, 5.40, "in"),
+                   (5.40, 5.60, "advance."), (5.60, 5.80, "Somebody"),
+                   (5.80, 6.00, "says,")])                             # punctuated
+    cand = _cand("stay Somebody", [(0.20, 0.40, "stay"), (5.60, 5.80, "Somebody")])
+
+    ok, review, bad = check_edges_respect_sentences(
+        cand, [a[0], b[0]], [a[1], b[1]])
+    assert not ok, "the mid-sentence close was not reported"
+    assert not review, "a clip with a hard failure was also marked for review"
+    assert any("closes mid-sentence" in d for d in bad), bad
+
+
+def test_both_edges_undecidable_are_counted():
+    utterance = _seg(0.0, [(0.00, 0.20, "we"), (0.20, 0.40, "stay"),
+                           (0.40, 0.60, "in"), (0.60, 0.80, "contact")])
+    # Drops words at both ends, on an utterance that cannot decide either.
+    cand = _cand("stay in", [(0.20, 0.40, "stay"), (0.40, 0.60, "in")])
+
+    ok, _review, bad = check_edges_respect_sentences(
+        cand, [utterance[0]], [utterance[1]])
+    assert ok
+    assert any(b.startswith("2 edges undecidable") for b in bad), bad
+
+
+def test_no_utterances_is_not_a_failure():
+    """A project whose transcript has no segments cannot be judged, and saying
+    so would be a finding about the transcript rather than about the clips."""
+    ok, review, bad = check_edges_respect_sentences(
+        _cand("hello", [(0.0, 0.5, "hello")]), [], [])
+    assert ok and not review and not bad
+
+
+def test_misaligned_utterance_words_is_not_a_failure():
+    """The two lists are parallel by index; a caller that breaks that pairing
+    must not turn a bookkeeping error into a shipped-clip verdict."""
+    ok, review, bad = check_edges_respect_sentences(
+        _cand("hello", [(0.0, 0.5, "hello")]), [(0.0, 1.0)], [])
+    assert ok and not review and not bad
+
+
+def test_a_clip_with_no_words_is_not_a_failure():
+    ok, review, bad = check_edges_respect_sentences(
+        {"text": "", "words": []}, [(0.0, 1.0)], [[(0.0, 0.5, "hello")]])
+    assert ok and not review and not bad
+
+
+def test_a_word_outside_every_utterance_is_skipped_not_reported():
+    """A clip in the gaps between transcript segments has no utterance to judge
+    it against — the same unmeasured case, reached from a different direction."""
+    utterance = _seg(100.0, [(100.00, 100.20, "far"), (100.20, 100.40, "away.")])
+    cand = _cand("hello world", [(0.0, 0.5, "hello"), (0.5, 1.0, "world.")])
+
+    ok, review, bad = check_edges_respect_sentences(
+        cand, [utterance[0]], [utterance[1]])
+    assert ok and not review and not bad, (
+        "a clip outside every utterance was reported: " + str(bad))
+
+
+def test_sentence_terminators_are_recognised_outside_english():
+    """The corpus already carries Hungarian, Hindi and Telugu. A check that only
+    matched '.' would be unable to decide any edge of a Devanagari segment that
+    ends its sentences with the danda, and would send every clip from one to
+    review."""
+    assert _terminal_punct("rained.")
+    assert _terminal_punct("rained?")
+    assert _terminal_punct("बारिश।")
+    assert _terminal_punct("雨。")
+    assert _terminal_punct('quoted."')
+    assert not _terminal_punct("rained")
+    assert not _terminal_punct("rained,")
+    assert not _terminal_punct("")
+
+
+def test_a_devanagari_clip_opening_after_a_danda_is_clean():
+    """The same discriminator, on a script whose terminator is not the period.
+
+    Without the danda in the recognised set this clip is indistinguishable from
+    one that opens mid-sentence; with it, the dropped text closes a sentence.
+    """
+    utterance = _seg(0.0, [
+        (0.00, 0.20, "बारिश"), (0.20, 0.40, "हुई।"),
+        (0.40, 0.60, "फिर"), (0.60, 0.80, "हम"),
+        (0.80, 1.00, "गए।"),
+    ])
+    cand = _cand("फिर हम गए।", [(0.40, 0.60, "फिर"),
+                                 (0.60, 0.80, "हम"), (0.80, 1.00, "गए।")])
+
+    ok, review, bad = check_edges_respect_sentences(
+        cand, [utterance[0]], [utterance[1]])
+    assert ok and not review, (
+        f"a clip opening after a Devanagari sentence end was reported: {bad}")
 
 
 # --- final word ------------------------------------------------------------
@@ -422,67 +663,103 @@ def test_the_audit_verdict_on_the_committed_corpus_is_the_recorded_baseline():
     """The audit's verdict over the eleven committed sources, pinned.
 
     This tool's purpose is to fail CI on a clip that is not publishable, so a
-    corpus leg cannot assert that everything passes: four sources were
-    suppressed by the VAD gate before selection ran and two carry a
-    silence-share finding whose acoustic measurement contradicts dead air —
-    which the tool reports as a hard failure on purpose, because "not digital
-    silence" does not establish that the material belongs in the clip and a
-    person still has to listen.
+    corpus leg cannot assert that everything passes. Five sources were
+    suppressed by the VAD gate before selection ran; two clips are genuinely
+    cut mid-sentence; and ten clips sit on transcripts too unpunctuated for the
+    edge check to decide, which the audit reports as awaiting review.
 
-    What the pin catches instead is the verdict *changing*: a check that
-    silently inverts, a new false positive, or an emitted tree that shifts a
-    clip from clean to failing. A change in either direction has to update
-    this table and say why, which is the property that kept the audit honest.
+    The verdict has three states, not two, so the pin records both: which clips
+    *fail* (a defect in the shipped artifact) and which clips are *under review*
+    (unmeasured, and still a non-zero exit code). Both sets are matched exactly,
+    because a check that silently inverts reads as a clean clip becoming a
+    failure or the reverse, and either is a change a reader of the baseline has
+    to be told about. A detail that gains a figure is still the same finding, so
+    reasons match by prefix.
 
-    Read alongside ``test_every_word_of_the_committed_corpus_lands_in_exactly_one_utterance``:
-    the mid-sentence check used to report failures on five of these seven
-    projects, and every one was a pause removed between two transcript-adjacent
-    words. None are reported now, and the ones that remain are named below.
+    The two failures are the edge check's: pentagon-esper-briefing clip 04 opens
+    on 'Syria.' having dropped the twelve words before it, and
+    royal-society-cloke clip 01 ends on 'Somebody' with 'says, you know,
+    actually tomorrow' cut away under it. Neither is visible to
+    ``check_cuts_respect_sentences``, which can only compare words that survive
+    the cut. The review set is a property of the transcripts, not of the clips:
+    34-47% of the English segments carry no terminal punctuation, and on such a
+    segment every edge is consistent with mid-sentence.
     """
     from tools.editorial_audit import audit
 
     runs = sorted((TOOLS.parent / "corpus").glob("*_run/project"))
     assert runs, "no corpus runs found; the test below would pass vacuously"
 
-    # The recorded verdict: which projects are clean and which are not, with the
-    # reason the failing check states. Reasons are matched by prefix so a detail
-    # that gains a figure still pins the same finding.
-    EXPECTED_CLEAN = {
-        "emwcon-panel-2018_run",
-        "hadhazy-protest_run",
-        "ooi-vertical_run",
-        "pentagon-esper-briefing_run",
-        "royal-society-cloke_run",
-    }
-    EXPECTED_FAILURES = {
-        "alice-1903_run": "no selections.json",
-        "hindi-baiga-interview_run": "no selections.json",
-        "nasa360-ep5_run": "silence share",
-        "roman-portrait-trailer_run": "no selections.json",
-        "telugu-launch_run": "no selections.json",
-        "telugu-tutorial_run": "silence share",
+    # The recorded verdict. ``fail`` is (finding name, reason prefix) for every
+    # hard failure; ``review`` is the set of clips the audit could not decide and
+    # sent to a human instead. Both are exhaustive: a clip may appear in either
+    # but a change to either set fails this test.
+    EXPECTED = {
+        "alice-1903_run": {
+            "fail": [("project", "no selections.json")],
+        },
+        "emwcon-panel-2018_run": {
+            "review": {"clip 02", "clip 03", "clip 04"},
+        },
+        "hadhazy-protest_run": {
+            "review": {"clip 01", "clip 02"},
+        },
+        "hindi-baiga-interview_run": {
+            "fail": [("project", "no selections.json")],
+        },
+        "nasa360-ep5_run": {
+            "review": {"clip 03", "clip 05"},
+        },
+        "ooi-vertical_run": {
+            "review": {"clip 02"},
+        },
+        "pentagon-esper-briefing_run": {
+            "fail": [("clip 04", "opens mid-sentence")],
+            "review": {"clip 03"},
+        },
+        "roman-portrait-trailer_run": {
+            "fail": [("project", "no selections.json")],
+        },
+        "royal-society-cloke_run": {
+            "fail": [("clip 01", "closes mid-sentence")],
+            "review": {"clip 04"},
+        },
+        "telugu-launch_run": {
+            "fail": [("project", "no selections.json")],
+        },
+        "telugu-tutorial_run": {
+            "review": {"clip 01"},
+        },
     }
 
     seen = {}
     for project in runs:
-        ok, rep = audit(project)
-        hard = [f"{name}: {detail}" for name, cok, detail in rep["findings"] if not cok]
-        seen[project.parent.name] = (ok, hard)
+        _ok, rep = audit(project)
+        review = set(rep.get("review") or [])
+        fail = [(name, detail) for name, cok, detail in rep["findings"]
+                if not cok and name not in review]
+        seen[project.parent.name] = {"fail": fail, "review": review}
 
     unexpected = []
-    for name, (ok, hard) in sorted(seen.items()):
-        if name in EXPECTED_CLEAN:
-            if not ok:
-                unexpected.append(f"{name}: expected clean, got {hard}")
-        elif name in EXPECTED_FAILURES:
-            want = EXPECTED_FAILURES[name]
-            if ok:
-                unexpected.append(f"{name}: expected a {want!r} failure, got clean")
-            elif not any(want in h for h in hard):
-                unexpected.append(f"{name}: expected a {want!r} failure, got {hard}")
-        else:
+    for name, got in sorted(seen.items()):
+        want = EXPECTED.get(name)
+        if want is None:
             unexpected.append(f"{name}: no recorded verdict for this project")
-    for name in sorted(set(EXPECTED_CLEAN) | set(EXPECTED_FAILURES)):
+            continue
+        for finding, reason in want.get("fail", []):
+            if not any(f == finding and d.startswith(reason) for f, d in got["fail"]):
+                unexpected.append(
+                    f"{name}: expected {finding} to fail with {reason!r}, "
+                    f"got {got['fail']}")
+        if len(want.get("fail", [])) != len(got["fail"]):
+            unexpected.append(
+                f"{name}: expected {len(want.get('fail', []))} hard failure(s), "
+                f"got {len(got['fail'])}: {got['fail']}")
+        if got["review"] != want.get("review", set()):
+            unexpected.append(
+                f"{name}: review set changed; expected "
+                f"{sorted(want.get('review', set()))}, got {sorted(got['review'])}")
+    for name in EXPECTED:
         if name not in seen:
             unexpected.append(f"{name}: recorded but not present in the corpus")
     assert not unexpected, (
@@ -592,6 +869,157 @@ def test_the_corpus_candidate_words_are_already_the_kept_set():
         f"{outside} of {total} candidate words fall outside every retention "
         "interval; the corpus now carries excised words, so the utterance "
         "source is observable through audit() and this test's claim is stale")
+
+
+# --- the corpus sweep and its comparison ---------------------------------
+
+
+CORPUS = TOOLS.parent / "corpus"
+BASELINE_SWEEP = CORPUS / "eval" / "audit-baseline-2026-09-27.json"
+
+
+def test_the_corpus_sweep_counts_every_run_and_every_clip():
+    """The sweep is what makes 'is this SeleKyT better than that one' answerable,
+    so its arithmetic is pinned: it is the figure a comparison is built on.
+
+    Eleven committed runs; six produced a timeline and five were stopped by the
+    VAD gate before selection ran, which the sweep records as project-level
+    failures rather than as clean runs they never had. Of the 27 clips those six
+    shipped, 14 are clean, 11 sit on transcripts the edge check cannot decide,
+    and 2 are cut mid-sentence.
+    """
+    from tools.editorial_audit import sweep
+
+    record = sweep(CORPUS)
+    assert record["totals"] == {"runs": 11, "clean": 14, "review": 11, "fail": 6}
+    sources = {run["source"] for run in record["runs"]}
+    assert len(sources) == 11, "a run was audited twice or missed"
+    # A clean clip is counted but not recorded: the comparison treats an absent
+    # entry as clean, so keeping one would make the same state read two ways.
+    assert all(run["clips"] for run in record["runs"]), (
+        "a run with no recorded clips should have been counted as all-clean, "
+        "which only happens when the run produced no timeline at all")
+
+
+def test_a_clean_clip_and_a_clean_run_read_the_same_way_to_a_comparison():
+    """An absent entry and an explicit clean one must not differ, or a clip that
+    became clean would be indistinguishable from one the sweep lost."""
+    from tools.editorial_audit import compare_sweeps
+
+    before = {"runs": [{"source": "a_run", "clips": [
+        {"clip": "clip 01", "state": "fail", "reason": "mid-word cut"}]}]}
+    after = {"runs": [{"source": "a_run", "clips": []}]}
+    changes = compare_sweeps(before, after)
+    assert len(changes) == 1
+    assert changes[0]["kind"] == "improvement"
+    assert changes[0]["before"] == "fail" and changes[0]["after"] == "clean"
+
+
+def test_a_sweep_diff_classifies_each_kind_of_change():
+    """Five ways a corpus can move, and the direction each one reads as.
+
+    ``regression`` is a clip that got worse, ``improvement`` one that got better,
+    and ``changed`` one that stayed broken in a different way — a check that
+    swapped one defect for another is not a wash, so it is reported rather than
+    cancelled. ``added`` and ``removed`` catch a run the comparison would
+    otherwise score as an improvement it did not earn.
+    """
+    from tools.editorial_audit import compare_sweeps
+
+    before = {"runs": [
+        {"source": "regression_run", "clips": [
+            {"clip": "clip 01", "state": "clean", "reason": "clean"}]},
+        {"source": "improvement_run", "clips": [
+            {"clip": "clip 01", "state": "fail", "reason": "mid-word cut"}]},
+        {"source": "changed_run", "clips": [
+            {"clip": "clip 01", "state": "fail", "reason": "mid-word cut"}]},
+        {"source": "gone_run", "clips": [
+            {"clip": "clip 01", "state": "review", "reason": "undecidable"}]},
+    ]}
+    after = {"runs": [
+        {"source": "regression_run", "clips": [
+            {"clip": "clip 01", "state": "fail", "reason": "mid-sentence"}]},
+        {"source": "improvement_run", "clips": []},
+        {"source": "changed_run", "clips": [
+            {"clip": "clip 01", "state": "fail", "reason": "silence"}]},
+        {"source": "new_run", "clips": []},
+    ]}
+    changes = compare_sweeps(before, after)
+
+    by_kind = {}
+    for c in changes:
+        by_kind.setdefault(c["kind"], []).append(c["source"])
+    assert set(by_kind) == {"regression", "improvement", "changed",
+                            "added", "removed"}, by_kind
+    assert by_kind["regression"] == ["regression_run"]
+    assert by_kind["improvement"] == ["improvement_run"]
+    assert by_kind["changed"] == ["changed_run"]
+    assert by_kind["removed"] == ["gone_run"]
+    assert by_kind["added"] == ["new_run"]
+    # Regressions sort first, so a reader who only sees the head of the list
+    # sees the worst of it.
+    assert changes[0]["kind"] == "regression"
+
+
+def test_a_review_state_does_not_read_as_a_failure_or_a_pass():
+    """The three states are ordered, and the order is what classifies a move.
+
+    clean < review < fail: a clip that went from failing to undecidable is an
+    improvement, because a person can still save it, and one that went from
+    undecidable to failing is a regression. Folding review into either would
+    hide exactly the move a sweep exists to catch.
+    """
+    from tools.editorial_audit import compare_sweeps
+
+    to_review = compare_sweeps(
+        {"runs": [{"source": "r", "clips": [
+            {"clip": "clip 01", "state": "fail", "reason": "x"}]}]},
+        {"runs": [{"source": "r", "clips": [
+            {"clip": "clip 01", "state": "review", "reason": "x"}]}]})
+    assert to_review[0]["kind"] == "improvement", (
+        "failing to undecidable is an improvement, not a wash")
+
+    from_review = compare_sweeps(
+        {"runs": [{"source": "r", "clips": [
+            {"clip": "clip 01", "state": "review", "reason": "x"}]}]},
+        {"runs": [{"source": "r", "clips": [
+            {"clip": "clip 01", "state": "fail", "reason": "x"}]}]})
+    assert from_review[0]["kind"] == "regression", (
+        "undecidable to failing is a regression")
+
+
+def test_a_sweep_compared_against_itself_reports_nothing():
+    """The null comparison: an unchanged corpus is not a wall of unchanged
+    lines, and it exits zero so a CI leg can tell signal from noise."""
+    from tools.editorial_audit import compare_sweeps, sweep
+
+    record = sweep(CORPUS)
+    assert compare_sweeps(record, record) == [], (
+        "an unchanged corpus produced a diff")
+
+
+def test_the_recorded_baseline_sweep_is_the_current_corpus():
+    """``--compare`` is only as good as the baseline it reads, so the committed
+    record is pinned against a fresh sweep of the same corpus.
+
+    This is the drift guard. A change to SeleKyT that moves any clip changes the
+    sweep, this test fails, and the baseline has to be re-recorded with
+    ``--corpus --baseline`` — after the diff it represents has been read and
+    explained, which is the point of recording it.
+    """
+    from tools.editorial_audit import compare_sweeps, sweep
+
+    if not BASELINE_SWEEP.is_file():
+        pytest.skip("the recorded baseline sweep is not in this checkout")
+    recorded = json.loads(BASELINE_SWEEP.read_text(encoding="utf-8"))
+    changes = compare_sweeps(recorded, sweep(CORPUS))
+    assert changes == [], (
+        "the committed corpus no longer matches the recorded baseline sweep; "
+        "read the diff, then re-record with "
+        "`python tools/editorial_audit.py corpus --corpus --baseline "
+        f"{BASELINE_SWEEP}`:\n" + "\n".join(
+            f"  {c['kind']} {c['source']} {c['clip']}: "
+            f"{c['before']} -> {c['after']}" for c in changes))
 
 
 # --- the caption parser the audit reads through ----------------------------

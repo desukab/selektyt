@@ -37,10 +37,23 @@ What it measures, and why each one is falsifiable rather than impressionistic:
   - duplication       the same sentence shipped in two clips, which is what a
                        reordering editor produces when its story units overlap
   - selection size    zero selections is a hard failure with a diagnostic
+  - orphaned edge     a clip whose first or last kept word sits inside a
+                      sentence — measured against the transcript words the
+                      boundary *dropped*, which the selection's own word list
+                      cannot show because it holds only the words the clip kept
 
 Every check returns (ok, detail). The exit code is nonzero if any hard check
 fails, so this composes with CI rather than being a report a human has to
-remember to read.
+remember to read. A check that cannot decide — a transcript too unpunctuated to
+mark where its sentences end — is reported as REVIEW, and REVIEW still fails the
+exit code: a clip the tool could not measure is not a clip it has passed.
+
+Sweeping the corpus, and comparing two sweeps, answers the question the audit
+by itself cannot: whether a change to SeleKyT made its output better or worse.
+``--corpus`` audits every committed run and ``--compare`` diffs the result
+against a sweep recorded with ``--baseline``, classifying each changed clip as
+an improvement or a regression rather than leaving a reader to eyeball two
+reports.
 """
 from __future__ import annotations
 
@@ -233,6 +246,139 @@ def check_cuts_respect_sentences(cand: dict,
                 continue
             bad.append(f"{edge} {t:.2f}s splits '{spans[lo][2]}'/'{spans[hi][2]}'")
     return not bad, bad
+
+
+def _terminal_punct(text: str) -> bool:
+    """The word/string closes a sentence in a script the transcript punctuates.
+
+    Latin, Devanagari and CJK sentence terminators are all covered so the check
+    is not English-only on a corpus that already carries Hungarian and Telugu.
+    """
+    return bool(re.search(r"[.!?։।。？][\"')\]]*\s*$", text.strip()))
+
+
+def check_edges_respect_sentences(
+    cand: dict,
+    utterances: list[tuple[float, float]],
+    utterance_words: list[list[tuple[float, float, str]]],
+) -> tuple[bool, bool, list[str]]:
+    """A clip's first and last kept word must not sit inside a sentence.
+
+    Returns ``(hard_ok, needs_review, detail)``. A mid-sentence edge is a hard
+    failure — it is a fact about the shipped artifact. An edge the transcript
+    cannot decide is not: it is unmeasured, and it goes to human review like the
+    silence check's ambiguous readings do, so the exit code still fails on it
+    instead of recording a pass nothing supports.
+
+    ``check_cuts_respect_sentences`` asks whether a boundary *loses a word the
+    clip kept*: it compares the words either side of a cut that both survive,
+    so a clip that simply begins partway into an utterance leaves it nothing to
+    compare — the boundary has no word on its other side. That is the gap its
+    docstring states plainly, and this check closes it by looking outward
+    instead of inward: at the transcript words the clip *dropped*.
+
+    For each edge it finds the utterance containing the clip's first or last
+    kept word, then asks whether the speech on the far side of the cut finishes
+    the sentence. An opening is clean when the speech before it ends a
+    sentence; a closing is clean when the clip's own last word does. The
+    failure is an orphan — pentagon-esper-briefing clip 04 opens on 'Syria.'
+    after dropping 'You mentioned the oil fields and securing the oil fields in
+    the east of', so the shipped clip begins with the last word of a sentence
+    it cut in half. royal-society-cloke clip 01 fails the other edge, ending on
+    'Somebody' and dropping 'says, you know, actually tomorrow'. Both are
+    defects no other check in this file reports.
+
+    This check looks past the clip's own bounds, so it sees the close edge that
+    a clip spanning into the following utterance moves out of reach: the words
+    that continue the sentence live in the next segment, not the one the clip
+    opened in.
+
+    ``utterances`` and ``utterance_words`` are parallel and share an index;
+    ``audit`` builds them together. Words are joined by time, which is exact on
+    this corpus.
+
+    Honest limits. The decision needs sentence punctuation, and 34-47% of the
+    segments on the English sources of this corpus carry none at all — the
+    transcript does not mark where its own sentences end. When the utterance an
+    edge sits in has no terminal punctuation anywhere, the question has no
+    answer on that transcript, because *every* edge in it is consistent with
+    mid-sentence and none is distinguishable from a clean one. That edge is
+    reported as undecidable rather than guessed at, and it is counted so a run
+    whose transcript is unpunctuated reads as unmeasured rather than as
+    passing. The proportion is a property of the ASR output, not of the clips:
+    on this corpus it follows the language model that transcribed the source,
+    and a re-transcription is what would change it.
+    """
+    spans = _word_spans(cand)
+    if not spans or not utterances or len(utterance_words) != len(utterances):
+        return True, False, []
+
+    import bisect
+    starts = [u[0] for u in utterances]
+
+    def utterance_of(t: float) -> int:
+        i = bisect.bisect_right(starts, t) - 1
+        return i if 0 <= i < len(utterances) else -1
+
+    def sentence_ends_before(idx: int, t: float) -> bool | None:
+        """Does speech before ``t`` in utterance ``idx`` close a sentence?
+
+        ``None`` means the utterance carries no terminal punctuation at all, so
+        the question has no answer on this transcript.
+        """
+        ws = utterance_words[idx]
+        if not any(_terminal_punct(w[2]) for w in ws):
+            return None
+        dropped = " ".join(w[2] for w in ws if w[1] <= t + 0.05)
+        if not dropped.strip():
+            return True  # the clip opens the utterance itself
+        return _terminal_punct(dropped)
+
+    bad: list[str] = []
+    notes: list[str] = []
+    undecidable = 0
+
+    first = spans[0]
+    i = utterance_of(first[0])
+    if i >= 0:
+        verdict = sentence_ends_before(i, first[0])
+        if verdict is None:
+            undecidable += 1
+        elif not verdict:
+            pre = " ".join(w[2] for w in utterance_words[i] if w[1] <= first[0] + 0.05).strip()
+            bad.append(
+                f"opens mid-sentence: the clip's first word '{first[2]}' follows "
+                f"'{pre[-72:]}' with no sentence break between them"
+            )
+
+    last = spans[-1]
+    j = utterance_of(last[0])
+    if j >= 0:
+        ws = utterance_words[j]
+        after = [w for w in ws if w[0] >= last[1] - 0.05]
+        if after:
+            if not any(_terminal_punct(w[2]) for w in ws):
+                undecidable += 1
+            elif not _terminal_punct(last[2]):
+                post = " ".join(w[2] for w in after).strip()
+                bad.append(
+                    f"closes mid-sentence: the clip's last word '{last[2]}' is "
+                    f"followed by '{post[:72:]}' with no sentence break"
+                )
+
+    # An undecidable edge is unmeasured, not clean: it goes to review so the
+    # exit code still fails on it, and the count is reported so the proportion
+    # is visible as a property of the transcript rather than of the clips. The
+    # note is kept out of ``bad`` — a hard failure says the shipped clip is
+    # wrong, and this one says the transcript cannot say.
+    review = bool(undecidable) and not bad
+    if undecidable:
+        edges = "edge" if undecidable == 1 else "edges"
+        notes.append(
+            f"{undecidable} {edges} undecidable — the transcript marks no "
+            f"sentence end in the utterance(s) involved"
+        )
+    return not bad, review, bad + notes
 
 
 def check_last_word_is_not_shaved(cand: dict, intervals: list[tuple[float, float]]) -> tuple[bool, list[str]]:
@@ -582,13 +728,31 @@ def audit(project: Path) -> tuple[bool, dict]:
     # which merges under-punctuated utterances and reports cuts that are clean.
     transcript = _load(project / "transcript.json")
     utterances: list[tuple[float, float]] = []
+    # Words of each utterance, parallel to ``utterances`` by index. The edge
+    # check looks at the speech a boundary cut away, which the selection's own
+    # word list cannot show it: those words are the ones the clip kept.
+    utterance_words: list[list[tuple[float, float, str]]] = []
     if transcript is not None:
         for seg in transcript.get("segments") or []:
             try:
                 utterances.append((float(seg["start"]), float(seg["end"])))
             except (KeyError, TypeError, ValueError):
                 continue
+            ws = []
+            for w in seg.get("words") or []:
+                if not isinstance(w, dict):
+                    continue
+                try:
+                    ws.append((float(w["start"]), float(w["end"]), w.get("text", "")))
+                except (KeyError, TypeError, ValueError):
+                    continue
+            utterance_words.append(ws)
         utterances.sort()
+        # Keep the parallel lists aligned through the same sort, by the
+        # utterance start each pair shares.
+        order = sorted(range(len(utterances)), key=lambda i: utterances[i])
+        utterances = [utterances[i] for i in order]
+        utterance_words = [utterance_words[i] for i in order]
 
     ok_all = True
     review: list[str] = []
@@ -612,6 +776,11 @@ def audit(project: Path) -> tuple[bool, dict]:
         detail += d
         o, d = check_cuts_respect_sentences(cand, intervals, utterances)
         ok &= o
+        detail += d
+        o, needs_review, d = check_edges_respect_sentences(cand, utterances, utterance_words)
+        ok &= o
+        if needs_review:
+            review.append(name)
         detail += d
         o, d = check_last_word_is_not_shaved(cand, intervals)
         ok &= o
@@ -666,14 +835,162 @@ def _probe_duration(mp4: Path) -> float:
         return 0.0
 
 
+def _state_of(name: str, cok: bool, review: set[str]) -> str:
+    if not cok and name not in review:
+        return "fail"
+    if name in review:
+        return "review"
+    return "clean"
+
+
+def sweep(root: Path) -> dict:
+    """Audit every ``*_run/project`` under ``root``, as one comparable record.
+
+    A single project's audit says whether that run's clips are publishable. The
+    question a change to SeleKyT actually asks is whether the corpus got better
+    or worse, which needs every run scored the same way and the states laid out
+    side by side. REVIEW is kept distinct from FAIL because a clip that became
+    undecidable is not a clip that became wrong — the two call for different
+    responses, and folding them together would hide exactly the regression a
+    sweep is for.
+    """
+    runs = sorted(p for p in root.glob("*_run/project") if p.is_dir())
+    record = {"runs": []}
+    clean_clips = 0
+    for project in runs:
+        _ok, rep = audit(project)
+        review = set(rep.get("review") or [])
+        clips = []
+        for name, cok, detail in rep["findings"]:
+            state = _state_of(name, cok, review)
+            if state == "clean":
+                # A clean clip carries no information a diff can use, and an
+                # absent entry reads as clean to the comparison — so it is
+                # counted and then dropped.
+                if name != "cross-clip":
+                    clean_clips += 1
+                continue
+            clips.append({"clip": name, "state": state,
+                          # The detail is truncated so a sweep stays small, but
+                          # the reason prefix is what a change is classified on.
+                          "reason": detail.split(";")[0].strip()[:160]})
+        record["runs"].append({"source": project.parent.name, "clips": clips})
+    record["totals"] = _sweep_totals(record["runs"], clean_clips)
+    return record
+
+
+def _sweep_totals(runs: list[dict], clean_clips: int = 0) -> dict:
+    totals = {"runs": len(runs), "clean": clean_clips, "review": 0, "fail": 0}
+    for run in runs:
+        for clip in run["clips"]:
+            if clip["clip"] == "cross-clip":
+                continue
+            totals[clip["state"]] += 1
+    return totals
+
+
+def compare_sweeps(before: dict, after: dict) -> list[dict]:
+    """Classify every clip whose state or reason moved between two sweeps.
+
+    Direction matters. A clip that went from failing to clean is an improvement;
+    one that went the other way is a regression; one that failed both ways with
+    a different reason changed shape and a reader has to look at it, because a
+    check that swapped one defect for another is not a wash. Sources present in
+    only one sweep are reported too — a corpus leg that quietly dropped a run
+    would otherwise read as a score improvement it did not earn.
+    """
+    index = {run["source"]: run for run in before["runs"]}
+    changes = []
+    rank = {"clean": 0, "review": 1, "fail": 2}
+    for run in after["runs"]:
+        source = run["source"]
+        prior = index.pop(source, None)
+        if prior is None:
+            changes.append({"source": source, "clip": "*",
+                            "kind": "added", "before": None, "after": "present",
+                            "reason": "the run is not in the baseline sweep"})
+            continue
+        seen = set()
+        for clip in run["clips"]:
+            name, state, reason = clip["clip"], clip["state"], clip["reason"]
+            seen.add(name)
+            old = next((c for c in prior["clips"] if c["clip"] == name), None)
+            before_state = old["state"] if old else "clean"
+            before_reason = old["reason"] if old else ""
+            if before_state == state and before_reason == reason:
+                continue
+            if before_state == state:
+                kind = "changed"
+            elif rank[state] < rank[before_state]:
+                kind = "improvement"
+            else:
+                kind = "regression"
+            changes.append({"source": source, "clip": name, "kind": kind,
+                            "before": before_state, "after": state,
+                            "reason": reason})
+        for old in prior["clips"]:
+            if old["clip"] not in seen:
+                changes.append({"source": source, "clip": old["clip"],
+                                "kind": "improvement", "before": old["state"],
+                                "after": "clean",
+                                "reason": "the clip is clean in the new sweep"})
+    for source in index:
+        changes.append({"source": source, "clip": "*", "kind": "removed",
+                        "before": "present", "after": None,
+                        "reason": "the run is gone from the new sweep"})
+    changes.sort(key=lambda c: ({"regression": 0, "removed": 1, "changed": 2,
+                                 "added": 3, "improvement": 4}[c["kind"]],
+                                c["source"], c["clip"]))
+    return changes
+
+
 def main(argv: list[str]) -> int:
-    if len(argv) != 2:
-        print("usage: editorial_audit.py <project-dir>", file=sys.stderr)
+    args = _parse_args(argv)
+    if args is None:
         return 2
-    project = Path(argv[1])
-    if not project.is_dir():
-        print(f"not a directory: {project}", file=sys.stderr)
-        return 2
+
+    if args.corpus:
+        record = sweep(Path(args.path))
+        if args.compare:
+            try:
+                before = json.loads(Path(args.compare).read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                print(f"cannot read the baseline sweep {args.compare}: {exc}",
+                      file=sys.stderr)
+                return 2
+            changes = compare_sweeps(before, record)
+            for c in changes:
+                print(f"{c['kind']:<11} {c['source']} {c['clip']}  "
+                      f"{c['before']} -> {c['after']}  {c['reason']}")
+            print()
+            kinds = {}
+            for c in changes:
+                kinds[c["kind"]] = kinds.get(c["kind"], 0) + 1
+            if kinds:
+                print("CHANGES: " + ", ".join(f"{k} {v}" for k, v in sorted(kinds.items())))
+            else:
+                print("no change against the baseline sweep")
+            # A regression or a removed run is a real signal; an improvement is
+            # not. ``changed`` is reported as a failure because a defect that
+            # moved is still a defect, and a sweep that printed it and exited 0
+            # would train its readers to ignore it.
+            signal = sum(kinds.get(k, 0) for k in ("regression", "removed", "changed"))
+            return 1 if signal else 0
+
+        t = record["totals"]
+        print(f"{t['runs']} runs, {t['clean']} clean clips, "
+              f"{t['review']} awaiting review, {t['fail']} failed")
+        for run in record["runs"]:
+            for clip in run["clips"]:
+                print(f"{run['source']:<28} {clip['state']:<7} {clip['clip']}  "
+                      f"{clip['reason']}")
+        if args.baseline:
+            Path(args.baseline).write_text(json.dumps(record, indent=1) + "\n",
+                                           encoding="utf-8")
+            print(f"\nrecorded as the baseline sweep: {args.baseline}")
+        return 1 if (t["fail"] or t["review"]) else 0
+
+    project = Path(args.path)
     ok, rep = audit(project)
     # audit() returns no report when the project has no selections.json, which
     # is itself the finding: the run never produced anything to audit. Report
@@ -686,6 +1003,7 @@ def main(argv: list[str]) -> int:
         return 1
     width = max((len(n) for n, _o, _d in rep["findings"]), default=8)
     review = set(rep.get("review") or [])
+    failed = [n for n, cok, _d in rep["findings"] if not cok and n not in review]
     for name, cok, detail in rep["findings"]:
         if cok:
             mark = "PASS"
@@ -698,15 +1016,87 @@ def main(argv: list[str]) -> int:
     # REVIEW findings are still failures for the exit code — a clip over the bar
     # needs a human to listen to it before it ships — so they are counted, not
     # cleared. Silently passing them would be the exact defect this state was
-    # added to remove.
-    if ok:
+    # added to remove. The edge check can leave a clip clean on every hard
+    # criterion and still undecidable, so ``ok`` alone is not the verdict, and a
+    # project with both kinds has to say which is which.
+    if ok and not review:
         print("ALL CHECKS PASS")
+    elif failed and review:
+        print(f"FAILURES PRESENT ({len(failed)} clip(s) failed; "
+              f"{len(review)} awaiting human review)")
     elif review:
         print(f"FAILURES PRESENT ({len(review)} clip(s) awaiting human review)")
-        return 1
     else:
         print("FAILURES PRESENT")
-    return 0 if ok else 1
+    return 0 if (ok and not review) else 1
+
+
+class _Args:
+    """``argparse.Namespace`` without argparse's repr in the usage line."""
+
+    def __init__(self, path: str, corpus: bool, baseline: str | None,
+                 compare: str | None):
+        self.path = path
+        self.corpus = corpus
+        self.baseline = baseline
+        self.compare = compare
+
+
+USAGE = """usage: editorial_audit.py <project-dir|corpus-root>
+                     [--corpus] [--baseline PATH] [--compare PATH]
+
+  <project-dir>      audit one run and print its findings
+  --corpus           audit every *_run under the root, as one sweep
+  --baseline PATH    record the sweep as the baseline for later comparison
+  --compare PATH     diff the sweep against a recorded baseline, and classify
+                     each changed clip as a regression, an improvement, or a
+                     change of shape
+
+
+The sweep modes need a corpus root (a directory of *_run trees); the single
+project mode needs a project directory containing selections.json."""
+
+
+def _parse_args(argv: list[str]) -> _Args | None:
+    """Hand-rolled so the tool stays a single import-free file.
+
+    ``--baseline`` and ``--compare`` are only meaningful with ``--corpus``:
+    a single project has nothing to compare and no baseline to record, so
+    pairing them is a usage error rather than a silently ignored flag.
+    """
+    positional: list[str] = []
+    flags: dict[str, str | None] = {"--corpus": None, "--baseline": None,
+                                    "--compare": None}
+    takes_value = {"--baseline", "--compare"}
+    i = 1
+    while i < len(argv):
+        arg = argv[i]
+        if arg in flags:
+            if arg in takes_value:
+                if i + 1 >= len(argv):
+                    print(f"{arg} needs a path", file=sys.stderr)
+                    print(USAGE, file=sys.stderr)
+                    return None
+                flags[arg] = argv[i + 1]
+                i += 2
+                continue
+            flags[arg] = "yes"
+        elif arg in ("-h", "--help"):
+            print(USAGE)
+            return None
+        else:
+            positional.append(arg)
+        i += 1
+
+    if len(positional) != 1:
+        print(USAGE, file=sys.stderr)
+        return None
+    corpus = flags["--corpus"] is not None
+    if not corpus and (flags["--baseline"] or flags["--compare"]):
+        print("--baseline and --compare need --corpus", file=sys.stderr)
+        print(USAGE, file=sys.stderr)
+        return None
+    return _Args(positional[0], corpus, flags["--baseline"], flags["--compare"])
 
 
 if __name__ == "__main__":

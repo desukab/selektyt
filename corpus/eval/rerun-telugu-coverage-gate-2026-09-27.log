@@ -1,0 +1,62 @@
+The coverage gate, hit for real on the source it was written for.
+
+Reproduction (no re-transcription and no re-extraction — a resumed run, the shape
+of an editor re-running a finished project):
+
+    OUT=$(mktemp -d); mkdir -p "$OUT/project/transcription"
+    cp corpus/telugu-tutorial_run/project/transcript.json       "$OUT/project/"
+    cp corpus/telugu-tutorial_run/project/transcription/audio.wav "$OUT/project/transcription/"
+    SRC=$(realpath corpus/media/telugu-tutorial.webm)
+    .venv/bin/python - "$OUT" "$SRC" <<'PY'
+    import json, sys
+    from pathlib import Path
+    sys.path.insert(0, ".")
+    from selekyt.pipeline import _fingerprint
+    out, src = sys.argv[1], sys.argv[2]
+    media = Path(src).expanduser()
+    Path(out, "project", "pipeline_state.json").write_text(json.dumps({
+        "source": src, "media_path": str(media), "media_info": {},
+        "fingerprint": _fingerprint(media, src, "small", None),
+        "model": "small", "language": "te",
+    }), encoding="utf-8")
+    PY
+
+    # 1. The gate aborts on the real source.
+    .venv/bin/selekyt "$SRC" --out "$OUT" --limit 3
+
+    # 2. Bypassing it does not reach a deliverable: the editorial confidence
+    #    gate refuses one stage later and names the transcription as the suspect.
+    .venv/bin/selekyt "$SRC" --out "$OUT" --limit 3 --skip-coverage-check
+
+Both outputs follow, verbatim. The numbers are the corpus survey's
+(corpus/wer/runs/coverage-2026-09-27.json): 4.5% transcript coverage against
+77.4% speech scored by silero over 339.6 s, ratio 0.058.
+(The onnxruntime device-discovery warning that precedes each run prints an
+Azure Hyper-V VMBUS device GUID for this VM; it is stripped from both logs
+below as host-internal detail with no bearing on the measurement.)
+
+--------------------------------------------------------------------------------
+
+[cache] using unchanged transcript
+Traceback (most recent call last):
+  File "/home/azureuser/selektyt/.venv/bin/selekyt", line 6, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/azureuser/selektyt/selekyt/cli.py", line 211, in main
+    project = run(
+              ^^^^
+  File "/home/azureuser/selektyt/selekyt/pipeline.py", line 731, in run
+    raise RuntimeError(
+RuntimeError: Transcription coverage collapse: the transcript covers 4.5% of a 340s source that the silero VAD scores 77.4% speech (ratio 0.058, below 0.25). The transcript is well-formed, which is why nothing else flagged it — verify it against the audio before shipping anything cut from this run. Re-run with a larger model if the language is a low-resource one, or pass --skip-coverage-check once you have verified the transcript by hand — but verify it, because this check exists to stop a wrong deliverable shipping as a success.
+
+[cache] using unchanged transcript
+Traceback (most recent call last):
+  File "/home/azureuser/selektyt/.venv/bin/selekyt", line 6, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/azureuser/selektyt/selekyt/cli.py", line 211, in main
+    project = run(
+              ^^^^
+  File "/home/azureuser/selektyt/selekyt/pipeline.py", line 775, in run
+    raise RuntimeError(
+RuntimeError: No complete standalone stories were selected. 5 eligible span(s) were scored, but every one was refused by the editorial/context gate while ranking, most often for: low factual confidence (best measured 0.39, against a 0.75 floor). The transcription is probably wrong rather than the stories being weak — re-run with a larger model, or with --language set if the detected language is not the one spoken. The coverage gate measured this independently: the transcript covers 4.5% of a 340s source that the silero VAD scores 77.4% speech (ratio 0.058, below 0.25). The transcript is well-formed, which is why nothing else flagged it — verify it against the audio before shipping anything cut from this run. --skip-coverage-check was passed, so the run continued past that gate to reach this one. No clip was lost to a budget — every one was refused on its merits.

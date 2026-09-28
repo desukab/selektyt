@@ -10,7 +10,11 @@ stopped at a fixed cap and never searched the back half of a long source. For
 whether a given run still reproduces — and the named cause when it does not —
 read `docs/CORPUS_BENCHMARK_STATUS.md` and run
 `tools/corpus_reproducibility.py`, which checks this against the current code
-instead of trusting this page.
+instead of trusting this page. The **OK** column below is the weakest claim in
+this document: it means the run delivered clips, and on 2026-09-27 an audit check
+that looks at the speech a clip *drops* rather than the speech it keeps found two
+hard mid-sentence failures inside that OK set — see the correction under the
+caption-straddle section.
 
 This is the first time SelekyT has been run on more than one source. It was
 run by `tools/corpus_run.py` over `corpus/manifest.json`; the raw record is
@@ -175,6 +179,40 @@ spanning 922.120–922.960 s against an end of 922.862 s.
 So: the caption-straddle fix is confirmed on two sources. The word-split fix is
 confirmed on one (`royal-society-cloke`, fully re-run). **The other three still
 need real re-runs**, and no claim in this document says otherwise.
+
+**Correction, 2026-09-27: "re-audited green" was green on the checks the audit
+had.** The three rows above still report no *mid-sentence split* failure, and
+that finding is still correct — the word-split false-positive diagnosis stands.
+But the audit's sentence work could only see the words a clip *kept*, so a clip
+that opened or closed mid-utterance had nothing on the offending edge to
+compare, and passed by construction. `check_edges_respect_sentences` looks
+outward at the transcript words the boundary dropped, and on the same committed
+output it finds two hard failures the previous checks could not have found:
+
+| Source | Clip | Finding |
+|---|---|---|
+| `pentagon-esper-briefing` | clip 04 | opens mid-sentence: first kept word ` Syria.` follows `…the oil fields in the east of` with no sentence break |
+| `royal-society-cloke` | clip 01 | closes mid-sentence: last kept word ` Somebody` is followed by `says, you know, actually tomorrow` with no sentence break |
+
+The cloke clip ends mid-clause — the audience hears a word that never resolves,
+which is a worse editorial defect than a gap in cue timing, and it was invisible
+to every check in the audit at the time it was reported green.
+
+Ten further clips across six sources are now reported **review**, not pass:
+34–47% of the corpus's English transcript segments carry no terminal
+punctuation, so on those segments every edge is consistent with mid-utterance
+and none is distinguishable from a clean one. That is a property of the
+transcript, not of the clips, so it is reported as unmeasured rather than as
+clean — and it still fails the audit's exit code, because a clip the tool could
+not measure is not a clip it has passed. The full three-state corpus verdict and
+the recorded baseline are in `docs/AI_EXECUTION_STATE.md`'s top session section.
+
+The implication for this document's earlier claims is narrow and worth stating
+precisely: the caption-straddle and word-split fixes are unaffected and still
+confirmed as written. What changed is that "green" meant "no defect the audit
+could see," and the audit could not see the edges that drop speech. No source
+previously reported green has been *cleared* by the new check — the corpus's
+true state is `11 runs, 14 clean clips, 11 awaiting review, 6 failed`.
 
 **The committed captions are themselves a snapshot three days behind the
 emitter**, measured 2026-09-22. Regenerating from the persisted

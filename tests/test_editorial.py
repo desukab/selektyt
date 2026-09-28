@@ -177,25 +177,51 @@ def test_scored_candidate_text_agrees_with_its_words():
 
     The candidate is the fix's seam: it is built once, here, and everything
     downstream (EDL, render, captions, content pack) reads its fields. If text
-    and words disagree here they disagree in every artefact."""
+    and words disagree here they disagree in every artefact.
+
+    **This test's first reading was wrong, and the audit proved it.** The
+    straddle here is 2.8e-14 s — ' Syria.' ends at 364.84000000000003 against
+    a bound of 364.84 — which is float noise, not a real overlap: the bound
+    sits on the word boundary. 'Syria.' is the *last word of the sentence before
+    the clip*, and admitting it made the shipped clip open on the tail of a
+    sentence the cut halved. ``editorial_audit.check_edges_respect_sentences``,
+    which looks at the transcript words a boundary drops rather than the ones
+    it keeps, is the instrument that showed it. The word is excluded and the
+    bound stays put."""
     text = ("Syria. has the deployment of reinforcements that you announced "
             "last week begun and could you describe more fully what you "
             "intend to do there?")
     rest = _words(" ".join(text.split()[1:]), 364.84)
-    # The opening word straddles the estimated bound: on the committed corpus
-    # it spans 364.50-364.84000000000003 against a bound of 364.84, so the
-    # strict inequality in _word_aligned sees it as inside.
+    # The opening word straddles the estimated bound by an float-ulp amount
+    # only: on the committed corpus it spans 364.50-364.84000000000003 against
+    # a bound of 364.84, which is a boundary, not a straddle.
     words = [Word(" Syria.", 364.50, 364.84000000000003)] + rest
     seg = Segment(364.84, rest[-1].end, " ".join(text.split()[1:]), words)
     c = score_candidate(seg)
 
-    assert c.text.startswith("Syria."), \
-        f"candidate text opens {c.text[:30]!r}, omitting the word the " \
-        f"shipped clip opens on"
-    assert c.start == 364.50, "the opening bound must snap back to the word"
-    # The closing edge is the mirror image: a bound inside the final word must
-    # drop it rather than carry a half word in both the text and the render.
-    assert c.text == " ".join(text.split())
+    assert c.start == 364.84, \
+        f"a bound on a word boundary must not pull back: got {c.start}"
+    assert not c.text.startswith("Syria."), \
+        f"candidate text opens {c.text[:30]!r}, on a word the previous " \
+        f"sentence owns"
+    assert all(w.text.strip() != "Syria." for w in c.words or []), \
+        "the orphan word must not survive into the candidate's word list"
+
+
+def test_scored_candidate_keeps_a_genuinely_straddling_opening_word():
+    """The mirror of the float-noise case: when the opening bound lands a real
+    distance into a word, the word *is* the clip's opening word and the bound
+    pulls back to keep it whole. A real straddle is orders of magnitude larger
+    than the ulp case above, so the two must not be treated alike."""
+    words = _words("Reinforcements have begun deploying to the eastern fields.", 400.0)
+    # 120 ms into a 300 ms opening word — a real straddle, not noise.
+    start = 400.12
+    seg = Segment(start, words[-1].end, " ".join(w.text for w in words[1:]), words)
+    c = score_candidate(seg)
+
+    assert c.start == 400.0, "the bound must snap back to keep the opening word"
+    assert c.text.startswith("Reinforcements"), \
+        f"candidate text opens {c.text[:30]!r}, omitting its own opening word"
 
 
 def test_scored_candidate_drops_a_partial_closing_word_from_text():

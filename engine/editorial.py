@@ -107,7 +107,19 @@ def _audio_quality_features(words: list, duration: float) -> dict | None:
 
 
 def _words_in(segs: list[Segment], start: float, end: float) -> list:
-    """Words overlapping [start, end], clipped to it, for a span's timestamps."""
+    """Words overlapping [start, end], for a span's timestamps.
+
+    Deliberately permissive: a word straddling either bound is admitted, and
+    ``edit_plan.align_span`` — which sees this list and the same bounds — is
+    what decides where each bound then sits and which words survive it. It
+    snaps the opening bound back through a straddling word to keep that word
+    whole, and drops a word the closing bound cuts, so the candidate's final
+    word list is containment-correct even though this one is not. Making this
+    function containment-correct as well was measured and reverted: given the
+    snap, it changed one clip's bounds by 0.27 s on a source whose selection
+    does not reproduce from the committed transcript anyway, and fixed
+    nothing, so the decision belongs in one place.
+    """
     out = []
     for seg in segs:
         if seg.end < start or seg.start > end:
@@ -459,9 +471,13 @@ def score_candidate(s: Segment) -> Candidate:
     # The span is aligned before it is scored, so the score, the hook, the
     # text and the shipped interval all describe the same clip. Without this
     # a candidate whose opening word is snapped into the cut is scored and
-    # hooked on a text that omits it. See edit_plan.align_span.
-    start, end, text = align_span(s.start, s.end, s.words or [], s.text.strip())
-    aligned = Segment(start, end, text, s.words, s.coherence, s.completeness)
+    # hooked on a text that omits it. The aligned word list is adopted too:
+    # keeping the list we were handed while taking the snapped bounds shipped
+    # a clip whose words named a word its own text did not, and every emitter
+    # below burned that disagreement. See edit_plan.align_span.
+    start, end, text, aligned_words = align_span(
+        s.start, s.end, s.words or [], s.text.strip())
+    aligned = Segment(start, end, text, aligned_words, s.coherence, s.completeness)
     editorial, virality, context, visual, story_type, reason, coherence, completeness = _score(aligned)
     hook, payoff = _clean_hook_payoff(text)
     words = aligned.words or []

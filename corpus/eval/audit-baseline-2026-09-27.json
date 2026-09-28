@@ -1,0 +1,150 @@
+{
+ "runs": [
+  {
+   "source": "alice-1903_run",
+   "clips": [
+    {
+     "clip": "project",
+     "state": "fail",
+     "reason": "no selections.json — transcription returned no segments (en)"
+    }
+   ]
+  },
+  {
+   "source": "emwcon-panel-2018_run",
+   "clips": [
+    {
+     "clip": "clip 02",
+     "state": "review",
+     "reason": "1 edge undecidable — the transcript marks no sentence end in the utterance(s) involved"
+    },
+    {
+     "clip": "clip 03",
+     "state": "review",
+     "reason": "1 edge undecidable — the transcript marks no sentence end in the utterance(s) involved"
+    },
+    {
+     "clip": "clip 04",
+     "state": "review",
+     "reason": "1 edge undecidable — the transcript marks no sentence end in the utterance(s) involved"
+    }
+   ]
+  },
+  {
+   "source": "hadhazy-protest_run",
+   "clips": [
+    {
+     "clip": "clip 01",
+     "state": "review",
+     "reason": "1 edge undecidable — the transcript marks no sentence end in the utterance(s) involved"
+    },
+    {
+     "clip": "clip 02",
+     "state": "review",
+     "reason": "1 edge undecidable — the transcript marks no sentence end in the utterance(s) involved"
+    }
+   ]
+  },
+  {
+   "source": "hindi-baiga-interview_run",
+   "clips": [
+    {
+     "clip": "project",
+     "state": "fail",
+     "reason": "no selections.json — transcription returned 3 segments (hi)"
+    }
+   ]
+  },
+  {
+   "source": "nasa360-ep5_run",
+   "clips": [
+    {
+     "clip": "clip 03",
+     "state": "review",
+     "reason": "1 edge undecidable — the transcript marks no sentence end in the utterance(s) involved"
+    },
+    {
+     "clip": "clip 05",
+     "state": "review",
+     "reason": "1 edge undecidable — the transcript marks no sentence end in the utterance(s) involved"
+    }
+   ]
+  },
+  {
+   "source": "ooi-vertical_run",
+   "clips": [
+    {
+     "clip": "clip 02",
+     "state": "review",
+     "reason": "1 edge undecidable — the transcript marks no sentence end in the utterance(s) involved"
+    }
+   ]
+  },
+  {
+   "source": "pentagon-esper-briefing_run",
+   "clips": [
+    {
+     "clip": "clip 03",
+     "state": "review",
+     "reason": "1 edge undecidable — the transcript marks no sentence end in the utterance(s) involved"
+    },
+    {
+     "clip": "clip 04",
+     "state": "fail",
+     "reason": "opens mid-sentence: the clip's first word ' Syria.' follows 'ed  the  oil  fields  and  securing  the  oil  fields  in  the  east  of' with no sentence break be"
+    }
+   ]
+  },
+  {
+   "source": "roman-portrait-trailer_run",
+   "clips": [
+    {
+     "clip": "project",
+     "state": "fail",
+     "reason": "no selections.json — transcription returned no segments (en)"
+    }
+   ]
+  },
+  {
+   "source": "royal-society-cloke_run",
+   "clips": [
+    {
+     "clip": "clip 01",
+     "state": "fail",
+     "reason": "closes mid-sentence: the clip's last word ' Somebody' is followed by 'says,  you  know,  actually  tomorrow' with no sentence break"
+    },
+    {
+     "clip": "clip 04",
+     "state": "review",
+     "reason": "1 edge undecidable — the transcript marks no sentence end in the utterance(s) involved"
+    }
+   ]
+  },
+  {
+   "source": "telugu-launch_run",
+   "clips": [
+    {
+     "clip": "project",
+     "state": "fail",
+     "reason": "no selections.json — transcription returned no segments (te)"
+    }
+   ]
+  },
+  {
+   "source": "telugu-tutorial_run",
+   "clips": [
+    {
+     "clip": "clip 01",
+     "state": "review",
+     "reason": "silence share 46.3% (word-free"
+    }
+   ]
+  }
+ ],
+ "totals": {
+  "runs": 11,
+  "clean": 14,
+  "review": 11,
+  "fail": 6
+ }
+}

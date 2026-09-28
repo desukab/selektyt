@@ -43,6 +43,17 @@ every line below was true on this host at that point.
   "not computable" in both directions.
   The fix routes the gate through the same backend chain as the selection and is
   measured, not thresholded, in the section below.
+  Most recent is the **engine fix in the top session section**: the audit's
+  outward-looking edge check found two orphan words in shipped corpus output, and
+  the trace ended at a 2.8e-14 s float comparison and a discarded word list in the
+  candidate constructor. A third candidate fix was measured redundant and
+  reverted rather than shipped.
+  Before that, the **editorial-audit comparison mode** in the next session
+  section: the audit's sentence-boundary check only ever saw the words a clip
+  kept, so a clip that opened mid-sentence passed by construction — looking
+  outward at the dropped words found two real shipped defects, and adding a
+  corpus sweep plus a recorded baseline gave the eval the comparison question it
+  was missing.
   Run `git log -1` for the current hash rather than trusting a hash printed
   here, since amending this file changes its own commit hash.
   Before this loop, the line of work was the **Windows desktop application**,
@@ -55,13 +66,45 @@ every line below was true on this host at that point.
   not run, and a green `build-windows` badge is not a Windows validation. That
   work is paused, not finished — it is the natural next thing to resume if the
   product loop returns to distribution.
-* Test suite: **1783 passed, 16 skipped** (2026-09-27) — measured by
+* Test suite: **1804 passed, 16 skipped** (2026-09-28) — measured by
   re-running the whole suite and reading its summary line, not by trusting a
   background task's exit code (see the trap note in "Completed work", and the
   disk note above: a concurrent `cargo test` + `pytest` pair once hit 100% disk
   and both died reporting success-shaped exit codes). This run covers the
-  coverage-gate fix and the diagnosis-convergence fix in the session sections
-  below, on top of the silero and fixture work.
+  engine fix in the top session section on top of the editorial-audit work —
+  the edge check, the three-state verdict, and the sweep/comparison mode — the
+  coverage-gate fix and the diagnosis-convergence fix in the earlier session
+  sections.
+  The net change from the engine fix is +1 in `tests/test_editorial.py`: one new
+  test pinning the real-straddle case, three removed that pinned a fix measured
+  redundant and reverted, and the existing text/words agreement test rewritten
+  around the measured behaviour. The count is small because the fix is two
+  lines; the three removed tests were testing a change that measurement showed
+  should not ship, and keeping them would have pinned behaviour the engine no
+  longer has.
+
+  The engine fix also moved the corpus, and that is the second count worth
+  reading. `tests/test_corpus_reproducibility.py` pins how many committed
+  selections still reproduce under the current code, and the fix took that from
+  four named exceptions to six: `pentagon-esper-briefing` and
+  `royal-society-cloke` are the two runs whose clips the audit's edge check
+  found opening and closing mid-sentence, and the fix that removes the defects
+  is exactly what makes those two selections no longer byte-reproduce. The
+  attribution was measured with the audit's own instrument rather than assumed
+  — patching the two fixes off in one process returns **both** runs to
+  `reproduces` and leaves every other run untouched, so the drift is the fix
+  and not the corpus's pre-existing non-reproducibility arriving somewhere new.
+  The tool-behaviour tests in that module used `pentagon-esper-briefing` as
+  their "a run that reproduces" fixture and moved to `ooi-vertical` for the
+  same reason.
+  The prior baseline was 1797/16. The growth of seven is exactly the sweep and
+  comparison suite added alongside the comparison mode: a count test pinning the
+  corpus sweep to `{"runs": 11, "clean": 14, "review": 11, "fail": 6}`, a
+  clean-clip/clean-run equivalence test, a five-way classification test over a
+  hand-mutated baseline, a review-state test proving it reads as neither fail nor
+  pass, a self-comparison test, and the baseline drift guard. The fifteen
+  edge-check tests and the rewritten three-state corpus table landed inside the
+  1797 figure's own file.
   The prior baseline was 1778/16, and the growth of five since is exactly
   accounted for: `tests/test_coverage.py` went 11 → 16 tests as the gate's contract
   was pinned (the collapse, the quiet source never failed, the chain's probe order,
@@ -229,6 +272,158 @@ every line below was true on this host at that point.
 
 ## Completed work
 
+### This session — the two defects the edge check found were traced to two lines, and one candidate fix was measured out
+
+The edge check in the section below found two real shipped defects. Both were
+orphan words — a word that survived into a clip whose sentence did not — and
+both were symptoms of one seam: the candidate is built on bounds *estimated*
+proportionally to character span, while the word timing it is paired with is
+*measured*, and nothing made the two agree before the clip was scored. The
+trace ended at two lines, and a third candidate fix was implemented, measured
+redundant, and reverted rather than shipped.
+
+**Root cause B — a float-noise snap (`edit_plan._word_aligned`).** The snap
+moves a bound back to a word's start when the bound falls inside the word:
+`w.start < t < w.end`. Sentence bounds are estimated to character span, word
+ends are measured, so the two disagree in the last ulp. On the committed
+pentagon source the sentence `'Korea, has the deployment…'` starts at `364.84`
+and the preceding token `' Syria.'` ends at `364.84000000000003` — a straddle
+of **2.8e-14 s**, which the comparison read as real. The bound snapped back
+0.34 s and the clip opened on the last word of the sentence the cut had halved.
+A bound within `1e-6` of a word's end is now treated as on the boundary and
+left alone. `editorial._words_in` is deliberately *not* made
+containment-correct to match: it stays permissive, and this function decides
+where the bound then sits, because the decision belongs in one place.
+
+**Root cause C — a discarded word list (`editorial.score_candidate`).**
+`score_candidate` called `align_span` for bounds and text and then built the
+candidate on the segment's *original* word list, so a candidate could carry a
+word its own text did not name. On the committed cloke source clip 01 ended at
+`235.237`, 117 ms into `'Somebody'` (`235.22–235.38`): the text dropped it, the
+word list kept it, and the captions — which are built from the word list —
+burned a word the render truncated. `align_span` now returns the aligned word
+list as a fourth value and `score_candidate` adopts it, so the score, the hook,
+the text, the interval and the captions all describe one clip.
+
+**Measured, not asserted.** A one-process control diff isolates attribution:
+the same transcript is ranked with the two changes patched off in place, so the
+pre-existing non-reproducibility of four sources' selections is excluded from
+the comparison. Both defects are fixed by B and C alone:
+
+    pentagon-esper-briefing clip 04
+      pre-fix  [364.500, 393.980]  first='Syria.'   last='facility.'   << orphaned
+      post-fix [364.840, 393.980]  first='Korea,'   last='facility.'   clean
+    royal-society-cloke clip 01
+      pre-fix  [181.735, 235.237]  first='The'      last='Somebody'    << orphaned
+      post-fix [181.735, 235.237]  first='The'      last='advance.'    clean
+
+The `align_span` correction is surgical, not a rebuild: on the committed corpus
+it rewrites **3 of 27** candidates with word timing and leaves the other
+twenty-four byte-identical.
+
+**A third fix was measured out and reverted.** Making `_words_in`
+containment-correct as well looked like the obvious completion of the pair. It
+was implemented and measured: given the snap, it changed exactly one clip's
+bounds by 0.27 s, on a source whose selection does not reproduce from the
+committed transcript anyway, and it fixed nothing — the orphan word in the
+cloke clip is admitted by *containment*, not by overlap, so the change does not
+touch it. Duplicating the containment decision in two functions would have
+been complexity with no effect, so it was reverted and the measurement is
+recorded in `_words_in`'s docstring instead.
+
+**What this does not claim.** The committed corpus artifacts still carry the
+two defects — re-running the two sources that still hold media (pentagon 158
+MiB, cloke 85 MiB) through the fixed pipeline is the real-media validation and
+has not been run. What is verified here is that the fixed engine, given the
+committed transcripts, no longer produces either orphan, and that the
+pre-fix engine given the same transcripts does.
+
+**Pinned in `tests/test_editorial.py`.** The existing
+`test_scored_candidate_text_agrees_with_its_words` was rewritten around the
+measured behaviour, and its docstring records that its *first* reading was
+wrong and the audit proved it: the ulp straddle is float noise, not a real
+overlap, and the test now asserts the bound stays put and the orphan word does
+not survive into the candidate's word list. A new
+`test_scored_candidate_keeps_a_genuinely_straddling_opening_word` pins the
+mirror case — 120 ms into a 300 ms word is a real straddle, orders of magnitude
+larger than the ulp case, and the bound snaps back to keep the word whole. The
+two must not be treated alike, which is the whole content of the epsilon guard.
+`test_an_already_aligned_candidate_is_left_alone` guards the drift: a span that
+is already word-aligned comes back unchanged, so the fix does not rewrite every
+candidate in the corpus and move the scoring.
+
+### This session — the audit learned to compare, and found the edges it could not see
+
+SelekyT Eval is P0 item 5, and the gap was not a missing check — it was a
+missing *question*. The audit could say whether one run's clips were
+publishable. It could not say whether a change to SeleKyT made its output better
+or worse, because there was no comparison mode and no recorded corpus baseline to
+compare against. Two pieces of work closed that, and the first one found a defect
+the old audit was structurally incapable of finding.
+
+**The edge check.** `check_cuts_respect_sentences` compares the words *both sides
+of a cut that survive in the clip*, so a clip that begins partway into an
+utterance leaves it nothing to compare on that edge — the words that would
+convict it are the ones the selection dropped, and the selection's own word list
+holds only the words it kept. The new `check_edges_respect_sentences` looks
+*outward* at the transcript words the boundary dropped instead of inward at the
+words it kept, and the criterion fell out of measurement rather than design: an
+opening is clean iff the speech preceding the clip's first kept word ends in a
+terminal sentence mark, and a closing is clean iff the clip's own last kept word
+does.
+
+That found two real shipped defects on committed corpus output, both of which the
+old check passed silently. `pentagon-esper-briefing` clip 04 opens on `' Syria.'`
+after dropping `'…the oil fields in the east of'`. `royal-society-cloke` clip 01
+ends on `' Somebody'`, dropping `'says, you know, actually tomorrow'` — the clip
+ends mid-clause and the audience hears a word that never resolves. These are
+exactly the failures that matter editorially, and they are invisible to any check
+that only inspects the words the clip kept.
+
+**Undecidable is a third state, not a pass.** Measuring the corpus revealed why a
+binary verdict was never going to be honest: 34–47% of the English transcript
+segments carry no terminal punctuation at all, so on such a segment *every* edge
+is consistent with mid-utterance and none is distinguishable from a clean one.
+Reporting that as a pass would be claiming a measurement that was not taken;
+reporting it as a fail would be blaming the clip for the transcript. It is
+reported as **review** with a count of how many edges were undecidable, so the
+proportion reads as a property of the transcript rather than of the clips. But
+review **still fails the exit code** — a clip the tool could not measure is not a
+clip it has passed. `main()` exits 0 only when `ok and not review`. The
+distinction is enforced inside the check too: the undecidable note goes into a
+separate `notes` list, never into `bad`, because a hard failure asserts the
+shipped clip is wrong while this one asserts the transcript cannot say.
+
+One subtlety worth recording, because it was a real bug in the first version: a
+clip that spans into the following utterance moves its close edge out of reach of
+the segment it opened in — the trailing continuation words live in the *next*
+segment. The close edge is keyed on the utterance of the clip's *last* kept word,
+not its first.
+
+**The comparison mode.** `sweep()` audits every `corpus/*_run/project` as one
+comparable record. Clean clips are counted but deliberately *not* recorded,
+because `compare_sweeps()` treats an absent entry as clean, and recording clean
+clips would make one state read two ways. `compare_sweeps(before, after)`
+classifies each clip that moved as `regression` / `improvement` / `changed` /
+`added` / `removed` over the state rank `clean < review < fail`, ordered by
+severity, and `main()`'s exit code treats a regression, a removed run, or a
+defect that changed shape as signal while an improvement is not. A SeleKyT
+change can now be scored against the corpus the way it has to be scored: not "are
+there defects" but "did this make defects worse."
+
+**The recorded baseline** is `corpus/eval/audit-baseline-2026-09-27.json`, pinned
+by a drift-guard test that re-sweeps the corpus and asserts it still matches. The
+three-state corpus verdict, replacing the stale binary table that claimed five
+projects clean:
+
+    11 runs, 14 clean clips, 11 awaiting review, 6 failed
+
+Two hard failures from the edge check, ten edge-undecidable reviews, one silence
+review (`telugu-tutorial` clip 01, 46.3% word-free), and five project-level
+failures where the VAD gate suppressed transcription before selection ever ran —
+those five are the coverage collapse already recorded in the session below, now
+visible in the eval instrument as well as in the pipeline.
+
 ### This session — the coverage gate was blind on the sources it existed for
 
 The pipeline has exactly one *hard* guard that compares the transcript against
@@ -305,7 +500,9 @@ figure in the refusal cannot drift from the figure the gate raised on. When the
 bypass was used, the clause says so, which is the one case where the two guards
 are visible to the editor in a single run.
 
-The real source confirms the merged message end-to-end (`corpus/rerun_telugu_gate.log`):
+The real source confirms the merged message end-to-end
+(`corpus/eval/rerun-telugu-coverage-gate-2026-09-27.log`, moved into the eval
+evidence directory with the audit baseline):
 
     RuntimeError: No complete standalone stories were selected. 5 eligible span(s)
     were scored, but every one was refused by the editorial/context gate while
