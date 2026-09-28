@@ -1,6 +1,6 @@
 # Product gap map
 
-Where SelekyT is a finished product and where it is not, as of `75c654a`.
+Where SelekyT is a finished product and where it is not, as of `30337f1`.
 
 The distinction this map exists to keep clear: **a stage whose code exists and
 whose unit tests pass is not the same as a stage a user can rely on.** Each row
