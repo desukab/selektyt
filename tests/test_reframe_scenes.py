@@ -259,6 +259,100 @@ def test_one_class_for_the_whole_interval_covers_the_span():
     assert plan_scenes([], []) == []
 
 
+def test_an_absorbed_run_leaves_the_segment_its_slide():
+    """A segment whose first samples were absorbed from another class still
+    carries the slide its own class needs.
+
+    ``plan_scenes`` absorbs a run shorter than ``_MIN_HOLD_S`` by rewriting its
+    class to its longer neighbour's. The segment that results can therefore
+    *start* on samples the classifier never saw as the segment's class, and
+    those samples' shots can hold no slide at all. The carry used to take the
+    slide from the first sample at or after the segment's start regardless, so
+    a segment the layout dereferences a slide for -- a ``SPLIT`` it composes two
+    bands from -- arrived with ``slide=None`` and the render died on its own
+    assertion. Measured, on the corpus: a ``--force`` re-run of
+    royal-society-cloke, whose fresh transcript reached that path, failed in
+    ``_layout_chains`` at ``assert seg.slide is not None``.
+
+    The fixture below is that shape, built small. A 0.4s speaker opening is
+    absorbed into a 2.9s SPLIT run, so the SPLIT segment starts on a
+    slide-less shot while the samples that earned it the SPLIT class sit later.
+    """
+    from engine.reframe_scenes import (
+        SceneClass,
+        SlideRect,
+        _carry_slides,
+        _layout_chains,
+        plan_scenes,
+    )
+
+    times = _even_times(60)          # 0.0 .. 5.9 at 0.1s
+    # shots: 0 for 0..4, 1 for 5..34, 2 for 35..59
+    shot_of = [0] * 5 + [1] * 30 + [2] * 25
+    # Only the middle shot holds a slide; the speaker shots hold none.
+    slide = SlideRect(672.0, 40.0, 352.0, 640.0)
+    per_shot = {0: None, 1: slide, 2: None}
+    classes = ([SceneClass.SPEAKER] * 5 + [SceneClass.SPLIT] * 30
+               + [SceneClass.SPEAKER] * 25)
+
+    # The fixture has to actually be the dangerous shape: the opening run is
+    # shorter than the minimum hold, so it is absorbed, and its shot has no
+    # slide to give.
+    assert times[4] - times[0] < 2.0
+    assert times[34] - times[5] >= 2.0
+    assert times[59] - times[35] >= 2.0
+    assert per_shot[shot_of[0]] is None
+
+    segments = plan_scenes(times, classes)
+    assert len(segments) == 2
+    assert segments[0].cls is SceneClass.SPLIT, (
+        "the short speaker opening must be absorbed into the SPLIT run, not "
+        "survive as its own segment")
+    # This is the absorption doing the absorbing: the segment starts on a
+    # sample the classifier called a SPEAKER.
+    assert classes[0] is SceneClass.SPEAKER
+
+    out = _carry_slides(segments, times, classes, shot_of, per_shot, [], CROP_W,
+                        SRC_W)
+    assert out[0].slide is slide, (
+        "the SPLIT segment must carry the slide of a sample its class came "
+        "from, not the empty hand of its first sample")
+    assert out[0].start == times[0]
+
+    # And the layout it feeds renders instead of asserting. This is the
+    # failure the corpus run hit, at the point it hit it.
+    chains = _layout_chains(out[0], SRC_W, SRC_H, 1, 1, CROP_W, 720, 1280,
+                            [], [], "", None)
+    assert any("vstack" in c for c in chains), (
+        "a SPLIT segment the plan can produce must compose two bands")
+
+
+def test_a_slide_held_by_a_later_shot_is_carried_to_a_slide_segment():
+    """The same lookup serves ``SLIDE``, which dereferences ``seg.slide`` for its
+    crop and would raise ``AttributeError`` rather than assert. A slide segment
+    starting on an absorbed slide-less sample has to pick the slide up too."""
+    from engine.reframe_scenes import (
+        SceneClass,
+        SlideRect,
+        _carry_slides,
+        plan_scenes,
+    )
+
+    times = _even_times(60)
+    shot_of = [0] * 5 + [1] * 30 + [2] * 25
+    slide = SlideRect(672.0, 40.0, 352.0, 640.0)
+    per_shot = {0: None, 1: slide, 2: None}
+    # A SPEAKER opening absorbed into a SLIDE run (no face in shot 1).
+    classes = ([SceneClass.SPEAKER] * 5 + [SceneClass.SLIDE] * 30
+               + [SceneClass.SPEAKER] * 25)
+
+    segments = plan_scenes(times, classes)
+    assert segments[0].cls is SceneClass.SLIDE
+    out = _carry_slides(segments, times, classes, shot_of, per_shot, [], CROP_W,
+                        SRC_W)
+    assert out[0].slide is slide
+
+
 def test_transitions_are_reported_between_classes():
     """The render turns these into dissolves rather than cuts, and an empty list
     is the common single-class clip."""

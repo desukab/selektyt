@@ -863,6 +863,51 @@ def _frame_area_slides(frames: list[np.ndarray | None], w: int, h: int,
     return per_shot, all_slides
 
 
+def _carry_slides(segments: list[SceneSegment], times: list[float],
+                  classes: list[SceneClass], shot_of: list[int],
+                  per_shot: dict[int, SlideRect | None],
+                  faces: list[FaceBox | None], crop_w: float,
+                  src_w: float) -> list[SceneSegment]:
+    """Carry the slide and the joint verdict into the segments.
+
+    The slide comes from a sample *inside the segment* that the classifier saw
+    as the segment's class, not from the first sample at or after the segment's
+    start. ``plan_scenes`` absorbs a run shorter than ``_MIN_HOLD_S`` into its
+    longer neighbour by rewriting that run's class to the neighbour's, so the
+    samples at a segment's edge can carry a class the segment reports without
+    ever having been classified as it -- and their shot can hold no slide at
+    all. Taking the slide from one of those made a segment the layout needs a
+    slide for (a ``SPLIT`` it has to compose two bands from, a ``SLIDE`` it has
+    to crop to) arrive with ``slide=None``, and the layout died on its own
+    assertion.
+
+    Choosing an originating sample is provably safe instead. A segment's class
+    is always the *original* class of some sample inside it -- absorption only
+    merges adjacent runs and adopts a class the neighbour already held -- and a
+    sample classified ``SPLIT`` or ``SLIDE`` has a slide by construction, since
+    ``classify_scene`` returns those only for a slide it was handed. So the
+    lookup returns a slide for exactly the classes the layout dereferences one
+    for.
+    """
+    out: list[SceneSegment] = []
+    for seg in segments:
+        i = next((j for j, t in enumerate(times)
+                  if seg.start <= t <= seg.end and classes[j] is seg.cls), None)
+        if i is None:
+            # Cannot happen for the reason above; the fallback keeps a future
+            # change to the absorption rules from turning into a crash here
+            # rather than into an assertion where the cause is visible.
+            i = next((j for j, t in enumerate(times) if t >= seg.start),
+                     len(times) - 1)
+        slide = per_shot.get(shot_of[i])
+        joint = (seg.cls is SceneClass.SPEAKER and slide is not None
+                 and faces and any(
+                     f is not None and both_fit_in_crop(f, slide, crop_w, src_w)
+                     for f in faces))
+        out.append(SceneSegment(seg.start, seg.end, seg.cls, slide, joint))
+    return out
+
+
 def analyse_scene(video: Path, start: float, end: float, samples: int = 28
                   ) -> tuple[list[SceneSegment], list[SlideRect], int, int]:
     """Perceive and plan one interval.
@@ -923,18 +968,8 @@ def analyse_scene(video: Path, start: float, end: float, samples: int = 28
     segments = plan_scenes(kept_times, classes,
                            {j for j, (i, _, _) in enumerate(kept) if i in boundaries})
 
-    # Carry the slide and the joint verdict into the segments, which is the
-    # information the layout needs and the information a reader asks for.
-    out: list[SceneSegment] = []
-    for seg in segments:
-        shot = next((s for s, t in zip(shot_of, kept_times) if t >= seg.start),
-                    shot_of[-1])
-        slide = per_shot.get(shot)
-        joint = (seg.cls is SceneClass.SPEAKER and slide is not None
-                 and faces and any(
-                     f is not None and both_fit_in_crop(f, slide, crop_w, w)
-                     for f in faces))
-        out.append(SceneSegment(seg.start, seg.end, seg.cls, slide, joint))
+    out = _carry_slides(segments, kept_times, classes, shot_of, per_shot,
+                        faces, crop_w, w)
 
     # The samples are evidence *for* the interval, not its boundary: the grid
     # sample landing exactly on ``end`` seeks past the final frame and comes back
