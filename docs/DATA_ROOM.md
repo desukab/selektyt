@@ -172,11 +172,17 @@ unit-economics *modelling*, which is a different thing:
   a financial record.
 - Measured compute rates (VERIFIED — `docs/BUSINESS_MODEL.md` §1, benchmarked on
   the real artifacts of the reference run on this 4-core host, render re-measured
-  2026-09-28): transcription 0.165 RTF CPU with `small`/int8; render **0.875 RTF
-  16:9 / 0.358 RTF 9:16** with the shipped `slow`/crf18 encoder (the 0.1232 this
+  2026-09-28): transcription 0.165 RTF CPU with `small`/int8; render **0.8221 RTF
+  16:9 / 0.3567 RTF 9:16** with the shipped `slow`/crf18 encoder and a real ASS
+  from the run burned in (the 0.1232 this
   row quoted until 2026-09-28 was measured against the pre-`56253b5`
   `veryfast`/crf20 encoder and was stale by 7×); all-in planning cost
-  $0.00104–$0.00496 per source-minute depending on delivery mode.
+  $0.00121–$0.00496 per source-minute depending on delivery mode. Every render
+  figure now traces to a committed record in `corpus/render/runs/`, and the
+  encoder ladder is published as per-orientation ranges rather than one-window
+  absolutes — absolute quality and bitrate turned out to be properties of the
+  content window, not of the encoder (`docs/AI_EXECUTION_STATE.md`, the
+  "no figure in it had a committed record" entry).
 
 A diligence team asking for "the financials" today would receive a cost model
 with zero dollars of history behind it. That is the correct thing to give them,

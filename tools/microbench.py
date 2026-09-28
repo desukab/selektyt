@@ -136,22 +136,38 @@ def _bench(fn, repeat: int) -> tuple[float, float]:
 
     `fn` takes the run index, 1-based, so a stage that must not reuse state
     between runs (the transcription checkpoint) can vary its inputs.
+
+    CPU time has to count the children: transcription decodes with ffmpeg and
+    rendering *is* ffmpeg, and ``RUSAGE_SELF`` reports only this interpreter's
+    own user time. Measured on a 60 s 16:9 render, that reports 0.4 ms of CPU
+    for 45.9 s of wall — a thousandth of the work, because every instruction
+    executed was a child and none of it was waited on as self. The two are
+    summed, which is what "CPU time of this stage on this host" has to mean
+    when the stage is a subprocess.
     """
     best = float("inf")
     best_cpu = 0.0
     for i in range(1, max(1, repeat) + 1):
-        ru0 = resource.getrusage(resource.RUSAGE_SELF).ru_utime if resource else 0.0
+        ru0 = _cpu_time() if resource else 0.0
         t0 = time.perf_counter()
         fn(i)
         wall = time.perf_counter() - t0
-        cpu = (
-            resource.getrusage(resource.RUSAGE_SELF).ru_utime - ru0
-            if resource
-            else 0.0
-        )
+        cpu = (_cpu_time() - ru0) if resource else 0.0
         if wall < best:
             best, best_cpu = wall, cpu
     return best, best_cpu
+
+
+def _cpu_time() -> float:
+    """User time of this process and every child it has waited for.
+
+    ``RUSAGE_CHILDREN`` is cumulative over waited-for children, so the delta
+    across a ``subprocess.run`` is exactly that child's contribution —
+    ``subprocess.run`` waits before returning, which is what makes the
+    subtraction meaningful rather than a running total.
+    """
+    return (resource.getrusage(resource.RUSAGE_SELF).ru_utime
+            + resource.getrusage(resource.RUSAGE_CHILDREN).ru_utime)
 
 
 def bench_transcribe(project: Path, source: Path, model: str, repeat: int,

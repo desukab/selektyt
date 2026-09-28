@@ -165,4 +165,4 @@ Stated so the study cannot be started before it is ready:
 That the rubric, the blinding procedure, the falsifiers and the budget exist
 and are recorded here. Not that editors have used SelekyT, not that time
 savings were measured, and not that any human has judged the cuts. The
-18×–73× figure in `docs/TIME_SAVINGS.md` remains a model and is labelled one.
+14.7×–58.9× figure in `docs/TIME_SAVINGS.md` remains a model and is labelled one.

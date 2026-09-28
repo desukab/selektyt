@@ -28,6 +28,13 @@ modified is this one, plus one retained reproduction artefact
 S2). `engine/caption_director.py` was temporarily edited to reproduce the
 pre-fix behaviour for R14/S9 and restored; `git diff` confirms it matches HEAD.
 
+**Line citations have drifted and will keep drifting.** Every `TIME_SAVINGS.md:N`
+reference below was correct against the file as it stood on 2026-09-19 and is not
+re-pinned on each edit to that document; the section numbers and quoted text are
+the stable identifiers and the line numbers are a convenience that has gone stale.
+Findings whose line citations matter (R5, R6) quote the sentences they object to
+verbatim, so they remain checkable by search.
+
 ---
 
 ## RANKED LIST OF CLAIMS THAT DO NOT SURVIVE SCRUTINY
@@ -418,6 +425,8 @@ Each of these is asserted with a precision the repo cannot back:
 | Audio decode 147.0 s / 0.10 RTF | `TIME_SAVINGS.md:57` (§2) | Explicitly an ASSUMPTION carried from `BUSINESS_MODEL.md` §3; `TIME_SAVINGS.md` §10.2 A2 admits "Still assumed. Not isolated by any artifact." Never measured. |
 | §2's microbenchmarks (36.12 s / 7.654 s / 5.552 s / 3,546 ms) | `TIME_SAVINGS.md:57-63` | No benchmark script or saved output is checked in. |
 | Cloud compute "$0.021 – $0.024" | `TIME_SAVINGS.md` §5 | **Critique stood and was actioned — but it actioned the wrong layer, and the audit should say so.** Recomputed with the stated inputs ($0.1785/h × 0.2678 RTF × 1469.77 s / 3600) = **$0.0195**, not $0.021. $0.021 was `BUSINESS_MODEL.md` §4(a)'s figure derived from that doc's **0.2917** RTF, and **$0.024 matched nothing in either document.** `TIME_SAVINGS.md` §5 now quotes $0.0195–$0.0261 with each RTF named. But the figure underneath both rows was itself stale: `BUSINESS_MODEL.md`'s 0.2917 total rested on a render RTF of 0.1232 measured against the pre-`56253b5` `veryfast`/crf20 encoder, and the shipped encoder is `slow`/crf18 — re-measured 2026-09-28 at **0.875 (16:9) / 0.358 (9:16)**, moving the total to **0.3584** and the job cost to **$0.0261**. This row caught an arithmetic inconsistency in a number whose *measurement basis* was wrong, and neither the original nor the correction noticed that. The generalizable audit rule: verify the measurement conditions, not just the arithmetic that consumes them. |
+
+**Postscript to this row, and it is the same defect one level down.** The 0.875 / 0.358 / 0.3584 / $0.0261 figures quoted immediately above were themselves single-window measurements with no committed record, and were superseded within the same week by swept records: **0.8221 / 0.3567** (`corpus/render/runs/pentagon-30s-ass.json`), a total of **0.3547**, and a job cost of **$0.0258** (`docs/TIME_SAVINGS.md` §5 now quotes $0.0213–$0.0258 with each RTF named). The audit rule this row states is the rule that caught it: 0.875 was checked for arithmetic and never for whether a record backed it. A red-team row that corrects a number with another unrecorded measurement has treated the symptom and not the cause — the cause was the absence of committed evidence, and it was the sweep, not the correction, that supplied it. Every render RTF in the repository is now backed by a record in `corpus/render/runs/`, and `tests/test_render.py` asserts that the docstring's tables agree with those records, which is the check that would have rejected 0.875 at the time.
 
 ### R14. One test is fully vacuous and its name claims a property it never measures
 

@@ -326,16 +326,21 @@ measured different ones (see §6).
 | Editorial pass (story units + ranking + gate) | **0.00241** | **VERIFIED** — 3.546 s for a 1469.77 s source, 4000 thoughts → 11 gate-passed candidates |
 | Captions SRT+ASS, 6 clips | **0.000012** | **VERIFIED** — 17.6 ms |
 | Timeline build + EDL + FCPXML, 6 clips | **0.000002** | **VERIFIED** — 0.4 + 1.4 + 1.5 = 3.3 ms |
-| Render 16:9 (99.254 s of output) | **0.00862** | **VERIFIED** — 12.66 s |
-| Render 9:16, anamorphic (99.254 s of output) | **0.00625** | **VERIFIED** — 9.18 s |
+| Render 16:9 (99.254 s of output) | **0.05552** | **MEASURED, DIFFERENT SOURCE** — shipped `slow`/crf18, 99.254 s × RTF **0.8221** from `corpus/render/runs/pentagon-30s-ass.json` (1280×720, 30 s window, real ASS burned in). The reference run's own source is 720×486 and has been **deleted** to free disk, and 1280×720 is 2.19× its pixel count, so this row **overstates** the reference run (`docs/TIME_SAVINGS.md` §2c) |
+| Render 9:16, anamorphic (99.254 s of output) | **0.02409** | **MEASURED, DIFFERENT SOURCE** — same record, 99.254 s × RTF **0.3567**; the same 1.96× pixel caveat applies |
 
 Cost for the **20-source / 400-source-minute** corpus:
 
 | Transcription model | Total RTF | Machine time for the whole corpus |
 | --- | --- | --- |
-| `small` (today's) | 0.2678 | **107 min ≈ 1.8 h** |
-| `medium` (×3 on transcription — ASSUMPTION) | 0.5688 | **228 min ≈ 3.8 h** |
-| `large-v3` (×10 on transcription — ASSUMPTION) | 1.6223 | **649 min ≈ 10.8 h** |
+| `small` (today's) | 0.3325 | **133 min ≈ 2.2 h** |
+| `medium` (×3 on transcription — ASSUMPTION) | 0.6335 | **253 min ≈ 4.2 h** |
+| `large-v3` (×10 on transcription — ASSUMPTION) | 1.6870 | **675 min ≈ 11.2 h** |
+
+The render rows above were 0.00862 / 0.00625 until 2026-09-28, measured against the
+pre-`56253b5` `veryfast`/crf20 encoder; they were stale by roughly 6× in wall clock, and the
+`small`-model row was 0.2678 / 107 min. The total moved from 0.2678 to 0.3325 for a
+**measurement-basis** reason, not because any stage got slower — see `docs/TIME_SAVINGS.md` §2c.
 
 Storage: VERIFIED 0.951 GB per 24.5-min project on disk (of which 0.884 GB is the source copy and
 0.047 GB the transient 16 kHz WAV); the deliverables are **19.13 MB** (11.90 MB 16:9 + 7.20 MB 9:16
@@ -343,8 +348,11 @@ Storage: VERIFIED 0.951 GB per 24.5-min project on disk (of which 0.884 GB is th
 **0.38 GB** if only deliverables are kept.
 
 **Reading:** the corpus is cheap. Even at `large-v3` the entire first corpus is a single overnight
-run on this 4-core box, and the transcription layer is the only component whose cost moves
-materially. **There is no compute-cost excuse for not running this corpus.** The binding constraint
+run on this 4-core box. Transcription remains the single largest component, but it is no longer the
+only one that matters: at the shipped encoder render is **0.0796 RTF of the 0.3325 total — 24%**,
+and the two `ASSUMPTION` rows above (decode 0.10, ×3/×10 on the bigger models) are now the parts of
+this table least anchored to a committed record. **There is no compute-cost excuse for not running
+this corpus.** The binding constraint
 is the human-judgement metrics (D6, P10, P11), which cost editor time, not CPU time — see
 `docs/TIME_SAVINGS.md` §7 for the dollar cost of that.
 
@@ -364,8 +372,8 @@ contradicts several of its numbers. This document uses the corrected values thro
 | 9:16 coded geometry | 272×486, SAR 8:9, DAR 1088:2187 | **308×486, SAR 8:9, DAR 1232:2187** | **CONTRADICTED** |
 | 16:9 output | "720×486 → cap 1080 wide" | **864×486 square-pixel** (the 4:3 content is padded into an exact 16:9 frame; it is never upscaled to 1080) | **CONTRADICTED** |
 | Transcription RTF | 0.1651 | **0.1505** (my cross-check) | corroborated, 8.8% more pessimistic than reality |
-| Render RTF 16:9 | 0.875 (shipped `slow`/crf18, 1280×720 source, MEASURED 2026-09-28) | **0.1276** (my cross-check) | **superseded on both sides** — see the note below |
-| Render RTF 9:16 | 0.358 (shipped `slow`/crf18, 406×722 tracked crop, MEASURED 2026-09-28) | not cross-checked | — |
+| Render RTF 16:9 | 0.8221 (shipped `slow`/crf18, 1280×720 source, real ASS burned in, MEASURED 2026-09-28) | **0.1276** (my cross-check) | **superseded on both sides** — see the note below |
+| Render RTF 9:16 | 0.3567 (shipped `slow`/crf18, 406×722 tracked crop, real ASS burned in, MEASURED 2026-09-28) | not cross-checked | — |
 | Editorial + export RTF | 0.01 combined (ASSUMPTION) | **0.00243 measured** | the assumption is **4.1× more pessimistic** than measured — safe direction |
 
 Note the direction: the two contradicted *measure* rows (duration, yield, bytes, geometry) are the
@@ -381,17 +389,19 @@ and agreed with it to 3.6%, which read as corroboration. It was not. Both figure
 (2026-09-25), measured on the 720×486 SD reference source — a configuration that no longer ships on
 either count. `56253b5` replaced the encoder with `-preset slow -crf 18`, and the reference source
 used for the original measurement is no longer on this host, so the 2026-09-28 re-measurement in
-`docs/BUSINESS_MODEL.md` is on the corpus's 1280×720 pentagon briefing instead and reads **0.875**
-(16:9) / **0.358** (9:16) — a 7× move on 16:9, of which 3.16× is the encoder measured head-to-head
-on one file and ~2.6× is the resolution change. My cross-check is therefore still a valid measurement
+`docs/BUSINESS_MODEL.md` is on the corpus's 1280×720 pentagon briefing instead and reads **0.8221**
+(16:9) / **0.3567** (9:16) — a 6.4× move on 16:9, of which **3.7× is the encoder** measured across
+three content windows on the 16:9 ladder and ~2.6× is the resolution change. My cross-check is therefore still a valid measurement
 of the retired configuration, and its agreement with 0.1232 is still real evidence that *that* number
 was right; what it is not is evidence about the shipped encoder. The honest reading is that render
 RTF was the least-cross-checked quantity in the cost model at the exact moment it became the most
 model-sensitive one, and the lesson is that a cross-check which reproduces a figure's *measurement
 conditions* rather than its *current conditions* corroborates the wrong thing.
 
-`docs/AI_EXECUTION_STATE.md` is known-stale and was not used as a source for anything in this
-document.
+`docs/AI_EXECUTION_STATE.md` was known-stale when this section was written and was
+not used as a source for anything here. Its stale render figures were corrected on
+2026-09-28 (the "no figure in it had a committed record" entry), and it now agrees
+with this document's 0.8221 / 0.3567; nothing in §6 was read from it either way.
 
 ---
 

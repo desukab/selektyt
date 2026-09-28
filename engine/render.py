@@ -221,12 +221,40 @@ def _encoder_args() -> list[str]:
     point where the extra is worth carrying.
 
     One entry in those tables is not like the others: medium/crf20 lands within
-    0.1 dB of slow/crf20 while costing roughly three quarters of its wall clock,
-    so the preset itself buys nothing at a fixed crf on this footage. That
-    suggests medium/crf18 could match the shipped quality at a lower render cost
-    -- but medium/crf18 has never been measured, and this docstring is not the
-    place to assert it. ``shipped_pair`` in the sweep records is what a follow-up
-    ladder run would need to re-score against.
+    0.13 dB of slow/crf20 while costing 0.74-0.78 of its wall clock, and at 2-5%
+    *higher* bitrate -- so the preset itself is rate-distortion dominated at a
+    fixed crf on this footage, and buys nothing but wall clock. That raised
+    a question worth answering, and it has been answered: medium/crf18 was swept
+    against the shipped pair on the same three windows per orientation
+    (corpus/render/runs/pentagon-240f-medium18.json and
+    pentagon-240f-medium18-16x9.json).
+
+    It is 30-55% faster, and it is not free. Within 0.03-0.15 dB of the shipped
+    quality in every window, but at 2-5% *higher* bitrate -- medium is strictly
+    dominated on the rate-distortion curve at this crf, and what it sells is wall
+    clock, not bytes. So the shipped pair stays on slow: the gap is small enough
+    that a batch service that needs throughput can take the 30-55% deliberately,
+    and small enough that a product whose deliverables go to phones on cellular
+    should not pay 2-5% more bytes for a PSNR delta no viewer will see. Neither
+    side of that is measurable here -- PSNR is a proxy, and no human has rated
+    either encode -- so the choice is left where a measurement ends and a product
+    judgement begins, and a per-run speed toggle remains the honest way to expose
+    it rather than a silent swap of a deliberate decision. The 30-55% range is
+    not symmetric across orientation either: 9:16 is where the win is (34-55%),
+    16:9 stays 30-40%, which is worth knowing before quoting one number at a
+    customer whose mix is not this one.
+
+    The speed range above is the per-window one, not the ratio of the two ``rtf``
+    columns in a record: those are independent min/max bounds, so dividing one
+    entry's fastest window by the other's slowest states a speedup no window
+    showed (0.567 at 9:16, against the 0.646 the slowest paired window actually
+    shows -- a 76% speedup invented from bounds that never co-occurred).
+    ``rtf_ratio_vs_shipped`` in a sweep's per-window ``quality_vs_cost`` carries
+    the paired figure; the two records above carry it, and
+    tests/test_render.py re-derives the range from it and cross-checks it
+    against the rows. A speedup is also 1/ratio - 1 and not 1 - ratio -- 0.646
+    of the wall clock is 55% faster, not 35% -- and the paragraph above stated
+    the smaller number until 2026-09-28 for exactly that reason.
 
     The resolution is *not* a lever here: a 9:16 crop of a 16:9 source is 406 px
     wide at 720 tall by arithmetic. Pre-upscaling that to 1080x1920 before the

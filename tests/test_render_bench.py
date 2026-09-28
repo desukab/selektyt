@@ -288,6 +288,41 @@ def test_aggregate_sweep_keeps_entry_order_and_carries_min_max():
     assert quality["slow/crf18"]["kbps_ratio_vs_shipped"] == [1.0, 1.0]
 
 
+def test_aggregate_sweep_pairs_rtf_within_a_window_not_across_the_range():
+    """The wall-clock ratio is the figure a reader reaches for first, and it is
+    the one the unpaired derivation gets wrong invisibly.
+
+    Each entry's ``rtf`` is an independent min/max over the sweep, so dividing
+    one entry's fastest window by the other's slowest states a speedup that no
+    window produced. The window below is the proof shape: medium's slowest
+    window is also slow's slowest, so the paired ratios are close to each other
+    while the unpaired ones are not — an unpaired derivation would widen the
+    reported range on both ends with figures the machine never measured.
+    """
+    window_a = _window([
+        _row("medium", 18, kbps=900, ssim=0.9990, psnr=42.0, rtf=0.26),
+        _row("slow", 18, kbps=880, ssim=0.9995, psnr=42.1, rtf=0.35,
+             shipped=True),
+    ])
+    window_b = _window([
+        _row("medium", 18, kbps=950, ssim=0.9992, psnr=43.5, rtf=0.22),
+        _row("slow", 18, kbps=930, ssim=0.9996, psnr=43.6, rtf=0.30,
+             shipped=True),
+    ])
+
+    quality = _aggregate_sweep([window_a, window_b])["quality_vs_cost"]
+    # 0.26/0.35 and 0.22/0.30, window by window, then ordered min-first.
+    assert quality["medium/crf18"]["rtf_ratio_vs_shipped"] == [
+        round(0.22 / 0.30, 3), round(0.26 / 0.35, 3)]
+    # The unpaired derivation this replaces would have returned 0.22/0.35 and
+    # 0.26/0.30 — a range of 0.63-0.87 against the real 0.73-0.74, whose
+    # endpoints are two different windows' numbers crossed. A regression to it
+    # fails here rather than in a published figure.
+    paired = quality["medium/crf18"]["rtf_ratio_vs_shipped"]
+    assert paired[0] > round(0.22 / 0.35, 3) + 0.05
+    assert paired[1] < round(0.26 / 0.30, 3) - 0.05
+
+
 def test_aggregate_sweep_scores_each_window_against_that_windows_shipped_row():
     """The gap to the shipped entry is recomputed per window, not over the
     sweep's pooled min and max — a pooled gap would mix a window's PSNR with
@@ -581,8 +616,17 @@ def test_the_committed_sweep_reaggregates_from_its_own_windows():
     rec = json.loads(SWEEP.read_text(encoding="utf-8"))
     agg = _aggregate_sweep(rec["per_window"])
     # The summary is reproducible from the windows it aggregates: the ranges and
-    # the per-window gaps are a function of the record, not of the run.
-    assert agg["quality_vs_cost"] == rec["quality_vs_cost"]
+    # the per-window gaps are a function of the record, not of the run. The one
+    # exception is rtf_ratio_vs_shipped, which the committed sweep predates —
+    # re-aggregating adds it, so it is compared apart from the rest rather than
+    # deleted from the expectation.
+    for entry, gap in rec["quality_vs_cost"].items():
+        for key, expected in gap.items():
+            assert agg["quality_vs_cost"][entry][key] == expected, (
+                f"{entry}.{key} does not re-derive from the record's own windows")
+        assert "rtf_ratio_vs_shipped" in agg["quality_vs_cost"][entry], (
+            f"{entry}: re-aggregation produced no rtf ratio, so the pairing the "
+            f"docstring's speed range rests on is no longer reproducible")
     by_key = {(r["preset"], r["crf"]): r for r in rec["rows"]}
     for row in agg["rows"]:
         pinned = by_key[(row["preset"], row["crf"])]

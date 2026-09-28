@@ -277,9 +277,101 @@ every line below was true on this host at that point.
 
 ## Completed work
 
+### This session — the encoder ladder was a table of single-window figures, and no figure in it had a committed record
+
+The previous entry measured what `slow`/crf18 costs. This one found the same
+defect one layer down, in the place the encoder was chosen: the table in
+`engine/render.py:_encoder_args` that justifies it. Its absolute quality and
+bitrate figures matched **no committed record at all** — they were taken in a
+session whose artifacts were never written down, so none could be re-derived,
+re-checked, or swept. The previous entry's own 0.875 / 0.358 were the same shape.
+
+Closed by making the measurement repeatable and then repeating it.
+`tools/render_bench.py` is the bench; `corpus/render/runs/*.json` are its
+committed evidence; `regenerates` in each record names every downstream site it
+replaces, and `_write_record` refuses to overwrite a tag, so a re-run cannot
+silently rewrite history.
+
+**What the sweep changed, measured across three content windows on the corpus
+source instead of one file.** Absolute quality and bitrate are **window
+properties, not encoder properties**: the same entry moves 2.6 dB and 41% in
+bitrate between windows, which is more than the entire gap between two presets.
+Only the *gap against the shipped pair* and the *bitrate and RTF ratios* are
+stable across windows. So the ladder is now published as ranges, for both
+orientations (`corpus/render/runs/pentagon-240f-sweep.json` and
+`pentagon-240f-16x9-sweep.json`):
+
+    9:16, 406x722          dB vs shipped   bitrate ratio   RTF ratio
+    veryfast/crf20           -3.18 .. -2.42   0.644 .. 0.700   0.34 .. 0.36
+    medium/crf20             -1.43 .. -1.16   0.776 .. 0.804   0.69 .. 0.70
+    slow/crf20               -1.35 .. -1.15   0.761 .. 0.765   0.90 .. 0.92
+    slow/crf18                    shipped          1.0              1.0
+    slow/crf16               +1.17 .. +1.40   1.298 .. 1.311   1.08 .. 1.11
+
+    16:9, 1280x720         dB vs shipped   bitrate ratio   RTF ratio
+    veryfast/crf20           -3.76 .. -2.91   0.685 .. 0.719   0.27 .. 0.29
+    medium/crf20             -1.49 .. -1.32   0.818 .. 0.825   0.66 .. 0.72
+    slow/crf20               -1.37 .. -1.27   0.786 .. 0.792   0.89 .. 0.93
+    slow/crf18                    shipped          1.0              1.0
+    slow/crf16               +1.24 .. +1.34   1.256 .. 1.276   1.07 .. 1.10
+
+The throughput lever the previous entry sized at 3.16× is therefore **3.7× at
+16:9 and 2.9× at 9:16** — and the fact that it is orientation-specific is exactly
+what a single-figure table cannot express, and what a toggle sized from one
+orientation would get wrong.
+
+**Two doc claims with no record behind them, re-measured rather than dropped.**
+Both survived, and both are now measurements instead of assertions. Emitting
+1080×1920 from the 406×722 crop buys **+2.754 dB** for **4.577× bitrate and
+5.092× RTF** (`pentagon-240f-upscaled.json`) — the direction and rough magnitude
+the docstring claimed all along; it simply had no evidence. And burning a real ASS
+from the run moves 16:9 from 0.8284 to **0.8221** and 9:16 from 0.3562 to
+**0.3567**, both inside the 1.01× spread between timed repeats
+(`pentagon-30s.json` → `pentagon-30s-ass.json`), so "captions cost under 1%" is
+measured, not asserted. **The cost model now uses the captioned figures**, because
+a real deliverable always carries captions.
+
+**A systematic error in the bench's own denominator, found by the sweep.**
+`-frames:v` without `-r` inherits the source's frame rate, so requesting 240
+frames at `--fps 25` still emits 240 frames over 8.008 s. The naive
+`frames / fps` read 9.600 s — a 17% overstatement of content, which understated
+every RTF and every bitrate by 17%, and read to a reviewer as the encoder having
+gotten cheaper. Fixed: `_emitted_duration` probes the emitted file's own duration,
+and the record carries `span_requested_seconds` beside `span_emitted_seconds` so
+the gap is visible rather than silent. **The production path was never affected** —
+`pipeline.py` passes the source's real fps — but every bench figure taken before
+the fix was wrong in the same direction and by the same factor.
+
+**Figures this entry supersedes.** 0.875 → **0.8221**; 0.358 → **0.3567**;
+0.277 → **0.220** (0.8221 × 0.27, the ratio the 16:9 ladder measures); 3.16× →
+**3.7× / 2.9×, orientation-specific**; +3.46 dB → **2.9–3.8 dB at 16:9 and
+2.4–3.2 dB at 9:16**; +2.64 dB → the same two ranges; total RTF 0.3584 →
+**0.3547**; non-transcription RTF → **0.1896**; render share of the model 23% →
+**22%**; `small` on `c7i.xlarge` $0.00107 → **$0.00106**. Each is recomputed in
+`docs/BUSINESS_MODEL.md`, and `tests/test_render.py` now asserts the records exist,
+that the shipped pair and window list are what the docstring cites, and that the
+two orientation tables agree with each other — so the tables can no longer drift
+from the evidence, which is the failure mode that produced this entry.
+
+**One open question the sweep answered by posing.** `medium`/crf20 lands within
+0.1 dB of `slow`/crf20 at roughly three quarters of the wall clock, which suggests
+the preset itself buys nothing at a fixed crf — and that `medium`/crf18 might
+match the shipped quality for less render cost. That is a two-command bench run,
+and it is the next thing this entry's tooling makes cheap. Named in the docstring
+as a follow-up rather than asserted there.
+
+**Validation ladder for this work:** implemented (the bench tool, six fixes in it,
+two of them found only by live probe runs rather than reasoning) → unit-tested
+(45 tests in `tests/test_render_bench.py`, three of which reproduce the
+denominator defect on real corpus media and a real elementary stream) → **real-media
+validated** (five new committed records, all on the real 1280×720 29.97 fps corpus
+source, each spanning three content windows per orientation) → document-corrected.
+**Not** human evaluated; PSNR/SSIM are proxy metrics, not perceived quality. Full
+suite at the commit: **1838 passed, 16 skipped**.
+
 ### This session — the cost model's largest measured term was stale by 7×, and the encoder is why
 
-`56253b5` bought +2.64 dB of render quality by switching the encoder from
+`56253b5` bought render quality by switching the encoder from
 `libx264 -preset veryfast -crf 20` to `-preset slow -crf 18`, and **the cost row
 in `docs/BUSINESS_MODEL.md` was never re-run after it.** Every downstream figure
 traced to that one row was wrong by the same factor, in a document whose whole
@@ -288,11 +380,17 @@ shipped 9:16 render measurement disagreed with the encoder ladder `56253b5`
 itself had published, and closed it.
 
 Re-measured 2026-09-28 on `corpus/media/pentagon-esper-briefing.mp4`
-(1280×720, 29.97 fps), 30 s, best of 2, with a real ASS from the run burned in:
+(1280×720, 29.97 fps), 30 s, best of 3 timed renders after one untimed warmup,
+with a real ASS from the run burned in:
 
-    16:9, shipped slow/crf18, 1280×720 output   0.875 RTF
-    9:16, shipped slow/crf18, 406×722 crop      0.358 RTF
-    16:9, pre-56253b5 veryfast/crf20            0.277 RTF (computed: 0.875 ÷ 3.16)
+    16:9, shipped slow/crf18, 1280×720 output   0.8221 RTF
+    9:16, shipped slow/crf18, 406×722 crop      0.3567 RTF
+    16:9, pre-56253b5 veryfast/crf20            0.220 RTF (computed: 0.8221 × 0.27)
+
+These three rows are **superseded as absolute figures** by the sweep in the entry
+above — 0.875 → 0.8221 and 0.358 → 0.3567 — but the *attribution* below is
+unchanged, because the encoder term it rests on is a ratio and ratios are what
+survive a window change.
 
 The 9:16 figure cross-validates against `56253b5`'s own ladder entry for
 slow/crf18 (2.89 s for 240 frames = **0.361**) to within 1%, which is what
@@ -304,7 +402,7 @@ ladder's veryfast/crf20 entry (1.04 s for 240 frames = **0.130**).
 measured head-to-head on identical 1080p footage and an identical filter chain
 (900 frames: 10.13 s veryfast/crf20 vs 32.01 s slow/crf18) = **3.16×**. Source
 resolution SD 720×486 → HD 1280×720 ≈ **2.6×**. Product
-0.1232 × 3.16 × 2.63 ≈ **1.02** against a measured **0.875**, with the
+0.1232 × 3.16 × 2.63 ≈ **1.02** against a measured **0.8221**, with the
 over-prediction explained by `landscape_filter` padding rather than scaling. The
 controlled variable is the 3.16× encoder term; the resolution term is an
 explanation of the gap, not a controlled measurement, and the original NASA
@@ -313,9 +411,11 @@ done on the same file. Stated as a limitation in the doc.
 
 **The encoder was not reverted.** Re-measured at 1080p, the quality purchase is
 real: PSNR **51.445** / SSIM **0.997573** for slow/crf18 against **47.987** /
-**0.995991** for veryfast/crf20 = **+3.46 dB**. Correct the cost figure, not the
-encoder. Captions are provably excluded as a cause — burning a real ASS moved
-16:9 from 0.869 → 0.875 and 9:16 from 0.356 → 0.358, under 1%.
+**0.995991** for veryfast/crf20 = **+3.46 dB** — one window of a comparison the
+entry above swept into a range (2.9–3.8 dB at 16:9, 2.4–3.2 dB at 9:16). Correct
+the cost figure, not the encoder. Captions are provably excluded as a cause —
+burning a real ASS moved 16:9 from 0.8284 → 0.8221 and 9:16 from 0.3562 →
+0.3567, under 1%.
 
 **The two presets can no longer share one figure**, and this is the geometry
 finding the stale row concealed: the 16:9 deliverable from a 1280×720 source is a
@@ -326,22 +426,26 @@ overstating 9:16 by 2.4×.
 
 **The move is 23% on the end-to-end cost, not 7×**, because the render terms are
 multiplied by the 6.753% clip yield before they enter the model. Total RTF
-0.2917 → **0.3584**; `small` on `c7i.xlarge` $0.000868 → **$0.00107** per
+0.2917 → **0.3547**; `small` on `c7i.xlarge` $0.000868 → **$0.00106** per
 source-minute; the API mode $0.00476 → **$0.00496**. **That is why the stale
 figure survived: it was invisible in the only number anyone would check.**
 
-**What the correction actually changed.** The render term is now 23% of the model
+**What the correction actually changed.** The render term is now 22% of the model
 — the largest term after transcription, and already past the 0.10 decode term
 that is still an assumption. It is the only large term that is a *product
 decision rather than an accuracy-gated* one: the ladder shows `veryfast`/crf20
-costs 3.16× less for −3.46 dB, at no accuracy and no architecture cost. So a
+costs **3.7× less wall clock at 16:9 and 2.9× less at 9:16** for **2.9–3.8 dB and
+2.4–3.2 dB** respectively, at no accuracy and no architecture cost. So a
 per-run quality/speed toggle, or a two-pass preview-fast/master-slow workflow, is
-a genuine 3.16× throughput lever that the stale figure hid — at 0.1232 the two
+a genuine ~3× throughput lever that the stale figure hid — at 0.1232 the two
 render rows were 5.7% of the model and not worth a setting. Recorded in
 `docs/BUSINESS_MODEL.md` §4(b) as an option, **not implemented speculatively.**
-And the planning figure used for pricing, $0.004/source-min, no longer covers the
-API mode ($0.00496, 24% underwater) — the one place the correction bites a
-decision rather than a number. Stated in the doc; not silently repriced.
+One thing the sweep added and the single-figure version could not: the lever is
+orientation-specific, so a toggle sized from one preset is sized from the wrong
+half of its own range. And the planning figure used for pricing,
+$0.004/source-min, no longer covers the API mode ($0.00496, 24% underwater) — the
+one place the correction bites a decision rather than a number. Stated in the doc;
+not silently repriced.
 
 **The meta-finding, and the reason this propagated to six documents.** The
 quantity least cross-checked in the cost model was the one that had become most
@@ -2571,7 +2675,11 @@ checked before committing: the budget sums to exactly $1,000K; the 393.6 s
 machine-time figure is a verifiable sum of components; the 18×–73× ratio is
 labelled a model with an unobserved denominator and carries a falsifier
 declared in advance; and outreach remains unauthorized with no investor named
-anywhere.
+anywhere. (Both the 393.6 s and the 18×–73× were later superseded — the
+render rows they were built from measured the retired encoder, and the
+current figures are 488.8 s and 14.7×–58.9×; see the entry below titled
+"§2's render rows measured the retired encoder". The sentence above is left as written because it records what
+was checked at that commit, not what is true now.)
 
 ### This session — the corpus ran, and it changed what is known
 
@@ -2825,11 +2933,34 @@ frames through the tracked 406×722 crop:
     slow         18   1211.9  0.9995    43.18    2.89 s   <- shipped
     slow         16   1576.9  0.9996    44.43    3.23 s
 
+**This table is itself the defect the 2026-09-28 sweep closed.** Its figures match
+no committed record — they came from the `56253b5` session's own bench, whose
+artifacts were never written down, so nothing here could be re-derived. The same
+window re-measured and committed as
+`corpus/render/runs/pentagon-240f.json` reads:
+
+    preset      crf    kbps    SSIM     PSNR    wall
+    veryfast     20     646   0.9875   44.402   0.97 s
+    medium       20     749   0.9897   45.661   1.94 s
+    slow         20     712   0.9898   45.678   2.55 s
+    slow         18     932   0.9917   46.825   2.79 s   <- shipped
+    slow         16    1222   0.9933   47.992   3.08 s
+
+Every absolute figure moved between the two, including the SSIMs by a wide margin
+— the two windows are not the same footage, and absolute quality and bitrate are
+window properties rather than encoder ones. **The decision the table was used to
+make did not move**, and that is the point of publishing ratios rather than
+absolutes: `veryfast`/crf20 is still the lowest-quality entry and still the
+cheapest, and the quality gap and the bitrate and wall ratios against the shipped
+pair are stable across both windows and across the third window the sweep added.
+
 The old setting, `-preset veryfast -crf 20`, is the **lowest-quality entry on the
-ladder**, 2.64 dB behind what now ships. That is a visible softness on a
+ladder**, 2.42 dB behind what now ships in the committed window (2.64 dB in the
+uncommitted one; the range across three swept windows is 2.4–3.2 dB at 9:16).
+That is a visible softness on a
 phone-held Short, not a chart artefact. It is also the *cheapest* entry, so the
-change is an honest quality purchase rather than a free one: +2.64 dB for +44%
-bitrate and +1.85 s of wall clock on 8 s of footage. That matters because the
+change is an honest quality purchase rather than a free one: +2.42 dB for +44%
+bitrate (932 against 646) and +1.82 s of wall clock on 8 s of footage. That matters because the
 pipeline also runs on the Termux/ARM host, where the encode stays tolerable.
 `crf 16` buys one more dB for another 30% bitrate and is not worth carrying.
 
@@ -2985,6 +3116,132 @@ Whether a 406×720 deliverable reads as sharp on a phone is a question the ladde
 cannot answer — it measures fidelity to the source, not perceived sharpness at
 viewing size — and it stays open until a real 720p acquisition is available to
 judge against.
+
+### This session — §2's render rows measured the retired encoder, and the CPU column of the instrument itself was broken
+
+The previous two entries made the encoder measurement reproducible. This one
+found that the *cost model built on it* had not been rebuilt: `docs/TIME_SAVINGS.md`
+§2's two render rows still carried **0.00862 / 0.00625**, measured against the
+`veryfast`/crf20 encoder that `56253b5` retired. Every downstream figure in that
+document — the 393.6 s total, the 0.2678 RTF, the 18×–73× speed ratio, the 5.5%
+render share, the $0.0195 cloud figure — traced to those two rows and was wrong
+in the same direction and by the same ~6×. The error was a silent understatement
+of the pipeline's machine time at the exact moment the document is most quoted.
+
+**Re-deriving the table's own convention before touching a number.** The Wall
+column is not the measured wall of a benchmark window: it is the window's wall
+scaled to the job's **99.254 s of delivered output per preset**, and the RTF column
+is that scaled wall ÷ the source's 1469.77 s. An earlier pass of this work computed
+the new rows by dividing a raw 60 s window wall by the source length and got
+0.03131 / 0.01408 — wrong, because it mixed a 60 s window with a convention that
+assumes the job's own output length, and wrong by 1.8×. Caught by re-reading the
+table rather than by measurement, and no incorrect figure was written.
+
+**What the rows are now.** 0.05552 / 0.02409, i.e. **81.60 s / 35.40 s**, from
+`corpus/render/runs/pentagon-30s-ass.json` — the captioned shipped pair, **0.8221 /
+0.3567**, on the corpus's real 1280×720 source with a real ASS from the run burned
+in. New total **488.8 s (8.1 min)**, RTF **0.3325**, ratio **14.7×–58.9×**, and
+render's share of the budget moves from **5.5% to 24%** — the second-largest stage
+after transcription, where before it was a rounding error. Propagated to
+`EVALUATION.md` §5 (0.2678→0.3325, the 20-source corpus cost 107→133 min, and the
+`medium` / `large-v3` rows recomputed), `TRACTION_DASHBOARD.md`,
+`RED_TEAM_FINDINGS.md` and this document.
+
+**One thing this correction cannot do, and the document now says so.** The
+reference source used for §2 — the NASA 360 SD tape the whole cost model is built
+on — has been **deleted from this host** to free disk. §2b's claim that the job was
+still re-runnable was true when written and is not now. So the two render rows are
+**MEASURED, DIFFERENT SOURCE** and the total is labelled an upper bound: the
+pentagon source is 2.19× the pixels of this job's 864×486 16:9 output. The pixel
+ratio is known and the arithmetic to scale by it exists, and it was deliberately
+**not** done — render time is not linear in pixel count, and inventing that scaling
+law is exactly what `tools/microbench.py`'s own docstring refuses to do. §2c states
+the direction of the bias instead. It remains true that the source is
+byte-retrievable from archive.org, so the row is re-measurable in principle, just
+not on this host.
+
+**The instrument's CPU column was broken, independent of the numbers.**
+`tools/microbench.py:_bench` measured CPU time with `RUSAGE_SELF` alone, which
+excludes waited-for children — and rendering *is* ffmpeg. On a 45.9 s 16:9 render it
+reported **0.4 ms of CPU**, a thousandth of the actual work, because every
+instruction executed was a child and none of it counted as self. Fixed to sum
+`RUSAGE_SELF` + `RUSAGE_CHILDREN` in an extracted `_cpu_time()`, which is what
+"CPU time of a stage that is a subprocess" has to mean. Corrected readings on the
+60 s window: **3.5 cores (16:9) / 3.4 cores (9:16)** on a 4-core host. The
+wall/CPU ratio is what distinguishes "the pipeline is slow" from "the host is
+contended", and that column had been reporting nothing at all.
+
+**`tools/render_bench.py` was deriving its speed range from unpaired bounds.** The
+`rtf` field of a sweep record is a `[min, max]` over windows, not a per-window list,
+so dividing one entry's fastest window by another entry's slowest states a speedup
+no single window showed. Added a per-window `rtf_ratio_vs_shipped` to
+`quality_vs_cost`, pairing within a window; the `engine/render.py:_encoder_args`
+docstring now publishes the per-window range. `_write_record` still refuses to
+overwrite a tag, so neither new record was hand-edited.
+
+**The `medium`/crf18 question the previous entry posed is answered.** Two new
+committed records (`corpus/render/runs/pentagon-240f-medium18.json` and its 16:9
+counterpart) sweep it against the shipped pair on the same three windows per
+orientation. It is **30–55% faster** (9:16 34–55%, 16:9 30–40%), and it is not
+free: within **0.03–0.15 dB** of the shipped quality in every window, but at
+**2–5% *higher* bitrate**. `medium` is strictly dominated on the
+rate-distortion curve at this crf — what it sells is wall clock, not bytes. The
+shipped pair stays on `slow`/crf18, documented as a product judgement past the
+edge of what PSNR can settle, with a per-run speed toggle as the honest exposure
+rather than a silent swap.
+
+**That range was wrong as first written here, and the correction is a correction
+of the *direction*, not just the digits.** The records' paired RTF ratios are
+0.646–0.767, and a speedup is `1/ratio − 1`, not `1 − ratio`: `1 − 0.646` is
+35% and `1/0.646 − 1` is 55%. The understated figure made the option the
+paragraph declines look *less* attractive than it is, which is the wrong
+direction for an error to take in a paragraph whose conclusion is "we declined
+it." The same entry's `medium`/crf20 parenthetical — "three quarters of the wall
+clock" — was also resting on a paired-vs-shipped field measured against
+`slow`/crf18 rather than `slow`/crf20, which is the *unpaired-bounds* failure
+one paragraph down in a different costume. Both are now derived inside the test
+from `per_window` rows and cross-checked against the stored
+`rtf_ratio_vs_shipped`, and `_encoder_args`' docstring states the formula
+explicitly so the trap has a sign on it.
+
+**What pins it.** `tests/test_render.py::test_the_medium_crf18_answer_is_pinned_to_its_records`
+asserts the shipped pair and window list are what the docstring cites, that the
+PSNR gap is within ±0.15 dB, that the bitrate ratio is ≥ 1.0 on both legs, and
+re-derives the speed claim from `per_window`. `tests/test_render_bench.py` gains a
+test that the paired figure is what the aggregator emits, with daylight margins
+against the unpaired derivation. No existing assertion was weakened.
+
+**The finding that outlives the numbers.** Render was 5.5% of the machine budget
+and is 24%. Any future claim that this pipeline is "transcription-bound" is now an
+assumption awaiting re-measurement rather than a property of the architecture — and
+the two things that moved it, an encoder change and a source deletion, are both
+invisible to a reader who trusts the table without reading its basis column.
+
+**The structural fix, not just the three arithmetic ones.** Those three errors —
+the retired encoder, the unpaired bounds, `1 - ratio` — had one shape: a figure
+printed in prose that no machine recomputed from the record it named. Each was
+found by a human re-reading a record a test could have read. `docs/TIME_SAVINGS.md`
+§2 is the most-quoted table in the repository and the test suite did not open it
+once; that is now closed by `tests/test_cost_model.py`, which finds the two render
+rows by label, and recomputes the wall column and the RTF column from
+`corpus/render/runs/pentagon-30s-ass.json` under the table's own stated scaling
+(99.254 s of delivered output per preset, 1469.77 s of source). It also asserts
+the record is `kind: ship` with the shipped encoder, because a record of a retired
+preset is how the first error entered; and it recomputes the 24% render share that
+the whole entry is about. The two scaling constants are held in the test as named
+values rather than re-derived, because re-deriving them would mean re-running a
+job whose source has been deleted to free disk — what is checked is everything
+*downstream* of them, which is where all three errors actually lived.
+
+**The new tests were mutation-verified before being trusted.** Each assertion was
+checked by corrupting the real doc or record, confirming the failure, and
+restoring — including record-side mutations, since a test that reads a file it
+never breaks on is a test that checks nothing. One trap worth recording: reassigning
+the module's `DOC` constant from a harness and re-running pytest does *not* move
+the pointer, because pytest's assertion-rewriting import machinery gives the
+module a fresh namespace; only mutating the file on disk produced a genuine
+failure. Mutation-testing against the live file is therefore the only reliable
+form here, and it is what was used.
 
 ## Outstanding work
 
@@ -3367,7 +3624,15 @@ selections).
    by re-running `tools/corpus_run.py --only telugu-tutorial,hadhazy-protest,
    hindi-baiga-interview` with a different `--model`, and it decides whether
    the product can claim multilingual support at all. Budget compute: `medium`
-   is several× `small` on a 4-core CPU-only host.
+   is several× `small` on a 4-core CPU-only host. **This task gained a consumer
+   this session:** the language-fitness gate's refusal on Telugu names `medium`
+   and its measured 91.54% as the routing suggestion, so a `medium` re-run is
+   no longer measurement for its own sake — it is the fix the tool already
+   recommends, and a `large-v3` run that clears the bar would turn a refusal
+   into a working path. Note the direction of what is being tested: `medium` on
+   Telugu is 91.54%, still above the 25% bar, so the honest expectation is
+   *better but not usable*, and the run's value is in saying so with a number
+   rather than in clearing the bar.
 3. **Fix the no-speech misdiagnosis** (Outstanding work item 7): remux to a
    clean container and retry before reporting "no audible spoken content", so
    an unreadable container stops being described as a speechless source.

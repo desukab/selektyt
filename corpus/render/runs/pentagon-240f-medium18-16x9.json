@@ -1,0 +1,330 @@
+{
+ "kind": "ladder_sweep",
+ "source": {
+  "path": "/home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4",
+  "width": 1280,
+  "height": 720,
+  "fps": 29.97002997002997,
+  "pix_fmt": "yuv420p",
+  "duration": 1013.846167,
+  "sar": "1:1",
+  "has_audio": true,
+  "size_bytes": 158163951
+ },
+ "conditions": {
+  "date": "2026-09-28",
+  "ffmpeg_version": "6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+  "cpu_count": 4,
+  "load_average": [
+   2.61,
+   0.71,
+   0.5
+  ],
+  "repo_commit": "d772be1"
+ },
+ "starts": [
+  0.0,
+  300.0,
+  600.0
+ ],
+ "filter": "scale=1280:720:flags=lanczos,pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1",
+ "frames": 240,
+ "content_seconds": 8.008,
+ "orientation": "16:9",
+ "reference_encoder": [
+  "libx264",
+  "preset veryfast",
+  "crf 0 (lossless)"
+ ],
+ "shipped_pair": [
+  "slow",
+  "18"
+ ],
+ "rows": [
+  {
+   "preset": "medium",
+   "crf": 18,
+   "shipped": false,
+   "windows": 3,
+   "kbps": [
+    1562,
+    2908
+   ],
+   "ssim": [
+    0.992719,
+    0.996401
+   ],
+   "psnr_db": [
+    46.411,
+    48.117
+   ],
+   "rtf": [
+    0.4056,
+    0.6223
+   ],
+   "output": {
+    "width": 1280,
+    "height": 720,
+    "dar": "16:9",
+    "megapixels": 0.9216
+   }
+  },
+  {
+   "preset": "slow",
+   "crf": 18,
+   "shipped": true,
+   "windows": 3,
+   "kbps": [
+    1512,
+    2767
+   ],
+   "ssim": [
+    0.992847,
+    0.99653
+   ],
+   "psnr_db": [
+    46.479,
+    48.266
+   ],
+   "rtf": [
+    0.5289,
+    0.8707
+   ],
+   "output": {
+    "width": 1280,
+    "height": 720,
+    "dar": "16:9",
+    "megapixels": 0.9216
+   }
+  }
+ ],
+ "quality_vs_cost": {
+  "medium/crf18": {
+   "psnr_db_vs_shipped": [
+    -0.149,
+    -0.068
+   ],
+   "kbps_ratio_vs_shipped": [
+    1.033,
+    1.051
+   ]
+  },
+  "slow/crf18": {
+   "psnr_db_vs_shipped": [
+    0.0,
+    0.0
+   ],
+   "kbps_ratio_vs_shipped": [
+    1.0,
+    1.0
+   ]
+  }
+ },
+ "per_window": [
+  {
+   "filter": "scale=1280:720:flags=lanczos,pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1",
+   "frames": 240,
+   "content_seconds": 8.008,
+   "span_requested_seconds": 8.0,
+   "span_emitted_seconds": 8.008,
+   "orientation": "16:9",
+   "reference_encoder": [
+    "libx264",
+    "preset veryfast",
+    "crf 0 (lossless)"
+   ],
+   "shipped_pair": [
+    "slow",
+    "18"
+   ],
+   "rows": [
+    {
+     "preset": "medium",
+     "crf": 18,
+     "shipped": false,
+     "ssim": 0.992719,
+     "psnr_db": 46.411,
+     "psnr_infinite": false,
+     "kbps": 2908,
+     "wall_seconds": 4.983,
+     "rtf": 0.6223,
+     "output": {
+      "width": 1280,
+      "height": 720,
+      "dar": "16:9",
+      "megapixels": 0.9216
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 18,
+     "shipped": true,
+     "ssim": 0.992847,
+     "psnr_db": 46.479,
+     "psnr_infinite": false,
+     "kbps": 2767,
+     "wall_seconds": 6.972,
+     "rtf": 0.8707,
+     "output": {
+      "width": 1280,
+      "height": 720,
+      "dar": "16:9",
+      "megapixels": 0.9216
+     }
+    }
+   ],
+   "quality_vs_cost": {
+    "medium/crf18": {
+     "psnr_db_vs_shipped": -0.068,
+     "ssim_vs_shipped": -0.000128,
+     "kbps_ratio_vs_shipped": 1.051,
+     "rtf_ratio_vs_shipped": 0.715
+    },
+    "slow/crf18": {
+     "psnr_db_vs_shipped": 0.0,
+     "ssim_vs_shipped": 0.0,
+     "kbps_ratio_vs_shipped": 1.0,
+     "rtf_ratio_vs_shipped": 1.0
+    }
+   }
+  },
+  {
+   "filter": "scale=1280:720:flags=lanczos,pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1",
+   "frames": 240,
+   "content_seconds": 8.008,
+   "span_requested_seconds": 8.0,
+   "span_emitted_seconds": 8.008,
+   "orientation": "16:9",
+   "reference_encoder": [
+    "libx264",
+    "preset veryfast",
+    "crf 0 (lossless)"
+   ],
+   "shipped_pair": [
+    "slow",
+    "18"
+   ],
+   "rows": [
+    {
+     "preset": "medium",
+     "crf": 18,
+     "shipped": false,
+     "ssim": 0.995848,
+     "psnr_db": 47.392,
+     "psnr_infinite": false,
+     "kbps": 1938,
+     "wall_seconds": 3.646,
+     "rtf": 0.4553,
+     "output": {
+      "width": 1280,
+      "height": 720,
+      "dar": "16:9",
+      "megapixels": 0.9216
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 18,
+     "shipped": true,
+     "ssim": 0.995955,
+     "psnr_db": 47.5,
+     "psnr_infinite": false,
+     "kbps": 1861,
+     "wall_seconds": 4.911,
+     "rtf": 0.6133,
+     "output": {
+      "width": 1280,
+      "height": 720,
+      "dar": "16:9",
+      "megapixels": 0.9216
+     }
+    }
+   ],
+   "quality_vs_cost": {
+    "medium/crf18": {
+     "psnr_db_vs_shipped": -0.108,
+     "ssim_vs_shipped": -0.000107,
+     "kbps_ratio_vs_shipped": 1.041,
+     "rtf_ratio_vs_shipped": 0.742
+    },
+    "slow/crf18": {
+     "psnr_db_vs_shipped": 0.0,
+     "ssim_vs_shipped": 0.0,
+     "kbps_ratio_vs_shipped": 1.0,
+     "rtf_ratio_vs_shipped": 1.0
+    }
+   }
+  },
+  {
+   "filter": "scale=1280:720:flags=lanczos,pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1",
+   "frames": 240,
+   "content_seconds": 8.008,
+   "span_requested_seconds": 8.0,
+   "span_emitted_seconds": 8.008,
+   "orientation": "16:9",
+   "reference_encoder": [
+    "libx264",
+    "preset veryfast",
+    "crf 0 (lossless)"
+   ],
+   "shipped_pair": [
+    "slow",
+    "18"
+   ],
+   "rows": [
+    {
+     "preset": "medium",
+     "crf": 18,
+     "shipped": false,
+     "ssim": 0.996401,
+     "psnr_db": 48.117,
+     "psnr_infinite": false,
+     "kbps": 1562,
+     "wall_seconds": 3.248,
+     "rtf": 0.4056,
+     "output": {
+      "width": 1280,
+      "height": 720,
+      "dar": "16:9",
+      "megapixels": 0.9216
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 18,
+     "shipped": true,
+     "ssim": 0.99653,
+     "psnr_db": 48.266,
+     "psnr_infinite": false,
+     "kbps": 1512,
+     "wall_seconds": 4.235,
+     "rtf": 0.5289,
+     "output": {
+      "width": 1280,
+      "height": 720,
+      "dar": "16:9",
+      "megapixels": 0.9216
+     }
+    }
+   ],
+   "quality_vs_cost": {
+    "medium/crf18": {
+     "psnr_db_vs_shipped": -0.149,
+     "ssim_vs_shipped": -0.000129,
+     "kbps_ratio_vs_shipped": 1.033,
+     "rtf_ratio_vs_shipped": 0.767
+    },
+    "slow/crf18": {
+     "psnr_db_vs_shipped": 0.0,
+     "ssim_vs_shipped": 0.0,
+     "kbps_ratio_vs_shipped": 1.0,
+     "rtf_ratio_vs_shipped": 1.0
+    }
+   }
+  }
+ ],
+ "regenerates": [
+  "engine/render.py — the ladder table in _encoder_args' docstring",
+  "tests/test_render.py:134 — the quality figures in the pinned-settings test"
+ ]
+}

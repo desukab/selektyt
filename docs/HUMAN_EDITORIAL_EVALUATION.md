@@ -590,8 +590,11 @@ currently invisible in the kept/trimmed/discarded/added scheme — it is folded
 into "trimming". Counting it separately is what makes the non-English arm
 measurable rather than merely runnable.
 
-**Status: PENDING EXTERNAL VALIDATION.** No time has been measured. The 18×–73×
-figure in `docs/TIME_SAVINGS.md` §5 remains a model and is labelled one.
+**Status: PENDING EXTERNAL VALIDATION.** No time has been measured. The
+14.7×–58.9× figure in `docs/TIME_SAVINGS.md` §5 remains a model and is labelled
+one. (It was 18×–73× until 2026-09-28; the range narrowed because §2's render rows
+were re-measured against the shipped encoder, not because anything got faster —
+see that document's §2c.)
 
 ---
 

@@ -314,7 +314,13 @@ def _score(entry: Path, reference: Path, frames: int) -> dict:
     ffmpeg's ``ssim`` and ``psnr`` filters both run in one pass over the two
     inputs and summarise to stderr. Luma only is reported: chroma follows luma
     closely enough on this footage that reporting both adds columns without
-    adding a decision, and the ladder in the docs has always been luma.
+    adding a decision, and the ladder in the docs has always been luma. That is
+    also an assumption baked into the parse below: ffmpeg labels the summary
+    after the planar component it measured, so a YUV input prints ``SSIM Y:``
+    and an RGB one prints ``SSIM R:``. Every entry this tool emits pins yuv420p,
+    so the Y case is the only live one; if an RGB file ever reaches here the
+    parse fails rather than silently scoring the wrong channel, and the message
+    below says which one it expected.
 
     A lossless entry scores ``PSNR y:inf``, which is not a parse failure — it is
     the correct answer to "how different are these two files" — so it is read as
@@ -340,8 +346,12 @@ def _score(entry: Path, reference: Path, frames: int) -> dict:
     psnr = re.search(r"PSNR y:([0-9.inf-]+)", log)
     if ssim is None or psnr is None:
         raise RuntimeError(
-            f"could not parse SSIM/PSNR from ffmpeg — the filters may be "
-            f"absent from this build. ffmpeg said:\n{log[-1200:]}")
+            f"could not parse SSIM Y:/PSNR y: from ffmpeg. This reports luma "
+            f"only, so it assumes a YUV planar input; an RGB pix_fmt would "
+            f"print SSIM R: instead and every entry this tool emits pins "
+            f"yuv420p, so that is the case to check first. The other cause is "
+            f"the ssim/psnr filters being absent from this build. ffmpeg "
+            f"said:\n{log[-1200:]}")
     psnr_text = psnr.group(1)
     infinite = psnr_text in ("inf", "-inf")
     return {"ssim": round(float(ssim.group(1)), 6),
@@ -633,6 +643,10 @@ def _measure_ladder(source: Path, start: float, frames: int, entries: list,
     shipped = next((r for r in rows if r["shipped"]), None)
     return {
         "filter": graph,
+        # Which window of the sweep this is. Without it a sweep's per_window list
+        # is three anonymous tables and the only way to name one is its position
+        # — which is also the only way to get the pairing below wrong.
+        "start_seconds": round(start, 3),
         "frames": frames,
         "content_seconds": round(denom, 4),
         # The requested span is kept beside the emitted one because a gap between
@@ -1090,7 +1104,7 @@ def _aggregate_sweep(per_window: list[dict]) -> dict:
 
     quality_vs_cost: dict[str, dict] = {}
     for row in rows:
-        gaps, ratios = [], []
+        gaps, ratios, rtf_ratios = [], [], []
         for window in per_window:
             shipped = next((g for g in window["rows"] if g["shipped"]), None)
             mine = next((g for g in window["rows"]
@@ -1099,10 +1113,19 @@ def _aggregate_sweep(per_window: list[dict]) -> dict:
             if shipped is not None and mine is not None:
                 gaps.append(mine["psnr_db"] - shipped["psnr_db"])
                 ratios.append(mine["kbps"] / max(1, shipped["kbps"]))
+                rtf_ratios.append(mine["rtf"] / max(1e-6, shipped["rtf"]))
         if gaps:
             quality_vs_cost[f"{row['preset']}/crf{row['crf']}"] = {
                 "psnr_db_vs_shipped": [round(x, 3) for x in _mm(gaps)],
                 "kbps_ratio_vs_shipped": [round(x, 3) for x in _mm(ratios)],
+                # The wall-clock saving is the one figure a reader reaches for
+                # first, so it is pre-computed like the other two. It has to be
+                # paired *per window* — the min/max ``rtf`` columns above are
+                # independent, so dividing one entry's fastest window by the
+                # other's slowest reports a speedup no window ever showed
+                # (measured: 0.646 paired against 0.656 from min/min, which is a
+                # different window's answer presented as the range's edge).
+                "rtf_ratio_vs_shipped": [round(x, 3) for x in _mm(rtf_ratios)],
             }
 
     return {

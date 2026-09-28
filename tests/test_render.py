@@ -221,6 +221,98 @@ def test_the_measured_ladder_records_still_exist():
         f"{pre['kbps'] / keep['kbps']:.2f}x, which is not the trade it describes")
 
 
+def test_the_medium_crf18_answer_is_pinned_to_its_records():
+    """The docstring's medium/crf18 paragraph answers a question it had raised
+    and left open: is the cheaper preset a free win? The answer it gives —
+    30-55% faster, within 0.03-0.15 dB, at 2-5% *higher* bitrate — is the reason
+    the shipped pair stayed on slow. That reasoning is only as good as the
+    records behind it, so they are checked here rather than trusted.
+
+    The speed figure used to read 23-35%, and it was wrong in the direction
+    that made the option the paragraph declines look *less* attractive than it
+    is. The error was arithmetically elementary: a 0.646 RTF ratio is a 55%
+    speedup, because you divide by the smaller number, and `1 - 0.646` is 35%
+    only if a 1.546x speedup is indistinguishable from a 1.354x one. It survived
+    because the assertion was written to print the figure it checked, not to
+    check the figure the docstring printed. The cross-check below now derives
+    the speedup from the record's own paired field and refuses a recomputation
+    that disagrees with it.
+
+    The half that matters is the bitrate one. "30-55% faster" is the sentence
+    someone acting on the paragraph alone would read first, and acting on it
+    alone is exactly the silent swap of a deliberate quality decision the
+    docstring declines to make. A medium row whose kbps ratio drifted below 1.0
+    would mean medium had stopped being rate-distortion dominated and the
+    conclusion — not just the table — would need re-measuring.
+    """
+    import json
+
+    runs = ROOT / "corpus" / "render" / "runs"
+    records = {name: runs / name for name in
+               ("pentagon-240f-medium18.json", "pentagon-240f-medium18-16x9.json")}
+    for name, path in records.items():
+        assert path.is_file(), f"{path} is cited by _encoder_args and is gone"
+
+    for name, path in records.items():
+        record = json.loads(path.read_text(encoding="utf-8"))
+        assert record["shipped_pair"] == ["slow", "18"], (
+            f"{name}: scored against {record['shipped_pair']}, not the shipped pair")
+        assert record["starts"] == [0.0, 300.0, 600.0], (
+            f"{name}: covers {record['starts']}; the docstring quotes three windows")
+        medium = record["quality_vs_cost"]["medium/crf18"]
+        # Within 0.03-0.15 dB of shipped in every window of both orientations;
+        # the widest recorded gap is -0.149, so the bound is the claim's own.
+        lo, hi = medium["psnr_db_vs_shipped"]
+        assert -0.15 <= lo <= hi <= 0.15, (
+            f"{name}: medium/crf18 is {lo}..{hi} dB from shipped, outside the "
+            f"0.03-0.15 dB the docstring quotes — re-read the record before "
+            f"quoting the paragraph again")
+        # And it costs bytes: medium is strictly dominated at this crf. A ratio
+        # at or below 1.0 would void the conclusion, not merely tighten it.
+        klo, khi = medium["kbps_ratio_vs_shipped"]
+        assert klo >= 1.0 and khi >= 1.0, (
+            f"{name}: medium/crf18 bitrate ratio {klo}..{khi} is not above "
+            f"shipped, so the 'not free' half of the answer no longer holds and "
+            f"the docstring's decision needs re-making")
+
+        # The speed claim, re-derived rather than copied. The two ``rtf``
+        # columns in a record are independent min/max bounds, so pairing min
+        # against min does not give a window's ratio — it gives one window's
+        # numerator over another's denominator. The per-window list is the only
+        # honest source, and render_bench writes the paired ratio into each
+        # window's quality_vs_cost, so that field is read and then independently
+        # recomputed from rows: a bench tool whose stored ratio disagrees with
+        # the arithmetic its own rows imply is the failure that produced the
+        # unpaired bounds in the first place.
+        ratios = []
+        for window in record["per_window"]:
+            by_entry = {f"{r['preset']}/{r['crf']}": r for r in window["rows"]}
+            stored = window["quality_vs_cost"]["medium/crf18"]["rtf_ratio_vs_shipped"]
+            recomputed = by_entry["medium/18"]["rtf"] / by_entry["slow/18"]["rtf"]
+            assert abs(stored - recomputed) < 1e-3, (
+                f"{name}: stored rtf_ratio_vs_shipped {stored} disagrees with the "
+                f"{recomputed:.4f} its own rows imply by more than rounding")
+            ratios.append(stored)
+        # Speedup is 1/ratio - 1, not 1 - ratio: 0.646 of the wall clock means
+        # 1.546x as fast, which is 55% faster and not 35%. Every figure quoted
+        # downstream is derived here so the printed claim cannot drift from the
+        # checked one again.
+        speedups = [1.0 / r - 1.0 for r in ratios]
+        assert 0.30 <= min(speedups) and max(speedups) <= 0.55, (
+            f"{name}: medium is {min(speedups):.0%}-{max(speedups):.0%} "
+            f"faster, outside the 30-55% the docstring quotes")
+        # Sweeping one window would reproduce the single-table mistake the
+        # ladder rewrite replaced, so the spread across windows is what the
+        # claim rests on.
+        assert len(ratios) == len(record["starts"]), (
+            f"{name}: {len(ratios)} RTF ratios against {len(record['starts'])} "
+            f"windows — a ratio list shorter than the sweep silently narrows "
+            f"the range the docstring publishes")
+        assert max(ratios) - min(ratios) < 0.20, (
+            f"{name}: RTF ratios {ratios} are too far apart for one range to "
+            f"describe them honestly")
+
+
 def _video_with_audio(out: Path, duration: float = 4.0) -> Path:
     """A 1280x720 source with a genuine AAC track.
 
