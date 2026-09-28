@@ -3,17 +3,16 @@
   "blocks": [
     {
       "start": 452.26,
-      "end": 453.7,
-      "text": "The terrorists should be aware of",
+      "end": 453.56,
+      "text": "The terrorists should be aware",
       "emphasis": [
-        " terrorists",
-        " should"
+        " terrorists"
       ]
     },
     {
-      "start": 453.7,
+      "start": 453.56,
       "end": 453.82,
-      "text": "that.",
+      "text": "of that.",
       "emphasis": [
         " that."
       ]
@@ -29,37 +28,43 @@
     },
     {
       "start": 455.0,
-      "end": 457.18,
-      "text": "after us doing this multiple times",
+      "end": 456.74,
+      "text": "after us doing this multiple",
       "emphasis": [
-        " multiple",
-        " times"
+        " multiple"
       ]
     },
     {
-      "start": 457.18,
-      "end": 458.6,
-      "text": "and with regard to your question",
+      "start": 456.74,
+      "end": 458.36,
+      "text": "times and with regard to your",
       "emphasis": [
-        " regard",
-        " question"
+        " times",
+        " regard"
       ]
     },
     {
-      "start": 458.6,
-      "end": 460.12,
-      "text": "regarding the stf We stay in",
+      "start": 458.36,
+      "end": 459.82,
+      "text": "question regarding the stf We",
       "emphasis": [
-        " regarding",
-        " stay"
+        " regarding"
       ]
     },
     {
-      "start": 460.12,
-      "end": 461.32,
-      "text": "continuous contact with them",
+      "start": 459.82,
+      "end": 461.12,
+      "text": "stay in continuous contact with",
       "emphasis": [
         " continuous"
+      ]
+    },
+    {
+      "start": 461.12,
+      "end": 461.32,
+      "text": "them",
+      "emphasis": [
+        " them"
       ]
     },
     {
@@ -73,44 +78,42 @@
     },
     {
       "start": 469.84,
-      "end": 471.62,
-      "text": "compound what kind of ordinance is",
+      "end": 471.32,
+      "text": "compound what kind of ordinance",
       "emphasis": [
-        " compound",
         " ordinance"
       ]
     },
     {
-      "start": 471.62,
-      "end": 473.82,
-      "text": "used to destroy the compound Also,",
+      "start": 471.32,
+      "end": 472.64,
+      "text": "is used to destroy the compound",
       "emphasis": [
         " destroy",
         " compound"
       ]
     },
     {
-      "start": 473.84,
-      "end": 475.0,
-      "text": "you mentioned that you had video",
+      "start": 473.34,
+      "end": 474.5,
+      "text": "Also, you mentioned that you",
       "emphasis": [
-        " mentioned",
+        " mentioned"
+      ]
+    },
+    {
+      "start": 474.5,
+      "end": 475.74,
+      "text": "had video do you have video",
+      "emphasis": [
+        " video",
         " video"
       ]
     },
     {
-      "start": 475.0,
-      "end": 476.78,
-      "text": "do you have video from inside",
-      "emphasis": [
-        " video",
-        " inside"
-      ]
-    },
-    {
-      "start": 476.78,
+      "start": 475.74,
       "end": 478.0,
-      "text": "the tunnel itself?",
+      "text": "from inside the tunnel itself?",
       "emphasis": [
         " itself?"
       ]

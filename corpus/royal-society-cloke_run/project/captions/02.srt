@@ -11,16 +11,16 @@ predictions on now?
 So when we're thinking about an
 
 4
-0:00:03,640 --> 0:00:04,967
-upcoming flood, so it's going to
+0:00:03,640 --> 0:00:04,887
+upcoming flood, so it's going
 
 5
-0:00:05,000 --> 0:00:07,227
-flood tomorrow or next week, we
+0:00:04,920 --> 0:00:06,960
+to flood tomorrow or next week,
 
 6
-0:00:07,260 --> 0:00:08,607
-can say with some confidence
+0:00:07,100 --> 0:00:08,607
+we can say with some confidence
 
 7
 0:00:08,640 --> 0:00:09,727
@@ -39,45 +39,49 @@ But when we look a long
 term and we think about our
 
 11
-0:00:13,000 --> 0:00:15,047
-changing climate, we can see how
+0:00:13,000 --> 0:00:14,747
+changing climate, we can see
 
 12
-0:00:15,080 --> 0:00:17,267
-likely those types of floods are
+0:00:14,780 --> 0:00:16,607
+how likely those types of
 
 13
-0:00:17,300 --> 0:00:18,340
-to happen in the future.
+0:00:16,640 --> 0:00:17,867
+floods are to happen in the
 
 14
+0:00:17,900 --> 0:00:18,340
+future.
+
+15
 0:00:18,780 --> 0:00:19,607
 And some of the things we're
 
-15
+16
 0:00:19,640 --> 0:00:20,887
 most worried about actually are
 
-16
+17
 0:00:20,920 --> 0:00:21,720
 flash floods.
 
-17
+18
 0:00:22,020 --> 0:00:22,887
 Those ones that are really
 
-18
-0:00:22,920 --> 0:00:24,287
-difficult to predict in the short
-
 19
-0:00:24,320 --> 0:00:24,760
-term.
+0:00:22,920 --> 0:00:24,107
+difficult to predict in the
 
 20
-0:00:25,220 --> 0:00:26,647
-And sometimes they come along in
+0:00:24,140 --> 0:00:24,760
+short term.
 
 21
-0:00:26,680 --> 0:00:27,500
-an hour or something.
+0:00:25,220 --> 0:00:26,487
+And sometimes they come along
+
+22
+0:00:26,520 --> 0:00:27,500
+in an hour or something.

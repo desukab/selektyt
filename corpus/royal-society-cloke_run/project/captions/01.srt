@@ -3,129 +3,133 @@
 The risk changes that factor if
 
 2
-0:00:02,185 --> 0:00:03,665
-it's going to happen more often,
+0:00:02,185 --> 0:00:03,252
+it's going to happen more
 
 3
-0:00:03,745 --> 0:00:04,572
-it's going to be worse.
+0:00:03,285 --> 0:00:04,572
+often, it's going to be worse.
 
 4
 0:00:04,605 --> 0:00:07,632
 And how good are we at
 
 5
-0:00:07,665 --> 0:00:10,352
-predicting the next flood or the
+0:00:07,665 --> 0:00:10,252
+predicting the next flood or
 
 6
-0:00:10,385 --> 0:00:12,265
-next extreme event like that?
+0:00:10,285 --> 0:00:11,852
+the next extreme event like
 
 7
-0:00:12,805 --> 0:00:14,512
-We've got some really good models
+0:00:11,885 --> 0:00:12,265
+that?
 
 8
-0:00:14,545 --> 0:00:15,005
-now.
+0:00:12,805 --> 0:00:14,072
+We've got some really good
 
 9
+0:00:14,105 --> 0:00:15,005
+models now.
+
+10
 0:00:15,165 --> 0:00:16,972
 So we have huge computer models
 
-10
+11
 0:00:17,005 --> 0:00:18,592
 of the Earth system that can
 
-11
+12
 0:00:18,625 --> 0:00:20,252
 put together how the atmosphere
 
-12
-0:00:20,285 --> 0:00:22,152
-moves around and what's happening
-
 13
-0:00:22,185 --> 0:00:23,632
-on the land surface and in
+0:00:20,285 --> 0:00:21,872
+moves around and what's
 
 14
-0:00:23,665 --> 0:00:24,185
-our rivers.
+0:00:21,905 --> 0:00:23,252
+happening on the land surface
 
 15
-0:00:24,545 --> 0:00:26,132
-And we're actually pretty good now
+0:00:23,285 --> 0:00:24,185
+and in our rivers.
 
 16
-0:00:26,165 --> 0:00:27,812
-at saying whether a natural hazard
+0:00:24,545 --> 0:00:25,852
+And we're actually pretty good
 
 17
-0:00:27,845 --> 0:00:29,672
-like a fire or a heat
+0:00:25,885 --> 0:00:27,552
+now at saying whether a natural
 
 18
-0:00:29,705 --> 0:00:30,912
-wave or a flood is going
+0:00:27,585 --> 0:00:29,552
+hazard like a fire or a
 
 19
-0:00:30,945 --> 0:00:32,852
-to happen even sometimes two or
+0:00:29,585 --> 0:00:30,732
+heat wave or a flood is
 
 20
-0:00:32,885 --> 0:00:33,625
-three weeks ahead.
+0:00:30,765 --> 0:00:32,372
+going to happen even sometimes
 
 21
+0:00:32,405 --> 0:00:33,625
+two or three weeks ahead.
+
+22
 0:00:34,145 --> 0:00:35,812
 So is that enough?
 
-22
+23
 0:00:35,845 --> 0:00:36,852
 Is two or three weeks ahead
 
-23
+24
 0:00:36,885 --> 0:00:38,572
 I guess enough to respond to
 
-24
+25
 0:00:38,605 --> 0:00:39,845
 that adequately?
 
-25
-0:00:39,965 --> 0:00:41,012
-So it depends what you're trying
-
 26
-0:00:41,045 --> 0:00:41,445
-to do.
+0:00:39,965 --> 0:00:40,872
+So it depends what you're
 
 27
+0:00:40,905 --> 0:00:41,445
+trying to do.
+
+28
 0:00:41,605 --> 0:00:42,412
 So if you're trying to get
 
-28
+29
 0:00:42,445 --> 0:00:44,392
 people out of the way, then
 
-29
+30
 0:00:44,425 --> 0:00:46,332
 you need at least a week
 
-30
-0:00:46,365 --> 0:00:48,092
-sometimes to prepare all of that
-
 31
-0:00:48,125 --> 0:00:49,245
-stuff in advance.
+0:00:46,365 --> 0:00:47,912
+sometimes to prepare all of
 
 32
+0:00:47,945 --> 0:00:49,245
+that stuff in advance.
+
+33
 0:00:49,365 --> 0:00:50,952
 We only tend to hear about
 
-33
-0:00:50,985 --> 0:00:52,325
+34
+0:00:50,985 --> 0:00:52,265
 things a day in advance.

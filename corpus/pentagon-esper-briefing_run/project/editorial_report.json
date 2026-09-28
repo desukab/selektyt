@@ -9,10 +9,10 @@
     "editorial_score": 0.863,
     "virality_score": 0.86,
     "context_score": 1.0,
-    "confidence": 0.9,
+    "confidence": 0.942,
     "visual_potential": 0.8,
     "total_score": 0.907,
-    "reason": "Structural editorial score: opening=1.00; progression=1.00; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.03; coherence=1.00; completeness=0.75; audio_pace=0.83; silence=0.205; dead_air=0.14.",
+    "reason": "conflict candidate that opens with a hook the viewer can land on mid-scroll. Structural editorial score: opening=1.00; progression=1.00; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.03; coherence=1.00; completeness=0.75; audio_pace=0.83; silence=0.205; dead_air=0.14.",
     "llm_metadata": null
   },
   {
@@ -25,10 +25,10 @@
     "editorial_score": 0.955,
     "virality_score": 0.707,
     "context_score": 1.0,
-    "confidence": 0.9,
+    "confidence": 0.91,
     "visual_potential": 0.8,
     "total_score": 0.904,
-    "reason": "Structural editorial score: opening=0.55; progression=0.99; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.11; coherence=1.00; completeness=1.00; audio_pace=0.81; silence=0.223; dead_air=0.21.",
+    "reason": "conflict candidate that lands a clear closing thought, with opening middling at 0.55. Structural editorial score: opening=0.55; progression=0.99; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.11; coherence=1.00; completeness=1.00; audio_pace=0.81; silence=0.223; dead_air=0.21.",
     "llm_metadata": null
   },
   {
@@ -41,26 +41,26 @@
     "editorial_score": 0.92,
     "virality_score": 0.587,
     "context_score": 1.0,
-    "confidence": 0.9,
+    "confidence": 0.933,
     "visual_potential": 0.7,
     "total_score": 0.858,
-    "reason": "Structural editorial score: opening=0.55; progression=0.80; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.05; coherence=1.00; completeness=1.00; audio_pace=0.91; silence=0.110; dead_air=0.00.",
+    "reason": "revelation candidate that lands a clear closing thought, with opening middling at 0.55. Structural editorial score: opening=0.55; progression=0.80; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.05; coherence=1.00; completeness=1.00; audio_pace=0.91; silence=0.110; dead_air=0.00.",
     "llm_metadata": null
   },
   {
-    "start": 364.5,
+    "start": 365.68,
     "end": 393.98,
-    "text": "Syria. Korea, has the deployment of reinforcements that you announced last week begun, and could you describe more fully what you intend to do there? We have begun deploying and repositioning additional assets into the vicinity of Dar-Arzara. As I said the other day, it includes mechanized forces and other types of forces. That will continue until we believe we have sufficient capability to ensure ISIS and other destabilizing actors are denied access to that oil facility.",
+    "text": "Has the deployment of reinforcements that you announced last week begun? And could you describe more fully what you intend to do there? We have begun deploying and repositioning additional assets into the vicinity of Dar-Arzara. As I said the other day, it includes mechanized forces and other types of forces that will continue until we believe we have sufficient capability to ensure ISIS and other destabilizing actors are denied access to that oil facility.",
     "story_type": "question",
-    "hook": "Syria.",
-    "payoff": "That will continue until we believe we have sufficient capability to ensure ISIS and other destabilizing actors are denied access to that oil facility.",
-    "editorial_score": 0.874,
+    "hook": "Has the deployment of reinforcements that you announced last week begun?",
+    "payoff": "e other day, it includes mechanized forces and other types of forces that will continue until we believe we have sufficient capability to ensure ISIS and other destabilizing actors are denied access to that oil facility.",
+    "editorial_score": 0.878,
     "virality_score": 0.467,
     "context_score": 1.0,
-    "confidence": 0.9,
+    "confidence": 0.943,
     "visual_potential": 0.6,
-    "total_score": 0.808,
-    "reason": "Structural editorial score: opening=0.55; progression=0.65; payoff=1.00; density=0.94; fillers=0; standalone=1.00; repetition=0.05; coherence=1.00; completeness=1.00; audio_pace=0.92; silence=0.090; dead_air=0.03.",
+    "total_score": 0.809,
+    "reason": "question candidate that lands a clear closing thought, with opening middling at 0.55. Structural editorial score: opening=0.55; progression=0.65; payoff=1.00; density=0.96; fillers=0; standalone=1.00; repetition=0.05; coherence=1.00; completeness=1.00; audio_pace=0.95; silence=0.061; dead_air=0.04.",
     "llm_metadata": null
   },
   {
@@ -73,10 +73,10 @@
     "editorial_score": 0.845,
     "virality_score": 0.512,
     "context_score": 0.925,
-    "confidence": 0.9,
+    "confidence": 0.976,
     "visual_potential": 0.6,
     "total_score": 0.796,
-    "reason": "Structural editorial score: opening=0.77; progression=0.65; payoff=0.89; density=1.00; fillers=0; standalone=1.00; repetition=0.09; coherence=1.00; completeness=1.00; audio_pace=0.94; silence=0.069; dead_air=0.00.",
+    "reason": "question candidate that carries substance per second, with progression middling at 0.65. Structural editorial score: opening=0.77; progression=0.65; payoff=0.89; density=1.00; fillers=0; standalone=1.00; repetition=0.09; coherence=1.00; completeness=1.00; audio_pace=0.94; silence=0.069; dead_air=0.00.",
     "llm_metadata": null
   }
 ]

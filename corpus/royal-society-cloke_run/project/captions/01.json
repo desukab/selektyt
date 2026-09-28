@@ -12,18 +12,18 @@
     },
     {
       "start": 183.92,
-      "end": 185.28,
-      "text": "it's going to happen more often,",
+      "end": 185.02,
+      "text": "it's going to happen more",
       "emphasis": [
-        " happen",
-        " often,"
+        " happen"
       ]
     },
     {
-      "start": 185.48,
+      "start": 185.02,
       "end": 186.34,
-      "text": "it's going to be worse.",
+      "text": "often, it's going to be worse.",
       "emphasis": [
+        " going",
         " worse."
       ]
     },
@@ -38,36 +38,42 @@
     },
     {
       "start": 189.4,
-      "end": 192.12,
-      "text": "predicting the next flood or the",
+      "end": 192.02,
+      "text": "predicting the next flood or",
       "emphasis": [
-        " predicting",
-        " flood"
+        " predicting"
       ]
     },
     {
-      "start": 192.12,
+      "start": 192.02,
+      "end": 193.62,
+      "text": "the next extreme event like",
+      "emphasis": [
+        " extreme"
+      ]
+    },
+    {
+      "start": 193.62,
       "end": 193.88,
-      "text": "next extreme event like that?",
+      "text": "that?",
       "emphasis": [
         " that?"
       ]
     },
     {
       "start": 194.54,
-      "end": 196.28,
-      "text": "We've got some really good models",
+      "end": 195.84,
+      "text": "We've got some really good",
       "emphasis": [
-        " really",
-        " models"
+        " really"
       ]
     },
     {
-      "start": 196.28,
+      "start": 195.84,
       "end": 196.62,
-      "text": "now.",
+      "text": "models now.",
       "emphasis": [
-        " now."
+        " models"
       ]
     },
     {
@@ -98,78 +104,75 @@
     },
     {
       "start": 202.02,
-      "end": 203.92,
-      "text": "moves around and what's happening",
+      "end": 203.64,
+      "text": "moves around and what's",
+      "emphasis": [
+        " around"
+      ]
+    },
+    {
+      "start": 203.64,
+      "end": 205.02,
+      "text": "happening on the land surface",
       "emphasis": [
         " happening"
       ]
     },
     {
-      "start": 203.92,
-      "end": 205.4,
-      "text": "on the land surface and in",
-      "emphasis": [
-        " land",
-        " surface"
-      ]
-    },
-    {
-      "start": 205.4,
+      "start": 205.02,
       "end": 205.8,
-      "text": "our rivers.",
+      "text": "and in our rivers.",
       "emphasis": [
         " rivers."
       ]
     },
     {
       "start": 206.28,
-      "end": 207.9,
-      "text": "And we're actually pretty good now",
+      "end": 207.62,
+      "text": "And we're actually pretty good",
       "emphasis": [
-        " actually",
-        " pretty"
+        " actually"
       ]
     },
     {
-      "start": 207.9,
-      "end": 209.58,
-      "text": "at saying whether a natural hazard",
+      "start": 207.62,
+      "end": 209.32,
+      "text": "now at saying whether a natural",
       "emphasis": [
         " whether",
         " natural"
       ]
     },
     {
-      "start": 209.58,
-      "end": 211.44,
-      "text": "like a fire or a heat",
+      "start": 209.32,
+      "end": 211.32,
+      "text": "hazard like a fire or a",
       "emphasis": [
-        " fire",
-        " heat"
+        " hazard",
+        " fire"
       ]
     },
     {
-      "start": 211.44,
-      "end": 212.68,
-      "text": "wave or a flood is going",
+      "start": 211.32,
+      "end": 212.5,
+      "text": "heat wave or a flood is",
       "emphasis": [
-        " flood",
-        " going"
+        " wave",
+        " flood"
       ]
     },
     {
-      "start": 212.68,
-      "end": 214.62,
-      "text": "to happen even sometimes two or",
+      "start": 212.5,
+      "end": 214.14,
+      "text": "going to happen even sometimes",
       "emphasis": [
-        " happen",
         " sometimes"
       ]
     },
     {
-      "start": 214.62,
+      "start": 214.14,
       "end": 215.24,
-      "text": "three weeks ahead.",
+      "text": "two or three weeks ahead.",
       "emphasis": [
         " ahead."
       ]
@@ -210,19 +213,18 @@
     },
     {
       "start": 222.3,
-      "end": 223.38,
-      "text": "So it depends what you're trying",
+      "end": 223.24,
+      "text": "So it depends what you're",
       "emphasis": [
-        " depends",
-        " trying"
+        " depends"
       ]
     },
     {
-      "start": 223.38,
+      "start": 223.24,
       "end": 223.66,
-      "text": "to do.",
+      "text": "trying to do.",
       "emphasis": [
-        " do."
+        " trying"
       ]
     },
     {
@@ -254,17 +256,16 @@
     },
     {
       "start": 228.7,
-      "end": 230.46,
-      "text": "sometimes to prepare all of that",
+      "end": 230.28,
+      "text": "sometimes to prepare all of",
       "emphasis": [
-        " sometimes",
-        " prepare"
+        " sometimes"
       ]
     },
     {
-      "start": 230.46,
+      "start": 230.28,
       "end": 231.46,
-      "text": "stuff in advance.",
+      "text": "that stuff in advance.",
       "emphasis": [
         " advance."
       ]

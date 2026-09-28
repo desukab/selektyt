@@ -62,21 +62,21 @@
   },
   {
     "index": 4,
-    "source_start": 364.5,
+    "source_start": 365.68,
     "source_end": 393.98,
-    "source_duration": 29.48,
+    "source_duration": 28.3,
     "intervals": [
       [
-        364.5,
-        370.2
+        365.68,
+        370.18
       ],
       [
-        370.94,
+        371.08,
         393.98
       ]
     ],
-    "edited_duration": 28.74,
-    "removed_seconds": 0.74,
+    "edited_duration": 27.4,
+    "removed_seconds": 0.9,
     "story_type": "question"
   },
   {

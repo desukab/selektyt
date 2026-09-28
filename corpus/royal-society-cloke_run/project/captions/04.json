@@ -2,78 +2,134 @@
   "style": "minimal",
   "blocks": [
     {
-      "start": 12.3,
-      "end": 14.24,
-      "text": "My next guest is Hannah cloak",
+      "start": 0.3,
+      "end": 2.34,
+      "text": "Now last year the UK recorded",
       "emphasis": [
-        " Hannah",
-        " cloak"
+        " year",
+        " recorded"
       ]
     },
     {
-      "start": 14.24,
+      "start": 2.34,
+      "end": 4.18,
+      "text": "its highest ever temperature of",
+      "emphasis": [
+        " temperature"
+      ]
+    },
+    {
+      "start": 4.18,
+      "end": 6.74,
+      "text": "40.3 degrees Celsius and on",
+      "emphasis": [
+        " degrees",
+        " Celsius"
+      ]
+    },
+    {
+      "start": 6.74,
+      "end": 7.98,
+      "text": "the news recently We've seen",
+      "emphasis": [
+        " recently"
+      ]
+    },
+    {
+      "start": 7.98,
+      "end": 10.3,
+      "text": "devastating floods droughts and",
+      "emphasis": [
+        " devastating"
+      ]
+    },
+    {
+      "start": 10.3,
+      "end": 13.0,
+      "text": "wildfires worldwide My next",
+      "emphasis": [
+        " worldwide"
+      ]
+    },
+    {
+      "start": 13.0,
+      "end": 14.64,
+      "text": "guest is Hannah cloak a",
+      "emphasis": [
+        " Hannah"
+      ]
+    },
+    {
+      "start": 14.64,
       "end": 16.46,
-      "text": "a specialist in extreme weather",
+      "text": "specialist in extreme weather",
       "emphasis": [
         " specialist"
       ]
     },
     {
       "start": 16.46,
-      "end": 19.04,
-      "text": "and professor of hydrology at the",
+      "end": 18.96,
+      "text": "and professor of hydrology at",
       "emphasis": [
-        " professor",
         " hydrology"
       ]
     },
     {
-      "start": 19.04,
-      "end": 21.26,
-      "text": "University of Reading She has",
+      "start": 18.96,
+      "end": 21.12,
+      "text": "the University of Reading She",
       "emphasis": [
         " University"
       ]
     },
     {
-      "start": 21.26,
-      "end": 23.08,
-      "text": "appeared on TV including in the",
+      "start": 21.12,
+      "end": 22.98,
+      "text": "has appeared on TV including in",
       "emphasis": [
         " appeared",
         " including"
       ]
     },
     {
-      "start": 23.08,
-      "end": 25.48,
-      "text": "panorama episode wild weather our",
+      "start": 22.98,
+      "end": 24.76,
+      "text": "the panorama episode wild",
       "emphasis": [
         " panorama"
       ]
     },
     {
-      "start": 25.48,
-      "end": 27.72,
-      "text": "world under threat And she was",
+      "start": 24.76,
+      "end": 26.44,
+      "text": "weather our world under threat",
       "emphasis": [
-        " under",
-        " threat"
+        " weather"
       ]
     },
     {
-      "start": 27.72,
-      "end": 29.32,
-      "text": "a subject of the Life Scientific",
+      "start": 26.44,
+      "end": 28.46,
+      "text": "And she was a subject of",
       "emphasis": [
-        " subject",
-        " Scientific"
+        " she",
+        " subject"
       ]
     },
     {
-      "start": 29.32,
+      "start": 28.46,
+      "end": 30.26,
+      "text": "the Life Scientific on Radio 4",
+      "emphasis": [
+        " Scientific",
+        " Radio"
+      ]
+    },
+    {
+      "start": 30.26,
       "end": 30.94,
-      "text": "on Radio 4 in 2021.",
+      "text": "in 2021.",
       "emphasis": [
         " 2021."
       ]
@@ -96,17 +152,16 @@
     },
     {
       "start": 34.6,
-      "end": 36.84,
-      "text": "When did you first discover your",
+      "end": 36.48,
+      "text": "When did you first discover",
       "emphasis": [
-        " first",
         " discover"
       ]
     },
     {
-      "start": 36.84,
+      "start": 36.48,
       "end": 38.78,
-      "text": "fascination with water and",
+      "text": "your fascination with water and",
       "emphasis": [
         " fascination"
       ]

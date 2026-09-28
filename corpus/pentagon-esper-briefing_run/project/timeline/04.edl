@@ -1,13 +1,13 @@
-TITLE:   Syria.
+TITLE:   Has the deployment of reinforcements that you announced last week begun?
 
 FCM: NON-DROP FRAME
 
-001  PENTAGON V     C        00:06:04:04 00:06:09:25 00:00:00:00 00:00:05:21
+001  PENTAGON V     C        00:06:05:09 00:06:09:24 00:00:00:00 00:00:04:15
      M2   pentagon-esper-briefing.mp4
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4
-001  PENTAGON A     C        00:06:04:04 00:06:09:25 00:00:00:00 00:00:05:21
+001  PENTAGON A     C        00:06:05:09 00:06:09:24 00:00:00:00 00:00:04:15
 
-002  PENTAGON V     C        00:06:10:17 00:06:33:18 00:00:05:21 00:00:28:22
+002  PENTAGON V     C        00:06:10:21 00:06:33:17 00:00:04:15 00:00:27:11
      M2   pentagon-esper-briefing.mp4
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4
-002  PENTAGON A     C        00:06:10:17 00:06:33:18 00:00:05:21 00:00:28:22
+002  PENTAGON A     C        00:06:10:21 00:06:33:17 00:00:04:15 00:00:27:11

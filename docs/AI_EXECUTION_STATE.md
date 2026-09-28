@@ -43,7 +43,12 @@ every line below was true on this host at that point.
   "not computable" in both directions.
   The fix routes the gate through the same backend chain as the selection and is
   measured, not thresholded, in the section below.
-  Most recent is the **engine fix in the top session section**: the audit's
+  Most recent is the **sentence-splitter and tracker fixes in the top session
+  section**: a re-run of the two sources that still hold media closed every
+  clip-level defect the corpus had — the sweep is 16 clean / 11 review / 4 fail
+  with the four failures all project-level — and the four tracker changes are
+  grounded in measurements on the real corpus windows rather than on fixtures.
+  Before that, the **engine fix in the next session section**: the audit's
   outward-looking edge check found two orphan words in shipped corpus output, and
   the trace ended at a 2.8e-14 s float comparison and a discarded word list in the
   candidate constructor. A third candidate fix was measured redundant and
@@ -271,6 +276,95 @@ every line below was true on this host at that point.
   a measurement is impossible.
 
 ## Completed work
+
+### This session — the sentence splitter, the tracker, and the real-media re-run that closed every clip-level defect
+
+The re-run the previous section called for has been run, and it did what a
+re-run is for: it confirmed one fix, and it found the defect that fix could not
+reach.
+
+**Defect 1, found by the re-run — the splitter ended a sentence on any period.**
+`pentagon-esper-briefing` clip 04 was the visible consequence. The source reads
+*"Thank you, Mr. Secretary."* The splitter broke it at `Mr.`, the candidate then
+opened on the fragment `Secretary.`, and its character-proportional bound
+estimate landed inside the word `Mr.` and snapped back onto it. The clip opened
+mid-sentence — for a reason the word-boundary fix could not reach, because the
+sentence it was being aligned *to* was the wrong sentence.
+
+The fix is a title/acronym/decimal table and a cursor walk over terminal marks
+in `engine/story_units.py` (`_TITLES`, four-case `_is_boundary`, `split_sentences`).
+An acronym, a title of address, a decimal or a tight pair of capitals no longer
+ends a sentence where the text continues. Measured across the committed corpus,
+three sources carry fewer, longer units — emwcon 112→108, nasa360 93→89,
+pentagon 70→61 — and the topic and thread counts that follow from unit
+boundaries moved with them. Pinned by 25 tests in `tests/test_story_units.py`.
+
+**Defect 2 — the tracker read a pan as a cut, and a stranger as the subject.**
+Four changes, each grounded in a measurement on the real corpus rather than on
+fixtures:
+
+1. `find_shot_boundaries` now reports only an *isolated* frame-difference
+   crossing. A run of crossings is a pan: the motion ramps and decays over
+   roughly 1.5 s. Measured over 10 real clip windows — cloke's 8 cuts are
+   isolated spikes of 30.8–50.7 with neighbours under 10, while pentagon's three
+   walking-speaker windows cross 2–3 consecutive samples at 22.8–35.6, one
+   ramping 9.7→32.3→32.9→23.3→9.9. The false boundaries cost the reporter 2.6 s
+   held outside the crop in a 34.8 s clip.
+2. The association leash is a *rate* as well as a width (`_MAX_JUMP_RATE_S`).
+   An absolute 2.5 face-widths is the wrong unit when the corpus sampling stride
+   varies 4× (0.44–1.98 s). Measured over 171 consecutive same-subject sighting
+   pairs in every selected window, a subject never moves faster than
+   1.51 widths/s (p50 0.06, p95 1.17); the two false inheritances read 3.0
+   widths/s. 2.0 sits in that gap and only binds where the stride is short
+   enough for it to matter.
+3. The election only treats a track as live if it has a sighting at or after the
+   cut. `evidence(t)` averages a ±3 s window either side of the sample, so
+   without the filter a track whose every sighting was in the previous shot
+   still out-scores the new shot's first sighting.
+4. The smoother's median window is centred even at the interval's edges, so the
+   opening crop tracks a speaker walking in instead of landing a full crop width
+   behind them.
+
+Two existing tests were wrong in a way that mattered and were corrected rather
+than left: `test_a_hard_cut_is_not_read_as_subject_motion` was passing because
+the tracker chained the two subjects at the width leash, not because the
+boundary marker prevented it — the boundary sat on the *last old frame*, so the
+bind happened at an unguarded index. The boundary index is the first frame of
+the new shot, which is what the detector reports. Two new tests were added: a
+walking speaker stays one track, and a stranger at a 0.81 s stride does not
+inherit it. 40 tests in `tests/test_reframe_regression.py`, including the five
+real-media rendered shorts and short04's zero-tolerance
+`not score["all_faces_lost"]`.
+
+**The re-run, and what it closed.** Both sources re-run on real media
+(`tools/corpus_run.py --only pentagon-esper-briefing,royal-society-cloke --force
+--keep-media`; `--keep-media` is required or the sources are deleted and have to
+be downloaded again):
+
+* The corpus sweep is **16 clean, 11 review, 4 fail — and no clip-level failure
+  at all**. The four failures are all project-level: five sources never reached
+  selection because the VAD gate ate their transcripts.
+* The A/B against the recorded pre-fix baseline reads `improvement 2`, no
+  regressions: cloke clip 01 fail→clean on the word-boundary fix, pentagon clip
+  04 fail→clean on the splitter fix. The intermediate reading (15 clean, 5 fail,
+  pentagon clip 04 failing on `Mr.` rather than on `Syria.`) is recorded in the
+  test docstrings and not in a baseline file, because the artifacts it was
+  swept from were overwritten by the second re-run.
+* The reproducibility tripwire is back to its four documented exceptions.
+  Pentagon re-transcribed (277→278 segments, one unit and one topic more), which
+  is the honest reason its selection moved: a different transcript, not an
+  unexplained code change.
+* `editorial_corpus.json` — the canonical story-memory graph the pipeline now
+  writes — is committed for the two re-run sources. The other nine predate the
+  write, and the corpus is frozen for them.
+
+**What is still not claimed.** The audit measures mechanical defects; no human
+has judged any clip, and a clip can pass every check and still be a bad cut.
+The reframe measurements are detector scores, not viewed frames — this
+environment cannot read images. A cut inside a pan, or two cuts within one
+stride, still reads as a pan; a prominence-based discriminator was considered
+and left out as diminishing returns, and the residual limit is stated in
+`find_shot_boundaries` rather than papered over.
 
 ### This session — the two defects the edge check found were traced to two lines, and one candidate fix was measured out
 
@@ -1803,8 +1897,11 @@ six modules in and running the suite: 1107 → **1186 passed**, 12 skipped, no
 regressions.
 
 **Measured across the committed corpus** (11 sources, 1,771 segments,
-18,748 word-timestamp entries): 314 units, 167 topics, 211 threads,
-9 redundancy groups. One judgement is checkable against the text: on
+18,751 word-timestamp entries): 314 units, 167 topics, 211 threads,
+9 redundancy groups. The corpus was re-run on 2026-09-28 for the two sources
+that still hold media, which moved pentagon-esper-briefing one unit and one
+topic lower, so those four counts are the pre-re-run figure; the segment and
+word-entry counts are current. One judgement is checkable against the text: on
 `nasa360-ep5` the layer groups the show's three sign-off boilerplate passages
 and reasons *"keep unit 85 … the later passage is a recap of an earlier point —
 keep in a long edit, cut in a short one."*

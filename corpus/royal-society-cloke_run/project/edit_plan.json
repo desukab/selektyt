@@ -15,11 +15,11 @@
       ],
       [
         232.12,
-        235.22
+        235.08
       ]
     ],
-    "edited_duration": 52.405,
-    "removed_seconds": 1.097,
+    "edited_duration": 52.265,
+    "removed_seconds": 1.237,
     "story_type": "conflict"
   },
   {
@@ -62,12 +62,12 @@
   },
   {
     "index": 4,
-    "source_start": 12.3,
+    "source_start": 0.3,
     "source_end": 39.08,
-    "source_duration": 26.78,
+    "source_duration": 38.78,
     "intervals": [
       [
-        12.3,
+        0.3,
         32.64
       ],
       [
@@ -75,7 +75,7 @@
         39.08
       ]
     ],
-    "edited_duration": 26.26,
+    "edited_duration": 38.26,
     "removed_seconds": 0.52,
     "story_type": "question"
   }

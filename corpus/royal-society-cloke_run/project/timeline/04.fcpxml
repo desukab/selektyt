@@ -8,12 +8,12 @@
     </asset>
   </resources>
   <library>
-    <event name="My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the pa">
-      <project name="My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the pa">
+    <event name="Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently We&apos;ve seen devastating floods droughts and wildfires">
+      <project name="Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently We&apos;ve seen devastating floods droughts and wildfires">
         <sequence format="f1" tcFormat="NDF">
           <spine>
-          <asset-clip ref="r1" offset="0s" start="308/25s" duration="508/25s" tcFormat="NDF" />
-          <asset-clip ref="r1" offset="508/25s" start="829/25s" duration="148/25s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="0s" start="8/25s" duration="809/25s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="809/25s" start="829/25s" duration="148/25s" tcFormat="NDF" />
           </spine>
         </sequence>
       </project>

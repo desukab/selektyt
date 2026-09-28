@@ -10,36 +10,37 @@ Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,
 
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
-Dialogue: 0,0:00:00.04,0:00:02.15,Default,,0,0,0,,{\k6}The {\k34}risk {\k56}{\c&H00D7FF&\b1}changes{\c&HFFFFFF&\b0} {\k36}that {\k54}{\c&H00D7FF&\b1}factor{\c&HFFFFFF&\b0} {\k28}if
-Dialogue: 0,0:00:02.18,0:00:03.66,Default,,0,0,0,,{\k50}it's {\k12}going {\k4}to {\k18}{\c&H00D7FF&\b1}happen{\c&HFFFFFF&\b0} {\k26}more {\k26}{\c&H00D7FF&\b1}often,{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:03.74,0:00:04.57,Default,,0,0,0,,{\k12}it's {\k18}going {\k8}to {\k10}be {\k38}{\c&H00D7FF&\b1}worse.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:04.60,0:00:07.63,Default,,0,0,0,,{\k78}And {\k18}{\c&H00D7FF&\b1}how{\c&HFFFFFF&\b0} {\k26}{\c&H00D7FF&\b1}good{\c&HFFFFFF&\b0} {\k12}are {\k24}we {\k148}at
-Dialogue: 0,0:00:07.66,0:00:10.35,Default,,0,0,0,,{\k58}{\c&H00D7FF&\b1}predicting{\c&HFFFFFF&\b0} {\k134}the {\k26}next {\k24}{\c&H00D7FF&\b1}flood{\c&HFFFFFF&\b0} {\k20}or {\k10}the
-Dialogue: 0,0:00:10.38,0:00:12.26,Default,,0,0,0,,{\k26}next {\k64}extreme {\k40}event {\k20}like {\k26}{\c&H00D7FF&\b1}that?{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:12.80,0:00:14.51,Default,,0,0,0,,{\k30}We've {\k12}got {\k14}some {\k38}{\c&H00D7FF&\b1}really{\c&HFFFFFF&\b0} {\k36}good {\k44}{\c&H00D7FF&\b1}models{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:14.54,0:00:15.00,Default,,0,0,0,,{\k34}{\c&H00D7FF&\b1}now.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:15.16,0:00:16.97,Default,,0,0,0,,{\k6}So {\k18}we {\k22}have {\k64}huge {\k40}{\c&H00D7FF&\b1}computer{\c&HFFFFFF&\b0} {\k34}{\c&H00D7FF&\b1}models{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:17.00,0:00:18.59,Default,,0,0,0,,{\k20}of {\k12}the {\k16}{\c&H00D7FF&\b1}Earth{\c&HFFFFFF&\b0} {\k40}{\c&H00D7FF&\b1}system{\c&HFFFFFF&\b0} {\k54}that {\k20}can
-Dialogue: 0,0:00:18.62,0:00:20.25,Default,,0,0,0,,{\k22}put {\k54}together {\k44}how {\k14}the {\k32}{\c&H00D7FF&\b1}atmosphere{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:20.28,0:00:22.15,Default,,0,0,0,,{\k40}moves {\k46}around {\k52}and {\k24}what's {\k28}{\c&H00D7FF&\b1}happening{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:22.18,0:00:23.63,Default,,0,0,0,,{\k26}on {\k16}the {\k16}{\c&H00D7FF&\b1}land{\c&HFFFFFF&\b0} {\k52}{\c&H00D7FF&\b1}surface{\c&HFFFFFF&\b0} {\k28}and {\k10}in
-Dialogue: 0,0:00:23.66,0:00:24.18,Default,,0,0,0,,{\k14}our {\k26}{\c&H00D7FF&\b1}rivers.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:24.54,0:00:26.13,Default,,0,0,0,,{\k24}And {\k16}we're {\k24}{\c&H00D7FF&\b1}actually{\c&HFFFFFF&\b0} {\k40}{\c&H00D7FF&\b1}pretty{\c&HFFFFFF&\b0} {\k30}good {\k28}now
-Dialogue: 0,0:00:26.16,0:00:27.81,Default,,0,0,0,,{\k24}at {\k36}saying {\k36}{\c&H00D7FF&\b1}whether{\c&HFFFFFF&\b0} {\k24}a {\k22}{\c&H00D7FF&\b1}natural{\c&HFFFFFF&\b0} {\k26}hazard
-Dialogue: 0,0:00:27.84,0:00:29.67,Default,,0,0,0,,{\k36}like {\k44}a {\k36}{\c&H00D7FF&\b1}fire{\c&HFFFFFF&\b0} {\k40}or {\k18}a {\k12}{\c&H00D7FF&\b1}heat{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:29.70,0:00:30.91,Default,,0,0,0,,{\k24}wave {\k30}or {\k10}a {\k22}{\c&H00D7FF&\b1}flood{\c&HFFFFFF&\b0} {\k20}is {\k18}{\c&H00D7FF&\b1}going{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:30.94,0:00:32.85,Default,,0,0,0,,{\k8}to {\k24}{\c&H00D7FF&\b1}happen{\c&HFFFFFF&\b0} {\k62}even {\k52}{\c&H00D7FF&\b1}sometimes{\c&HFFFFFF&\b0} {\k36}two {\k12}or
-Dialogue: 0,0:00:32.88,0:00:33.62,Default,,0,0,0,,{\k16}three {\k24}weeks {\k22}{\c&H00D7FF&\b1}ahead.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:34.14,0:00:35.81,Default,,0,0,0,,{\k48}So {\k24}is {\k52}that {\k38}{\c&H00D7FF&\b1}enough?{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:35.84,0:00:36.85,Default,,0,0,0,,{\k14}Is {\k18}two {\k8}or {\k18}three {\k22}{\c&H00D7FF&\b1}weeks{\c&HFFFFFF&\b0} {\k24}{\c&H00D7FF&\b1}ahead{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:36.88,0:00:38.57,Default,,0,0,0,,{\k26}I {\k12}guess {\k28}{\c&H00D7FF&\b1}enough{\c&HFFFFFF&\b0} {\k24}to {\k46}{\c&H00D7FF&\b1}respond{\c&HFFFFFF&\b0} {\k36}to
-Dialogue: 0,0:00:38.60,0:00:39.84,Default,,0,0,0,,{\k26}that {\k86}{\c&H00D7FF&\b1}adequately?{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:39.97,0:00:41.01,Default,,0,0,0,,{\k20}So {\k28}it {\k18}{\c&H00D7FF&\b1}depends{\c&HFFFFFF&\b0} {\k14}what {\k14}you're {\k14}{\c&H00D7FF&\b1}trying{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:41.04,0:00:41.44,Default,,0,0,0,,{\k12}to {\k16}{\c&H00D7FF&\b1}do.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:41.60,0:00:42.41,Default,,0,0,0,,{\k18}So {\k12}if {\k12}{\c&H00D7FF&\b1}you're{\c&HFFFFFF&\b0} {\k14}{\c&H00D7FF&\b1}trying{\c&HFFFFFF&\b0} {\k14}to {\k14}get
-Dialogue: 0,0:00:42.44,0:00:44.39,Default,,0,0,0,,{\k40}{\c&H00D7FF&\b1}people{\c&HFFFFFF&\b0} {\k20}out {\k18}of {\k8}the {\k30}way, {\k58}{\c&H00D7FF&\b1}then{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:44.42,0:00:46.33,Default,,0,0,0,,{\k60}you {\k38}need {\k26}at {\k24}{\c&H00D7FF&\b1}least{\c&HFFFFFF&\b0} {\k20}a {\k26}{\c&H00D7FF&\b1}week{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:46.36,0:00:48.09,Default,,0,0,0,,{\k30}{\c&H00D7FF&\b1}sometimes{\c&HFFFFFF&\b0} {\k24}to {\k44}{\c&H00D7FF&\b1}prepare{\c&HFFFFFF&\b0} {\k46}all {\k14}of {\k18}that
-Dialogue: 0,0:00:48.12,0:00:49.24,Default,,0,0,0,,{\k34}stuff {\k24}in {\k42}{\c&H00D7FF&\b1}advance.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:49.37,0:00:50.95,Default,,0,0,0,,{\k48}We {\k26}only {\k32}tend {\k16}to {\k12}{\c&H00D7FF&\b1}hear{\c&HFFFFFF&\b0} {\k28}{\c&H00D7FF&\b1}about{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:50.99,0:00:52.33,Default,,0,0,0,,{\k32}things {\k22}a {\k24}day {\k20}in {\k24}{\c&H00D7FF&\b1}advance.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.04,0:00:02.15,Default,,0,0,0,,{\k6}The{\k34}risk{\k56}{\c&H00D7FF&\b1}changes{\c&HFFFFFF&\b0}{\k36}that{\k54}{\c&H00D7FF&\b1}factor{\c&HFFFFFF&\b0}{\k28}if
+Dialogue: 0,0:00:02.18,0:00:03.25,Default,,0,0,0,,{\k50}it's{\k12}going{\k4}to{\k18}{\c&H00D7FF&\b1}happen{\c&HFFFFFF&\b0}{\k26}more
+Dialogue: 0,0:00:03.28,0:00:04.57,Default,,0,0,0,,{\k26}often,{\k12}it's{\k18}{\c&H00D7FF&\b1}going{\c&HFFFFFF&\b0}{\k8}to{\k10}be{\k38}{\c&H00D7FF&\b1}worse.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:04.60,0:00:07.63,Default,,0,0,0,,{\k78}And{\k18}{\c&H00D7FF&\b1}how{\c&HFFFFFF&\b0}{\k26}{\c&H00D7FF&\b1}good{\c&HFFFFFF&\b0}{\k12}are{\k24}we{\k148}at
+Dialogue: 0,0:00:07.66,0:00:10.25,Default,,0,0,0,,{\k58}{\c&H00D7FF&\b1}predicting{\c&HFFFFFF&\b0}{\k134}the{\k26}next{\k24}flood{\k20}or
+Dialogue: 0,0:00:10.28,0:00:11.85,Default,,0,0,0,,{\k10}the{\k26}next{\k64}{\c&H00D7FF&\b1}extreme{\c&HFFFFFF&\b0}{\k40}event{\k20}like
+Dialogue: 0,0:00:11.88,0:00:12.26,Default,,0,0,0,,{\k26}{\c&H00D7FF&\b1}that?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:12.80,0:00:14.07,Default,,0,0,0,,{\k30}We've{\k12}got{\k14}some{\k38}{\c&H00D7FF&\b1}really{\c&HFFFFFF&\b0}{\k36}good
+Dialogue: 0,0:00:14.10,0:00:15.00,Default,,0,0,0,,{\k44}{\c&H00D7FF&\b1}models{\c&HFFFFFF&\b0}{\k34}now.
+Dialogue: 0,0:00:15.16,0:00:16.97,Default,,0,0,0,,{\k6}So{\k18}we{\k22}have{\k64}huge{\k40}{\c&H00D7FF&\b1}computer{\c&HFFFFFF&\b0}{\k34}{\c&H00D7FF&\b1}models{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:17.00,0:00:18.59,Default,,0,0,0,,{\k20}of{\k12}the{\k16}{\c&H00D7FF&\b1}Earth{\c&HFFFFFF&\b0}{\k40}{\c&H00D7FF&\b1}system{\c&HFFFFFF&\b0}{\k54}that{\k20}can
+Dialogue: 0,0:00:18.62,0:00:20.25,Default,,0,0,0,,{\k22}put{\k54}together{\k44}how{\k14}the{\k32}{\c&H00D7FF&\b1}atmosphere{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:20.28,0:00:21.87,Default,,0,0,0,,{\k40}moves{\k46}{\c&H00D7FF&\b1}around{\c&HFFFFFF&\b0}{\k52}and{\k24}what's
+Dialogue: 0,0:00:21.90,0:00:23.25,Default,,0,0,0,,{\k28}{\c&H00D7FF&\b1}happening{\c&HFFFFFF&\b0}{\k26}on{\k16}the{\k16}land{\k52}surface
+Dialogue: 0,0:00:23.28,0:00:24.18,Default,,0,0,0,,{\k28}and{\k10}in{\k14}our{\k26}{\c&H00D7FF&\b1}rivers.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:24.54,0:00:25.85,Default,,0,0,0,,{\k24}And{\k16}we're{\k24}{\c&H00D7FF&\b1}actually{\c&HFFFFFF&\b0}{\k40}pretty{\k30}good
+Dialogue: 0,0:00:25.88,0:00:27.55,Default,,0,0,0,,{\k28}now{\k24}at{\k36}saying{\k36}{\c&H00D7FF&\b1}whether{\c&HFFFFFF&\b0}{\k24}a{\k22}{\c&H00D7FF&\b1}natural{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:27.58,0:00:29.55,Default,,0,0,0,,{\k26}{\c&H00D7FF&\b1}hazard{\c&HFFFFFF&\b0}{\k36}like{\k44}a{\k36}{\c&H00D7FF&\b1}fire{\c&HFFFFFF&\b0}{\k40}or{\k18}a
+Dialogue: 0,0:00:29.58,0:00:30.73,Default,,0,0,0,,{\k12}heat{\k24}{\c&H00D7FF&\b1}wave{\c&HFFFFFF&\b0}{\k30}or{\k10}a{\k22}{\c&H00D7FF&\b1}flood{\c&HFFFFFF&\b0}{\k20}is
+Dialogue: 0,0:00:30.76,0:00:32.37,Default,,0,0,0,,{\k18}going{\k8}to{\k24}happen{\k62}even{\k52}{\c&H00D7FF&\b1}sometimes{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:32.40,0:00:33.62,Default,,0,0,0,,{\k36}two{\k12}or{\k16}three{\k24}weeks{\k22}{\c&H00D7FF&\b1}ahead.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:34.14,0:00:35.81,Default,,0,0,0,,{\k48}So{\k24}is{\k52}that{\k38}{\c&H00D7FF&\b1}enough?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:35.84,0:00:36.85,Default,,0,0,0,,{\k14}Is{\k18}two{\k8}or{\k18}three{\k22}{\c&H00D7FF&\b1}weeks{\c&HFFFFFF&\b0}{\k24}{\c&H00D7FF&\b1}ahead{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:36.88,0:00:38.57,Default,,0,0,0,,{\k26}I{\k12}guess{\k28}{\c&H00D7FF&\b1}enough{\c&HFFFFFF&\b0}{\k24}to{\k46}{\c&H00D7FF&\b1}respond{\c&HFFFFFF&\b0}{\k36}to
+Dialogue: 0,0:00:38.60,0:00:39.84,Default,,0,0,0,,{\k26}that{\k86}{\c&H00D7FF&\b1}adequately?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:39.97,0:00:40.87,Default,,0,0,0,,{\k20}So{\k28}it{\k18}{\c&H00D7FF&\b1}depends{\c&HFFFFFF&\b0}{\k14}what{\k14}you're
+Dialogue: 0,0:00:40.91,0:00:41.44,Default,,0,0,0,,{\k14}{\c&H00D7FF&\b1}trying{\c&HFFFFFF&\b0}{\k12}to{\k16}do.
+Dialogue: 0,0:00:41.60,0:00:42.41,Default,,0,0,0,,{\k18}So{\k12}if{\k12}{\c&H00D7FF&\b1}you're{\c&HFFFFFF&\b0}{\k14}{\c&H00D7FF&\b1}trying{\c&HFFFFFF&\b0}{\k14}to{\k14}get
+Dialogue: 0,0:00:42.44,0:00:44.39,Default,,0,0,0,,{\k40}{\c&H00D7FF&\b1}people{\c&HFFFFFF&\b0}{\k20}out{\k18}of{\k8}the{\k30}way,{\k58}{\c&H00D7FF&\b1}then{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:44.42,0:00:46.33,Default,,0,0,0,,{\k60}you{\k38}need{\k26}at{\k24}{\c&H00D7FF&\b1}least{\c&HFFFFFF&\b0}{\k20}a{\k26}{\c&H00D7FF&\b1}week{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:46.36,0:00:47.91,Default,,0,0,0,,{\k30}{\c&H00D7FF&\b1}sometimes{\c&HFFFFFF&\b0}{\k24}to{\k44}prepare{\k46}all{\k14}of
+Dialogue: 0,0:00:47.94,0:00:49.24,Default,,0,0,0,,{\k18}that{\k34}stuff{\k24}in{\k42}{\c&H00D7FF&\b1}advance.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:49.37,0:00:50.95,Default,,0,0,0,,{\k48}We{\k26}only{\k32}tend{\k16}to{\k12}{\c&H00D7FF&\b1}hear{\c&HFFFFFF&\b0}{\k28}{\c&H00D7FF&\b1}about{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:50.99,0:00:52.27,Default,,0,0,0,,{\k32}things{\k22}a{\k24}day{\k20}in{\k24}{\c&H00D7FF&\b1}advance.{\c&HFFFFFF&\b0}

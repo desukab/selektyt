@@ -30,6 +30,49 @@ def test_split_sentences_is_multilingual():
     assert split_sentences("తెలుగు వాక్యం। మరొకటి।") == ["తెలుగు వాక్యం।", "మరొకటి।"]
 
 
+def test_split_sentences_keeps_titles_with_their_names():
+    """A title's period is not a sentence boundary -- the failure that put it
+    here was real, and measured.
+
+    ``Thank you, Mr. Secretary.`` used to split into ``Thank you, Mr.`` and
+    ``Secretary.``; the second piece was timed into the middle of the word
+    ``Mr.`` (359.203 against a word spanning 359.14-359.50), the clip start
+    snapped back to that word's start, and the clip opened on ``Mr.`` having
+    dropped ``Thank you,`` with no sentence break between them. That was an
+    audit FAIL on a real source, not a hypothetical.
+    """
+    assert split_sentences("Thank you, Mr. Secretary.") == ["Thank you, Mr. Secretary."]
+    assert split_sentences("Thank you so much, Dr. List.") == ["Thank you so much, Dr. List."]
+    # The title can end the text on its own, and then its period is terminal.
+    assert split_sentences("Over to you, Dr.") == ["Over to you, Dr."]
+    # A boundary after a title's name is still a boundary.
+    assert split_sentences("Dr. List. Thank you.") == ["Dr. List.", "Thank you."]
+
+
+def test_split_sentences_keeps_numbers_and_domains_intact():
+    """Structural non-boundaries that need no list to recognise."""
+    assert split_sentences("0.03% of the population.") == ["0.03% of the population."]
+    assert split_sentences("Go to mediawiki.org and look.") == ["Go to mediawiki.org and look."]
+    assert split_sentences("The U.S. space agency. It launched.") == [
+        "The U.S. space agency.", "It launched."]
+
+
+def test_split_sentences_keeps_a_lettered_list_item_short():
+    """``a. The first step`` is a list marker, not a one-letter sentence."""
+    assert split_sentences("a. The first step is to read.") == ["a. The first step is to read."]
+
+
+def test_split_sentences_errs_towards_not_splitting():
+    """The rule cannot see ``I saw Dr. He left.`` as two sentences.
+
+    That is the accepted cost, and it is measured against the alternative: the
+    failure this fixes is a clip opening mid-word, and this one is a sentence
+    that runs one name long. Asserting it keeps the choice where a reader can
+    find it, rather than hiding it as an accident of the regex.
+    """
+    assert split_sentences("I saw Dr. He left.") == ["I saw Dr. He left."]
+
+
 def test_boilerplate_detects_byline_and_issue():
     frac, kinds = boilerplate_fraction(
         "The system shipped on time. "

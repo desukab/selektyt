@@ -215,21 +215,40 @@ def find_shot_boundaries(frames: Sequence[np.ndarray | None],
     motion observed and below the pan peak, so it fires on pans and cuts and
     nothing else on this footage.
 
-    That distinction matters for what the tracker does next: a pan is the same
-    shot, and the subject comes back, whereas a cut means every previous
-    position is void. ``find_shot_boundaries`` cannot tell them apart on
-    magnitude alone — a detector-driven or adaptive threshold (PySceneDetect's
-    approach) could, and this is the place to add one if a later corpus shows a
-    clip where the two need separating. Callers treat every boundary as a reset,
-    which is safe for a pan because re-establishing the same subject costs one
-    hold and produces no visible crop move.
+    A pan is not a new shot, and the two have different *shapes* on this grid,
+    not just different magnitudes. Measured over every selected clip window in
+    the corpus (10 windows, 28 samples each): a hard cut is one spike whose
+    neighbours on both sides are quiet -- cloke's eight cuts read 30.8-50.7
+    with every neighbour under 10, telugu's reads 30.8 with neighbours at 0.1
+    and 0.5 -- while a pan is a *run* of consecutive crossings as the motion
+    ramps up and comes back down over about 1.5 s: pentagon's three
+    walking-speaker windows cross for 2-3 consecutive samples at 22.8-35.6,
+    one of them ramping 9.7 -> 32.3 -> 32.9 -> 23.3 -> 9.9.
+
+    A crossing adjacent to another crossing is therefore sustained motion, and
+    is not reported. Reporting it used to cost a clip its subject: a boundary
+    resets the tracker to a one-face-width leash, a speaker who has walked
+    further than that between samples fails it, and the sighting starts its own
+    one-sample track; the election then holds that single sighting for its
+    minimum hold and the crop stays on an empty position. Measured on pentagon
+    clip [359.140, 393.980], where the reporter crossed at 22.8 and 25.7 and
+    was held outside the crop for 2.6 s of a 34.8 s clip.
+
+    What this still cannot see is a cut landed inside a pan, or two cuts within
+    one sample stride: both look like a run, and the tracker inherits a
+    position across them. That is narrow -- a cut within about two seconds of
+    sustained camera motion -- and it costs one stale hold, against the
+    walking-speaker failure above, which is common on this footage.
     """
-    out = []
+    crossing: list[int] = []
     prev: np.ndarray | None = None
     for i, frame in enumerate(frames):
         if frame is None:
             continue
         if prev is not None and frame_difference(prev, frame) > threshold:
-            out.append(i)
+            crossing.append(i)
         prev = frame
-    return out
+    # Only an isolated crossing is a cut. A run of crossings is a pan, and the
+    # samples in it are the same shot moving.
+    return [i for i in crossing
+            if i - 1 not in crossing and i + 1 not in crossing]

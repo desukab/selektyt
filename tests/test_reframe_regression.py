@@ -252,14 +252,102 @@ def test_single_frame_false_detections_are_ignored():
 # ── 4. shot cuts reset the tracker, never read as motion ──────────────────
 
 
+def test_a_walking_speaker_is_one_track_not_a_series_of_strangers():
+    """A subject who walks across a wide shot between two samples, on a
+    continuous shot with no cut, must be followed rather than fragmented.
+
+    This is the shape ``find_shot_boundaries`` used to get wrong: a walk trips
+    the frame-difference detector on two or three consecutive samples, and a
+    run of crossings was reported as a cut. The tracker then re-bound with the
+    one-face-width post-cut leash, the walk exceeded it, and every sighting
+    became its own one-sample track; the election held the first of those for
+    its minimum hold and the crop sat on a position the speaker had left.
+    Measured on pentagon [359.140, 393.980], where the reporter moved 297 px
+    between 1.29 s samples with a 186 px face and was held outside the crop for
+    2.6 s of a 34.8 s clip.
+    """
+    from engine.reframe import _Track, _update_tracks
+
+    times = _times(30.0, 1.29)
+    face_w = 0.145 * SRC_W
+    # 1.5 face widths per sample, i.e. 1.2 widths/s -- the reporter's measured
+    # rate, above the post-cut leash but below the rate cap. Three steps, then
+    # the speaker arrives and stays: the measured walk was 524 -> 822 -> 1010 px
+    # and then a settled position.
+    stops = [0.20, 0.20 + 1.5 * face_w / SRC_W, 0.20 + 3.0 * face_w / SRC_W]
+    dets = [[_face(stops[min(i, len(stops) - 1)], w_frac=0.145)]
+            for i in range(len(times))]
+    end = stops[-1]
+
+    tracks: list[_Track] = []
+    for i, t in enumerate(times):
+        _update_tracks(tracks, dets[i], t, after_cut=False)
+
+    # One subject, one track. Fragmentation is the defect: each fragment is a
+    # stranger the election has to hold or displace.
+    walked = [tr for tr in tracks if len(tr.samples) > 1]
+    assert len(walked) == 1, (
+        f"a continuous walk is one subject; got {len(tracks)} tracks of which "
+        f"{len(walked)} have more than one sighting"
+    )
+    assert len(walked[0].samples) == len(times)
+
+    pts = plan_crop(times, dets, set(), SRC_W, SRC_H, CROP_W)
+    # The crop arrives where the speaker ends up, and it never sits on a
+    # position the speaker has already left: at every sample the crop window
+    # contains the face.
+    for i, t in enumerate(times):
+        c = _interpolate(pts, t)
+        fcx = dets[i][0][0] + dets[i][0][2] / 2.0
+        x0, x1 = _crop_window(c)
+        assert x0 <= fcx <= x1, (
+            f"t={t:.2f}s: the crop [{x0:.0f},{x1:.0f}] lost the walking "
+            f"speaker at {fcx:.0f}"
+        )
+    assert abs(_interpolate(pts, times[-1]) - end) < 0.10
+
+
+def test_a_stranger_at_a_short_stride_does_not_inherit_the_subject():
+    """The leash is a rate, not a width, because the sampling stride varies four
+    fold across the corpus. At 0.44 s a 2.5-width allowance admits a face that
+    travelled 5.7 widths/s -- and no subject in the corpus is measured above
+    1.5 widths/s. Measured on pentagon [633.570, 655.530], where a face 2.5
+    widths away bound the previous speaker's track at a 0.81 s stride and the
+    crop followed it out of the frame.
+    """
+    from engine.reframe import _MAX_JUMP_RATE_S, _Track, _update_tracks
+
+    stride = 0.81
+    speaker = _face(0.48, w_frac=0.137)
+    stranger = _face(0.85, w_frac=0.137)
+    gap = abs((stranger[0] + stranger[2] / 2) - (speaker[0] + speaker[2] / 2))
+    rate = gap / speaker[2] / stride
+    assert rate > _MAX_JUMP_RATE_S, (
+        f"the fixture must move faster than {_MAX_JUMP_RATE_S} widths/s to be "
+        f"an inheritance; it moves {rate:.1f}"
+    )
+
+    tracks: list[_Track] = []
+    _update_tracks(tracks, [speaker], 0.0, after_cut=False)
+    _update_tracks(tracks, [stranger], stride, after_cut=False)
+    assert len(tracks) == 2, (
+        f"a face arriving {rate:.1f} widths/s after a {stride}s gap is a new "
+        "person, not the subject moved -- if it binds, the rate cap is inert"
+    )
+
+
 def test_a_hard_cut_is_not_read_as_subject_motion():
     """Before the cut the speaker is at 0.15 in a close-up; after it they are at
     0.65. The two are close enough in pixels that a distance matcher *would*
     chain them into one moving track, which is exactly the misreading the brief
     names. The boundary marker must prevent it, and the crop must re-establish
     on the new subject instead of drifting after a phantom.
+
+    The boundary index is the *first frame of the new shot*, which is what
+    ``find_shot_boundaries`` reports; placing it on the last old frame leaves the
+    new subject's first sighting unguarded and the bind happens anyway.
     """
-    times = _times(30.0)
+    times = _times(30.0, 1.5)          # a stride the corpus actually uses
     cut_at = times.index(min(times, key=lambda t: abs(t - 10.0)))
     dets = []
     for i, t in enumerate(times):
@@ -268,7 +356,7 @@ def test_a_hard_cut_is_not_read_as_subject_motion():
         else:
             dets.append([_face(0.65, w_frac=0.24)])
 
-    pts = plan_crop(times, dets, {cut_at}, SRC_W, SRC_H, CROP_W)
+    pts = plan_crop(times, dets, {cut_at + 1}, SRC_W, SRC_H, CROP_W)
 
     # The crop has re-established on the new subject by 2s after the cut.
     settled = _interpolate(pts, times[cut_at] + 2.0)
@@ -285,26 +373,42 @@ def test_without_the_boundary_marker_a_cut_looks_like_motion():
     get chained into one subject's walk. This is the regression's signature --
     if the perception layer stops emitting boundaries, this test fails and says
     why rather than the failure surfacing as a twitchy Short.
+
+    The stride is 1.5 s, in the range the corpus uses (0.44-1.98 s), because the
+    leash is a *rate*: at 0.5 s this pair is 4.2 face-widths per second apart,
+    and no subject in the corpus is measured to move faster than 1.5, so a
+    matcher that refused it would be refusing on rate rather than on the missing
+    boundary -- the control would prove nothing.
     """
-    from engine.reframe import _MAX_JUMP_AFTER_CUT_WIDTHS, _MAX_JUMP_WIDTHS, _Track, _update_tracks
+    from engine.reframe import (
+        _MAX_JUMP_AFTER_CUT_WIDTHS,
+        _MAX_JUMP_RATE_S,
+        _MAX_JUMP_WIDTHS,
+        _Track,
+        _update_tracks,
+    )
 
     wide = _face(0.15, w_frac=0.24)
     far = _face(0.65, w_frac=0.24)
     gap_px = abs((far[0] + far[2] / 2) - (wide[0] + wide[2] / 2))
+    stride = 1.5
+    rate = gap_px / wide[2] / stride
+    assert rate <= _MAX_JUMP_RATE_S, "the fixture must be chainable on rate alone"
 
     same_shot: list[_Track] = []
     _update_tracks(same_shot, [wide], 0.0, after_cut=False)
-    _update_tracks(same_shot, [far], 0.5, after_cut=False)
+    _update_tracks(same_shot, [far], stride, after_cut=False)
     assert len(same_shot) == 1, (
         "the close-up and the post-cut subject are "
         f"{gap_px:.0f}px apart with a {wide[2]:.0f}px face, i.e. within "
-        f"{_MAX_JUMP_WIDTHS} face widths, so a matcher without the cut marker "
-        "must chain them -- if it does not, the boundary feature is inert"
+        f"{_MAX_JUMP_WIDTHS} face widths at {rate:.1f} widths/s, so a matcher "
+        "without the cut marker must chain them -- if it does not, the boundary "
+        "feature is inert"
     )
 
     across_cut: list[_Track] = []
     _update_tracks(across_cut, [wide], 0.0, after_cut=False)
-    _update_tracks(across_cut, [far], 0.5, after_cut=True)
+    _update_tracks(across_cut, [far], stride, after_cut=True)
     assert len(across_cut) == 2, (
         "the same two detections across a cut are "
         f"{gap_px / wide[2]:.1f} face widths apart, above the "

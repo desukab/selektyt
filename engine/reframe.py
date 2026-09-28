@@ -24,6 +24,18 @@ from providers.ffmpeg import (require_ffmpeg, require_ffprobe,
 # a fraction of a face width.
 _MAX_JUMP_WIDTHS = 2.5
 
+# ...and never faster than this many face-widths per second. An absolute width
+# allowance is the wrong unit when the sampling stride varies by 4x across the
+# corpus (0.44 s to 1.98 s): at a short stride 2.5 widths is a subject who
+# teleported, and a stranger's face lands inside the leash and inherits the
+# subject's track. Measured over every sighting of the elected subject in every
+# selected clip window (171 consecutive pairs) the same subject never moves
+# faster than 1.51 widths/s -- p50 0.06, p95 1.17 -- while the two false
+# inheritances on pentagon read 3.0 widths/s. 2.0 sits in that gap and only
+# binds where the stride is short enough for it to matter: at 1.3 s it still
+# allows the full 2.5 widths, at 0.8 s it allows 1.6.
+_MAX_JUMP_RATE_S = 2.0
+
 # After a shot boundary a track only re-binds this tightly. A pan trips the
 # boundary detector too, and the same speaker usually returns near where they
 # left; one face width is the "same person, same place" test, and anything
@@ -233,8 +245,19 @@ def _update_tracks(tracks: list[_Track], dets: list[tuple[float, float, float, f
         # The radius is face-relative so a wide shot's small faces get a short
         # leash in pixels and a close-up's large faces a long one, keeping the
         # "same person?" question scale-free.
-        radius = max(w, h) * limit_widths
-        if best is not None and best_d <= radius:
+        if best is None:
+            # No track has a position yet, so there is nothing to measure a
+            # jump from: the sighting starts a track.
+            tracks.append(_Track([(t, x, y, w, h, _score)]))
+            continue
+        dt = t - best.samples[-1][0]
+        # The rate cap only tightens a gap of real length. At dt == 0 -- two
+        # detections binding one track in the same call -- the width allowance
+        # alone decides, which is the question the cap is not about.
+        widths = limit_widths if (after_cut or dt <= 0.0) else min(
+            _MAX_JUMP_WIDTHS, _MAX_JUMP_RATE_S * dt)
+        radius = max(w, h) * widths
+        if best_d <= radius:
             best.samples.append((t, x, y, w, h, _score))
         else:
             tracks.append(_Track([(t, x, y, w, h, _score)]))
@@ -244,7 +267,8 @@ def _update_tracks(tracks: list[_Track], dets: list[tuple[float, float, float, f
 # Layers 3+4: active-subject election and crop optimisation
 # --------------------------------------------------------------------------- #
 
-def _elect_centers(tracks: list[_Track], times: list[float]) -> list[float]:
+def _elect_centers(tracks: list[_Track], times: list[float],
+                   boundaries: set[int] | None = None) -> list[float]:
     """Per-sample face centre of the elected subject, or NaN where none.
 
     A forward pass with hysteresis: the incumbent is held for at least
@@ -252,16 +276,32 @@ def _elect_centers(tracks: list[_Track], times: list[float]) -> list[float]:
     exceeds it by ``_SWITCH_MARGIN``. Without this the crop follows whichever
     detection is momentarily larger, and on a two-shot that is a coin flip
     every sample — the A/B/A/B oscillation the brief calls out specifically.
+
+    A cut voids the hold, immediately rather than after the minimum hold.
+    ``evidence`` averages over a window either side of the sample, so without
+    the filter below a track whose every sighting is in the previous shot still
+    out-scores the new shot's first sighting — the incumbent is held, its centre
+    is undefined outside its own span, and the crop sits on a carried position
+    for the whole hold before re-establishing. The hysteresis exists to stop a
+    coin flip between two *visible* subjects; a subject not seen since the cut
+    is not visible, so there is nothing to be loyal to. Only a track with a
+    sighting at or after the boundary frame is live, since a boundary index is
+    where the new shot starts.
     """
     out: list[float] = []
     incumbent: _Track | None = None
     hold_until = -float("inf")
-    for t in times:
-        live = [tr for tr in tracks if tr.evidence(t) > 0]
+    cut_t: float | None = None
+    boundaries = boundaries or set()
+    for i, t in enumerate(times):
+        if i in boundaries:
+            cut_t = t
+        live = [tr for tr in tracks
+                if tr.evidence(t) > 0 and (cut_t is None or tr.samples[-1][0] >= cut_t)]
         if not live:
             out.append(float("nan"))
             continue
-        if incumbent is None or incumbent.evidence(t) <= 0:
+        if incumbent is None or incumbent.evidence(t) <= 0 or incumbent not in live:
             incumbent = max(live, key=lambda tr: tr.evidence(t))
             hold_until = t + _MIN_HOLD_S
         elif t >= hold_until:
@@ -386,12 +426,23 @@ def _smooth_elected(times: list[float], centers: list[float],
     spacing = (float(np.median(np.diff(times))) if len(times) > 1 else 1.0)
     half = max(half_window, 2.0 * spacing)
     out = list(centers)
+    span_lo, span_hi = times[0], times[-1]
     for i, (t, c) in enumerate(zip(times, centers)):
         if not np.isfinite(c):
             continue
+        # A median only tracks a moving subject when its window is centred on
+        # the sample. At the interval's edges the data truncates one side, so
+        # the other side is truncated to match: a window reaching two and a
+        # half seconds forward of the first sample takes its median over
+        # subject positions the crop will not reach for another two samples,
+        # and the clip opens where the speaker is going rather than where they
+        # are. Measured on a walking speaker at the head of a clip, the median
+        # of [524.7, 821.7, 1009.7] put the opening crop on 821.7 with the
+        # speaker at 524.7, outside the 406px window.
+        w = min(half, t - span_lo, span_hi - t)
         near = []
         for j in range(len(times)):
-            if abs(times[j] - t) > half or not np.isfinite(centers[j]):
+            if abs(times[j] - t) > w or not np.isfinite(centers[j]):
                 continue
             # A boundary at either end of the pair, or between the two, means
             # different shots. Both endpoints matter: a boundary index starts a
@@ -773,7 +824,7 @@ def plan_crop(times: list[float],
     tracks: list[_Track] = []
     for i, t in enumerate(times):
         _update_tracks(tracks, detections[i], t, after_cut=(i in boundaries))
-    elected = _elect_centers(tracks, times)
+    elected = _elect_centers(tracks, times, boundaries)
     held = _hold_through_gaps(times, elected)
     # The low pass goes after the hold and before the targets: it smooths the
     # elected subject position, and the target layer must still clamp the face

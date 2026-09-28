@@ -20,10 +20,18 @@
     },
     {
       "start": 586.52,
-      "end": 587.98,
-      "text": "until it gets exploited properly.",
+      "end": 587.6,
+      "text": "until it gets exploited",
       "emphasis": [
         " exploited"
+      ]
+    },
+    {
+      "start": 587.6,
+      "end": 587.98,
+      "text": "properly.",
+      "emphasis": [
+        " properly."
       ]
     },
     {
@@ -112,17 +120,16 @@
     },
     {
       "start": 609.68,
-      "end": 610.8,
-      "text": "They're in our custody and they're",
+      "end": 610.66,
+      "text": "They're in our custody and",
       "emphasis": [
-        " custody",
-        " they're"
+        " custody"
       ]
     },
     {
-      "start": 610.8,
+      "start": 610.66,
       "end": 611.64,
-      "text": "at a secure facility.",
+      "text": "they're at a secure facility.",
       "emphasis": [
         " facility."
       ]

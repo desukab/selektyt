@@ -1,13 +1,13 @@
-TITLE:   My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the pa
+TITLE:   Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently We've seen devastating floods droughts and wildfires
 
 FCM: NON-DROP FRAME
 
-001  ROYAL_SO V     C        00:00:12:08 00:00:32:16 00:00:00:00 00:00:20:08
+001  ROYAL_SO V     C        00:00:00:08 00:00:32:17 00:00:00:00 00:00:32:09
      M2   royal-society-cloke.webm
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
-001  ROYAL_SO A     C        00:00:12:08 00:00:32:16 00:00:00:00 00:00:20:08
+001  ROYAL_SO A     C        00:00:00:08 00:00:32:17 00:00:00:00 00:00:32:09
 
-002  ROYAL_SO V     C        00:00:33:04 00:00:39:02 00:00:20:08 00:00:26:06
+002  ROYAL_SO V     C        00:00:33:04 00:00:39:02 00:00:32:09 00:00:38:07
      M2   royal-society-cloke.webm
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
-002  ROYAL_SO A     C        00:00:33:04 00:00:39:02 00:00:20:08 00:00:26:06
+002  ROYAL_SO A     C        00:00:33:04 00:00:39:02 00:00:32:09 00:00:38:07

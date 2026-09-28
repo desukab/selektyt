@@ -1,0 +1,140 @@
+{
+ "runs": [
+  {
+   "source": "alice-1903_run",
+   "clips": [
+    {
+     "clip": "project",
+     "state": "fail",
+     "reason": "no selections.json \u2014 transcription returned no segments (en)"
+    }
+   ]
+  },
+  {
+   "source": "emwcon-panel-2018_run",
+   "clips": [
+    {
+     "clip": "clip 02",
+     "state": "review",
+     "reason": "1 edge undecidable \u2014 the transcript marks no sentence end in the utterance(s) involved"
+    },
+    {
+     "clip": "clip 03",
+     "state": "review",
+     "reason": "1 edge undecidable \u2014 the transcript marks no sentence end in the utterance(s) involved"
+    },
+    {
+     "clip": "clip 04",
+     "state": "review",
+     "reason": "1 edge undecidable \u2014 the transcript marks no sentence end in the utterance(s) involved"
+    }
+   ]
+  },
+  {
+   "source": "hadhazy-protest_run",
+   "clips": [
+    {
+     "clip": "clip 01",
+     "state": "review",
+     "reason": "1 edge undecidable \u2014 the transcript marks no sentence end in the utterance(s) involved"
+    },
+    {
+     "clip": "clip 02",
+     "state": "review",
+     "reason": "1 edge undecidable \u2014 the transcript marks no sentence end in the utterance(s) involved"
+    }
+   ]
+  },
+  {
+   "source": "hindi-baiga-interview_run",
+   "clips": [
+    {
+     "clip": "project",
+     "state": "fail",
+     "reason": "no selections.json \u2014 transcription returned 3 segments (hi)"
+    }
+   ]
+  },
+  {
+   "source": "nasa360-ep5_run",
+   "clips": [
+    {
+     "clip": "clip 03",
+     "state": "review",
+     "reason": "1 edge undecidable \u2014 the transcript marks no sentence end in the utterance(s) involved"
+    },
+    {
+     "clip": "clip 05",
+     "state": "review",
+     "reason": "1 edge undecidable \u2014 the transcript marks no sentence end in the utterance(s) involved"
+    }
+   ]
+  },
+  {
+   "source": "ooi-vertical_run",
+   "clips": [
+    {
+     "clip": "clip 02",
+     "state": "review",
+     "reason": "1 edge undecidable \u2014 the transcript marks no sentence end in the utterance(s) involved"
+    }
+   ]
+  },
+  {
+   "source": "pentagon-esper-briefing_run",
+   "clips": [
+    {
+     "clip": "clip 03",
+     "state": "review",
+     "reason": "1 edge undecidable \u2014 the transcript marks no sentence end in the utterance(s) involved"
+    }
+   ]
+  },
+  {
+   "source": "roman-portrait-trailer_run",
+   "clips": [
+    {
+     "clip": "project",
+     "state": "fail",
+     "reason": "no selections.json \u2014 transcription returned no segments (en)"
+    }
+   ]
+  },
+  {
+   "source": "royal-society-cloke_run",
+   "clips": [
+    {
+     "clip": "clip 04",
+     "state": "review",
+     "reason": "1 edge undecidable \u2014 the transcript marks no sentence end in the utterance(s) involved"
+    }
+   ]
+  },
+  {
+   "source": "telugu-launch_run",
+   "clips": [
+    {
+     "clip": "project",
+     "state": "fail",
+     "reason": "no selections.json \u2014 transcription returned no segments (te)"
+    }
+   ]
+  },
+  {
+   "source": "telugu-tutorial_run",
+   "clips": [
+    {
+     "clip": "clip 01",
+     "state": "review",
+     "reason": "silence share 46.3% (word-free"
+    }
+   ]
+  }
+ ],
+ "totals": {
+  "runs": 11,
+  "clean": 16,
+  "review": 11,
+  "fail": 4
+ }
+}

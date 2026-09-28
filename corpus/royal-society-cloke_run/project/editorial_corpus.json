@@ -1,0 +1,3280 @@
+{
+  "source": "corpus/media/royal-society-cloke.webm",
+  "language": "en",
+  "detected_languages": [
+    "english"
+  ],
+  "duration": 625.6,
+  "build": {
+    "schema": "1.1",
+    "fingerprint": "3d3d7b5d0ebe9c21",
+    "unit_count": 22,
+    "segment_count": 156,
+    "duration_source": "given",
+    "note": "built from 156 segment(s) into 22 unit(s)"
+  },
+  "has_word_timestamps": true,
+  "has_speaker_labels": false,
+  "units": [
+    {
+      "index": 0,
+      "start": 0.3,
+      "end": 31.317,
+      "segment_indices": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "text": "Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently We've seen devastating floods droughts and wildfires worldwide My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the panorama episode wild weather our world under threat And she was a subject of the Life Scientific on Radio 4 in 2021.",
+      "sentence_count": 5,
+      "word_count": 77,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "word_aligned",
+      "restatement_count": 0,
+      "topic_id": 0,
+      "thread_id": 0,
+      "beat_id": 0,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 0
+    },
+    {
+      "index": 1,
+      "start": 31.317,
+      "end": 109.92,
+      "segment_indices": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "text": "Welcome Hannah. It's lovely to be here. When did you first discover your fascination with water and geography? I wonder if I was actually just born into water because you know when I was a little girl I was just fascinated by it and we used to go on holiday to Devon to see my grandparents every summer and I just used to throw myself into the sea and you know go paddling in Dartmoor rivers and just spent hours and hours in the water so I think it was there from when I was very very small I'm sure that my my mom and dad influenced me as well. That's amazing I love that but then water can also be quite a devastating force on the world so could you talk a little bit about that and you know the research that you do now? So I do love water I love the sound of rain, I love flinging myself into rivers, but I'm very aware that these things can turn into monsters. Heavy rainfall, rivers can turn fluddy, and they will absolutely devastate communities. So it's really interesting being very fascinated by water and how it moves around the planet, but yet being very aware of how dangerous it can be. And that's really why I do what I do. So I'm interested in flood forecasting, warning people, making sure people can get out of the way of dangerous floods.",
+      "sentence_count": 24,
+      "word_count": 242,
+      "coherence": 0.828,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 1,
+      "thread_id": 1,
+      "beat_id": 1,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 0
+    },
+    {
+      "index": 2,
+      "start": 111.28,
+      "end": 120.72,
+      "segment_indices": [
+        22,
+        23,
+        24,
+        25
+      ],
+      "text": "Now, it seems like some scientists perhaps are a bit reluctant to kind of pinpoint the cause of some of these extreme weather events as being because of the climate crisis.",
+      "sentence_count": 4,
+      "word_count": 31,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 2,
+      "thread_id": 2,
+      "beat_id": 2,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 1
+    },
+    {
+      "index": 3,
+      "start": 121.06,
+      "end": 140.02,
+      "segment_indices": [
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "text": "What's your response to that? Yeah, it's an interesting question because it's always flooded. So it's flooded since before humans existed. And we've always had heat waves and there's always been forest fires. So it would be wrong to say that every forest fire is caused by climate change.",
+      "sentence_count": 6,
+      "word_count": 49,
+      "coherence": 0.75,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 3,
+      "thread_id": 3,
+      "beat_id": 3,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 1
+    },
+    {
+      "index": 4,
+      "start": 140.44,
+      "end": 180.227,
+      "segment_indices": [
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41
+      ],
+      "text": "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes they're more intense. So our floods can cover more land. They can be more violent because of the fingerprints of climate change. So it's really important to distinguish that because we can't just go around saying, saying, oh, this flood is definitely because of climate change. But we can say that it's more likely because of climate change and the fingerprints of climate change are there, which means that we need to take it seriously. So it's almost like there's the effect that we're having on the planet is to make things a little bit more riskier in the sort of natural disaster regard.",
+      "sentence_count": 12,
+      "word_count": 124,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 1,
+      "topic_id": 1,
+      "thread_id": 1,
+      "beat_id": 4,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 1
+    },
+    {
+      "index": 5,
+      "start": 180.227,
+      "end": 235.237,
+      "segment_indices": [
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52
+      ],
+      "text": "Yeah, that's exactly it. The risk changes that factor if it's going to happen more often, it's going to be worse. And how good are we at predicting the next flood or the next extreme event like that? We've got some really good models now. So we have huge computer models of the Earth system that can put together how the atmosphere moves around and what's happening on the land surface and in our rivers. And we're actually pretty good now at saying whether a natural hazard like a fire or a heat wave or a flood is going to happen even sometimes two or three weeks ahead. So is that enough? Is two or three weeks ahead I guess enough to respond to that adequately? So it depends what you're trying to do. So if you're trying to get people out of the way, then you need at least a week sometimes to prepare all of that stuff in advance. We only tend to hear about things a day in advance.",
+      "sentence_count": 16,
+      "word_count": 172,
+      "coherence": 0.25,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 1,
+      "thread_id": null,
+      "beat_id": 5,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 1
+    },
+    {
+      "index": 6,
+      "start": 235.237,
+      "end": 265.52,
+      "segment_indices": [
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58
+      ],
+      "text": "Somebody says, you know, actually tomorrow it's going to rain really hard. You need to, you know, get out of your house. But behind the scenes people are moving around putting equipment in the right place going on alert. And with this kind of, I guess in the longer term, if I'm, you know, from my perspective as a structural engineer, I've been involved in, you know, urban planning and looking at cities and so on, how can we use the kind of modeling that you do to maybe better design where human beings decide to settle down?",
+      "sentence_count": 9,
+      "word_count": 98,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 4,
+      "thread_id": 4,
+      "beat_id": 6,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 1
+    },
+    {
+      "index": 7,
+      "start": 266.24,
+      "end": 299.78,
+      "segment_indices": [
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71
+      ],
+      "text": "Yeah, humans have a tendency to live in very dangerous places. We like water, right? We do. It's really pretty living next to the river and it's really functional. In London it's a really nice place to live. People want to live there. It's really expensive. But it can be very, very dangerous indeed. So we have this legacy of people living in really, really dangerous places. But we can use the same types of model that we use when we're forecasting whether a flood is coming next week. We can use that to work out what the risk is of any types of floods coming along. We can say, you know, these.",
+      "sentence_count": 13,
+      "word_count": 113,
+      "coherence": 0.867,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 1,
+      "thread_id": null,
+      "beat_id": 7,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 1
+    },
+    {
+      "index": 8,
+      "start": 301.88,
+      "end": 356.42,
+      "segment_indices": [
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91
+      ],
+      "text": "do not build here, perhaps even move people out of the way. And then these places, there is still some risk so you need to adapt your homes or your businesses. And what kind of time skills Are you able to make these predictions on now? So when we're thinking about an upcoming flood, so it's going to flood tomorrow or next week, we can say with some confidence whether that flood is going to happen. But when we look a long term and we think about our changing climate, we can see how likely those types of floods are to happen in the future. And some of the things we're most worried about actually are flash floods. Those ones that are really difficult to predict in the short term. And sometimes they come along in an hour or something. A big thunderstorm happens and it sweeps through the streets or along a river. But we know that they are getting more likely in the future. And warming climate means we're holding more water in the atmosphere, heavier rainfall, more intense rainfall, more flash floods.",
+      "sentence_count": 22,
+      "word_count": 185,
+      "coherence": 0.92,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 1,
+      "thread_id": 1,
+      "beat_id": 8,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 1
+    },
+    {
+      "index": 9,
+      "start": 356.92,
+      "end": 362.92,
+      "segment_indices": [
+        92,
+        93
+      ],
+      "text": "What about the scene kind of more globally? I guess we've talked a little bit more specifically at the UK perhaps.",
+      "sentence_count": 2,
+      "word_count": 21,
+      "coherence": 0.5,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 2,
+      "thread_id": 5,
+      "beat_id": 9,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 1
+    },
+    {
+      "index": 10,
+      "start": 363.22,
+      "end": 374.982,
+      "segment_indices": [
+        94,
+        95,
+        96
+      ],
+      "text": "What's happening on the worldwide basis with flood prediction? Some of the most vulnerable places in the world are desperately in need of much better flood forecasting and warning systems.",
+      "sentence_count": 3,
+      "word_count": 30,
+      "coherence": 0.5,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 5,
+      "thread_id": 6,
+      "beat_id": 10,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 1
+    },
+    {
+      "index": 11,
+      "start": 374.982,
+      "end": 417.12,
+      "segment_indices": [
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105
+      ],
+      "text": "A lot of those places, you know, they don't have enough funding to really get to grips with some of these global models. So it's about working together with partners, perhaps in Mozambique and Bangladesh, places that are very filled with floods often, and a lot of people die every year from these types of floods. So the more that we can support those countries and provide kind of the infrastructure and work together with them to help them get the warnings to the people so they can get out of the way of those floods the better. Yeah, seems like it's one of those things where, you know, the more we come together, the better our responses can be and so on. So quite a big challenge. It's a big challenge. It is a big job. The world is a very big place.",
+      "sentence_count": 14,
+      "word_count": 144,
+      "coherence": 0.929,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 1,
+      "thread_id": 1,
+      "beat_id": 11,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 2
+    },
+    {
+      "index": 12,
+      "start": 417.24,
+      "end": 438.91,
+      "segment_indices": [
+        106,
+        107,
+        108,
+        109,
+        110,
+        111
+      ],
+      "text": "Yeah. And we do have global models and they do provide like flood forecasts and flood heat wave forecasts. But actually getting that message to the people on the ground, that's really, really tough. So you can only really do that at the local level. So you're moving from global environmental models to actually psychology at the local level. And that's a big chain of events.",
+      "sentence_count": 10,
+      "word_count": 66,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 1,
+      "thread_id": null,
+      "beat_id": 12,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 2
+    },
+    {
+      "index": 13,
+      "start": 438.91,
+      "end": 446.622,
+      "segment_indices": [
+        111,
+        112
+      ],
+      "text": "Completely. So now I'm going to ask you a completely different question, which is poetry. Apparently, I've heard that you've written some poetry.",
+      "sentence_count": 3,
+      "word_count": 23,
+      "coherence": 0.625,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 6,
+      "thread_id": 7,
+      "beat_id": 13,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 2
+    },
+    {
+      "index": 14,
+      "start": 446.622,
+      "end": 451.68,
+      "segment_indices": [
+        112,
+        113
+      ],
+      "text": "There's something about the brain, isn't there doing arts and science together? I mean is that something you quite enjoy?",
+      "sentence_count": 3,
+      "word_count": 20,
+      "coherence": 0.5,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 7,
+      "thread_id": 8,
+      "beat_id": 14,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 2
+    },
+    {
+      "index": 15,
+      "start": 452.64,
+      "end": 491.159,
+      "segment_indices": [
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122
+      ],
+      "text": "Yeah I think as a scientist I was a bit wary about it thinking that there's a bit unscientific, let's not do that, you know people will laugh at me. But actually opening up that different way of thinking actually generates new ideas and you actually start to think in a different way as well and communicate in a different way. So I work with now with artists, musicians across the board do a lot of work with museums and it's brought a lot and much richer way of communicating things like flood risk. Yeah I mean it sounds like I mean I know this but you know arts and sciences if we need to talk to each other then we can learn new things from each other which which is brilliant.",
+      "sentence_count": 12,
+      "word_count": 132,
+      "coherence": 0.722,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 8,
+      "thread_id": 8,
+      "beat_id": 15,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 3
+    },
+    {
+      "index": 16,
+      "start": 491.159,
+      "end": 543.613,
+      "segment_indices": [
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136
+      ],
+      "text": "Yeah and not be frightened. I know 100% and so that's really great and is there something that you would be devastated to lose if it got swept away in the flood? It's really important actually to focus on that when you're trying to communicate to people whether they're at flood risk and what's actually going to happen to them. Because if they just think about like how much rain is falling or how high the river is, it means nothing to them. But if you pick something that's really precious to someone, so for me that's my grandmother's music box. You know, she gave it to me, sadly she's passed away. it means a lot for my childhood and it sits on my shelf and I always imagine, you know, how would I feel if that got swept away in a flood? And to me that's the real meaning of being at flood risk. Yeah and I guess it's a way to explain the risk to other people like you said that, you know, it might feel like a very distant thing.",
+      "sentence_count": 18,
+      "word_count": 183,
+      "coherence": 0.875,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 8,
+      "thread_id": 1,
+      "beat_id": 16,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 3
+    },
+    {
+      "index": 17,
+      "start": 543.613,
+      "end": 553.269,
+      "segment_indices": [
+        136,
+        137,
+        138,
+        139
+      ],
+      "text": "Yeah and they have to imagine it so they have to be able to imagine those flood waters in the house and putting their possessions at risk, perhaps putting their family at risk and you need to help that imagination along.",
+      "sentence_count": 4,
+      "word_count": 41,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 8,
+      "thread_id": 1,
+      "beat_id": 17,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 3
+    },
+    {
+      "index": 18,
+      "start": 553.269,
+      "end": 568.6800000000001,
+      "segment_indices": [
+        139,
+        140,
+        141,
+        142
+      ],
+      "text": "So, those types of precious objects are really helpful to do that. Just to change scales a little bit again, but the welcome trust which some of our viewers may be familiar with has recently started talking about how climate change is a health crisis. What are your thoughts on that?",
+      "sentence_count": 5,
+      "word_count": 51,
+      "coherence": 0.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 2,
+      "thread_id": 9,
+      "beat_id": 18,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 3
+    },
+    {
+      "index": 19,
+      "start": 569.4,
+      "end": 573.326,
+      "segment_indices": [
+        143,
+        144
+      ],
+      "text": "There are so many links between climate and health. I don't think I could cover them all now.",
+      "sentence_count": 3,
+      "word_count": 18,
+      "coherence": 0.5,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 2,
+      "thread_id": 9,
+      "beat_id": 19,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 3
+    },
+    {
+      "index": 20,
+      "start": 573.326,
+      "end": 611.2,
+      "segment_indices": [
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151
+      ],
+      "text": "On a pick a couple, I mean, last summer we saw absolutely intense heat in the city we went over that 40 degree barrier and it was terrifying and it meant you know thousands of people died and that you know that's pretty severe and that's in the UK we're not even thinking about places on the planet where it's absolutely inhospitable to live so heat is a giant killer it's a silent killer as well floodwater coming through your house. It really picks the vulnerable people as well. So that's an obvious example of where climate and health are so intricately linked.",
+      "sentence_count": 10,
+      "word_count": 103,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 2,
+      "thread_id": 10,
+      "beat_id": 20,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 3
+    },
+    {
+      "index": 21,
+      "start": 611.2,
+      "end": 625.6,
+      "segment_indices": [
+        152,
+        153,
+        154,
+        155
+      ],
+      "text": "Thank you so much for chatting to me. It's been fascinating to hear about really what's a major problem worldwide, but also, you know, like you said, the psychology of the family or the person or the community that then has to respond to that on a local level. So I really appreciate your time.",
+      "sentence_count": 6,
+      "word_count": 55,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 1,
+      "thread_id": null,
+      "beat_id": 21,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 3
+    }
+  ],
+  "topics": [
+    {
+      "topic_id": 0,
+      "label": "wildfires, wild, university",
+      "terms": [
+        "wildfires",
+        "wild",
+        "university",
+        "threat"
+      ],
+      "unit_indices": [
+        0
+      ],
+      "segment_indices": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "start": 0.3,
+      "end": 31.317,
+      "runs": 1,
+      "span_share": 0.0496,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on…"
+      ]
+    },
+    {
+      "topic_id": 1,
+      "label": "things, floods, week",
+      "terms": [
+        "things",
+        "floods",
+        "week",
+        "water"
+      ],
+      "unit_indices": [
+        1,
+        4,
+        5,
+        7,
+        8,
+        11,
+        12,
+        21
+      ],
+      "segment_indices": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        152,
+        153,
+        154,
+        155
+      ],
+      "start": 31.317,
+      "end": 625.6,
+      "runs": 5,
+      "span_share": 0.9499,
+      "confidence": 0.964,
+      "reason": "established subject: 8 units across 5 run(s) share signature terms things, floods, week (containment 0.23-0.39, rarity-weighted 0.29) over a 252s interruption)",
+      "evidence": [
+        "Welcome Hannah. It's lovely to be here. When did you first discover your fascination with…",
+        "What it does is it makes it more likely. So we see more of them, sometimes they're more f…",
+        "Yeah, that's exactly it. The risk changes that factor if it's going to happen more often,…"
+      ]
+    },
+    {
+      "topic_id": 2,
+      "label": "health, climate, crisis",
+      "terms": [
+        "health",
+        "climate",
+        "crisis",
+        "bit"
+      ],
+      "unit_indices": [
+        2,
+        9,
+        18,
+        19,
+        20
+      ],
+      "segment_indices": [
+        22,
+        23,
+        24,
+        25,
+        92,
+        93,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151
+      ],
+      "start": 111.28,
+      "end": 611.2,
+      "runs": 3,
+      "span_share": 0.7991,
+      "confidence": 0.905,
+      "reason": "established subject: 5 units across 3 run(s) share signature terms health, climate, crisis (containment 0.22-0.33, rarity-weighted 0.23) over a 427s interruption)",
+      "evidence": [
+        "Now, it seems like some scientists perhaps are a bit reluctant to kind of pinpoint the ca…",
+        "What about the scene kind of more globally? I guess we've talked a little bit more specif…",
+        "So, those types of precious objects are really helpful to do that. Just to change scales…"
+      ]
+    },
+    {
+      "topic_id": 3,
+      "label": "wrong, waves, since",
+      "terms": [
+        "wrong",
+        "waves",
+        "since",
+        "response"
+      ],
+      "unit_indices": [
+        3
+      ],
+      "segment_indices": [
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "start": 121.06,
+      "end": 140.02,
+      "runs": 1,
+      "span_share": 0.0303,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "What's your response to that? Yeah, it's an interesting question because it's always floo…"
+      ]
+    },
+    {
+      "topic_id": 4,
+      "label": "urban, structural, somebody",
+      "terms": [
+        "urban",
+        "structural",
+        "somebody",
+        "settle"
+      ],
+      "unit_indices": [
+        6
+      ],
+      "segment_indices": [
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58
+      ],
+      "start": 235.237,
+      "end": 265.52,
+      "runs": 1,
+      "span_share": 0.0484,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "Somebody says, you know, actually tomorrow it's going to rain really hard. You need to, y…"
+      ]
+    },
+    {
+      "topic_id": 5,
+      "label": "systems, prediction, desperately",
+      "terms": [
+        "systems",
+        "prediction",
+        "desperately",
+        "basis"
+      ],
+      "unit_indices": [
+        10
+      ],
+      "segment_indices": [
+        94,
+        95,
+        96
+      ],
+      "start": 363.22,
+      "end": 374.982,
+      "runs": 1,
+      "span_share": 0.0188,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "What's happening on the worldwide basis with flood prediction? Some of the most vulnerabl…"
+      ]
+    },
+    {
+      "topic_id": 6,
+      "label": "written, poetry, heard",
+      "terms": [
+        "written",
+        "poetry",
+        "heard",
+        "completely"
+      ],
+      "unit_indices": [
+        13
+      ],
+      "segment_indices": [
+        111,
+        112
+      ],
+      "start": 438.91,
+      "end": 446.622,
+      "runs": 1,
+      "span_share": 0.0123,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "Completely. So now I'm going to ask you a completely different question, which is poetry.…"
+      ]
+    },
+    {
+      "topic_id": 7,
+      "label": "science, isn, enjoy",
+      "terms": [
+        "science",
+        "isn",
+        "enjoy",
+        "doing"
+      ],
+      "unit_indices": [
+        14
+      ],
+      "segment_indices": [
+        112,
+        113
+      ],
+      "start": 446.622,
+      "end": 451.68,
+      "runs": 1,
+      "span_share": 0.0081,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "There's something about the brain, isn't there doing arts and science together? I mean is…"
+      ]
+    },
+    {
+      "topic_id": 8,
+      "label": "imagine, communicate, risk",
+      "terms": [
+        "imagine",
+        "communicate",
+        "risk",
+        "lot"
+      ],
+      "unit_indices": [
+        15,
+        16,
+        17
+      ],
+      "segment_indices": [
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139
+      ],
+      "start": 452.64,
+      "end": 553.269,
+      "runs": 1,
+      "span_share": 0.1609,
+      "confidence": 0.739,
+      "reason": "established subject: 3 units across 1 run(s) share signature terms imagine, communicate, risk (containment 0.27-0.28, rarity-weighted 0.19))",
+      "evidence": [
+        "Yeah I think as a scientist I was a bit wary about it thinking that there's a bit unscien…",
+        "Yeah and not be frightened. I know 100% and so that's really great and is there something…",
+        "Yeah and they have to imagine it so they have to be able to imagine those flood waters in…"
+      ]
+    }
+  ],
+  "threads": [
+    {
+      "thread_id": 0,
+      "title": "wildfires, wild, university",
+      "terms": [
+        "wildfires",
+        "wild",
+        "university",
+        "threat"
+      ],
+      "unit_indices": [
+        0
+      ],
+      "links": [],
+      "beat_indices": [
+        0
+      ],
+      "start": 0.3,
+      "end": 31.317,
+      "arc": "tension",
+      "span_share": 0.0496,
+      "confidence": 0.25,
+      "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
+      "evidence": [
+        "Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently W…"
+      ]
+    },
+    {
+      "thread_id": 1,
+      "title": "see, means, way",
+      "terms": [
+        "see",
+        "means",
+        "way",
+        "things"
+      ],
+      "unit_indices": [
+        1,
+        4,
+        8,
+        11,
+        16,
+        17
+      ],
+      "links": [
+        {
+          "setup_unit": 1,
+          "payoff_unit": 4,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 31.317,
+          "setup_end": 109.92,
+          "payoff_start": 140.44,
+          "payoff_end": 180.227,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.23) — the speaker asserts the causation",
+          "evidence": [
+            "Welcome Hannah. It's lovely to be here. When did you first discover your fascination with water and geography…",
+            "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…"
+          ]
+        },
+        {
+          "setup_unit": 4,
+          "payoff_unit": 8,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 140.44,
+          "setup_end": 180.227,
+          "payoff_start": 301.88,
+          "payoff_end": 356.42,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.33) — the speaker asserts the causation",
+          "evidence": [
+            "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…",
+            "do not build here, perhaps even move people out of the way. And then these places, there is still some risk s…"
+          ]
+        },
+        {
+          "setup_unit": 8,
+          "payoff_unit": 11,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 301.88,
+          "setup_end": 356.42,
+          "payoff_start": 374.982,
+          "payoff_end": 417.12,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
+          "evidence": [
+            "do not build here, perhaps even move people out of the way. And then these places, there is still some risk s…",
+            "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…"
+          ]
+        },
+        {
+          "setup_unit": 11,
+          "payoff_unit": 16,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 374.982,
+          "setup_end": 417.12,
+          "payoff_start": 491.159,
+          "payoff_end": 543.613,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.17) — the speaker asserts the causation",
+          "evidence": [
+            "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…",
+            "Yeah and not be frightened. I know 100% and so that's really great and is there something that you would be d…"
+          ]
+        },
+        {
+          "setup_unit": 11,
+          "payoff_unit": 17,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 374.982,
+          "setup_end": 417.12,
+          "payoff_start": 543.613,
+          "payoff_end": 553.269,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.20) — the speaker asserts the causation",
+          "evidence": [
+            "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…",
+            "Yeah and they have to imagine it so they have to be able to imagine those flood waters in the house and putti…"
+          ]
+        },
+        {
+          "setup_unit": 16,
+          "payoff_unit": 17,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 491.159,
+          "setup_end": 543.613,
+          "payoff_start": 543.613,
+          "payoff_end": 553.269,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.27) — the speaker asserts the causation",
+          "evidence": [
+            "Yeah and not be frightened. I know 100% and so that's really great and is there something that you would be d…",
+            "Yeah and they have to imagine it so they have to be able to imagine those flood waters in the house and putti…"
+          ]
+        }
+      ],
+      "beat_indices": [
+        1,
+        4,
+        8,
+        11,
+        16,
+        17
+      ],
+      "start": 31.317,
+      "end": 553.269,
+      "arc": "tension → resolution → tension",
+      "span_share": 0.8343,
+      "confidence": 0.825,
+      "reason": "chain of 6 unit(s) joined by 6 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
+      "evidence": [
+        "Welcome Hannah. It's lovely to be here. When did you first discover your fascination with water and geography…",
+        "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…",
+        "do not build here, perhaps even move people out of the way. And then these places, there is still some risk s…"
+      ]
+    },
+    {
+      "thread_id": 2,
+      "title": "violent, take, sort",
+      "terms": [
+        "violent",
+        "take",
+        "sort",
+        "seriously"
+      ],
+      "unit_indices": [
+        2,
+        4
+      ],
+      "links": [
+        {
+          "setup_unit": 2,
+          "payoff_unit": 4,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 111.28,
+          "setup_end": 120.72,
+          "payoff_start": 140.44,
+          "payoff_end": 180.227,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.21) — the speaker asserts the causation",
+          "evidence": [
+            "Now, it seems like some scientists perhaps are a bit reluctant to kind of pinpoint the cause of some of these…",
+            "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…"
+          ]
+        }
+      ],
+      "beat_indices": [
+        2,
+        4
+      ],
+      "start": 111.28,
+      "end": 180.227,
+      "arc": "tension",
+      "span_share": 0.1102,
+      "confidence": 0.825,
+      "reason": "chain of 2 unit(s) joined by 1 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
+      "evidence": [
+        "Now, it seems like some scientists perhaps are a bit reluctant to kind of pinpoint the cause of some of these…",
+        "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…"
+      ]
+    },
+    {
+      "thread_id": 3,
+      "title": "change, say, wrong",
+      "terms": [
+        "change",
+        "say",
+        "wrong",
+        "waves"
+      ],
+      "unit_indices": [
+        3,
+        4
+      ],
+      "links": [
+        {
+          "setup_unit": 3,
+          "payoff_unit": 4,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 121.06,
+          "setup_end": 140.02,
+          "payoff_start": 140.44,
+          "payoff_end": 180.227,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.15) — the speaker asserts the causation",
+          "evidence": [
+            "What's your response to that? Yeah, it's an interesting question because it's always flooded. So it's flooded…",
+            "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…"
+          ]
+        }
+      ],
+      "beat_indices": [
+        3,
+        4
+      ],
+      "start": 121.06,
+      "end": 180.227,
+      "arc": "tension",
+      "span_share": 0.0946,
+      "confidence": 0.825,
+      "reason": "chain of 2 unit(s) joined by 1 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
+      "evidence": [
+        "What's your response to that? Yeah, it's an interesting question because it's always flooded. So it's flooded…",
+        "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…"
+      ]
+    },
+    {
+      "thread_id": 4,
+      "title": "tomorrow, term, kind",
+      "terms": [
+        "tomorrow",
+        "term",
+        "kind",
+        "going"
+      ],
+      "unit_indices": [
+        6,
+        8
+      ],
+      "links": [
+        {
+          "setup_unit": 6,
+          "payoff_unit": 8,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 235.237,
+          "setup_end": 265.52,
+          "payoff_start": 301.88,
+          "payoff_end": 356.42,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.21) — the speaker asserts the causation",
+          "evidence": [
+            "Somebody says, you know, actually tomorrow it's going to rain really hard. You need to, you know, get out of…",
+            "do not build here, perhaps even move people out of the way. And then these places, there is still some risk s…"
+          ]
+        }
+      ],
+      "beat_indices": [
+        6,
+        8
+      ],
+      "start": 235.237,
+      "end": 356.42,
+      "arc": "tension",
+      "span_share": 0.1937,
+      "confidence": 0.825,
+      "reason": "chain of 2 unit(s) joined by 1 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
+      "evidence": [
+        "Somebody says, you know, actually tomorrow it's going to rain really hard. You need to, you know, get out of…",
+        "do not build here, perhaps even move people out of the way. And then these places, there is still some risk s…"
+      ]
+    },
+    {
+      "thread_id": 5,
+      "title": "perhaps, kind, working",
+      "terms": [
+        "perhaps",
+        "kind",
+        "working",
+        "warnings"
+      ],
+      "unit_indices": [
+        9,
+        11
+      ],
+      "links": [
+        {
+          "setup_unit": 9,
+          "payoff_unit": 11,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 356.92,
+          "setup_end": 362.92,
+          "payoff_start": 374.982,
+          "payoff_end": 417.12,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.22) — the speaker asserts the causation",
+          "evidence": [
+            "What about the scene kind of more globally? I guess we've talked a little bit more specifically at the UK per…",
+            "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…"
+          ]
+        }
+      ],
+      "beat_indices": [
+        9,
+        11
+      ],
+      "start": 356.92,
+      "end": 417.12,
+      "arc": "tension → resolution",
+      "span_share": 0.0962,
+      "confidence": 0.825,
+      "reason": "chain of 2 unit(s) joined by 1 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
+      "evidence": [
+        "What about the scene kind of more globally? I guess we've talked a little bit more specifically at the UK per…",
+        "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…"
+      ]
+    },
+    {
+      "thread_id": 6,
+      "title": "better, world, places",
+      "terms": [
+        "better",
+        "world",
+        "places",
+        "working"
+      ],
+      "unit_indices": [
+        10,
+        11
+      ],
+      "links": [
+        {
+          "setup_unit": 10,
+          "payoff_unit": 11,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 363.22,
+          "setup_end": 374.982,
+          "payoff_start": 374.982,
+          "payoff_end": 417.12,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.20) — the speaker asserts the causation",
+          "evidence": [
+            "What's happening on the worldwide basis with flood prediction? Some of the most vulnerable places in the worl…",
+            "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…"
+          ]
+        }
+      ],
+      "beat_indices": [
+        10,
+        11
+      ],
+      "start": 363.22,
+      "end": 417.12,
+      "arc": "tension → resolution",
+      "span_share": 0.0862,
+      "confidence": 0.825,
+      "reason": "chain of 2 unit(s) joined by 1 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
+      "evidence": [
+        "What's happening on the worldwide basis with flood prediction? Some of the most vulnerable places in the worl…",
+        "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…"
+      ]
+    },
+    {
+      "thread_id": 7,
+      "title": "written, poetry, heard",
+      "terms": [
+        "written",
+        "poetry",
+        "heard",
+        "completely"
+      ],
+      "unit_indices": [
+        13
+      ],
+      "links": [],
+      "beat_indices": [
+        13
+      ],
+      "start": 438.91,
+      "end": 446.622,
+      "arc": "resolution",
+      "span_share": 0.0123,
+      "confidence": 0.25,
+      "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
+      "evidence": [
+        "Completely. So now I'm going to ask you a completely different question, which is poetry. Apparently, I've he…"
+      ]
+    },
+    {
+      "thread_id": 8,
+      "title": "communicate, arts, something",
+      "terms": [
+        "communicate",
+        "arts",
+        "something",
+        "mean"
+      ],
+      "unit_indices": [
+        14,
+        15,
+        16
+      ],
+      "links": [
+        {
+          "setup_unit": 14,
+          "payoff_unit": 15,
+          "kind": "question_answer",
+          "strength": 0.65,
+          "setup_start": 446.622,
+          "setup_end": 451.68,
+          "payoff_start": 452.64,
+          "payoff_end": 491.159,
+          "confidence": 0.65,
+          "reason": "setup asks, payoff answers on the same subject (overlap 0.20)",
+          "evidence": [
+            "There's something about the brain, isn't there doing arts and science together? I mean is that something you…",
+            "Yeah I think as a scientist I was a bit wary about it thinking that there's a bit unscientific, let's not do…"
+          ]
+        },
+        {
+          "setup_unit": 15,
+          "payoff_unit": 16,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 452.64,
+          "setup_end": 491.159,
+          "payoff_start": 491.159,
+          "payoff_end": 543.613,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.28) — the speaker asserts the causation",
+          "evidence": [
+            "Yeah I think as a scientist I was a bit wary about it thinking that there's a bit unscientific, let's not do…",
+            "Yeah and not be frightened. I know 100% and so that's really great and is there something that you would be d…"
+          ]
+        }
+      ],
+      "beat_indices": [
+        14,
+        15,
+        16
+      ],
+      "start": 446.622,
+      "end": 543.613,
+      "arc": "tension",
+      "span_share": 0.155,
+      "confidence": 0.8,
+      "reason": "chain of 3 unit(s) joined by 2 setup->payoff link(s) (mean evidence strength 0.70); strongest: causal",
+      "evidence": [
+        "There's something about the brain, isn't there doing arts and science together? I mean is that something you…",
+        "Yeah I think as a scientist I was a bit wary about it thinking that there's a bit unscientific, let's not do…",
+        "Yeah and not be frightened. I know 100% and so that's really great and is there something that you would be d…"
+      ]
+    },
+    {
+      "thread_id": 9,
+      "title": "health, viewers, trust",
+      "terms": [
+        "health",
+        "viewers",
+        "trust",
+        "thoughts"
+      ],
+      "unit_indices": [
+        18,
+        19
+      ],
+      "links": [
+        {
+          "setup_unit": 18,
+          "payoff_unit": 19,
+          "kind": "causal",
+          "strength": 0.75,
+          "setup_start": 553.269,
+          "setup_end": 568.6800000000001,
+          "payoff_start": 569.4,
+          "payoff_end": 573.326,
+          "confidence": 0.75,
+          "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
+          "evidence": [
+            "So, those types of precious objects are really helpful to do that. Just to change scales a little bit again,…",
+            "There are so many links between climate and health. I don't think I could cover them all now."
+          ]
+        }
+      ],
+      "beat_indices": [
+        18,
+        19
+      ],
+      "start": 553.269,
+      "end": 573.326,
+      "arc": "tension → resolution",
+      "span_share": 0.0321,
+      "confidence": 0.825,
+      "reason": "chain of 2 unit(s) joined by 1 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
+      "evidence": [
+        "So, those types of precious objects are really helpful to do that. Just to change scales a little bit again,…",
+        "There are so many links between climate and health. I don't think I could cover them all now."
+      ]
+    },
+    {
+      "thread_id": 10,
+      "title": "went, thousands, terrifying",
+      "terms": [
+        "went",
+        "thousands",
+        "terrifying",
+        "silent"
+      ],
+      "unit_indices": [
+        20
+      ],
+      "links": [],
+      "beat_indices": [
+        20
+      ],
+      "start": 573.326,
+      "end": 611.2,
+      "arc": "tension",
+      "span_share": 0.0605,
+      "confidence": 0.25,
+      "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
+      "evidence": [
+        "On a pick a couple, I mean, last summer we saw absolutely intense heat in the city we went over that 40 degre…"
+      ]
+    }
+  ],
+  "beats": [
+    {
+      "unit_index": 0,
+      "start": 0.3,
+      "end": 31.317,
+      "kind": "tension",
+      "polarity": "negative",
+      "intensity": 0.259,
+      "percentile": 0.048,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [
+        "threat",
+        "devastating"
+      ],
+      "thread_id": 0,
+      "confidence": 0.58,
+      "reason": "tension beat; 1× problem cue; cues: threat, devastating; polarity negative from lexicon matches"
+    },
+    {
+      "unit_index": 1,
+      "start": 31.317,
+      "end": 109.92,
+      "kind": "tension",
+      "polarity": "neutral",
+      "intensity": 0.759,
+      "percentile": 1.0,
+      "is_thread_peak": true,
+      "is_corpus_peak": true,
+      "cues": [
+        "actually",
+        "but",
+        "but",
+        "but",
+        "so",
+        "so"
+      ],
+      "thread_id": 1,
+      "confidence": 0.83,
+      "reason": "tension beat; opens a question (“When did you first discover your fascination with water and geography?”); 5× contrast cue; 5× result cue; cues: actually, but, but; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 2,
+      "start": 111.28,
+      "end": 120.72,
+      "kind": "tension",
+      "polarity": "negative",
+      "intensity": 0.259,
+      "percentile": 0.095,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [
+        "crisis"
+      ],
+      "thread_id": 2,
+      "confidence": 0.58,
+      "reason": "tension beat; 1× problem cue; cues: crisis; polarity negative from lexicon matches"
+    },
+    {
+      "unit_index": 3,
+      "start": 121.06,
+      "end": 140.02,
+      "kind": "tension",
+      "polarity": "negative",
+      "intensity": 0.623,
+      "percentile": 0.714,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [
+        "wrong",
+        "So",
+        "So",
+        "always",
+        "always",
+        "always"
+      ],
+      "thread_id": 3,
+      "confidence": 0.761,
+      "reason": "tension beat; opens a question (“What's your response to that?”); 1× problem cue; 2× result cue; cues: wrong, So, So; polarity negative from lexicon matches"
+    },
+    {
+      "unit_index": 4,
+      "start": 140.44,
+      "end": 180.227,
+      "kind": "tension",
+      "polarity": "negative",
+      "intensity": 0.636,
+      "percentile": 0.762,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [
+        "But",
+        "So",
+        "So",
+        "So",
+        "So",
+        "disaster"
+      ],
+      "thread_id": 3,
+      "confidence": 0.768,
+      "reason": "tension beat; opens a question (“What it does is it makes it more likely.”); 1× contrast cue; 4× result cue; cues: But, So, So; polarity negative from lexicon matches"
+    },
+    {
+      "unit_index": 5,
+      "start": 180.227,
+      "end": 235.237,
+      "kind": "tension",
+      "polarity": "negative",
+      "intensity": 0.661,
+      "percentile": 0.81,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [
+        "risk",
+        "actually",
+        "So",
+        "So",
+        "So",
+        "So"
+      ],
+      "thread_id": null,
+      "confidence": 0.781,
+      "reason": "tension beat; opens a question (“And how good are we at predicting the next flood or the next extreme event like that?”); 1× problem cue; 1× contrast cue; 4× result cue; cues: risk, actually, So; polarity negative from lexicon matches"
+    },
+    {
+      "unit_index": 6,
+      "start": 235.237,
+      "end": 265.52,
+      "kind": "tension",
+      "polarity": "neutral",
+      "intensity": 0.556,
+      "percentile": 0.476,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [
+        "actually",
+        "But",
+        "so"
+      ],
+      "thread_id": 4,
+      "confidence": 0.728,
+      "reason": "tension beat; opens a question (“design where human beings decide to settle down?”); 2× contrast cue; 1× result cue; cues: actually, But, so; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 7,
+      "start": 266.24,
+      "end": 299.78,
+      "kind": "tension",
+      "polarity": "negative",
+      "intensity": 0.617,
+      "percentile": 0.667,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [
+        "risk",
+        "But",
+        "But",
+        "So"
+      ],
+      "thread_id": null,
+      "confidence": 0.759,
+      "reason": "tension beat; opens a question (“We like water, right?”); 1× problem cue; 2× contrast cue; 1× result cue; cues: risk, But, But; polarity negative from lexicon matches"
+    },
+    {
+      "unit_index": 8,
+      "start": 301.88,
+      "end": 356.42,
+      "kind": "tension",
+      "polarity": "negative",
+      "intensity": 0.703,
+      "percentile": 0.905,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [
+        "risk",
+        "But",
+        "actually",
+        "But",
+        "so",
+        "So"
+      ],
+      "thread_id": 4,
+      "confidence": 0.801,
+      "reason": "tension beat; opens a question (“Are you able to make these predictions on now?”); 1× problem cue; 3× contrast cue; 3× result cue; cues: risk, But, actually; polarity negative from lexicon matches"
+    },
+    {
+      "unit_index": 9,
+      "start": 356.92,
+      "end": 362.92,
+      "kind": "tension",
+      "polarity": "neutral",
+      "intensity": 0.259,
+      "percentile": 0.143,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [],
+      "thread_id": 5,
+      "confidence": 0.58,
+      "reason": "tension beat; opens a question (“What about the scene kind of more globally?”); polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 10,
+      "start": 363.22,
+      "end": 374.982,
+      "kind": "tension",
+      "polarity": "neutral",
+      "intensity": 0.394,
+      "percentile": 0.286,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [
+        "the most"
+      ],
+      "thread_id": 6,
+      "confidence": 0.647,
+      "reason": "tension beat; opens a question (“What's happening on the worldwide basis with flood prediction?”); cues: the most; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 11,
+      "start": 374.982,
+      "end": 417.12,
+      "kind": "resolution",
+      "polarity": "neutral",
+      "intensity": 0.556,
+      "percentile": 0.571,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [
+        "So",
+        "So",
+        "so",
+        "so"
+      ],
+      "thread_id": 6,
+      "confidence": 0.728,
+      "reason": "resolution beat; 5× result cue; cues: So, So, so; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 12,
+      "start": 417.24,
+      "end": 438.91,
+      "kind": "turn",
+      "polarity": "neutral",
+      "intensity": 0.556,
+      "percentile": 0.524,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [
+        "But",
+        "actually",
+        "actually",
+        "So",
+        "So"
+      ],
+      "thread_id": null,
+      "confidence": 0.728,
+      "reason": "turn beat; 3× contrast cue; 2× result cue; cues: But, actually, actually; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 13,
+      "start": 438.91,
+      "end": 446.622,
+      "kind": "resolution",
+      "polarity": "neutral",
+      "intensity": 0.355,
+      "percentile": 0.238,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [
+        "So",
+        "Completely",
+        "completely"
+      ],
+      "thread_id": 7,
+      "confidence": 0.627,
+      "reason": "resolution beat; 1× result cue; cues: So, Completely, completely; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 14,
+      "start": 446.622,
+      "end": 451.68,
+      "kind": "tension",
+      "polarity": "neutral",
+      "intensity": 0.277,
+      "percentile": 0.19,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [],
+      "thread_id": 8,
+      "confidence": 0.589,
+      "reason": "tension beat; opens a question (“isn't there doing arts and science together?”); polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 15,
+      "start": 452.64,
+      "end": 491.159,
+      "kind": "tension",
+      "polarity": "negative",
+      "intensity": 0.667,
+      "percentile": 0.857,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [
+        "risk",
+        "But",
+        "actually",
+        "actually",
+        "actually",
+        "So"
+      ],
+      "thread_id": 8,
+      "confidence": 0.784,
+      "reason": "tension beat; 1× problem cue; 5× contrast cue; 1× result cue; cues: risk, But, actually; polarity negative from lexicon matches"
+    },
+    {
+      "unit_index": 16,
+      "start": 491.159,
+      "end": 543.613,
+      "kind": "tension",
+      "polarity": "neutral",
+      "intensity": 0.756,
+      "percentile": 0.952,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [
+        "risk",
+        "risk",
+        "risk",
+        "actually",
+        "actually",
+        "But"
+      ],
+      "thread_id": 8,
+      "confidence": 0.828,
+      "reason": "tension beat; opens a question (“if it got swept away in the flood?”); 3× problem cue; 3× contrast cue; 2× result cue; cues: risk, risk, risk; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 17,
+      "start": 543.613,
+      "end": 553.269,
+      "kind": "tension",
+      "polarity": "negative",
+      "intensity": 0.494,
+      "percentile": 0.333,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [
+        "risk",
+        "risk",
+        "so"
+      ],
+      "thread_id": 1,
+      "confidence": 0.697,
+      "reason": "tension beat; 2× problem cue; 1× result cue; cues: risk, risk, so; polarity negative from lexicon matches"
+    },
+    {
+      "unit_index": 18,
+      "start": 553.269,
+      "end": 568.6800000000001,
+      "kind": "tension",
+      "polarity": "negative",
+      "intensity": 0.546,
+      "percentile": 0.429,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [
+        "crisis",
+        "but",
+        "So"
+      ],
+      "thread_id": 9,
+      "confidence": 0.723,
+      "reason": "tension beat; opens a question (“What are your thoughts on that?”); 1× problem cue; 1× contrast cue; 1× result cue; cues: crisis, but, So; polarity negative from lexicon matches"
+    },
+    {
+      "unit_index": 19,
+      "start": 569.4,
+      "end": 573.326,
+      "kind": "resolution",
+      "polarity": "neutral",
+      "intensity": 0.237,
+      "percentile": 0.0,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [
+        "so"
+      ],
+      "thread_id": 9,
+      "confidence": 0.569,
+      "reason": "resolution beat; 1× result cue; cues: so; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 20,
+      "start": 573.326,
+      "end": 611.2,
+      "kind": "tension",
+      "polarity": "neutral",
+      "intensity": 0.608,
+      "percentile": 0.619,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [
+        "so",
+        "So",
+        "so",
+        "absolutely",
+        "absolutely"
+      ],
+      "thread_id": 10,
+      "confidence": 0.754,
+      "reason": "tension beat; opens a question (“where it's absolutely inhospitable to live so heat is a giant killer it's a”); 3× result cue; cues: so, So, so; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 21,
+      "start": 611.2,
+      "end": 625.6,
+      "kind": "tension",
+      "polarity": "negative",
+      "intensity": 0.528,
+      "percentile": 0.381,
+      "is_thread_peak": false,
+      "is_corpus_peak": false,
+      "cues": [
+        "problem",
+        "but",
+        "so",
+        "So"
+      ],
+      "thread_id": null,
+      "confidence": 0.714,
+      "reason": "tension beat; 1× problem cue; 1× contrast cue; 2× result cue; cues: problem, but, so; polarity negative from lexicon matches"
+    }
+  ],
+  "links": [
+    {
+      "setup_unit": 1,
+      "payoff_unit": 4,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 31.317,
+      "setup_end": 109.92,
+      "payoff_start": 140.44,
+      "payoff_end": 180.227,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.23) — the speaker asserts the causation",
+      "evidence": [
+        "Welcome Hannah. It's lovely to be here. When did you first discover your fascination with water and geography…",
+        "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…"
+      ]
+    },
+    {
+      "setup_unit": 1,
+      "payoff_unit": 5,
+      "kind": "callback",
+      "strength": 0.45,
+      "setup_start": 31.317,
+      "setup_end": 109.92,
+      "payoff_start": 180.227,
+      "payoff_end": 235.237,
+      "confidence": 0.45,
+      "reason": "subject returns after 3 intervening unit(s) — the return pays off the earlier setup",
+      "evidence": [
+        "Welcome Hannah. It's lovely to be here. When did you first discover your fascination with water and geography…",
+        "Yeah, that's exactly it. The risk changes that factor if it's going to happen more often, it's going to be wo…"
+      ]
+    },
+    {
+      "setup_unit": 2,
+      "payoff_unit": 4,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 111.28,
+      "setup_end": 120.72,
+      "payoff_start": 140.44,
+      "payoff_end": 180.227,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.21) — the speaker asserts the causation",
+      "evidence": [
+        "Now, it seems like some scientists perhaps are a bit reluctant to kind of pinpoint the cause of some of these…",
+        "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…"
+      ]
+    },
+    {
+      "setup_unit": 3,
+      "payoff_unit": 4,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 121.06,
+      "setup_end": 140.02,
+      "payoff_start": 140.44,
+      "payoff_end": 180.227,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.15) — the speaker asserts the causation",
+      "evidence": [
+        "What's your response to that? Yeah, it's an interesting question because it's always flooded. So it's flooded…",
+        "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…"
+      ]
+    },
+    {
+      "setup_unit": 4,
+      "payoff_unit": 7,
+      "kind": "callback",
+      "strength": 0.45,
+      "setup_start": 140.44,
+      "setup_end": 180.227,
+      "payoff_start": 266.24,
+      "payoff_end": 299.78,
+      "confidence": 0.45,
+      "reason": "subject returns after 2 intervening unit(s) — the return pays off the earlier setup",
+      "evidence": [
+        "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…",
+        "Yeah, humans have a tendency to live in very dangerous places. We like water, right? We do. It's really prett…"
+      ]
+    },
+    {
+      "setup_unit": 4,
+      "payoff_unit": 8,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 140.44,
+      "setup_end": 180.227,
+      "payoff_start": 301.88,
+      "payoff_end": 356.42,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.33) — the speaker asserts the causation",
+      "evidence": [
+        "What it does is it makes it more likely. So we see more of them, sometimes they're more frequent, sometimes t…",
+        "do not build here, perhaps even move people out of the way. And then these places, there is still some risk s…"
+      ]
+    },
+    {
+      "setup_unit": 5,
+      "payoff_unit": 8,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 180.227,
+      "setup_end": 235.237,
+      "payoff_start": 301.88,
+      "payoff_end": 356.42,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.23) — the speaker asserts the causation",
+      "evidence": [
+        "Yeah, that's exactly it. The risk changes that factor if it's going to happen more often, it's going to be wo…",
+        "do not build here, perhaps even move people out of the way. And then these places, there is still some risk s…"
+      ]
+    },
+    {
+      "setup_unit": 5,
+      "payoff_unit": 11,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 180.227,
+      "setup_end": 235.237,
+      "payoff_start": 374.982,
+      "payoff_end": 417.12,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.23) — the speaker asserts the causation",
+      "evidence": [
+        "Yeah, that's exactly it. The risk changes that factor if it's going to happen more often, it's going to be wo…",
+        "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…"
+      ]
+    },
+    {
+      "setup_unit": 6,
+      "payoff_unit": 8,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 235.237,
+      "setup_end": 265.52,
+      "payoff_start": 301.88,
+      "payoff_end": 356.42,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.21) — the speaker asserts the causation",
+      "evidence": [
+        "Somebody says, you know, actually tomorrow it's going to rain really hard. You need to, you know, get out of…",
+        "do not build here, perhaps even move people out of the way. And then these places, there is still some risk s…"
+      ]
+    },
+    {
+      "setup_unit": 6,
+      "payoff_unit": 11,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 235.237,
+      "setup_end": 265.52,
+      "payoff_start": 374.982,
+      "payoff_end": 417.12,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.16) — the speaker asserts the causation",
+      "evidence": [
+        "Somebody says, you know, actually tomorrow it's going to rain really hard. You need to, you know, get out of…",
+        "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…"
+      ]
+    },
+    {
+      "setup_unit": 7,
+      "payoff_unit": 8,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 266.24,
+      "setup_end": 299.78,
+      "payoff_start": 301.88,
+      "payoff_end": 356.42,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.39) — the speaker asserts the causation",
+      "evidence": [
+        "Yeah, humans have a tendency to live in very dangerous places. We like water, right? We do. It's really prett…",
+        "do not build here, perhaps even move people out of the way. And then these places, there is still some risk s…"
+      ]
+    },
+    {
+      "setup_unit": 7,
+      "payoff_unit": 11,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 266.24,
+      "setup_end": 299.78,
+      "payoff_start": 374.982,
+      "payoff_end": 417.12,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.26) — the speaker asserts the causation",
+      "evidence": [
+        "Yeah, humans have a tendency to live in very dangerous places. We like water, right? We do. It's really prett…",
+        "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…"
+      ]
+    },
+    {
+      "setup_unit": 7,
+      "payoff_unit": 12,
+      "kind": "question_answer",
+      "strength": 0.65,
+      "setup_start": 266.24,
+      "setup_end": 299.78,
+      "payoff_start": 417.24,
+      "payoff_end": 438.91,
+      "confidence": 0.65,
+      "reason": "setup asks, payoff answers on the same subject (overlap 0.21)",
+      "evidence": [
+        "Yeah, humans have a tendency to live in very dangerous places. We like water, right? We do. It's really prett…",
+        "Yeah. And we do have global models and they do provide like flood forecasts and flood heat wave forecasts. Bu…"
+      ]
+    },
+    {
+      "setup_unit": 8,
+      "payoff_unit": 11,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 301.88,
+      "setup_end": 356.42,
+      "payoff_start": 374.982,
+      "payoff_end": 417.12,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
+      "evidence": [
+        "do not build here, perhaps even move people out of the way. And then these places, there is still some risk s…",
+        "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…"
+      ]
+    },
+    {
+      "setup_unit": 8,
+      "payoff_unit": 12,
+      "kind": "question_answer",
+      "strength": 0.65,
+      "setup_start": 301.88,
+      "setup_end": 356.42,
+      "payoff_start": 417.24,
+      "payoff_end": 438.91,
+      "confidence": 0.65,
+      "reason": "setup asks, payoff answers on the same subject (overlap 0.25)",
+      "evidence": [
+        "do not build here, perhaps even move people out of the way. And then these places, there is still some risk s…",
+        "Yeah. And we do have global models and they do provide like flood forecasts and flood heat wave forecasts. Bu…"
+      ]
+    },
+    {
+      "setup_unit": 9,
+      "payoff_unit": 11,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 356.92,
+      "setup_end": 362.92,
+      "payoff_start": 374.982,
+      "payoff_end": 417.12,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.22) — the speaker asserts the causation",
+      "evidence": [
+        "What about the scene kind of more globally? I guess we've talked a little bit more specifically at the UK per…",
+        "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…"
+      ]
+    },
+    {
+      "setup_unit": 10,
+      "payoff_unit": 11,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 363.22,
+      "setup_end": 374.982,
+      "payoff_start": 374.982,
+      "payoff_end": 417.12,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.20) — the speaker asserts the causation",
+      "evidence": [
+        "What's happening on the worldwide basis with flood prediction? Some of the most vulnerable places in the worl…",
+        "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…"
+      ]
+    },
+    {
+      "setup_unit": 10,
+      "payoff_unit": 15,
+      "kind": "question_answer",
+      "strength": 0.65,
+      "setup_start": 363.22,
+      "setup_end": 374.982,
+      "payoff_start": 452.64,
+      "payoff_end": 491.159,
+      "confidence": 0.65,
+      "reason": "setup asks, payoff answers on the same subject (overlap 0.20)",
+      "evidence": [
+        "What's happening on the worldwide basis with flood prediction? Some of the most vulnerable places in the worl…",
+        "Yeah I think as a scientist I was a bit wary about it thinking that there's a bit unscientific, let's not do…"
+      ]
+    },
+    {
+      "setup_unit": 11,
+      "payoff_unit": 12,
+      "kind": "contrast_turn",
+      "strength": 0.55,
+      "setup_start": 374.982,
+      "setup_end": 417.12,
+      "payoff_start": 417.24,
+      "payoff_end": 438.91,
+      "confidence": 0.55,
+      "reason": "payoff opens with a reversal marker on the same subject (overlap 0.33)",
+      "evidence": [
+        "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…",
+        "Yeah. And we do have global models and they do provide like flood forecasts and flood heat wave forecasts. Bu…"
+      ]
+    },
+    {
+      "setup_unit": 11,
+      "payoff_unit": 16,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 374.982,
+      "setup_end": 417.12,
+      "payoff_start": 491.159,
+      "payoff_end": 543.613,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.17) — the speaker asserts the causation",
+      "evidence": [
+        "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…",
+        "Yeah and not be frightened. I know 100% and so that's really great and is there something that you would be d…"
+      ]
+    },
+    {
+      "setup_unit": 11,
+      "payoff_unit": 17,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 374.982,
+      "setup_end": 417.12,
+      "payoff_start": 543.613,
+      "payoff_end": 553.269,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.20) — the speaker asserts the causation",
+      "evidence": [
+        "A lot of those places, you know, they don't have enough funding to really get to grips with some of these glo…",
+        "Yeah and they have to imagine it so they have to be able to imagine those flood waters in the house and putti…"
+      ]
+    },
+    {
+      "setup_unit": 12,
+      "payoff_unit": 15,
+      "kind": "contrast_turn",
+      "strength": 0.55,
+      "setup_start": 417.24,
+      "setup_end": 438.91,
+      "payoff_start": 452.64,
+      "payoff_end": 491.159,
+      "confidence": 0.55,
+      "reason": "payoff opens with a reversal marker on the same subject (overlap 0.21)",
+      "evidence": [
+        "Yeah. And we do have global models and they do provide like flood forecasts and flood heat wave forecasts. Bu…",
+        "Yeah I think as a scientist I was a bit wary about it thinking that there's a bit unscientific, let's not do…"
+      ]
+    },
+    {
+      "setup_unit": 12,
+      "payoff_unit": 16,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 417.24,
+      "setup_end": 438.91,
+      "payoff_start": 491.159,
+      "payoff_end": 543.613,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
+      "evidence": [
+        "Yeah. And we do have global models and they do provide like flood forecasts and flood heat wave forecasts. Bu…",
+        "Yeah and not be frightened. I know 100% and so that's really great and is there something that you would be d…"
+      ]
+    },
+    {
+      "setup_unit": 14,
+      "payoff_unit": 15,
+      "kind": "question_answer",
+      "strength": 0.65,
+      "setup_start": 446.622,
+      "setup_end": 451.68,
+      "payoff_start": 452.64,
+      "payoff_end": 491.159,
+      "confidence": 0.65,
+      "reason": "setup asks, payoff answers on the same subject (overlap 0.20)",
+      "evidence": [
+        "There's something about the brain, isn't there doing arts and science together? I mean is that something you…",
+        "Yeah I think as a scientist I was a bit wary about it thinking that there's a bit unscientific, let's not do…"
+      ]
+    },
+    {
+      "setup_unit": 15,
+      "payoff_unit": 16,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 452.64,
+      "setup_end": 491.159,
+      "payoff_start": 491.159,
+      "payoff_end": 543.613,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.28) — the speaker asserts the causation",
+      "evidence": [
+        "Yeah I think as a scientist I was a bit wary about it thinking that there's a bit unscientific, let's not do…",
+        "Yeah and not be frightened. I know 100% and so that's really great and is there something that you would be d…"
+      ]
+    },
+    {
+      "setup_unit": 15,
+      "payoff_unit": 17,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 452.64,
+      "setup_end": 491.159,
+      "payoff_start": 543.613,
+      "payoff_end": 553.269,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.27) — the speaker asserts the causation",
+      "evidence": [
+        "Yeah I think as a scientist I was a bit wary about it thinking that there's a bit unscientific, let's not do…",
+        "Yeah and they have to imagine it so they have to be able to imagine those flood waters in the house and putti…"
+      ]
+    },
+    {
+      "setup_unit": 15,
+      "payoff_unit": 21,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 452.64,
+      "setup_end": 491.159,
+      "payoff_start": 611.2,
+      "payoff_end": 625.6,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.15) — the speaker asserts the causation",
+      "evidence": [
+        "Yeah I think as a scientist I was a bit wary about it thinking that there's a bit unscientific, let's not do…",
+        "Thank you so much for chatting to me. It's been fascinating to hear about really what's a major problem world…"
+      ]
+    },
+    {
+      "setup_unit": 16,
+      "payoff_unit": 17,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 491.159,
+      "setup_end": 543.613,
+      "payoff_start": 543.613,
+      "payoff_end": 553.269,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.27) — the speaker asserts the causation",
+      "evidence": [
+        "Yeah and not be frightened. I know 100% and so that's really great and is there something that you would be d…",
+        "Yeah and they have to imagine it so they have to be able to imagine those flood waters in the house and putti…"
+      ]
+    },
+    {
+      "setup_unit": 16,
+      "payoff_unit": 19,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 491.159,
+      "setup_end": 543.613,
+      "payoff_start": 569.4,
+      "payoff_end": 573.326,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
+      "evidence": [
+        "Yeah and not be frightened. I know 100% and so that's really great and is there something that you would be d…",
+        "There are so many links between climate and health. I don't think I could cover them all now."
+      ]
+    },
+    {
+      "setup_unit": 16,
+      "payoff_unit": 21,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 491.159,
+      "setup_end": 543.613,
+      "payoff_start": 611.2,
+      "payoff_end": 625.6,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.20) — the speaker asserts the causation",
+      "evidence": [
+        "Yeah and not be frightened. I know 100% and so that's really great and is there something that you would be d…",
+        "Thank you so much for chatting to me. It's been fascinating to hear about really what's a major problem world…"
+      ]
+    },
+    {
+      "setup_unit": 18,
+      "payoff_unit": 19,
+      "kind": "causal",
+      "strength": 0.75,
+      "setup_start": 553.269,
+      "setup_end": 568.6800000000001,
+      "payoff_start": 569.4,
+      "payoff_end": 573.326,
+      "confidence": 0.75,
+      "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
+      "evidence": [
+        "So, those types of precious objects are really helpful to do that. Just to change scales a little bit again,…",
+        "There are so many links between climate and health. I don't think I could cover them all now."
+      ]
+    }
+  ],
+  "redundancy_groups": [],
+  "speaker_blocks": [
+    {
+      "block_id": 0,
+      "start": 0.3,
+      "end": 109.92,
+      "speaker": null,
+      "unit_indices": [
+        0,
+        1
+      ],
+      "boundary_reason": "corpus start",
+      "confidence": 0.0,
+      "reason": "transcript carries no speaker labels; this block is a turn hypothesis from pause + subject-change evidence, and the speaker is deliberately not guessed"
+    },
+    {
+      "block_id": 1,
+      "start": 111.28,
+      "end": 374.982,
+      "speaker": null,
+      "unit_indices": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "boundary_reason": "1.4s silence followed by a subject change — a turn boundary hypothesis",
+      "confidence": 0.0,
+      "reason": "transcript carries no speaker labels; this block is a turn hypothesis from pause + subject-change evidence, and the speaker is deliberately not guessed"
+    },
+    {
+      "block_id": 2,
+      "start": 374.982,
+      "end": 451.68,
+      "speaker": null,
+      "unit_indices": [
+        11,
+        12,
+        13,
+        14
+      ],
+      "boundary_reason": "1.1s silence followed by a subject change — a turn boundary hypothesis",
+      "confidence": 0.0,
+      "reason": "transcript carries no speaker labels; this block is a turn hypothesis from pause + subject-change evidence, and the speaker is deliberately not guessed"
+    },
+    {
+      "block_id": 3,
+      "start": 452.64,
+      "end": 625.6,
+      "speaker": null,
+      "unit_indices": [
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "boundary_reason": "1.0s silence followed by a subject change — a turn boundary hypothesis",
+      "confidence": 0.0,
+      "reason": "transcript carries no speaker labels; this block is a turn hypothesis from pause + subject-change evidence, and the speaker is deliberately not guessed"
+    }
+  ],
+  "broll": [
+    {
+      "start": 30.657,
+      "end": 109.92,
+      "kind": "reaction",
+      "cue": "Welcome Hannah.",
+      "unit_index": 1,
+      "confidence": 0.5,
+      "reason": "0.7s held silence precedes a tension beat at intensity 0.76; a reaction cutaway would land here — inferred from timing, not stated by the speaker"
+    },
+    {
+      "start": 265.52,
+      "end": 299.78,
+      "kind": "reaction",
+      "cue": "Yeah, humans have a tendency to live in very dangerous places.",
+      "unit_index": 7,
+      "confidence": 0.5,
+      "reason": "0.7s held silence precedes a tension beat at intensity 0.62; a reaction cutaway would land here — inferred from timing, not stated by the speaker"
+    },
+    {
+      "start": 299.78,
+      "end": 356.42,
+      "kind": "reaction",
+      "cue": "do not build here, perhaps even move people out of the way.",
+      "unit_index": 8,
+      "confidence": 0.5,
+      "reason": "2.1s held silence precedes a tension beat at intensity 0.70; a reaction cutaway would land here — inferred from timing, not stated by the speaker"
+    },
+    {
+      "start": 325.08,
+      "end": 326.52,
+      "kind": "illustration",
+      "cue": "think about",
+      "unit_index": 8,
+      "confidence": 0.45,
+      "reason": "visualisable analogy in the transcript; an illustrative cutaway is possible, not guaranteed"
+    },
+    {
+      "start": 373.922,
+      "end": 417.12,
+      "kind": "reaction",
+      "cue": "A lot of those places, you know, they don't have enough funding",
+      "unit_index": 11,
+      "confidence": 0.5,
+      "reason": "1.1s held silence precedes a resolution beat at intensity 0.56; a reaction cutaway would land here — inferred from timing, not stated by the speaker"
+    },
+    {
+      "start": 451.68,
+      "end": 491.159,
+      "kind": "reaction",
+      "cue": "Yeah I think as a scientist I was a bit wary about it thinking that there's a b…",
+      "unit_index": 15,
+      "confidence": 0.5,
+      "reason": "1.0s held silence precedes a tension beat at intensity 0.67; a reaction cutaway would land here — inferred from timing, not stated by the speaker"
+    },
+    {
+      "start": 509.3,
+      "end": 513.52,
+      "kind": "illustration",
+      "cue": "think about",
+      "unit_index": 16,
+      "confidence": 0.45,
+      "reason": "visualisable analogy in the transcript; an illustrative cutaway is possible, not guaranteed"
+    },
+    {
+      "start": 523.66,
+      "end": 529.44,
+      "kind": "illustration",
+      "cue": "imagine",
+      "unit_index": 16,
+      "confidence": 0.45,
+      "reason": "visualisable analogy in the transcript; an illustrative cutaway is possible, not guaranteed"
+    },
+    {
+      "start": 543.613,
+      "end": 545.6,
+      "kind": "illustration",
+      "cue": "imagine",
+      "unit_index": 17,
+      "confidence": 0.45,
+      "reason": "visualisable analogy in the transcript; an illustrative cutaway is possible, not guaranteed"
+    },
+    {
+      "start": 545.6,
+      "end": 549.14,
+      "kind": "illustration",
+      "cue": "imagine",
+      "unit_index": 17,
+      "confidence": 0.45,
+      "reason": "visualisable analogy in the transcript; an illustrative cutaway is possible, not guaranteed"
+    }
+  ],
+  "rhythm": {
+    "available": true,
+    "total_words": 1980,
+    "speech_seconds": 553.34,
+    "speech_rate_wpm": 214.7,
+    "median_rate_wpm": 221.8,
+    "pause_counts": {
+      "intentional": 9,
+      "breathing": 79,
+      "hesitation": 26,
+      "uncertain": 15,
+      "dead_air": 2
+    },
+    "pause_rate_per_minute": {
+      "intentional": 0.86,
+      "breathing": 7.58,
+      "hesitation": 2.49,
+      "uncertain": 1.44,
+      "dead_air": 0.19
+    },
+    "filler_count": 42,
+    "filler_rate_per_minute": 4.03,
+    "false_start_count": 5,
+    "incomplete_count": 0,
+    "per_unit": [
+      {
+        "unit_index": 0,
+        "start": 0.3,
+        "end": 31.317,
+        "word_count": 78,
+        "speech_seconds": 29.5,
+        "pause_seconds": 1.14,
+        "speech_rate_wpm": 158.6,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "intentional": 2
+        },
+        "longest_pause": 0.58,
+        "emphatic_pause": 0.58,
+        "pre_pause": 0.0,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 1.0,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 1,
+        "start": 31.317,
+        "end": 109.92,
+        "word_count": 242,
+        "speech_seconds": 69.92,
+        "pause_seconds": 8.4,
+        "speech_rate_wpm": 207.7,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 9,
+          "hesitation": 5,
+          "intentional": 2
+        },
+        "longest_pause": 1.06,
+        "emphatic_pause": 1.06,
+        "pre_pause": 0.66,
+        "filler_count": 3,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.79,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 2,
+        "start": 111.28,
+        "end": 120.72,
+        "word_count": 31,
+        "speech_seconds": 9.44,
+        "pause_seconds": 0.0,
+        "speech_rate_wpm": 197.0,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {},
+        "longest_pause": 0.0,
+        "emphatic_pause": 0.0,
+        "pre_pause": 1.36,
+        "filler_count": 2,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.96,
+        "confidence": 0.55,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 3,
+        "start": 121.06,
+        "end": 140.02,
+        "word_count": 49,
+        "speech_seconds": 17.14,
+        "pause_seconds": 1.82,
+        "speech_rate_wpm": 171.5,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 3
+        },
+        "longest_pause": 0.82,
+        "emphatic_pause": 0.82,
+        "pre_pause": 0.34,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 1.0,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 4,
+        "start": 140.44,
+        "end": 180.227,
+        "word_count": 124,
+        "speech_seconds": 35.5,
+        "pause_seconds": 4.2,
+        "speech_rate_wpm": 209.6,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 6,
+          "hesitation": 3,
+          "uncertain": 1
+        },
+        "longest_pause": 0.96,
+        "emphatic_pause": 0.96,
+        "pre_pause": 0.42,
+        "filler_count": 2,
+        "false_start_count": 1,
+        "incomplete": false,
+        "fluency": 0.82,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 5,
+        "start": 180.227,
+        "end": 235.237,
+        "word_count": 173,
+        "speech_seconds": 50.08,
+        "pause_seconds": 4.82,
+        "speech_rate_wpm": 207.3,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 9,
+          "uncertain": 1,
+          "hesitation": 1
+        },
+        "longest_pause": 0.84,
+        "emphatic_pause": 0.84,
+        "pre_pause": 0.34,
+        "filler_count": 2,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.93,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 6,
+        "start": 235.237,
+        "end": 265.52,
+        "word_count": 97,
+        "speech_seconds": 26.46,
+        "pause_seconds": 3.68,
+        "speech_rate_wpm": 220.0,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "hesitation": 2,
+          "breathing": 1,
+          "dead_air": 1,
+          "uncertain": 2,
+          "intentional": 1
+        },
+        "longest_pause": 2.24,
+        "emphatic_pause": 2.24,
+        "pre_pause": 0.2,
+        "filler_count": 6,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.77,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 7,
+        "start": 266.24,
+        "end": 299.78,
+        "word_count": 113,
+        "speech_seconds": 28.08,
+        "pause_seconds": 5.46,
+        "speech_rate_wpm": 241.5,
+        "rush": 0.089,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 10,
+          "uncertain": 2
+        },
+        "longest_pause": 1.12,
+        "emphatic_pause": 1.12,
+        "pre_pause": 0.72,
+        "filler_count": 2,
+        "false_start_count": 2,
+        "incomplete": false,
+        "fluency": 0.86,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 8,
+        "start": 301.88,
+        "end": 356.42,
+        "word_count": 185,
+        "speech_seconds": 46.12,
+        "pause_seconds": 8.42,
+        "speech_rate_wpm": 240.7,
+        "rush": 0.085,
+        "drag": false,
+        "pause_counts": {
+          "hesitation": 7,
+          "breathing": 9,
+          "uncertain": 1
+        },
+        "longest_pause": 1.12,
+        "emphatic_pause": 1.12,
+        "pre_pause": 2.1,
+        "filler_count": 1,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.77,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 9,
+        "start": 356.92,
+        "end": 362.92,
+        "word_count": 21,
+        "speech_seconds": 5.68,
+        "pause_seconds": 0.32,
+        "speech_rate_wpm": 221.8,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 1
+        },
+        "longest_pause": 0.32,
+        "emphatic_pause": 0.32,
+        "pre_pause": 0.5,
+        "filler_count": 1,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.98,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 10,
+        "start": 363.22,
+        "end": 374.982,
+        "word_count": 30,
+        "speech_seconds": 10.12,
+        "pause_seconds": 1.0,
+        "speech_rate_wpm": 177.9,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 1
+        },
+        "longest_pause": 1.0,
+        "emphatic_pause": 1.0,
+        "pre_pause": 0.3,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 1.0,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 11,
+        "start": 374.982,
+        "end": 417.12,
+        "word_count": 144,
+        "speech_seconds": 38.14,
+        "pause_seconds": 3.58,
+        "speech_rate_wpm": 226.5,
+        "rush": 0.021,
+        "drag": false,
+        "pause_counts": {
+          "hesitation": 2,
+          "breathing": 6,
+          "uncertain": 4
+        },
+        "longest_pause": 0.64,
+        "emphatic_pause": 0.64,
+        "pre_pause": 1.06,
+        "filler_count": 4,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.86,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 12,
+        "start": 417.24,
+        "end": 438.91,
+        "word_count": 66,
+        "speech_seconds": 19.98,
+        "pause_seconds": 2.02,
+        "speech_rate_wpm": 198.2,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 5,
+          "uncertain": 1
+        },
+        "longest_pause": 0.72,
+        "emphatic_pause": 0.72,
+        "pre_pause": 0.12,
+        "filler_count": 1,
+        "false_start_count": 1,
+        "incomplete": false,
+        "fluency": 0.93,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 13,
+        "start": 438.91,
+        "end": 446.622,
+        "word_count": 23,
+        "speech_seconds": 6.24,
+        "pause_seconds": 0.78,
+        "speech_rate_wpm": 221.2,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 2,
+          "uncertain": 1
+        },
+        "longest_pause": 0.3,
+        "emphatic_pause": 0.3,
+        "pre_pause": 0.62,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 1.0,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 14,
+        "start": 446.622,
+        "end": 451.68,
+        "word_count": 20,
+        "speech_seconds": 4.42,
+        "pause_seconds": 0.24,
+        "speech_rate_wpm": 271.5,
+        "rush": 0.224,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 1
+        },
+        "longest_pause": 0.24,
+        "emphatic_pause": 0.24,
+        "pre_pause": 0.14,
+        "filler_count": 1,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.98,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 15,
+        "start": 452.64,
+        "end": 491.159,
+        "word_count": 132,
+        "speech_seconds": 34.46,
+        "pause_seconds": 3.46,
+        "speech_rate_wpm": 229.8,
+        "rush": 0.036,
+        "drag": false,
+        "pause_counts": {
+          "intentional": 2,
+          "hesitation": 1,
+          "uncertain": 1,
+          "breathing": 3
+        },
+        "longest_pause": 0.94,
+        "emphatic_pause": 0.94,
+        "pre_pause": 0.96,
+        "filler_count": 6,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.85,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 16,
+        "start": 491.159,
+        "end": 543.613,
+        "word_count": 184,
+        "speech_seconds": 47.7,
+        "pause_seconds": 4.74,
+        "speech_rate_wpm": 231.4,
+        "rush": 0.043,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 7,
+          "uncertain": 1,
+          "hesitation": 4
+        },
+        "longest_pause": 1.0,
+        "emphatic_pause": 1.0,
+        "pre_pause": 0.76,
+        "filler_count": 6,
+        "false_start_count": 1,
+        "incomplete": false,
+        "fluency": 0.71,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 17,
+        "start": 543.613,
+        "end": 553.269,
+        "word_count": 41,
+        "speech_seconds": 9.54,
+        "pause_seconds": 0.0,
+        "speech_rate_wpm": 257.9,
+        "rush": 0.163,
+        "drag": false,
+        "pause_counts": {},
+        "longest_pause": 0.0,
+        "emphatic_pause": 0.0,
+        "pre_pause": 0.0,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 1.0,
+        "confidence": 0.55,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 18,
+        "start": 553.269,
+        "end": 568.6800000000001,
+        "word_count": 51,
+        "speech_seconds": 13.74,
+        "pause_seconds": 1.14,
+        "speech_rate_wpm": 222.7,
+        "rush": 0.004,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 2,
+          "hesitation": 1
+        },
+        "longest_pause": 0.7,
+        "emphatic_pause": 0.7,
+        "pre_pause": 0.5,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.97,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 19,
+        "start": 569.4,
+        "end": 573.326,
+        "word_count": 18,
+        "speech_seconds": 3.46,
+        "pause_seconds": 0.2,
+        "speech_rate_wpm": 312.1,
+        "rush": 0.407,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 1
+        },
+        "longest_pause": 0.2,
+        "emphatic_pause": 0.2,
+        "pre_pause": 0.72,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 1.0,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 20,
+        "start": 573.326,
+        "end": 611.2,
+        "word_count": 103,
+        "speech_seconds": 34.26,
+        "pause_seconds": 3.5,
+        "speech_rate_wpm": 180.4,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "intentional": 1,
+          "dead_air": 1,
+          "breathing": 2
+        },
+        "longest_pause": 1.82,
+        "emphatic_pause": 1.82,
+        "pre_pause": 0.38,
+        "filler_count": 3,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.89,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 21,
+        "start": 611.2,
+        "end": 625.6,
+        "word_count": 55,
+        "speech_seconds": 13.36,
+        "pause_seconds": 1.04,
+        "speech_rate_wpm": 247.0,
+        "rush": 0.113,
+        "drag": false,
+        "pause_counts": {
+          "intentional": 1,
+          "breathing": 1
+        },
+        "longest_pause": 0.62,
+        "emphatic_pause": 0.62,
+        "pre_pause": 0.0,
+        "filler_count": 2,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.96,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      }
+    ],
+    "confidence": 0.85,
+    "reason": "pauses reconstructed from inter-word gaps and classified with the shared pause classifier; word timing stands in for audio truth, so timing-derived confidence is capped below an audio-VAD measurement"
+  },
+  "arc_summary": "22 coherent passage(s) over 10.4 min (9 subject cluster(s), 11 narrative chain(s)). recurring subject(s) — the spine(s) of this recording: things, floods, week, health, climate, crisis. 8 chain(s) with setup-to-payoff links (causal×23, question_answer×4, callback×2, contrast_turn×2). highest dramatic intensity at 5% of runtime (tension, intensity 0.76). speech rate 215 wpm over voiced time (42 filler marker(s), 5 false start(s), 0 truncated passage(s)). scripts detected: english.",
+  "unit_threads": [
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      1,
+      2,
+      3
+    ],
+    [],
+    [
+      4
+    ],
+    [],
+    [
+      1,
+      4
+    ],
+    [
+      5
+    ],
+    [
+      6
+    ],
+    [
+      1,
+      5,
+      6
+    ],
+    [],
+    [
+      7
+    ],
+    [
+      8
+    ],
+    [
+      8
+    ],
+    [
+      1,
+      8
+    ],
+    [
+      1
+    ],
+    [
+      9
+    ],
+    [
+      9
+    ],
+    [
+      10
+    ],
+    []
+  ],
+  "notes": [
+    "some sentence timecodes could not be word-anchored (ASR text and word stream disagree); those sentences keep character-proportional timing",
+    "no speaker labels in the transcript: speaker identity is not guessed; block boundaries are turn hypotheses from pause and subject-change evidence",
+    "4 unit(s) have no inferable narrative relation (e.g. [5, 7, 12, 21]); reported as standalone passages"
+  ]
+}

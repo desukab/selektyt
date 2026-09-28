@@ -107,18 +107,82 @@ class StoryUnit:
 
 _TERMINAL = re.compile(r"[.!?।॥？！]+")
 
+# Titles of address and military rank that end in a period and are always
+# followed by the name they qualify. Measured across every multi-piece segment
+# of the corpus: of 354 pieces, 11 carried a period that was not a boundary, and
+# 9 of those were one of these followed by a capitalised name. The remaining two
+# ("no.", "etc.") are genuinely ambiguous in either direction and are left
+# alone rather than guessed at -- see ``_is_boundary`` for why the safe
+# direction is to not split.
+_TITLES = frozenset(
+    "mr mrs ms dr prof sr jr st gen sen rep gov lt sgt col capt maj rev hon".split())
+
+
+def _is_boundary(text: str, m: re.Match[str]) -> bool:
+    """Is this terminal-mark run a real sentence boundary?
+
+    Four cases where it is not, each structural rather than a guess:
+
+    - a decimal point between digits (``3.14``);
+    - a period with letters tight against it on both sides (``mediawiki.org``);
+    - a period ending a token with internal periods (``U.S.``, ``e.g.``);
+    - a period after a title or a single lowercase letter, when the next word
+      is capitalised (``Dr. Esper``, ``a. The first step``).
+
+    That last rule is where the residual ambiguity lives: ``I saw Dr. He
+    left.`` is a boundary this refuses to see. It is accepted deliberately,
+    because the failure this exists to fix is the opposite one --
+    ``Thank you, Mr. Secretary.`` split into ``Mr.`` and ``Secretary.``,
+    the second piece timed into the middle of the word ``Mr.``, and a clip
+    that opened on ``Mr.`` and dropped ``Thank you,`` with no sentence break
+    between them. A sentence that runs one name long is a small error; a clip
+    whose first word is cut in half is a defect a viewer sees. Under-splitting
+    is the safe direction, so the rule errs that way.
+    """
+    if m.group() != ".":
+        return True  # "!!", "??" and the multilingual marks are never ambiguous
+    before, after = text[: m.start()], text[m.end():]
+    if before and after and before[-1].isdigit() and after[0].isdigit():
+        return False
+    if before and after and before[-1].isalpha() and after[0].isalpha():
+        return False
+    if not after.lstrip():
+        return True  # the text ends here, so the period ends the sentence
+    word = before.split()[-1].lower() if before.split() else ""
+    # An acronym or abbreviation carries its periods internally, so a period
+    # at its edge belongs to the token rather than to the sentence.
+    if "." in word and all(ch.isalpha() or ch == "." for ch in word):
+        return False
+    # A title qualifies the capitalised name that follows it.
+    if word in _TITLES and after.lstrip()[:1].isupper():
+        return False
+    # A single lowercase letter is a lettered list item, not a sentence.
+    # A digit is not (``Section 2. The next part`` is two sentences).
+    if len(word) == 1 and word.isalpha() and after.lstrip()[:1].isupper():
+        return False
+    return True
+
 
 def split_sentences(text: str) -> list[str]:
-    """Split on terminal punctuation, keeping the punctuation. Multilingual."""
-    parts = _TERMINAL.split(text.strip())
-    marks = _TERMINAL.findall(text.strip())
+    """Split on terminal punctuation, keeping the punctuation. Multilingual.
+
+    A period that terminates a title (``Mr.``, ``Dr.``) is not a boundary; see
+    :func:`_is_boundary` for the measured cost of treating it as one.
+    """
+    stripped = text.strip()
     out: list[str] = []
-    for i, part in enumerate(parts):
-        part = part.strip()
-        if not part:
+    cursor = 0
+    for m in _TERMINAL.finditer(stripped):
+        if not _is_boundary(stripped, m):
             continue
-        out.append(part + (marks[i] if i < len(marks) else ""))
-    return out or [text.strip()]
+        piece = stripped[cursor: m.end()].strip()
+        if piece:
+            out.append(piece)
+        cursor = m.end()
+    tail = stripped[cursor:].strip()
+    if tail:
+        out.append(tail)
+    return out or [stripped]
 
 
 def _split_markers(sentence: str) -> list[str]:

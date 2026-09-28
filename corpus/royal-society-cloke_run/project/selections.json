@@ -9,8 +9,8 @@
     "editorial_score": 1.0,
     "virality_score": 0.86,
     "context_score": 1.0,
-    "confidence": 0.9,
-    "reason": "Structural editorial score: opening=1.00; progression=0.94; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.18; coherence=1.00; completeness=1.00; audio_pace=0.93; silence=0.086; dead_air=0.03.",
+    "confidence": 0.9428280219435692,
+    "reason": "conflict candidate that opens with a hook the viewer can land on mid-scroll. Structural editorial score: opening=1.00; progression=0.94; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.18; coherence=1.00; completeness=1.00; audio_pace=0.93; silence=0.083; dead_air=0.03.",
     "visual_potential": 0.8,
     "words": [
       {
@@ -1020,12 +1020,6 @@
         "start": 234.78,
         "end": 235.02,
         "confidence": 0.9976972937583923
-      },
-      {
-        "text": " Somebody",
-        "start": 235.22,
-        "end": 235.38,
-        "confidence": 0.97882080078125
       }
     ],
     "coherence_score": 1.0,
@@ -1043,8 +1037,8 @@
     "editorial_score": 0.8625,
     "virality_score": 0.86,
     "context_score": 1.0,
-    "confidence": 0.9,
-    "reason": "Structural editorial score: opening=1.00; progression=0.98; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.13; coherence=1.00; completeness=0.75; audio_pace=0.89; silence=0.135; dead_air=0.04.",
+    "confidence": 0.938538767325068,
+    "reason": "conflict candidate that opens with a hook the viewer can land on mid-scroll. Structural editorial score: opening=1.00; progression=0.98; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.13; coherence=1.00; completeness=0.75; audio_pace=0.89; silence=0.135; dead_air=0.04.",
     "visual_potential": 0.8,
     "words": [
       {
@@ -1681,8 +1675,8 @@
     "editorial_score": 0.7880133333333332,
     "virality_score": 0.6635,
     "context_score": 1.0,
-    "confidence": 0.9,
-    "reason": "Structural editorial score: opening=0.77; progression=0.71; payoff=1.00; density=1.00; fillers=2; standalone=1.00; repetition=0.08; coherence=1.00; completeness=1.00; audio_pace=0.88; silence=0.148; dead_air=0.10.",
+    "confidence": 0.9489030153364748,
+    "reason": "revelation candidate that lands a clear closing thought, with fillers middling at 0.50. Structural editorial score: opening=0.77; progression=0.71; payoff=1.00; density=1.00; fillers=2; standalone=1.00; repetition=0.08; coherence=1.00; completeness=1.00; audio_pace=0.88; silence=0.148; dead_air=0.10.",
     "visual_potential": 0.7,
     "words": [
       {
@@ -2136,19 +2130,187 @@
     "total_score": 0.8331
   },
   {
-    "start": 12.3,
+    "start": 0.3,
     "end": 39.08,
-    "text": "My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the panorama episode wild weather our world under threat And she was a subject of the Life Scientific on Radio 4 in 2021. Welcome Hannah. It's lovely to be here. When did you first discover your fascination with water and geography?",
+    "text": "Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently We've seen devastating floods droughts and wildfires worldwide My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the panorama episode wild weather our world under threat And she was a subject of the Life Scientific on Radio 4 in 2021. Welcome Hannah. It's lovely to be here. When did you first discover your fascination with water and geography?",
     "story_type": "question",
-    "hook": "My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the pa",
+    "hook": "Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently We've seen devastating floods droughts and wildfires",
     "payoff": "When did you first discover your fascination with water and geography?",
-    "editorial_score": 0.695189858132907,
-    "virality_score": 0.6820714285714287,
+    "editorial_score": 0.6956836618037002,
+    "virality_score": 0.6835,
     "context_score": 1.0,
-    "confidence": 0.9,
-    "reason": "Structural editorial score: opening=0.77; progression=0.65; payoff=0.99; density=0.92; fillers=0; standalone=1.00; repetition=0.00; coherence=0.83; completeness=0.75; audio_pace=0.92; silence=0.096; dead_air=0.03.",
+    "confidence": 0.9207831373334758,
+    "reason": "question candidate that lands a clear closing thought, with progression middling at 0.65. Structural editorial score: opening=0.77; progression=0.65; payoff=1.00; density=0.90; fillers=0; standalone=1.00; repetition=0.00; coherence=0.83; completeness=0.75; audio_pace=0.93; silence=0.080; dead_air=0.02.",
     "visual_potential": 0.8,
     "words": [
+      {
+        "text": " Now",
+        "start": 0.3,
+        "end": 0.8,
+        "confidence": 0.5857250094413757
+      },
+      {
+        "text": " last",
+        "start": 0.8,
+        "end": 1.12,
+        "confidence": 0.5472533702850342
+      },
+      {
+        "text": " year",
+        "start": 1.12,
+        "end": 1.4,
+        "confidence": 0.998450756072998
+      },
+      {
+        "text": " the",
+        "start": 1.4,
+        "end": 1.58,
+        "confidence": 0.711414635181427
+      },
+      {
+        "text": " UK",
+        "start": 1.58,
+        "end": 1.84,
+        "confidence": 0.962368369102478
+      },
+      {
+        "text": " recorded",
+        "start": 1.84,
+        "end": 2.34,
+        "confidence": 0.9841064214706421
+      },
+      {
+        "text": " its",
+        "start": 2.34,
+        "end": 2.58,
+        "confidence": 0.9202235341072083
+      },
+      {
+        "text": " highest",
+        "start": 2.58,
+        "end": 3.14,
+        "confidence": 0.9975824356079102
+      },
+      {
+        "text": " ever",
+        "start": 3.14,
+        "end": 3.42,
+        "confidence": 0.7917441725730896
+      },
+      {
+        "text": " temperature",
+        "start": 3.42,
+        "end": 3.86,
+        "confidence": 0.9932218790054321
+      },
+      {
+        "text": " of",
+        "start": 3.86,
+        "end": 4.18,
+        "confidence": 0.9946309328079224
+      },
+      {
+        "text": " 40",
+        "start": 4.18,
+        "end": 4.5,
+        "confidence": 0.8379538059234619
+      },
+      {
+        "text": ".3",
+        "start": 4.5,
+        "end": 5.02,
+        "confidence": 0.9928107857704163
+      },
+      {
+        "text": " degrees",
+        "start": 5.02,
+        "end": 5.28,
+        "confidence": 0.9014861583709717
+      },
+      {
+        "text": " Celsius",
+        "start": 5.28,
+        "end": 5.7,
+        "confidence": 0.8469619154930115
+      },
+      {
+        "text": " and",
+        "start": 5.7,
+        "end": 6.64,
+        "confidence": 0.5744724273681641
+      },
+      {
+        "text": " on",
+        "start": 6.64,
+        "end": 6.74,
+        "confidence": 0.9814352989196777
+      },
+      {
+        "text": " the",
+        "start": 6.74,
+        "end": 6.82,
+        "confidence": 0.9977186918258667
+      },
+      {
+        "text": " news",
+        "start": 6.82,
+        "end": 6.98,
+        "confidence": 0.998690664768219
+      },
+      {
+        "text": " recently",
+        "start": 6.98,
+        "end": 7.44,
+        "confidence": 0.9363917112350464
+      },
+      {
+        "text": " We've",
+        "start": 7.44,
+        "end": 7.82,
+        "confidence": 0.643122062087059
+      },
+      {
+        "text": " seen",
+        "start": 7.82,
+        "end": 7.98,
+        "confidence": 0.9990179538726807
+      },
+      {
+        "text": " devastating",
+        "start": 7.98,
+        "end": 8.48,
+        "confidence": 0.9878800511360168
+      },
+      {
+        "text": " floods",
+        "start": 8.48,
+        "end": 9.22,
+        "confidence": 0.9962849617004395
+      },
+      {
+        "text": " droughts",
+        "start": 9.22,
+        "end": 10.1,
+        "confidence": 0.8516643047332764
+      },
+      {
+        "text": " and",
+        "start": 10.1,
+        "end": 10.3,
+        "confidence": 0.9933927655220032
+      },
+      {
+        "text": " wildfires",
+        "start": 10.3,
+        "end": 10.92,
+        "confidence": 0.9936453998088837
+      },
+      {
+        "text": " worldwide",
+        "start": 10.92,
+        "end": 11.74,
+        "confidence": 0.8846346139907837
+      },
       {
         "text": " My",
         "start": 12.3,
@@ -2561,6 +2723,6 @@
     "coherence_score": 0.833,
     "completeness": 0.75,
     "llm_metadata": null,
-    "total_score": 0.7842
+    "total_score": 0.7847
   }
 ]

@@ -29,27 +29,27 @@
     },
     {
       "start": 316.44,
-      "end": 317.8,
-      "text": "upcoming flood, so it's going to",
+      "end": 317.72,
+      "text": "upcoming flood, so it's going",
       "emphasis": [
-        " upcoming",
-        " going"
+        " upcoming"
       ]
     },
     {
-      "start": 317.8,
-      "end": 320.06,
-      "text": "flood tomorrow or next week, we",
+      "start": 317.72,
+      "end": 319.64,
+      "text": "to flood tomorrow or next week,",
       "emphasis": [
         " flood",
         " tomorrow"
       ]
     },
     {
-      "start": 320.06,
+      "start": 319.9,
       "end": 321.44,
-      "text": "can say with some confidence",
+      "text": "we can say with some confidence",
       "emphasis": [
+        " some",
         " confidence"
       ]
     },
@@ -90,26 +90,33 @@
     },
     {
       "start": 325.8,
-      "end": 327.88,
-      "text": "changing climate, we can see how",
+      "end": 327.58,
+      "text": "changing climate, we can see",
       "emphasis": [
-        " changing",
-        " climate,"
+        " changing"
       ]
     },
     {
-      "start": 327.88,
-      "end": 330.1,
-      "text": "likely those types of floods are",
+      "start": 327.58,
+      "end": 329.44,
+      "text": "how likely those types of",
       "emphasis": [
-        " likely",
-        " floods"
+        " likely"
       ]
     },
     {
-      "start": 330.1,
+      "start": 329.44,
+      "end": 330.7,
+      "text": "floods are to happen in the",
+      "emphasis": [
+        " floods",
+        " happen"
+      ]
+    },
+    {
+      "start": 330.7,
       "end": 331.02,
-      "text": "to happen in the future.",
+      "text": "future.",
       "emphasis": [
         " future."
       ]
@@ -149,34 +156,32 @@
     },
     {
       "start": 335.72,
-      "end": 337.12,
-      "text": "difficult to predict in the short",
+      "end": 336.94,
+      "text": "difficult to predict in the",
       "emphasis": [
-        " difficult",
-        " predict"
+        " difficult"
       ]
     },
     {
-      "start": 337.12,
+      "start": 336.94,
       "end": 337.44,
-      "text": "term.",
+      "text": "short term.",
       "emphasis": [
-        " term."
+        " short"
       ]
     },
     {
       "start": 338.02,
-      "end": 339.48,
-      "text": "And sometimes they come along in",
+      "end": 339.32,
+      "text": "And sometimes they come along",
       "emphasis": [
-        " sometimes",
-        " along"
+        " sometimes"
       ]
     },
     {
-      "start": 339.48,
+      "start": 339.32,
       "end": 340.3,
-      "text": "an hour or something.",
+      "text": "in an hour or something.",
       "emphasis": [
         " something."
       ]

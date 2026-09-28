@@ -3,8 +3,8 @@
  "status": "OK",
  "exit_code": 0,
  "no_speech_cause": null,
- "clips": 5,
- "segments": 278,
- "elapsed_s": 291.0,
- "finished_utc": "2026-09-19T15:25:47Z"
+ "clips": null,
+ "segments": null,
+ "elapsed_s": 352.3,
+ "finished_utc": "2026-09-28T04:46:31Z"
 }

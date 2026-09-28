@@ -10,17 +10,18 @@ Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,
 
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
-Dialogue: 0,0:00:00.00,0:00:01.37,Default,,0,0,0,,{\k28}the {\k30}scenes {\k36}people {\k18}are {\k28}{\c&H00D7FF&\b1}moving{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:01.40,0:00:02.89,Default,,0,0,0,,{\k46}around {\k32}putting {\k44}{\c&H00D7FF&\b1}equipment{\c&HFFFFFF&\b0} {\k22}in {\k8}the
-Dialogue: 0,0:00:02.92,0:00:04.64,Default,,0,0,0,,{\k16}right {\k30}place {\k64}going {\k20}on {\k30}{\c&H00D7FF&\b1}alert.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:04.76,0:00:07.03,Default,,0,0,0,,{\k56}And {\k56}{\c&H00D7FF&\b1}with{\c&HFFFFFF&\b0} {\k32}this {\k50}{\c&H00D7FF&\b1}kind{\c&HFFFFFF&\b0} {\k20}of, {\k6}I
-Dialogue: 0,0:00:07.06,0:00:08.17,Default,,0,0,0,,{\k14}{\c&H00D7FF&\b1}guess{\c&HFFFFFF&\b0} {\k12}in {\k10}the {\k24}{\c&H00D7FF&\b1}longer{\c&HFFFFFF&\b0} {\k32}term, {\k2}if
-Dialogue: 0,0:00:08.20,0:00:09.27,Default,,0,0,0,,{\k28}I'm, {\k10}you {\k8}know, {\k10}{\c&H00D7FF&\b1}from{\c&HFFFFFF&\b0} {\k14}my {\k32}{\c&H00D7FF&\b1}perspective{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:09.30,0:00:10.19,Default,,0,0,0,,{\k20}as {\k8}a {\k14}{\c&H00D7FF&\b1}structural{\c&HFFFFFF&\b0} {\k36}engineer, {\k1}I've
-Dialogue: 0,0:00:10.22,0:00:12.23,Default,,0,0,0,,{\k8}been {\k30}{\c&H00D7FF&\b1}involved{\c&HFFFFFF&\b0} {\k44}in, {\k76}you {\k14}know, {\k16}{\c&H00D7FF&\b1}urban{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:12.26,0:00:14.21,Default,,0,0,0,,{\k30}{\c&H00D7FF&\b1}planning{\c&HFFFFFF&\b0} {\k44}and {\k22}{\c&H00D7FF&\b1}looking{\c&HFFFFFF&\b0} {\k28}at {\k46}cities {\k28}and
-Dialogue: 0,0:00:14.24,0:00:16.01,Default,,0,0,0,,{\k22}so {\k30}on, {\k26}how {\k20}{\c&H00D7FF&\b1}can{\c&HFFFFFF&\b0} {\k12}we {\k18}{\c&H00D7FF&\b1}use{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:16.04,0:00:17.05,Default,,0,0,0,,{\k8}the {\k14}{\c&H00D7FF&\b1}kind{\c&HFFFFFF&\b0} {\k8}of {\k32}{\c&H00D7FF&\b1}modeling{\c&HFFFFFF&\b0} {\k28}that {\k14}you
-Dialogue: 0,0:00:17.08,0:00:19.33,Default,,0,0,0,,{\k28}do {\k36}to {\k60}maybe {\k34}{\c&H00D7FF&\b1}better{\c&HFFFFFF&\b0} {\k40}{\c&H00D7FF&\b1}design{\c&HFFFFFF&\b0} {\k30}where
-Dialogue: 0,0:00:19.36,0:00:20.93,Default,,0,0,0,,{\k32}human {\k34}beings {\k60}decide {\k18}to {\k16}{\c&H00D7FF&\b1}settle{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.00,0:00:01.37,Default,,0,0,0,,{\k28}the{\k30}scenes{\k36}people{\k18}are{\k28}{\c&H00D7FF&\b1}moving{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:01.40,0:00:02.89,Default,,0,0,0,,{\k46}around{\k32}putting{\k44}{\c&H00D7FF&\b1}equipment{\c&HFFFFFF&\b0}{\k22}in{\k8}the
+Dialogue: 0,0:00:02.92,0:00:04.64,Default,,0,0,0,,{\k16}right{\k30}place{\k64}going{\k20}on{\k30}{\c&H00D7FF&\b1}alert.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:04.76,0:00:07.03,Default,,0,0,0,,{\k56}And{\k56}{\c&H00D7FF&\b1}with{\c&HFFFFFF&\b0}{\k32}this{\k50}{\c&H00D7FF&\b1}kind{\c&HFFFFFF&\b0}{\k20}of,{\k6}I
+Dialogue: 0,0:00:07.06,0:00:08.17,Default,,0,0,0,,{\k14}{\c&H00D7FF&\b1}guess{\c&HFFFFFF&\b0}{\k12}in{\k10}the{\k24}{\c&H00D7FF&\b1}longer{\c&HFFFFFF&\b0}{\k32}term,{\k2}if
+Dialogue: 0,0:00:08.20,0:00:08.95,Default,,0,0,0,,{\k28}I'm,{\k10}you{\k8}know,{\k10}{\c&H00D7FF&\b1}from{\c&HFFFFFF&\b0}{\k14}my
+Dialogue: 0,0:00:08.98,0:00:09.69,Default,,0,0,0,,{\k32}{\c&H00D7FF&\b1}perspective{\c&HFFFFFF&\b0}{\k20}as{\k8}a{\k14}structural
+Dialogue: 0,0:00:09.72,0:00:10.57,Default,,0,0,0,,{\k36}engineer,{\k1}I've{\k8}been{\k30}{\c&H00D7FF&\b1}involved{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:10.60,0:00:12.53,Default,,0,0,0,,{\k44}in,{\k76}you{\k14}know,{\k16}urban{\k30}{\c&H00D7FF&\b1}planning{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:12.56,0:00:14.43,Default,,0,0,0,,{\k44}and{\k22}{\c&H00D7FF&\b1}looking{\c&HFFFFFF&\b0}{\k28}at{\k46}{\c&H00D7FF&\b1}cities{\c&HFFFFFF&\b0}{\k28}and{\k22}so
+Dialogue: 0,0:00:14.46,0:00:16.09,Default,,0,0,0,,{\k30}on,{\k26}how{\k20}{\c&H00D7FF&\b1}can{\c&HFFFFFF&\b0}{\k12}we{\k18}{\c&H00D7FF&\b1}use{\c&HFFFFFF&\b0}{\k8}the
+Dialogue: 0,0:00:16.12,0:00:17.33,Default,,0,0,0,,{\k14}{\c&H00D7FF&\b1}kind{\c&HFFFFFF&\b0}{\k8}of{\k32}{\c&H00D7FF&\b1}modeling{\c&HFFFFFF&\b0}{\k28}that{\k14}you{\k28}do
+Dialogue: 0,0:00:17.36,0:00:19.33,Default,,0,0,0,,{\k36}to{\k60}maybe{\k34}better{\k40}{\c&H00D7FF&\b1}design{\c&HFFFFFF&\b0}{\k30}where
+Dialogue: 0,0:00:19.36,0:00:20.93,Default,,0,0,0,,{\k32}human{\k34}beings{\k60}decide{\k18}to{\k16}{\c&H00D7FF&\b1}settle{\c&HFFFFFF&\b0}
 Dialogue: 0,0:00:20.96,0:00:21.24,Default,,0,0,0,,{\k28}{\c&H00D7FF&\b1}down?{\c&HFFFFFF&\b0}

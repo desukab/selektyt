@@ -1,55 +1,83 @@
 1
-0:00:00,000 --> 0:00:01,907
-My next guest is Hannah cloak
+0:00:00,000 --> 0:00:02,007
+Now last year the UK recorded
 
 2
-0:00:01,940 --> 0:00:04,127
-a specialist in extreme weather
+0:00:02,040 --> 0:00:03,847
+its highest ever temperature of
 
 3
-0:00:04,160 --> 0:00:06,707
-and professor of hydrology at the
+0:00:03,880 --> 0:00:06,407
+40.3 degrees Celsius and on
 
 4
-0:00:06,740 --> 0:00:08,927
-University of Reading She has
+0:00:06,440 --> 0:00:07,647
+the news recently We've seen
 
 5
-0:00:08,960 --> 0:00:10,747
-appeared on TV including in the
+0:00:07,680 --> 0:00:09,967
+devastating floods droughts and
 
 6
-0:00:10,780 --> 0:00:13,147
-panorama episode wild weather our
+0:00:10,000 --> 0:00:12,667
+wildfires worldwide My next
 
 7
-0:00:13,180 --> 0:00:15,387
-world under threat And she was
+0:00:12,700 --> 0:00:14,307
+guest is Hannah cloak a
 
 8
-0:00:15,420 --> 0:00:16,987
-a subject of the Life Scientific
+0:00:14,340 --> 0:00:16,127
+specialist in extreme weather
 
 9
-0:00:17,020 --> 0:00:18,760
-on Radio 4 in 2021.
+0:00:16,160 --> 0:00:18,627
+and professor of hydrology at
 
 10
-0:00:19,300 --> 0:00:20,280
-Welcome Hannah.
+0:00:18,660 --> 0:00:20,787
+the University of Reading She
 
 11
-0:00:20,400 --> 0:00:21,340
-It's lovely to be here.
+0:00:20,820 --> 0:00:22,647
+has appeared on TV including in
 
 12
-0:00:21,780 --> 0:00:23,987
-When did you first discover your
+0:00:22,680 --> 0:00:24,427
+the panorama episode wild
 
 13
-0:00:24,020 --> 0:00:25,927
-fascination with water and
+0:00:24,460 --> 0:00:26,107
+weather our world under threat
 
 14
-0:00:25,960 --> 0:00:26,260
+0:00:26,140 --> 0:00:28,127
+And she was a subject of
+
+15
+0:00:28,160 --> 0:00:29,927
+the Life Scientific on Radio 4
+
+16
+0:00:29,960 --> 0:00:30,760
+in 2021.
+
+17
+0:00:31,300 --> 0:00:32,280
+Welcome Hannah.
+
+18
+0:00:32,400 --> 0:00:33,340
+It's lovely to be here.
+
+19
+0:00:33,780 --> 0:00:35,627
+When did you first discover
+
+20
+0:00:35,660 --> 0:00:37,927
+your fascination with water and
+
+21
+0:00:37,960 --> 0:00:38,260
 geography?

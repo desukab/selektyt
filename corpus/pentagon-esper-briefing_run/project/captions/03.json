@@ -12,26 +12,26 @@
     },
     {
       "start": 635.17,
-      "end": 636.97,
-      "text": "on what's been collected, what's",
+      "end": 636.59,
+      "text": "on what's been collected,",
       "emphasis": [
         " collected,"
       ]
     },
     {
-      "start": 636.97,
-      "end": 639.13,
-      "text": "being looked through now, and what",
+      "start": 636.79,
+      "end": 637.63,
+      "text": "what's being looked through",
       "emphasis": [
-        " looked",
         " through"
       ]
     },
     {
-      "start": 639.13,
+      "start": 637.63,
       "end": 639.61,
-      "text": "that might mean?",
+      "text": "now, and what that might mean?",
       "emphasis": [
+        " might",
         " mean?"
       ]
     },
@@ -46,34 +46,41 @@
     },
     {
       "start": 640.99,
-      "end": 642.59,
-      "text": "reasons, because that information",
+      "end": 641.89,
+      "text": "reasons, because that",
+      "emphasis": [
+        " because"
+      ]
+    },
+    {
+      "start": 641.89,
+      "end": 643.47,
+      "text": "information needs to be",
       "emphasis": [
         " information"
       ]
     },
     {
-      "start": 642.59,
-      "end": 645.23,
-      "text": "needs to be exploited properly for",
+      "start": 643.47,
+      "end": 645.41,
+      "text": "exploited properly for any",
       "emphasis": [
-        " exploited",
-        " properly"
+        " exploited"
       ]
     },
     {
-      "start": 645.23,
-      "end": 646.23,
-      "text": "any follow -on missions that we",
+      "start": 645.41,
+      "end": 646.37,
+      "text": "follow-on missions that we may",
       "emphasis": [
         " follow",
         " missions"
       ]
     },
     {
-      "start": 646.23,
+      "start": 646.37,
       "end": 647.03,
-      "text": "may choose to do.",
+      "text": "choose to do.",
       "emphasis": [
         " choose"
       ]
@@ -107,26 +114,25 @@
     },
     {
       "start": 651.47,
-      "end": 653.07,
-      "text": "ensure the enduring defeat of ISIS",
+      "end": 652.79,
+      "text": "ensure the enduring defeat of",
       "emphasis": [
-        " enduring",
-        " ISIS"
+        " enduring"
       ]
     },
     {
-      "start": 653.07,
-      "end": 655.33,
-      "text": "in the region, and that's our",
+      "start": 652.79,
+      "end": 655.21,
+      "text": "ISIS in the region, and that's",
       "emphasis": [
-        " region,",
-        " that's"
+        " ISIS",
+        " region,"
       ]
     },
     {
-      "start": 655.33,
+      "start": 655.21,
       "end": 655.53,
-      "text": "mission.",
+      "text": "our mission.",
       "emphasis": [
         " mission."
       ]

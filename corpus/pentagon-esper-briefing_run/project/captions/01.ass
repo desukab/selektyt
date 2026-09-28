@@ -10,18 +10,19 @@ Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,
 
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
-Dialogue: 0,0:00:00.00,0:00:00.79,Default,,0,0,0,,{\k8}I {\k24}don't {\k12}want {\k8}to {\k30}{\c&H00D7FF&\b1}characterize{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:00.82,0:00:02.79,Default,,0,0,0,,{\k60}{\c&H00D7FF&\b1}exactly{\c&HFFFFFF&\b0} {\k44}what {\k34}or {\k14}how {\k26}{\c&H00D7FF&\b1}much{\c&HFFFFFF&\b0} {\k22}yet
-Dialogue: 0,0:00:02.82,0:00:04.40,Default,,0,0,0,,{\k40}until {\k14}it {\k18}gets {\k36}{\c&H00D7FF&\b1}exploited{\c&HFFFFFF&\b0} {\k38}properly.
-Dialogue: 0,0:00:04.52,0:00:05.74,Default,,0,0,0,,{\k26}But {\k18}as {\k8}a {\k16}{\c&H00D7FF&\b1}matter{\c&HFFFFFF&\b0} {\k20}of {\k22}{\c&H00D7FF&\b1}course,{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:05.80,0:00:08.11,Default,,0,0,0,,{\k26}we {\k42}always {\k114}do {\k32}{\c&H00D7FF&\b1}sensitive{\c&HFFFFFF&\b0} {\k20}site
-Dialogue: 0,0:00:08.14,0:00:09.59,Default,,0,0,0,,{\k40}{\c&H00D7FF&\b1}exploitation{\c&HFFFFFF&\b0} {\k28}on {\k22}any {\k58}objective
-Dialogue: 0,0:00:09.62,0:00:11.13,Default,,0,0,0,,{\k46}{\c&H00D7FF&\b1}anywhere{\c&HFFFFFF&\b0} {\k78}to {\k14}do {\k16}that.
-Dialogue: 0,0:00:11.16,0:00:12.17,Default,,0,0,0,,{\k58}As {\k10}to {\k12}{\c&H00D7FF&\b1}whether{\c&HFFFFFF&\b0} {\k20}it's {\k4}his
-Dialogue: 0,0:00:12.20,0:00:13.91,Default,,0,0,0,,{\k34}{\c&H00D7FF&\b1}headquarters,{\c&HFFFFFF&\b0} {\k6}it {\k26}was {\k44}an {\k24}{\c&H00D7FF&\b1}area{\c&HFFFFFF&\b0} {\k22}in
-Dialogue: 0,0:00:13.94,0:00:15.86,Default,,0,0,0,,{\k28}which {\k84}he {\k24}was {\k44}{\c&H00D7FF&\b1}staying.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:15.98,0:00:18.08,Default,,0,0,0,,{\k36}And {\k22}what {\k24}about {\k116}{\c&H00D7FF&\b1}prisoners?{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:18.50,0:00:20.57,Default,,0,0,0,,{\k16}You {\k18}took {\k26}{\c&H00D7FF&\b1}some,{\c&HFFFFFF&\b0} {\k28}how {\k22}{\c&H00D7FF&\b1}many,{\c&HFFFFFF&\b0} {\k28}and
-Dialogue: 0,0:00:20.60,0:00:22.46,Default,,0,0,0,,{\k28}whose {\k40}{\c&H00D7FF&\b1}custody{\c&HFFFFFF&\b0} {\k44}are {\k20}they {\k20}in {\k22}{\c&H00D7FF&\b1}now?{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:22.66,0:00:23.75,Default,,0,0,0,,{\k24}They're {\k8}in {\k14}our {\k34}{\c&H00D7FF&\b1}custody{\c&HFFFFFF&\b0} {\k18}and {\k14}{\c&H00D7FF&\b1}they're{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:23.78,0:00:24.62,Default,,0,0,0,,{\k8}at {\k8}a {\k22}secure {\k46}{\c&H00D7FF&\b1}facility.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.00,0:00:00.79,Default,,0,0,0,,{\k8}I{\k24}don't{\k12}want{\k8}to{\k30}{\c&H00D7FF&\b1}characterize{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.82,0:00:02.79,Default,,0,0,0,,{\k60}{\c&H00D7FF&\b1}exactly{\c&HFFFFFF&\b0}{\k44}what{\k34}or{\k14}how{\k26}{\c&H00D7FF&\b1}much{\c&HFFFFFF&\b0}{\k22}yet
+Dialogue: 0,0:00:02.82,0:00:03.87,Default,,0,0,0,,{\k40}until{\k14}it{\k18}gets{\k36}{\c&H00D7FF&\b1}exploited{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:03.90,0:00:04.40,Default,,0,0,0,,{\k38}{\c&H00D7FF&\b1}properly.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:04.52,0:00:05.74,Default,,0,0,0,,{\k26}But{\k18}as{\k8}a{\k16}{\c&H00D7FF&\b1}matter{\c&HFFFFFF&\b0}{\k20}of{\k22}{\c&H00D7FF&\b1}course,{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:05.80,0:00:08.11,Default,,0,0,0,,{\k26}we{\k42}always{\k114}do{\k32}{\c&H00D7FF&\b1}sensitive{\c&HFFFFFF&\b0}{\k20}site
+Dialogue: 0,0:00:08.14,0:00:09.59,Default,,0,0,0,,{\k40}{\c&H00D7FF&\b1}exploitation{\c&HFFFFFF&\b0}{\k28}on{\k22}any{\k58}objective
+Dialogue: 0,0:00:09.62,0:00:11.13,Default,,0,0,0,,{\k46}{\c&H00D7FF&\b1}anywhere{\c&HFFFFFF&\b0}{\k78}to{\k14}do{\k16}that.
+Dialogue: 0,0:00:11.16,0:00:12.17,Default,,0,0,0,,{\k58}As{\k10}to{\k12}{\c&H00D7FF&\b1}whether{\c&HFFFFFF&\b0}{\k20}it's{\k4}his
+Dialogue: 0,0:00:12.20,0:00:13.91,Default,,0,0,0,,{\k34}{\c&H00D7FF&\b1}headquarters,{\c&HFFFFFF&\b0}{\k6}it{\k26}was{\k44}an{\k24}{\c&H00D7FF&\b1}area{\c&HFFFFFF&\b0}{\k22}in
+Dialogue: 0,0:00:13.94,0:00:15.86,Default,,0,0,0,,{\k28}which{\k84}he{\k24}was{\k44}{\c&H00D7FF&\b1}staying.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:15.98,0:00:18.08,Default,,0,0,0,,{\k36}And{\k22}what{\k24}about{\k116}{\c&H00D7FF&\b1}prisoners?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:18.50,0:00:20.57,Default,,0,0,0,,{\k16}You{\k18}took{\k26}{\c&H00D7FF&\b1}some,{\c&HFFFFFF&\b0}{\k28}how{\k22}{\c&H00D7FF&\b1}many,{\c&HFFFFFF&\b0}{\k28}and
+Dialogue: 0,0:00:20.60,0:00:22.46,Default,,0,0,0,,{\k28}whose{\k40}{\c&H00D7FF&\b1}custody{\c&HFFFFFF&\b0}{\k44}are{\k20}they{\k20}in{\k22}{\c&H00D7FF&\b1}now?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:22.66,0:00:23.61,Default,,0,0,0,,{\k24}They're{\k8}in{\k14}our{\k34}{\c&H00D7FF&\b1}custody{\c&HFFFFFF&\b0}{\k18}and
+Dialogue: 0,0:00:23.64,0:00:24.62,Default,,0,0,0,,{\k14}they're{\k8}at{\k8}a{\k22}secure{\k46}{\c&H00D7FF&\b1}facility.{\c&HFFFFFF&\b0}

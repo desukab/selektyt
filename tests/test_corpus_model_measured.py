@@ -96,11 +96,17 @@ def test_the_doc_table_row_matches_the_corpus(name, expected):
 
 
 def test_the_doc_states_the_totals_the_corpus_measures():
-    """The totals line is the one a reader would quote; it must be right."""
+    """The totals line is the one a reader would quote; it must be right.
+
+    The figure is computed, not copied: hardcoding it here would make this
+    test assert a number a re-transcription can move, and the corpus's two
+    re-runnable sources do move it -- pentagon went 277 to 278 segments when
+    it was re-transcribed under the splitter fix.
+    """
     text = DOC.read_text(encoding="utf-8")
     segs = sum(v[0] for v in MEASURED.values())
-    assert f"1,771 segments" in text, (
-        f"the doc's headline says 1,771 segments; the corpus has {segs}"
+    assert f"{segs:,} segments" in text, (
+        f"the doc's headline must state the corpus's segment count: {segs}"
     )
 
 

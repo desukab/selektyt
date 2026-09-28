@@ -212,7 +212,33 @@ precisely: the caption-straddle and word-split fixes are unaffected and still
 confirmed as written. What changed is that "green" meant "no defect the audit
 could see," and the audit could not see the edges that drop speech. No source
 previously reported green has been *cleared* by the new check — the corpus's
-true state is `11 runs, 14 clean clips, 11 awaiting review, 6 failed`.
+true state at the time was `11 runs, 14 clean clips, 11 awaiting review,
+6 failed`.
+
+**Correction, 2026-09-28: both failures in the table above are gone, and the
+corpus now ships no clip-level defect at all.** This page is a historical
+record of the run it describes, so the table is left as it stood; the current
+verdict is in `docs/AI_EXECUTION_STATE.md` and is re-derivable with
+`tools/editorial_audit.py corpus --corpus`. What closed them was not a change
+to the audit but two engine fixes, each confirmed by re-running the source on
+real media rather than by re-scoring a stale artifact:
+
+* `royal-society-cloke` clip 01 — the word-boundary fix in `engine/edit_plan.py`
+  (`75c654a`). The clip no longer ends 117 ms into `'Somebody'`; the re-run
+  renders 52.30 s with 34 cues and passes every check.
+* `pentagon-esper-briefing` clip 04 — the sentence-splitter fix in
+  `engine/story_units.py`. The word-boundary fix removed `' Syria.'` but the
+  clip *still* opened mid-sentence, because the splitter had ended the source
+  sentence on the period in the honorific `'Mr.'` and the candidate then opened
+  on the fragment `'Secretary.'`. Fixing the splitter moved the opening to
+  `365.680` (from `359.140`), the clip renders 27.42 s with 18 cues, and it
+  passes. The re-transcription also moved this source's segment count
+  `277 → 278`.
+
+The A/B against the recorded pre-fix baseline
+(`corpus/eval/audit-baseline-2026-09-27.json`) reads `improvement 2` with no
+regressions and no changed defects. What this does not establish is editorial
+quality — the audit is a machine instrument, and no human has judged any clip.
 
 **The committed captions are themselves a snapshot three days behind the
 emitter**, measured 2026-09-22. Regenerating from the persisted

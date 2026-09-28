@@ -2,56 +2,56 @@
   "style": "minimal",
   "blocks": [
     {
-      "start": 364.5,
-      "end": 364.84,
-      "text": "Syria.",
-      "emphasis": [
-        " Syria."
-      ]
-    },
-    {
-      "start": 364.84,
+      "start": 365.68,
       "end": 367.74,
-      "text": "Korea, has the deployment of",
+      "text": "Has the deployment of",
       "emphasis": [
         " deployment"
       ]
     },
     {
       "start": 367.74,
-      "end": 369.08,
-      "text": "reinforcements that you announced",
+      "end": 368.8,
+      "text": "reinforcements that you",
       "emphasis": [
         " reinforcements"
       ]
     },
     {
-      "start": 369.08,
-      "end": 371.74,
-      "text": "last week begun, and could you",
+      "start": 368.8,
+      "end": 370.0,
+      "text": "announced last week begun?",
       "emphasis": [
-        " begun,",
-        " could"
+        " begun?"
       ]
     },
     {
-      "start": 371.74,
-      "end": 373.48,
-      "text": "describe more fully what you",
+      "start": 371.14,
+      "end": 372.34,
+      "text": "And could you describe more",
       "emphasis": [
         " describe"
       ]
     },
     {
-      "start": 373.48,
+      "start": 372.34,
+      "end": 374.0,
+      "text": "fully what you intend to do",
+      "emphasis": [
+        " fully",
+        " intend"
+      ]
+    },
+    {
+      "start": 374.0,
       "end": 374.18,
-      "text": "intend to do there?",
+      "text": "there?",
       "emphasis": [
         " there?"
       ]
     },
     {
-      "start": 374.32,
+      "start": 374.34,
       "end": 376.1,
       "text": "We have begun deploying and",
       "emphasis": [
@@ -68,10 +68,17 @@
     },
     {
       "start": 377.52,
-      "end": 379.84,
-      "text": "into the vicinity of Dar -Arzara.",
+      "end": 379.4,
+      "text": "into the vicinity of Dar",
       "emphasis": [
-        " vicinity",
+        " vicinity"
+      ]
+    },
+    {
+      "start": 379.4,
+      "end": 379.84,
+      "text": "-Arzara.",
+      "emphasis": [
         "-Arzara."
       ]
     },
@@ -86,64 +93,57 @@
     },
     {
       "start": 381.52,
-      "end": 383.02,
-      "text": "it includes mechanized forces and",
+      "end": 382.68,
+      "text": "it includes mechanized forces",
       "emphasis": [
         " mechanized"
       ]
     },
     {
-      "start": 383.02,
-      "end": 383.86,
-      "text": "other types of forces.",
+      "start": 382.68,
+      "end": 384.92,
+      "text": "and other types of forces that",
       "emphasis": [
-        " forces."
+        " types",
+        " forces"
       ]
     },
     {
-      "start": 384.44,
-      "end": 386.36,
-      "text": "That will continue until we",
+      "start": 384.92,
+      "end": 387.16,
+      "text": "will continue until we believe",
       "emphasis": [
         " continue"
       ]
     },
     {
-      "start": 386.36,
-      "end": 387.62,
-      "text": "believe we have sufficient",
-      "emphasis": [
-        " sufficient"
-      ]
-    },
-    {
-      "start": 387.62,
-      "end": 389.54,
-      "text": "capability to ensure ISIS and",
+      "start": 387.16,
+      "end": 388.34,
+      "text": "we have sufficient capability",
       "emphasis": [
         " capability"
       ]
     },
     {
-      "start": 389.54,
-      "end": 391.96,
-      "text": "other destabilizing actors are",
+      "start": 388.34,
+      "end": 389.76,
+      "text": "to ensure ISIS and other",
+      "emphasis": [
+        " ISIS"
+      ]
+    },
+    {
+      "start": 389.76,
+      "end": 392.22,
+      "text": "destabilizing actors are denied",
       "emphasis": [
         " destabilizing"
       ]
     },
     {
-      "start": 391.96,
-      "end": 393.54,
-      "text": "denied access to that oil",
-      "emphasis": [
-        " access"
-      ]
-    },
-    {
-      "start": 393.54,
+      "start": 392.22,
       "end": 393.98,
-      "text": "facility.",
+      "text": "access to that oil facility.",
       "emphasis": [
         " facility."
       ]

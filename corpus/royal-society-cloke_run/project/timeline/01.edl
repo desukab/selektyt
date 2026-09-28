@@ -12,7 +12,7 @@ FCM: NON-DROP FRAME
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
 002  ROYAL_SO A     C        00:03:42:06 00:03:51:16 00:00:39:23 00:00:49:08
 
-003  ROYAL_SO V     C        00:03:52:03 00:03:55:05 00:00:49:08 00:00:52:10
+003  ROYAL_SO V     C        00:03:52:03 00:03:55:02 00:00:49:08 00:00:52:07
      M2   royal-society-cloke.webm
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
-003  ROYAL_SO A     C        00:03:52:03 00:03:55:05 00:00:49:08 00:00:52:10
+003  ROYAL_SO A     C        00:03:52:03 00:03:55:02 00:00:49:08 00:00:52:07

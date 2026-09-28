@@ -50,11 +50,22 @@ and fails on any change to it.
 
 **Current result — 3 of 7 delivering runs reproduce exactly:**
 
+The two sources that still hold media (`pentagon-esper-briefing`,
+`royal-society-cloke`) are re-run on real media whenever an engine fix could
+move their selection, so the tool reports them `ok` — exact agreement on spans
+*and* scores, the stronger of the two passing states, because the artifacts
+were written by the code under test rather than merely agreeing with it. The
+last such re-run was 2026-09-28, under the word-boundary, sentence-splitter and
+tracker fixes together; pentagon's re-transcription moved it 277 → 278
+segments and its clip 04 opening 359.140 → 365.680. A re-transcription is the
+honest reason for a moved selection: it is a different transcript, not a code
+change the docs do not record.
+
 | Run | Language | Clips | Status |
 | --- | --- | --- | --- |
 | `ooi-vertical` | en | 3 / 3 | reproduces |
-| `pentagon-esper-briefing` | en | 5 / 5 | reproduces |
-| `royal-society-cloke` | en | 4 / 4 | reproduces |
+| `pentagon-esper-briefing` | en | 5 / 5 | **ok** (re-run 2026-09-28) |
+| `royal-society-cloke` | en | 4 / 4 | **ok** (re-run 2026-09-28) |
 | `emwcon-panel-2018` | en | 5 shipped / 5 now | **moved** (scan reached the tail) |
 | `nasa360-ep5` | en | 6 shipped / 6 now | **moved** (scan reached the tail) |
 | `hadhazy-protest` | hu | 3 shipped / 1 now | **no longer ships** |

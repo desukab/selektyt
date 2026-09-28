@@ -45,63 +45,68 @@
     },
     {
       "start": 252.48,
-      "end": 253.58,
-      "text": "I'm, you know, from my perspective",
+      "end": 253.26,
+      "text": "I'm, you know, from my",
       "emphasis": [
-        " from",
+        " from"
+      ]
+    },
+    {
+      "start": 253.26,
+      "end": 254.0,
+      "text": "perspective as a structural",
+      "emphasis": [
         " perspective"
       ]
     },
     {
-      "start": 253.58,
-      "end": 254.5,
-      "text": "as a structural engineer, I've",
+      "start": 254.0,
+      "end": 254.88,
+      "text": "engineer, I've been involved",
       "emphasis": [
-        " structural"
+        " involved"
       ]
     },
     {
-      "start": 254.5,
-      "end": 256.54,
-      "text": "been involved in, you know, urban",
+      "start": 254.88,
+      "end": 256.84,
+      "text": "in, you know, urban planning",
       "emphasis": [
-        " involved",
-        " urban"
+        " planning"
       ]
     },
     {
-      "start": 256.54,
-      "end": 258.52,
-      "text": "planning and looking at cities and",
+      "start": 256.84,
+      "end": 258.74,
+      "text": "and looking at cities and so",
       "emphasis": [
-        " planning",
-        " looking"
+        " looking",
+        " cities"
       ]
     },
     {
-      "start": 258.52,
-      "end": 260.32,
-      "text": "so on, how can we use",
+      "start": 258.74,
+      "end": 260.4,
+      "text": "on, how can we use the",
       "emphasis": [
         " can",
         " use"
       ]
     },
     {
-      "start": 260.32,
-      "end": 261.36,
-      "text": "the kind of modeling that you",
+      "start": 260.4,
+      "end": 261.64,
+      "text": "kind of modeling that you do",
       "emphasis": [
         " kind",
         " modeling"
       ]
     },
     {
-      "start": 261.36,
+      "start": 261.64,
       "end": 263.64,
-      "text": "do to maybe better design where",
+      "text": "to maybe better design where",
       "emphasis": [
-        " better",
         " design"
       ]
     },

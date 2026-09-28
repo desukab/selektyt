@@ -4,17 +4,17 @@
   "rejected_count": 0,
   "context_guard_rejections": 0,
   "truncated_by_limit": 7,
-  "avg_duration": 24.98,
+  "avg_duration": 24.75,
   "duration_distribution": {
     "<15s": 1,
     "15-30s": 3,
     "30-45s": 1,
     "45-55s": 0
   },
-  "silence_pct": 7.6,
+  "silence_pct": 7.8,
   "filler_pct": 0.0,
-  "avg_words_per_second": 3.07,
-  "avg_hook_latency": 2.03,
+  "avg_words_per_second": 3.08,
+  "avg_hook_latency": 1.79,
   "payoff_presence_rate": 1.0,
   "duplicate_overlap_rate": 0.0
 }

@@ -664,9 +664,10 @@ def test_the_audit_verdict_on_the_committed_corpus_is_the_recorded_baseline():
 
     This tool's purpose is to fail CI on a clip that is not publishable, so a
     corpus leg cannot assert that everything passes. Five sources were
-    suppressed by the VAD gate before selection ran; two clips are genuinely
-    cut mid-sentence; and ten clips sit on transcripts too unpunctuated for the
-    edge check to decide, which the audit reports as awaiting review.
+    suppressed by the VAD gate before selection ran, and those five are the
+    *only* hard failures left: no shipped clip in the corpus is mechanically
+    defective any more. Eleven clips sit on transcripts too unpunctuated for
+    the edge check to decide, which the audit reports as awaiting review.
 
     The verdict has three states, not two, so the pin records both: which clips
     *fail* (a defect in the shipped artifact) and which clips are *under review*
@@ -676,14 +677,16 @@ def test_the_audit_verdict_on_the_committed_corpus_is_the_recorded_baseline():
     to be told about. A detail that gains a figure is still the same finding, so
     reasons match by prefix.
 
-    The two failures are the edge check's: pentagon-esper-briefing clip 04 opens
-    on 'Syria.' having dropped the twelve words before it, and
-    royal-society-cloke clip 01 ends on 'Somebody' with 'says, you know,
-    actually tomorrow' cut away under it. Neither is visible to
-    ``check_cuts_respect_sentences``, which can only compare words that survive
-    the cut. The review set is a property of the transcripts, not of the clips:
-    34-47% of the English segments carry no terminal punctuation, and on such a
-    segment every edge is consistent with mid-sentence.
+    The last clip-level failure was pentagon-esper-briefing clip 04, which
+    opened on 'Mr.' inside the sentence 'Thank you, Mr. Secretary.' because the
+    sentence splitter broke that sentence on the period in the honorific and
+    the candidate then opened on the fragment 'Secretary.'. The splitter no
+    longer breaks there, the source was re-run on real media, and the clip is
+    clean -- the third failure this instrument found and the code fixed,
+    after 'Syria.' and 'Somebody'. The review set is a property of the
+    transcripts, not of the clips: 34-47% of the English segments carry no
+    terminal punctuation, and on such a segment every edge is consistent with
+    mid-sentence.
     """
     from tools.editorial_audit import audit
 
@@ -714,14 +717,12 @@ def test_the_audit_verdict_on_the_committed_corpus_is_the_recorded_baseline():
             "review": {"clip 02"},
         },
         "pentagon-esper-briefing_run": {
-            "fail": [("clip 04", "opens mid-sentence")],
             "review": {"clip 03"},
         },
         "roman-portrait-trailer_run": {
             "fail": [("project", "no selections.json")],
         },
         "royal-society-cloke_run": {
-            "fail": [("clip 01", "closes mid-sentence")],
             "review": {"clip 04"},
         },
         "telugu-launch_run": {
@@ -875,7 +876,7 @@ def test_the_corpus_candidate_words_are_already_the_kept_set():
 
 
 CORPUS = TOOLS.parent / "corpus"
-BASELINE_SWEEP = CORPUS / "eval" / "audit-baseline-2026-09-27.json"
+BASELINE_SWEEP = CORPUS / "eval" / "audit-baseline-2026-09-28.json"
 
 
 def test_the_corpus_sweep_counts_every_run_and_every_clip():
@@ -885,13 +886,30 @@ def test_the_corpus_sweep_counts_every_run_and_every_clip():
     Eleven committed runs; six produced a timeline and five were stopped by the
     VAD gate before selection ran, which the sweep records as project-level
     failures rather than as clean runs they never had. Of the 27 clips those six
-    shipped, 14 are clean, 11 sit on transcripts the edge check cannot decide,
-    and 2 are cut mid-sentence.
+    shipped, 16 are clean and 11 sit on transcripts the edge check cannot
+    decide. **No clip fails**: the five failures are all project-level, a source
+    that never reached selection.
+
+    The arc the recorded baselines hold: `audit-baseline-2026-09-27.json`
+    counted 14 clean and 2 mid-sentence failures, both found by the edge check
+    that looks at the speech a clip *drops*. The two sources holding those clips
+    were re-run on real media and the comparison reads two improvements and no
+    regressions -- royal-society-cloke clip 01 fail -> clean on the word-boundary
+    fix, then pentagon-esper-briefing clip 04 fail -> clean once the sentence
+    splitter stopped ending a sentence on the period in the honorific 'Mr.'.
+    Between the two re-runs the clip was still a failure, but for a different
+    reason: the clipped word 'Syria.' was gone and what the audit found instead
+    was the sentence the splitter had broken. That intermediate reading --
+    15 clean, 5 failed, this clip failing on 'Mr.' rather than on 'Syria.' --
+    lives here rather than in a baseline file, because the artifacts it was
+    swept from were overwritten by the second re-run and a baseline that
+    describes no artifact is not evidence. That was a new finding the re-run
+    surfaced, not a regression the fix introduced.
     """
     from tools.editorial_audit import sweep
 
     record = sweep(CORPUS)
-    assert record["totals"] == {"runs": 11, "clean": 14, "review": 11, "fail": 6}
+    assert record["totals"] == {"runs": 11, "clean": 16, "review": 11, "fail": 4}
     sources = {run["source"] for run in record["runs"]}
     assert len(sources) == 11, "a run was audited twice or missed"
     # A clean clip is counted but not recorded: the comparison treats an absent

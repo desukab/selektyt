@@ -9,10 +9,10 @@
     "editorial_score": 1.0,
     "virality_score": 0.86,
     "context_score": 1.0,
-    "confidence": 0.9,
+    "confidence": 0.943,
     "visual_potential": 0.8,
     "total_score": 0.948,
-    "reason": "Structural editorial score: opening=1.00; progression=0.94; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.18; coherence=1.00; completeness=1.00; audio_pace=0.93; silence=0.086; dead_air=0.03.",
+    "reason": "conflict candidate that opens with a hook the viewer can land on mid-scroll. Structural editorial score: opening=1.00; progression=0.94; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.18; coherence=1.00; completeness=1.00; audio_pace=0.93; silence=0.083; dead_air=0.03.",
     "llm_metadata": null
   },
   {
@@ -25,10 +25,10 @@
     "editorial_score": 0.863,
     "virality_score": 0.86,
     "context_score": 1.0,
-    "confidence": 0.9,
+    "confidence": 0.939,
     "visual_potential": 0.8,
     "total_score": 0.907,
-    "reason": "Structural editorial score: opening=1.00; progression=0.98; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.13; coherence=1.00; completeness=0.75; audio_pace=0.89; silence=0.135; dead_air=0.04.",
+    "reason": "conflict candidate that opens with a hook the viewer can land on mid-scroll. Structural editorial score: opening=1.00; progression=0.98; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.13; coherence=1.00; completeness=0.75; audio_pace=0.89; silence=0.135; dead_air=0.04.",
     "llm_metadata": null
   },
   {
@@ -41,26 +41,26 @@
     "editorial_score": 0.788,
     "virality_score": 0.663,
     "context_score": 1.0,
-    "confidence": 0.9,
+    "confidence": 0.949,
     "visual_potential": 0.7,
     "total_score": 0.833,
-    "reason": "Structural editorial score: opening=0.77; progression=0.71; payoff=1.00; density=1.00; fillers=2; standalone=1.00; repetition=0.08; coherence=1.00; completeness=1.00; audio_pace=0.88; silence=0.148; dead_air=0.10.",
+    "reason": "revelation candidate that lands a clear closing thought, with fillers middling at 0.50. Structural editorial score: opening=0.77; progression=0.71; payoff=1.00; density=1.00; fillers=2; standalone=1.00; repetition=0.08; coherence=1.00; completeness=1.00; audio_pace=0.88; silence=0.148; dead_air=0.10.",
     "llm_metadata": null
   },
   {
-    "start": 12.3,
+    "start": 0.3,
     "end": 39.08,
-    "text": "My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the panorama episode wild weather our world under threat And she was a subject of the Life Scientific on Radio 4 in 2021. Welcome Hannah. It's lovely to be here. When did you first discover your fascination with water and geography?",
+    "text": "Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently We've seen devastating floods droughts and wildfires worldwide My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the panorama episode wild weather our world under threat And she was a subject of the Life Scientific on Radio 4 in 2021. Welcome Hannah. It's lovely to be here. When did you first discover your fascination with water and geography?",
     "story_type": "question",
-    "hook": "My next guest is Hannah cloak a specialist in extreme weather and professor of hydrology at the University of Reading She has appeared on TV including in the pa",
+    "hook": "Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently We've seen devastating floods droughts and wildfires",
     "payoff": "When did you first discover your fascination with water and geography?",
-    "editorial_score": 0.695,
-    "virality_score": 0.682,
+    "editorial_score": 0.696,
+    "virality_score": 0.683,
     "context_score": 1.0,
-    "confidence": 0.9,
+    "confidence": 0.921,
     "visual_potential": 0.8,
-    "total_score": 0.784,
-    "reason": "Structural editorial score: opening=0.77; progression=0.65; payoff=0.99; density=0.92; fillers=0; standalone=1.00; repetition=0.00; coherence=0.83; completeness=0.75; audio_pace=0.92; silence=0.096; dead_air=0.03.",
+    "total_score": 0.785,
+    "reason": "question candidate that lands a clear closing thought, with progression middling at 0.65. Structural editorial score: opening=0.77; progression=0.65; payoff=1.00; density=0.90; fillers=0; standalone=1.00; repetition=0.00; coherence=0.83; completeness=0.75; audio_pace=0.93; silence=0.080; dead_air=0.02.",
     "llm_metadata": null
   }
 ]
