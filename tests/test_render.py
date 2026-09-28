@@ -25,6 +25,8 @@ from engine.captions import (MARGIN_H, PLAYRES_X, ass_for_candidate,
 from engine.render import render_clip, require_ffmpeg
 from models.core import Candidate, Word
 
+ROOT = Path(__file__).resolve().parent.parent
+
 _HAVE_FFMPEG = shutil.which("ffmpeg") is not None
 pytestmark = pytest.mark.skipif(not _HAVE_FFMPEG, reason="ffmpeg not available")
 
@@ -134,21 +136,23 @@ def test_render_vertical_clip_is_9_16(tmp_path):
 def test_encoder_settings_are_the_measured_ones():
     """The deliverable's x264 settings were chosen by measurement, and a silent
     change back to the old pair would look like a tidy small-file improvement
-    while costing 2.6 dB of picture quality.
+    while costing 2.4-3.2 dB of picture quality.
 
     On real corpus footage (the 1280x720, 29.97 fps pentagon briefing) scored
     against a -crf 0 reference of the same filter chain, 240 frames through the
-    tracked 406x722 crop:
+    tracked 406x722 crop, in three windows. The absolute figures are window
+    properties, not encoder ones, so the decision is carried by the *gap* to the
+    shipped entry, which is stable (see ``corpus/render/runs/pentagon-240f-
+    sweep.json``):
 
-        preset     crf    kbps    SSIM     PSNR
-        veryfast    20    837.9  0.9991    40.54   <- the old settings
-        slow        18   1211.9  0.9995    43.18   <- current
+        entry          PSNR dB vs shipped   bitrate ratio
+        veryfast/crf20   -3.176 .. -2.423    0.644 .. 0.700  <- the old settings
+        slow/crf18              0.0               1.0         <- current
 
     veryfast/crf20 is the lowest-quality entry on the ladder; it is also the
-    cheapest, so slow/crf18 is a deliberate quality purchase rather than a
-    free win (+2.64 dB for +44% bitrate). Any edit that drops one of these three
-    flags has to re-run that bench and update the docstring in ``_encoder_args``,
-    not just the assertion.
+    cheapest, so slow/crf18 is a deliberate quality purchase rather than a free
+    win. Any edit that drops one of these three flags has to re-run that bench
+    and update the docstring in ``_encoder_args``, not just the assertion.
     """
     from engine.render import _encoder_args
 
@@ -160,6 +164,61 @@ def test_encoder_settings_are_the_measured_ones():
     assert "-pix_fmt" in args and args[args.index("-pix_fmt") + 1] == "yuv420p", \
         "yuv420p is the only plan every player accepts; a 4:2:2/4:4:4 master " \
         "would otherwise ship chroma subsampling half the decoders refuse"
+
+
+def test_the_measured_ladder_records_still_exist():
+    """The docstring above cites records by name. A citation of a record that no
+    longer exists is worse than no citation — it lends a measurement's authority
+    to a figure nobody can check, which is the exact failure the docstring was
+    rewritten to stop. The two sweeps and the upscale comparison are what it
+    names.
+    """
+    import json
+
+    runs = ROOT / "corpus" / "render" / "runs"
+    records = {name: runs / name for name in
+               ("pentagon-240f-sweep.json", "pentagon-240f-16x9-sweep.json",
+                "pentagon-240f-upscaled.json")}
+    for name, path in records.items():
+        assert path.is_file(), f"{path} is cited by _encoder_args and is gone"
+
+    # The docstring quotes a dB-vs-shipped and bitrate-ratio row per entry. Those
+    # ranges are only valid for the shipped pair the sweep scored against, and
+    # only valid as *ranges* because there are three windows — one window
+    # reproduces the single-table mistake the rewrite replaced.
+    for name in ("pentagon-240f-sweep.json", "pentagon-240f-16x9-sweep.json"):
+        record = json.loads(records[name].read_text(encoding="utf-8"))
+        assert record["shipped_pair"] == ["slow", "18"], (
+            f"{name}: shipped pair is {record['shipped_pair']}, but the "
+            f"docstring's tables are scored against slow/crf18")
+        assert record["starts"] == [0.0, 300.0, 600.0], (
+            f"{name}: covers {record['starts']}; the docstring quotes "
+            f"0, 300 and 600 s")
+        # The docstring's tables are hand-transcribed from these. Checking the
+        # shipped row exactly and the others to the precision the docstring
+        # keeps is enough to catch a transcription swap without making every
+        # cosmetic reformat of the table a test failure.
+        for entry, gap in record["quality_vs_cost"].items():
+            lo, hi = gap["psnr_db_vs_shipped"]
+            assert lo <= hi, f"{name}: {entry} range is not ordered"
+            # The docstring rounds to two decimals, so a checked value is always
+            # inside its quoted range plus that rounding.
+            assert -4.5 < lo < 1.8 and -4.5 < hi < 1.8, (
+                f"{name}: {entry} dB gap {lo}..{hi} is outside anything the "
+                f"docstring quotes")
+
+    up = json.loads(records["pentagon-240f-upscaled.json"].read_text("utf-8"))
+    by_variant = {r["variant"]: r for r in up["rows"]}
+    # The upscale paragraph's two headline numbers, re-derived from the record
+    # rather than copied into the docstring by hand — a hand-copy is where the
+    # original drift came in.
+    keep, pre = by_variant["source_preserving"], by_variant["pre_upscaled"]
+    assert pre["psnr_db"] > keep["psnr_db"], (
+        "the docstring claims pre-upscaling is better at the display size; the "
+        f"record says {pre['psnr_db']} vs {keep['psnr_db']} dB")
+    assert pre["kbps"] / keep["kbps"] > 3.0, (
+        "the docstring calls the upscale 4.6x the bitrate; the record says "
+        f"{pre['kbps'] / keep['kbps']:.2f}x, which is not the trade it describes")
 
 
 def _video_with_audio(out: Path, duration: float = 4.0) -> Path:

@@ -1,0 +1,161 @@
+{
+ "kind": "ladder",
+ "source": {
+  "path": "/home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4",
+  "width": 1280,
+  "height": 720,
+  "fps": 29.97002997002997,
+  "pix_fmt": "yuv420p",
+  "duration": 1013.846167,
+  "sar": "1:1",
+  "has_audio": true,
+  "size_bytes": 158163951
+ },
+ "conditions": {
+  "date": "2026-09-28",
+  "ffmpeg_version": "6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+  "cpu_count": 4,
+  "load_average": [
+   0.17,
+   0.16,
+   0.08
+  ],
+  "repo_commit": "50f062a"
+ },
+ "filter": "crop=406:720:x='if(lt(t,1.778),218.7+(215.2-218.7)*(t-0.889)/0.889,if(lt(t,2.074),215.2+(201.6-215.2)*(t-1.778)/0.296,if(lt(t,2.370),201.6+(178.8-201.6)*(t-2.074)/0.296,if(lt(t,2.667),178.8+(147.2-178.8)*(t-2.370)/0.296,if(lt(t,2.963),147.2+(117.0-147.2)*(t-2.667)/0.296,if(lt(t,3.259),117.0+(72.2-117.0)*(t-2.963)/0.296,if(lt(t,3.556),72.2+(43.3-72.2)*(t-3.259)/0.296,if(lt(t,3.852),43.3+(29.6-43.3)*(t-3.556)/0.296,if(lt(t,4.148),29.6+(4.2-29.6)*(t-3.852)/0.296,if(lt(t,7.407),4.2+(0.0-4.2)*(t-4.148)/3.259,if(lt(t,7.704),0.0+(78.0-0.0)*(t-7.407)/0.296,if(lt(t,8.000),78.0+(78.0-78.0)*(t-7.704)/0.296,78.04202651977539))))))))))))':y=0,scale=406:722:flags=lanczos",
+ "frames": 240,
+ "content_seconds": 8.0,
+ "orientation": "9:16",
+ "reference_encoder": [
+  "libx264",
+  "preset veryfast",
+  "crf 0 (lossless)"
+ ],
+ "shipped_pair": [
+  "slow",
+  "18"
+ ],
+ "rows": [
+  {
+   "preset": "veryfast",
+   "crf": 20,
+   "shipped": false,
+   "ssim": 0.987464,
+   "psnr_db": 44.402,
+   "psnr_infinite": false,
+   "kbps": 646,
+   "wall_seconds": 0.974,
+   "rtf": 0.1218,
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "medium",
+   "crf": 20,
+   "shipped": false,
+   "ssim": 0.9897,
+   "psnr_db": 45.661,
+   "psnr_infinite": false,
+   "kbps": 749,
+   "wall_seconds": 1.944,
+   "rtf": 0.2429,
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "slow",
+   "crf": 20,
+   "shipped": false,
+   "ssim": 0.989799,
+   "psnr_db": 45.678,
+   "psnr_infinite": false,
+   "kbps": 712,
+   "wall_seconds": 2.549,
+   "rtf": 0.3186,
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "slow",
+   "crf": 18,
+   "shipped": true,
+   "ssim": 0.991689,
+   "psnr_db": 46.825,
+   "psnr_infinite": false,
+   "kbps": 932,
+   "wall_seconds": 2.795,
+   "rtf": 0.3494,
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "slow",
+   "crf": 16,
+   "shipped": false,
+   "ssim": 0.993267,
+   "psnr_db": 47.992,
+   "psnr_infinite": false,
+   "kbps": 1222,
+   "wall_seconds": 3.075,
+   "rtf": 0.3843,
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  }
+ ],
+ "quality_vs_cost": {
+  "veryfast/crf20": {
+   "psnr_db_vs_shipped": -2.423,
+   "ssim_vs_shipped": -0.004225,
+   "kbps_ratio_vs_shipped": 0.693,
+   "rtf_ratio_vs_shipped": 0.349
+  },
+  "medium/crf20": {
+   "psnr_db_vs_shipped": -1.164,
+   "ssim_vs_shipped": -0.001989,
+   "kbps_ratio_vs_shipped": 0.804,
+   "rtf_ratio_vs_shipped": 0.695
+  },
+  "slow/crf20": {
+   "psnr_db_vs_shipped": -1.147,
+   "ssim_vs_shipped": -0.00189,
+   "kbps_ratio_vs_shipped": 0.764,
+   "rtf_ratio_vs_shipped": 0.912
+  },
+  "slow/crf18": {
+   "psnr_db_vs_shipped": 0.0,
+   "ssim_vs_shipped": 0.0,
+   "kbps_ratio_vs_shipped": 1.0,
+   "rtf_ratio_vs_shipped": 1.0
+  },
+  "slow/crf16": {
+   "psnr_db_vs_shipped": 1.167,
+   "ssim_vs_shipped": 0.001578,
+   "kbps_ratio_vs_shipped": 1.311,
+   "rtf_ratio_vs_shipped": 1.1
+  }
+ },
+ "regenerates": [
+  "engine/render.py — the ladder table in _encoder_args' docstring",
+  "tests/test_render.py:134 — the quality figures in the pinned-settings test"
+ ]
+}

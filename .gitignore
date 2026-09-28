@@ -68,6 +68,17 @@ corpus/wer/*/*
 !corpus/wer/runs/
 !corpus/wer/runs/*
 
+# Render bench scratch (tools/render_bench.py): the rendered deliverables and
+# the -crf 0 lossless reference are regenerable in minutes from a committed
+# source, and the lossless reference alone is ~300 MB for 240 frames of HD. The
+# run records under corpus/render/runs/ ARE the evidence and stay in: they
+# carry the source, the window, the exact filter strings, the encoder flags and
+# the host conditions beside the RTF, which is what makes a quoted figure
+# auditable without re-rendering it.
+corpus/render/*
+!corpus/render/runs/
+!corpus/render/runs/*
+
 corpus/*_run/project/facebook/
 corpus/*_run/project/shorts/
 corpus/*_run/project/source/

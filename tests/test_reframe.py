@@ -531,6 +531,43 @@ def test_an_anamorphic_source_renders_to_a_genuinely_16_9_frame(tmp_path):
     )
 
 
+def test_the_landscape_frames_aspect_residue_stays_under_qas_tolerance():
+    """The landscape frame cannot be exactly 16:9 in pixel terms: 16:9 on an
+    even grid needs a height divisible by 9, and most sources are not, so the
+    even rounding leaves a residue. This pins the measured bound so a change
+    that widened it past ``engine.qa``'s 1% display-aspect tolerance fails here
+    rather than shipping a deliverable the pipeline's own QA then rejects.
+
+    Computed rather than rendered: the residue is a property of the rounding
+    alone, so every even source height is checked, not the few a render would
+    sample. The bound is 0.338% (worst case: a 148-line source ships 264x148,
+    a DAR of 1.7838), and tightening it to exactness is not free -- a 480-line
+    source would have to give up 12 lines to lose its 0.078% residue, so the
+    residue is bounded, not eliminated.
+    """
+    from engine.reframe import _even
+
+    worst = 0.0
+    where = None
+    for h in range(144, 2161, 2):  # 144p is the lowest real delivery height
+        frame_w = _even(min(h * 16 / 9, 1920))
+        frame_h = _even(frame_w * 9 / 16)
+        residue = abs(frame_w / frame_h - 16 / 9) / (16 / 9)
+        if residue > worst:
+            worst, where = residue, (frame_w, frame_h)
+
+    assert worst < 0.01, (
+        f"the worst landscape aspect residue over real source heights is "
+        f"{worst:.4%} at {where[0]}x{where[1]}, past QA's 1% tolerance"
+    )
+    # The bound the docstring quotes, stated separately: if the rounding ever
+    # moves far enough to make the docstring's 0.338% a lie, this fires first.
+    assert worst < 0.0034, (
+        f"the docstring promises a worst residue of 0.338%; measured {worst:.4%} "
+        f"at {where[0]}x{where[1]} -- update both together"
+    )
+
+
 def test_a_4k_source_renders_to_exactly_1080x1920(tmp_path):
     """The defect this file exists for, measured on the deliverable: a 3840x2160
     source through the vertical reframe used to ship **1080x1918**. The crop at

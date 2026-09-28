@@ -1067,8 +1067,20 @@ def landscape_filter(video: Path, target: tuple[int, int] = (16, 9),
     add bars, and cropping is an editorial decision the pipeline is not
     entitled to make unsupervised -- on a talking-head source it takes heads
     off. Padding keeps every frame the source recorded and still delivers a
-    frame that measures exactly 16:9, which is the contract the render
-    promised. A wider-than-target source is letterboxed by the same rule.
+    frame at the target aspect, which is the contract the render promised.
+    A wider-than-target source is letterboxed by the same rule.
+
+    The frame is not *exactly* 16:9 in pixel terms: an exact 16:9 on an even
+    grid needs a height divisible by 9, which most sources do not have, so the
+    even rounding leaves a residue. Measured over every even source height from
+    144 to 2160, the worst residue is 0.338% (a 148-line source ships 264x148,
+    a DAR of 1.7838 rather than 1.7778). That is a third of the 1%
+    display-aspect tolerance ``engine.qa`` checks the deliverable against, and
+    buying the rest back would cost real resolution -- a 480-line source would
+    have to drop to 468 lines to be exact, losing 2.5% of its lines to correct
+    0.078%. The frame is therefore stated as at-aspect, not exact-aspect, and
+    the residue is bounded by ``tests/test_reframe.py`` rather than assumed
+    away.
 
     The content is scaled to fit and never enlarged: a 720x486 NTSC source
     becomes a 640x486 square-pixel picture inside an 864x486 frame, not an
@@ -1081,7 +1093,8 @@ def landscape_filter(video: Path, target: tuple[int, int] = (16, 9),
 
     # The largest frame of this aspect whose height does not exceed the
     # source's, capped at the delivery width. Height is derived from the
-    # rounded width so the two are exactly proportional.
+    # rounded width so the two stay at the target aspect to within the
+    # rounding residue documented above.
     frame_w = _even(min(h * tw / th, max_width))
     frame_h = _even(frame_w * th / tw)
 

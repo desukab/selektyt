@@ -177,43 +177,94 @@ def _has_audio(path: Path) -> bool:
 def _encoder_args() -> list[str]:
     """The x264 settings the deliverable is mastered with.
 
-    These were chosen by measurement, not by taste. The ladder below is scored
-    against a -crf 0 reference of the same filter chain, on real corpus footage
-    (the 1280x720, 29.97 fps pentagon briefing -- the profile the vertical path
-    actually targets), 240 frames through the tracked 406x722 crop:
+    These were chosen by measurement, not by taste. The ladder was scored against
+    a -crf 0 reference of the same filter chain, on real corpus footage (the
+    1280x720, 29.97 fps pentagon briefing), 240 frames per entry, in three
+    independent 8 s windows starting at 0, 300 and 600 s, for both orientations
+    the pipeline ships: the tracked 406x722 vertical crop and the full-frame
+    1280x720 landscape. ``corpus/render/runs/pentagon-240f-sweep.json`` and
+    ``pentagon-240f-16x9-sweep.json`` are the records.
 
-        preset      crf    kbps    SSIM     PSNR
-        veryfast     20    837.9  0.9991    40.54
-        medium       20    962.5  0.9994    41.92
-        slow         20    929.6  0.9994    41.93
-        slow         18   1211.9  0.9995    43.18
-        slow         16   1576.9  0.9996    44.43
+    Read the absolute columns as *window* properties, not encoder ones. The same
+    veryfast/crf20 entry scores 44.402 dB in one 9:16 window and 40.901 in
+    another -- a 3.5 dB swing from content alone, which is wider than the gap
+    between most of the entries being chosen between. A single-window table
+    presented as an encoder property is exactly what the paragraph this replaced
+    did, and its figures matched no committed record at all. Only the gap to the
+    shipped entry, and the ratio of bitrate and wall clock, are stable across
+    windows. The two orientations have their own ranges, because they encode
+    3.14x different pixel counts:
 
-    veryfast/crf20, the old setting, is the lowest-quality entry: 2.64 dB behind
-    slow/crf18, which is a real softness on a phone-held Short rather than a
-    chart artefact. It happens to be the cheapest entry too, so the move to
-    slow/crf18 is a deliberate quality purchase -- +2.64 dB for +44% bitrate and
-    +1.85 s of wall clock on 8 s of footage, tolerable on the Termux/ARM host the
-    pipeline also runs on. crf16 buys another +1.25 dB for another +30% bitrate,
-    past the point where the extra is worth carrying.
+        9:16, 406x722 (0.29 Mpx)
+        entry          dB vs shipped   bitrate ratio   RTF ratio
+        veryfast/crf20   -3.18 .. -2.42   0.644 .. 0.700   0.34 .. 0.36
+        medium/crf20     -1.43 .. -1.16   0.776 .. 0.804   0.69 .. 0.70
+        slow/crf20       -1.35 .. -1.15   0.761 .. 0.765   0.90 .. 0.92
+        slow/crf18            shipped          1.0              1.0
+        slow/crf16       +1.17 .. +1.40   1.298 .. 1.311   1.08 .. 1.11
 
-    Note that the resolution is *not* a lever here: a 9:16 crop of a 16:9 source
-    is 406 px wide at 720 tall by arithmetic. Pre-upscaling that to 1080x1920
-    before the encoder was measured to be genuinely *better* at a common display
-    size on this footage (PSNR 45.97 vs 43.43 dB, both compared at 1080x1920) --
-    but at 5219 kbps against 1212 kbps, 4.3x the deliverable for +2.5 dB. The
-    pipeline ships the source-preserving crop and lets the player do that upscale
-    for free; the encoder spend is where the same perceptual budget buys far
-    more. See ``engine.reframe.vertical_scale_filter`` -- the frame is never
-    enlarged. This is a cost decision rather than a free win, and it is recorded
-    here because the opposite was once believed from a synthetic bench source
-    that was later overwritten.
+        16:9, 1280x720 (0.92 Mpx)
+        entry          dB vs shipped   bitrate ratio   RTF ratio
+        veryfast/crf20   -3.76 .. -2.91   0.685 .. 0.719   0.27 .. 0.29
+        medium/crf20     -1.49 .. -1.32   0.818 .. 0.825   0.66 .. 0.72
+        slow/crf20       -1.37 .. -1.27   0.786 .. 0.792   0.89 .. 0.93
+        slow/crf18            shipped          1.0              1.0
+        slow/crf16       +1.24 .. +1.34   1.256 .. 1.276   1.07 .. 1.10
+
+    veryfast/crf20, the old setting, is the lowest-quality entry in both tables:
+    2.4-3.2 dB behind slow/crf18 at 9:16 and 2.9-3.8 dB at 16:9, which is a real
+    softness on a phone-held Short rather than a chart artefact. It is also the
+    cheapest entry in both, so the move to slow/crf18 is a deliberate quality
+    purchase -- roughly +2.8 dB for +40-45% bitrate, and +1.6-1.9 s of wall clock
+    on 8 s of 9:16 footage, tolerable on the Termux/ARM host the pipeline also
+    runs on. crf16 buys another 1.2-1.4 dB for another 25-30% bitrate, past the
+    point where the extra is worth carrying.
+
+    One entry in those tables is not like the others: medium/crf20 lands within
+    0.1 dB of slow/crf20 while costing roughly three quarters of its wall clock,
+    so the preset itself buys nothing at a fixed crf on this footage. That
+    suggests medium/crf18 could match the shipped quality at a lower render cost
+    -- but medium/crf18 has never been measured, and this docstring is not the
+    place to assert it. ``shipped_pair`` in the sweep records is what a follow-up
+    ladder run would need to re-score against.
+
+    The resolution is *not* a lever here: a 9:16 crop of a 16:9 source is 406 px
+    wide at 720 tall by arithmetic. Pre-upscaling that to 1080x1920 before the
+    encoder was measured to be genuinely *better* at that display size on this
+    footage (PSNR 50.101 vs 47.347 dB, both compared at 1080x1920 against the
+    same lossless reference) -- but at 4266 kbps against 932 kbps and 5.1x the
+    wall clock, for +2.75 dB. The pipeline ships the source-preserving crop and
+    lets the player do that upscale for free; the encoder spend above is where
+    the same perceptual budget buys far more.
+    ``corpus/render/runs/pentagon-240f-upscaled.json`` is the record. This is a
+    cost decision rather than a free win, and it is recorded here because the
+    opposite was once believed from a synthetic bench source that was later
+    overwritten.
     """
     # yuv420p is the only plan every player and every platform accepts. ffmpeg
     # picks it for most sources anyway, but a 4:2:2 or 4:4:4 master (common for
     # pro footage) would otherwise carry its chroma subsampling into an MP4
     # that half the decoders in the world refuse to open.
     return ["-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p"]
+
+
+def _subtitle_terms(ass: Path | None) -> list[str]:
+    """The ffmpeg filter terms that burn an ASS into the chain, or none.
+
+    The escaping is load-bearing and easy to get wrong, so it lives in one place
+    and is shared by the render and by the benchmark that records the filter the
+    render actually used: a record whose graph omits the subtitles a deliverable
+    carries is not reproducible from the record.
+    """
+    if not ass:
+        return []
+    safe = ass.as_posix().replace("'", "\\'")
+    # A Windows drive letter ("C:/...") puts a bare ":" in the filtergraph,
+    # which ffmpeg parses as the option separator and then fails with
+    # "Invalid argument". Escaping it as "\:" is the documented way to pass
+    # a literal colon inside a filter value.
+    safe = safe.replace(":", "\\:")
+    return [f"subtitles='{safe}'"]
 
 
 def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | None, vertical: bool, fps: float) -> None:
@@ -226,15 +277,7 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
         # 16:9, and nothing in the pipeline would ever notice.
         vf.append(landscape_filter(source))
     frames, span = _frame_count(start, end, fps)
-    sub: list[str] = []
-    if ass:
-        safe = ass.as_posix().replace("'", "\\'")
-        # A Windows drive letter ("C:/...") puts a bare ":" in the filtergraph,
-        # which ffmpeg parses as the option separator and then fails with
-        # "Invalid argument". Escaping it as "\:" is the documented way to pass
-        # a literal colon inside a filter value.
-        safe = safe.replace(":", "\\:")
-        sub.append(f"subtitles='{safe}'")
+    sub = _subtitle_terms(ass)
     if vertical:
         # The complete 9:16 reframe: a tracked crop, then a scale onto a frame
         # whose display ratio is 9:16 by construction. Scaling by width with an

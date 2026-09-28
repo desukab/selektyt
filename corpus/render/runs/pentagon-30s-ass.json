@@ -1,0 +1,105 @@
+{
+ "kind": "ship",
+ "encoder": [
+  "-preset",
+  "slow",
+  "-crf",
+  "18",
+  "-pix_fmt",
+  "yuv420p"
+ ],
+ "source": {
+  "path": "/home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4",
+  "width": 1280,
+  "height": 720,
+  "fps": 29.97002997002997,
+  "pix_fmt": "yuv420p",
+  "duration": 1013.846167,
+  "sar": "1:1",
+  "has_audio": true,
+  "size_bytes": 158163951
+ },
+ "conditions": {
+  "date": "2026-09-28",
+  "ffmpeg_version": "6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+  "cpu_count": 4,
+  "load_average": [
+   0.13,
+   0.21,
+   0.22
+  ],
+  "repo_commit": "50f062a"
+ },
+ "ass": "corpus/pentagon-esper-briefing_run/project/captions/01.ass",
+ "renders": [
+  {
+   "orientation": "16:9",
+   "vertical": false,
+   "start": 0.0,
+   "end": 30.0,
+   "frames": 900,
+   "content_seconds": 30.03,
+   "fps_requested": 30.0,
+   "repeats": 3,
+   "wall_seconds": [
+    24.89,
+    24.69,
+    24.78
+   ],
+   "best_wall_seconds": 24.69,
+   "rtf": 0.8221,
+   "median_rtf": 0.825,
+   "worst_rtf": 0.8288,
+   "spread": 1.008,
+   "span_requested_seconds": 30.0,
+   "span_emitted_seconds": 30.03,
+   "output": {
+    "width": 1280,
+    "height": 720,
+    "dar": "16:9",
+    "megapixels": 0.9216
+   },
+   "bitrate_kbps": 2890,
+   "audio_in_deliverable": true,
+   "filter": "scale=1280:720:flags=lanczos,pad=1280:720:(ow-iw)/2:(oh-ih)/2:black,setsar=1,subtitles='corpus/pentagon-esper-briefing_run/project/captions/01.ass'"
+  },
+  {
+   "orientation": "9:16",
+   "vertical": true,
+   "start": 0.0,
+   "end": 30.0,
+   "frames": 900,
+   "content_seconds": 30.03,
+   "fps_requested": 30.0,
+   "repeats": 3,
+   "wall_seconds": [
+    10.71,
+    10.82,
+    10.75
+   ],
+   "best_wall_seconds": 10.71,
+   "rtf": 0.3567,
+   "median_rtf": 0.3578,
+   "worst_rtf": 0.3605,
+   "spread": 1.01,
+   "span_requested_seconds": 30.0,
+   "span_emitted_seconds": 30.03,
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   },
+   "bitrate_kbps": 1166,
+   "audio_in_deliverable": true,
+   "filter": "crop=406:720:x='if(lt(t,2.222),203.9+(186.8-203.9)*(t-1.111)/1.111,if(lt(t,3.333),186.8+(72.0-186.8)*(t-2.222)/1.111,if(lt(t,4.444),72.0+(0.0-72.0)*(t-3.333)/1.111,if(lt(t,14.444),0.0+(0.0-0.0)*(t-4.444)/10.000,if(lt(t,15.556),0.0+(312.9-0.0)*(t-14.444)/1.111,if(lt(t,16.667),312.9+(625.8-312.9)*(t-15.556)/1.111,if(lt(t,17.778),625.8+(675.6-625.8)*(t-16.667)/1.111,if(lt(t,18.889),675.6+(712.7-675.6)*(t-17.778)/1.111,if(lt(t,25.556),712.7+(709.2-712.7)*(t-18.889)/6.667,if(lt(t,26.667),709.2+(724.2-709.2)*(t-25.556)/1.111,if(lt(t,27.778),724.2+(771.6-724.2)*(t-26.667)/1.111,if(lt(t,28.889),771.6+(813.1-771.6)*(t-27.778)/1.111,if(lt(t,30.000),813.1+(874.0-813.1)*(t-28.889)/1.111,874.0)))))))))))))':y=0,scale=406:722:flags=lanczos,subtitles='corpus/pentagon-esper-briefing_run/project/captions/01.ass'"
+  }
+ ],
+ "regenerates": [
+  "docs/BUSINESS_MODEL.md §1 — the 16:9 and 9:16 render RTF rows",
+  "docs/BUSINESS_MODEL.md §4 — the throughput model that multiplies them",
+  "docs/AI_EXECUTION_STATE.md — the entry dated 2026-09-28",
+  "docs/EVALUATION.md §6 — the render RTF cross-check rows",
+  "docs/TIME_SAVINGS.md §3 and §5 — the compute figures"
+ ]
+}

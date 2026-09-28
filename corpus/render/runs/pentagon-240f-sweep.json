@@ -1,0 +1,645 @@
+{
+ "kind": "ladder_sweep",
+ "source": {
+  "path": "/home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4",
+  "width": 1280,
+  "height": 720,
+  "fps": 29.97002997002997,
+  "pix_fmt": "yuv420p",
+  "duration": 1013.846167,
+  "sar": "1:1",
+  "has_audio": true,
+  "size_bytes": 158163951
+ },
+ "conditions": {
+  "date": "2026-09-28",
+  "ffmpeg_version": "6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+  "cpu_count": 4,
+  "load_average": [
+   3.87,
+   1.21,
+   0.55
+  ],
+  "repo_commit": "50f062a"
+ },
+ "starts": [
+  0.0,
+  300.0,
+  600.0
+ ],
+ "filter": "crop=406:720:x='if(lt(t,1.778),218.7+(215.2-218.7)*(t-0.889)/0.889,if(lt(t,2.074),215.2+(201.6-215.2)*(t-1.778)/0.296,if(lt(t,2.370),201.6+(178.8-201.6)*(t-2.074)/0.296,if(lt(t,2.667),178.8+(147.2-178.8)*(t-2.370)/0.296,if(lt(t,2.963),147.2+(117.0-147.2)*(t-2.667)/0.296,if(lt(t,3.259),117.0+(72.2-117.0)*(t-2.963)/0.296,if(lt(t,3.556),72.2+(43.3-72.2)*(t-3.259)/0.296,if(lt(t,3.852),43.3+(29.6-43.3)*(t-3.556)/0.296,if(lt(t,4.148),29.6+(4.2-29.6)*(t-3.852)/0.296,if(lt(t,7.407),4.2+(0.0-4.2)*(t-4.148)/3.259,if(lt(t,7.704),0.0+(78.0-0.0)*(t-7.407)/0.296,if(lt(t,8.000),78.0+(78.0-78.0)*(t-7.704)/0.296,78.04202651977539))))))))))))':y=0,scale=406:722:flags=lanczos",
+ "frames": 240,
+ "content_seconds": 8.0,
+ "orientation": "9:16",
+ "reference_encoder": [
+  "libx264",
+  "preset veryfast",
+  "crf 0 (lossless)"
+ ],
+ "shipped_pair": [
+  "slow",
+  "18"
+ ],
+ "rows": [
+  {
+   "preset": "medium",
+   "crf": 20,
+   "shipped": false,
+   "windows": 3,
+   "kbps": [
+    749,
+    1053
+   ],
+   "ssim": [
+    0.9897,
+    0.991872
+   ],
+   "psnr_db": [
+    42.327,
+    45.661
+   ],
+   "rtf": [
+    0.2129,
+    0.2433
+   ],
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "slow",
+   "crf": 16,
+   "shipped": false,
+   "windows": 3,
+   "kbps": [
+    1222,
+    1746
+   ],
+   "ssim": [
+    0.993267,
+    0.994789
+   ],
+   "psnr_db": [
+    45.135,
+    47.992
+   ],
+   "rtf": [
+    0.3289,
+    0.3895
+   ],
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "slow",
+   "crf": 18,
+   "shipped": true,
+   "windows": 3,
+   "kbps": [
+    932,
+    1345
+   ],
+   "ssim": [
+    0.991689,
+    0.993528
+   ],
+   "psnr_db": [
+    43.737,
+    46.825
+   ],
+   "rtf": [
+    0.3041,
+    0.3533
+   ],
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "slow",
+   "crf": 20,
+   "shipped": false,
+   "windows": 3,
+   "kbps": [
+    712,
+    1029
+   ],
+   "ssim": [
+    0.989799,
+    0.992012
+   ],
+   "psnr_db": [
+    42.39,
+    45.678
+   ],
+   "rtf": [
+    0.281,
+    0.3266
+   ],
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "veryfast",
+   "crf": 20,
+   "shipped": false,
+   "windows": 3,
+   "kbps": [
+    646,
+    942
+   ],
+   "ssim": [
+    0.987464,
+    0.988983
+   ],
+   "psnr_db": [
+    40.901,
+    44.402
+   ],
+   "rtf": [
+    0.1085,
+    0.1212
+   ],
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  }
+ ],
+ "quality_vs_cost": {
+  "medium/crf20": {
+   "psnr_db_vs_shipped": [
+    -1.427,
+    -1.164
+   ],
+   "kbps_ratio_vs_shipped": [
+    0.776,
+    0.804
+   ]
+  },
+  "slow/crf16": {
+   "psnr_db_vs_shipped": [
+    1.167,
+    1.398
+   ],
+   "kbps_ratio_vs_shipped": [
+    1.298,
+    1.311
+   ]
+  },
+  "slow/crf18": {
+   "psnr_db_vs_shipped": [
+    0.0,
+    0.0
+   ],
+   "kbps_ratio_vs_shipped": [
+    1.0,
+    1.0
+   ]
+  },
+  "slow/crf20": {
+   "psnr_db_vs_shipped": [
+    -1.347,
+    -1.147
+   ],
+   "kbps_ratio_vs_shipped": [
+    0.761,
+    0.765
+   ]
+  },
+  "veryfast/crf20": {
+   "psnr_db_vs_shipped": [
+    -3.176,
+    -2.423
+   ],
+   "kbps_ratio_vs_shipped": [
+    0.644,
+    0.7
+   ]
+  }
+ },
+ "per_window": [
+  {
+   "filter": "crop=406:720:x='if(lt(t,1.778),218.7+(215.2-218.7)*(t-0.889)/0.889,if(lt(t,2.074),215.2+(201.6-215.2)*(t-1.778)/0.296,if(lt(t,2.370),201.6+(178.8-201.6)*(t-2.074)/0.296,if(lt(t,2.667),178.8+(147.2-178.8)*(t-2.370)/0.296,if(lt(t,2.963),147.2+(117.0-147.2)*(t-2.667)/0.296,if(lt(t,3.259),117.0+(72.2-117.0)*(t-2.963)/0.296,if(lt(t,3.556),72.2+(43.3-72.2)*(t-3.259)/0.296,if(lt(t,3.852),43.3+(29.6-43.3)*(t-3.556)/0.296,if(lt(t,4.148),29.6+(4.2-29.6)*(t-3.852)/0.296,if(lt(t,7.407),4.2+(0.0-4.2)*(t-4.148)/3.259,if(lt(t,7.704),0.0+(78.0-0.0)*(t-7.407)/0.296,if(lt(t,8.000),78.0+(78.0-78.0)*(t-7.704)/0.296,78.04202651977539))))))))))))':y=0,scale=406:722:flags=lanczos",
+   "frames": 240,
+   "content_seconds": 8.0,
+   "orientation": "9:16",
+   "reference_encoder": [
+    "libx264",
+    "preset veryfast",
+    "crf 0 (lossless)"
+   ],
+   "shipped_pair": [
+    "slow",
+    "18"
+   ],
+   "rows": [
+    {
+     "preset": "veryfast",
+     "crf": 20,
+     "shipped": false,
+     "ssim": 0.987464,
+     "psnr_db": 44.402,
+     "psnr_infinite": false,
+     "kbps": 646,
+     "wall_seconds": 0.97,
+     "rtf": 0.1212,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "medium",
+     "crf": 20,
+     "shipped": false,
+     "ssim": 0.9897,
+     "psnr_db": 45.661,
+     "psnr_infinite": false,
+     "kbps": 749,
+     "wall_seconds": 1.934,
+     "rtf": 0.2417,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 20,
+     "shipped": false,
+     "ssim": 0.989799,
+     "psnr_db": 45.678,
+     "psnr_infinite": false,
+     "kbps": 712,
+     "wall_seconds": 2.522,
+     "rtf": 0.3153,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 18,
+     "shipped": true,
+     "ssim": 0.991689,
+     "psnr_db": 46.825,
+     "psnr_infinite": false,
+     "kbps": 932,
+     "wall_seconds": 2.812,
+     "rtf": 0.3515,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 16,
+     "shipped": false,
+     "ssim": 0.993267,
+     "psnr_db": 47.992,
+     "psnr_infinite": false,
+     "kbps": 1222,
+     "wall_seconds": 3.116,
+     "rtf": 0.3895,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    }
+   ],
+   "quality_vs_cost": {
+    "veryfast/crf20": {
+     "psnr_db_vs_shipped": -2.423,
+     "ssim_vs_shipped": -0.004225,
+     "kbps_ratio_vs_shipped": 0.693,
+     "rtf_ratio_vs_shipped": 0.345
+    },
+    "medium/crf20": {
+     "psnr_db_vs_shipped": -1.164,
+     "ssim_vs_shipped": -0.001989,
+     "kbps_ratio_vs_shipped": 0.804,
+     "rtf_ratio_vs_shipped": 0.688
+    },
+    "slow/crf20": {
+     "psnr_db_vs_shipped": -1.147,
+     "ssim_vs_shipped": -0.00189,
+     "kbps_ratio_vs_shipped": 0.764,
+     "rtf_ratio_vs_shipped": 0.897
+    },
+    "slow/crf18": {
+     "psnr_db_vs_shipped": 0.0,
+     "ssim_vs_shipped": 0.0,
+     "kbps_ratio_vs_shipped": 1.0,
+     "rtf_ratio_vs_shipped": 1.0
+    },
+    "slow/crf16": {
+     "psnr_db_vs_shipped": 1.167,
+     "ssim_vs_shipped": 0.001578,
+     "kbps_ratio_vs_shipped": 1.311,
+     "rtf_ratio_vs_shipped": 1.108
+    }
+   }
+  },
+  {
+   "filter": "crop=406:720:x='if(lt(t,0.296),470.0+(431.2-470.0)*(t-0.000)/0.296,if(lt(t,0.593),431.2+(393.7-431.2)*(t-0.296)/0.296,if(lt(t,0.889),393.7+(402.4-393.7)*(t-0.593)/0.296,if(lt(t,1.481),402.4+(402.4-402.4)*(t-0.889)/0.593,if(lt(t,1.778),402.4+(414.7-402.4)*(t-1.481)/0.296,if(lt(t,2.074),414.7+(431.8-414.7)*(t-1.778)/0.296,if(lt(t,2.370),431.8+(436.8-431.8)*(t-2.074)/0.296,if(lt(t,2.667),436.8+(440.0-436.8)*(t-2.370)/0.296,if(lt(t,2.963),440.0+(443.0-440.0)*(t-2.667)/0.296,if(lt(t,3.259),443.0+(446.9-443.0)*(t-2.963)/0.296,if(lt(t,3.556),446.9+(454.9-446.9)*(t-3.259)/0.296,if(lt(t,4.148),454.9+(459.4-454.9)*(t-3.556)/0.593,if(lt(t,4.444),459.4+(462.0-459.4)*(t-4.148)/0.296,if(lt(t,6.222),462.0+(465.4-462.0)*(t-4.444)/1.778,if(lt(t,6.519),465.4+(454.9-465.4)*(t-6.222)/0.296,if(lt(t,6.815),454.9+(446.1-454.9)*(t-6.519)/0.296,if(lt(t,7.111),446.1+(440.7-446.1)*(t-6.815)/0.296,if(lt(t,7.407),440.7+(437.1-440.7)*(t-7.111)/0.296,if(lt(t,7.704),437.1+(432.5-437.1)*(t-7.407)/0.296,if(lt(t,8.000),432.5+(420.4-432.5)*(t-7.704)/0.296,420.3721008300781))))))))))))))))))))':y=0,scale=406:722:flags=lanczos",
+   "frames": 240,
+   "content_seconds": 8.0,
+   "orientation": "9:16",
+   "reference_encoder": [
+    "libx264",
+    "preset veryfast",
+    "crf 0 (lossless)"
+   ],
+   "shipped_pair": [
+    "slow",
+    "18"
+   ],
+   "rows": [
+    {
+     "preset": "veryfast",
+     "crf": 20,
+     "shipped": false,
+     "ssim": 0.987773,
+     "psnr_db": 40.901,
+     "psnr_infinite": false,
+     "kbps": 942,
+     "wall_seconds": 0.956,
+     "rtf": 0.1194,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "medium",
+     "crf": 20,
+     "shipped": false,
+     "ssim": 0.990444,
+     "psnr_db": 42.327,
+     "psnr_infinite": false,
+     "kbps": 1053,
+     "wall_seconds": 1.946,
+     "rtf": 0.2433,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 20,
+     "shipped": false,
+     "ssim": 0.990574,
+     "psnr_db": 42.39,
+     "psnr_infinite": false,
+     "kbps": 1029,
+     "wall_seconds": 2.613,
+     "rtf": 0.3266,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 18,
+     "shipped": true,
+     "ssim": 0.992319,
+     "psnr_db": 43.737,
+     "psnr_infinite": false,
+     "kbps": 1345,
+     "wall_seconds": 2.826,
+     "rtf": 0.3533,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 16,
+     "shipped": false,
+     "ssim": 0.993758,
+     "psnr_db": 45.135,
+     "psnr_infinite": false,
+     "kbps": 1746,
+     "wall_seconds": 3.084,
+     "rtf": 0.3855,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    }
+   ],
+   "quality_vs_cost": {
+    "veryfast/crf20": {
+     "psnr_db_vs_shipped": -2.836,
+     "ssim_vs_shipped": -0.004546,
+     "kbps_ratio_vs_shipped": 0.7,
+     "rtf_ratio_vs_shipped": 0.338
+    },
+    "medium/crf20": {
+     "psnr_db_vs_shipped": -1.41,
+     "ssim_vs_shipped": -0.001875,
+     "kbps_ratio_vs_shipped": 0.783,
+     "rtf_ratio_vs_shipped": 0.689
+    },
+    "slow/crf20": {
+     "psnr_db_vs_shipped": -1.347,
+     "ssim_vs_shipped": -0.001745,
+     "kbps_ratio_vs_shipped": 0.765,
+     "rtf_ratio_vs_shipped": 0.924
+    },
+    "slow/crf18": {
+     "psnr_db_vs_shipped": 0.0,
+     "ssim_vs_shipped": 0.0,
+     "kbps_ratio_vs_shipped": 1.0,
+     "rtf_ratio_vs_shipped": 1.0
+    },
+    "slow/crf16": {
+     "psnr_db_vs_shipped": 1.398,
+     "ssim_vs_shipped": 0.001439,
+     "kbps_ratio_vs_shipped": 1.298,
+     "rtf_ratio_vs_shipped": 1.091
+    }
+   }
+  },
+  {
+   "filter": "crop=406:720:x='if(lt(t,0.296),421.8+(428.9-421.8)*(t-0.000)/0.296,if(lt(t,3.556),428.9+(425.0-428.9)*(t-0.296)/3.259,if(lt(t,3.852),425.0+(418.2-425.0)*(t-3.556)/0.296,if(lt(t,8.000),418.2+(415.0-418.2)*(t-3.852)/4.148,415.01436614990234))))':y=0,scale=406:722:flags=lanczos",
+   "frames": 240,
+   "content_seconds": 8.0,
+   "orientation": "9:16",
+   "reference_encoder": [
+    "libx264",
+    "preset veryfast",
+    "crf 0 (lossless)"
+   ],
+   "shipped_pair": [
+    "slow",
+    "18"
+   ],
+   "rows": [
+    {
+     "preset": "veryfast",
+     "crf": 20,
+     "shipped": false,
+     "ssim": 0.988983,
+     "psnr_db": 41.289,
+     "psnr_infinite": false,
+     "kbps": 678,
+     "wall_seconds": 0.868,
+     "rtf": 0.1085,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "medium",
+     "crf": 20,
+     "shipped": false,
+     "ssim": 0.991872,
+     "psnr_db": 43.038,
+     "psnr_infinite": false,
+     "kbps": 817,
+     "wall_seconds": 1.703,
+     "rtf": 0.2129,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 20,
+     "shipped": false,
+     "ssim": 0.992012,
+     "psnr_db": 43.131,
+     "psnr_infinite": false,
+     "kbps": 801,
+     "wall_seconds": 2.248,
+     "rtf": 0.281,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 18,
+     "shipped": true,
+     "ssim": 0.993528,
+     "psnr_db": 44.465,
+     "psnr_infinite": false,
+     "kbps": 1053,
+     "wall_seconds": 2.433,
+     "rtf": 0.3041,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    },
+    {
+     "preset": "slow",
+     "crf": 16,
+     "shipped": false,
+     "ssim": 0.994789,
+     "psnr_db": 45.84,
+     "psnr_infinite": false,
+     "kbps": 1372,
+     "wall_seconds": 2.631,
+     "rtf": 0.3289,
+     "output": {
+      "width": 406,
+      "height": 722,
+      "dar": "203:360",
+      "megapixels": 0.2931
+     }
+    }
+   ],
+   "quality_vs_cost": {
+    "veryfast/crf20": {
+     "psnr_db_vs_shipped": -3.176,
+     "ssim_vs_shipped": -0.004545,
+     "kbps_ratio_vs_shipped": 0.644,
+     "rtf_ratio_vs_shipped": 0.357
+    },
+    "medium/crf20": {
+     "psnr_db_vs_shipped": -1.427,
+     "ssim_vs_shipped": -0.001656,
+     "kbps_ratio_vs_shipped": 0.776,
+     "rtf_ratio_vs_shipped": 0.7
+    },
+    "slow/crf20": {
+     "psnr_db_vs_shipped": -1.334,
+     "ssim_vs_shipped": -0.001516,
+     "kbps_ratio_vs_shipped": 0.761,
+     "rtf_ratio_vs_shipped": 0.924
+    },
+    "slow/crf18": {
+     "psnr_db_vs_shipped": 0.0,
+     "ssim_vs_shipped": 0.0,
+     "kbps_ratio_vs_shipped": 1.0,
+     "rtf_ratio_vs_shipped": 1.0
+    },
+    "slow/crf16": {
+     "psnr_db_vs_shipped": 1.375,
+     "ssim_vs_shipped": 0.001261,
+     "kbps_ratio_vs_shipped": 1.303,
+     "rtf_ratio_vs_shipped": 1.082
+    }
+   }
+  }
+ ],
+ "regenerates": [
+  "engine/render.py — the ladder table in _encoder_args' docstring",
+  "tests/test_render.py:134 — the quality figures in the pinned-settings test"
+ ]
+}

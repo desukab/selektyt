@@ -1,0 +1,94 @@
+{
+ "kind": "upscale",
+ "source": {
+  "path": "/home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4",
+  "width": 1280,
+  "height": 720,
+  "fps": 29.97002997002997,
+  "pix_fmt": "yuv420p",
+  "duration": 1013.846167,
+  "sar": "1:1",
+  "has_audio": true,
+  "size_bytes": 158163951
+ },
+ "conditions": {
+  "date": "2026-09-28",
+  "ffmpeg_version": "6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+  "cpu_count": 4,
+  "load_average": [
+   0.15,
+   0.16,
+   0.06
+  ],
+  "repo_commit": "50f062a"
+ },
+ "filter": "crop=406:720:x='if(lt(t,1.778),218.7+(215.2-218.7)*(t-0.889)/0.889,if(lt(t,2.074),215.2+(201.6-215.2)*(t-1.778)/0.296,if(lt(t,2.370),201.6+(178.8-201.6)*(t-2.074)/0.296,if(lt(t,2.667),178.8+(147.2-178.8)*(t-2.370)/0.296,if(lt(t,2.963),147.2+(117.0-147.2)*(t-2.667)/0.296,if(lt(t,3.259),117.0+(72.2-117.0)*(t-2.963)/0.296,if(lt(t,3.556),72.2+(43.3-72.2)*(t-3.259)/0.296,if(lt(t,3.852),43.3+(29.6-43.3)*(t-3.556)/0.296,if(lt(t,4.148),29.6+(4.2-29.6)*(t-3.852)/0.296,if(lt(t,7.407),4.2+(0.0-4.2)*(t-4.148)/3.259,if(lt(t,7.704),0.0+(78.0-0.0)*(t-7.407)/0.296,if(lt(t,8.000),78.0+(78.0-78.0)*(t-7.704)/0.296,78.04202651977539))))))))))))':y=0,scale=406:722:flags=lanczos",
+ "upscaled_filter": "crop=406:720:x='if(lt(t,1.778),218.7+(215.2-218.7)*(t-0.889)/0.889,if(lt(t,2.074),215.2+(201.6-215.2)*(t-1.778)/0.296,if(lt(t,2.370),201.6+(178.8-201.6)*(t-2.074)/0.296,if(lt(t,2.667),178.8+(147.2-178.8)*(t-2.370)/0.296,if(lt(t,2.963),147.2+(117.0-147.2)*(t-2.667)/0.296,if(lt(t,3.259),117.0+(72.2-117.0)*(t-2.963)/0.296,if(lt(t,3.556),72.2+(43.3-72.2)*(t-3.259)/0.296,if(lt(t,3.852),43.3+(29.6-43.3)*(t-3.556)/0.296,if(lt(t,4.148),29.6+(4.2-29.6)*(t-3.852)/0.296,if(lt(t,7.407),4.2+(0.0-4.2)*(t-4.148)/3.259,if(lt(t,7.704),0.0+(78.0-0.0)*(t-7.407)/0.296,if(lt(t,8.000),78.0+(78.0-78.0)*(t-7.704)/0.296,78.04202651977539))))))))))))':y=0,scale=406:722:flags=lanczos,scale=1080:1920:flags=lanczos",
+ "frames": 240,
+ "content_seconds": 8.0,
+ "orientation": "9:16",
+ "comparison_size": [
+  1080,
+  1920
+ ],
+ "reference_encoder": [
+  "libx264",
+  "preset veryfast",
+  "crf 0 (lossless)"
+ ],
+ "shipped_pair": [
+  "slow",
+  "18"
+ ],
+ "encoder": [
+  "-preset",
+  "slow",
+  "-crf",
+  "18",
+  "-pix_fmt",
+  "yuv420p"
+ ],
+ "rows": [
+  {
+   "variant": "source_preserving",
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   },
+   "kbps": 932,
+   "wall_seconds": 2.825,
+   "rtf": 0.3531,
+   "ssim": 0.991309,
+   "psnr_db": 47.347,
+   "psnr_infinite": false
+  },
+  {
+   "variant": "pre_upscaled",
+   "output": {
+    "width": 1080,
+    "height": 1920,
+    "dar": "203:360",
+    "megapixels": 2.0736
+   },
+   "kbps": 4266,
+   "wall_seconds": 14.384,
+   "rtf": 1.798,
+   "ssim": 0.994886,
+   "psnr_db": 50.101,
+   "psnr_infinite": false
+  }
+ ],
+ "quality_vs_cost": {
+  "pre_upscaled_vs_source_preserving": {
+   "psnr_db_delta": 2.754,
+   "ssim_delta": 0.003577,
+   "kbps_ratio": 4.577,
+   "rtf_ratio": 5.092
+  }
+ },
+ "regenerates": [
+  "engine/render.py \u2014 the pre-upscale paragraph in _encoder_args' docstring"
+ ]
+}

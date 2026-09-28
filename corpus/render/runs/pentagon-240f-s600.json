@@ -1,0 +1,161 @@
+{
+ "kind": "ladder",
+ "source": {
+  "path": "/home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4",
+  "width": 1280,
+  "height": 720,
+  "fps": 29.97002997002997,
+  "pix_fmt": "yuv420p",
+  "duration": 1013.846167,
+  "sar": "1:1",
+  "has_audio": true,
+  "size_bytes": 158163951
+ },
+ "conditions": {
+  "date": "2026-09-28",
+  "ffmpeg_version": "6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+  "cpu_count": 4,
+  "load_average": [
+   1.62,
+   0.61,
+   0.27
+  ],
+  "repo_commit": "50f062a"
+ },
+ "filter": "crop=406:720:x='if(lt(t,0.296),421.8+(428.9-421.8)*(t-0.000)/0.296,if(lt(t,3.556),428.9+(425.0-428.9)*(t-0.296)/3.259,if(lt(t,3.852),425.0+(418.2-425.0)*(t-3.556)/0.296,if(lt(t,8.000),418.2+(415.0-418.2)*(t-3.852)/4.148,415.01436614990234))))':y=0,scale=406:722:flags=lanczos",
+ "frames": 240,
+ "content_seconds": 8.0,
+ "orientation": "9:16",
+ "reference_encoder": [
+  "libx264",
+  "preset veryfast",
+  "crf 0 (lossless)"
+ ],
+ "shipped_pair": [
+  "slow",
+  "18"
+ ],
+ "rows": [
+  {
+   "preset": "veryfast",
+   "crf": 20,
+   "shipped": false,
+   "ssim": 0.988983,
+   "psnr_db": 41.289,
+   "psnr_infinite": false,
+   "kbps": 678,
+   "wall_seconds": 0.933,
+   "rtf": 0.1166,
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "medium",
+   "crf": 20,
+   "shipped": false,
+   "ssim": 0.991872,
+   "psnr_db": 43.038,
+   "psnr_infinite": false,
+   "kbps": 817,
+   "wall_seconds": 1.745,
+   "rtf": 0.2181,
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "slow",
+   "crf": 20,
+   "shipped": false,
+   "ssim": 0.992012,
+   "psnr_db": 43.131,
+   "psnr_infinite": false,
+   "kbps": 801,
+   "wall_seconds": 2.324,
+   "rtf": 0.2905,
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "slow",
+   "crf": 18,
+   "shipped": true,
+   "ssim": 0.993528,
+   "psnr_db": 44.465,
+   "psnr_infinite": false,
+   "kbps": 1053,
+   "wall_seconds": 2.715,
+   "rtf": 0.3394,
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  },
+  {
+   "preset": "slow",
+   "crf": 16,
+   "shipped": false,
+   "ssim": 0.994789,
+   "psnr_db": 45.84,
+   "psnr_infinite": false,
+   "kbps": 1372,
+   "wall_seconds": 2.645,
+   "rtf": 0.3307,
+   "output": {
+    "width": 406,
+    "height": 722,
+    "dar": "203:360",
+    "megapixels": 0.2931
+   }
+  }
+ ],
+ "quality_vs_cost": {
+  "veryfast/crf20": {
+   "psnr_db_vs_shipped": -3.176,
+   "ssim_vs_shipped": -0.004545,
+   "kbps_ratio_vs_shipped": 0.644,
+   "rtf_ratio_vs_shipped": 0.344
+  },
+  "medium/crf20": {
+   "psnr_db_vs_shipped": -1.427,
+   "ssim_vs_shipped": -0.001656,
+   "kbps_ratio_vs_shipped": 0.776,
+   "rtf_ratio_vs_shipped": 0.643
+  },
+  "slow/crf20": {
+   "psnr_db_vs_shipped": -1.334,
+   "ssim_vs_shipped": -0.001516,
+   "kbps_ratio_vs_shipped": 0.761,
+   "rtf_ratio_vs_shipped": 0.856
+  },
+  "slow/crf18": {
+   "psnr_db_vs_shipped": 0.0,
+   "ssim_vs_shipped": 0.0,
+   "kbps_ratio_vs_shipped": 1.0,
+   "rtf_ratio_vs_shipped": 1.0
+  },
+  "slow/crf16": {
+   "psnr_db_vs_shipped": 1.375,
+   "ssim_vs_shipped": 0.001261,
+   "kbps_ratio_vs_shipped": 1.303,
+   "rtf_ratio_vs_shipped": 0.974
+  }
+ },
+ "regenerates": [
+  "engine/render.py — the ladder table in _encoder_args' docstring",
+  "tests/test_render.py:134 — the quality figures in the pinned-settings test"
+ ]
+}
