@@ -179,6 +179,16 @@ def main() -> None:
              "transcript by hand.",
     )
     p.add_argument(
+        "--skip-language-check", action="store_true",
+        # argparse %-formats its help strings, so a literal percent has to be
+        # doubled or `selekyt --help` dies with "unsupported format character".
+        help="Ship a run whose language the transcription model measures as "
+             "unusable (WER above 100%%, i.e. more error words than the source "
+             "has words). Captions and cut points are all derived from that "
+             "transcript, so the deliverable is worthless on it; only pass "
+             "this after verifying the transcript by hand.",
+    )
+    p.add_argument(
         "--json", action="store_true",
         help="Print the final machine-readable report as JSON on stdout",
     )
@@ -229,6 +239,7 @@ def main() -> None:
         remove_filler=args.remove_filler,
         export_fcpxml=args.export_fcpxml,
         skip_coverage_check=args.skip_coverage_check,
+        skip_language_check=args.skip_language_check,
     )
     if args.json:
         report_path = project / "report.json"

@@ -277,6 +277,83 @@ every line below was true on this host at that point.
 
 ## Completed work
 
+### This session — the language a model cannot transcribe now stops the run, and the table that says so is auditable
+
+The gap map has carried the measurement for two sessions without acting on it:
+Telugu scores WER **151.08%** on `small` and **91.54%** on `medium` (0 and 1 of
+50 clips inside a 25% bar) where Polish scores 11.01% on that same `small`
+model. At 151% the transcript carries more error words than the reference has
+words, so every deliverable derived from it — captions, selection, cut points —
+inherits the wrongness, and the run reported success. Nothing else in the
+pipeline could see it: the coverage gate compares the transcript against the
+*audio*, so a dense Telugu source scores a high coverage ratio, well-formed text
+and a wrong one; the editorial gates read the transcript's text and cannot tell
+a fluent hallucination from a faithful one.
+
+`engine/language_fitness` is the one check that asks whether the *model* can do
+this *language*, and it asks a table measured offline rather than asking the
+thing under suspicion. It runs before the coverage gate — cheaper, and the
+question is more specific — and refuses above `WER_REFUSE = 1.0`. Three
+properties, each forced by a real record in the corpus:
+
+* a **2-clip** record (`nasa-c4-small`) scores English at WER 1.0000. That is a
+  reference corpus whose alignment failed, not a statement about English; loaded
+  naively it makes the most verified language in the table *unusable* — the
+  difference between a gate that helps and one that breaks on its first real
+  user. Records under `MIN_CLIP_COUNT = 10` cannot score.
+* a **beam-size sweep** (`c9-small-beam5`, 4.05% at beam 5) had taken the
+  en/small slot on filename order and made English look 20% worse than it is —
+  an optimistic-looking table built from a record answering a different
+  question. Records off `PRODUCTION_BEAM = 1` cannot score.
+* **absence is never a pass**: an unmeasured language, and a measured language
+  on an unmeasured model, both read `not_measured`, reported as a caveat and
+  never as `usable`. A gate that reports *usable* for every language it has
+  never heard of is the failure mode this module exists to remove.
+
+The bar, `WER_BAR = 0.25`, is a cut point in a measured empty interval rather
+than a calibration: seven languages are measured and nothing falls between
+Italian's 20.11% and Telugu-on-medium's 91.54% — a 4.5× gap with no data in it.
+Italian is the language the bar decides against, and that is stated rather than
+buried: at 20.11% WER and 4.53% CER its characters are mostly right where its
+words are not, which is why it lands on the usable side of a bar drawn on words.
+
+**Two things this work found about its own reasoning, both wrong as first
+written.** (1) `poor` (25–100% WER) warns rather than refuses, and the rationale
+was the comforting one — "at 13.59% WER the transcript is mostly right and an
+editor can work with it, and refusing would block every Romance and Slavic
+language." French at 13.59% is *below* the bar, i.e. `usable`, and every
+measured Romance and Slavic language is `usable` too. The band's only measured
+member is Telugu-on-medium at 91.54%, which is badly wrong and whose only
+measured alternative is *worse* (small, 151.08%) — so a refusal would name a
+fix the corpus does not have, and the rest of the band is unmeasured, so a
+second cut point inside it would be guessing where the data is absent. (2) A
+duplicate that lost the clip-count race was dropped with no audit trail — the
+exact "a loader that quietly drops the records that disagree with it" failure
+the module's own docstring claims to prevent. It now lands in a separate
+`superseded` list, because a re-run that *disagrees* with the measurement it
+replaces is the one record an auditor most needs to see. The two lists come out
+of one scan of the directory rather than a second pass, so a rule added in one
+place cannot be forgotten in the other.
+
+Pinned by `tests/test_language_fitness.py` (34 tests), including four
+pipeline-level tests that exercise the wiring rather than the arithmetic: the
+refusal reaches no selection or render; the bypass leaves the verdict and both
+audit lists in `report.json`; and the gate scores the model that **ran**
+(provenance) rather than the one requested, because a silent downgrade can move
+a language across the usable line. Every assertion was mutation-verified — 11
+mutations against the bar, both refuse lines, both loader rules, the duplicate
+resolver, the superseded lists, the alternatives ordering, `is_refusable`, and
+the pipeline's gate wiring; the one mutation that escaped the first pass
+(requested-vs-provenance model) is what made that fourth pipeline test necessary.
+
+**What this still cannot see**, stated as a limit rather than a caveat: WER is a
+property of the language-model pair, not of this file. A source in a
+well-measured language can still be transcribed wrong — heavy accent,
+crosstalk, music, a domain the references did not cover. The verdict is a prior;
+the coverage gate and the confidence gate are the checks that listen to *this*
+audio. They are complements, not substitutes, and this module deliberately does
+not try to do their jobs.
+
 ### This session — the encoder ladder was a table of single-window figures, and no figure in it had a committed record
 
 The previous entry measured what `slow`/crf18 costs. This one found the same

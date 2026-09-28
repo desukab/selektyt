@@ -20,6 +20,8 @@ from engine.content_pack import build_content_pack
 from engine.context_guard import validate
 from engine.corpus import build_corpus
 from engine.coverage import check as check_coverage
+from engine.language_fitness import fitness as language_fitness
+from engine.language_fitness import is_refusable as language_is_refusable
 from engine.edit_plan import retention_intervals, pacing_report, aggregate_pacing_report
 from engine.qa import write_report
 from engine.report import ReportBuilder
@@ -516,6 +518,7 @@ def run(
     remove_filler: bool = True,
     export_fcpxml: bool = False,
     skip_coverage_check: bool = False,
+    skip_language_check: bool = False,
 ) -> Path:
     # Reject unusable parameters before touching the network or the disk: a
     # bad --limit used to survive download + transcription and then surface as
@@ -738,6 +741,38 @@ def run(
             "Transcription produced no speech: the source has no audible "
             f"spoken content. {_no_speech_diagnosis(peak, unreadable)}"
         )
+
+    # Before comparing the transcript against the audio, ask a cheaper and more
+    # specific question of it: can the model that just ran transcribe this
+    # language at all? The coverage gate below catches a transcript that
+    # describes too little of the audio, but a dense source in a language the
+    # model cannot handle has high coverage, well-formed text and a wrong one —
+    # the corpus's Telugu source measures 151% WER on this model, so the output
+    # carries more error words than the reference has words. Every other audit
+    # reads the transcript's text and cannot tell a fluent hallucination from a
+    # faithful one, so this is the one check that consults a table measured
+    # offline instead of asking the suspect.
+    # The model that *ran* is the one to score, not the one requested: a silent
+    # downgrade to a smaller model can move a language across the usable line
+    # and the verdict has to follow the model that produced the words.
+    fit = language_fitness(detected or language, asr_provenance.get("model") or model)
+    if language_is_refusable(fit) and not skip_language_check:
+        raise RuntimeError(
+            f"Transcription is not usable on this language: {fit.detail} "
+            "Re-run with a model this language is measured on, or pass "
+            "--skip-language-check once you have verified the transcript by "
+            "hand — but verify it, because the captions and the cut points "
+            "are all derived from it."
+        )
+    # A `poor` verdict does not stop the run, and not for the comforting reason:
+    # the poor band (above the bar, at or below 100% WER) has one measured
+    # member — Telugu on medium, 91.54% — and its only measured alternative is
+    # worse, so a refusal would name a fix the corpus does not have. The rest of
+    # that band is unmeasured, and refusing inside it would be guessing where
+    # the data is absent. A `not_measured` verdict never stops it either —
+    # refusing on absence would block every language the table has not covered,
+    # which is most of them. Both are recorded below so neither can look like a
+    # pass.
 
     # The near-empty case: a transcript that is well-formed, non-empty and in
     # the right language yet describes a small fraction of audio that is
@@ -1136,6 +1171,15 @@ def run(
         # statement that the check could not measure anything, and recording
         # only the failures would make the silent case look like a pass.
         "coverage": coverage.as_dict(),
+        # Whether the model that ran is one that can transcribe the language it
+        # transcribed. Recorded on every run for the same reason the coverage
+        # verdict is: a `not_measured` is a statement that this language-model
+        # pair has never been scored against a reference corpus, and recording
+        # only failures would make the unmeasured case look like a pass.
+        # `excluded` names the WER records the loader refused, because a table
+        # that quietly drops the records that disagree with it can support any
+        # conclusion.
+        "language_fitness": fit.as_dict(),
     }
     # The audio section is always present: either the full provenance summary,
     # or an explicit `enabled: False` so a B2B consumer can distinguish

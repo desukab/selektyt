@@ -210,6 +210,22 @@ def test_python_m_selekyt_doctor_works():
     assert "SelekyT doctor" in proc.stdout
 
 
+@pytest.mark.skipif(
+    subprocess.run([sys.executable, "-c", "import selekyt"], capture_output=True).returncode != 0,
+    reason="package not importable in this interpreter",
+)
+def test_help_renders_every_flag():
+    """`--help` reaches argparse's %-formatting, so a literal percent in any help
+    string is a crash on the first thing a new user types.
+
+    Nothing else in the suite renders help, which is how a broken escape here
+    once shipped: the flag was unreachable from any test."""
+    proc = _run_module(["--help"])
+    assert proc.returncode == 0, proc.stderr
+    assert "--skip-language-check" in proc.stdout
+    assert "100%" in proc.stdout
+
+
 def test_python_m_selekyt_server_answers_ping(tmp_path):
     """`python -m selekyt --server` is a live JSON-RPC sidecar over stdio."""
     proc = subprocess.Popen(
