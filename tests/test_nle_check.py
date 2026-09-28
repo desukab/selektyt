@@ -117,6 +117,67 @@ def _audit(project: Path):
         sys.modules.pop("nle_check", None)
 
 
+def _build_project_outside_tree(root: Path,
+                                intervals: list[tuple[float, float]] | None = None
+                                ) -> tuple[Path, Path]:
+    """A project whose source media is *not* inside the project directory.
+
+    This is the shape of a local-file run: ``selekyt clip.mp4 --out run`` reads
+    the media where it lives rather than copying it in, so ``project/source/``
+    does not exist and the audit's first resolution route has nothing to glob.
+    Both the resolution fix and the sys.path fix below only fail on this shape —
+    with media inside the tree the glob finds it, and no fallback is exercised.
+    """
+    media = root / "library" / "movie.mov"
+    media.parent.mkdir(parents=True)
+    _write_media(media)
+    project = root / "project"
+    project.mkdir()
+    project.joinpath("timeline").mkdir()
+    project.joinpath("timeline", "01.edl").write_text(
+        _EDL.format(media=media, src_in="00:00:00:00", src_out="00:00:01:00")
+    )
+    project.joinpath("timeline", "01.fcpxml").write_text(
+        _FCPXML.format(media_uri="file://" + str(media.resolve()))
+    )
+    for preset in ("facebook", "shorts"):
+        project.joinpath(preset).mkdir()
+        _write_media(project / preset / "01.mp4")
+    project.joinpath("selections.json").write_text(
+        '[{"start": 0.0, "end": 1.0, "text": "a", "hook": "a", "payoff": "a"}]'
+    )
+    if intervals is not None:
+        project.joinpath("edit_plan.json").write_text(
+            json.dumps([{"index": 1, "source_start": intervals[0][0],
+                         "source_end": intervals[-1][1],
+                         "intervals": [list(iv) for iv in intervals],
+                         "edited_duration": sum(b - a for a, b in intervals),
+                         "removed_seconds": 0.0}])
+        )
+    return project, media
+
+
+def _audit_subprocess(project: Path, *, cwd: Path) -> str:
+    """Run the audit the way a user runs it: as a script, from ``cwd``.
+
+    Two regressions are only reproducible this way. A relative ``pipeline_state``
+    source key resolves against the interpreter's working directory, which an
+    in-process audit shares with the test; and the vendored FCPXML reader needs
+    the repo root on sys.path, which the test session has already added for an
+    unrelated module. Isolating both is what makes these tests fail before the
+    fix rather than passing vacuously.
+    """
+    proc = subprocess.run(
+        [sys.executable, str(TOOLS / "nle_check.py"), str(project)],
+        capture_output=True, text=True, cwd=str(cwd), timeout=300,
+        encoding="utf-8",
+    )
+    assert proc.returncode in (0, 1), (
+        f"the audit crashed rather than reporting findings: {proc.stderr}"
+    )
+    return proc.stdout
+
+
 @pytest.mark.skipif(subprocess.run(["which", "ffmpeg"]).returncode != 0,
                     reason="ffmpeg is needed to build the test media")
 def test_a_clean_project_passes(tmp_path):
@@ -180,6 +241,59 @@ def test_an_edl_media_path_is_resolved_against_the_timeline_not_the_audit(tmp_pa
         [f"{n}: {d}" for n, cok, d in findings]
     )
     assert media.is_file(), "the failure is the path base, not the media being gone"
+
+
+def test_a_run_that_recorded_a_relative_source_path_is_auditable(tmp_path, monkeypatch):
+    """Regression: the audit found the source media through the ``source`` key
+    the pipeline records in pipeline_state.json, and a local-file run stores the
+    path the way it was spelled on the command line. ``selekyt clip.mp4 --out
+    run`` leaves a bare filename there that resolves only from the directory the
+    run was started from — not from this tool's, and not from the project's — so
+    every fps-dependent check reported NOT RUN on a local run that itself
+    succeeded, and the frame grid those checks exist to verify was never
+    examined at all.
+
+    The audit now resolves the media from the FROM CLIP path the export itself
+    names, which is the path an NLE is asked to relink. Reproduced by invoking
+    the tool the way it is actually used — as a subprocess, from a directory the
+    recorded spelling does not resolve from, over a project whose media the
+    corpus fixture keeps outside the project tree the way a local run does.
+    """
+    project, media = _build_project_outside_tree(tmp_path, intervals=[(0.0, 1.0)])
+    # The recording a local run leaves behind: a bare filename, valid only
+    # relative to the directory the run was started in.
+    (project / "pipeline_state.json").write_text(
+        json.dumps({"source": media.name, "media_info": {}}), encoding="utf-8"
+    )
+    findings = _audit_subprocess(project, cwd=tmp_path)
+    assert "ALL CHECKS PASS" in findings, findings
+    assert "25.0000 fps" in findings
+    # The checks that were NOT RUN before this resolution existed are the ones
+    # that depend on the frame grid, and they must now carry measured verdicts.
+    for line in findings.splitlines():
+        if "timeline == facebook render" in line or "intervals == edit plan" in line:
+            assert "NOT RUN" not in line, line
+
+
+def test_the_vendored_fcpxml_reader_is_importable_from_any_directory(tmp_path):
+    """Regression: the independent FCPXML reader is vendored at the repo root
+    under third_party/, which is only on sys.path when the audit is run from the
+    repo root. Invoked as ``python tools/nle_check.py`` from anywhere else, the
+    import failed and the check reported the reader as "not installed" — while
+    the reader was present and the ``nle`` extra it told the user to install
+    already was. Every FCPXML was therefore validated only by this repo's own
+    emitter, which is the self-consistency this tool exists to break out of.
+
+    This is a subprocess test on purpose: an in-process audit inherits the repo
+    root from another test module's sys.path entry, so the import failure cannot
+    be reproduced without isolating the interpreter the way a user's invocation
+    isolates it.
+    """
+    project, _media = _build_project_outside_tree(tmp_path, intervals=[(0.0, 1.0)])
+    findings = _audit_subprocess(project, cwd=tmp_path)
+    line = next(l for l in findings.splitlines() if "fcpxml independent parse" in l)
+    assert "not installed" not in line, line
+    assert "ExternalReference" in line, line
 
 
 def test_an_overlapping_record_span_is_caught(tmp_path):

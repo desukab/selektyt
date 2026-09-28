@@ -3103,10 +3103,17 @@ In rough order of how much it would cost a user (fuller list in
    the SAR fix is provably correct *geometry*, but whether the wider crop keeps
    a moving subject well framed is not measured. A 9:16 cut from SD footage is
    sub-SD (308×486), a property of the input.
-12. **Frame-rate and codec coverage is narrow.** The corpus added 25, 30 and
-    29.97 fps. 23.976, 50 and 59.94 remain untested, and no 4K/H.265 source was
-    attempted — still the largest unquantified risk in `docs/BUSINESS_MODEL.md`
-    §9.
+12. **Frame-rate and codec coverage — closed, 2026-09-28.** 23.976, 50, 59.94 and
+    a real 3840×2160 H.265 transcode were built from corpus speech footage and
+    run through the full pipeline, and all four pass `tools/nle_check.py` with
+    canonical un-reduced `frameDuration` rationals and frame-grid agreement
+    within 0.81 frame. The measurement also found and fixed two defects in the
+    auditor that made it impossible to take (see the gap map's EXPORT row), and
+    it produced the 4K cost number §9 was missing: **36.5 s of perception for
+    27 s of clip, 9.0× the 720p cost, 79% of it frame decode** — 4K ingest works
+    and is correct but does not perceive in realtime on this CPU. What remains
+    open is not coverage but *viewing*: no render was judged by a person, and
+    the render-RTF half of the cost row is still an extrapolation.
 13. **The slide layout is solved and shipped, and the codec gap it exposed is
     closed.** The speaker-left / slide-right layout is no longer an unsolved
     geometry problem — the election now has a second content class and answers

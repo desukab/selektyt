@@ -47,6 +47,19 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+# The vendored FCPXML reader lives at the repo root under third_party/, which
+# is only importable when the repo root is on sys.path. Running this script as
+# `python tools/nle_check.py` puts tools/ there instead, so from any other
+# working directory the import fails and every FCPXML independent-parse check
+# reports the reader as "not installed" — while the reader is present and the
+# `nle` extra it tells the user to install already is. Resolving the root from
+# this file rather than from the invocation repairs that without a cwd
+# assumption, which is the same class of bug the FROM CLIP resolution below
+# exists to catch.
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 # The FCPXML 1.11 element vocabulary, from Apple's Final Cut Pro XML
 # reference. An element outside this set is either a typo or a version
 # mismatch, and an NLE will reject or silently drop it. This is a vocabulary
@@ -729,6 +742,30 @@ def check_project(project: Path) -> tuple[bool, list[tuple[str, bool, str]]]:
     # Fall back to it so a local run is auditable to the same standard; without
     # it every fps-dependent check reports "could not probe the source" on a
     # run that itself succeeded.
+    if source is None:
+        # The FROM CLIP paths the timelines themselves name, resolved the way an
+        # NLE resolves them. This is reached when the run's recorded source does
+        # not resolve from the audit's working directory, which is the usual case
+        # for a local-file run: the pipeline stores the path the way it was
+        # spelled on the command line, and `selekyt clip.mp4 --out run` leaves a
+        # bare filename in pipeline_state.json that is only valid relative to the
+        # directory the run was started from — not this tool's, and not the
+        # project's. Reading the path off the export instead is what makes the
+        # frame grid auditable on those runs, and it is the stronger source too:
+        # it is the path an NLE is actually asked to relink, so the rate is
+        # measured on the file the export points at rather than one that merely
+        # shares its name.
+        for edl in sorted(timeline.glob("*.edl")):
+            try:
+                text = edl.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            for p in _edl_media(text, edl):
+                if not p.startswith(("file://", "http://", "https://")) and Path(p).is_file():
+                    source = Path(p)
+                    break
+            if source is not None:
+                break
     if source is None:
         state_path = project / "pipeline_state.json"
         if state_path.is_file():
