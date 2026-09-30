@@ -80,6 +80,11 @@ def join_words(words: list[Word]) -> str:
     ``"This is about the 1 ,024"`` while the transcript they caption reads
     ``"1,024"``. A caption track that disagrees with its own transcript is not
     a cosmetic defect — it is the deliverable being wrong.
+
+    ``words`` may be any sequence of objects carrying a ``text`` attribute:
+    ``Word`` and ``timeline_captions.TimelineWord`` both meet that, and both
+    are joined by the same rule so a per-candidate cue and a timeline cue cut
+    from the same speech render identical text.
     """
     parts: list[str] = []
     for w in words:

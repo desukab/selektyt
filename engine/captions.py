@@ -109,25 +109,38 @@ _TAGS = re.compile(r"\{[^}]*\}")
 
 
 def _karaoke_text(words: list[Word], emphasis: set[int]) -> str:
-    """Render word timings with ASS karaoke tags and subtle emphasis."""
+    """Render word timings with ASS karaoke tags and subtle emphasis.
+
+    The spacing rule is :func:`engine.edit_plan.join_words` applied to the raw
+    tokens: faster-whisper emits ``' is'`` rather than ``'is'``, and that
+    leading space is the separator, while ``'-lived'`` and ``',024'`` carry no
+    leading space and must glue onto the token before them. ``join_words``
+    emits the raw token, so this must too -- escaping it, never stripping it.
+
+    Stripping before deciding re-split exactly what ``align_span`` repaired:
+    the separator test ``re.match(r'\\w', raw)`` fails on the leading space of
+    ``' is'``, no separator was emitted, and the strip then destroyed the
+    gluing space the token already carried. The burned-in ASS read
+    ``Thisisabout`` while the SRT beside it, which goes through ``join_words``,
+    read ``This is about`` -- two deliverables of the same clip disagreeing.
+    """
     out: list[str] = []
-    prev_raw = ""
     for idx, word in enumerate(words):
         duration_cs = max(1, int(round((word.end - word.start) * 100)))
-        # The spacing decision is made on the raw token, where whisper's
-        # leading space still carries the gluing ('1' + ',024' -> '1,024').
-        # Only the visible text is escaped; stripping before deciding would
-        # destroy that space and re-split the number.
         raw = word.text
         if not raw.strip():
             continue
-        if out and not prev_raw[-1:].isspace() and re.match(r"\w", raw):
+        if not out:
+            # ``join_words`` collapses whitespace at the join, so a leading
+            # space on the first emitted token does not survive it. Match that
+            # here or the cue carries an invisible indent libass honours.
+            raw = raw.lstrip()
+        elif not out[-1].endswith(" ") and re.match(r"\w", raw):
             out.append(" ")
-        text = _escape(raw.strip())
+        text = _escape(raw)
         if idx in emphasis:
             text = r"{\c&H00D7FF&\b1}" + text + r"{\c&HFFFFFF&\b0}"
         out.append(rf"{{\k{duration_cs}}}{text}")
-        prev_raw = raw
     return "".join(out)
 
 

@@ -94,20 +94,29 @@ def test_srt_and_ass_cues_match_one_for_one(tmp_path):
 
 
 def _number_and_hyphen_words() -> list[Word]:
-    """Tokens as faster-whisper actually emits them.
+    """Tokens as faster-whisper actually emits them, raw and unstripped.
 
-    A four-digit number comes apart as ``'1'`` and ``'',024'``, and a hyphenated
+    A four-digit number comes apart as ``'1'`` and ``',024'``, and a hyphenated
     word as ``'short'`` and ``'-lived'``. The leading space is load-bearing: it
-    is what makes the pieces glue back into ``1,024`` and ``short-lived``.
+    is what makes the pieces glue back into ``1,024`` and ``short-lived``, and
+    the fragment tokens carry no space at all. ``providers/whisper.py`` stores
+    ``w.word`` verbatim and nothing downstream strips it, so this is the shape
+    the caption writers actually meet.
+
+    These tokens were previously pre-stripped while the docstring claimed
+    otherwise, which is why this suite passed on a defect the real run shipped:
+    the karaoke emitter's separator test sees the leading space, the fixture
+    had none, and the burned-in ASS read ``Thisisabout`` while the SRT beside
+    it read ``This is about``.
     """
     return [
-        Word("this", 0.0, 0.3),
-        Word("is", 0.3, 0.6),
-        Word("about", 0.6, 0.9),
-        Word("the", 0.9, 1.2),
+        Word("This", 0.0, 0.3),
+        Word(" is", 0.3, 0.6),
+        Word(" about", 0.6, 0.9),
+        Word(" the", 0.9, 1.2),
         Word("1", 1.2, 1.5),
         Word(",024", 1.5, 1.8),
-        Word("pixels", 1.8, 2.1),
+        Word(" pixels", 1.8, 2.1),
         Word("short", 2.1, 2.4),
         Word("-lived", 2.4, 2.7),
     ]
@@ -159,6 +168,42 @@ def test_karaoke_keeps_glued_tokens_adjacent():
     assert "short-lived" in visible, visible
     assert "1 ,024" not in visible
     assert "short -lived" not in visible
+
+
+def test_karaoke_and_srt_agree_on_the_same_words(tmp_path):
+    """The burned-in track and the file beside it must read identically.
+
+    The karaoke emitter strips its tokens and decided the separator on the raw
+    text, so a whisper token's leading space failed ``re.match(r'\\w', raw)``,
+    no separator was emitted, and the strip destroyed the gluing space the
+    token already carried. The burned-in ASS read ``Thisisabout`` while the SRT
+    for the same candidate read ``This is about`` -- two deliverables of one
+    clip disagreeing with each other, and every existing test passed because
+    the shared fixture had pre-stripped the tokens its docstring called raw.
+    """
+    from engine.captions import _karaoke_text, ass_for_candidate, srt_for_candidate
+    from engine.edit_plan import join_words
+
+    words = _number_and_hyphen_words()
+    c = _candidate(words)
+
+    srt = srt_for_candidate(c, tmp_path / "agree.srt")
+    ass = ass_for_candidate(c, tmp_path / "agree.ass")
+
+    srt_body = srt.read_text(encoding="utf-8")
+    ass_visible = re.sub(r"\{\\[^}]*\}", "", ass.read_text(encoding="utf-8"))
+
+    # The visible ASS text is the join of the same words the SRT carries, and
+    # neither may re-split what ``align_span`` repaired.
+    assert "This is about" in ass_visible, ass_visible
+    assert "This is about" in srt_body, srt_body
+    assert "1,024" in ass_visible and "1,024" in srt_body
+    assert "short-lived" in ass_visible and "short-lived" in srt_body
+    assert "Thisisabout" not in ass_visible, ass_visible
+    assert "1 ,024" not in ass_visible and "1 ,024" not in srt_body
+
+    # And the karaoke builder itself agrees with the canonical joiner.
+    assert re.sub(r"\{[^}]*\}", "", _karaoke_text(words, set())) == join_words(words)
 
 
 def test_srt_handles_missing_word_timestamps(tmp_path):

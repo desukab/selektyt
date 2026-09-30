@@ -50,6 +50,7 @@ from __future__ import annotations
 import bisect
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -57,9 +58,11 @@ from engine import timecode
 
 # Shared with engine/captions.py so both caption writers agree on emphasis and
 # on how wide a Telugu/Devanagari glyph is.
-from engine.captions import caption_geometry, caption_presets, preset_for
+from engine.captions import (caption_geometry, caption_presets, preset_for,
+                             _karaoke_text)
 from engine.caption_director import (_emphasis, _width, max_line_width_for,
                                      style_name)
+from engine.edit_plan import join_words
 from engine.timeline import Clip, Timeline, format_smpte
 from models.core import Word
 
@@ -301,6 +304,30 @@ def timeline_words(
 # ------------------------------------------------------------------ grouping
 
 
+def _glued_units(words: list[TimelineWord]) -> list[list[TimelineWord]]:
+    """Group raw tokens into the units that must never be split across a line.
+
+    ``join_words`` puts no separator before a token that does not start a word
+    — ``'1'`` + ``',024'`` and ``'short'`` + ``'-lived'`` — so those tokens are
+    one *word* laid out as two. Wrapping between them splits a word in two on
+    the screen (``short`` / ``-lived`` on consecutive lines) while every check
+    that reads the joined text sees one word and reports the cue clean. The
+    units are therefore the runs between the points ``join_words`` would
+    separate, which is the only definition that cannot drift from the joiner.
+    """
+    units: list[list[TimelineWord]] = []
+    for w in words:
+        if not w.text.strip():
+            continue
+        if units and re.match(r"\w", w.text):
+            units.append([w])
+        else:
+            if not units:
+                units.append([])
+            units[-1].append(w)
+    return units
+
+
 def _wrap(words: list[TimelineWord], config: CaptionConfig) -> list[str] | None:
     """Wrap words into at most ``max_lines`` lines of at most the config's
     display columns.
@@ -308,32 +335,41 @@ def _wrap(words: list[TimelineWord], config: CaptionConfig) -> list[str] | None:
     Returns None when the words do not fit — the caller must then split the
     cue. Whitespace between words is not counted (it does not draw), which is
     why the measured width is per glyph.
+
+    Lines are joined with ``join_words``, never ``' '.join(stripped)``: the
+    raw tokens carry the gluing that keeps ``'1'`` + ``',024'`` as ``1,024``
+    and ``'short'`` + ``'-lived'`` as ``short-lived``, and stripping before
+    joining re-splits exactly that. The width is measured on the *joined* text
+    for the same reason — a stripped token measures one column too many when
+    it glues, so a budget measured on stripped text wraps early.
+
+    Wrapping operates on glued units, not raw tokens, so a word whisper split
+    across two tokens is never broken across a line.
     """
     # The budget is a width on this canvas for this preset, not a constant: a
     # timeline rendered narrower than 1080 has proportionally less safe area,
     # and a cue sized for the reference canvas would wrap on it.
     width = config.max_line_width or max_line_width_for(
         preset_for(), config.playres_x, config.margin_h)
-    lines: list[str] = []
-    current: list[str] = []
+    units = _glued_units(words)
+    lines: list[list[TimelineWord]] = []
+    current: list[TimelineWord] = []
     used = 0
-    for w in words:
-        token = w.text.strip()
-        if not token:
-            continue
-        add = _width(token) + (1 if current else 0)
-        if used + add > width:
+    for unit in units:
+        trial = [*current, *unit]
+        trial_width = _width(join_words(trial))
+        if trial_width > width and current:
             if len(lines) + 1 >= config.max_lines:
                 return None
-            lines.append(" ".join(current))
-            current = [token]
-            used = _width(token)
+            lines.append(current)
+            current = list(unit)
+            used = _width(join_words(current))
         else:
-            current.append(token)
-            used += add
+            current = trial
+            used = trial_width
     if current:
-        lines.append(" ".join(current))
-    return lines or None
+        lines.append(current)
+    return [join_words(line) for line in lines] or None
 
 
 def _ends_sentence(word: TimelineWord) -> bool:
@@ -456,24 +492,22 @@ def build_cues(
 def _force_wrap(words: list[TimelineWord], config: CaptionConfig) -> list[str]:
     """Last-resort wrap for a single unbreakable token longer than the line:
     emit one line per word so nothing is silently dropped."""
-    lines: list[str] = []
-    current: list[str] = []
+    lines: list[list[TimelineWord]] = []
+    current: list[TimelineWord] = []
     width = 0
-    for w in words:
-        token = w.text.strip()
-        if not token:
-            continue
-        add = _width(token) + (1 if current else 0)
-        if width + add > config.max_line_width and current:
-            lines.append(" ".join(current))
-            current = [token]
-            width = _width(token)
+    for unit in _glued_units(words):
+        trial = [*current, *unit]
+        trial_width = _width(join_words(trial))
+        if trial_width > config.max_line_width and current:
+            lines.append(current)
+            current = list(unit)
+            width = _width(join_words(current))
         else:
-            current.append(token)
-            width += add
+            current = trial
+            width = trial_width
     if current:
-        lines.append(" ".join(current))
-    return lines or [" "]
+        lines.append(current)
+    return [join_words(line) for line in lines] or [" "]
 
 
 # ------------------------------------------------------------------- writers
@@ -514,20 +548,47 @@ def _ass_presets() -> dict:
 def _ass_karaoke(cue: CaptionCue, config: CaptionConfig) -> str:
     """Word-timed karaoke text when timings are real, plain text when they
     are the documented approximation (karaoke on invented timings would be a
-    lie about where speech is)."""
+    lie about where speech is).
+
+    The karaoke itself is emitted by ``engine.captions._karaoke_text``: the
+    separator rule for whisper tokens lives in exactly one place, and a second
+    copy here would drift the way a second width table would — invisibly,
+    until the two writers disagree about whether ``'1'`` + ``',024'`` carries
+    a space.
+
+    The wrapped ``cue.lines`` are emitted with ``\\N`` so the *measured*
+    two-line layout is what burns, rather than handing libass one long line and
+    letting it re-wrap to its own metrics. Without that the SRT honoured the
+    width budget and line cap this module computed while the burned ASS broke
+    at different points entirely, and a cue this writer judged unbreakable was
+    broken anyway.
+    """
     if cue.approximate:
         return _escape_ass(cue.text)
-    raw = [Word(w.text, w.source_start, w.source_end) for w in cue.words]
-    emphasis = _emphasis(raw)
-    pieces: list[str] = []
     words = [w for w in cue.words if w.text.strip()]
-    for idx, w in enumerate(words):
-        duration_cs = max(1, int(round(w.duration * 100)))
-        text = _escape_ass(w.text.strip())
-        if idx in emphasis:
-            text = r"{\c&H00D7FF&\b1}" + text + r"{\c&HFFFFFF&\b0}"
-        pieces.append(rf"{{\k{duration_cs}}}{text}")
-    return " ".join(pieces) if pieces else _escape_ass(cue.text)
+    if len(cue.lines) <= 1:
+        return _karaoke_text(_as_words(words), _emphasis(_as_words(words)))
+    # ``_wrap`` built each line from a contiguous run of words, so consuming
+    # the word list in order reproduces its split exactly. Peeling until the
+    # joined text matches the line is what copes with a line whose first token
+    # lost its leading space at the join.
+    out_lines: list[str] = []
+    rest = words
+    for line in cue.lines:
+        n = len(rest)
+        for i in range(1, len(rest) + 1):
+            if join_words(_as_words(rest[:i])) == line:
+                n = i
+                break
+        consumed, rest = rest[:n], rest[n:]
+        raw = _as_words(consumed)
+        out_lines.append(_karaoke_text(raw, _emphasis(raw)))
+    return r"\N".join(out_lines)
+
+
+def _as_words(timeline_words: list[TimelineWord]) -> list[Word]:
+    """``TimelineWord`` to ``Word`` for the emitters that key on the latter."""
+    return [Word(w.text, w.source_start, w.source_end) for w in timeline_words]
 
 
 def srt_for_timeline(

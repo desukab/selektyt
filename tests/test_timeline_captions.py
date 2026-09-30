@@ -282,9 +282,12 @@ def test_srt_and_ass_are_cue_for_cue_identical(tmp_path):
         # Same cue window, to the centisecond (ASS writes CS, SRT writes MS).
         assert abs(_cs_seconds(fields[1]) - _to_seconds(cue["st"])) < 0.011
         assert abs(_cs_seconds(fields[2]) - _to_seconds(cue["en"])) < 0.011
-        # Same text once the ASS override tags are stripped.
+        # Same text once the ASS override tags are stripped. ``\N`` is the ASS
+        # line break, so it is normalised like the SRT's newline: the burned
+        # track must break where this writer measured the break, not where
+        # libass re-wraps a single long line.
         srt_text = cue["text"].replace("\n", " ")
-        ass_text = re.sub(r"\{[^}]*\}", "", fields[9]).strip()
+        ass_text = re.sub(r"\{[^}]*\}", "", fields[9]).strip().replace(r"\N", " ")
         assert srt_text.split() == ass_text.split()
 
 
@@ -344,6 +347,97 @@ def test_ass_karaoke_is_absent_for_approximate_cues(tmp_path):
     parsed = _parse_ass(path)
     assert parsed["dialogue"]
     assert not any(r"{\k" in ln for ln in parsed["dialogue"])
+
+
+def _glued_transcript(timeline: Timeline) -> Transcript:
+    """Words as faster-whisper emits them: a number and a hyphenation split
+    across raw tokens whose leading space is the only glue.
+
+    ``'1'`` + ``',024'`` must read ``1,024`` and ``'short'`` + ``'-lived'``
+    must read ``short-lived``. The emitters used to strip each token and
+    space-join, which re-split both and shipped ``the 1 ,024 pixels were
+    short -lived`` -- the exact corruption ``engine.edit_plan.join_words``
+    exists to prevent, in the writer that never called it.
+    """
+    words = [
+        Word("the", 0.00, 0.20),
+        Word(" 1", 0.20, 0.40),
+        Word(",024", 0.40, 0.60),
+        Word(" pixels", 0.60, 0.80),
+        Word(" were", 0.80, 1.00),
+        Word("short", 1.00, 1.20),
+        Word("-lived", 1.20, 1.40),
+        Word(" but", 1.40, 1.60),
+        Word(" bright", 1.60, 1.80),
+    ]
+    return Transcript(source_key=timeline.clips[0].source.key,
+                      words=tuple(words))
+
+
+def test_timeline_captions_glue_split_numbers_and_hyphens(tmp_path):
+    """Both deliverables of the same cue must read ``1,024`` and
+    ``short-lived`` -- the SRT and the burned ASS agree with each other and
+    with the transcript."""
+    from engine.timeline_captions import ass_for_timeline
+
+    tl = english_timeline()
+    tr = [_glued_transcript(tl)]
+
+    srt = srt_for_timeline(tl, tr, tmp_path / "g.srt")
+    ass = ass_for_timeline(tl, tr, tmp_path / "g.ass")
+
+    srt_body = srt.read_text(encoding="utf-8")
+    ass_visible = re.sub(r"\{[^}]*\}", "",
+                         ass.read_text(encoding="utf-8")).replace(r"\N", " ")
+
+    for needle in ("1,024", "short-lived"):
+        assert needle in srt_body, f"SRT lost {needle!r}: {srt_body!r}"
+        assert needle in ass_visible, f"ASS lost {needle!r}: {ass_visible!r}"
+    for corruption in ("1 ,024", "short -lived"):
+        assert corruption not in srt_body, f"SRT re-split: {corruption!r}"
+        assert corruption not in ass_visible, f"ASS re-split: {corruption!r}"
+
+
+def test_ass_burns_the_measured_line_breaks(tmp_path):
+    """The burned track breaks where this writer measured the break.
+
+    ``_wrap`` returns the lines; the ASS used to ignore them and hand libass
+    one long line, so the burned cue re-wrapped to libass's own metrics and
+    could break a cue this writer had judged unbreakable. The ``\\N`` in the
+    dialogue is the measured layout being shipped instead.
+    """
+    from engine.timeline_captions import (CaptionConfig, _force_wrap, _wrap,
+                                          ass_for_timeline)
+
+    tl = english_timeline()
+    tr = [_transcript_for(tl, ENGLISH_WORDS)]
+    config = CaptionConfig()
+    words = timeline_words(tl, tr, config)
+    cues = build_cues(words, tl, config)
+    multi = [c for c in cues if len(c.lines) > 1]
+    if not multi:
+        pytest.skip("no cue wraps on this fixture; the check needs one")
+    path = ass_for_timeline(tl, tr, tmp_path / "w.ass")
+    body = path.read_text(encoding="utf-8")
+    # Every cue that wrapped carries its line break into the dialogue.
+    for cue in multi:
+        assert any(r"\N" in ln for ln in body.splitlines()
+                   if f",{_ass_ts_of(cue)}," in ln), (
+            f"cue {cue.index} wrapped to {cue.lines!r} but burned as one line")
+
+    # And the wrap functions themselves never split a glued token, even on a
+    # budget that forces breaks everywhere.
+    tight = CaptionConfig(max_line_width=8)
+    for words_for_cue in ([w for w in cue.words] for cue in cues):
+        wrapped = _wrap(words_for_cue, tight) or _force_wrap(words_for_cue, tight)
+        assert wrapped, "a cue that does not fit must be force-wrapped, not dropped"
+        joined = " ".join(wrapped)
+        assert " ,0" not in joined and " -" not in joined, joined
+
+
+def _ass_ts_of(cue) -> str:
+    from engine.timeline_captions import _ass_ts
+    return f"{_ass_ts(cue.start)},{_ass_ts(cue.end)}"
 
 
 def test_write_captions_emits_three_files(tmp_path):
