@@ -286,7 +286,17 @@ def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float 
     return _scan(require_terminal=False)
 
 
-def _score(s: Segment) -> tuple[float, float, float, float, str, str, float]:
+def _score(s: Segment) -> tuple[float, float, float, float, str, str, float, float, float]:
+    """Score a span, returning the opening strength as the last element.
+
+    The opening is the one signal the *selection* policy acts on
+    (``engine.selection.WEAK_OPENING``). Until it was returned here it existed
+    only as prose inside ``reason`` — "opens slowly, with no hook in the first
+    sentence" — and nothing in the pipeline acted on the measurement it came
+    from, so a clip the scorer had judged to have no opening could still win on
+    aggregate score. Returning it makes the measurement reachable by the layer
+    that needs it.
+    """
     text = s.text.strip(); low = text.lower()
     tokens = re.findall(r"\w+", low, flags=re.UNICODE)
     n = max(1, len(tokens)); duration = max(0.1, s.duration)
@@ -365,7 +375,7 @@ def _score(s: Segment) -> tuple[float, float, float, float, str, str, float]:
     reason = _explain(story_type, reason, opening, progression, payoff, density,
                       standalone, coherence, completeness, repetition, filler,
                       bp_kinds, audio_q if audio_q else None)
-    return editorial, virality, context, visual, story_type, reason, coherence, completeness
+    return editorial, virality, context, visual, story_type, reason, coherence, completeness, opening
 
 
 def _explain(story_type: str, detail: str, opening: float, progression: float,
@@ -478,7 +488,7 @@ def score_candidate(s: Segment) -> Candidate:
     start, end, text, aligned_words = align_span(
         s.start, s.end, s.words or [], s.text.strip())
     aligned = Segment(start, end, text, aligned_words, s.coherence, s.completeness)
-    editorial, virality, context, visual, story_type, reason, coherence, completeness = _score(aligned)
+    editorial, virality, context, visual, story_type, reason, coherence, completeness, opening = _score(aligned)
     hook, payoff = _clean_hook_payoff(text)
     words = aligned.words or []
     dead_air = _dead_air_fraction(words, aligned.duration) if words else None
@@ -501,7 +511,7 @@ def score_candidate(s: Segment) -> Candidate:
         start, end, text, story_type, hook, payoff,
         editorial, virality, context, confidence,
         reason + ".",
-        visual, words, coherence, getattr(s, "completeness", 1.0),
+        visual, words, coherence, getattr(s, "completeness", 1.0), opening,
     )
 
 
@@ -516,11 +526,36 @@ def _hook_similarity(a: str, b: str) -> float:
     return _similarity(a[:50], b[:50])
 
 
-def rank(thoughts: list[Segment], limit: int = 8) -> list[Candidate]:
+def rank(thoughts: list[Segment], limit: int = 8,
+         select_limit: int | None = None) -> list[Candidate]:
+    """Rank candidates, keeping a bench beyond the budget the caller selects from.
+
+    ``limit`` is this list's own length. The pipeline calls with ``limit * 3`` so
+    the near-misses survive into the report as the bench; ``select_limit`` is the
+    real budget, and it is what the diversity caps are measured against — not
+    derivable from ``limit``, so the caller names it. Defaults to ``limit`` for a
+    caller that has no separate budget.
+    """
     # 8s is a complete short-form beat; below that a clip cannot establish a
     # setup and payoff, so the floor sits there rather than at 12s.
     candidates = [score_candidate(s) for s in thoughts if 8 <= s.duration <= 55 and len(re.findall(r"\w+", s.text, re.UNICODE)) >= 20]
     candidates.sort(key=lambda c: (c.total_score, c.editorial_score, c.context_score, c.end-c.start), reverse=True)
+    # The diversity caps below are measured against the *selection* budget, not
+    # this list's own length. ``rank`` is called with ``limit * 3`` so the bench
+    # of near-misses survives into the report, and with the caps gated on
+    # ``len(chosen) < limit - 1`` the bar was 17 at the real budget — the
+    # topic-overlap and per-story-type caps never fired at all. On the
+    # 53-minute benchmark twelve candidates passed for six slots and four of the
+    # six came from one 134-second window.
+    #
+    # ``select_limit`` is that budget, passed explicitly because it is not
+    # derivable from ``limit`` here. The caps fire while the chosen set is still
+    # short of it, so they keep the budget slots free of topical and story-type
+    # duplication; past the budget they stop filtering, which leaves the policy
+    # layer (``engine.selection``) a bench of real alternatives to substitute
+    # against the set it is building. That layer carries the terms that only make
+    # sense against a chosen set — scene, content, arc — and needs the bench.
+    select_limit = max(1, limit if select_limit is None else select_limit)
     chosen: list[Candidate] = []; kinds: Counter[str] = Counter(); topic_tokens: Counter[str] = Counter()
     for c in candidates:
         # A candidate that cannot stand alone must not claim a window: it
@@ -538,8 +573,8 @@ def rank(thoughts: list[Segment], limit: int = 8) -> list[Candidate]:
         # documentary looks like a duplicate of every other one.
         c_tokens = Counter(_content_tokens(c.text))
         topic_overlap = sum((topic_tokens & c_tokens).values())
-        if topic_overlap > 12 and len(chosen) < limit - 1: continue
-        if kinds[c.story_type] >= 2 and len(chosen) < limit-1: continue
+        if topic_overlap > 12 and len(chosen) < select_limit: continue
+        if kinds[c.story_type] >= 2 and len(chosen) < select_limit: continue
         chosen.append(c)
         kinds[c.story_type] += 1
         topic_tokens.update(c_tokens)

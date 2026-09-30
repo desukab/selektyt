@@ -366,21 +366,71 @@ def _report_detail(report: dict, project: Any) -> dict[str, Any]:
     return {"artifacts": len(named)}
 
 
+def _apply_selection_policy(passed: list, *, limit: int, corpus=None) -> tuple:
+    """Choose the set, in the context of the set being chosen.
+
+    ``passed[:limit]`` — which this replaces — is a sort and a slice: every
+    candidate scored independently, the top N taken. Nothing in it knows the
+    selection it is building, so two strong clips 20 s apart in one scene both
+    win, and on the 53-minute benchmark four of six came from a single
+    134-second window while three complete arcs elsewhere were discarded.
+
+    ``engine.selection.select`` re-scores each survivor against the ones already
+    chosen and reports every move it makes. It invents no signal: it reads the
+    per-clip scores ``editorial`` measured and the corpus records the selector
+    never saw, and it is the corpus that is allowed to be absent — a transcript
+    too sparse to analyse degrades to the diversity-only terms rather than
+    failing the run.
+
+    Returns ``(selected, policy_report)`` so the editorial report can carry the
+    terms each selection was made under rather than presenting the six as a
+    verdict the editor cannot see the working for.
+    """
+    from engine.selection import select
+
+    report = select(passed, limit=limit, corpus=corpus)
+    return list(report.candidates), report
+
+
+def _policy_terms(report) -> dict[tuple, list[dict]]:
+    """The policy's notes, keyed so the editorial report can attach them.
+
+    The key is the clip's own identity — start, end, hook — rather than its slot
+    in ``selected``: the LLM pass below can replace a candidate object, and the
+    report must attribute each term to the clip the policy scored rather than to
+    whichever clip ends up in that position. A clip nothing fired for is simply
+    absent, which is itself information: it won on its own score.
+    """
+    return {
+        (round(s.candidate.start, 3), round(s.candidate.end, 3),
+         s.candidate.hook): [
+            {"term": n.term, "delta": round(n.delta, 4),
+             "against": n.other, "reason": n.reason}
+            for n in s.notes
+        ]
+        for s in report.selected
+    }
+
+
 def _select_detail(thoughts: list, ranked: list, gate_results: list[tuple],
-                   limit: int) -> dict[str, Any]:
-    """Editorial stage summary: the funnel the gate actually produced.
+                   limit: int, selected: list | None = None) -> dict[str, Any]:
+    """Editorial stage summary: the funnel the gate and the policy produced.
 
     Every number here is a count of a list the stage already built; none is
-    derived for display.
+    derived for display. ``selected`` is the selection the policy actually made,
+    which is not the same list as ``passed[:limit]`` once the policy re-orders
+    survivors against each other — reporting the pre-policy head of the list
+    would describe a selection the run did not make.
     """
     passed = [c for c, ok, _r in gate_results if ok]
+    kept = passed[:limit] if selected is None else selected
     out: dict[str, Any] = {
         "candidates": len(thoughts),
-        "selected": len(passed[:limit]),
+        "selected": len(kept),
     }
     if len(gate_results) - len(passed):
         out["rejected"] = len(gate_results) - len(passed)
-    bench = len(passed) - limit
+    bench = len(passed) - len(kept)
     if bench > 0:
         out["bench"] = bench
     return out
@@ -1037,8 +1087,35 @@ def run(
                 "deliverable shipping as a success."
             )
 
+    # The corpus is built *before* selection, not after. For the whole beta it
+    # ran at the end of this function — computed, written to JSON and discarded
+    # for the one purpose that would have used it, because the selector never
+    # saw it. On the 53-minute benchmark the corpus's threads held all three
+    # strong regions the final six ignored, and the selector picked four of six
+    # clips out of one 134-second window with no access to any of that evidence.
+    # Building it here costs 0.15 s at that length and is the change that makes
+    # the corpus evidence load-bearing in the edit rather than in a report.
+    #
+    # A failure to build is reported, not fatal: the selection layer reads a
+    # ``None`` corpus as absent and degrades to its diversity-only terms, so a
+    # transcript too sparse to analyse still selects — on weaker evidence, which
+    # the report says. ``None`` is also the signal ``engine.memory.populate.
+    # build`` reads as "the corpus stage failed upstream".
+    try:
+        corpus_report = build_corpus(
+            transcript,
+            duration=max((s.end for s in transcript), default=0.0),
+            language=detected or "unknown",
+            source=source,
+        )
+    except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+        print(f"[selektyt] corpus analysis unavailable: {exc}", file=sys.stderr)
+        _notify(progress, type="note", level="warn",
+                text=f"corpus analysis unavailable: {exc}")
+        corpus_report = None
+
     thoughts = make_thoughts(transcript)
-    ranked = rank(thoughts, limit=max(limit * 3, limit))
+    ranked = rank(thoughts, limit=max(limit * 3, limit), select_limit=limit)
     # Validate once, not twice: the previous form called validate() again when
     # building the rejected list, so a candidate's gate reason was computed two
     # expensive times and the two lists could disagree on a non-deterministic
@@ -1049,7 +1126,7 @@ def run(
     # breaking change on the contract.
     gate_results: list[tuple] = []
     with _stage(progress, "select", detail=lambda: _select_detail(
-        thoughts, ranked, gate_results, limit)):
+        thoughts, ranked, gate_results, limit, selected)):
         for i, c in enumerate(ranked, 1):
             outcome = validate(c)
             ok = bool(outcome[0])
@@ -1072,13 +1149,17 @@ def run(
         for _c, ok, reason in gate_results:
             if not ok:
                 rejection_reasons[reason] = rejection_reasons.get(reason, 0) + 1
-        selected = passed[:limit]
+        selection = _apply_selection_policy(passed, limit=limit,
+                                            corpus=corpus_report)
+        selected, policy_report = selection
         # The bench: candidates that passed every editorial gate and lost only to
-        # the --limit budget. Recording just the count left an editor staring at
-        # "5 more clips passed" with no way to see them, so the report now
-        # carries the candidates themselves and the count is a claim the
-        # artifact backs.
-        bench = [c.to_bench_dict() for c in passed[limit:]]
+        # the --limit budget — or to a selection-policy term, which is a different
+        # loss and is reported separately below. Recording just the count left an
+        # editor staring at "5 more clips passed" with no way to see them, so the
+        # report now carries the candidates themselves and the count is a claim
+        # the artifact backs.
+        shipped = {id(c) for c in selected}
+        bench = [c.to_bench_dict() for c in passed if id(c) not in shipped]
         if not selected:
             raise RuntimeError(
                 "No complete standalone stories were selected. "
@@ -1087,6 +1168,12 @@ def run(
                     coverage=coverage, coverage_bypassed=skip_coverage_check,
                 )
             )
+        # The policy's terms, keyed on the clip's stable identity rather than its
+        # position in ``selected``: ``attach_metadata`` runs below and an
+        # editor's report must attribute each term to the clip the policy
+        # actually scored, not to whichever clip happens to sit in that slot.
+        policy_terms = _policy_terms(policy_report)
+
         if ollama_url:
             selected = [attach_metadata(c, ollama_url) for c in selected]
         (project / "selections.json").write_text(
@@ -1096,7 +1183,7 @@ def run(
 
     editorial_report = []
     for c in selected:
-        editorial_report.append({
+        entry = {
             "start": round(c.start, 3),
             "end": round(c.end, 3),
             "text": c.text,
@@ -1111,7 +1198,16 @@ def run(
             "total_score": round(c.total_score, 3),
             "reason": c.reason,
             "llm_metadata": c.llm_metadata,
-        })
+        }
+        # Why the policy kept this clip, in its own terms: the scene it shared
+        # with another selection, the opening it was held back for, the arc it
+        # closes. Absent when the clip won on its own score and nothing fired,
+        # which is also worth seeing.
+        terms = policy_terms.get(
+            (round(c.start, 3), round(c.end, 3), c.hook))
+        if terms:
+            entry["policy"] = terms
+        editorial_report.append(entry)
     (project / "editorial_report.json").write_text(
         json.dumps(editorial_report, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -1134,26 +1230,24 @@ def run(
     corpus_path = project / "editorial_corpus.json"
     with _stage(progress, "corpus", detail=lambda: _corpus_detail(
             corpus_report, memory_path)):
-        # ``None`` is the signal ``engine.memory.populate.build`` reads as "the
-        # corpus stage failed upstream": the memory then records no topic-level
-        # evidence at all rather than half a corpus, and the summary below does
-        # not duplicate a diagnosis the except already printed.
-        corpus_report = None
-        try:
-            corpus_report = build_corpus(
-                transcript,
-                duration=max((s.end for s in transcript), default=0.0),
-                language=detected or "unknown",
-                source=source,
-            )
-            corpus_path.write_text(
-                json.dumps(corpus_report.to_dict(), ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-        except Exception as exc:  # noqa: BLE001 - reported, not swallowed
-            print(f"[selektyt] corpus analysis unavailable: {exc}", file=sys.stderr)
-            _notify(progress, type="note", level="warn",
-                    text=f"corpus analysis unavailable: {exc}")
+        # The corpus was built above, before selection, so the selection policy
+        # could read it; this stage writes the record the memory layer and the
+        # story view read. ``corpus_report`` is ``None`` when the build failed
+        # above, and that is the signal ``engine.memory.populate.build`` reads
+        # as "the corpus stage failed upstream" — the memory then records no
+        # topic-level evidence at all rather than half a corpus, and the summary
+        # below does not duplicate a diagnosis the except already printed.
+        if corpus_report is not None:
+            try:
+                corpus_path.write_text(
+                    json.dumps(corpus_report.to_dict(), ensure_ascii=False,
+                               indent=2),
+                    encoding="utf-8",
+                )
+            except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+                print(f"[selektyt] corpus write unavailable: {exc}", file=sys.stderr)
+                _notify(progress, type="note", level="warn",
+                        text=f"corpus write unavailable: {exc}")
 
         # Video memory: the speech regions and the corpus analysis above were both
         # already computed and both were about to be discarded. ``coverage`` holds

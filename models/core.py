@@ -40,6 +40,17 @@ class Candidate:
     coherence_score: float = 1.0
     completeness: float = 1.0
     llm_metadata: dict | None = None
+    # The measured opening strength ``engine.editorial._score`` computed, carried
+    # here so the selection policy can act on it. Until this field existed the
+    # opening signal reached the editor only as prose inside ``reason`` —
+    # "opens slowly, with no hook in the first sentence" — and nothing in the
+    # pipeline ever acted on the measurement it came from, so a clip the scorer
+    # had judged to have no opening could still rank on aggregate score. See
+    # ``engine.selection.WEAK_OPENING`` for the policy that reads it.
+    # 1.0 is the neutral default, not a measured value: an unparsed reason string
+    # means the scorer did not record one, and a selection policy must not
+    # penalise a clip for being built by an older caller.
+    opening_score: float = 1.0
 
     @property
     def total_score(self) -> float:

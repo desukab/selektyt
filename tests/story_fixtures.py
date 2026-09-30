@@ -60,6 +60,35 @@ FILLER_TEXT = "The {a} {b} opened for the season. The {c} reviewed the schedule.
 _PASSAGE_SPACING = 12.0
 _PASSAGE_SPAN = 8.0
 
+# The connective tissue for ``varied_transcript``. ``FILLER_TEXT`` reuses one
+# sentence shape throughout, which is what the corpus fixtures need — it forces
+# a hard topical seam — but it also makes every filler passage near-verbatim to
+# every other one, so ``editorial.rank``'s similarity cap collapses the whole
+# transcript onto two candidates and a selection test over it has nothing to
+# choose between.
+#
+# These shapes all draw on one nautical vocabulary, so a window spanning two
+# filler passages stays coherent (the coherence scorer sees the shared topic and
+# does not read it as a splice of two stories) while the passages themselves are
+# different enough in wording that the similarity cap does not take them for the
+# same clip. That is the realistic shape: an interview's connective passages
+# revisit one subject without repeating one sentence.
+_FILLER_WORDS = ["harbour", "lighthouse", "quay", "pier", "jetty", "marina",
+                 "tide", "channel", "beacon", "lock", "dock", "slipway",
+                 "buoy", "wharf", "vessel", "captain", "harbourmaster", "pilots"]
+_FILLER_SHAPES = [
+    "The {a} at the {b} reopened after the {c} survey.",
+    "A {c} at the {b} signalled the {a} to stand clear.",
+    "The harbourmaster logged the {a} and cleared the {b} for the {c} run.",
+    "Pilots guided the {a} past the {b} and into the {c} channel.",
+    "The {b} {a} was repainted before the {c} traffic resumed.",
+    "A spare {a} arrived at the {b} once the {c} had passed.",
+    "The {c} delayed the {a} but left the {b} schedule intact.",
+    "Quayside crews secured the {a} alongside the {b} at the {c} mark.",
+    "The {a}'s mooring at the {b} was checked twice that {c}.",
+    "Harbour {c} traffic was held while the {a} cleared the {b}.",
+]
+
 
 def passages(n_units: int) -> list[str]:
     """A transcript of question / digression / answer blocks.
@@ -115,6 +144,34 @@ def transcript(n_units: int) -> list[Segment]:
     segs: list[Segment] = []
     t = 0.0
     for text in passages(n_units):
+        segs.append(_seg(t, t + _PASSAGE_SPAN, text))
+        t += _PASSAGE_SPACING
+    return segs
+
+
+def varied_transcript(n_units: int) -> list[Segment]:
+    """The same question / digression / answer blocks, with distinct filler.
+
+    ``transcript`` reuses one filler sentence shape throughout, which forces the
+    hard topical seam the segmenter needs but makes every filler passage
+    near-identical to every other. ``editorial.rank``'s similarity cap then
+    keeps only two candidates out of hundreds, and a selection test built on it
+    has nothing to choose between — the selection layer would be tested against
+    a pool that is already collapsed.
+
+    This keeps the question/answer blocks ``transcript`` has (so the corpus
+    still yields threads and setup-payoff links) and only varies the connective
+    passages, so ``rank`` returns a bench that spans the source and a selection
+    over it has real alternatives to pick from.
+    """
+    segs: list[Segment] = []
+    t = 0.0
+    for i, text in enumerate(passages(n_units)):
+        if "opened for the season" in text:
+            w = _FILLER_WORDS
+            shape = _FILLER_SHAPES[(i // 2) % len(_FILLER_SHAPES)]
+            text = shape.format(
+                a=w[(i * 3) % len(w)], b=w[(i * 5) % len(w)], c=w[(i * 7) % len(w)])
         segs.append(_seg(t, t + _PASSAGE_SPAN, text))
         t += _PASSAGE_SPACING
     return segs
