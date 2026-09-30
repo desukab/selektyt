@@ -165,6 +165,7 @@ def _drive(
     coverage = types.SimpleNamespace(
         verdict="not_measured",
         detail="no audio was measured",
+        speech_regions=(),
         duration_s=0.0,
         vad_backend=None,
         coverage_ratio=None,

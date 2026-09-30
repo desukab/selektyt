@@ -29,18 +29,32 @@ import pytest
 
 from models.core import Candidate, Segment, Word
 from selekyt.pipeline import run as pipeline_run, _selection_digest
+from engine.edit_plan import retention_intervals
 from engine.captions import _digest, ass_content
 from providers.transcribe import _ENGINE_INSTALLED_MESSAGE
+from tests.speech_fixtures import write_speech_wav
 
 
 # ── shared scaffolding ──
 
 def _candidate(start: float, end: float, text: str = "hello world") -> Candidate:
+    # The real editorial bar an injected candidate has to clear is 8 s of
+    # duration and 20 words of density (``pipeline.py``'s ``_no_story_diagnosis``
+    # floor). One word at the span's start passed before that bar existed and
+    # now aborts the run before the memory stage is ever reached, which makes
+    # every memory assertion vacuous rather than testing the capture.
+    duration = end - start
+    word_count = max(20, int(duration * 2))
+    step = duration / word_count
+    words = [
+        Word(f"word{i}", start + i * step, start + (i + 1) * step)
+        for i in range(word_count)
+    ]
     return Candidate(
         start, end, text, "story", text[:12], text[-12:],
         editorial_score=0.9, virality_score=0.8, context_score=0.9,
         confidence=0.9, reason="test", visual_potential=0.8,
-        words=[Word("hello", start, start + 0.5)],
+        words=words,
     )
 
 
@@ -120,12 +134,36 @@ def _run_pipeline(tmp_path, candidates, *, limit=6, gate_results=None,
         # A second call with the same project is a resume: the transcript on
         # disk is what that run reuses, so it is left alone rather than
         # rewritten without the provenance the first run recorded.
+        #
+        # The injected transcript is the one the editorial bar actually reads,
+        # and the resume tests below run the *real* select stage on it (only
+        # ``_fingerprint`` is patched on the second call), so it has to clear
+        # the same bar a real transcript does: the 8 s / 20-word floor in
+        # ``rank``, and ``context_guard.validate``'s confidence, boilerplate,
+        # absolute-claim and standalone-context checks. One word, or twenty
+        # unpunctuated tokens over a 10 s span, scores ``context`` at ~0.70 and
+        # lands just under the 0.70 standalone threshold, aborting selection
+        # before any later stage runs — which turns assertions about memory or
+        # the report into vacuous passes. Two sentences with a finite verb,
+        # spread over an 18 s span, clears it on the merits.
+        _TEXT = (
+            "The crew tested the new engine in the morning and recorded "
+            "the results. The measurements showed a clear improvement over "
+            "the earlier design."
+        )
+        _SPAN = (2.0, 20.0)
+        _tokens = _TEXT.split()
+        _step = (_SPAN[1] - _SPAN[0]) / len(_tokens)
+        words = [
+            {"text": t, "start": _SPAN[0] + i * _step,
+             "end": _SPAN[0] + (i + 1) * _step, "confidence": 1.0}
+            for i, t in enumerate(_tokens)
+        ]
         (project / "transcript.json").write_text(json.dumps({
             "language": "en",
             **({"asr": asr} if asr is not None else {}),
-            "segments": [{"start": 10.0, "end": 20.0, "text": "hello world",
-                          "words": [{"text": "hello", "start": 0.0,
-                                     "end": 0.5, "confidence": 1.0}]}],
+            "segments": [{"start": _SPAN[0], "end": _SPAN[1], "text": _TEXT,
+                          "words": words}],
         }), encoding="utf-8")
     patches = _pipeline_patches(tmp_path, candidates, gate_results)
     if real_pacing:
@@ -363,6 +401,169 @@ def test_corpus_analysis_is_written_and_reports_when_unavailable(tmp_path):
     report2 = json.loads((project2 / "report.json").read_text())
     assert report2.get("editorial_corpus") is None, \
         "the report must name the corpus only when it actually exists"
+
+
+def _speech_audio_for(project: Path, seconds: float = 20.0) -> Path:
+    """A real voiced WAV where the pipeline expects the extracted audio.
+
+    The coverage gate and the memory capture both read this path, and a
+    synthesised tone would not do: the VAD chain is entitled to score a pure
+    tone as non-speech, which would leave the run with no speech regions and
+    make every memory assertion vacuous. A resumed run does not re-extract it,
+    so the fixture supplies it directly.
+    """
+    audio = project / "transcription" / "audio.wav"
+    audio.parent.mkdir(parents=True, exist_ok=True)
+    write_speech_wav(audio, seconds)
+    return audio
+
+
+def _valid_render(out: Path, duration: float, *, vertical: bool) -> Path:
+    """A real MP4 container of the right shape, in the test's encoder profile.
+
+    Nothing in these tests depends on the pixels a real render would produce,
+    but the run cannot reach the report unless the output QA probes pass, and
+    those are checks on the file rather than on the plan. So the stand-in is an
+    actual decoded container with the correct orientation, the plan's exact
+    duration, and real audio — the profile ``tests/test_render.py`` settled on
+    after the slow/crf18 default shipped.
+    """
+    size = "1080x1920" if vertical else "1920x1080"
+    duration = max(1.0, round(duration, 3))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        ["ffmpeg", "-y", "-f", "lavfi",
+         "-i", f"color=c=blue:s={size}:rate=30:duration={duration}",
+         "-f", "lavfi", "-i", f"sine=frequency=440:duration={duration}",
+         "-c:v", "libx264", "-preset", "veryfast", "-crf", "24",
+         "-pix_fmt", "yuv420p",
+         "-c:a", "aac", "-b:a", "128k", "-shortest", str(out)],
+        check=True, capture_output=True,
+    )
+    return out
+
+
+def _resume_render(media, cand, out, caption, *, vertical=False, **kw):
+    """A stand-in render: same shape as the plan, none of the decoding.
+
+    The plan's edited duration is the sum of the retention intervals the real
+    render would concatenate, so the stand-in is built to that length and the
+    report's duration check reads the same figure the plan promises.
+    """
+    edited = sum(b - a for a, b in retention_intervals(cand))
+    return _valid_render(Path(out), edited, vertical=vertical)
+
+
+@contextlib.contextmanager
+def _resume():
+    """A second call over an existing project, with the analysis stages real.
+
+    Only ``_fingerprint`` (so the cached transcript on disk is the one read)
+    and the pixel-producing side of the render are patched. The injected media
+    is 100 bytes, so no decoder can read it and a real render is impossible —
+    and the pixels are not what these tests assert on. The select stage, the
+    coverage gate, the memory capture and the output QA in the report must run
+    for real: a resume that mocked any of those would make every memory
+    assertion vacuous, which is exactly the failure mode the editorial-bar
+    comment in ``_run_pipeline`` guards against. ``_resume_render`` substitutes
+    a *real* container of the shape the plan promises, so the report's probes
+    still run against something rather than being bypassed.
+    """
+    with patch("selekyt.pipeline._fingerprint",
+               return_value="test-fingerprint"), \
+         patch("selekyt.pipeline.render_clip", side_effect=_resume_render):
+        yield
+
+
+def test_video_memory_is_written_from_artifacts_the_run_already_held(tmp_path):
+    """The VAD pass for the coverage gate and the corpus analysis were both
+    computed and both discarded; the capture must cost no second listen. The
+    regions in ``memory.json`` have to be the ones the gate measured, and the
+    report must say whether the capture happened rather than leaving a reader
+    to guess from an absent file."""
+    cands = [_candidate(10.0, 20.0)]
+    project = _run_pipeline(tmp_path, cands, limit=6)
+    _speech_audio_for(project)
+
+    # A second run over the same project reuses the transcript on disk, so the
+    # audio above is the one the coverage gate now reads.
+    with _resume():
+        pipeline_run("https://example.com/v", tmp_path, model="small", limit=6)
+
+    memory_path = project / "memory.json"
+    assert memory_path.is_file(), "the capture must land on disk"
+
+    memory = json.loads(memory_path.read_text())
+    assert memory["schema"]
+    assert memory["meta"]["duration"] == 20.0
+    # The speech regions are the gate's own measurement, not a re-listen: there
+    # is a span, and it is inside the source the meta describes.
+    audio_items = [i for i in memory["items"] if i["modality"] == "audio"]
+    assert any(i["claim"] == "Speech is present" for i in audio_items)
+    assert any(i["claim"].startswith("Silence") for i in audio_items), \
+        "the complement is derived, so the whole source is covered at level 1"
+    for item in audio_items:
+        for span in item["intervals"]["intervals"]:
+            assert 0.0 <= span["start"] < span["end"] <= 20.0
+
+    # Level 0 is recorded by construction and level 1 spans the source; a level
+    # with no evidence is not recorded as examined.
+    levels = {r["level"]: r for r in memory["levels"]}
+    assert levels[0]["coverage"]["intervals"] == [
+        {"start": 0.0, "end": 20.0}]
+
+    report = json.loads((project / "report.json").read_text())
+    assert report["memory"]["path"] == str(memory_path)
+    assert report["memory"]["summary"]["items"] == len(memory["items"])
+    assert report["memory"]["summary"]["errors"] == [], \
+        "a clean capture reports no stage failures"
+
+
+def test_video_memory_failure_reports_and_does_not_abort_the_run(tmp_path):
+    """A memory that cannot be built is a missing report, not a missing
+    deliverable: the clips are already selected and rendered by this point."""
+    cands = [_candidate(10.0, 20.0)]
+    project = _run_pipeline(tmp_path, cands, limit=6)
+    _speech_audio_for(project)
+
+    err = io.StringIO()
+    # The pipeline imports ``engine.memory`` *function-locally* inside the
+    # corpus stage, so nothing has imported it yet and ``patch`` cannot resolve
+    # a target absent from ``sys.modules``. Importing it here makes the patch
+    # target the module object the run will actually use.
+    import engine.memory.populate  # noqa: F401 (import for the patch target)
+    with patch("engine.memory.populate.build",
+               side_effect=RuntimeError("memory exploded")), \
+            _resume(), \
+            contextlib.redirect_stderr(err):
+        pipeline_run("https://example.com/v", tmp_path, model="small", limit=6)
+    assert "memory exploded" in err.getvalue(), \
+        "the failure must be surfaced rather than swallowed"
+
+    assert not (project / "memory.json").exists(), \
+        "a failed capture must not leave a partial record behind"
+    report = json.loads((project / "report.json").read_text())
+    assert report["memory"]["path"] is None, \
+        "the report must not name a file it did not write"
+    assert "memory exploded" in report["memory"]["summary"]["error"]
+
+
+def test_an_unmeasured_source_skips_memory_without_lying(tmp_path):
+    """No audio means no duration and no regions. Building a memory anyway
+    would record a zero-length source and flag every span in it, which reads
+    as an empty source rather than an unmeasured one."""
+    cands = [_candidate(10.0, 20.0)]
+    project = _run_pipeline(tmp_path, cands, limit=6)
+    assert not (project / "transcription" / "audio.wav").exists()
+
+    with _resume():
+        pipeline_run("https://example.com/v", tmp_path, model="small", limit=6)
+
+    assert not (project / "memory.json").exists()
+    report = json.loads((project / "report.json").read_text())
+    assert report["memory"]["path"] is None
+    assert "skipped" in report["memory"]["summary"], \
+        "the report must say the capture was skipped and why"
 
 
 # ── F13: cached renders are validated, stubs are re-rendered ──

@@ -153,9 +153,17 @@ class CoverageReport:
     # Reported to the pipeline's report.json so an editor challenging the gate
     # can see which of those they are looking at.
     vad_backend: str = ""
+    # Where speech was measured to be. Not in ``as_dict``: this is the one field
+    # the gate's own report is not the audience for. ``report.json`` is a verdict
+    # and its reasons, read by a UI; the regions belong in video memory, which
+    # answers "where" and is a separate file. Carrying them here would put
+    # thousands of spans into a record an editor opens to see one ratio.
+    speech_regions: tuple = ()
 
     def as_dict(self) -> dict:
-        return asdict(self)
+        out = asdict(self)
+        out.pop("speech_regions", None)
+        return out
 
 
 def _dbfs(amplitude: float) -> float:
@@ -232,9 +240,15 @@ def measure(audio: Path, segments: list[dict],
 
     backend = _select_backend(vad_backend)
     vad = backend.analyze(audio)
-    _regions, meta = segment_with_meta(vad.scores, sample_rate=rate, frame_ms=FRAME_MS,
-                                       threshold=0.5, min_speech_ms=150,
-                                       min_silence_ms=100)
+    # The regions are the whole point of the audio pass and used to be discarded
+    # here: they were bound to a name beginning with an underscore and read only
+    # to total their duration. Video memory captures them as evidence instead of
+    # re-running the VAD to recover them, so they ride along on the numbers this
+    # function already returns. The audio pass is the only place speech regions
+    # are computed on a default run; a second pass at hour scale is real time.
+    regions, meta = segment_with_meta(vad.scores, sample_rate=rate, frame_ms=FRAME_MS,
+                                      threshold=0.5, min_speech_ms=150,
+                                      min_silence_ms=100)
     vad_seconds = meta["speech_seconds"]
     asr_seconds = _union_span([(s["start"], s["end"]) for s in segments])
 
@@ -250,6 +264,11 @@ def measure(audio: Path, segments: list[dict],
         "asr_speech_s": round(asr_seconds, 3),
         "asr_speech_frac": round(asr_frac, 4),
         "coverage_ratio": round(asr_frac / vad_frac, 4) if vad_frac > 0 else None,
+        # Named for what it is, not what consumes it. A reader of this dict that
+        # only wants the gate's verdict reads the numbers above and ignores this
+        # key; a reader that wants to remember where speech is takes it and does
+        # not re-listen.
+        "speech_regions": regions,
     }
 
 
@@ -311,4 +330,5 @@ def check(audio: Path, segments: list[dict],
 
     return CoverageReport(m["duration_s"], m["vad_speech_s"], vad_frac,
                           m["asr_speech_s"], asr_frac, verdict, detail,
-                          coverage_ratio=ratio, vad_backend=m["vad_backend"])
+                          coverage_ratio=ratio, vad_backend=m["vad_backend"],
+                          speech_regions=m["speech_regions"])

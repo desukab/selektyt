@@ -728,6 +728,7 @@ def _output_rows(report: dict[str, Any], t: Terminal) -> list[str]:
         ("content pack", report.get("content_pack")),
         ("editorial report", report.get("editorial_report")),
         ("story corpus", report.get("editorial_corpus")),
+        ("video memory", (report.get("memory") or {}).get("path")),
     ]
     for label, path in families:
         if path is None:

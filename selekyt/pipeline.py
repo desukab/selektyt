@@ -296,8 +296,8 @@ def _selection_digest(selected: list) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def _corpus_detail(corpus_report: Any) -> dict[str, Any]:
-    """Corpus summary: what the analysis produced, not what it tried to.
+def _corpus_detail(corpus_report: Any, memory_path: Any) -> dict[str, Any]:
+    """Corpus/memory summary: what the analysis produced, not what it tried to.
 
     A corpus that failed is ``None``, which is shown as nothing rather than as
     a zero that could be mistaken for an analysis that ran and found no topics.
@@ -307,6 +307,8 @@ def _corpus_detail(corpus_report: Any) -> dict[str, Any]:
         topics = getattr(corpus_report, "topics", None)
         if topics is not None:
             out["topics"] = len(topics)
+    if memory_path is not None and Path(str(memory_path)).is_file():
+        out["memory"] = "recorded"
     return out
 
 
@@ -1115,11 +1117,11 @@ def run(
     )
 
     # The corpus layer (topics, threads, redundancy groups, rhythm) is the
-    # story-view layer's input. It was originally a finished, tested analysis
+    # story-memory layer's input. It was originally a finished, tested analysis
     # that nothing consumed — reachable only by importing engine.corpus, so an
     # editor never saw the redundancy groups already computed and never saw a
-    # topic spine at all. This file is what changed that: engine.story_view
-    # reads it back through engine.corpus_io, so a run writes
+    # topic spine at all. This file is what changed that: engine.story_path and
+    # engine.story_view read it back through engine.corpus_io, so a run writes
     # the canonical graph the story view is derived from. It is deterministic,
     # pure and 0.2 s on an 8.9-minute source, so writing it alongside the other
     # reports costs nothing and it degrades to a valid corpus with explanatory
@@ -1131,10 +1133,11 @@ def run(
     # that as a broken run.
     corpus_path = project / "editorial_corpus.json"
     with _stage(progress, "corpus", detail=lambda: _corpus_detail(
-            corpus_report)):
-        # ``None`` is the failure signal the detail builder above reads as "the
-        # corpus stage failed upstream": a corpus that did not run is shown as
-        # nothing, not as a zero that reads as an analysis that found no topics.
+            corpus_report, memory_path)):
+        # ``None`` is the signal ``engine.memory.populate.build`` reads as "the
+        # corpus stage failed upstream": the memory then records no topic-level
+        # evidence at all rather than half a corpus, and the summary below does
+        # not duplicate a diagnosis the except already printed.
         corpus_report = None
         try:
             corpus_report = build_corpus(
@@ -1151,6 +1154,59 @@ def run(
             print(f"[selektyt] corpus analysis unavailable: {exc}", file=sys.stderr)
             _notify(progress, type="note", level="warn",
                     text=f"corpus analysis unavailable: {exc}")
+
+        # Video memory: the speech regions and the corpus analysis above were both
+        # already computed and both were about to be discarded. ``coverage`` holds
+        # the regions the VAD measured for the gate — the only pass over the whole
+        # audio a default run makes — and ``corpus_report`` holds the topics,
+        # beats, setup-payoff links and b-roll markers. Capturing both here costs
+        # no decode, no listen and no inference, and it is what makes "what was on
+        # screen while this was said" answerable later. A failure here is
+        # reported exactly like the corpus failure above and for the same reason:
+        # the run's clips are already selected, and a memory that could not be
+        # written is a missing report, not a missing deliverable.
+        memory_summary: dict = {}
+        memory_path = project / "memory.json"
+        if coverage.verdict == "not_measured":
+            # No duration and no regions, so Level 0 would be a source of zero
+            # length and every recorded span an out-of-bounds warning. Writing
+            # that would make a source the memory cannot measure look like one it
+            # measured and found empty, which is the same confusion as a green
+            # coverage verdict on an unmeasured run — the reason ``coverage`` is
+            # recorded on every run above.
+            memory_summary = {"skipped": coverage.detail}
+        else:
+            try:
+                from engine.memory import SourceMeta, populate
+                media_st = media.stat()
+                memory, summary = populate.build(
+                    SourceMeta(
+                        path=str(media),
+                        duration=coverage.duration_s,
+                        # The media digest excludes the ASR parameters, because a
+                        # re-transcribe changes the words and not the pixels; the
+                        # transcript digest below includes them for exactly that
+                        # reason.
+                        fingerprint=hashlib.sha256(
+                            f"{source}|{media.resolve()}|{media_st.st_size}"
+                            f"|{media_st.st_mtime_ns}".encode()
+                        ).hexdigest(),
+                        transcript_fingerprint=fingerprint,
+                        width=int(info.get("width", 0) or 0),
+                        height=int(info.get("height", 0) or 0),
+                    ),
+                    speech_regions=tuple(coverage.speech_regions),
+                    vad_backend=coverage.vad_backend,
+                    corpus=corpus_report,
+                    language=detected or "unknown",
+                )
+                memory.save(memory_path)
+                memory_summary = summary.as_dict()
+            except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+                print(f"[selektyt] video memory unavailable: {exc}", file=sys.stderr)
+                memory_summary = {"error": f"{type(exc).__name__}: {exc}"}
+                _notify(progress, type="note", level="warn",
+                        text=f"video memory unavailable: {exc}")
 
     pacing = aggregate_pacing_report(
         selected, rejected, context_guard_rejections,
@@ -1495,6 +1551,18 @@ def run(
             # that quietly drops the records that disagree with it can support any
             # conclusion.
             "language_fitness": fit.as_dict(),
+            # Video memory is a *different file*, not a section of this report: the
+            # queries it answers ("where is this discussed", "what was on screen
+            # while it was said") return intervals, not prose, and they belong in a
+            # record a retrieval layer reads. What belongs here is whether the
+            # capture happened and which stages failed — an editor who asks the
+            # memory a question it cannot answer needs to be told the evidence was
+            # never recorded, and a missing memory.json otherwise reads as an empty
+            # source rather than a failed capture.
+            "memory": {
+                "path": str(memory_path) if memory_path.is_file() else None,
+                "summary": memory_summary,
+            },
         }
         # The audio section is always present: either the full provenance summary,
         # or an explicit `enabled: False` so a B2B consumer can distinguish

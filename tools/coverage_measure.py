@@ -77,10 +77,17 @@ def main(argv: list[str] | None = None) -> int:
     for name, audio, tr in discover(args.root):
         try:
             record = json.loads(tr.read_text(encoding="utf-8"))
+            measured = measure(audio, record.get("segments") or [],
+                               vad_backend=args.vad_backend)
+            # The regions are dropped here, not in ``measure``: this record is a
+            # distribution across a corpus — one row per source, read for the
+            # ratios — and carrying every region would dwarf it by orders of
+            # magnitude and serve no question the tool answers. Memory is where
+            # they are kept, and it takes them from the same dict this just read.
+            measured.pop("speech_regions", None)
             rows.append({"source": name,
                          "asr_segments": len(record.get("segments") or []),
-                         **measure(audio, record.get("segments") or [],
-                                   vad_backend=args.vad_backend)})
+                         **measured})
         except Exception as exc:  # a source that cannot be measured is a result
             rows.append({"source": name, "error": f"{type(exc).__name__}: {exc}"})
 
