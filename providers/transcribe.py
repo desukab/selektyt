@@ -11,6 +11,8 @@ uses a different ASR engine than the operator thinks it did.
 """
 from __future__ import annotations
 
+from typing import Callable
+
 from pathlib import Path
 
 from models.core import Segment
@@ -58,6 +60,7 @@ def transcribe(
     cpu_threads: int | None = None,
     beam_size: int = 1,
     vad_filter: bool = True,
+    progress: Callable[[dict], None] | None = None,
 ) -> tuple[list[Segment], str, dict]:
     """Transcribe with the best engine available on this host.
 
@@ -69,7 +72,7 @@ def transcribe(
         segments, lang, prov = _fw(
             media, model_name, language, checkpoint_dir,
             chunk_minutes=chunk_minutes, cpu_threads=cpu_threads,
-            beam_size=beam_size, vad_filter=vad_filter,
+            beam_size=beam_size, vad_filter=vad_filter, progress=progress,
         )
         return segments, lang, {
             "engine": "faster-whisper",
@@ -93,7 +96,8 @@ def transcribe(
     if select_engine(model_name) == "sherpa-onnx-whisper":
         segments, lang, prov = _so(
             media, model_name, language, checkpoint_dir,
-            chunk_minutes=chunk_minutes, cpu_threads=cpu_threads, beam_size=beam_size,
+            chunk_minutes=chunk_minutes, cpu_threads=cpu_threads,
+            beam_size=beam_size, progress=progress,
         )
         return segments, lang, {
             "engine": "sherpa-onnx-whisper",

@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
+from typing import Callable
 
 from models.core import Segment, Word
 from providers.atomic import read_json, write_json_atomic
@@ -260,6 +261,7 @@ def transcribe(
     cpu_threads: int | None = None,
     beam_size: int = 1,
     vad_filter: bool = True,
+    progress: Callable[[dict], None] | None = None,
 ) -> tuple[list[Segment], str, dict]:
     """Transcribe long media in bounded, resumable chunks.
 
@@ -330,6 +332,9 @@ def transcribe(
         chunk_path = chunks_dir / f"chunk_{index:04d}.json"
         was_cached = False
         wall = 0.0
+        # The ETA a progress sink forwards; None until the running average that
+        # supports it exists (it needs at least three decoded chunks).
+        eta: float | None = None
 
         if chunk_path.exists():
             chunk_segments, detected, was_cached, cached_note = _load_chunk_checkpoint(chunk_path)
@@ -497,6 +502,12 @@ def transcribe(
                         slow_count = 0
             else:
                 slow_count = 0
+
+        # One event per chunk, cached or decoded: the chunk counter is the only
+        # progress measure the decode itself exposes, and a cached chunk counts
+        # as progress too, since a resumed run skips its own re-decode.
+        if progress is not None:
+            progress({"index": index + 1, "count": count, "eta": eta})
 
     all_segments.sort(key=lambda s: (s.start, s.end))
     merged: list[Segment] = []

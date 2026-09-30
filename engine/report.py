@@ -72,8 +72,12 @@ class ReportBuilder:
     def __init__(self, started_at: float | None = None):
         self._start = started_at or time.time()
         self.sections = ReportSections()
+        # ``self._start``, not "now": the caller hands the moment the run began so
+        # the reported duration is the run's, and a caller that omits it gets the
+        # same value either way. Formatting "now" here made ``started_at`` read as
+        # the report-build moment whenever a start was supplied.
         self.sections.provenance.started_at = time.strftime(
-            "%Y-%m-%dT%H:%M:%S%z"
+            "%Y-%m-%dT%H:%M:%S%z", time.localtime(self._start)
         )
         self.sections.provenance.platform = platform.platform()
         self.sections.provenance.python = platform.python_version()

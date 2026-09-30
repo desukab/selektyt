@@ -5,11 +5,21 @@ import json
 import os
 import shutil
 import sys
+import time
+from contextlib import contextmanager
 from pathlib import Path
+from typing import TextIO
 
 from engine.captions import caption_presets
 from selekyt.pipeline import run
 from selekyt.server import serve_stdio as serve_python
+from selekyt.ui import (
+    ProgressRenderer,
+    Terminal,
+    complete_screen,
+    fail_screen,
+    start_screen,
+)
 
 
 def _doctor() -> int:
@@ -55,9 +65,222 @@ def _doctor() -> int:
     return 1
 
 
+def _is_os_stderr(stream: object) -> bool:
+    """Whether ``stream`` is the process's real stderr, i.e. fd 2.
+
+    A dup2 on the descriptor cannot reach an in-memory stream, and such a
+    stream never shared the descriptor, so it needs no re-plumbing below: a
+    test double keeps receiving the panel exactly as it did before. Anything
+    without a fileno, or whose fileno is not 2, falls on the same side.
+    """
+    try:
+        return stream.fileno() == 2  # type: ignore[attr-defined]
+    except (AttributeError, ValueError, OSError):
+        # io.UnsupportedOperation subclasses both ValueError and OSError, so a
+        # StringIO-based double is covered without naming it.
+        return False
+
+
+@contextmanager
+def _engine_stdout(log_path: Path, term: Terminal):
+    """Send the engine's own stdout — and every child's stdio — to the run log.
+
+    Every provider prints its own diagnostics — chunk position, RT factor, ETA
+    — to stdout, which is also the channel ``--json`` reports on. Without this,
+    ``selekyt URL --json | jq`` carries transcription chatter above the JSON.
+    The live panel is on stderr and is unaffected, so this is what makes the
+    two channels separable without touching a single print inside the engine.
+
+    Appends rather than truncating: a run that was killed and resumed is one
+    history, and the earlier diagnostics are what diagnose the interruption.
+
+    Subprocesses and native libraries inherit OS-level *file descriptors*, not
+    Python's ``sys.stdout`` object, so the object swap alone does not silence
+    them: ffmpeg's banner, yt-dlp's progress and onnxruntime's C++ warnings all
+    write straight to fds 1 and 2 and land on the user's terminal, interleaved
+    with the live panel. Redirecting the descriptors themselves — one dup2 pair
+    here, inside the context the whole pipeline already runs in — covers every
+    spawn site at once, including any an audit has not mapped, without changing
+    a single test-pinned ``subprocess.run`` call shape. It is also the only
+    approach that can reach a native library at all: onnxruntime and ctranslate2
+    write to fd 2 from C++, through no ``subprocess`` call to add a kwarg to.
+
+    Chosen over per-call ``stderr=`` plumbing for that coverage, and because it
+    keeps the diagnostic instead of discarding it: ffmpeg's stderr is the only
+    post-mortem a failed render has, and the CLI points a failed run at
+    "Details saved to: ./<out>/run.log", so the banner and the encoder's error
+    report belong there rather than in DEVNULL. Calls that deliberately pipe a
+    child's output — ``stderr=subprocess.PIPE`` in providers/ffmpeg.py and
+    engine/qa.py, yt-dlp's ``stdout=2`` — still win over the redirect, which is
+    exactly right: those are the ones whose captured output becomes the error
+    message the user reads.
+
+    The live panel writes to ``term.err``, which by then is the process's real
+    stderr object and so fd 2 — just pointed at the log by the dup2 above. It
+    is handed the pre-redirect copy of the descriptor so the panel keeps
+    drawing on the terminal while the engine's children write to the log.
+
+    ``--verbose`` skips this entire context (see main): that flag asks for the
+    engine's diagnostics — child output included — on the terminal, and that
+    is what it still gets, byte for byte.
+    """
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    real_stdout = sys.stdout
+    handle = open(log_path, "a", encoding="utf-8")
+    handle.write(f"\n--- selekyt run {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+    handle.flush()
+    sys.stdout = handle
+    saved_out: int | None = None
+    saved_err: int | None = None
+    panel: TextIO | None = None
+    real_term_err = term.err
+    try:
+        try:
+            saved_out = os.dup(1)
+            saved_err = os.dup(2)
+            os.dup2(handle.fileno(), 1)
+            os.dup2(handle.fileno(), 2)
+        except OSError:
+            # Whatever of the redirect did take hold goes back before
+            # continuing: leaving fd 1 on the log would silently send the rest
+            # of the CLI's own output there.
+            for saved, fd in ((saved_out, 1), (saved_err, 2)):
+                if saved is None:
+                    continue
+                try:
+                    os.dup2(saved, fd)
+                except OSError:
+                    pass
+                try:
+                    os.close(saved)
+                except OSError:
+                    pass
+            saved_out = saved_err = None
+        else:
+            # closefd=False: the descriptor is restored by hand in the finally
+            # below, and a wrapper that owned it would close the terminal it
+            # still aliases.
+            panel = os.fdopen(
+                saved_err, "w", encoding="utf-8", errors="replace", closefd=False
+            )
+            if _is_os_stderr(real_term_err):
+                term.err = panel
+        yield
+    finally:
+        # Restore in the order that keeps every still-running writer valid: the
+        # ticker thread can render between these steps, and while the
+        # descriptors are redirected both ``panel`` (the pre-redirect copy) and
+        # the reverted ``term.err`` (fd 2) write to the terminal, so the panel
+        # never blinks onto the log and never writes a closed descriptor.
+        for stream in (panel, handle):
+            if stream is None:
+                continue
+            try:
+                stream.flush()
+            except OSError:
+                pass
+        if saved_out is not None and saved_err is not None:
+            os.dup2(saved_out, 1)
+            os.dup2(saved_err, 2)
+            term.err = real_term_err
+            os.close(saved_out)
+            os.close(saved_err)
+        sys.stdout = real_stdout
+        handle.close()
+
+
+def _remediation(reason: str) -> str | None:
+    """The action the message's own diagnosis implies, or None when there is none.
+
+    Every clause matches a wording the pipeline itself raises, so the advice is
+    attached to the failure it names rather than emitted unconditionally. An
+    unknown failure gets no invented remedy — the run log is the honest thing
+    to point at instead.
+    """
+    reason = reason or ""
+    if "no audible spoken content" in reason:
+        return (
+            "Check that the source has an audible speech track. If its container "
+            "is damaged, re-mux or re-encode it by hand and re-run."
+        )
+    if "no audio stream, or a container" in reason:
+        return (
+            "Check that the file plays and has an audio track. If the container "
+            "is damaged, re-mux it — `ffmpeg -i in.mp4 -c copy out.mp4` — and "
+            "re-run."
+        )
+    if "not usable on this language" in reason:
+        return (
+            "Re-run with a model this language is measured on, or pass "
+            "--skip-language-check once you have verified the transcript by hand."
+        )
+    if "covers far less audio" in reason or "coverage" in reason.lower():
+        return (
+            "Verify the transcript against the source by hand, then re-run with "
+            "--skip-coverage-check if it really is complete."
+        )
+    if "passed the editorial/context gate" in reason:
+        return (
+            "Nothing in this source stood on its own at the current gates. Raise "
+            "--limit for more attempts, or try a source with clearer standalone "
+            "passages; report.json names every rejection reason."
+        )
+    if "Local video not found" in reason:
+        return "Check the path — a local source must be a readable media file."
+    if "Install transcription support" in reason or "engine" in reason.lower():
+        return "Run `selekyt --doctor` to see which tools and models are installed."
+    return None
+
+
+def _plain_reason(reason: str, exc: BaseException, stage: str | None) -> str:
+    """A subprocess failure in plain words, or the reason unchanged.
+
+    ``CalledProcessError`` reports the command it ran and the exit status, and
+    nothing about why: the why is on the tool's own stderr, which the run log
+    already captured. By the time this runs the pipeline has already turned the
+    exception into a ``fail`` event carrying ``str(exc)``, so the command repr
+    is looked for in the reason string as well as on the exception — the same
+    message reaches the screen either way.
+
+    The stage says which ffmpeg step failed, and the wording keeps to what that
+    distinguishes: a decode that fails before transcription has anything to work
+    on is most often a source with no audio stream, while an encode failure
+    during rendering is reported without that guess. Both point at run.log
+    rather than inventing a diagnosis, and any failure whose program is not
+    ffmpeg/ffprobe/yt-dlp keeps the verbatim message.
+    """
+    import re
+    from subprocess import CalledProcessError
+
+    cmd = exc.cmd if isinstance(exc, CalledProcessError) else None
+    code = getattr(exc, "returncode", None)
+    if cmd is None:
+        m = re.match(r"Command '\['(.+?)'", reason)
+        if not m:
+            return reason
+        cmd = m.group(1)
+        code = re.search(r"exit status (\d+)", reason)
+        code = int(code.group(1)) if code else None
+    args = cmd if isinstance(cmd, list) else [cmd]
+    name = str(args[0]).split("/")[-1]
+    if name not in ("ffmpeg", "ffprobe", "yt-dlp"):
+        return reason
+    where = f" in run.log"
+    if stage == "transcribe":
+        return (
+            f"could not decode this source's audio: {name} exited {code}. The "
+            "file likely has no audio stream, or a container this build of "
+            f"{name} cannot open — what {name} printed when it failed is"
+            + where
+        )
+    return (
+        f"{name} failed while processing this source (exit {code}); what it "
+        "printed when it failed is" + where
+    )
+
+
 def _validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     """Fail fast on unusable numeric flags, before any network or ASR work.
-
     A bad --limit used to survive all the way through download and
     transcription and then die as a confusing "no stories passed" error; a
     bad --chunk-minutes died mid-transcription after extracting audio.
@@ -85,11 +308,37 @@ def _validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) ->
         parser.error("; ".join(problems))
 
 
+def _version() -> str:
+    """The installed distribution's version, and nothing invented when absent.
+
+    Sourced from the package metadata rather than a second literal so the two
+    cannot drift; a checkout run without an install reports that instead of a
+    number that may not be true. Failing closed here is better than a wrong
+    version next to a release number a user would act on.
+    """
+    try:
+        from importlib.metadata import PackageNotFoundError, version
+        try:
+            return version("selekyt")
+        except PackageNotFoundError:
+            return "unknown (not installed; run pip install -e .)"
+    except ImportError:  # pragma: no cover - 3.10+ ships importlib.metadata
+        return "unknown"
+
+
 def main() -> None:
+    # ``selekyt analyze video.mp4`` is the documented invocation and
+    # ``selekyt video.mp4`` stays valid: the verb carries no state, it only
+    # names what the default does. A file genuinely called ``analyze`` remains
+    # reachable as ``./analyze``.
+    argv = sys.argv[1:]
+    if argv and argv[0] == "analyze":
+        argv = argv[1:]
     p = argparse.ArgumentParser(
         prog="selekyt",
         description="Turn long-form video into retention-aware social cuts.",
     )
+    p.add_argument("--version", action="version", version=_version())
     p.add_argument("source", nargs="?", help="YouTube URL or local video path")
     p.add_argument("--out", default="out", help="Output directory")
     p.add_argument("--model", default="small", help="faster-whisper model size")
@@ -208,7 +457,20 @@ def main() -> None:
         help="With --clean-project, keep the downloaded media (what "
              "tools/nle_check.py probes and a re-render needs)",
     )
-    args = p.parse_args()
+    p.add_argument(
+        "--no-color", action="store_true",
+        help="Disable colour in the output (also set via NO_COLOR)",
+    )
+    p.add_argument(
+        "--quiet", action="store_true",
+        help="Print nothing but the final result and errors",
+    )
+    p.add_argument(
+        "--verbose", action="store_true",
+        help="Show the engine's own diagnostics (chunk timing, ffmpeg output) "
+             "instead of logging them to run.log",
+    )
+    args = p.parse_args(argv)
     if args.server:
         raise SystemExit(serve_python())
     if args.clean_project:
@@ -218,17 +480,21 @@ def main() -> None:
     if args.doctor or not args.source:
         raise SystemExit(_doctor())
     os.environ["SELEKYT_CAPTION_STYLE"] = args.caption_style
-    project = run(
-        args.source,
-        Path(args.out),
-        args.model,
-        args.language,
-        args.limit,
-        args.cookies,
-        args.chunk_minutes,
-        args.beam_size,
-        args.cpu_threads,
-        args.ollama_url,
+    out = Path(args.out)
+    term = Terminal(
+        no_color=args.no_color, quiet=args.quiet, verbose=args.verbose,
+        json_mode=args.json,
+    )
+    started = time.monotonic()
+    renderer = ProgressRenderer(term)
+    start_screen(
+        term, source=args.source, model=args.model, language=args.language,
+        out=str(out), width=None, height=None,
+    )
+    log_path = out / "run.log"
+    # Keyword-only extras the pipeline accepts beyond its positional core; kept
+    # in one place so the verbose and logged branches cannot drift apart.
+    extras = dict(
         audio_analysis=args.audio_analysis,
         vad_backend=args.vad_backend,
         silence_threshold=args.silence_threshold,
@@ -240,13 +506,89 @@ def main() -> None:
         export_fcpxml=args.export_fcpxml,
         skip_coverage_check=args.skip_coverage_check,
         skip_language_check=args.skip_language_check,
+        progress=renderer.event,
     )
+    try:
+        # ``--verbose`` wants the engine's own output on the terminal, so it
+        # skips the redirect; the panel and the diagnostics then interleave on
+        # the two streams, which is what that flag asked for. Every other run
+        # sends the engine's prints and every child's stdio to run.log, keeping
+        # only the live panel on the terminal (see _engine_stdout).
+        if term.verbose:
+            project = run(args.source, out, args.model, args.language, args.limit,
+                          args.cookies, args.chunk_minutes, args.beam_size,
+                          args.cpu_threads, args.ollama_url, **extras)
+        else:
+            with _engine_stdout(log_path, term):
+                project = run(args.source, out, args.model, args.language, args.limit,
+                              args.cookies, args.chunk_minutes, args.beam_size,
+                              args.cpu_threads, args.ollama_url, **extras)
+    except BaseException as exc:
+        # A normal user error is reported as an action to take, not as a
+        # traceback. The exception's own message is echoed verbatim because
+        # tools/corpus_run.py classifies runs by grepping it out of stderr, but
+        # its Python class name is dropped: it is an implementation detail the
+        # spec says a normal user must never see. A subprocess failure is the
+        # exception to the verbatim rule: a CalledProcessError's message is its
+        # command line and an exit code, which tells a user nothing about the
+        # source they handed in — and the verbatim form is already in run.log
+        # beside the tool's own stderr, so nothing a post-mortem needs is lost.
+        renderer.close()
+        reason = _plain_reason(
+            renderer.failed_reason or str(exc), exc, renderer.failed_stage
+        )
+        fail_screen(
+            term,
+            stage=renderer.failed_stage,
+            reason=reason,
+            remediation=_remediation(reason),
+            log_path=str(log_path) if log_path.is_file() else None,
+        )
+        # The panel is gone and its screen is drawn; the terminal descriptor
+        # measurement used to lay them out can go back now.
+        term.close()
+        raise SystemExit(1)
+    renderer.close()
+    runtime = time.monotonic() - started
+    # The report is read rather than remembered because it is the record the run
+    # just wrote: a field the pipeline does not populate is a field the screen
+    # does not show. A caller that hands back something other than a path (a
+    # test double, or a future entry that returns early) has no report to read,
+    # and the screen renders what it can name without one.
+    report: dict[str, object] = {}
+    if isinstance(project, (Path, str)):
+        report_path = Path(project) / "report.json"
+        if report_path.is_file():
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+        artifacts = sum(1 for f in Path(project).rglob("*") if f.is_file())
+    else:
+        artifacts = 0
     if args.json:
-        report_path = project / "report.json"
-        report = json.loads(report_path.read_text(encoding="utf-8"))
+        # The only thing on stdout in this mode: the report, after the redirect
+        # above has been released.
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
-        print(f"SelekyT complete: {project}")
+        complete_screen(
+            term, report=report, project=str(project), runtime=runtime,
+            artifacts=artifacts,
+        )
+    # Last use of term was the screen above; nothing renders after this point.
+    term.close()
+
+
+def _project_dir(arg: Path) -> Path:
+    """The directory a run wrote its state into, given either spelling.
+
+    ``--out`` names a directory that holds ``run.log`` alongside the ``project``
+    subdirectory the pipeline wrote; ``--clean-project`` was documented against
+    the same value, so both the out directory and the project inside it resolve
+    here rather than making a user retype a path they already typed once. When
+    neither holds state the argument is returned unchanged, and the engine's
+    own refusal explains why."""
+    for candidate in (arg, arg / "project"):
+        if (candidate / "pipeline_state.json").is_file():
+            return candidate
+    return arg
 
 
 def _report_cleanup(project: Path, *, keep_source: bool = False) -> int:
@@ -256,7 +598,8 @@ def _report_cleanup(project: Path, *, keep_source: bool = False) -> int:
     person can read; the exit code is 1 on a refusal so a script can tell a
     no-op from a success."""
     from selekyt.pipeline import reclaim_intermediates
-    result = reclaim_intermediates(project, keep_source=keep_source)
+    resolved = _project_dir(project)
+    result = reclaim_intermediates(resolved, keep_source=keep_source)
     if not result["ok"]:
         print(f"not cleaning {project}: {result['reason']}")
         return 1
@@ -264,7 +607,7 @@ def _report_cleanup(project: Path, *, keep_source: bool = False) -> int:
         mb = row["bytes"] / (1024 * 1024)
         print(f"removed {row['dir']}/ ({mb:.1f} MB)")
     if not result["removed"]:
-        print(f"{project} has no regenerable intermediates to reclaim")
+        print(f"{resolved} has no regenerable intermediates to reclaim")
     if result.get("re_download_on_rerun"):
         print(
             "the downloaded source is gone; a re-run will fetch it again "

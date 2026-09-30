@@ -20,6 +20,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Callable
 
 from models.core import Segment, Word
 from providers.atomic import read_json, write_json_atomic
@@ -357,6 +358,7 @@ def transcribe(
     cpu_threads: int | None = None,
     beam_size: int = 1,
     models_dir: Path | None = None,
+    progress: Callable[[dict], None] | None = None,
 ) -> tuple[list[Segment], str]:
     """Transcribe long media in bounded, resumable chunks.
 
@@ -406,6 +408,17 @@ def transcribe(
 
     all_segments: list[Segment] = []
     failed_chunks: list[int] = []
+
+    def _advance(done: int) -> None:
+        """Report the chunk position to a progress sink, if one is attached.
+
+        Sherpa's decode exposes no finer measure than the window counter (no
+        wall/RT average is maintained), so that is all a sink gets; the count it
+        is measured against is the window count computed above.
+        """
+        if progress is not None:
+            progress({"index": done, "count": count})
+
     try:
         for index in range(count):
             start = index * window
@@ -415,10 +428,15 @@ def transcribe(
                 chunk_segments = cached
                 print(f"[transcribe:sherpa] chunk {index + 1}/{count}: cached", flush=True)
                 all_segments.extend(chunk_segments)
+                _advance(index + 1)
                 continue
 
             samples = reader.window(start, start + window)
             if len(samples) < sr // 2:
+                # The tail of the file is shorter than half a window, so there
+                # is no chunk here to decode: the count above was rounded up
+                # from a fractional window, and this position was never work.
+                _advance(index)
                 break
 
             try:
@@ -436,6 +454,7 @@ def transcribe(
                     f"[transcribe:sherpa] chunk {index + 1}/{count}: FAILED: {exc}",
                     flush=True,
                 )
+                _advance(index + 1)
                 continue
             all_segments.extend(segs)
             _write_sherpa_checkpoint(
@@ -443,6 +462,7 @@ def transcribe(
             )
             print(f"[transcribe:sherpa] chunk {index + 1}/{count}: "
                   f"{len(segs)} segments", flush=True)
+            _advance(index + 1)
     finally:
         reader.close()
 

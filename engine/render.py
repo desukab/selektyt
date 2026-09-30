@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import unicodedata
 from pathlib import Path
+from typing import Callable
 
 from engine.captions import slice_ass
 from engine.edit_plan import retention_intervals
@@ -353,7 +354,7 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
                        check=True)
 
 
-def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None = None, vertical: bool = False, fps: float = 30.0) -> Path:
+def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None = None, vertical: bool = False, fps: float = 30.0, progress: Callable[[dict], None] | None = None) -> Path:
     require_ffmpeg(); out.parent.mkdir(parents=True, exist_ok=True)
     intervals = retention_intervals(candidate)
     if not intervals: raise RuntimeError("candidate has no renderable intervals")
@@ -380,8 +381,17 @@ def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None 
                               offset, offset + (end - start)),
                     encoding="utf-8")
         part = tmp / f"{i:03d}.mp4"
+        # Part granularity is the finest honest measure here: ffmpeg reports
+        # ``time=`` on stderr, but these parts are seconds long, so a fraction
+        # within one would move too fast to be worth reading and would need the
+        # process's stderr piped rather than inherited. The part count is what
+        # the render itself can count.
+        if progress is not None:
+            progress({"part": i, "parts": len(intervals), "vertical": vertical})
         _render_one(source, start, end, part, part_ass, vertical, fps)
         parts.append(part)
+        if progress is not None:
+            progress({"part": i + 1, "parts": len(intervals), "vertical": vertical})
     if len(parts) == 1:
         shutil.move(str(parts[0]), str(out)); shutil.rmtree(tmp, ignore_errors=True); return out
     # The concat demuxer resolves relative entries against the concat file's

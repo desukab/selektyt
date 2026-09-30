@@ -52,6 +52,26 @@ def test_finalize_records_duration():
     assert abs(d["provenance"]["duration_seconds"] - 5.0) < 2.0
 
 
+def test_a_supplied_start_is_reported_not_the_moment_the_report_was_built():
+    """The pipeline hands the moment the run began. For a nine-minute run the
+    reported duration was reading 0.015 s because ``started_at`` was formatted
+    from "now" and the duration was measured from an unused field: the string
+    and the number disagreed, and both described the report's assembly rather
+    than the work it summarizes."""
+    started = time.time() - 600.0
+    b = ReportBuilder(started_at=started)
+    time.sleep(0.05)
+    b.finalize()
+    p = b.to_dict()["provenance"]
+    # The timestamp string is the supplied start, so it precedes the finish.
+    assert p["started_at"] != p["finished_at"]
+    assert p["duration_seconds"] >= 599.0
+    # And the two spellings agree: the finish is the start plus the duration.
+    start_again = time.mktime(time.strptime(p["started_at"], "%Y-%m-%dT%H:%M:%S%z"))
+    finish = time.mktime(time.strptime(p["finished_at"], "%Y-%m-%dT%H:%M:%S%z"))
+    assert abs((finish - start_again) - p["duration_seconds"]) < 1.0
+
+
 def test_write_report_json(tmp_path):
     b = ReportBuilder()
     b.set_provenance(source_path="a.mp4")

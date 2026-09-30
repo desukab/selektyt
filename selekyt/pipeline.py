@@ -7,8 +7,11 @@ import os
 import re
 import shutil
 import sys
+import time
+from contextlib import contextmanager
 from dataclasses import asdict
 from pathlib import Path
+from typing import Any, Callable
 
 from providers.atomic import read_json, write_json_atomic
 from providers.audio import peak_dbfs, AudioReadError
@@ -54,6 +57,54 @@ STATE_NAME = "pipeline_state.json"
 # against 16-bit full scale, so this floor separates "nothing was decoded" from
 # "something loud was decoded into nothing".
 SILENT_PEAK_DBFS = -50.0
+
+
+# ── UI event channel ──────────────────────────────────────────────────────────
+#
+# ``run`` accepts an optional ``progress`` callable and emits structured events
+# to it as stages begin and end. The CLI presentation layer renders from these;
+# nobody else passes it, and the pipeline's own ``print`` calls stay exactly as
+# they were so the sidecar's stdout-redirection shim and every tool that greps
+# the stage prefixes keep working unchanged. Events are the only thing the UI
+# may consume: parsing those print lines would couple the presentation layer to
+# the wording of diagnostics, and the four classification strings below are
+# read by tools/corpus_run.py.
+
+ProgressFn = Callable[[dict[str, Any]], None]
+
+
+def _notify(progress: ProgressFn | None, **event: Any) -> None:
+    """Emit one UI event, or nothing when nobody is listening."""
+    if progress is not None:
+        progress(event)
+
+
+@contextmanager
+def _stage(progress: ProgressFn | None, name: str, detail: Any = None):
+    """Bracket a pipeline stage for a listening UI.
+
+    ``detail`` may be a mapping, or a zero-arg callable returning one, because
+    most stage summaries are only known once the stage has run. A raised
+    exception emits ``fail`` rather than ``done`` so the UI can attribute the
+    failure to the stage that was actually running, then re-raises.
+    """
+    _notify(progress, type="stage", stage=name, state="start")
+    started = time.monotonic()
+    try:
+        yield
+    except BaseException as exc:
+        # The class name is deliberately not in the payload: it is a Python
+        # implementation detail, and the CLI shows this string to a user who
+        # asked for an editorial package, not a traceback. The corpus runner
+        # classifies on phrases inside the message itself, not the type.
+        _notify(progress, type="fail", stage=name, reason=str(exc))
+        raise
+    _notify(
+        progress, type="stage", stage=name, state="done",
+        duration=time.monotonic() - started,
+        detail=detail() if callable(detail) else (detail or {}),
+    )
+
 
 
 def _load_state(state_path: Path) -> dict:
@@ -243,6 +294,169 @@ def _selection_digest(selected: list) -> str:
     """
     raw = "|".join(f"{c.start:.3f},{c.end:.3f},{c.text}" for c in selected)
     return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _corpus_detail(corpus_report: Any) -> dict[str, Any]:
+    """Corpus summary: what the analysis produced, not what it tried to.
+
+    A corpus that failed is ``None``, which is shown as nothing rather than as
+    a zero that could be mistaken for an analysis that ran and found no topics.
+    """
+    out: dict[str, Any] = {}
+    if corpus_report is not None:
+        topics = getattr(corpus_report, "topics", None)
+        if topics is not None:
+            out["topics"] = len(topics)
+    return out
+
+
+def _audio_detail(summary: dict) -> dict[str, Any]:
+    """The audio stage's summary, from the provenance dict it returned.
+
+    A compression ratio below 1.0 is not a compressed cut, so it is not shown as
+    one — ``dead_air`` is the ratio that reads honestly on its own.
+    """
+    if not summary:
+        return {}
+    out: dict[str, Any] = {}
+    if summary.get("vad_backend"):
+        out["vad"] = summary["vad_backend"]
+    speech = summary.get("speech_ratio")
+    if isinstance(speech, (int, float)):
+        out["speech"] = f"{speech * 100:.0f}%"
+    dead = summary.get("dead_air_ratio")
+    if isinstance(dead, (int, float)):
+        out["dead air"] = f"{dead * 100:.0f}%"
+    comp = summary.get("compression_ratio")
+    if isinstance(comp, (int, float)) and comp > 1.0:
+        out["compression"] = f"{comp:.2f}x"
+    return out
+
+
+def _render_detail(outputs: list, edit_report: list) -> dict[str, Any]:
+    """The render stage's summary: files on disk, not files requested.
+
+    ``outputs`` is appended only after a clip's MP4s land, so its length is the
+    count of orientation-files actually written; the two-per-clip pairing is
+    what turns that into a clip count.
+    """
+    out: dict[str, Any] = {"clips": len(edit_report)}
+    if outputs:
+        out["orientations"] = f"{len(outputs)} files"
+    return out
+
+
+def _report_detail(report: dict, project: Any) -> dict[str, Any]:
+    """The packaging stage's summary: which deliverables the run can point at.
+
+    ``report.json`` is the artifact this stage writes, so a report dict that has
+    not been built yet means the stage is still mid-flight; the count of keys
+    that name a real path is what an editor can actually go and open.
+    """
+    if not report:
+        return {}
+    named = [
+        key
+        for key in ("captions", "timeline", "content_pack", "editorial_report",
+                    "editorial_corpus", "qa")
+        if report.get(key) and Path(str(report[key])).exists()
+    ]
+    return {"artifacts": len(named)}
+
+
+def _select_detail(thoughts: list, ranked: list, gate_results: list[tuple],
+                   limit: int) -> dict[str, Any]:
+    """Editorial stage summary: the funnel the gate actually produced.
+
+    Every number here is a count of a list the stage already built; none is
+    derived for display.
+    """
+    passed = [c for c, ok, _r in gate_results if ok]
+    out: dict[str, Any] = {
+        "candidates": len(thoughts),
+        "selected": len(passed[:limit]),
+    }
+    if len(gate_results) - len(passed):
+        out["rejected"] = len(gate_results) - len(passed)
+    bench = len(passed) - limit
+    if bench > 0:
+        out["bench"] = bench
+    return out
+
+
+def _verify_detail(fit: Any, coverage: Any) -> dict[str, Any]:
+    """The language/coverage audit's summary, from the verdicts it returned.
+
+    ``coverage`` is absent on the language-refusal path, which raises before it
+    runs; the UI then shows the fitness verdict alone rather than a coverage
+    figure that was never measured.
+    """
+    out: dict[str, Any] = {}
+    if getattr(fit, "verdict", None):
+        out["language"] = str(fit.verdict)
+    if coverage is not None:
+        ratio = getattr(coverage, "coverage_ratio", None)
+        if ratio is not None:
+            out["coverage"] = f"{ratio * 100:.0f}%"
+        if getattr(coverage, "vad_backend", None):
+            out["vad"] = coverage.vad_backend
+    return out
+
+
+def _chunk_progress(progress: ProgressFn | None, stage: str) -> ProgressFn | None:
+    """Adapt a UI progress sink to the transcription providers' callback.
+
+    The providers report per-chunk facts they already compute for their own
+    print lines (index, count, ETA); this only forwards them, so the percent on
+    screen is the chunk position the decode actually reached.
+    """
+    if progress is None:
+        return None
+
+    def _send(payload: dict[str, Any]) -> None:
+        event: dict[str, Any] = {
+            "type": "progress",
+            "stage": stage,
+            "current": payload.get("index"),
+            "total": payload.get("count"),
+        }
+        if payload.get("eta") is not None:
+            event["eta"] = payload["eta"]
+        progress(event)
+
+    return _send
+
+
+def _transcribe_detail(
+    transcript: list, detected: str | None, provenance: dict, reused: bool
+) -> dict[str, Any]:
+    """Transcription stage summary from the provenance the run already keeps."""
+    out: dict[str, Any] = {
+        "segments": len(transcript),
+        "language": detected or "unknown",
+        "model": provenance.get("model"),
+    }
+    if reused:
+        out["cache"] = "reused"
+    elif provenance.get("downgrade_reason"):
+        out["model"] = f"{provenance.get('model')} (downgraded)"
+    return out
+
+
+def _input_detail(info: dict) -> dict[str, Any]:
+    """The input stage's summary, restricted to what the media reported.
+
+    A local file carries no yt-dlp metadata, so ``title`` and ``resolution`` are
+    absent there by construction; the UI shows what exists rather than a
+    placeholder word where a value is missing.
+    """
+    out: dict[str, Any] = {}
+    if info.get("title"):
+        out["title"] = str(info["title"])[:60]
+    width, height = int(info.get("width") or 0), int(info.get("height") or 0)
+    if width and height:
+        out["resolution"] = f"{width}x{height}"
+    return out
 
 
 def _no_speech_diagnosis(peak: float | None, unreadable: str | None = None) -> str:
@@ -519,6 +733,7 @@ def run(
     export_fcpxml: bool = False,
     skip_coverage_check: bool = False,
     skip_language_check: bool = False,
+    progress: ProgressFn | None = None,
 ) -> Path:
     # Reject unusable parameters before touching the network or the disk: a
     # bad --limit used to survive download + transcription and then surface as
@@ -545,6 +760,11 @@ def run(
     # the requested model, hence the model name rather than a bare boolean.
     if select_engine(model) is None:
         raise RuntimeError(_ENGINE_INSTALLED_MESSAGE)
+    # The report's provenance needs the wall-clock moment the run began, not the
+    # moment the report was assembled — the latter made ``duration_seconds``
+    # read as the whole run while measuring only the final write (0.015 s on a
+    # nine-minute run).
+    run_started = time.time()
     project = out_root / "project"
     project.mkdir(parents=True, exist_ok=True)
     # Resolved before anything is recorded: report.json quotes these paths to
@@ -554,37 +774,39 @@ def run(
     project = project.resolve()
     state_path = project / STATE_NAME
     state = _load_state(state_path)
-    if source.startswith(("http://", "https://")):
-        media_path = state.get("media_path")
-        if (
-            media_path
-            and Path(media_path).is_file()
-            and state.get("source") == source
-        ):
-            media, info = Path(media_path), state.get("media_info", {})
-            print(f"[cache] reusing downloaded source: {media}", flush=True)
+    with _stage(progress, "input", detail=lambda: _input_detail(info)):
+        if source.startswith(("http://", "https://")):
+            media_path = state.get("media_path")
+            if (
+                media_path
+                and Path(media_path).is_file()
+                and state.get("source") == source
+            ):
+                media, info = Path(media_path), state.get("media_info", {})
+                print(f"[cache] reusing downloaded source: {media}", flush=True)
+            else:
+                media, info = download(source, project / "source", cookies=cookies)
+                state.update(
+                    {
+                        "source": source,
+                        "media_path": str(media),
+                        "media_info": _scrub_credentials(info),
+                    }
+                )
+                _save_state(state_path, state)
         else:
-            media, info = download(source, project / "source", cookies=cookies)
-            state.update(
-                {
-                    "source": source,
-                    "media_path": str(media),
-                    "media_info": _scrub_credentials(info),
-                }
-            )
-            _save_state(state_path, state)
-    else:
-        media, info = Path(source).expanduser(), {}
-        if not media.is_file():
-            raise RuntimeError(f"Local video not found: {media}")
-        # A local source is not copied into the project tree, so `source` is
-        # the media's own path rather than a URL. tools/nle_check.py reads that
-        # key to find the media and derive the frame rate the timelines were
-        # stamped with; without it, every fps-dependent check reports "could
-        # not probe the source" on a local-file run that otherwise succeeded.
-        if state.get("source") != source:
-            state.update({"source": source, "media_info": {}})
-            _save_state(state_path, state)
+            media, info = Path(source).expanduser(), {}
+            if not media.is_file():
+                raise RuntimeError(f"Local video not found: {media}")
+            # A local source is not copied into the project tree, so `source` is
+            # the media's own path rather than a URL. tools/nle_check.py reads
+            # that key to find the media and derive the frame rate the timelines
+            # were stamped with; without it, every fps-dependent check reports
+            # "could not probe the source" on a local-file run that otherwise
+            # succeeded.
+            if state.get("source") != source:
+                state.update({"source": source, "media_info": {}})
+                _save_state(state_path, state)
 
     fingerprint = _fingerprint(media, source, model, language)
     transcript_path = project / "transcript.json"
@@ -593,154 +815,157 @@ def run(
     # for: a cached transcript plus `--language x` falls through and
     # re-transcribes, so `cached` alone is not the reuse signal.
     transcript_reused = bool(cached and not language)
-    if transcript_reused:
-        transcript, detected = cached
-        # Provenance is read back rather than carried in a local: this branch
-        # skips transcription entirely, and the report still has to name which
-        # model produced the words a resumed run is reusing. The recovery
-        # marker goes with it for the same reason.
-        asr_provenance = _asr_provenance(transcript_path) or {}
-        recovery_note = _recovery_note(transcript_path)
-        print("[cache] using unchanged transcript", flush=True)
-    else:
-        print(
-            f"[transcribe] model={model}; language={language or 'auto'}; "
-            f"chunk={chunk_minutes}min",
-            flush=True,
-        )
-        transcript, detected, asr_provenance = transcribe_auto(
-            media,
-            model_name=model,
-            language=language,
-            checkpoint_dir=project / "transcription",
-            chunk_minutes=chunk_minutes,
-            beam_size=beam_size,
-            cpu_threads=cpu_threads,
-        )
-        recovery_note = None
-        print(
-            f"[transcribe] engine={asr_provenance['engine']} "
-            f"word_timestamps={asr_provenance['word_timestamps']}"
-            + (f" ({asr_provenance['fallback_reason']})" if asr_provenance["fallback_reason"] else ""),
-            flush=True,
-        )
-        # Provenance must name the model that actually ran, not the one that
-        # was asked for. A silent small→base downgrade is invisible without
-        # this line, and an editor challenging the transcript cannot tell why
-        # the word timing fidelity changed.
-        used = asr_provenance.get("model")
-        downgrade = asr_provenance.get("downgrade_reason")
-        if downgrade:
+    with _stage(progress, "transcribe", detail=lambda: _transcribe_detail(
+        transcript, detected, asr_provenance, transcript_reused)):
+        if transcript_reused:
+            transcript, detected = cached
+            # Provenance is read back rather than carried in a local: this branch
+            # skips transcription entirely, and the report still has to name
+            # which model produced the words a resumed run is reusing. The
+            # recovery marker goes with it for the same reason.
+            asr_provenance = _asr_provenance(transcript_path) or {}
+            recovery_note = _recovery_note(transcript_path)
+            print("[cache] using unchanged transcript", flush=True)
+        else:
             print(
-                f"[transcribe] MODEL DOWNGRADE: requested "
-                f"{asr_provenance.get('requested_model')}, used {used}: {downgrade}",
+                f"[transcribe] model={model}; language={language or 'auto'}; "
+                f"chunk={chunk_minutes}min",
                 flush=True,
             )
-        write_json_atomic(
-            transcript_path,
-            {
-                "language": detected,
-                "asr": asr_provenance,
-                "segments": [
-                    {
-                        "start": s.start,
-                        "end": s.end,
-                        "text": s.text,
-                        "words": [asdict(w) for w in s.words],
-                    }
-                    for s in transcript
-                ],
-            },
-        )
-        # merge, not replace: the download cache (source/media_path/media_info)
-        # must survive transcription so a resumed run reuses the local file
-        state.update({"fingerprint": fingerprint, "model": model, "language": detected})
-        _save_state(state_path, state)
-
-    if not transcript:
-        # An empty transcript means one of two unrelated things, and only one
-        # of them is the user's problem: the source genuinely has no speech,
-        # or its audio is there and the decode lost it. For a long time the
-        # error below blamed the user's content for both — a corpus source at
-        # 95.5% speech energy was rejected as "no audible spoken content"
-        # purely because its container was broken, and a clean remux of the
-        # same file transcribed to 11 segments.
-        #
-        # The extraction is the thing to ask first, because it is cheap and it
-        # settles it: digital silence cannot be repaired by any container fix,
-        # while real level with no transcript points at the decode.
-        audio_path = project / "transcription" / "audio.wav"
-        try:
-            peak = peak_dbfs(audio_path)
-        except AudioReadError as exc:
-            # Not measurable is not the same as silent. A file that is there
-            # and cannot be parsed is a decode that went wrong, which is the
-            # damaged-container case below — reporting it as silence would send
-            # a user looking for an audio track their file does have.
-            peak = None
-            unreadable = str(exc)
-        else:
-            unreadable = None
-        if unreadable or (peak is not None and math.isfinite(peak)
-                          and peak > SILENT_PEAK_DBFS):
-            recovered = _recover_from_a_damaged_container(
-                media, project / "source",
-                transcribe=lambda m: transcribe_auto(
-                    m, model_name=model, language=language,
-                    checkpoint_dir=project / "transcription",
-                    chunk_minutes=chunk_minutes, beam_size=beam_size,
-                    cpu_threads=cpu_threads,
-                ),
+            transcript, detected, asr_provenance = transcribe_auto(
+                media,
+                model_name=model,
+                language=language,
+                checkpoint_dir=project / "transcription",
+                chunk_minutes=chunk_minutes,
+                beam_size=beam_size,
+                cpu_threads=cpu_threads,
+                progress=_chunk_progress(progress, "transcribe"),
             )
-            if recovered is not None:
-                remuxed, transcript, detected, asr_provenance, note = recovered
-                # Downstream renders and timelines seek this media; leaving
-                # them on the damaged original would reintroduce the decode
-                # loss the recovery just fixed, one stage later and silently.
-                media = remuxed
-                state.update({"media_path": str(media)})
-                _save_state(state_path, state)
-                write_json_atomic(
-                    transcript_path,
-                    {
-                        "language": detected,
-                        "asr": asr_provenance,
-                        "segments": [
-                            {"start": s.start, "end": s.end, "text": s.text,
-                             "words": [asdict(w) for w in s.words]}
-                            for s in transcript
-                        ],
-                        # Named so a reader can tell this transcript came from
-                        # a repaired container, not the file they handed in.
-                        "container_recovery": note,
+            recovery_note = None
+            print(
+                f"[transcribe] engine={asr_provenance['engine']} "
+                f"word_timestamps={asr_provenance['word_timestamps']}"
+                + (f" ({asr_provenance['fallback_reason']})" if asr_provenance["fallback_reason"] else ""),
+                flush=True,
+            )
+            # Provenance must name the model that actually ran, not the one that
+            # was asked for. A silent small→base downgrade is invisible without
+            # this line, and an editor challenging the transcript cannot tell why
+            # the word timing fidelity changed.
+            used = asr_provenance.get("model")
+            downgrade = asr_provenance.get("downgrade_reason")
+            if downgrade:
+                print(
+                    f"[transcribe] MODEL DOWNGRADE: requested "
+                    f"{asr_provenance.get('requested_model')}, used {used}: {downgrade}",
+                    flush=True,
+                )
+            write_json_atomic(
+                transcript_path,
+                {
+                    "language": detected,
+                    "asr": asr_provenance,
+                    "segments": [
+                        {
+                            "start": s.start,
+                            "end": s.end,
+                            "text": s.text,
+                            "words": [asdict(w) for w in s.words],
+                        }
+                        for s in transcript
+                    ],
                 },
             )
-                recovery_note = note
-                print(f"[transcribe] recovered {len(transcript)} segment(s) via {note}",
-                      flush=True)
+            # merge, not replace: the download cache (source/media_path/media_info)
+            # must survive transcription so a resumed run reuses the local file
+            state.update({"fingerprint": fingerprint, "model": model, "language": detected})
+            _save_state(state_path, state)
 
-    if not transcript:
-        # A source with no detectable speech has no stories to select, and
-        # every candidate would be rejected for having too few words. Failing
-        # here names the actual cause instead of letting it surface forty
-        # minutes later as "no complete standalone stories passed the gate",
-        # which tells a user nothing they can act on. Hit on a real URL whose
-        # audio track was digital silence.
-        # Re-measured on purpose: the recovery above may have remuxed the
-        # source and re-extracted the audio, in which case the peak taken
-        # before it describes a file that no longer exists. Measured here
-        # instead of hoisted, because before this point the peak was a
-        # decision and here it is a report, and only the report needs to
-        # survive an extraction that still will not parse.
-        try:
-            peak = peak_dbfs(project / "transcription" / "audio.wav")
-            unreadable = None
-        except AudioReadError as exc:
-            peak, unreadable = None, str(exc)
-        raise RuntimeError(
-            "Transcription produced no speech: the source has no audible "
-            f"spoken content. {_no_speech_diagnosis(peak, unreadable)}"
-        )
+        if not transcript:
+            # An empty transcript means one of two unrelated things, and only one
+            # of them is the user's problem: the source genuinely has no speech,
+            # or its audio is there and the decode lost it. For a long time the
+            # error below blamed the user's content for both — a corpus source at
+            # 95.5% speech energy was rejected as "no audible spoken content"
+            # purely because its container was broken, and a clean remux of the
+            # same file transcribed to 11 segments.
+            #
+            # The extraction is the thing to ask first, because it is cheap and it
+            # settles it: digital silence cannot be repaired by any container fix,
+            # while real level with no transcript points at the decode.
+            audio_path = project / "transcription" / "audio.wav"
+            try:
+                peak = peak_dbfs(audio_path)
+            except AudioReadError as exc:
+                # Not measurable is not the same as silent. A file that is there
+                # and cannot be parsed is a decode that went wrong, which is the
+                # damaged-container case below — reporting it as silence would send
+                # a user looking for an audio track their file does have.
+                peak = None
+                unreadable = str(exc)
+            else:
+                unreadable = None
+            if unreadable or (peak is not None and math.isfinite(peak)
+                              and peak > SILENT_PEAK_DBFS):
+                recovered = _recover_from_a_damaged_container(
+                    media, project / "source",
+                    transcribe=lambda m: transcribe_auto(
+                        m, model_name=model, language=language,
+                        checkpoint_dir=project / "transcription",
+                        chunk_minutes=chunk_minutes, beam_size=beam_size,
+                        cpu_threads=cpu_threads,
+                    ),
+                )
+                if recovered is not None:
+                    remuxed, transcript, detected, asr_provenance, note = recovered
+                    # Downstream renders and timelines seek this media; leaving
+                    # them on the damaged original would reintroduce the decode
+                    # loss the recovery just fixed, one stage later and silently.
+                    media = remuxed
+                    state.update({"media_path": str(media)})
+                    _save_state(state_path, state)
+                    write_json_atomic(
+                        transcript_path,
+                        {
+                            "language": detected,
+                            "asr": asr_provenance,
+                            "segments": [
+                                {"start": s.start, "end": s.end, "text": s.text,
+                                 "words": [asdict(w) for w in s.words]}
+                                for s in transcript
+                            ],
+                            # Named so a reader can tell this transcript came from
+                            # a repaired container, not the file they handed in.
+                            "container_recovery": note,
+                    },
+                )
+                    recovery_note = note
+                    print(f"[transcribe] recovered {len(transcript)} segment(s) via {note}",
+                          flush=True)
+
+        if not transcript:
+            # A source with no detectable speech has no stories to select, and
+            # every candidate would be rejected for having too few words. Failing
+            # here names the actual cause instead of letting it surface forty
+            # minutes later as "no complete standalone stories passed the gate",
+            # which tells a user nothing they can act on. Hit on a real URL whose
+            # audio track was digital silence.
+            # Re-measured on purpose: the recovery above may have remuxed the
+            # source and re-extracted the audio, in which case the peak taken
+            # before it describes a file that no longer exists. Measured here
+            # instead of hoisted, because before this point the peak was a
+            # decision and here it is a report, and only the report needs to
+            # survive an extraction that still will not parse.
+            try:
+                peak = peak_dbfs(project / "transcription" / "audio.wav")
+                unreadable = None
+            except AudioReadError as exc:
+                peak, unreadable = None, str(exc)
+            raise RuntimeError(
+                "Transcription produced no speech: the source has no audible "
+                f"spoken content. {_no_speech_diagnosis(peak, unreadable)}"
+            )
 
     # Before comparing the transcript against the audio, ask a cheaper and more
     # specific question of it: can the model that just ran transcribe this
@@ -756,14 +981,19 @@ def run(
     # downgrade to a smaller model can move a language across the usable line
     # and the verdict has to follow the model that produced the words.
     fit = language_fitness(detected or language, asr_provenance.get("model") or model)
-    if language_is_refusable(fit) and not skip_language_check:
-        raise RuntimeError(
-            f"Transcription is not usable on this language: {fit.detail} "
-            "Re-run with a model this language is measured on, or pass "
-            "--skip-language-check once you have verified the transcript by "
-            "hand — but verify it, because the captions and the cut points "
-            "are all derived from it."
-        )
+    # ``seen`` carries the coverage object out to the stage's detail callback;
+    # it is assigned inside the block and read once, after the block closes.
+    seen: dict[str, Any] = {}
+    with _stage(progress, "verify",
+                detail=lambda: _verify_detail(fit, seen.get("coverage"))):
+        if language_is_refusable(fit) and not skip_language_check:
+            raise RuntimeError(
+                f"Transcription is not usable on this language: {fit.detail} "
+                "Re-run with a model this language is measured on, or pass "
+                "--skip-language-check once you have verified the transcript by "
+                "hand — but verify it, because the captions and the cut points "
+                "are all derived from it."
+            )
     # A `poor` verdict does not stop the run, and not for the comforting reason:
     # the poor band (above the bar, at or below 100% WER) has one measured
     # member — Telugu on medium, 91.54% — and its only measured alternative is
@@ -791,18 +1021,19 @@ def run(
     # back to the gate's own chain here keeps a `--vad-backend whisper` selection
     # run working while the audit still comes from an instrument that listened;
     # the backend that actually ran is recorded in `coverage` below.
-    gate_backend = None if vad_backend == "whisper" else vad_backend
-    coverage = check_coverage(project / "transcription" / "audio.wav",
-                              [{"start": s.start, "end": s.end} for s in transcript],
-                              vad_backend=gate_backend)
-    if coverage.verdict == "coverage_collapse" and not skip_coverage_check:
-        raise RuntimeError(
-            f"Transcription coverage collapse: {coverage.detail}. Re-run with a "
-            "larger model if the language is a low-resource one, or pass "
-            "--skip-coverage-check once you have verified the transcript by "
-            "hand — but verify it, because this check exists to stop a wrong "
-            "deliverable shipping as a success."
-        )
+        gate_backend = None if vad_backend == "whisper" else vad_backend
+        coverage = check_coverage(project / "transcription" / "audio.wav",
+                                  [{"start": s.start, "end": s.end} for s in transcript],
+                                  vad_backend=gate_backend)
+        seen["coverage"] = coverage
+        if coverage.verdict == "coverage_collapse" and not skip_coverage_check:
+            raise RuntimeError(
+                f"Transcription coverage collapse: {coverage.detail}. Re-run with a "
+                "larger model if the language is a low-resource one, or pass "
+                "--skip-coverage-check once you have verified the transcript by "
+                "hand — but verify it, because this check exists to stop a wrong "
+                "deliverable shipping as a success."
+            )
 
     thoughts = make_thoughts(transcript)
     ranked = rank(thoughts, limit=max(limit * 3, limit))
@@ -815,44 +1046,51 @@ def run(
     # patch it that way, so both shapes are accepted rather than forcing a
     # breaking change on the contract.
     gate_results: list[tuple] = []
-    for c in ranked:
-        outcome = validate(c)
-        ok = bool(outcome[0])
-        reason = str(outcome[1]) if len(outcome) > 1 else "rejected"
-        gate_results.append((c, ok, reason))
-    passed = [c for c, ok, _r in gate_results if ok]
-    rejected = [c for c, ok, _r in gate_results if not ok]
-    # The two ways a candidate disappears are editorially different and the
-    # report must not conflate them:
-    #   * the gate rejected it — an editorial judgment an editor can challenge;
-    #   * it passed but ranked below --limit — a budget constraint, not a
-    #     judgment, and the clip is still available in the ranked set.
-    context_guard_rejections = len(rejected)
-    truncated_by_limit = max(0, len(passed) - limit)
-    rejection_reasons: dict[str, int] = {}
-    for _c, ok, reason in gate_results:
-        if not ok:
-            rejection_reasons[reason] = rejection_reasons.get(reason, 0) + 1
-    selected = passed[:limit]
-    # The bench: candidates that passed every editorial gate and lost only to
-    # the --limit budget. Recording just the count left an editor staring at
-    # "5 more clips passed" with no way to see them, so the report now carries
-    # the candidates themselves and the count is a claim the artifact backs.
-    bench = [c.to_bench_dict() for c in passed[limit:]]
-    if not selected:
-        raise RuntimeError(
-            "No complete standalone stories were selected. "
-            + _no_story_diagnosis(
-                thoughts, ranked, gate_results, rejection_reasons,
-                coverage=coverage, coverage_bypassed=skip_coverage_check,
+    with _stage(progress, "select", detail=lambda: _select_detail(
+        thoughts, ranked, gate_results, limit)):
+        for i, c in enumerate(ranked, 1):
+            outcome = validate(c)
+            ok = bool(outcome[0])
+            reason = str(outcome[1]) if len(outcome) > 1 else "rejected"
+            gate_results.append((c, ok, reason))
+            # A per-candidate tick is real progress: the gate is the work this
+            # stage does, and every candidate through it is a unit of it.
+            _notify(progress, type="progress", stage="select",
+                    current=i, total=len(ranked))
+        passed = [c for c, ok, _r in gate_results if ok]
+        rejected = [c for c, ok, _r in gate_results if not ok]
+        # The two ways a candidate disappears are editorially different and the
+        # report must not conflate them:
+        #   * the gate rejected it — an editorial judgment an editor can challenge;
+        #   * it passed but ranked below --limit — a budget constraint, not a
+        #     judgment, and the clip is still available in the ranked set.
+        context_guard_rejections = len(rejected)
+        truncated_by_limit = max(0, len(passed) - limit)
+        rejection_reasons: dict[str, int] = {}
+        for _c, ok, reason in gate_results:
+            if not ok:
+                rejection_reasons[reason] = rejection_reasons.get(reason, 0) + 1
+        selected = passed[:limit]
+        # The bench: candidates that passed every editorial gate and lost only to
+        # the --limit budget. Recording just the count left an editor staring at
+        # "5 more clips passed" with no way to see them, so the report now
+        # carries the candidates themselves and the count is a claim the
+        # artifact backs.
+        bench = [c.to_bench_dict() for c in passed[limit:]]
+        if not selected:
+            raise RuntimeError(
+                "No complete standalone stories were selected. "
+                + _no_story_diagnosis(
+                    thoughts, ranked, gate_results, rejection_reasons,
+                    coverage=coverage, coverage_bypassed=skip_coverage_check,
+                )
             )
+        if ollama_url:
+            selected = [attach_metadata(c, ollama_url) for c in selected]
+        (project / "selections.json").write_text(
+            json.dumps([c.to_dict() for c in selected], ensure_ascii=False, indent=2),
+            encoding="utf-8",
         )
-    if ollama_url:
-        selected = [attach_metadata(c, ollama_url) for c in selected]
-    (project / "selections.json").write_text(
-        json.dumps([c.to_dict() for c in selected], ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
 
     editorial_report = []
     for c in selected:
@@ -877,11 +1115,11 @@ def run(
     )
 
     # The corpus layer (topics, threads, redundancy groups, rhythm) is the
-    # story-memory layer's input. It was originally a finished, tested analysis
+    # story-view layer's input. It was originally a finished, tested analysis
     # that nothing consumed — reachable only by importing engine.corpus, so an
     # editor never saw the redundancy groups already computed and never saw a
-    # topic spine at all. This file is what changed that: engine.story_path and
-    # engine.story_view read it back through engine.corpus_io, so a run writes
+    # topic spine at all. This file is what changed that: engine.story_view
+    # reads it back through engine.corpus_io, so a run writes
     # the canonical graph the story view is derived from. It is deterministic,
     # pure and 0.2 s on an 8.9-minute source, so writing it alongside the other
     # reports costs nothing and it degrades to a valid corpus with explanatory
@@ -892,19 +1130,28 @@ def run(
     # absent key, because a UI resolving it fails loudly and an editor reads
     # that as a broken run.
     corpus_path = project / "editorial_corpus.json"
-    try:
-        corpus_report = build_corpus(
-            transcript,
-            duration=max((s.end for s in transcript), default=0.0),
-            language=detected or "unknown",
-            source=source,
-        )
-        corpus_path.write_text(
-            json.dumps(corpus_report.to_dict(), ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-    except Exception as exc:  # noqa: BLE001 - reported, not swallowed
-        print(f"[selektyt] corpus analysis unavailable: {exc}", file=sys.stderr)
+    with _stage(progress, "corpus", detail=lambda: _corpus_detail(
+            corpus_report)):
+        # ``None`` is the failure signal the detail builder above reads as "the
+        # corpus stage failed upstream": a corpus that did not run is shown as
+        # nothing, not as a zero that reads as an analysis that found no topics.
+        corpus_report = None
+        try:
+            corpus_report = build_corpus(
+                transcript,
+                duration=max((s.end for s in transcript), default=0.0),
+                language=detected or "unknown",
+                source=source,
+            )
+            corpus_path.write_text(
+                json.dumps(corpus_report.to_dict(), ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+            print(f"[selektyt] corpus analysis unavailable: {exc}", file=sys.stderr)
+            _notify(progress, type="note", level="warn",
+                    text=f"corpus analysis unavailable: {exc}")
+
     pacing = aggregate_pacing_report(
         selected, rejected, context_guard_rejections,
         truncated_by_limit=truncated_by_limit,
@@ -912,26 +1159,30 @@ def run(
 
     audio_summary: dict = {}
     if audio_analysis:
-        all_words: list[Word] = []
-        for s in transcript:
-            all_words.extend(s.words or [])
-        audio_summary = run_pipeline_audio(
-            media,
-            project,
-            words=all_words or None,
-            source=source,
-            pacing=pacing,
-            min_speech_ms=min_speech_ms,
-            min_silence_ms=min_silence_ms,
-            silence_threshold=silence_threshold,
-            silence_padding=silence_padding,
-            keep_pauses=keep_pauses,
-            remove_filler=remove_filler,
-            export_fcpxml=export_fcpxml,
-            vad_backend=vad_backend,
-            force=False,
-        )
-        (project / "audio").mkdir(exist_ok=True)
+        # The only stage that is opt-in, so it never appears on the panel for a
+        # default run — a stage that did not run is not shown as one that did.
+        with _stage(progress, "audio",
+                    detail=lambda: _audio_detail(audio_summary)):
+            all_words: list[Word] = []
+            for s in transcript:
+                all_words.extend(s.words or [])
+            audio_summary = run_pipeline_audio(
+                media,
+                project,
+                words=all_words or None,
+                source=source,
+                pacing=pacing,
+                min_speech_ms=min_speech_ms,
+                min_silence_ms=min_silence_ms,
+                silence_threshold=silence_threshold,
+                silence_padding=silence_padding,
+                keep_pauses=keep_pauses,
+                remove_filler=remove_filler,
+                export_fcpxml=export_fcpxml,
+                vad_backend=vad_backend,
+                force=False,
+            )
+            (project / "audio").mkdir(exist_ok=True)
     (project / "pacing_report.json").write_text(
         json.dumps(pacing, ensure_ascii=False, indent=2), encoding="utf-8"
     )
@@ -964,277 +1215,341 @@ def run(
     # written after the whole loop completed, so a run killed during clip 3 of
     # 6 re-rendered all six even though 1 and 2 were already on disk.
     renders = state.get("renders", {})
-    for idx, c in enumerate(selected, 1):
-        intervals = retention_intervals(c)
-        # The ASS is a render input, not a by-product: it is the document burned
-        # into the MP4, so it must be written through the guard that keeps an
-        # editor's hand on it. Writing it unconditionally here would overwrite a
-        # moved cue before the cache below is even consulted, and the moved cue
-        # would never reach the render.
-        caption, ass_digest = ship_captions(
-            c,
-            project / "captions" / f"{idx:02d}.ass",
-            project / "captions" / f"{idx:02d}.srt",
-            renders.get(f"{idx:02d}", {}).get("ass_digest"),
-        )
-        (project / "captions" / f"{idx:02d}.json").write_text(
-            json.dumps(caption_metadata(c), ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        pack = build_content_pack(c)
-        pack["clip_index"] = idx
-        (project / "content_pack" / f"{idx:02d}.json").parent.mkdir(parents=True, exist_ok=True)
-        (project / "content_pack" / f"{idx:02d}.json").write_text(
-            json.dumps(pack, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
-        content_packs.append(pack)
+    with _stage(progress, "render",
+                detail=lambda: _render_detail(outputs, edit_report)):
+        for idx, c in enumerate(selected, 1):
+            intervals = retention_intervals(c)
+            # The ASS is a render input, not a by-product: it is the document burned
+            # into the MP4, so it must be written through the guard that keeps an
+            # editor's hand on it. Writing it unconditionally here would overwrite a
+            # moved cue before the cache below is even consulted, and the moved cue
+            # would never reach the render.
+            caption, ass_digest = ship_captions(
+                c,
+                project / "captions" / f"{idx:02d}.ass",
+                project / "captions" / f"{idx:02d}.srt",
+                renders.get(f"{idx:02d}", {}).get("ass_digest"),
+            )
+            (project / "captions" / f"{idx:02d}.json").write_text(
+                json.dumps(caption_metadata(c), ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            pack = build_content_pack(c)
+            pack["clip_index"] = idx
+            (project / "content_pack" / f"{idx:02d}.json").parent.mkdir(parents=True, exist_ok=True)
+            (project / "content_pack" / f"{idx:02d}.json").write_text(
+                json.dumps(pack, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            content_packs.append(pack)
 
-        fb = project / "facebook" / f"{idx:02d}.mp4"
-        sh = project / "shorts" / f"{idx:02d}.mp4"
-        # A cached render is only reusable when it really is the render for
-        # this selection of this source AND ffprobe can confirm it is a
-        # complete, correctly-oriented video. A truncated file from a killed
-        # run, or a 5-byte stub, would otherwise be shipped as a finished clip.
-        # The ASS digest is in the key for the same reason the selection digest
-        # is: the burned-in captions are part of what the cached MP4 *is*, so a
-        # changed cue must invalidate the render even when nothing else about
-        # the clip moved. It also makes a hand edit self-invalidating — a
-        # preserved ASS arrives with a digest that no cached render carries.
-        cached = renders.get(f"{idx:02d}")
-        if (
-            cached
-            and cached.get("fingerprint") == fingerprint
-            and cached.get("selection_digest") == sel_digest
-            and cached.get("caption_style") == caption_style
-            and cached.get("ass_digest") == ass_digest
-            and _render_is_valid(fb, vertical=False, source=media)
-            and _render_is_valid(sh, vertical=True, source=media)
-        ):
-            print(f"[cache] reusing rendered clip {idx:02d}", flush=True)
-        else:
-            render_clip(media, c, fb, caption, vertical=False, fps=source_fps)
-            render_clip(media, c, sh, caption, vertical=True, fps=source_fps)
-            renders[f"{idx:02d}"] = {
-                "fingerprint": fingerprint,
-                "selection_digest": sel_digest,
-                "caption_style": caption_style,
-                "ass_digest": ass_digest,
-                "facebook": str(fb),
-                "shorts": str(sh),
-            }
-            # Checkpoint after each clip, not once at the end: this is what
-            # makes an interrupted run resume from the last finished clip.
-            state["renders"] = renders
-            _save_state(state_path, state)
-        # The editable interchange for this clip. The timeline is built from
-        # the same retention_intervals the render just concatenated, so an NLE
-        # relinking these clips gets the cut that was shipped — but note that
-        # this agreement is measured in two legs, not one direct comparison:
-        # validate_edl/validate_fcpxml below check the timeline against the
-        # plan on the frame grid it was written on, and write_report later
-        # probes the rendered MP4s and compares their durations against the
-        # same plan's edited_duration at 1%. The two legs meet at the plan, so
-        # a render that dropped an interval is caught — outside the sub-1%
-        # slop a container muxer can introduce, which is what
-        # tools/nle_check.py's direct render-vs-timeline comparison is for at
-        # its two-frame tolerance. That tool is not invoked here; run it over
-        # the project directory, or tools/corpus_run.py does, or the suite
-        # does — tests/test_nle_check.py runs it over the committed corpus and
-        # tests/test_pipeline_e2e.py over a tree this code just wrote, which
-        # is what catches an emitter drifting past its own self-consistent
-        # validation. The independent EDL parse below is the half of that audit
-        # that needs no media, so it runs on every export.
-        tl = timeline_for_candidate(media, c, fps=source_fps, duration=source_duration)
-        exported = nle_export(tl, project / "timeline", stem=f"{idx:02d}")
-        # CMX 3600 declares no frame rate, so the list is validated on the grid
-        # it was written on. Without the real rate a 24 fps cut is read as 30
-        # and correct spans report a spurious few-frame retime.
-        edl_text = exported["edl"].read_text(encoding="ascii")
-        edl_problems = validate_edl(edl_text, fps=source_fps)
-        # A reader that is not ours must accept the same text: the regex above
-        # is the emitter's own grammar, so an EDL it accepts is not thereby an
-        # EDL an NLE can read. Absent pycmx this stays advisory rather than
-        # fatal — see independent_parse_edl for why the two differ.
-        ran, indep_problems = independent_parse_edl(edl_text)
-        if ran:
-            if indep_problems:
-                edl_problems += indep_problems
-        else:
-            print(
-                "[export] pycmx is not installed, so the EDL was not parsed by an "
-                "independent reader; install the 'nle' extra to verify it",
-                flush=True,
+            fb = project / "facebook" / f"{idx:02d}.mp4"
+            sh = project / "shorts" / f"{idx:02d}.mp4"
+            # A cached render is only reusable when it really is the render for
+            # this selection of this source AND ffprobe can confirm it is a
+            # complete, correctly-oriented video. A truncated file from a killed
+            # run, or a 5-byte stub, would otherwise be shipped as a finished clip.
+            # The ASS digest is in the key for the same reason the selection digest
+            # is: the burned-in captions are part of what the cached MP4 *is*, so a
+            # changed cue must invalidate the render even when nothing else about
+            # the clip moved. It also makes a hand edit self-invalidating — a
+            # preserved ASS arrives with a digest that no cached render carries.
+            cached = renders.get(f"{idx:02d}")
+            # Two bars, one per deliverable orientation, both driven by the part
+            # count the render itself reports — no bar moves without a part
+            # landing. A clip that is reused from cache shows both bars full,
+            # which is what it is: the file was verified on disk, not rendered.
+            _notify(progress, type="progress", stage="render",
+                    current=idx - 1, total=len(selected),
+                    subprogress=[{"label": "16:9", "fraction": 0.0},
+                                 {"label": "9:16", "fraction": 0.0}],
+                    note=f"clip {idx:02d}/{len(selected)}")
+            if (
+                cached
+                and cached.get("fingerprint") == fingerprint
+                and cached.get("selection_digest") == sel_digest
+                and cached.get("caption_style") == caption_style
+                and cached.get("ass_digest") == ass_digest
+                and _render_is_valid(fb, vertical=False, source=media)
+                and _render_is_valid(sh, vertical=True, source=media)
+            ):
+                print(f"[cache] reusing rendered clip {idx:02d}", flush=True)
+                _notify(progress, type="progress", stage="render",
+                        current=idx - 1, total=len(selected),
+                        subprogress=[{"label": "16:9", "fraction": 1.0},
+                                     {"label": "9:16", "fraction": 1.0}],
+                        note=f"clip {idx:02d} reused from cache")
+                _notify(progress, type="note",
+                        text=f"clip {idx:02d} reused from cache")
+            else:
+                # One sink per orientation: the bar for the orientation not
+                # currently rendering holds the fraction the completed one
+                # reached, so the pair reads as "16:9 done, 9:16 at part 2/3".
+                done = {"16:9": 0.0, "9:16": 0.0}
+
+                def _sink(label: str, *, done=done, idx=idx) -> None:
+                    def _send(payload: dict) -> None:
+                        total = payload.get("parts") or 1
+                        done[label] = (payload.get("part") or 0) / total
+                        _notify(progress, type="progress", stage="render",
+                                current=idx - 1, total=len(selected),
+                                subprogress=[
+                                    {"label": "16:9", "fraction": done["16:9"]},
+                                    {"label": "9:16", "fraction": done["9:16"]},
+                                ])
+
+                    return _send
+
+                render_clip(media, c, fb, caption, vertical=False,
+                            fps=source_fps, progress=_sink("16:9"))
+                # The 16:9 render has finished and its bar should say so at this
+                # instant, not at the 9:16 render's first part event — otherwise
+                # the pair reads as "both in progress" through a render that is
+                # already half done. A note marks it so the UI can tell this
+                # announcement from a part payload, which is also what makes it
+                # read as a state change rather than a progress tick.
+                _notify(progress, type="progress", stage="render",
+                        current=idx - 1, total=len(selected),
+                        subprogress=[
+                            {"label": "16:9", "fraction": 1.0},
+                            {"label": "9:16", "fraction": 0.0},
+                        ], note=f"clip {idx:02d} 16:9 rendered")
+                done["16:9"] = 1.0
+                render_clip(media, c, sh, caption, vertical=True,
+                            fps=source_fps, progress=_sink("9:16"))
+                renders[f"{idx:02d}"] = {
+                    "fingerprint": fingerprint,
+                    "selection_digest": sel_digest,
+                    "caption_style": caption_style,
+                    "ass_digest": ass_digest,
+                    "facebook": str(fb),
+                    "shorts": str(sh),
+                }
+                # Checkpoint after each clip, not once at the end: this is what
+                # makes an interrupted run resume from the last finished clip.
+                state["renders"] = renders
+                _save_state(state_path, state)
+            # The editable interchange for this clip. The timeline is built from
+            # the same retention_intervals the render just concatenated, so an NLE
+            # relinking these clips gets the cut that was shipped — but note that
+            # this agreement is measured in two legs, not one direct comparison:
+            # validate_edl/validate_fcpxml below check the timeline against the
+            # plan on the frame grid it was written on, and write_report later
+            # probes the rendered MP4s and compares their durations against the
+            # same plan's edited_duration at 1%. The two legs meet at the plan, so
+            # a render that dropped an interval is caught — outside the sub-1%
+            # slop a container muxer can introduce, which is what
+            # tools/nle_check.py's direct render-vs-timeline comparison is for at
+            # its two-frame tolerance. That tool is not invoked here; run it over
+            # the project directory, or tools/corpus_run.py does, or the suite
+            # does — tests/test_nle_check.py runs it over the committed corpus and
+            # tests/test_pipeline_e2e.py over a tree this code just wrote, which
+            # is what catches an emitter drifting past its own self-consistent
+            # validation. The independent EDL parse below is the half of that audit
+            # that needs no media, so it runs on every export.
+            tl = timeline_for_candidate(media, c, fps=source_fps, duration=source_duration)
+            exported = nle_export(tl, project / "timeline", stem=f"{idx:02d}")
+            # CMX 3600 declares no frame rate, so the list is validated on the grid
+            # it was written on. Without the real rate a 24 fps cut is read as 30
+            # and correct spans report a spurious few-frame retime.
+            edl_text = exported["edl"].read_text(encoding="ascii")
+            edl_problems = validate_edl(edl_text, fps=source_fps)
+            # A reader that is not ours must accept the same text: the regex above
+            # is the emitter's own grammar, so an EDL it accepts is not thereby an
+            # EDL an NLE can read. Absent pycmx this stays advisory rather than
+            # fatal — see independent_parse_edl for why the two differ.
+            ran, indep_problems = independent_parse_edl(edl_text)
+            if ran:
+                if indep_problems:
+                    edl_problems += indep_problems
+            else:
+                print(
+                    "[export] pycmx is not installed, so the EDL was not parsed by an "
+                    "independent reader; install the 'nle' extra to verify it",
+                    flush=True,
+                )
+                _notify(progress, type="note", level="warn",
+                        text="pycmx absent: the EDL was not independently verified")
+            fcpxml_problems = validate_fcpxml(
+                exported["fcpxml"].read_text(encoding="utf-8"), tl
             )
-        fcpxml_problems = validate_fcpxml(
-            exported["fcpxml"].read_text(encoding="utf-8"), tl
+            # The same standard applied to the other half: our FCPXML grammar is
+            # the emitter's own, so a document it accepts is not thereby a document
+            # an NLE can read. The vendored OTIO adapter resolves each clip's media
+            # through <media-rep>, where we write it; a parse that comes back with
+            # unlinked clips is reported as a problem rather than a pass. Absent the
+            # reader this stays advisory, exactly as the EDL half does above.
+            fcpxml_text = exported["fcpxml"].read_text(encoding="utf-8")
+            ran_fcpxml, indep_fcpxml_problems = independent_parse_fcpxml(fcpxml_text)
+            if ran_fcpxml:
+                fcpxml_problems += indep_fcpxml_problems
+            else:
+                print(
+                    "[export] the FCPXML reader is not installed, so the FCPXML was "
+                    "not parsed by an independent reader; install the 'nle' extra "
+                    "to verify it",
+                    flush=True,
+                )
+                _notify(progress, type="note", level="warn",
+                        text="the FCPXML reader is absent; the export is unverified")
+            if edl_problems or fcpxml_problems:
+                raise RuntimeError(
+                    f"clip {idx:02d} exported an interchange file that failed its own "
+                    f"validation: {edl_problems + fcpxml_problems}"
+                )
+            outputs += [fb, sh]
+            edited = sum(b - a for a, b in intervals)
+            edit_report.append(
+                {
+                    "index": idx,
+                    "source_start": c.start,
+                    "source_end": c.end,
+                    "source_duration": round(c.end - c.start, 3),
+                    "intervals": [[round(a, 3), round(b, 3)] for a, b in intervals],
+                    "edited_duration": round(edited, 3),
+                    "removed_seconds": round((c.end - c.start) - edited, 3),
+                    "story_type": c.story_type,
+                    # No file paths here: edit_plan.json is a deterministic artifact
+                    # (two runs over the same input agree byte for byte), and a
+                    # run-specific output path is exactly what breaks that. Paths
+                    # live in report.json, which is not deterministic by design.
+                }
+            )
+            # The counter inside the loop reports the clip it is about to render,
+            # so without this the last clip would leave the stage reading N-1 of
+            # N while every clip is on disk, checkpointed and exported. idx here
+            # *is* finished — cached or rendered by either branch above — so N/N
+            # is what the bar should read.
+            _notify(progress, type="progress", stage="render",
+                    current=idx, total=len(selected))
+    with _stage(progress, "report",
+                detail=lambda: _report_detail(report, project)):
+        (project / "edit_plan.json").write_text(json.dumps(edit_report, indent=2), encoding="utf-8")
+        (project / "content_pack.json").write_text(
+            json.dumps(content_packs, ensure_ascii=False, indent=2), encoding="utf-8"
         )
-        # The same standard applied to the other half: our FCPXML grammar is
-        # the emitter's own, so a document it accepts is not thereby a document
-        # an NLE can read. The vendored OTIO adapter resolves each clip's media
-        # through <media-rep>, where we write it; a parse that comes back with
-        # unlinked clips is reported as a problem rather than a pass. Absent the
-        # reader this stays advisory, exactly as the EDL half does above.
-        fcpxml_text = exported["fcpxml"].read_text(encoding="utf-8")
-        ran_fcpxml, indep_fcpxml_problems = independent_parse_fcpxml(fcpxml_text)
-        if ran_fcpxml:
-            fcpxml_problems += indep_fcpxml_problems
-        else:
-            print(
-                "[export] the FCPXML reader is not installed, so the FCPXML was "
-                "not parsed by an independent reader; install the 'nle' extra "
-                "to verify it",
-                flush=True,
-            )
-        if edl_problems or fcpxml_problems:
-            raise RuntimeError(
-                f"clip {idx:02d} exported an interchange file that failed its own "
-                f"validation: {edl_problems + fcpxml_problems}"
-            )
-        outputs += [fb, sh]
-        edited = sum(b - a for a, b in intervals)
-        edit_report.append(
-            {
-                "index": idx,
-                "source_start": c.start,
-                "source_end": c.end,
-                "source_duration": round(c.end - c.start, 3),
-                "intervals": [[round(a, 3), round(b, 3)] for a, b in intervals],
-                "edited_duration": round(edited, 3),
-                "removed_seconds": round((c.end - c.start) - edited, 3),
-                "story_type": c.story_type,
-                # No file paths here: edit_plan.json is a deterministic artifact
-                # (two runs over the same input agree byte for byte), and a
-                # run-specific output path is exactly what breaks that. Paths
-                # live in report.json, which is not deterministic by design.
-            }
+        qa_path = write_report(project, outputs, source_path=str(media))
+        # A local file carries no metadata title, so the report used to read
+        # ``"title": null`` for every local source — the first thing shown about
+        # the user's own media was an absence. yt-dlp's title is preferred when a
+        # download supplied one; otherwise the stem of the file is the title the
+        # user already knows it by.
+        title = info.get("title") or media.stem
+        report = {
+            "source": source,
+            "title": title,
+            "language": detected,
+            "candidate_count": len(thoughts),
+            "selected_count": len(selected),
+            "rejected_by_context_guard": context_guard_rejections,
+            # Separate from the above: these passed every editorial gate and were
+            # dropped only because --limit capped the output. A budget, not a
+            # judgment — and the bench below is what it counts.
+            "truncated_by_limit": truncated_by_limit,
+            # The bench: these passed every gate and differ from the shipped clips
+            # only in rank, so an editor raising --limit reads from here. The
+            # entries are visible and comparable; promoting one without re-running
+            # the source is not possible, because rank() has no include hook —
+            # see docs/PRODUCT_WORKFLOW_AUDIT.md J2.
+            "bench": bench,
+            "rejection_reasons": dict(sorted(rejection_reasons.items(), key=lambda kv: -kv[1])),
+            "outputs": {"facebook": str(project / "facebook"), "shorts": str(project / "shorts")},
+            "captions": str(project / "captions"),
+            "timeline": str(project / "timeline"),
+            "content_pack": str(project / "content_pack.json"),
+            "editorial_report": str(project / "editorial_report.json"),
+            "editorial_corpus": str(corpus_path) if corpus_path.is_file() else None,
+            "pacing_report": str(project / "pacing_report.json"),
+            "qa": str(qa_path),
+            "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
+            # Which model actually produced the words, and at what timing
+            # fidelity. The full provenance is in transcript.json under ``asr``;
+            # repeating the six fields a trust judgement needs keeps an editor
+            # from hunting for them in a different file to decide whether the word
+            # timing is attention-based or character-proportional. A null
+            # downgrade_reason reads as "the requested model ran all the way
+            # through" — it is recorded on every run, not only when it fires.
+            "transcription": {
+                k: asr_provenance.get(k)
+                for k in ("engine", "requested_model", "model", "downgrade_reason",
+                          "word_timestamps", "fallback_reason")
+            },
+            # None means the transcript came from the file the user handed in. A
+            # value means it did not: the container was damaged, a remux
+            # transcribed where the original did not, and the clips were cut from
+            # the repair. Timings in a repaired file can shift relative to the
+            # original, so this is the thing to check before trusting a frame, and
+            # it lived only in transcript.json until now — the same gap as the
+            # model name above.
+            "container_recovery": recovery_note,
+            # The completeness measurement behind the coverage guard. Recorded on
+            # every run, not only on failures: a `not_computable` verdict is a
+            # statement that the check could not measure anything, and recording
+            # only the failures would make the silent case look like a pass.
+            "coverage": coverage.as_dict(),
+            # Whether the model that ran is one that can transcribe the language it
+            # transcribed. Recorded on every run for the same reason the coverage
+            # verdict is: a `not_measured` is a statement that this language-model
+            # pair has never been scored against a reference corpus, and recording
+            # only failures would make the unmeasured case look like a pass.
+            # `excluded` names the WER records the loader refused, because a table
+            # that quietly drops the records that disagree with it can support any
+            # conclusion.
+            "language_fitness": fit.as_dict(),
+        }
+        # The audio section is always present: either the full provenance summary,
+        # or an explicit `enabled: False` so a B2B consumer can distinguish
+        # "not run" from "failed silently".
+        report["audio"] = audio_summary if audio_summary else {"enabled": False}
+        # What made this deliverable, and on what: a clip handed to a reviewer is
+        # reproducible only if the report says which build and which parameters
+        # produced it. Every value below is read from the place the pipeline
+        # already computed it rather than recomputed here, so each fact keeps the
+        # one home it had.
+        report_builder = ReportBuilder(started_at=run_started)
+        report_builder.set_provenance(
+            source_path=str(media),
+            source_fingerprint=fingerprint,
+            # The transcript is what a resumed run reuses, so the cache state is a
+            # property of it rather than of the render.
+            cache_status="transcript-reused" if transcript_reused else "transcript-fresh",
         )
-    (project / "edit_plan.json").write_text(json.dumps(edit_report, indent=2), encoding="utf-8")
-    (project / "content_pack.json").write_text(
-        json.dumps(content_packs, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    qa_path = write_report(project, outputs, source_path=str(media))
-    # A local file carries no metadata title, so the report used to read
-    # ``"title": null`` for every local source — the first thing shown about
-    # the user's own media was an absence. yt-dlp's title is preferred when a
-    # download supplied one; otherwise the stem of the file is the title the
-    # user already knows it by.
-    title = info.get("title") or media.stem
-    report = {
-        "source": source,
-        "title": title,
-        "language": detected,
-        "candidate_count": len(thoughts),
-        "selected_count": len(selected),
-        "rejected_by_context_guard": context_guard_rejections,
-        # Separate from the above: these passed every editorial gate and were
-        # dropped only because --limit capped the output. A budget, not a
-        # judgment — and the bench below is what it counts.
-        "truncated_by_limit": truncated_by_limit,
-        # The bench: these passed every gate and differ from the shipped clips
-        # only in rank, so an editor raising --limit reads from here. The
-        # entries are visible and comparable; promoting one without re-running
-        # the source is not possible, because rank() has no include hook —
-        # see docs/PRODUCT_WORKFLOW_AUDIT.md J2.
-        "bench": bench,
-        "rejection_reasons": dict(sorted(rejection_reasons.items(), key=lambda kv: -kv[1])),
-        "outputs": {"facebook": str(project / "facebook"), "shorts": str(project / "shorts")},
-        "captions": str(project / "captions"),
-        "timeline": str(project / "timeline"),
-        "content_pack": str(project / "content_pack.json"),
-        "editorial_report": str(project / "editorial_report.json"),
-        "editorial_corpus": str(corpus_path) if corpus_path.is_file() else None,
-        "pacing_report": str(project / "pacing_report.json"),
-        "qa": str(qa_path),
-        "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
-        # Which model actually produced the words, and at what timing
-        # fidelity. The full provenance is in transcript.json under ``asr``;
-        # repeating the six fields a trust judgement needs keeps an editor
-        # from hunting for them in a different file to decide whether the word
-        # timing is attention-based or character-proportional. A null
-        # downgrade_reason reads as "the requested model ran all the way
-        # through" — it is recorded on every run, not only when it fires.
-        "transcription": {
-            k: asr_provenance.get(k)
-            for k in ("engine", "requested_model", "model", "downgrade_reason",
-                      "word_timestamps", "fallback_reason")
-        },
-        # None means the transcript came from the file the user handed in. A
-        # value means it did not: the container was damaged, a remux
-        # transcribed where the original did not, and the clips were cut from
-        # the repair. Timings in a repaired file can shift relative to the
-        # original, so this is the thing to check before trusting a frame, and
-        # it lived only in transcript.json until now — the same gap as the
-        # model name above.
-        "container_recovery": recovery_note,
-        # The completeness measurement behind the coverage guard. Recorded on
-        # every run, not only on failures: a `not_computable` verdict is a
-        # statement that the check could not measure anything, and recording
-        # only the failures would make the silent case look like a pass.
-        "coverage": coverage.as_dict(),
-        # Whether the model that ran is one that can transcribe the language it
-        # transcribed. Recorded on every run for the same reason the coverage
-        # verdict is: a `not_measured` is a statement that this language-model
-        # pair has never been scored against a reference corpus, and recording
-        # only failures would make the unmeasured case look like a pass.
-        # `excluded` names the WER records the loader refused, because a table
-        # that quietly drops the records that disagree with it can support any
-        # conclusion.
-        "language_fitness": fit.as_dict(),
-    }
-    # The audio section is always present: either the full provenance summary,
-    # or an explicit `enabled: False` so a B2B consumer can distinguish
-    # "not run" from "failed silently".
-    report["audio"] = audio_summary if audio_summary else {"enabled": False}
-    # What made this deliverable, and on what: a clip handed to a reviewer is
-    # reproducible only if the report says which build and which parameters
-    # produced it. Every value below is read from the place the pipeline
-    # already computed it rather than recomputed here, so each fact keeps the
-    # one home it had.
-    report_builder = ReportBuilder()
-    report_builder.set_provenance(
-        source_path=str(media),
-        source_fingerprint=fingerprint,
-        # The transcript is what a resumed run reuses, so the cache state is a
-        # property of it rather than of the render.
-        cache_status="transcript-reused" if transcript_reused else "transcript-fresh",
-    )
-    # Deliberately not populated: the model, the language, the ASR engine and
-    # the VAD backend all already have one home in this report (``transcription``,
-    # ``language``, ``audio``), and a second copy of a fact under a second key is
-    # how the two drift apart. Neither the ASR nor the VAD reports a version
-    # string either, so the version fields stay empty rather than carrying a
-    # model or engine name that would read as one.
-    report_builder.set_config({
-        "model": model,
-        "language": language,
-        "limit": limit,
-        "chunk_minutes": chunk_minutes,
-        "beam_size": beam_size,
-        "cpu_threads": cpu_threads,
-        "audio_analysis": audio_analysis,
-        "vad_backend": vad_backend,
-        "silence_threshold": silence_threshold,
-        "silence_padding": silence_padding,
-        "min_speech_ms": min_speech_ms,
-        "min_silence_ms": min_silence_ms,
-        "keep_pauses": keep_pauses,
-        "remove_filler": remove_filler,
-        "export_fcpxml": export_fcpxml,
-        "skip_coverage_check": skip_coverage_check,
-        "caption_style": caption_style,
-        "ollama_url": ollama_url,
-        "cookies": "<set>" if cookies else None,
-    })
-    report["provenance"] = report_builder.finalize().provenance_dict()
-    report["config"] = report_builder.to_dict()["config"]
-    (project / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    # No "complete" flag is written here. Nothing in the repo, the web shell or
-    # the tests ever reads one: resume keys off ``renders`` and the caller learns
-    # the run finished from this function returning. A write-only flag is worse
-    # than no signal, because a future reader of pipeline_state.json would take
-    # "complete" as a guarantee that a later, failing step had succeeded.
-    state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "render_selection_digest": sel_digest, "selected_count": len(selected), "qa": str(qa_path)})
-    _save_state(state_path, state)
+        # Deliberately not populated: the model, the language, the ASR engine and
+        # the VAD backend all already have one home in this report (``transcription``,
+        # ``language``, ``audio``), and a second copy of a fact under a second key is
+        # how the two drift apart. Neither the ASR nor the VAD reports a version
+        # string either, so the version fields stay empty rather than carrying a
+        # model or engine name that would read as one.
+        report_builder.set_config({
+            "model": model,
+            "language": language,
+            "limit": limit,
+            "chunk_minutes": chunk_minutes,
+            "beam_size": beam_size,
+            "cpu_threads": cpu_threads,
+            "audio_analysis": audio_analysis,
+            "vad_backend": vad_backend,
+            "silence_threshold": silence_threshold,
+            "silence_padding": silence_padding,
+            "min_speech_ms": min_speech_ms,
+            "min_silence_ms": min_silence_ms,
+            "keep_pauses": keep_pauses,
+            "remove_filler": remove_filler,
+            "export_fcpxml": export_fcpxml,
+            "skip_coverage_check": skip_coverage_check,
+            "caption_style": caption_style,
+            "ollama_url": ollama_url,
+            "cookies": "<set>" if cookies else None,
+        })
+        report["provenance"] = report_builder.finalize().provenance_dict()
+        report["config"] = report_builder.to_dict()["config"]
+        (project / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        # No "complete" flag is written here. Nothing in the repo, the web shell or
+        # the tests ever reads one: resume keys off ``renders`` and the caller learns
+        # the run finished from this function returning. A write-only flag is worse
+        # than no signal, because a future reader of pipeline_state.json would take
+        # "complete" as a guarantee that a later, failing step had succeeded.
+        state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "render_selection_digest": sel_digest, "selected_count": len(selected), "qa": str(qa_path)})
+        _save_state(state_path, state)
     return project
 
 

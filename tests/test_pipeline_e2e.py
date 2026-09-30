@@ -570,3 +570,77 @@ def test_regenerating_captions_is_byte_identical_to_a_fresh_run(
     assert before == after, (
         "regeneration is not byte-identical to a fresh run: "
         + ", ".join(sorted(set(before) | set(after))))
+
+
+def test_the_progress_events_name_every_stage_and_real_counts(
+    patched_pipeline, tmp_path, media,
+):
+    """The UI's event channel, run against the real pipeline.
+
+    The renderer is presentation-only, so what has to be tested here is the
+    contract it reads: every stage the panel can label is started and finished
+    in order, each ``done`` carries a duration, and the render stage's counts
+    are the counts the tree actually contains. A stage that emitted no event is
+    a stage the panel silently omits, which is how a missing stage would ship
+    as a working one.
+    """
+    events: list[dict] = []
+    project = patched_pipeline.run(
+        "https://example.com/v", tmp_path, model="small", limit=1,
+        progress=events.append,
+    )
+    by_type = {}
+    for evt in events:
+        by_type.setdefault(evt["type"], []).append(evt)
+
+    started = [e["stage"] for e in by_type["stage"] if e["state"] == "start"]
+    finished = [e["stage"] for e in by_type["stage"] if e["state"] == "done"]
+    # A stage that is not started is not finished either, so the two orders
+    # agree and none is dropped: ``audio`` is absent here because the run did
+    # not ask for it, and it must stay absent rather than appear empty.
+    assert started == finished == ["input", "transcribe", "verify", "select",
+                                   "corpus", "render", "report"]
+
+    details = {e["stage"]: e["detail"]
+               for e in by_type["stage"] if e["state"] == "done"}
+    for stage, detail in details.items():
+        assert isinstance(detail, dict), f"{stage} carried no detail dict"
+        assert detail, f"{stage} carried an empty detail; show nothing instead"
+    # A detail that names a number the tree does not hold is a fabricated one.
+    assert details["render"]["clips"] == len(
+        list((project / "facebook").glob("*.mp4")))
+    assert details["report"]["artifacts"] > 0
+
+
+def test_audio_stage_appears_only_when_it_ran(patched_pipeline, tmp_path, media):
+    events: list[dict] = []
+    patched_pipeline.run("https://example.com/v", tmp_path, model="small", limit=1,
+                         audio_analysis=True, vad_backend="energy",
+                         progress=events.append)
+    stages = [e["stage"] for e in events
+              if e["type"] == "stage" and e["state"] == "start"]
+    assert stages == ["input", "transcribe", "verify", "select", "corpus",
+                      "audio", "render", "report"]
+
+
+def test_a_failed_stage_reports_itself_before_raising(
+    patched_pipeline, tmp_path, media, monkeypatch,
+):
+    """The fail event is what lets the CLI attribute a failure to a stage.
+
+    The verify stage refuses a language the fitness table marks unusable, which
+    is the cheapest refusal the pipeline can raise; the attribution is what the
+    failure screen names, so a stage that raised without emitting would be
+    reported as a nameless "Run" failure.
+    """
+    import selekyt.pipeline as p
+
+    monkeypatch.setattr(p, "language_is_refusable", lambda fit: True)
+    events: list[dict] = []
+    with pytest.raises(RuntimeError, match="not usable on this language"):
+        p.run("https://example.com/v", tmp_path, model="small", limit=1,
+              progress=events.append)
+    fails = [e for e in events if e["type"] == "fail"]
+    assert len(fails) == 1
+    assert fails[0]["stage"] == "verify"
+    assert "not usable on this language" in fails[0]["reason"]
