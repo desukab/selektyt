@@ -335,6 +335,27 @@ def _audio_detail(summary: dict) -> dict[str, Any]:
     return out
 
 
+def _assemble_detail(summary: dict) -> dict[str, Any]:
+    """The assembly stage's summary: the shape of the edit as it was built.
+
+    ``summary`` is only populated once the assembly landed, so an empty dict is
+    the honest signal that the canonical edit is not available rather than a
+    report of an edit with zero clips.
+    """
+    if not summary:
+        return {"edit": "unavailable"}
+    out: dict[str, Any] = {
+        "clips": summary.get("clips", 0),
+        "duration": summary.get("duration", 0.0),
+        "order": summary.get("order"),
+    }
+    if summary.get("problems"):
+        out["problems"] = len(summary["problems"])
+    if summary.get("dangling"):
+        out["dangling"] = summary["dangling"]
+    return out
+
+
 def _render_detail(outputs: list, edit_report: list) -> dict[str, Any]:
     """The render stage's summary: files on disk, not files requested.
 
@@ -1361,6 +1382,58 @@ def run(
         source_duration = probe_duration(media)
     except FfmpegError:
         source_duration = None
+
+    # The canonical edit: one ordered timeline plus the decisions behind it.
+    # ``selected`` leaves the policy in greedy pick order, so until this stage
+    # nothing describes the edit as a whole — the render loop numbers the
+    # deliverables off that order, making ``01.mp4`` "the clip the policy scored
+    # highest" rather than "the opening". The assembly sequences the set into a
+    # program and records what it dropped and why, which is the gap G1/G3 the
+    # reconnaissance named. It is pure and reads no media, so a failure here is
+    # a missing report rather than a missing deliverable and is reported rather
+    # than raised, exactly as the corpus and memory writes above are.
+    edit_summary: dict = {}
+    edit_path = project / "edit.json"
+    with _stage(progress, "assemble",
+                detail=lambda: _assemble_detail(edit_summary)):
+        try:
+            from engine.assembly import AssemblyConfig, assemble
+            assembly = assemble(
+                selected,
+                media=media,
+                fps=source_fps,
+                source_duration=source_duration,
+                title=f"{source} edit",
+                corpus=corpus_report,
+                scored=list(policy_report.selected),
+                deferred=list(policy_report.deferred),
+                config=AssemblyConfig(order="arc"),
+            )
+            edit_path.write_text(
+                json.dumps(assembly.as_dict(), ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            problems = assembly.timeline.validate()
+            edit_summary = dict(assembly.report)
+            edit_summary["clips"] = len(assembly.timeline.clips)
+            edit_summary["duration"] = round(assembly.duration, 3)
+            edit_summary["problems"] = problems
+            # Dangling decisions mean the assembly moved a clip without moving
+            # the reasoning attached to it — a bug to surface, not a warning to
+            # bury, so it is reported at warn and not folded into the summary.
+            if assembly.graph.dangling():
+                _notify(progress, type="note", level="warn",
+                        text=f"{len(assembly.graph.dangling())} decision(s) "
+                             f"anchor on no clip in the assembled edit")
+            if problems:
+                _notify(progress, type="note", level="warn",
+                        text=f"the assembled timeline reports "
+                             f"{len(problems)} problem(s)")
+        except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+            print(f"[selektyt] canonical edit unavailable: {exc}", file=sys.stderr)
+            _notify(progress, type="note", level="warn",
+                    text=f"canonical edit unavailable: {exc}")
+
     # Per-clip render cache. The previous single render_fingerprint was only
     # written after the whole loop completed, so a run killed during clip 3 of
     # 6 re-rendered all six even though 1 and 2 were already on disk.

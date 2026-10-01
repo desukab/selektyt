@@ -599,7 +599,7 @@ def test_the_progress_events_name_every_stage_and_real_counts(
     # agree and none is dropped: ``audio`` is absent here because the run did
     # not ask for it, and it must stay absent rather than appear empty.
     assert started == finished == ["input", "transcribe", "verify", "select",
-                                   "corpus", "render", "report"]
+                                   "corpus", "assemble", "render", "report"]
 
     details = {e["stage"]: e["detail"]
                for e in by_type["stage"] if e["state"] == "done"}
@@ -620,7 +620,7 @@ def test_audio_stage_appears_only_when_it_ran(patched_pipeline, tmp_path, media)
     stages = [e["stage"] for e in events
               if e["type"] == "stage" and e["state"] == "start"]
     assert stages == ["input", "transcribe", "verify", "select", "corpus",
-                      "audio", "render", "report"]
+                      "assemble", "audio", "render", "report"]
 
 
 def test_a_failed_stage_reports_itself_before_raising(
