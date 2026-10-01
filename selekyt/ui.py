@@ -40,6 +40,7 @@ STAGE_LABELS: dict[str, str] = {
     "verify": "Verification",
     "select": "Editorial",
     "corpus": "Corpus",
+    "assemble": "Assembly",
     "audio": "Audio analysis",
     "render": "Rendering",
     "report": "Package",

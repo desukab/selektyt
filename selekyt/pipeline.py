@@ -1418,6 +1418,38 @@ def run(
             edit_summary["clips"] = len(assembly.timeline.clips)
             edit_summary["duration"] = round(assembly.duration, 3)
             edit_summary["problems"] = problems
+
+            # The canonical edit's own interchange: one EDL and one FCPXML for
+            # the whole program, where the per-clip exports below are six
+            # separate one-track files. This is the artifact an NLE opens to see
+            # the edit as assembled rather than as a bin of clips. The emitters
+            # and validators are the same ones the per-clip path already uses,
+            # so the two halves cannot drift into different grammars, and the
+            # independent EDL reader is run on every export for the same reason
+            # it is below: our validator is our own grammar, so a document it
+            # accepts is not thereby a document an NLE can read.
+            exported = nle_export(assembly.timeline, project / "timeline",
+                                  stem="program")
+            edl_text = exported["edl"].read_text(encoding="ascii")
+            export_problems = validate_edl(edl_text, fps=source_fps)
+            ran_reader, indep_problems = independent_parse_edl(edl_text)
+            if ran_reader:
+                export_problems += indep_problems
+            fcpxml_problems = validate_fcpxml(
+                exported["fcpxml"].read_text(encoding="utf-8"),
+                assembly.timeline,
+            )
+            edit_summary["interchange"] = {
+                "edl": str(exported["edl"]),
+                "fcpxml": str(exported["fcpxml"]),
+                "problems": export_problems + fcpxml_problems,
+                "edl_independently_parsed": ran_reader,
+            }
+            if export_problems or fcpxml_problems:
+                _notify(progress, type="note", level="warn",
+                        text=f"the canonical edit's interchange reports "
+                             f"{len(export_problems) + len(fcpxml_problems)} "
+                             f"problem(s)")
             # Dangling decisions mean the assembly moved a clip without moving
             # the reasoning attached to it — a bug to surface, not a warning to
             # bury, so it is reported at warn and not folded into the summary.
