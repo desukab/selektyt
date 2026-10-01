@@ -620,7 +620,56 @@ def test_audio_stage_appears_only_when_it_ran(patched_pipeline, tmp_path, media)
     stages = [e["stage"] for e in events
               if e["type"] == "stage" and e["state"] == "start"]
     assert stages == ["input", "transcribe", "verify", "select", "corpus",
-                      "assemble", "audio", "render", "report"]
+                      "audio", "assemble", "render", "report"]
+
+
+def test_the_canonical_edit_is_written_and_valid(patched_pipeline, tmp_path,
+                                                media, capfd):
+    """The assemble stage must land an edit, not merely not crash.
+
+    The stage catches its own exceptions and reports them, which is the right
+    behaviour for a stage whose failure costs a report rather than a
+    deliverable — but it means a run whose assembly raised looks identical to a
+    successful one from the stage list alone. This is the assertion that closes
+    that gap: the edit is on disk, it describes every clip the reel placed, its
+    decisions do not dangle, and its interchange validates on both readers.
+    """
+    events: list[dict] = []
+    project = patched_pipeline.run("https://example.com/v", tmp_path,
+                                   model="small", limit=2,
+                                   progress=events.append)
+    assert project == tmp_path / "project"
+    assert "canonical edit unavailable" not in capfd.readouterr().err, \
+        "the assemble stage raised and reported instead of writing an edit"
+
+    edit = json.loads((project / "edit.json").read_text(encoding="utf-8"))
+    # Decisions, not just a header: every placement the reel made is a decision
+    # the graph holds, and a decision anchoring on no clip is a move that moved
+    # the clip without moving its reasoning.
+    assert edit["decisions"], "the graph recorded no decisions at all"
+    assert edit["placements"], "the reel placed no clips"
+    assert len(edit["placements"]) == len(edit["decisions"])
+    assert edit["dangling"] == 0
+
+    # The program-level interchange is the artifact an NLE opens to see the edit
+    # as assembled. It is validated inside the stage against the real timeline —
+    # a stronger check than a reconstruction from this JSON, which records no
+    # timeline positions — and the result is carried in the stage detail.
+    edl = project / "timeline" / "program.edl"
+    fcpxml = project / "timeline" / "program.fcpxml"
+    assert edl.is_file() and fcpxml.is_file()
+
+    detail = next(e["detail"] for e in events
+                  if e["type"] == "stage" and e["stage"] == "assemble"
+                  and e["state"] == "done")
+    assert detail.get("edit") != "unavailable"
+    interchange = detail["interchange"]
+    assert interchange["problems"] == [], \
+        f"the program interchange failed validation: {interchange['problems']}"
+    assert interchange["edl_independently_parsed"], \
+        "pycmx is not installed, so the independent EDL parse is vacuous"
+    assert Path(interchange["edl"]) == edl
+    assert Path(interchange["fcpxml"]) == fcpxml
 
 
 def test_a_failed_stage_reports_itself_before_raising(

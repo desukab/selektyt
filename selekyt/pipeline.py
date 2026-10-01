@@ -353,6 +353,11 @@ def _assemble_detail(summary: dict) -> dict[str, Any]:
         out["problems"] = len(summary["problems"])
     if summary.get("dangling"):
         out["dangling"] = summary["dangling"]
+    if summary.get("interchange"):
+        # Reported here and not only as a note because a program EDL that fails
+        # its own validator is a broken deliverable, and the detail is what the
+        # report channel carries to a caller that never saw the note.
+        out["interchange"] = dict(summary["interchange"])
     return out
 
 
@@ -1406,7 +1411,11 @@ def run(
                 title=f"{source} edit",
                 corpus=corpus_report,
                 scored=list(policy_report.selected),
-                deferred=list(policy_report.deferred),
+                # ``deferred`` holds ``Scored`` records, each wrapping the
+                # candidate it scored; the assembly's contract is candidates,
+                # so they are unwrapped here rather than making the assembly
+                # learn the policy's record type.
+                deferred=[s.candidate for s in policy_report.deferred],
                 config=AssemblyConfig(order="arc"),
             )
             edit_path.write_text(
