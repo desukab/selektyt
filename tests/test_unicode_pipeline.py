@@ -298,9 +298,15 @@ def test_full_telugu_run_preserves_the_script_in_every_artifact(tmp_path):
             body = (project / "captions" / f"{i:02d}.{ext}").read_bytes()
             _assert_script_clean(body.decode("utf-8", errors="strict"))
 
-    # packs stay extractive in Telugu
+    # packs stay extractive in Telugu. Packs are numbered in program order while
+    # selections is the policy's pick order, so the pack's own clip is the one
+    # sharing its source span.
     packs = json.loads((project / "content_pack.json").read_text(encoding="utf-8"))
-    for pack, sel in zip(packs, selections):
+    by_span = {(round(s["start"], 3), round(s["end"], 3)): s
+               for s in selections}
+    for pack in packs:
+        sel = by_span[(round(pack["source_start"], 3),
+                       round(pack["source_end"], 3))]
         assert _norm(pack["instagram_caption"]) == _norm(sel["text"])
 
     assert (project / "facebook" / "01.mp4").is_file()

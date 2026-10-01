@@ -28,7 +28,7 @@ from unittest.mock import patch
 import pytest
 
 from models.core import Candidate, Segment, Word
-from selekyt.pipeline import run as pipeline_run, _selection_digest
+from selekyt.pipeline import run as pipeline_run, _program_digest, _selection_digest
 from engine.edit_plan import retention_intervals
 from engine.captions import _digest, ass_content
 from providers.transcribe import _ENGINE_INSTALLED_MESSAGE
@@ -599,6 +599,7 @@ def test_valid_cached_render_is_reused(tmp_path):
         "source": "https://example.com/v", "media_path": str(media),
         "media_info": {"title": "t"}, "fingerprint": fp,
         "renders": {"01": {"fingerprint": fp, "selection_digest": digest,
+                           "program_digest": _program_digest(cands),
                            "caption_style": "minimal",
                            "ass_digest": _digest(ass),
                            "facebook": str(project_dir / "facebook" / "01.mp4"),

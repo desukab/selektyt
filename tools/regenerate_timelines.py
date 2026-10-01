@@ -95,7 +95,20 @@ def main(project_dir: str) -> int:
 
     out_dir = project / "timeline"
     changed = 0
-    for idx, raw in enumerate(json.loads(sel_path.read_text(encoding="utf-8")), 1):
+    raws = json.loads(sel_path.read_text(encoding="utf-8"))
+    # Numbered by position in the reel, so the order must come from the canonical
+    # edit when there is one: ``01.edl`` is the program's opening, and
+    # regenerating in pick order would write the opening's timeline under 02.
+    from engine.assembly import program_order_of
+
+    order = program_order_of(project)
+    if order is not None:
+        by_span = {(round(float(r["start"]), 3), round(float(r["end"]), 3)): r
+                   for r in raws}
+        keyed = [k for k in ((round(s, 3), round(e, 3)) for s, e in order)
+                 if k in by_span]
+        raws = [by_span[k] for k in keyed]
+    for idx, raw in enumerate(raws, 1):
         c = _candidate(raw)
         tl = timeline_for_candidate(media, c, fps=fps, duration=duration)
         before = {f: f.read_text(encoding="utf-8") if f.is_file() else None

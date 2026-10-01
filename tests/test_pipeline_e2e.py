@@ -254,9 +254,15 @@ def test_run_produces_the_full_project_tree(patched_pipeline, tmp_path, media):
     assert corpus["build"]["schema"]
     assert report["editorial_corpus"] == str(project / "editorial_corpus.json")
 
-    # captions for every selected clip, both formats
+    # captions for every shipped clip, both formats. Packs are built per program
+    # position, so they count what the reel kept — the selection count is the
+    # policy's, and the two differ when the assembly dropped an unrenderable
+    # candidate. Here nothing is dropped, and the two agreeing is itself the
+    # assertion that the run shipped everything it chose.
     packs = json.loads((project / "content_pack.json").read_text())
-    assert len(packs) == report["selected_count"]
+    assert len(packs) == report["program_count"]
+    assert report["program_count"] == report["selected_count"], \
+        "the assembly dropped a clip this fixture expects to ship whole"
     for pack in packs:
         assert pack["source_based"] is True
         assert pack["titles"], "every clip ships title variants"
@@ -670,6 +676,46 @@ def test_the_canonical_edit_is_written_and_valid(patched_pipeline, tmp_path,
         "pycmx is not installed, so the independent EDL parse is vacuous"
     assert Path(interchange["edl"]) == edl
     assert Path(interchange["fcpxml"]) == fcpxml
+
+
+def test_deliverables_are_numbered_in_the_order_the_program_plays_them(
+        patched_pipeline, tmp_path, media):
+    """The render loop follows the assembly, not the policy.
+
+    ``selected`` leaves the policy in greedy pick order — highest score first —
+    while the assembly sequences the same clips into a program that may reorder
+    them. ``01.mp4`` has to be the program's opening, not the policy's top
+    pick, or every derivative silently disagrees with the canonical edit this
+    whole pipeline exists to serve. The numbering is what an editor reads as
+    order, so it is where a reordering the assembly made would be lost.
+    """
+    project = patched_pipeline.run("https://example.com/v", tmp_path,
+                                   model="small", limit=2)
+    selections = json.loads((project / "selections.json").read_text())
+    edit = json.loads((project / "edit.json").read_text())
+    plan = json.loads((project / "edit_plan.json").read_text())
+
+    picked = [round(s["start"], 3) for s in selections]
+    program = [pl["start"] for pl in edit["placements"]]
+    shipped = [e["source_start"] for e in plan]
+
+    # The fixture has to diverge for any of this to mean anything: the policy
+    # ranks the later clip higher, the assembly keeps chronology. Asserted
+    # rather than assumed, because a scoring change that made the two agree
+    # would leave every assertion below passing vacuously — the same discipline
+    # as the pycmx-installed check elsewhere in this file.
+    assert picked != program, \
+        ("the policy and the assembly agree on order in this fixture, so it "
+         "cannot detect the render loop following one rather than the other")
+
+    # The plan is written per program position inside the render loop, so its
+    # order is the order the loop iterated. Following the policy would put
+    # ``picked`` here instead.
+    assert shipped == program
+    # And the deliverables themselves carry the same numbering.
+    assert len(plan) == len(list((project / "facebook").glob("*.mp4")))
+    assert len(plan) == json.loads(
+        (project / "report.json").read_text())["program_count"]
 
 
 def test_a_failed_stage_reports_itself_before_raising(

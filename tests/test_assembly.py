@@ -9,9 +9,11 @@ no threads, a candidate bound to no thread, and a clip with no renderable span.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
-from engine.assembly import AssemblyConfig, assemble
+from engine.assembly import AssemblyConfig, assemble, program_order_of
 from engine.edit_decision import EditorialAction
 from engine.edit_plan import retention_intervals as _retention
 from engine.selection import PolicyNote, Scored
@@ -463,3 +465,40 @@ class TestIdentity:
         assert d["placements"][0]["thread_title"] == "the incident"
         assert d["placements"][0]["grouped"] is False
         assert "clips" in a.report
+
+
+class TestProgramOrderOf:
+    """``program_order_of`` is the join between the canonical edit and the tools
+    that number artifacts by position.
+
+    ``selections.json`` is the policy's pick order and the caption, timeline and
+    audit artifacts are numbered by position in the reel, so a tool that reads
+    them positionally would pair the wrong clip's transcript with the wrong
+    clip's captions whenever the assembly reordered anything. This is what makes
+    the numbering derive from the edit instead.
+    """
+
+    def test_the_order_is_the_reel_order_not_the_pick_order(self, tmp_path):
+        a = assemble([_Cand(60.0, 90.0, hook="second", opening_score=0.9),
+                      _Cand(0.0, 30.0, hook="first", opening_score=0.1)],
+                     corpus=None, title="T",
+                     config=AssemblyConfig(order="source"))
+        (tmp_path / "edit.json").write_text(
+            json.dumps(a.as_dict()), encoding="utf-8")
+        # source order, and the pick order above is reversed relative to it
+        assert program_order_of(tmp_path) == [(0.0, 30.0), (60.0, 90.0)]
+
+    def test_no_edit_is_none_and_not_empty(self, tmp_path):
+        # None is the signal to fall back to the selection order; an empty list
+        # would read as "the program holds nothing" and drop every clip's
+        # captions instead of reordering them.
+        assert program_order_of(tmp_path) is None
+
+    def test_an_unreadable_edit_is_none(self, tmp_path):
+        (tmp_path / "edit.json").write_text("{not json", encoding="utf-8")
+        assert program_order_of(tmp_path) is None
+
+    def test_an_edit_with_no_placements_is_none(self, tmp_path):
+        (tmp_path / "edit.json").write_text(
+            json.dumps({"placements": []}), encoding="utf-8")
+        assert program_order_of(tmp_path) is None

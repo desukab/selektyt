@@ -85,8 +85,15 @@ def test_run_writes_one_render_and_caption_set_per_clip(project):
 
 @_NEED_FFMPEG
 def test_clip_indices_agree_across_every_artifact(project):
-    """selections / editorial_report / edit_plan / content_pack / captions /
-    renders all number the same clips over the same source timecode."""
+    """selections / editorial_report agree in the policy's pick order, and
+    edit_plan / content_pack / captions / renders agree in the order the program
+    plays them; the two groups hold the same clips.
+
+    These orders differ by design — the policy ranks, the assembly sequences —
+    so joining them by position would assert that a reorder never happens, which
+    is exactly what the assembly exists to do. The join is by source span, and
+    what has to agree is the set of clips and each group's internal numbering.
+    """
     selections = _load(project, "selections.json")
     editorial = _load(project, "editorial_report.json")
     edit_plan = _load(project, "edit_plan.json")
@@ -95,20 +102,31 @@ def test_clip_indices_agree_across_every_artifact(project):
 
     n = report["selected_count"]
     assert n >= 3, "fixture must select several clips for a meaningful run"
-    assert len(selections) == len(editorial) == len(edit_plan) == len(packs) == n
+    assert len(selections) == len(editorial) == n
+    assert len(edit_plan) == len(packs) == report["program_count"]
 
+    # The policy's own records agree with each other, position for position.
     for i in range(n):
-        idx = i + 1
-        # source timecode agrees
-        assert selections[i]["start"] == editorial[i]["start"] == edit_plan[i]["source_start"]
-        assert selections[i]["end"] == editorial[i]["end"] == edit_plan[i]["source_end"]
-        # text agrees
+        assert selections[i]["start"] == editorial[i]["start"]
+        assert selections[i]["end"] == editorial[i]["end"]
         assert _norm(selections[i]["text"]) == _norm(editorial[i]["text"])
-        # numbering agrees
-        assert edit_plan[i]["index"] == idx
-        assert packs[i]["clip_index"] == idx
-        assert (project / "content_pack" / f"{idx:02d}.json").is_file()
-        assert (project / "captions" / f"{idx:02d}.json").is_file()
+
+    # The deliverables agree with each other, position for position, and are
+    # numbered from one with no gaps.
+    for i, (plan, pack) in enumerate(zip(edit_plan, packs), 1):
+        assert plan["index"] == i
+        assert pack["clip_index"] == i
+        assert (project / "content_pack" / f"{i:02d}.json").is_file()
+        assert (project / "captions" / f"{i:02d}.json").is_file()
+
+    # And the two groups hold the same clips, joined by span rather than slot.
+    def spans(rows, s, e):
+        return {(round(r[s], 3), round(r[e], 3)) for r in rows}
+
+    assert spans(selections, "start", "end") == spans(edit_plan,
+                                                      "source_start",
+                                                      "source_end"), \
+        "the policy selected a clip the program does not ship, or vice versa"
 
 
 @_NEED_FFMPEG
@@ -216,8 +234,8 @@ def test_every_path_in_the_report_points_at_a_real_nonempty_file(project):
 @_NEED_FFMPEG
 def test_captions_cover_the_clip_and_stay_inside_its_span(project):
     transcript_text = _norm(" ".join(s.text for s in fx.english_transcript()))
-    selections = _load(project, "selections.json")
-    for i, sel in enumerate(selections, 1):
+    edit_plan = _load(project, "edit_plan.json")
+    for i, plan in enumerate(edit_plan, 1):
         meta = json.loads((project / "captions" / f"{i:02d}.json").read_text(encoding="utf-8"))
         assert meta["blocks"], f"clip {i} has no caption blocks"
         for a, b in zip(meta["blocks"], meta["blocks"][1:]):
@@ -234,8 +252,13 @@ def test_captions_cover_the_clip_and_stay_inside_its_span(project):
 def test_ass_and_srt_tracks_carry_the_same_cues(project):
     """The platform-neutral SRT track must track the styled ASS track
     cue for cue, with cue times relative to the clip start."""
+    # Caption files are numbered in program order while selections.json is the
+    # policy's pick order, so the clip a track belongs to is found by span.
     selections = _load(project, "selections.json")
-    for i, sel in enumerate(selections, 1):
+    edit_plan = _load(project, "edit_plan.json")
+    by_span = {(round(s["start"], 3), round(s["end"], 3)): s
+               for s in selections}
+    for i, plan in enumerate(edit_plan, 1):
         ass = (project / "captions" / f"{i:02d}.ass").read_text(encoding="utf-8")
         srt = (project / "captions" / f"{i:02d}.srt").read_text(encoding="utf-8")
         ass_cues = [ln for ln in ass.splitlines() if ln.startswith("Dialogue:")]
@@ -248,6 +271,8 @@ def test_ass_and_srt_tracks_carry_the_same_cues(project):
                 r"^\d+\n\d{1,2}:\d{2}:\d{2},\d{3} --> \d{1,2}:\d{2}:\d{2},\d{3}\n",
                 block,
             )
+        sel = by_span[(round(plan["source_start"], 3),
+                       round(plan["source_end"], 3))]
         duration = sel["end"] - sel["start"]
         prev_end = 0.0
         for cue in ass_cues:
@@ -268,9 +293,15 @@ def test_ass_and_srt_tracks_carry_the_same_cues(project):
 @_NEED_FFMPEG
 def test_content_pack_titles_trace_to_spoken_words_only(project):
     """The pack's titles/caption are extractive — no fabricated claims."""
+    # Packs are numbered in program order; selections.json is pick order. The
+    # pack's own clip is the selection with the same source span.
     selections = _load(project, "selections.json")
     packs = _load(project, "content_pack.json")
-    for sel, pack in zip(selections, packs):
+    by_span = {(round(s["start"], 3), round(s["end"], 3)): s
+               for s in selections}
+    for pack in packs:
+        sel = by_span[(round(pack["source_start"], 3),
+                       round(pack["source_end"], 3))]
         clip_text = _norm(sel["text"])
         assert pack["source_based"] is True
         assert "fabricated" in pack["policy"]

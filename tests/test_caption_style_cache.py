@@ -20,7 +20,7 @@ import pytest
 
 from engine.captions import _digest, ass_content
 from engine.caption_director import style_name
-from selekyt.pipeline import _selection_digest
+from selekyt.pipeline import _program_digest, _selection_digest
 from tests.test_pipeline_resume import _fake_candidate, _real_render_pair
 
 _HAVE_FFMPEG = shutil.which("ffmpeg") is not None
@@ -51,6 +51,7 @@ def _scaffold(tmp_path: Path, monkeypatch, cached_style: str | None):
     fp = "test-fingerprint"
     digest = _selection_digest([cand])
     record = {"fingerprint": fp, "selection_digest": digest,
+              "program_digest": _program_digest([cand]),
               "facebook": str(project / "facebook" / "01.mp4"),
               "shorts": str(project / "shorts" / "01.mp4")}
     if cached_style is not None:

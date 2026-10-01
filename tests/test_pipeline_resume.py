@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from models.core import Candidate, Segment, Word
 
 
-from selekyt.pipeline import _selection_digest
+from selekyt.pipeline import _program_digest, _selection_digest
 from engine.captions import _digest, ass_content
 
 
@@ -116,6 +116,7 @@ def test_pipeline_skips_render_when_clips_exist(tmp_path):
              "render_fingerprint": fp,
              "render_selection_digest": digest,
              "renders": {"01": {"fingerprint": fp, "selection_digest": digest,
+                                "program_digest": _program_digest([cand]),
                                 "caption_style": "minimal",
                                 "ass_digest": _digest(ass),
                                 "facebook": str(project / "facebook" / "01.mp4"),

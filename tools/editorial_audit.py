@@ -718,8 +718,28 @@ def audit(project: Path) -> tuple[bool, dict]:
         findings.append(("selection size", False, f"no clips selected; rejection reasons: {sample}"))
         return False, {"findings": findings}
 
+    from engine.assembly import program_order_of
     from engine.edit_plan import retention_intervals
     from models.core import Candidate, Word
+
+    # Clip 01 is the program's opening, not the policy's highest score:
+    # selections.json is pick order, the captions and renders beside it are
+    # numbered by position in the reel, and this loop reads those files by the
+    # same index it names the finding. Without the reorder the audit would check
+    # clip 02's captions against clip 01's transcript and report a defect that
+    # is the audit's own misalignment. Falls back to pick order on a project
+    # with no canonical edit.
+    order = program_order_of(project)
+    if order is not None:
+        by_span = {(round(float(c["start"]), 3), round(float(c["end"]), 3)): c
+                   for c in cands}
+        keyed = [(round(s, 3), round(e, 3)) for s, e in order]
+        reordered = [by_span[k] for k in keyed if k in by_span]
+        seen = {(round(float(c["start"]), 3), round(float(c["end"]), 3))
+                for c in reordered}
+        cands = reordered + [c for c in cands
+                             if (round(float(c["start"]), 3),
+                                 round(float(c["end"]), 3)) not in seen]
 
     # The transcript's segments are the sentence structure the mid-sentence
     # check needs. Each selection's words were cut from them, and joining a

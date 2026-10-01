@@ -296,6 +296,18 @@ def _selection_digest(selected: list) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
+def _program_digest(program_order: list) -> str:
+    """Digest of the order the program plays the selected clips in.
+
+    Distinct from the selection digest: the same clips in a different sequence
+    are a different edit, and the render cache is keyed by index, so without
+    this a reorder would reuse the previous run's MP4s in place and ship the
+    wrong clip at each number.
+    """
+    raw = "|".join(f"{c.start:.3f},{c.end:.3f}" for c in program_order)
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
 def _corpus_detail(corpus_report: Any, memory_path: Any) -> dict[str, Any]:
     """Corpus/memory summary: what the analysis produced, not what it tried to.
 
@@ -353,6 +365,11 @@ def _assemble_detail(summary: dict) -> dict[str, Any]:
         out["problems"] = len(summary["problems"])
     if summary.get("dangling"):
         out["dangling"] = summary["dangling"]
+    if summary.get("skipped"):
+        # A selection that produced no renderable span is named, not buried: the
+        # policy chose it and the edit dropped it, and an editor comparing the
+        # selection count against the shipped count needs to see why they differ.
+        out["skipped"] = list(summary["skipped"])
     if summary.get("interchange"):
         # Reported here and not only as a note because a program EDL that fails
         # its own validator is a broken deliverable, and the detail is what the
@@ -1399,6 +1416,11 @@ def run(
     # than raised, exactly as the corpus and memory writes above are.
     edit_summary: dict = {}
     edit_path = project / "edit.json"
+    # Held outside the stage so the render loop below can follow the program the
+    # assembly sequenced. It stays None when the assembly could not be built, and
+    # every reader of it degrades to the policy's pick order in that case — the
+    # deliverables are the selection either way, only their numbering differs.
+    assembly: Any = None
     with _stage(progress, "assemble",
                 detail=lambda: _assemble_detail(edit_summary)):
         try:
@@ -1427,6 +1449,8 @@ def run(
             edit_summary["clips"] = len(assembly.timeline.clips)
             edit_summary["duration"] = round(assembly.duration, 3)
             edit_summary["problems"] = problems
+            if assembly.skipped:
+                edit_summary["skipped"] = list(assembly.skipped)
 
             # The canonical edit's own interchange: one EDL and one FCPXML for
             # the whole program, where the per-clip exports below are six
@@ -1475,13 +1499,33 @@ def run(
             _notify(progress, type="note", level="warn",
                     text=f"canonical edit unavailable: {exc}")
 
+    # The deliverables are numbered in the order the program plays them, not the
+    # order the policy picked them. Those agree when the assembly has no reason
+    # to reorder — no threads binding a group, no opener strong enough to lead —
+    # and visibly disagree otherwise, which is the point of having an assembly
+    # at all. ``01.mp4`` is therefore the program's opening rather than the clip
+    # the policy scored highest, and a reel that led with its second-strongest
+    # clip ships that way in every derivative. The placement order is
+    # deterministic for a given selection, so this is stable across re-runs.
+    program = (list(assembly.placements) if assembly is not None else [])
+    program_order = [p.candidate for p in sorted(program, key=lambda p: p.sequence)] \
+        if program else selected
+
+    # A digest of the program's order, for the same reason the selection digest
+    # exists: the render cache is keyed by index, so a reel that kept every clip
+    # but reordered them would otherwise find a valid MP4 at 01.mp4 — rendered
+    # from whichever clip led before — and ship the wrong clip as the opening.
+    # The selection digest alone does not catch this, because the selection is
+    # unchanged; only the sequence moved.
+    program_digest = _program_digest(program_order)
+
     # Per-clip render cache. The previous single render_fingerprint was only
     # written after the whole loop completed, so a run killed during clip 3 of
     # 6 re-rendered all six even though 1 and 2 were already on disk.
     renders = state.get("renders", {})
     with _stage(progress, "render",
                 detail=lambda: _render_detail(outputs, edit_report)):
-        for idx, c in enumerate(selected, 1):
+        for idx, c in enumerate(program_order, 1):
             intervals = retention_intervals(c)
             # The ASS is a render input, not a by-product: it is the document burned
             # into the MP4, so it must be written through the guard that keeps an
@@ -1500,6 +1544,13 @@ def run(
             )
             pack = build_content_pack(c)
             pack["clip_index"] = idx
+            # The span this pack describes, so a reader can join the pack to its
+            # clip without trusting position: selections.json is the policy's
+            # pick order and the packs are numbered in program order, and a
+            # reorder would otherwise leave no way to tell which clip a pack
+            # belongs to short of reading its caption text.
+            pack["source_start"] = round(c.start, 3)
+            pack["source_end"] = round(c.end, 3)
             (project / "content_pack" / f"{idx:02d}.json").parent.mkdir(parents=True, exist_ok=True)
             (project / "content_pack" / f"{idx:02d}.json").write_text(
                 json.dumps(pack, ensure_ascii=False, indent=2), encoding="utf-8"
@@ -1523,14 +1574,15 @@ def run(
             # landing. A clip that is reused from cache shows both bars full,
             # which is what it is: the file was verified on disk, not rendered.
             _notify(progress, type="progress", stage="render",
-                    current=idx - 1, total=len(selected),
+                    current=idx - 1, total=len(program_order),
                     subprogress=[{"label": "16:9", "fraction": 0.0},
                                  {"label": "9:16", "fraction": 0.0}],
-                    note=f"clip {idx:02d}/{len(selected)}")
+                    note=f"clip {idx:02d}/{len(program_order)}")
             if (
                 cached
                 and cached.get("fingerprint") == fingerprint
                 and cached.get("selection_digest") == sel_digest
+                and cached.get("program_digest") == program_digest
                 and cached.get("caption_style") == caption_style
                 and cached.get("ass_digest") == ass_digest
                 and _render_is_valid(fb, vertical=False, source=media)
@@ -1538,7 +1590,7 @@ def run(
             ):
                 print(f"[cache] reusing rendered clip {idx:02d}", flush=True)
                 _notify(progress, type="progress", stage="render",
-                        current=idx - 1, total=len(selected),
+                        current=idx - 1, total=len(program_order),
                         subprogress=[{"label": "16:9", "fraction": 1.0},
                                      {"label": "9:16", "fraction": 1.0}],
                         note=f"clip {idx:02d} reused from cache")
@@ -1555,7 +1607,7 @@ def run(
                         total = payload.get("parts") or 1
                         done[label] = (payload.get("part") or 0) / total
                         _notify(progress, type="progress", stage="render",
-                                current=idx - 1, total=len(selected),
+                                current=idx - 1, total=len(program_order),
                                 subprogress=[
                                     {"label": "16:9", "fraction": done["16:9"]},
                                     {"label": "9:16", "fraction": done["9:16"]},
@@ -1572,7 +1624,7 @@ def run(
                 # announcement from a part payload, which is also what makes it
                 # read as a state change rather than a progress tick.
                 _notify(progress, type="progress", stage="render",
-                        current=idx - 1, total=len(selected),
+                        current=idx - 1, total=len(program_order),
                         subprogress=[
                             {"label": "16:9", "fraction": 1.0},
                             {"label": "9:16", "fraction": 0.0},
@@ -1583,6 +1635,7 @@ def run(
                 renders[f"{idx:02d}"] = {
                     "fingerprint": fingerprint,
                     "selection_digest": sel_digest,
+                    "program_digest": program_digest,
                     "caption_style": caption_style,
                     "ass_digest": ass_digest,
                     "facebook": str(fb),
@@ -1684,7 +1737,7 @@ def run(
             # *is* finished — cached or rendered by either branch above — so N/N
             # is what the bar should read.
             _notify(progress, type="progress", stage="render",
-                    current=idx, total=len(selected))
+                    current=idx, total=len(program_order))
     with _stage(progress, "report",
                 detail=lambda: _report_detail(report, project)):
         (project / "edit_plan.json").write_text(json.dumps(edit_report, indent=2), encoding="utf-8")
@@ -1704,6 +1757,12 @@ def run(
             "language": detected,
             "candidate_count": len(thoughts),
             "selected_count": len(selected),
+            # The count the render loop actually targeted, which is lower than
+            # selected_count when the assembly dropped a candidate with no
+            # renderable span. Stated separately rather than as a delta because
+            # both numbers are facts an editor reads independently: how many the
+            # policy chose, and how many the program shipped.
+            "program_count": len(program_order),
             "rejected_by_context_guard": context_guard_rejections,
             # Separate from the above: these passed every editorial gate and were
             # dropped only because --limit capped the output. A budget, not a
@@ -1824,7 +1883,7 @@ def run(
         # the run finished from this function returning. A write-only flag is worse
         # than no signal, because a future reader of pipeline_state.json would take
         # "complete" as a guarantee that a later, failing step had succeeded.
-        state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "render_selection_digest": sel_digest, "selected_count": len(selected), "qa": str(qa_path)})
+        state.update({"fingerprint": fingerprint, "render_fingerprint": fingerprint, "render_selection_digest": sel_digest, "selected_count": len(selected), "program_count": len(program_order), "qa": str(qa_path)})
         _save_state(state_path, state)
     return project
 
@@ -1884,10 +1943,10 @@ def cleanable(project: Path) -> tuple[bool, str]:
     for path in _rendered_files(project, renders):
         if not path.is_file():
             return False, f"{path.name} is recorded as rendered but is missing; the run is incomplete"
-    selected_count = state.get("selected_count")
+    selected_count = state.get("program_count", state.get("selected_count"))
     if selected_count is not None and len(renders) < int(selected_count):
         return False, (
-            f"{len(renders)} of {selected_count} selected clips are rendered; "
+            f"{len(renders)} of {selected_count} clips are rendered; "
             "the rest are still outstanding"
         )
     return True, ""

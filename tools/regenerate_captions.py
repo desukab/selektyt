@@ -35,6 +35,34 @@ def _candidate(d: dict) -> Candidate:
     return Candidate(**kwargs)
 
 
+def _in_program_order(raws: list[dict], project: Path) -> list[dict]:
+    """The selections, in the order the program plays them.
+
+    ``selections.json`` lists clips in the policy's pick order, but the caption
+    tracks are numbered by position in the reel: ``captions/01.srt`` belongs to
+    the program's opening, not to the clip the policy scored highest. The two
+    orders differ whenever the assembly reordered the reel, and re-emitting in
+    pick order would write clip 02's cues onto clip 01's track. The canonical
+    edit is the authority; absent it the selection order stands, which is what
+    a project from before the assembly shipped looks like.
+    """
+    from engine.assembly import program_order_of
+
+    order = program_order_of(project)
+    if order is None:
+        return raws
+    by_span = {(round(float(r["start"]), 3), round(float(r["end"]), 3)): r
+               for r in raws}
+    out = [by_span[(round(s, 3), round(e, 3))] for s, e in order
+           if (round(s, 3), round(e, 3)) in by_span]
+    # A span the edit names but selections.json does not carry, or vice versa,
+    # means the two disagree about what was shipped. Reorder what agrees and
+    # keep the rest rather than dropping a clip's only caption track.
+    seen = {(round(float(r["start"]), 3), round(float(r["end"]), 3)) for r in out}
+    return out + [r for r in raws
+                  if (round(float(r["start"]), 3), round(float(r["end"]), 3)) not in seen]
+
+
 def main(project_dir: str) -> int:
     project = Path(project_dir)
     selections = project / "selections.json"
@@ -45,7 +73,9 @@ def main(project_dir: str) -> int:
     out_dir = project / "captions"
     out_dir.mkdir(parents=True, exist_ok=True)
     changed = 0
-    for idx, raw in enumerate(json.loads(selections.read_text(encoding="utf-8")), 1):
+    raws = _in_program_order(json.loads(selections.read_text(encoding="utf-8")),
+                             project)
+    for idx, raw in enumerate(raws, 1):
         c = _candidate(raw)
         srt = out_dir / f"{idx:02d}.srt"
         ass = out_dir / f"{idx:02d}.ass"

@@ -32,6 +32,7 @@ named: a span the edit dropped, with the reason it was dropped.
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -505,9 +506,36 @@ def assemble(selected: list,
     )
 
 
+def program_order_of(project: Path) -> list[tuple[float, float]] | None:
+    """The source spans of the program's clips, in the order the reel plays them.
+
+    Reads ``edit.json``, the canonical edit, so a tool that numbers artifacts by
+    position (captions, timelines, the audit) derives that numbering from the
+    edit rather than from the order ``selections.json`` happens to list clips in.
+    Those two orders differ whenever the assembly reorders the reel — which is
+    what an assembly is for — and a tool that zipped the policy's pick order
+    against the program's numbering would then audit or rewrite the wrong clip.
+
+    Returns ``None`` when the project has no canonical edit, which is the honest
+    signal to fall back to the selection order rather than an empty list that
+    would read as "the program holds nothing".
+    """
+    edit_path = Path(project) / "edit.json"
+    if not edit_path.is_file():
+        return None
+    try:
+        edit = json.loads(edit_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    placements = edit.get("placements")
+    if not placements:
+        return None
+    ordered = sorted(placements, key=lambda p: p.get("sequence", 0))
+    return [(float(p["start"]), float(p["end"])) for p in ordered]
+
+
 def _action_for(sequence: int, source_rank: int) -> EditorialAction:
     """How the assembled position differs from source order.
-
     A clip placed earlier than its source position was promoted, one placed
     later demoted; equal is the neutral ``keep``. This is derived from the two
     orders rather than asserted, so the action is a fact about the assembly.
