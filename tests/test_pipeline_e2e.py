@@ -739,3 +739,60 @@ def test_a_failed_stage_reports_itself_before_raising(
     assert len(fails) == 1
     assert fails[0]["stage"] == "verify"
     assert "not usable on this language" in fails[0]["reason"]
+
+
+def test_a_run_writes_a_retrieval_index_that_answers_its_own_transcript(
+        patched_pipeline, tmp_path, media):
+    """The index is what makes a transcript queryable after the run.
+
+    A run already decodes the audio, measures the speech regions and builds the
+    corpus; the index is built from those same artifacts, so a run that wrote
+    neither it nor a path to it would have paid for the whole analysis and left
+    the source unsearchable. This test loads what the run wrote and queries it —
+    an index that does not round-trip, or that loads but returns no intervals for
+    a term the transcript verbatim contains, is a missing index no matter what
+    the report says.
+    """
+    from engine.retrieval import RetrievalIndex, StaleIndexError, retrieve
+
+    project = patched_pipeline.run(
+        "https://example.com/v", tmp_path, model="small", limit=2,
+    )
+    index_path = project / "retrieval-index.json"
+    assert index_path.is_file(), "retrieval-index.json was not written"
+
+    # The fingerprint is the transcript digest the run already recorded, so the
+    # index is checked against the transcript it was built from rather than
+    # trusted on faith. A load that accepted any fingerprint would hand a stale
+    # index to a re-transcribed source without complaint.
+    state = json.loads((project / "pipeline_state.json").read_text())
+    index = RetrievalIndex.load(index_path, source_fingerprint=state["fingerprint"])
+    assert not index.is_empty
+    assert index.n_words > 0
+    assert index.language == "en"
+
+    # "hiring" occurs only in the second story, so the query's intervals have to
+    # land inside it and nowhere else — an index that returned the whole source
+    # for a term in one passage is an index that cannot locate anything.
+    result = retrieve(index, ["hiring"])
+    assert not result.intervals.is_empty, \
+        "a term the transcript verbatim contains retrieved nothing"
+    for span in result.intervals:
+        assert span.start >= 20.0 - 0.5 and span.end <= 28.0 + 0.5, \
+            f"interval for 'hiring' outside the second story: {span}"
+    assert result.evidence, "a retrieved interval carries no evidence"
+    assert all(e.modality.name == "TEXT" for e in result.evidence)
+
+    # The report names the file and its contents, for the same reason it names
+    # memory.json: a missing index otherwise reads as a source with nothing in
+    # it rather than a capture that did not happen.
+    report = json.loads((project / "report.json").read_text())
+    assert report["retrieval"]["path"] == str(index_path)
+    assert report["retrieval"]["summary"]["terms"] == index.n_terms
+    assert report["retrieval"]["summary"]["words"] == index.n_words
+
+    # A fingerprint that does not match is refused rather than rebuilt: the
+    # reader cannot know what changed, and silently rebuilding would index a
+    # transcript the caller did not ask to index.
+    with pytest.raises(StaleIndexError):
+        RetrievalIndex.load(index_path, source_fingerprint="not-the-transcript")

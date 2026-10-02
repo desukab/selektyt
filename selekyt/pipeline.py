@@ -1345,6 +1345,64 @@ def run(
                 _notify(progress, type="note", level="warn",
                         text=f"video memory unavailable: {exc}")
 
+        # Retrieval index: the transcript was already built into thoughts, ranked
+        # and selected on, and the index is what makes it *queryable* after the
+        # run — the difference between a source whose evidence this edit consumed
+        # and one a later query can still search. It re-uses the fitness verdict
+        # already measured at the top of this function, the speech regions the
+        # coverage gate already measured, and the topic spans the corpus above
+        # already found, so it costs no decode, no listen and no inference. Its
+        # fingerprint is the run digest above — which includes the model and
+        # the language rather than the media bytes alone, for exactly the
+        # reason ``SourceMeta``'s comment gives — so a re-transcribe
+        # invalidates a stored index rather than leaving it silently re-usable
+        # against words that no longer match it.
+        retrieval_summary: dict = {}
+        retrieval_path = project / "retrieval-index.json"
+        if not any(getattr(s, "words", None) for s in transcript):
+            # Without word timestamps there are no postings to build: every term
+            # needs a time to answer an interval query, and an index whose terms
+            # carry none is a vocabulary list. Reporting the absence rather than
+            # writing an empty index keeps "no index" distinguishable from "an
+            # index over nothing", the same distinction the memory block above
+            # draws for an unmeasured source.
+            retrieval_summary = {"skipped": "transcript has no word timestamps"}
+        else:
+            try:
+                from engine.retrieval import build_index
+                index = build_index(
+                    transcript,
+                    language=detected or "unknown",
+                    source_fingerprint=fingerprint,
+                    fitness=fit,
+                    speech_regions=[
+                        (float(r.start), float(r.end))
+                        for r in coverage.speech_regions
+                    ],
+                    editorial_units=[
+                        (float(t.start), float(t.end))
+                        for t in (corpus_report.topics if corpus_report else [])
+                    ],
+                )
+                index.save(retrieval_path)
+                retrieval_summary = {
+                    "schema": index.schema,
+                    "terms": index.n_terms,
+                    "words": index.n_words,
+                    "segments": len(index.segments),
+                    "ngram_fallback": bool(index.ngram_postings),
+                    "channels": {
+                        name: status.to_dict()
+                        for name, status in index.optional.items()
+                    },
+                }
+            except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+                print(f"[selektyt] retrieval index unavailable: {exc}",
+                      file=sys.stderr)
+                retrieval_summary = {"error": f"{type(exc).__name__}: {exc}"}
+                _notify(progress, type="note", level="warn",
+                        text=f"retrieval index unavailable: {exc}")
+
     pacing = aggregate_pacing_report(
         selected, rejected, context_guard_rejections,
         truncated_by_limit=truncated_by_limit,
@@ -1829,6 +1887,17 @@ def run(
             "memory": {
                 "path": str(memory_path) if memory_path.is_file() else None,
                 "summary": memory_summary,
+            },
+            # A third artifact file, and for the same reason: the retrieval index
+            # answers "where in this source is X discussed" and that answer is an
+            # interval set, not prose. What belongs here is whether the index was
+            # written, how large it is, and which optional channels it re-ranked
+            # against — an editor who queries a stale index gets answers for a
+            # transcript that no longer exists, and a missing file otherwise reads
+            # as a source with nothing in it.
+            "retrieval": {
+                "path": str(retrieval_path) if retrieval_path.is_file() else None,
+                "summary": retrieval_summary,
             },
         }
         # The audio section is always present: either the full provenance summary,
