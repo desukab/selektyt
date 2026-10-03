@@ -615,6 +615,11 @@ The retrieve stage inherits this without exception:
 
 ### 6.1 The handoff to GROUND — the interface this document must satisfy
 
+> **Status (2026-10-02): the receiving side is implemented.** `engine/ground.py`
+> grounds a `RetrievalResult` into decoded frames under exactly the contract below,
+> and `docs/ground-design.md` is that stage's design document. The two constraints
+> at the end of this section are enforced by its tests, not just asserted here.
+
 Retrieval stops at the union. It does not decode, does not look at pixels, does not
 verify. The contract GROUND receives:
 

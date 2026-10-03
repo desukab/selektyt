@@ -152,6 +152,7 @@ _INSTRUMENT_LEVEL: dict[str, Level] = {
     # ── level 5: precise evidence grounding ─────────────────────────────────
     "engine.memory.ground": Level.GROUND,
     "engine.memory.ingest": Level.GROUND,
+    "engine.ground.sample_window": Level.GROUND,
 }
 
 
