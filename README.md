@@ -26,8 +26,8 @@ SelekyT can:
 - reframe subjects for vertical video
 - generate word-timed captions
 - produce structured editorial selections and reports
-- export an editable **CMX 3600 EDL** timeline alongside every rendered cut
-  (**FCPXML** too, with `--audio-analysis --export-fcpxml`)
+- export an editable **CMX 3600 EDL and FCPXML 1.11 timeline** alongside every
+  rendered cut
 
 The goal is not to replace the editor. The goal is to give the editor a strong, editable first pass.
 
@@ -69,9 +69,10 @@ video-to-social workflow. It is a source-checkout extra, started with
 
 ### Timeline handoff
 
-SelekyT currently emits a CMX 3600 EDL timeline with every rendered cut and
-validates its structure. FCPXML 1.11 is optional and requires
-`--audio-analysis --export-fcpxml`; only the EDL is produced on a default run.
+SelekyT emits both a CMX 3600 EDL and an FCPXML 1.11 timeline with every
+rendered cut on a default run. `--audio-analysis --export-fcpxml` additionally
+writes an audio-analysis cut-list FCPXML under `project/audio/`; it is separate
+from the editable timelines in `project/timeline/`.
 
 **Important:** timeline generation has been validated mechanically; real-world import into a professional NLE is still an active validation step. We do not claim NLE compatibility has been proven until an editor imports and uses the files.
 
