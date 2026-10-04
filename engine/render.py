@@ -397,7 +397,7 @@ def concat_renders(
         inputs: list[str] = []
         for i, duration in enumerate(part_durations):
             filters.append(
-                f"[{i}:v:0]setpts=PTS-STARTPTS,trim=duration={duration:.9f},"
+                f"[{i}:v:0]setpts=PTS-STARTPTS,setsar=1,trim=duration={duration:.9f},"
                 f"setpts=PTS-STARTPTS[v{i}]"
             )
             inputs.append(f"[v{i}]")

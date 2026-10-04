@@ -73,6 +73,14 @@ def _word_from_groq(item, offset: float) -> Word | None:
 
 
 def _groq_segments(response, offset: float, core_start: float, core_end: float) -> list[Segment]:
+    # Groq's verbose_json response carries timestamp_granularities=word in a
+    # response-level ``words`` array. Some compatible responses also nest
+    # words on each segment, so accept both shapes and prefer nested values
+    # when present.
+    response_words = [
+        word for raw in (_value(response, "words", []) or [])
+        if (word := _word_from_groq(raw, offset)) is not None
+    ]
     result: list[Segment] = []
     for item in _value(response, "segments", []) or []:
         start = _seconds(_value(item, "start"))
@@ -86,6 +94,11 @@ def _groq_segments(response, offset: float, core_start: float, core_end: float) 
             continue
         words = [w for raw in (_value(item, "words", []) or [])
                  if (w := _word_from_groq(raw, offset)) is not None]
+        if not words and response_words:
+            words = [
+                word for word in response_words
+                if absolute_start <= (word.start + word.end) / 2 <= absolute_end
+            ]
         result.append(Segment(
             absolute_start, absolute_end, text, words,
             speaker=_value(item, "speaker_id") or _value(item, "speaker"),

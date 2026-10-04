@@ -86,6 +86,22 @@ def test_groq_long_audio_chunks_preserve_offsets_and_cache(monkeypatch, tmp_path
     assert len(calls) == 4, "changing the chunk window must invalidate cached results"
 
 
+def test_groq_attaches_response_level_word_timestamps_to_segments():
+    response = {
+        "segments": [{"start": 1.0, "end": 2.0, "text": "Hello world."}],
+        "words": [
+            {"word": "Hello", "start": 1.0, "end": 1.4, "probability": 0.8},
+            {"word": "world.", "start": 1.5, "end": 2.0, "probability": 0.9},
+        ],
+    }
+    segments = cloud_transcribe._groq_segments(response, 10.0, 0.0, 30.0)
+    assert len(segments) == 1
+    assert [(word.text, word.start, word.end) for word in segments[0].words] == [
+        ("Hello", 11.0, 11.4), ("world.", 11.5, 12.0),
+    ]
+    assert segments[0].words[0].confidence == pytest.approx(0.8)
+
+
 def test_gemini_word_annotations_normalize_to_canonical_speaker_segments():
     interaction = SimpleNamespace(
         output_text="Hello there.",
