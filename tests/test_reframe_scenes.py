@@ -1,7 +1,7 @@
-"""The scene-aware reframe: what the clip is made of, and how it is composed.
+"""The scene-aware reframe: classifications and coherent crop rendering.
 
-``engine.reframe_scenes`` is the two-region composition the single-crop reframe
-cannot serve. Three things are pinned here, in the order the module builds them:
+``engine.reframe_scenes`` classifies speakers and other static content while
+preserving one source crop per instant. Three things are pinned here:
 
 1. the *decision* -- given a speaker and a content region, does one legal crop
    hold both, or is the layout one the crop has to concede? These are pure, so
@@ -9,15 +9,13 @@ cannot serve. Three things are pinned here, in the order the module builds them:
    large to compose beside) are numbers rather than a guess at what a detector
    would see;
 2. the *plan* -- per-sample classes become held, shot-aligned, contiguous
-   segments, because the composed graph trims each segment to its own window and
-   a gap between two would drop video while the audio played on;
-3. the *layout* -- a SPLIT really does render two bands that each carry their
-   own region of the source, at the delivered frame's pixel aspect, with the
-   composition measured in pixels rather than read off the filtergraph text.
+   segments, because the filtergraph trims each segment to its own window and a
+   gap between two would drop video while the audio played on;
+3. the *layout* -- even a SPLIT classification renders one tracked speaker crop,
+   never stacked source regions.
 """
 from __future__ import annotations
 
-import re
 import subprocess
 from pathlib import Path
 
@@ -322,9 +320,10 @@ def test_an_absorbed_run_leaves_the_segment_its_slide():
     # And the layout it feeds renders instead of asserting. This is the
     # failure the corpus run hit, at the point it hit it.
     chains = _layout_chains(out[0], SRC_W, SRC_H, 1, 1, CROP_W, 720, 1280,
-                            [], [], "", None)
-    assert any("vstack" in c for c in chains), (
-        "a SPLIT segment the plan can produce must compose two bands")
+                            [], "", None)
+    assert len(chains) == 1 and "crop=" in chains[0], (
+        "a SPLIT classification still renders one tracked crop")
+    assert "vstack" not in "".join(chains)
 
 
 def test_a_slide_held_by_a_later_shot_is_carried_to_a_slide_segment():
@@ -537,7 +536,7 @@ def test_the_scene_cache_key_includes_the_tail(composed):
     plain = rs.scene_filter(composed, 0.0, 2.0, samples=12)
     captioned = rs.scene_filter(composed, 0.0, 2.0, samples=12, tail=tail)
 
-    assert rs.is_composed(plain) and rs.is_composed(captioned)
+    assert not rs.is_composed(plain) and not rs.is_composed(captioned)
     assert plain != captioned, (
         "the tail is part of the graph; a cache that ignored it would hand the "
         "second caller the first caller's filter")
@@ -550,15 +549,15 @@ def test_the_scene_cache_key_includes_the_tail(composed):
 
 
 def _render(source: Path, graph: str, out: Path, duration: float) -> None:
-    """Render a composed graph. A labelled multi-chain description needs
-    ``-filter_complex`` and an explicit ``[v]`` map; a plain ``-vf`` rejects it
-    (measured: "Error initializing a simple filtergraph")."""
-    subprocess.run(
-        ["ffmpeg", "-y", "-i", str(source), "-t", f"{duration}",
-         "-filter_complex", graph, "-map", "[v]", "-map", "0:a?",
-         "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
-         "-pix_fmt", "yuv420p", "-an", str(out)],
-        check=True, capture_output=True)
+    """Render either the normal single-crop filter or a multi-scene graph."""
+    cmd = ["ffmpeg", "-y", "-i", str(source), "-t", f"{duration}"]
+    if ";" in graph:
+        cmd += ["-filter_complex", graph, "-map", "[v]"]
+    else:
+        cmd += ["-vf", graph]
+    cmd += ["-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+            "-pix_fmt", "yuv420p", "-an", str(out)]
+    subprocess.run(cmd, check=True, capture_output=True)
 
 
 def _gray_frames(path: Path) -> tuple[object, int, int]:
@@ -576,43 +575,16 @@ def _gray_frames(path: Path) -> tuple[object, int, int]:
     return np.frombuffer(raw, np.uint8).reshape(n, h, w), w, h
 
 
-def _band_chain(graph: str, label: str) -> tuple[int, int, int, int]:
-    """One band's declared source window and delivered size, read out of the
-    graph: ``(window_w, window_h, delivered_w, delivered_h)``.
-
-    The squeeze assertion compares the marker's delivered size against the
-    isotropic scaling the graph itself declares, so it follows the layout
-    instead of pinning one set of numbers to it. The band split is read the
-    same way rather than assumed, so the measurement cannot be silently
-    inverted against a changed layout.
-    """
-    for chain in graph.split(";"):
-        if chain.startswith(f"[{label}]"):
-            m = re.search(r"crop=(\d+):(\d+):x='[^']*':y='[^']*',"
-                          r"scale=(\d+):(\d+)", chain)
-            assert m, f"the {label} chain must declare its window; got {chain!r}"
-            return tuple(int(g) for g in m.groups())
-    raise AssertionError(f"no {label} band in the graph: {graph}")
-
-
-def test_a_split_renders_two_bands_that_each_hold_their_region(composed, tmp_path):
-    """The centrepiece, measured in pixels: the speaker is in one band, the
-    slide is in the other, and neither content is squeezed.
-
-    Geometry alone cannot say this -- the crop and scale can be exactly right on
-    paper and still carry the wrong region, or carry both, which is the failure
-    the two-window layout exists to repair. So the frame is rendered and read
-    back, and each band is asked what it actually shows.
-    """
+def test_a_split_classification_renders_one_coherent_speaker_crop(composed, tmp_path):
+    """Even when two regions cannot fit, one vertical frame is one source crop."""
     import numpy as np
 
     import engine.reframe_scenes as rs
 
     graph = rs.scene_filter(composed, 0.0, 2.0, samples=12)
-    assert rs.is_composed(graph), (
-        f"a SPLIT scene must build a composed graph, not a plain -vf chain: "
-        f"{graph}")
-    assert "vstack=inputs=2" in graph
+    assert not rs.is_composed(graph)
+    assert "vstack" not in graph and "split=2[a][b]" not in graph
+    assert graph.startswith("crop=406:720:")
 
     out = tmp_path / "split.mp4"
     _render(composed, graph, out, 2.0)
@@ -622,55 +594,12 @@ def test_a_split_renders_two_bands_that_each_hold_their_region(composed, tmp_pat
     assert w == 406, f"the crop width is {CROP_W}; got {w}"
     assert abs(w / h - 9 / 16) < 0.005, f"the frame must display as 9:16; got {w}x{h}"
 
-    # The band split the graph declared, read out of it rather than assumed.
-    # The speaker band is vstacked first, so it is the frame's top rows.
-    _, _, sp_w, band_h = _band_chain(graph, "a")
-    win_w, win_h, sl_w, sl_h = _band_chain(graph, "b")
-    assert sp_w == w and sl_w == w, "both bands must deliver the full frame width"
-    assert band_h + sl_h == h, (
-        f"the bands declare {band_h}+{sl_h} rows but the frame is {h} rows")
-    speaker, slide = frames[len(frames) // 2][:band_h], frames[len(frames) // 2][band_h:]
-    assert band_h > 0 and h - band_h > 0, "both bands must be non-empty"
-
-    # The speaker band: the marker is bright, and the slide block -- which lives
-    # at source columns the speaker window does not contain -- cannot be in it.
-    speaker_bright = speaker > 150
-    assert speaker_bright.sum() > 0, "the speaker marker must be in its band"
-    ys, xs = np.nonzero(speaker_bright)
-    assert xs.mean() / w < 0.6, (
-        f"the marker sits at source x~300 of a 0..674 window, so it lands left "
-        f"of centre; got {xs.mean() / w:.2f}")
-    assert speaker_bright.mean() < 0.15, (
-        "the speaker band must not be carrying the slide block as well")
-
-    # The slide band: mostly the block, with the marker's black square inside it.
-    slide_bright = slide > 150
-    assert slide_bright.mean() > 0.5, (
-        f"the slide band must hold the slide block; got {slide_bright.mean():.0%}")
-    cols = np.nonzero(slide_bright.any(axis=0))[0]
-    rows = np.nonzero(slide_bright.any(axis=1))[0]
-    block = slide[rows.min():rows.max() + 1, cols.min():cols.max() + 1]
-    hole = block < 100
-    assert hole.any(), "the 160x160 marker must survive into the slide band"
-    hcols = np.nonzero(hole.any(axis=0))[0]
-    hrows = np.nonzero(hole.any(axis=1))[0]
-    mw = hcols.max() - hcols.min() + 1
-    mh = hrows.max() - hrows.min() + 1
-
-    # A shape of known source size, scaled by the factors the graph declares.
-    # Squeeze is when x and y disagree, so both are checked against the
-    # isotropic expectation and against each other.
-    delivered_w, delivered_h = sl_w, sl_h
-    expect_w = 160.0 * delivered_w / win_w
-    expect_h = 160.0 * delivered_h / win_h
-    assert abs(mw / expect_w - 1) < 0.08, (
-        f"the marker is {mw}px wide, {mw / expect_w:.2f}x the isotropic scale; "
-        f"a window of {win_w}px onto {delivered_w}px cannot disagree with itself")
-    assert abs(mh / expect_h - 1) < 0.08, (
-        f"the marker is {mh}px tall, {mh / expect_h:.2f}x the isotropic scale")
-    assert abs(mw / mh - 1) < 0.06, (
-        f"a 160x160 source square arrives as {mw}x{mh}; the band's pixel aspect "
-        f"and its window's must match or the content is distorted")
+    frame = frames[len(frames) // 2]
+    bright = frame > 150
+    assert bright.any(), "the speaker marker must survive in the single crop"
+    assert bright.mean() < 0.15, (
+        "the delivered view should be the tracked speaker crop, not a stacked "
+        "slide region")
 
 
 # ── the composition across a mid-clip change of layout ── #
@@ -730,19 +659,15 @@ def test_a_mid_clip_class_change_composes_and_keeps_the_interval(changing, tmp_p
         f"the deliverable must keep the whole {CHG_SPAN}s interval; got "
         f"{len(frames)} frames of {CHG_FPS * CHG_SPAN:g}")
 
-    # The first frame is still the first layout: two bands, the lower one the
-    # slide block. The split is read out of the graph for the same reason the
-    # single-scene test reads it.
-    _, _, _, band_h = _band_chain(graph, "a")
+    # The scene classification may change, but no instant stacks two source
+    # regions into the vertical output.
+    assert "vstack" not in graph
+    assert graph.count("crop=406:720:") >= 2
     first = frames[0]
-    assert (first[band_h:] > 150).mean() > 0.5, (
-        "the clip opens on the lecture; the slide band must carry the slide block")
-    assert (first[:band_h] > 150).any(), (
-        "and its speaker band must carry the speaker marker")
+    assert (first > 150).any(), "the clip must open with the speaker in frame"
 
     # The last frame has settled on the second layout: one band, no slide block
-    # anywhere in it, and the marker still in frame. A slide band is mostly
-    # bright; a talking head is mostly background with a marker in it.
+    # with the marker still in frame.
     last = frames[-1]
     assert (last > 150).mean() < 0.15, (
         f"the slide is gone by the end of the clip; got "
@@ -753,8 +678,3 @@ def test_a_mid_clip_class_change_composes_and_keeps_the_interval(changing, tmp_p
     assert 0.2 < xs.mean() / w < 0.9, (
         f"the marker is inside the tracked window; got x fraction "
         f"{xs.mean() / w:.2f}, which is off-frame or in the slide's columns")
-
-    # And the layout genuinely changed: the two ends differ by more than the
-    # marker moving, because the first holds a bright band the second does not.
-    assert first[band_h:].mean() - last[band_h:].mean() > 50, (
-        "the last frame is not the first layout; the dissolve changed something")

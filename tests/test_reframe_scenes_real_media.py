@@ -59,12 +59,13 @@ def _ffmpeg(args: list[str], out: Path) -> Path:
     return out
 
 
-def _deliver(graph: str, out: Path) -> Path:
+def _deliver(graph: str, out: Path, start: float = WIDE_START,
+             end: float = WIDE_END) -> Path:
     """Render a graph the way ``engine.render`` does: a composed description
     needs ``-filter_complex`` with an explicit ``[v]`` map, a plain chain takes
     ``-vf``."""
-    frames = int(30 * (WIDE_END - WIDE_START))
-    common = ["-ss", f"{WIDE_START:.3f}", "-i", str(REAL_MEDIA),
+    frames = int(30 * (end - start))
+    common = ["-ss", f"{start:.3f}", "-i", str(REAL_MEDIA),
               "-frames:v", str(frames), "-c:v", "libx264", "-preset",
               "veryfast", "-crf", "20", "-an", "-pix_fmt", "yuv420p"]
     if ";" in graph:
@@ -165,3 +166,30 @@ def test_the_delivered_frame_still_contains_the_speaker(tmp_path):
         f"a speaker detectable in the source is present in only {present:.0%} "
         f"of the delivered frames; the composition chose a window that lost "
         f"them")
+
+
+def test_false_background_slide_stays_one_coherent_vertical_crop(tmp_path):
+    """The selected Cloke interval misreads the bookshelf/lamp as a slide.
+
+    That detector verdict used to reach the per-clip renderer as SPLIT and
+    become two source crops stacked with vstack. Pin the scene that triggered
+    the shipped artifact: it must remain a single tracked crop through actual
+    vertical rendering.
+    """
+    start, end = 0.3, 8.3
+    segments, _slides, _w, _h = analyse_scene(
+        REAL_MEDIA, start, end, samples=24)
+    assert segments and any(seg.cls is SceneClass.SPLIT for seg in segments), (
+        "the real interval no longer exercises the false slide classification")
+
+    graph = scene_filter(REAL_MEDIA, start, end, samples=24)
+    assert "vstack" not in graph and "split=2[a][b]" not in graph, (
+        "a 9:16 instant must come from one coherent source crop")
+    assert "crop=" in graph and "scale=" in graph
+
+    clip = _deliver(graph, tmp_path / "single-crop.mp4", start, end)
+    result = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=width,height", "-of", "csv=p=0",
+         str(clip)], check=True, capture_output=True, text=True)
+    assert result.stdout.strip() == "608,1080"

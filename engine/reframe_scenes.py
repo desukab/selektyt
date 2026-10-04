@@ -1,11 +1,11 @@
-"""Layer 1b of the reframe: scene classes and the two-region composition.
+"""Scene-aware planning for coherent, single-crop vertical reframing.
 
 ``engine.reframe`` reframes a *subject*: it tracks a face, elects one, and keeps
 it inside a full-height 9:16 window. That is the whole story for a talking head,
 and it is provably incomplete for a lecture, where the frame holds a speaker and
 a slide at the same time and the 9:16 window is too narrow for both. This module
-adds the missing half: it perceives the second content class, decides what kind
-of scene it is in, and composes a layout for it.
+perceives the second content class and records when both regions cannot fit a
+single crop. The delivered frame remains one crop, with the speaker prioritized.
 
 Four scene classes
 ------------------
@@ -17,9 +17,9 @@ Four scene classes
              filling the frame. The crop is centred on the content region
              instead of on a face that is not there.
 
-``SPLIT``    a speaker and a slide that *cannot* both sit in one legal 9:16
-             crop. Two bands are composed: the speaker's window and the
-             content window, stacked, each scaled without distortion.
+``SPLIT``    the detected speaker and content cannot both fit one legal 9:16
+             crop. This is a classification result, not a spatial layout: the
+             renderer keeps a single tracked speaker crop.
 
 ``TRANSITION``  not a layout -- the fade the renderer inserts between two
              segments of differing classes, instead of a hard switch. See
@@ -300,8 +300,8 @@ def joint_crop_x(face: FaceBox, slide: SlideRect, crop_w: float, src_w: float
 
     When such an edge exists this returns the one nearest to centring the face:
     the face stays the primary subject, and the slide is what the crop concedes
-    to. When it does not, ``None`` is the answer, and the caller must compose
-    two regions instead of choosing one and silently discarding the other.
+    to. When it does not, ``None`` is the answer; the caller records a SPLIT
+    classification and keeps the speaker as the vertical crop's subject.
     """
     flo, fhi = face_crop_window(face, crop_w, src_w)
     slo, shi = _slide_crop_window(slide, crop_w)
@@ -369,9 +369,9 @@ def classify_scene(face: FaceBox | None, slide: SlideRect | None,
     static region covering 98% of the frame. The slide-only rule called it a
     SLIDE, the layout cropped to the slide's own centre, and the speaker left the
     deliverable on 6 of 26 samples while the pre-composition reframe kept it on
-    25 of 26. The geometry below already answers the question -- one crop when
-    the speaker is inside the slide's window, two regions when it is not -- so
-    this classifies on the pair and lets the geometry decide.
+    25 of 26. The geometry below records whether the speaker and content can
+    share one crop. If they cannot, the vertical render still prioritizes the
+    speaker crop rather than composing separate source regions.
     """
     if face is not None and slide is not None:
         if both_fit_in_crop(face, slide, crop_w, src_w):
@@ -513,11 +513,6 @@ def transition_points(segments: list[SceneSegment]
 # Layout: the ffmpeg chains
 # --------------------------------------------------------------------------- #
 
-_SPEAKER_BAND = 0.60
-# Share of the delivered height the speaker band takes in a SPLIT layout. The
-# speaker is the primary subject, so the band carries most of the frame; the
-# rest holds the content at a size that stays legible at 406 px wide.
-
 _TRANSITION_S = 0.5
 # Crossfade duration between two scene classes. Short enough to sit on a cut
 # without dragging, long enough that a layout change is not a flash. Every
@@ -587,7 +582,6 @@ def _set_sar(sar_w: int, sar_h: int) -> str:
 def _layout_chains(seg: SceneSegment, src_w: int, src_h: int, sar_w: int,
                    sar_h: int, crop_w: int, out_w: int, out_h: int,
                    track_pts: list[tuple[float, float]],
-                   band_pts: list[tuple[float, float]],
                    in_label: str, out_label: str | None,
                    trim: tuple[float, float] | None = None) -> list[str]:
     """The ffmpeg chains implementing one segment's layout.
@@ -597,14 +591,14 @@ def _layout_chains(seg: SceneSegment, src_w: int, src_h: int, sar_w: int,
     label means the chain *is* the graph input, which is the ``-vf``-compatible
     single-chain form. ``out_label`` names what the last chain produces.
     ``None`` for the output label means the last chain *is* the graph's output,
-    which is how a single-segment SPLIT is expressed.
+    which is how a single-segment multi-chain layout is expressed.
 
     ``trim`` gives the window this segment is clipped to in clip-relative time.
     ``setpts=PTS-STARTPTS`` after it makes the rebased PTS the time every
     expression in this chain sees, so the caller's keypoints are already
     segment-local. It is applied to the first chain only, upstream of any
-    ``split`` -- both bands then read the same local clock and the dissolve
-    between layouts starts at the boundary rather than partway into one.
+    any multi-chain filter -- both downstream segments then read the same local
+    clock and the dissolve between layouts starts at the boundary.
     """
     tail = ""
     if out_label is not None:
@@ -622,38 +616,19 @@ def _layout_chains(seg: SceneSegment, src_w: int, src_h: int, sar_w: int,
                 f"{_scale_to(out_w, out_h)},{_set_sar(sar_w, sar_h)}{tail}"]
 
     if seg.cls is SceneClass.SPLIT:
-        # The two bands are computed from the same delivered frame, so the two
-        # windows are guaranteed to share its width and their heights to sum to
-        # its height: vstack then composes an exact frame. The delivered band
-        # heights are what is asked for; the windows _band_geometry returns are
-        # source pixels and may be larger or smaller than them, so the two must
-        # not be mixed -- the scale, and the residue the other band gets, are
-        # both in delivered height. ``vstack`` takes no size: it derives the
-        # frame from its inputs, which is why ``sp_h + l_h == out_h`` has to hold
-        # here rather than being repairable downstream.
-        sp_h = _even(int(out_h * _SPEAKER_BAND))
-        l_h = out_h - sp_h
-        s_w, _s_sh, s_x, s_y = _band_geometry(
-            src_w, src_h, out_w, sp_h,
-            (0.0, 0.0, float(src_w), float(src_h)))
-        assert seg.slide is not None
-        l_w, _l_sh, l_x, l_y = _band_geometry(
-            src_w, src_h, out_w, l_h,
-            (seg.slide.x, seg.slide.y, seg.slide.w, seg.slide.h))
-        speaker_x = _x_expression(src_w, s_w, band_pts)
-        return [
-            f"{src}{pre}split=2[a][b]",
-            f"[a]crop={s_w}:{_s_sh}:x='{speaker_x}':y='{s_y:.0f}',"
-            f"{_scale_to(out_w, sp_h)},format=yuv420p[sp]",
-            f"[b]crop={l_w}:{_l_sh}:x='{l_x:.0f}':y='{l_y:.0f}',"
-            f"{_scale_to(out_w, l_h)},format=yuv420p[sl]",
-            f"[sp][sl]vstack=inputs=2,{_set_sar(sar_w, sar_h)}{tail}",
-        ]
+        # A vertical program is a crop of one source view at every instant.
+        # Slide detection is intentionally permissive enough to find screens,
+        # but static set dressing (as in the Royal Society interview) can also
+        # be mistaken for one. Stacking the two regions turns that detector
+        # error into an obvious split-screen. Keep the established face track
+        # and crop path instead; no source region is duplicated or composed.
+        x_expr = _x_expression(src_w, crop_w, track_pts)
+        return [f"{src}{pre}crop={crop_w}:{src_h}:x='{x_expr}':y=0,"
+                f"{_scale_to(out_w, out_h)},{_set_sar(sar_w, sar_h)}{tail}"]
 
     # SPEAKER. The crop is the full height the subject tracker already planned
     # against; in the joint case the same tracking is clamped to the window that
-    # also keeps the slide, so the speaker still moves and the slide still
-    # survives.
+    # also keeps the slide.
     if seg.joint and seg.slide is not None:
         # The clamp is the joint interval itself: any crop left-edge inside it
         # holds both regions by construction, and _x_expression centres the
@@ -676,15 +651,12 @@ def _layout_chains(seg: SceneSegment, src_w: int, src_h: int, sar_w: int,
 def _graph(segments: list[SceneSegment], src_w: int, src_h: int, sar_w: int,
            sar_h: int, crop_w: int, out_w: int, out_h: int,
            track_pts: list[list[tuple[float, float]]],
-           band_pts: list[list[tuple[float, float]]],
            tail: tuple[str, ...]) -> str:
     """Compose the layouts of every segment into one filtergraph.
 
     A single segment whose layout is a single chain (a plain SPEAKER or SLIDE
-    segment) is returned as that bare chain: it runs under ``-vf`` unchanged and
-    is byte-identical to the legacy reframe, so a talking-head clip renders
-    exactly as before. Anything with more than one chain -- a SPLIT, or several
-    segments joined by transitions -- is returned as a labelled graph whose
+    segment) is returned as that bare chain: it runs under ``-vf`` unchanged.
+    Several segments joined by transitions are returned as a labelled graph whose
     final chain produces ``[v]``, which needs ``-filter_complex`` plus an
     explicit ``-map`` (a simple ``-vf`` graph rejects a labelled multi-chain
     description: measured, "Error initializing a simple filtergraph"). The
@@ -697,17 +669,11 @@ def _graph(segments: list[SceneSegment], src_w: int, src_h: int, sar_w: int,
     ``xfade`` needs in order to hold input A up to its offset.
     """
     if len(segments) == 1:
-        chains = _layout_chains(segments[0], src_w, src_h, sar_w, sar_h, crop_w,
-                                out_w, out_h, track_pts[0], band_pts[0],
-                                "", None)
-        if len(chains) == 1:
-            body = chains[0]
-            if tail:
-                body = body + "," + ",".join(tail)
-            return body
+        body = _layout_chains(segments[0], src_w, src_h, sar_w, sar_h,
+                              crop_w, out_w, out_h, track_pts[0], "", None)[0]
         if tail:
-            chains[-1] = chains[-1] + "," + ",".join(tail)
-        return ";".join([*chains[:-1], chains[-1] + "[v]"])
+            body = body + "," + ",".join(tail)
+        return body
 
     # ``split`` without explicit output labels assigns its own generated names,
     # which are not the ``s{i}`` the per-segment chains refer to -- ffmpeg then
@@ -756,10 +722,9 @@ def _graph(segments: list[SceneSegment], src_w: int, src_h: int, sar_w: int,
         # transition off the subject.
         base = windows[i][0]
         local_track = [(t - base, c) for t, c in track_pts[i]]
-        local_band = [(t - base, c) for t, c in band_pts[i]]
         chains = _layout_chains(seg, src_w, src_h, sar_w, sar_h, crop_w,
-                                out_w, out_h, local_track, local_band,
-                                f"s{i}", f"p{i}", trim=windows[i])
+                                out_w, out_h, local_track, f"s{i}", f"p{i}",
+                                trim=windows[i])
         parts.extend(chains)
 
     # ``xfade``'s offset is where input B's clock begins, and it requires input
@@ -876,18 +841,15 @@ def _carry_slides(segments: list[SceneSegment], times: list[float],
     longer neighbour by rewriting that run's class to the neighbour's, so the
     samples at a segment's edge can carry a class the segment reports without
     ever having been classified as it -- and their shot can hold no slide at
-    all. Taking the slide from one of those made a segment the layout needs a
-    slide for (a ``SPLIT`` it has to compose two bands from, a ``SLIDE`` it has
-    to crop to) arrive with ``slide=None``, and the layout died on its own
-    assertion.
+    all. A slide segment uses this region to choose its crop; retaining it on a
+    SPLIT segment keeps the classification evidence available to diagnostics.
 
     Choosing an originating sample is provably safe instead. A segment's class
     is always the *original* class of some sample inside it -- absorption only
     merges adjacent runs and adopts a class the neighbour already held -- and a
     sample classified ``SPLIT`` or ``SLIDE`` has a slide by construction, since
-    ``classify_scene`` returns those only for a slide it was handed. So the
-    lookup returns a slide for exactly the classes the layout dereferences one
-    for.
+    ``classify_scene`` returns those only for a slide it was handed. The lookup
+    therefore retains the content region associated with each classification.
     """
     out: list[SceneSegment] = []
     for seg in segments:
@@ -1050,12 +1012,8 @@ def scene_filter(video: Path, start: float, end: float, tail: tuple[str, ...] = 
     out_w = _even(min(crop_w, 1080))
     out_h = _even(out_w * sar_w * 16 / (9 * sar_h))
 
-    # Two trajectories per segment: the tracker's, planned against the crop the
-    # deliverable uses, and the speaker band's, planned against the wider window
-    # a SPLIT gives the speaker. Both come from the same detection stream, and
-    # that stream is the one ``analyse_scene`` already ran: perceiving the same
-    # frames a second time was 1.73 s of a clip's budget for byte-identical
-    # boxes. The perception cache hands it back; the frames are the same arrays.
+    # The crop trajectory uses the same cached detections as the scene planner;
+    # re-running perception here would spend time to recover identical boxes.
     times, frames, _w, _h, per_frame, boundaries = _perceive_window(video,
                                                                    start, end,
                                                                    samples)
@@ -1065,10 +1023,7 @@ def scene_filter(video: Path, start: float, end: float, tail: tuple[str, ...] = 
     kept_dets = [per_frame[i] for i, _, _ in kept]
     kept_bounds = {j for j, (i, _, _) in enumerate(kept) if i in boundaries}
 
-    s_w = _even(min(src_band_w(w, h, sar_w, sar_h, out_w,
-                               _even(int(out_h * _SPEAKER_BAND))), w))
     track_pts: list[list[tuple[float, float]]] = []
-    band_pts: list[list[tuple[float, float]]] = []
     for seg in segments:
         # The samples spanning this segment, used to plan both of its
         # trajectories. A segment shorter than the sample spacing collapses to
@@ -1084,34 +1039,11 @@ def scene_filter(video: Path, start: float, end: float, tail: tuple[str, ...] = 
         seg_dets = kept_dets[a:b + 1]
         if not seg_times:
             track_pts.append([])
-            band_pts.append([])
             continue
         seg_bounds = {j for j in kept_bounds if a <= j <= b}
         track_pts.append(plan_crop(seg_times, seg_dets, seg_bounds, w, h, crop_w))
-        band_pts.append(plan_crop(seg_times, seg_dets, seg_bounds, w, h, s_w))
 
     result = _graph(segments, w, h, sar_w, sar_h, crop_w, out_w, out_h,
-                    track_pts, band_pts, tail)
+                    track_pts, tail)
     _SCENE_CACHE[key] = result
     return result
-
-
-def src_band_w(src_w: int, src_h: int, sar_w: int, sar_h: int,
-               out_w: int, band_h: int) -> int:
-    """The pixel width of a full-height source window matching a band's aspect.
-
-    This is the band counterpart of :func:`engine.reframe.vertical_crop_width`:
-    the window is as tall as the source, so its width is what the band's
-    *pixel* aspect demands. Kept public because the width decides the
-    trajectory the speaker band is planned against, and a caller may want it
-    without building a filter.
-
-    ``sar_w``/``sar_h`` are accepted for parity with
-    :func:`engine.reframe.vertical_crop_width` and deliberately *not* used: the
-    delivered band keeps the source's SAR (see :func:`_set_sar`), so the SAR is
-    on both sides of the width and cancels. The caller still has to name it,
-    which is the point -- the aspect correction belongs to the frame-size
-    computation, not to the window this cuts.
-    """
-    width = float(src_h) * out_w / float(band_h)  # SAR cancels; see _band_geometry
-    return max(2, int(width / 2 + 0.5) * 2)
