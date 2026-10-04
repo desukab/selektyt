@@ -287,13 +287,23 @@ def _subtitle_terms(ass: Path | None) -> list[str]:
     """
     if not ass:
         return []
-    safe = ass.as_posix().replace("'", "\\'")
+    font_dir = Path(__file__).resolve().parent / "assets" / "fonts"
+    font_files = (font_dir / "Fredoka-Regular.ttf", font_dir / "Fredoka-Bold.ttf")
+    if any(not path.is_file() for path in font_files):
+        raise RuntimeError(f"bundled Fredoka caption fonts are missing from {font_dir}")
+
+    def filter_path(path: Path) -> str:
+        safe = path.resolve().as_posix().replace("'", "\\'")
+        # A Windows drive letter ("C:/...") puts a bare ":" in the
+        # filtergraph, which ffmpeg parses as the option separator.
+        return safe.replace(":", "\\:")
+
+    safe = filter_path(ass)
     # A Windows drive letter ("C:/...") puts a bare ":" in the filtergraph,
     # which ffmpeg parses as the option separator and then fails with
     # "Invalid argument". Escaping it as "\:" is the documented way to pass
     # a literal colon inside a filter value.
-    safe = safe.replace(":", "\\:")
-    return [f"subtitles='{safe}'"]
+    return [f"subtitles='{safe}':fontsdir='{filter_path(font_dir)}'"]
 
 
 def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | None, vertical: bool, fps: float) -> None:

@@ -53,5 +53,6 @@ include = ["selekyt*", "engine*", "models*", "providers*", "third_party*"]
 # Apache-2.0 redistribution, and the provenance record ships with it so the
 # origin claim travels with the wheel instead of only living in the repo.
 [tool.setuptools.package-data]
+engine = ["assets/fonts/*.ttf", "assets/licenses/OFL-Fredoka.txt"]
 third_party = ["PROVENANCE.md"]
 "third_party.otio_fcpxml_adapter" = ["LICENSE"]

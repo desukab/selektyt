@@ -274,12 +274,10 @@ def ass_content(c: Candidate, words_per_line: int = 6) -> str:
     clobbered — see :func:`ship_captions`.
     """
     p = preset_for()
-    # Declared by name, not embedded: libass resolves it through fontconfig, so
-    # the font that actually renders depends on the machine. "Noto Sans" is not
-    # installed on this build host — fontconfig substitutes DejaVu Sans, which
-    # is wider, so a safe-area bound measured here is conservative rather than
-    # optimistic. tests/test_caption_safe_area.py records what resolved.
-    font = os.getenv("SELEKYT_FONT", "Noto Sans")
+    # The default family is bundled with SeleKyT and supplied to libass by the
+    # renderer's subtitles filter. Keep the environment override for users who
+    # deliberately want a different installed font.
+    font = os.getenv("SELEKYT_FONT", "Fredoka")
     lines: list[str] = []
     blocks = _blocks_for_candidate(c, words_per_line)
     for (st, en), block in zip(_cue_sequence(c, blocks), blocks):
