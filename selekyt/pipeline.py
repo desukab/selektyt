@@ -46,6 +46,11 @@ from providers.transcribe import (
     select_engine,
     transcribe as transcribe_auto,
 )
+from selekyt.transcription_settings import (
+    PROVIDERS as TRANSCRIPTION_PROVIDERS,
+    default_provider as default_transcription_provider,
+    require_api_key as require_transcription_api_key,
+)
 from models.core import Segment, Word
 
 
@@ -218,6 +223,7 @@ def _load_transcript(path: Path) -> tuple[list[Segment], str] | None:
                     float(s["end"]),
                     s["text"],
                     [Word(**w) for w in s.get("words", [])],
+                    speaker=s.get("speaker"),
                 )
             )
         return out, str(data.get("language") or "unknown")
@@ -254,9 +260,10 @@ def _recovery_note(path: Path) -> str | None:
         return None
 
 
-def _fingerprint(media: Path, source: str, model: str, language: str | None) -> str:
+def _fingerprint(media: Path, source: str, model: str, language: str | None,
+                 provider: str = "local") -> str:
     st = media.stat()
-    raw = f"{source}|{media.resolve()}|{st.st_size}|{st.st_mtime_ns}|{model}|{language or 'auto'}"
+    raw = f"{source}|{media.resolve()}|{st.st_size}|{st.st_mtime_ns}|{provider}|{model}|{language or 'auto'}"
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
@@ -828,6 +835,7 @@ def run(
     export_fcpxml: bool = False,
     skip_coverage_check: bool = False,
     skip_language_check: bool = False,
+    transcription_provider: str | None = None,
     progress: ProgressFn | None = None,
 ) -> Path:
     # Reject unusable parameters before touching the network or the disk: a
@@ -853,7 +861,17 @@ def run(
     # it also fails on a default install that has faster-whisper but is asking
     # for a model the fallback cannot supply. Sherpa availability depends on
     # the requested model, hence the model name rather than a bare boolean.
-    if select_engine(model) is None:
+    provider = transcription_provider or default_transcription_provider()
+    if provider not in TRANSCRIPTION_PROVIDERS:
+        raise ValueError(
+            f"transcription provider must be one of: {', '.join(TRANSCRIPTION_PROVIDERS)}"
+        )
+    cloud_key = None
+    if provider != "local":
+        # Resolve credentials before downloading a URL or creating output. An
+        # explicit cloud choice never changes into a local run on error.
+        cloud_key = require_transcription_api_key(provider)
+    if provider == "local" and select_engine(model) is None:
         raise RuntimeError(_ENGINE_INSTALLED_MESSAGE)
     # The report's provenance needs the wall-clock moment the run began, not the
     # moment the report was assembled — the latter made ``duration_seconds``
@@ -903,8 +921,28 @@ def run(
                 state.update({"source": source, "media_info": {}})
                 _save_state(state_path, state)
 
-    fingerprint = _fingerprint(media, source, model, language)
+    fingerprint = _fingerprint(media, source, model, language, provider)
     transcript_path = project / "transcript.json"
+
+    def transcribe_current(target: Path):
+        if provider == "local":
+            segments, lang, provenance = transcribe_auto(
+                target, model_name=model, language=language,
+                checkpoint_dir=project / "transcription",
+                chunk_minutes=chunk_minutes, beam_size=beam_size,
+                cpu_threads=cpu_threads,
+                progress=_chunk_progress(progress, "transcribe"),
+            )
+            provenance["provider"] = "local"
+            return segments, lang, provenance
+        from providers.cloud_transcribe import transcribe as transcribe_cloud
+        return transcribe_cloud(
+            target, provider, cloud_key or "", language=language,
+            checkpoint_dir=project / "transcription",
+            chunk_minutes=chunk_minutes,
+            progress=_chunk_progress(progress, "transcribe"),
+        )
+
     cached = _load_transcript(transcript_path) if state.get("fingerprint") == fingerprint else None
     # The cache is only actually reused when no explicit language was asked
     # for: a cached transcript plus `--language x` falls through and
@@ -922,21 +960,15 @@ def run(
             recovery_note = _recovery_note(transcript_path)
             print("[cache] using unchanged transcript", flush=True)
         else:
+            selected_model = model if provider == "local" else (
+                "whisper-large-v3" if provider == "groq" else "gemini-3.5-transcribe"
+            )
             print(
-                f"[transcribe] model={model}; language={language or 'auto'}; "
-                f"chunk={chunk_minutes}min",
+                f"[transcribe] provider={provider}; model={selected_model}; "
+                f"language={language or 'auto'}; chunk={chunk_minutes}min",
                 flush=True,
             )
-            transcript, detected, asr_provenance = transcribe_auto(
-                media,
-                model_name=model,
-                language=language,
-                checkpoint_dir=project / "transcription",
-                chunk_minutes=chunk_minutes,
-                beam_size=beam_size,
-                cpu_threads=cpu_threads,
-                progress=_chunk_progress(progress, "transcribe"),
-            )
+            transcript, detected, asr_provenance = transcribe_current(media)
             recovery_note = None
             print(
                 f"[transcribe] engine={asr_provenance['engine']} "
@@ -967,6 +999,7 @@ def run(
                             "end": s.end,
                             "text": s.text,
                             "words": [asdict(w) for w in s.words],
+                            "speaker": s.speaker,
                         }
                         for s in transcript
                     ],
@@ -1005,12 +1038,7 @@ def run(
                               and peak > SILENT_PEAK_DBFS):
                 recovered = _recover_from_a_damaged_container(
                     media, project / "source",
-                    transcribe=lambda m: transcribe_auto(
-                        m, model_name=model, language=language,
-                        checkpoint_dir=project / "transcription",
-                        chunk_minutes=chunk_minutes, beam_size=beam_size,
-                        cpu_threads=cpu_threads,
-                    ),
+                    transcribe=transcribe_current,
                 )
                 if recovered is not None:
                     remuxed, transcript, detected, asr_provenance, note = recovered
@@ -1027,7 +1055,8 @@ def run(
                             "asr": asr_provenance,
                             "segments": [
                                 {"start": s.start, "end": s.end, "text": s.text,
-                                 "words": [asdict(w) for w in s.words]}
+                                 "words": [asdict(w) for w in s.words],
+                                 "speaker": s.speaker}
                                 for s in transcript
                             ],
                             # Named so a reader can tell this transcript came from
@@ -1961,7 +1990,7 @@ def run(
             # through" — it is recorded on every run, not only when it fires.
             "transcription": {
                 k: asr_provenance.get(k)
-                for k in ("engine", "requested_model", "model", "downgrade_reason",
+                for k in ("provider", "engine", "requested_model", "model", "downgrade_reason",
                           "word_timestamps", "fallback_reason")
             },
             # None means the transcript came from the file the user handed in. A
@@ -2049,6 +2078,7 @@ def run(
             "keep_pauses": keep_pauses,
             "remove_filler": remove_filler,
             "export_fcpxml": export_fcpxml,
+            "transcription_provider": provider,
             "skip_coverage_check": skip_coverage_check,
             "caption_style": caption_style,
             "ollama_url": ollama_url,

@@ -99,6 +99,31 @@ Check the local environment:
 selekyt --doctor
 ```
 
+### Transcription providers
+
+Local transcription is the default and needs no API key:
+
+```bash
+selekyt ./my-video.mp4
+```
+
+For an optional cloud transcription upgrade, install its clients and configure
+your own provider key once. Keys entered at the prompt go to the operating
+system's credential store; provider preferences contain no key material. You
+can also supply `GROQ_API_KEY` or `GEMINI_API_KEY` through your environment.
+
+```bash
+pip install -e '.[cloud-transcription]'
+selekyt configure-transcription groq    # prompts without echoing the key
+# or: selekyt configure-transcription gemini
+```
+
+The saved provider is used on later runs. Choose a provider for one run with
+`--transcription local`, `--transcription groq`, or `--transcription gemini`;
+this does not change the saved preference. Groq and Gemini send extracted audio
+to the selected provider using your key. SeleKyT does not silently switch to
+local transcription when an explicitly selected cloud provider fails.
+
 Control what the terminal shows:
 
 ```bash

@@ -17,6 +17,9 @@ class Segment:
     words: list[Word]
     coherence: float = 1.0
     completeness: float = 1.0
+    # Provider metadata stays on the canonical segment instead of forcing
+    # downstream code to branch on which transcription service produced it.
+    speaker: str | None = None
 
     @property
     def duration(self) -> float:

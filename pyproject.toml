@@ -16,6 +16,7 @@ dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26", "yt-dlp>=2026.8.19
 transcription = ["faster-whisper>=1.1"]
 sherpa = ["sherpa-onnx>=1.10"]
 llm = ["requests>=2.31"]
+cloud-transcription = ["groq>=0.31", "google-genai>=2.0,<3", "keyring>=25"]
 # pycmx is an independent CMX 3600 reader, and the vendored
 # otio_fcpxml_adapter (see third_party/PROVENANCE.md) is an independent FCPXML
 # reader. tools/nle_check.py uses both to parse SelekyT's own EDL and FCPXML

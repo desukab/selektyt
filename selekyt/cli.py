@@ -13,6 +13,12 @@ from typing import TextIO
 from engine.captions import caption_presets
 from selekyt.pipeline import run
 from selekyt.server import serve_stdio as serve_python
+from selekyt.transcription_settings import (
+    PROVIDERS as TRANSCRIPTION_PROVIDERS,
+    TranscriptionSettingsError,
+    configure_interactive as configure_transcription_interactive,
+    default_provider as default_transcription_provider,
+)
 from selekyt.ui import (
     ProgressRenderer,
     Terminal,
@@ -332,6 +338,22 @@ def main() -> None:
     # names what the default does. A file genuinely called ``analyze`` remains
     # reachable as ``./analyze``.
     argv = sys.argv[1:]
+    if argv and argv[0] == "configure-transcription":
+        setup = argparse.ArgumentParser(
+            prog="selekyt configure-transcription",
+            description="Set SeleKyT's saved transcription provider and BYOK key.",
+        )
+        setup.add_argument("provider", nargs="?", choices=TRANSCRIPTION_PROVIDERS)
+        setup_args = setup.parse_args(argv[1:])
+        try:
+            provider = configure_transcription_interactive(setup_args.provider)
+        except (TranscriptionSettingsError, OSError, ValueError, EOFError) as exc:
+            print(str(exc), file=sys.stderr)
+            raise SystemExit(2) from None
+        label = {"local": "private/offline", "groq": "cloud using your Groq key",
+                 "gemini": "cloud using your Gemini key"}[provider]
+        print(f"Saved default transcription provider: {provider} ({label}).")
+        return
     if argv and argv[0] == "analyze":
         argv = argv[1:]
     p = argparse.ArgumentParser(
@@ -343,6 +365,10 @@ def main() -> None:
     p.add_argument("--out", default="out", help="Output directory")
     p.add_argument("--model", default="small", help="faster-whisper model size")
     p.add_argument("--language", default=None, help="Force transcription language, e.g. te, hi, ta")
+    p.add_argument(
+        "--transcription", choices=TRANSCRIPTION_PROVIDERS, default=None,
+        help="Provider for this run only (default: saved preference, initially local)",
+    )
     p.add_argument("--limit", type=int, default=6, help="Number of selected stories")
     p.add_argument(
         "--chunk-minutes", type=int, default=5, help="Whisper chunk size for long videos"
@@ -487,9 +513,11 @@ def main() -> None:
     )
     started = time.monotonic()
     renderer = ProgressRenderer(term)
+    effective_transcription = args.transcription or default_transcription_provider()
     start_screen(
         term, source=args.source, model=args.model, language=args.language,
         out=str(out), width=None, height=None,
+        transcription_provider=effective_transcription,
     )
     log_path = out / "run.log"
     # Keyword-only extras the pipeline accepts beyond its positional core; kept
@@ -506,6 +534,7 @@ def main() -> None:
         export_fcpxml=args.export_fcpxml,
         skip_coverage_check=args.skip_coverage_check,
         skip_language_check=args.skip_language_check,
+        transcription_provider=args.transcription,
         progress=renderer.event,
     )
     try:

@@ -619,6 +619,7 @@ def start_screen(
     out: str,
     width: int | None,
     height: int | None,
+    transcription_provider: str = "local",
 ) -> None:
     """The identity block shown once, before the pipeline starts.
 
@@ -641,6 +642,7 @@ def start_screen(
         t.s(GRAY, _truncate("editorial intelligence for long-form video", t.width)),
         "",
         _truncate("  ·  ".join(bits), t.width),
+        t.s(GRAY, _truncate(_transcription_notice(transcription_provider), t.width)),
         t.s(GRAY, _truncate(f"package → {out}", t.width)),
         "",
         rule,
@@ -648,6 +650,14 @@ def start_screen(
     for line in lines:
         t.err.write(line + "\n")
     t.err.flush()
+
+
+def _transcription_notice(provider: str) -> str:
+    if provider == "groq":
+        return "Groq cloud transcription · audio sent using your key"
+    if provider == "gemini":
+        return "Gemini cloud transcription · audio sent using your key"
+    return "Local transcription · private/offline"
 
 
 def complete_screen(

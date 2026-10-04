@@ -177,6 +177,7 @@ def test_main_forwards_every_flag(monkeypatch, tmp_path):
     monkeypatch.setattr(sys, "argv", [
         "selekyt", "https://example.com/v", "--out", str(tmp_path),
         "--model", "small", "--language", "te", "--limit", "3",
+        "--transcription", "groq",
         "--chunk-minutes", "2", "--beam-size", "2", "--cpu-threads", "4",
         "--caption-style", "punch", "--cookies", "c.txt",
         "--ollama-url", "http://localhost:11434",
@@ -197,6 +198,7 @@ def test_main_forwards_every_flag(monkeypatch, tmp_path):
     assert seen["source"] == "https://example.com/v"
     assert seen["model"] == "small"
     assert seen["language"] == "te"
+    assert seen["kw"]["transcription_provider"] == "groq"
     assert seen["limit"] == 3
     assert seen["chunk_minutes"] == 2
     assert seen["beam_size"] == 2

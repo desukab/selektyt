@@ -627,6 +627,17 @@ def test_start_screen_names_the_source_and_the_package():
     assert "video.mp4" in plain
     assert "1920x1080" in plain
     assert "out/pkg" in plain
+    assert "Local transcription · private/offline" in plain
+
+
+def test_start_screen_discloses_cloud_transcription():
+    err = FakeTTY()
+    term = Terminal(out=FakeTTY(), err=err)
+    start_screen(term, source="video.mp4", model="small", language=None,
+                 out="out/pkg", width=None, height=None,
+                 transcription_provider="gemini")
+    assert "Gemini cloud" in _plain(err.getvalue())
+    assert "audio sent using your key" in _plain(err.getvalue())
 
 
 def test_start_screen_truncates_a_long_source_at_narrow_widths(monkeypatch):
