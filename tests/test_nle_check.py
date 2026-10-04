@@ -214,6 +214,26 @@ def test_a_clip_reading_past_its_asset_is_caught(tmp_path):
     assert any("reads past the end of its asset" in d for _n, _o, d in findings)
 
 
+def test_a_program_can_cut_backwards_in_source_while_spine_advances(tmp_path):
+    """A reel's timeline order is its FCPXML ``offset``, not source ``start``.
+
+    Editors commonly assemble stories from source intervals that move
+    backwards through the original video. Those source in-points must not be
+    mistaken for overlapping timeline clips by the NLE audit.
+    """
+    project = _build_project(tmp_path / "project")
+    fcpxml = (project / "timeline" / "01.fcpxml").read_text()
+    fcpxml = fcpxml.replace(
+        '<asset-clip ref="r1" offset="0s" start="0s" duration="25/25s" />',
+        '<asset-clip ref="r1" offset="0s" start="12/25s" duration="13/25s" />'
+        '<asset-clip ref="r1" offset="13/25s" start="0s" duration="12/25s" />',
+    )
+    (project / "timeline" / "01.fcpxml").write_text(fcpxml)
+    ok, findings = _audit(project)
+    failures = [f"{name}: {detail}" for name, passed, detail in findings if not passed]
+    assert ok, "a valid source rewind was reported as timeline overlap: " + "; ".join(failures)
+
+
 def test_an_edl_media_path_is_resolved_against_the_timeline_not_the_audit(tmp_path, monkeypatch):
     """Regression: the audit checked ``Path(from_clip).exists()`` from *its own*
     working directory. The emitter writes the path from its working directory

@@ -483,6 +483,35 @@ def test_fcpxml_fills_primary_holes_with_gaps():
     assert abs(_rational_sec(gaps[0].get("offset")) - 4.0) < slack
 
 
+def test_fcpxml_keeps_frame_contiguous_program_clips_contiguous():
+    """Independent frame rounding must not create a hole inside a touching edit.
+
+    A 2.10-second clip at 25 fps rounds to 2.08 seconds. After prior clips
+    have accumulated a half-frame discrepancy, independently rounding the
+    following clip's raw offset can place it one frame after that end. The
+    source timeline has no gap, so the emitted spine must not invent one.
+    """
+    from engine.timeline import Clip, SourceMedia, Timeline
+
+    media = SourceMedia("source.mp4", fps=25.0, duration=100.0)
+    clips = [
+        Clip(media, 0.0, 39.92, 0.0, 39.92),
+        Clip(media, 40.0, 49.4, 39.92, 49.32),
+        Clip(media, 50.0, 52.1, 49.32, 51.42),
+        Clip(media, 60.0, 61.0, 51.42, 52.42),
+    ]
+    xml = render_fcpxml(Timeline(clips=clips, fps=25.0))
+    spine = ET.fromstring(xml).find("./library/event/project/sequence/spine")
+    placed = [c for c in spine if c.tag == "asset-clip"]
+    assert len(placed) == len(clips)
+    for previous, current in zip(placed, placed[1:]):
+        previous_end = (
+            _rational_sec(previous.get("offset"))
+            + _rational_sec(previous.get("duration"))
+        )
+        assert _rational_sec(current.get("offset")) == pytest.approx(previous_end)
+
+
 def test_fcpxml_puts_connected_clips_on_lanes():
     root = ET.fromstring(render_fcpxml(multitrack_timeline()))
     connected = [c for c in root.findall(".//asset-clip") if c.get("lane") not in (None, "0", "")]

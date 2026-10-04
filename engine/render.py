@@ -364,6 +364,84 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
                        check=True)
 
 
+def concat_renders(
+    parts: list[Path], out: Path, *, part_durations: list[float] | None = None
+) -> Path:
+    """Join already-rendered parts into one file without re-encoding.
+
+    The parts come from the same encoder with the same parameters — every one
+    of them was written by ``_render_one`` — so the copy demuxer can stitch
+    them at container level: no decode, no encode, no generation loss, and the
+    output cannot differ from the parts it was made of. That last property is
+    the reason the assembled program is concatenated rather than rendered a
+    second time: a reel built this way *is* the clips, byte for byte, so
+    nothing the run QA'd per clip can drift in the reel.
+
+    A single part is copied rather than muxed, which is the same operation the
+    demuxer would perform and one fewer ffmpeg invocation.
+    """
+    require_ffmpeg()
+    if not parts:
+        raise RuntimeError("concat_renders needs at least one part")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if part_durations is not None:
+        if len(part_durations) != len(parts) or any(d <= 0 for d in part_durations):
+            raise ValueError("part_durations must contain one positive duration per part")
+        audio = [_has_audio(p) for p in parts]
+        if any(present != audio[0] for present in audio[1:]):
+            raise RuntimeError("program reel parts do not agree on whether audio is present")
+        cmd = ["ffmpeg", "-y"]
+        for part in parts:
+            cmd += ["-i", str(part)]
+        filters: list[str] = []
+        inputs: list[str] = []
+        for i, duration in enumerate(part_durations):
+            filters.append(
+                f"[{i}:v:0]setpts=PTS-STARTPTS,trim=duration={duration:.9f},"
+                f"setpts=PTS-STARTPTS[v{i}]"
+            )
+            inputs.append(f"[v{i}]")
+            if audio[i]:
+                filters.append(
+                    f"[{i}:a:0]asetpts=PTS-STARTPTS,atrim=duration={duration:.9f},"
+                    f"asetpts=PTS-STARTPTS[a{i}]"
+                )
+                inputs.append(f"[a{i}]")
+        filters.append(
+            f"{''.join(inputs)}concat=n={len(parts)}:v=1:a={1 if audio[0] else 0}"
+            "[vout]" + ("[aout]" if audio[0] else "")
+        )
+        cmd += ["-filter_complex", ";".join(filters), "-map", "[vout]"]
+        if audio[0]:
+            cmd += ["-map", "[aout]"]
+        cmd += ["-c:v", "libx264", *_encoder_args()]
+        if audio[0]:
+            cmd += ["-c:a", "aac", "-b:a", "160k"]
+        cmd += ["-movflags", "+faststart", str(out)]
+        subprocess.run(cmd, check=True)
+        return out
+    if len(parts) == 1:
+        shutil.copyfile(str(parts[0]), str(out))
+        return out
+    # The concat demuxer resolves relative entries against the concat file's
+    # own directory, not the process CWD — CWD-relative paths get doubled and
+    # the whole render fails. Entries must be absolute.
+    tmp = out.parent / f".{out.stem}_concat"
+    tmp.mkdir(parents=True, exist_ok=True)
+    try:
+        concat = tmp / "concat.txt"
+        concat.write_text(
+            "\n".join(f"file '{p.resolve().as_posix()}'" for p in parts),
+            encoding="utf-8",
+        )
+        cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat)]
+        cmd += ["-c", "copy", "-movflags", "+faststart", str(out)]
+        subprocess.run(cmd, check=True)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return out
+
+
 def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None = None, vertical: bool = False, fps: float = 30.0, progress: Callable[[dict], None] | None = None) -> Path:
     require_ffmpeg(); out.parent.mkdir(parents=True, exist_ok=True)
     intervals = retention_intervals(candidate)
@@ -404,13 +482,6 @@ def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None 
             progress({"part": i + 1, "parts": len(intervals), "vertical": vertical})
     if len(parts) == 1:
         shutil.move(str(parts[0]), str(out)); shutil.rmtree(tmp, ignore_errors=True); return out
-    # The concat demuxer resolves relative entries against the concat file's
-    # own directory, not the process CWD — CWD-relative paths get doubled and
-    # the whole render fails. Entries must be absolute.
-    concat = tmp / "concat.txt"
-    concat.write_text(
-        "\n".join(f"file '{p.resolve().as_posix()}'" for p in parts), encoding="utf-8"
-    )
-    subprocess.run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat), "-c", "copy", "-movflags", "+faststart", str(out)], check=True)
+    concat_renders(parts, out)
     shutil.rmtree(tmp, ignore_errors=True)
     return out

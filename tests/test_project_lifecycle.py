@@ -214,7 +214,10 @@ def test_every_path_in_the_report_points_at_a_real_nonempty_file(project):
         mp4s = sorted(directory.glob("*.mp4"))
         assert mp4s, f"{sub} directory is empty"
         assert all(p.stat().st_size > 0 for p in mp4s)
-        assert len(mp4s) == report["selected_count"]
+        # The assembled program reel lives in the same directory and spans every
+        # clip, so it is not counted among them.
+        clips = [p for p in mp4s if p.stem != "program"]
+        assert len(clips) == report["selected_count"]
 
     # qa.json is itself a manifest: every file it audited must exist and the
     # size it recorded must match the file on disk.

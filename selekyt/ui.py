@@ -731,6 +731,14 @@ def _output_rows(report: dict[str, Any], t: Terminal) -> list[str]:
         ("story corpus", report.get("editorial_corpus")),
         ("video memory", (report.get("memory") or {}).get("path")),
     ]
+    # The assembled reel is listed after the cuts it is made of: it is the same
+    # material joined end to end, so a reader who wants one video rather than a
+    # set finds it, and one who wants the parts still has them above. Named for
+    # the file itself because a bucket of clips and one reel are different
+    # shapes of deliverable.
+    program = report.get("program") or {}
+    families.append(("program reel", program.get("facebook")))
+    families.append(("program reel 9:16", program.get("shorts")))
     for label, path in families:
         if path is None:
             continue

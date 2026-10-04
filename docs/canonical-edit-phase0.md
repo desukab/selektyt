@@ -139,6 +139,11 @@ numbers from that order. `--limit` is a *count*. **[CODE]**
 structure describes the whole edit, no file could serve as a preview source, and
 nothing concatenates the clips into one program. **[CODE]**
 
+> Superseded in part: `program.edl` / `program.fcpxml` describe the whole edit,
+> and the render stage now concatenates the per-clip renders it ordered into
+> `facebook/program.mp4` and `shorts/program.mp4` — the preview source this gap
+> said did not exist. The clip remains the unit of *editable* deliverable.
+
 **G3 — Removed ranges are recorded without reasons.** `edit_plan.json` carries
 kept `intervals` and a scalar `removed_seconds`; the complement is only
 implicit, and no span carries *why* it was cut. `cut_algebra.omitted_intervals`

@@ -28,7 +28,7 @@ from engine.language_fitness import is_refusable as language_is_refusable
 from engine.edit_plan import retention_intervals, pacing_report, aggregate_pacing_report
 from engine.qa import write_report
 from engine.report import ReportBuilder
-from engine.render import render_clip
+from engine.render import concat_renders, render_clip
 from engine.timeline_build import timeline_for_candidate
 from engine.nle_export import (
     export as nle_export,
@@ -1581,6 +1581,11 @@ def run(
     # written after the whole loop completed, so a run killed during clip 3 of
     # 6 re-rendered all six even though 1 and 2 were already on disk.
     renders = state.get("renders", {})
+    # The burned-in caption digest of each clip, in program order. The assembled
+    # reel is a function of these clips, so its cache key is keyed on them: any
+    # clip the loop re-rendered or re-captioned appears here, and a reel
+    # assembled from the old parts is not reused.
+    program_ass_digests: list[str] = []
     with _stage(progress, "render",
                 detail=lambda: _render_detail(outputs, edit_report)):
         for idx, c in enumerate(program_order, 1):
@@ -1596,6 +1601,7 @@ def run(
                 project / "captions" / f"{idx:02d}.srt",
                 renders.get(f"{idx:02d}", {}).get("ass_digest"),
             )
+            program_ass_digests.append(ass_digest)
             (project / "captions" / f"{idx:02d}.json").write_text(
                 json.dumps(caption_metadata(c), ensure_ascii=False, indent=2),
                 encoding="utf-8",
@@ -1796,6 +1802,103 @@ def run(
             # is what the bar should read.
             _notify(progress, type="progress", stage="render",
                     current=idx, total=len(program_order))
+
+        # The assembled program as one watchable reel. ``program.edl`` sequences
+        # these same clips in this same order on this same source, so the reel
+        # *is* the per-clip renders joined end to end — concatenating them
+        # costs no encode and cannot diverge from the clips the loop just QA'd,
+        # where a second render of the same material would be a third opinion
+        # on every cut. The captions are already burned in, including any an
+        # editor retimed through the shipped ASS, so the reel inherits them.
+        # A user without an NLE can now watch the story the assembly found
+        # instead of being handed loose cuts plus an interchange file.
+        fb_program = project / "facebook" / "program.mp4"
+        sh_program = project / "shorts" / "program.mp4"
+        parts_fb = [project / "facebook" / f"{i:02d}.mp4"
+                    for i in range(1, len(program_order) + 1)]
+        parts_sh = [project / "shorts" / f"{i:02d}.mp4"
+                    for i in range(1, len(program_order) + 1)]
+        # What actually distinguishes one reel from another: the order the
+        # assembly chose, plus the burned-in captions of every clip in it. A
+        # re-rendered clip or a moved cue changes an entry here and invalidates
+        # the cached reel, exactly as the per-clip key does for a clip. Source
+        # and style are in the key for the same reasons they are per clip.
+        parts_digest = hashlib.sha256(
+            "".join(program_ass_digests).encode()
+        ).hexdigest()
+        cached_program = renders.get("program")
+        if (
+            cached_program
+            and cached_program.get("fingerprint") == fingerprint
+            and cached_program.get("program_digest") == program_digest
+            and cached_program.get("caption_style") == caption_style
+            and cached_program.get("parts_digest") == parts_digest
+            and _render_is_valid(fb_program, vertical=False, source=media)
+            and _render_is_valid(sh_program, vertical=True, source=media)
+        ):
+            print("[cache] reusing assembled program reel", flush=True)
+            _notify(progress, type="note",
+                    text="program reel reused from cache")
+        elif program_order and all(p.is_file() for p in parts_fb + parts_sh) \
+                and all(_render_is_valid(p, vertical=False, source=media) for p in parts_fb) \
+                and all(_render_is_valid(p, vertical=True, source=media) for p in parts_sh):
+            _notify(progress, type="note", text="assembling the program reel")
+            # Each timeline clip is snapped independently to the sequence
+            # frame grid. Match that same summed frame duration here; raw float
+            # ``assembly.duration`` can land between frames, while unconstrained
+            # stream copy accumulates mux padding from every source cut.
+            program_part_durations = [
+                sum(
+                    max(1, round((end - start) * source_fps)) / source_fps
+                    for start, end in retention_intervals(candidate)
+                )
+                for candidate in program_order
+            ]
+            concat_renders(parts_fb, fb_program,
+                           part_durations=program_part_durations)
+            concat_renders(parts_sh, sh_program,
+                           part_durations=program_part_durations)
+            # A reel the muxer could not produce is a missing deliverable, not a
+            # silent absence: the run's per-clip QA below would still pass, so
+            # without this check a broken program would ship as a clean run.
+            if not _render_is_valid(fb_program, vertical=False, source=media):
+                raise RuntimeError(
+                    "the assembled 16:9 program reel failed its own validation"
+                )
+            if not _render_is_valid(sh_program, vertical=True, source=media):
+                raise RuntimeError(
+                    "the assembled 9:16 program reel failed its own validation"
+                )
+            renders["program"] = {
+                "fingerprint": fingerprint,
+                "program_digest": program_digest,
+                "caption_style": caption_style,
+                "parts_digest": parts_digest,
+                "facebook": str(fb_program),
+                "shorts": str(sh_program),
+            }
+            # Same checkpoint discipline as a clip: a run killed after the reel
+            # is assembled must not reassemble it.
+            state["renders"] = renders
+            _save_state(state_path, state)
+            _notify(progress, type="note",
+                    text=f"program reel assembled ({len(program_order)} clips)")
+        else:
+            # The clips are the reel's only input, so an unusable one means the
+            # reel cannot be built. This does not fail the run: the per-clip
+            # deliverables are still good and the QA stage below is what gates
+            # them, while a reel that cannot honestly be made is reported as
+            # absent rather than faked. ``tools/nle_check.py`` reports the
+            # missing reel as SKIP for the same reason.
+            print(
+                "[render] skipping the program reel: a per-clip render it "
+                "needs is missing or not a valid video",
+                flush=True,
+            )
+            _notify(progress, type="note", level="warn",
+                    text="the program reel could not be assembled")
+        if fb_program.is_file() and sh_program.is_file():
+            outputs += [fb_program, sh_program]
     with _stage(progress, "report",
                 detail=lambda: _report_detail(report, project)):
         (project / "edit_plan.json").write_text(json.dumps(edit_report, indent=2), encoding="utf-8")
@@ -1834,6 +1937,13 @@ def run(
             "bench": bench,
             "rejection_reasons": dict(sorted(rejection_reasons.items(), key=lambda kv: -kv[1])),
             "outputs": {"facebook": str(project / "facebook"), "shorts": str(project / "shorts")},
+            # The assembled reel, named by file rather than directory: it is one
+            # deliverable per aspect, not a bucket of them, and a reader who
+            # wants the story whole rather than clip by clip goes straight here.
+            # Absent when the reel could not be assembled, which the CLI reports
+            # as absent rather than as a path that does not resolve.
+            "program": ({"facebook": str(fb_program), "shorts": str(sh_program)}
+                        if fb_program.is_file() else None),
             "captions": str(project / "captions"),
             "timeline": str(project / "timeline"),
             "content_pack": str(project / "content_pack.json"),

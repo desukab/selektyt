@@ -633,7 +633,10 @@ def _check_fcpxml(fcpxml: Path, renders: dict[str, Path], fps: float,
         for clip in spine:
             if clip.tag not in ("asset-clip", "gap", "sync-clip"):
                 continue
-            start = _rational_seconds(clip.get("start", "0s"))
+            # ``start`` is the source-media in-point. A reel may legitimately
+            # cut backwards in its source, so ordering must be checked against
+            # the clip's timeline ``offset`` instead.
+            start = _rational_seconds(clip.get("offset", "0s"))
             duration = _rational_seconds(clip.get("duration", "0s"))
             if start < cursor - 1e-6:
                 advances = False

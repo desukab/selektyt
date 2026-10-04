@@ -634,7 +634,12 @@ def validate_outputs_expanded(outputs: list[Path], *,
             report["ok"] = False
         if warnings:
             report["warnings"].extend(f"{f}: {w}" for w in warnings)
-    fb_clips = [p for p in outputs if "facebook" in p.parts]
+    # The whole-reel program is excluded from the diversity set: it contains
+    # every clip in it, so including it would compare the reel against its own
+    # parts and the score would measure the wrong thing. Diversity is a
+    # clip-to-clip property.
+    fb_clips = [p for p in outputs
+                if "facebook" in p.parts and p.stem != "program"]
     report["diversity"] = visual_diversity_score(fb_clips) if len(fb_clips) > 1 else 1.0
     if report["diversity"] is None:
         # Two or more clips and not enough frames decoded to compare them: no
@@ -743,6 +748,16 @@ def write_report(root: Path, outputs: list[Path], source_path: str | None = None
                 except (TypeError, ValueError):
                     key = str(entry.get("index"))
                 expected_durations[key] = val
+            # The assembled program reel — ``facebook/program.mp4`` and
+            # ``shorts/program.mp4`` — plays every clip in the plan end to end,
+            # so the duration it owes QA is the plan's total. The reel is named
+            # for a stem no per-clip entry can produce, so the total is recorded
+            # under that stem rather than appended to the plan as a row: a row
+            # would break the one-entry-per-clip shape every reader of
+            # edit_plan.json relies on.
+            total = sum(expected_durations.values())
+            if total > 0:
+                expected_durations["program"] = total
         except (OSError, json.JSONDecodeError, TypeError, ValueError):
             expected_durations = {}
     report = validate_outputs_expanded(outputs, source=source, expected_fps=expected_fps,

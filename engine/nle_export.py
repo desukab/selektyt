@@ -457,15 +457,36 @@ def render_fcpxml(timeline: Timeline) -> str:
 
     # Storyline elements with gaps filled in, in timeline order.
     elements: list[tuple[str, float, float]] = []  # (xml, offset, end)
+    frame_seconds = rate.frame_seconds()
     cursor = 0.0
+    raw_cursor = 0.0
     for clip in primary:
-        if clip.timeline_in > cursor + 1e-9:
-            elements.append((_gap_xml(cursor, clip.timeline_in - cursor, rate), cursor, clip.timeline_in))
-        elements.append(
-            (_clip_xml(clip, asset_ids[clip.source.key], None, rate, tc_format),
-             clip.timeline_in, clip.timeline_out)
+        # The offsets and durations are serialized separately as frame-grid
+        # rationals. Accumulating unrounded floats here can put a later clip one
+        # frame after the rounded end of its predecessor, creating a gap in the
+        # FCPXML even though the in-memory timeline is contiguous. Advance the
+        # serialization cursor by the same snapped durations the document will
+        # carry, while retaining intentional frame-sized timeline gaps.
+        # If the in-memory clips touch, their serialized starts must touch too:
+        # a cumulative half-frame rounding difference can otherwise turn a
+        # continuous edit into a one-frame FCPXML gap. Preserve an actual gap
+        # only when the model itself has one.
+        contiguous = clip.timeline_in <= raw_cursor + 1e-9
+        offset = (
+            cursor if contiguous
+            else round(clip.timeline_in / frame_seconds) * frame_seconds
         )
-        cursor = clip.timeline_out
+        if offset > cursor + 1e-9:
+            elements.append((_gap_xml(cursor, offset - cursor, rate), cursor, offset))
+        offset = max(offset, cursor)
+        duration = round(clip.duration / frame_seconds) * frame_seconds
+        end = offset + duration
+        elements.append(
+            (_clip_xml(clip, asset_ids[clip.source.key], None, rate, tc_format,
+                       offset=offset), offset, end)
+        )
+        cursor = end
+        raw_cursor = clip.timeline_out
     if not elements:
         elements.append((_gap_xml(0.0, timeline.duration, rate), 0.0, timeline.duration))
 

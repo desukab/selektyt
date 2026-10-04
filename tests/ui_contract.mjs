@@ -207,14 +207,22 @@ for (const bucket of ["facebook", "shorts"]) {
   const dir = report.outputs[bucket];
   let n = 0;
   try {
-    n = readdirSync(dir).filter((f) => f.endsWith(".mp4")).length;
+    // The assembled program reel shares the bucket and spans every selection,
+    // so it is not counted as a clip.
+    n = readdirSync(dir).filter((f) => f.endsWith(".mp4") && f !== "program.mp4").length;
   } catch {
     // Missing is reported by the shell's project listing, not here.
   }
   check(
     n === report.selected_count,
-    `${bucket} has ${n} mp4s for ${report.selected_count} selections`,
+    `${bucket} has ${n} clips for ${report.selected_count} selections`,
   );
+}
+// The reel itself: report.json names it by file, and the file must be there
+// when the run assembled one. Absent is reported as null, not as a bad path.
+if (report.program) {
+  check(existsSync(report.program.facebook), "the program reel the report names exists");
+  check(existsSync(report.program.shorts), "the 9:16 program reel the report names exists");
 }
 const qa = readJson("qa.json");
 for (const key of ["ok", "per_file"]) {

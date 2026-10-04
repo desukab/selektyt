@@ -808,6 +808,68 @@ def test_render_rejects_empty_intervals(tmp_path):
         render_clip(source, c, tmp_path / "fb" / "01.mp4")
 
 
+def test_concat_renders_joins_parts_without_re_encoding(tmp_path):
+    """The assembled program reel is the per-clip renders copied end to end.
+
+    ``concat_renders`` is what makes the reel the clips it is made of: no
+    decode, no encode, so the join cannot introduce a generation of loss or a
+    retiming of either stream. Measured here as duration arithmetic and as
+    frame-level stream agreement, the same properties the multi-part clip path
+    is pinned by above.
+    """
+    from engine.render import concat_renders
+
+    parts = []
+    for i, span in enumerate((1.0, 1.5, 0.5)):
+        p = tmp_path / f"part{i}.mp4"
+        _video_with_audio(p, duration=span)
+        parts.append(p)
+
+    out = concat_renders(parts, tmp_path / "reel" / "program.mp4")
+    assert out.is_file() and out.stat().st_size > 0
+
+    v_start, v_dur = _stream_start_and_duration(out, "v:0")
+    a_start, a_dur = _stream_start_and_duration(out, "a:0")
+    # The reel's length is the sum of its parts. Container muxing rounds to the
+    # frame grid, so the tolerance is a frame pair rather than zero — the same
+    # slop tools/nle_check.py allows when comparing the reel to program.edl.
+    assert v_dur == pytest.approx(3.0, abs=0.05), (
+        f"the reel is {v_dur:.3f}s; its parts total 3.000s")
+    assert a_dur == pytest.approx(3.0, abs=0.05)
+    assert v_start == pytest.approx(a_start, abs=0.04), (
+        "joining the parts shifted picture and sound apart")
+    assert a_dur > 0.0
+
+    # No leftover scratch directory: a run that leaves a ``.program_concat``
+    # behind ships a stale manifest source alongside its reel.
+    assert not list((tmp_path / "reel").glob(".*")), \
+        "the concat scratch directory was not cleaned up"
+
+
+def test_concat_renders_copies_a_single_part(tmp_path):
+    """A one-clip program is a copy, not a mux through a concat list — the same
+    output the demuxer would give for one fewer ffmpeg invocation."""
+    from engine.render import concat_renders
+
+    part = tmp_path / "only.mp4"
+    _video_with_audio(part, duration=2.0)
+    out = concat_renders([part], tmp_path / "reel" / "program.mp4")
+
+    v_start, v_dur = _stream_start_and_duration(out, "v:0")
+    assert v_dur == pytest.approx(2.0, abs=0.05)
+    assert out.read_bytes()[:32] == part.read_bytes()[:32], (
+        "a single-part reel is not the clip it was copied from")
+
+
+def test_concat_renders_refuses_no_parts(tmp_path):
+    """An empty program has no reel: the call must fail loudly rather than
+    write a zero-byte file a later QA step would have to catch."""
+    from engine.render import concat_renders
+
+    with pytest.raises(RuntimeError, match="at least one part"):
+        concat_renders([], tmp_path / "reel" / "program.mp4")
+
+
 def test_render_restores_audio_when_input_seeking_drops_it(monkeypatch, tmp_path):
     """A part that comes out video-only is re-rendered with output seeking.
 

@@ -613,8 +613,10 @@ def test_the_progress_events_name_every_stage_and_real_counts(
         assert isinstance(detail, dict), f"{stage} carried no detail dict"
         assert detail, f"{stage} carried an empty detail; show nothing instead"
     # A detail that names a number the tree does not hold is a fabricated one.
+    # The render detail counts clips, so the assembled ``program.mp4`` reel that
+    # shares the directory is not one of them.
     assert details["render"]["clips"] == len(
-        list((project / "facebook").glob("*.mp4")))
+        [p for p in (project / "facebook").glob("*.mp4") if p.stem != "program"])
     assert details["report"]["artifacts"] > 0
 
 
@@ -712,10 +714,87 @@ def test_deliverables_are_numbered_in_the_order_the_program_plays_them(
     # order is the order the loop iterated. Following the policy would put
     # ``picked`` here instead.
     assert shipped == program
-    # And the deliverables themselves carry the same numbering.
-    assert len(plan) == len(list((project / "facebook").glob("*.mp4")))
+    # And the deliverables themselves carry the same numbering. The assembled
+    # reel (``program.mp4``) lives in the same directory and is excluded from
+    # this count: it is one file covering every plan entry, not a clip.
+    clips = [p for p in (project / "facebook").glob("*.mp4") if p.stem != "program"]
+    assert len(plan) == len(clips)
     assert len(plan) == json.loads(
         (project / "report.json").read_text())["program_count"]
+
+
+def test_the_assembled_program_is_rendered_as_one_reel(patched_pipeline, tmp_path, media):
+    """The program the assembly ordered ships as one watchable video.
+
+    ``program.edl`` described the assembled edit but nothing rendered it, so a
+    user without an NLE received loose clips and an interchange file: the story
+    SeleKyT found was not watchable. The reel concatenates the per-clip renders,
+    which makes it those clips end to end — it cannot disagree with what the run
+    QA'd per clip, and the captions are already burned in.
+    """
+    from providers.ffmpeg import probe_duration
+
+    project = patched_pipeline.run("https://example.com/v", tmp_path,
+                                   model="small", limit=2)
+    report = json.loads((project / "report.json").read_text())
+    plan = json.loads((project / "edit_plan.json").read_text())
+    assert len(plan) >= 2, "this fixture must ship more than one clip"
+
+    fb_reel = project / "facebook" / "program.mp4"
+    sh_reel = project / "shorts" / "program.mp4"
+    assert fb_reel.is_file() and fb_reel.stat().st_size > 0
+    assert sh_reel.is_file() and sh_reel.stat().st_size > 0
+
+    # The report names the reel by file, so a reader looking for one video
+    # rather than a set goes straight at it. Null would mean the run did not
+    # assemble one, which this fixture has no reason to do.
+    assert report["program"] == {"facebook": str(fb_reel), "shorts": str(sh_reel)}
+
+    # The reel plays the whole program, so its duration is the plan's total —
+    # every clip the assembly kept, in order. Container muxing accumulates a
+    # little slop per join, so the comparison is at the same 1% the per-clip
+    # plan check uses rather than exact.
+    expected = sum(e["edited_duration"] for e in plan)
+    for reel in (fb_reel, sh_reel):
+        got = probe_duration(reel)
+        assert got > 0
+        assert abs(got - expected) <= max(0.05, 0.01 * expected), (
+            f"the reel is {got:.3f}s against a plan total of {expected:.3f}s; a "
+            "clip was probably dropped or duplicated in the join")
+
+    # The reel is audited alongside the clips it is made of: a deliverable QA
+    # never looked at is one a broken render could ship silently.
+    qa = json.loads((project / "qa.json").read_text())
+    assert qa["ok"] is True
+    for reel in (fb_reel, sh_reel):
+        assert str(reel) in qa["per_file"], f"qa.json did not audit {reel}"
+        assert not qa["per_file"][str(reel)]["errors"]
+
+    # The reel carries the same captioned content as the clips it joins: a
+    # concat that lost a stream would be a silent or textless program.
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "a",
+         "-show_entries", "stream=codec_type", "-of", "csv=p=0", str(fb_reel)],
+        capture_output=True, text=True, check=True)
+    assert "audio" in probe.stdout, "the 16:9 reel has no audio stream"
+
+
+def test_the_program_reel_is_reused_when_nothing_changed(patched_pipeline, tmp_path, media):
+    """A cached reel is not reassembled, and reassembling it is byte-stable.
+
+    The reel is a pure function of the clips in it, so a second run that finds
+    the same clips on disk must produce the same reel — and must not rebuild
+    it, which is what makes a resume cheap.
+    """
+    project = patched_pipeline.run("https://example.com/v", tmp_path,
+                                   model="small", limit=2)
+    fb_reel = project / "facebook" / "program.mp4"
+    first = fb_reel.read_bytes()
+
+    patched_pipeline.run("https://example.com/v", tmp_path, model="small", limit=2)
+    assert fb_reel.read_bytes() == first, "an unchanged program reassembled differently"
+    state = json.loads((project / "pipeline_state.json").read_text())
+    assert "program" in state["renders"], "the reel has no cache record of its own"
 
 
 def test_a_failed_stage_reports_itself_before_raising(
