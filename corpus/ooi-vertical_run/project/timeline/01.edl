@@ -1,18 +1,18 @@
-TITLE:   Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.
+TITLE:   Scientists need to know where these changes are occurring and how fast.
 
 FCM: NON-DROP FRAME
 
-001  OOI_VERT V     C        00:01:53:07 00:01:55:22 00:00:00:00 00:00:02:15
+001  OOI_VERT V     C        00:00:12:06 00:00:16:04 00:00:00:00 00:00:03:28
      M2   ooi-vertical.webm
-* FROM CLIP: corpus/media/ooi-vertical.webm
-001  OOI_VERT A     C        00:01:53:07 00:01:55:22 00:00:00:00 00:00:02:15
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+001  OOI_VERT A     C        00:00:12:06 00:00:16:04 00:00:00:00 00:00:03:28
 
-002  OOI_VERT V     C        00:01:56:09 00:02:05:17 00:00:02:15 00:00:11:23
+002  OOI_VERT V     C        00:00:16:22 00:00:21:12 00:00:03:28 00:00:08:18
      M2   ooi-vertical.webm
-* FROM CLIP: corpus/media/ooi-vertical.webm
-002  OOI_VERT A     C        00:01:56:09 00:02:05:17 00:00:02:15 00:00:11:23
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+002  OOI_VERT A     C        00:00:16:22 00:00:21:12 00:00:03:28 00:00:08:18
 
-003  OOI_VERT V     C        00:02:08:05 00:02:18:29 00:00:11:23 00:00:22:17
+003  OOI_VERT V     C        00:00:22:03 00:00:32:16 00:00:08:18 00:00:19:01
      M2   ooi-vertical.webm
-* FROM CLIP: corpus/media/ooi-vertical.webm
-003  OOI_VERT A     C        00:02:08:05 00:02:18:29 00:00:11:23 00:00:22:17
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+003  OOI_VERT A     C        00:00:22:03 00:00:32:16 00:00:08:18 00:00:19:01

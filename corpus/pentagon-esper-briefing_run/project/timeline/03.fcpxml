@@ -8,11 +8,13 @@
     </asset>
   </resources>
   <library>
-    <event name="Can you in any way elaborate on what&apos;s been collected, what&apos;s being looked through now, and what that might mean?">
-      <project name="Can you in any way elaborate on what&apos;s been collected, what&apos;s being looked through now, and what that might mean?">
+    <event name="I don&apos;t want to characterize exactly what or how much yet until it gets exploited properly.">
+      <project name="I don&apos;t want to characterize exactly what or how much yet until it gets exploited properly.">
         <sequence format="f1" tcFormat="NDF">
           <spine>
-          <asset-clip ref="r1" offset="0s" start="19006988/30000s" duration="658658/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="0s" start="17511494/30000s" duration="134134/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="134134/30000s" start="17658641/30000s" duration="343343/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="477477/30000s" start="18088070/30000s" duration="261261/30000s" tcFormat="NDF" />
           </spine>
         </sequence>
       </project>

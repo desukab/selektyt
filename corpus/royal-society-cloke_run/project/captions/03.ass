@@ -6,22 +6,29 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
-Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+Style: Default,Fredoka,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
 
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
-Dialogue: 0,0:00:00.00,0:00:01.37,Default,,0,0,0,,{\k28}the{\k30}scenes{\k36}people{\k18}are{\k28}{\c&H00D7FF&\b1}moving{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:01.40,0:00:02.89,Default,,0,0,0,,{\k46}around{\k32}putting{\k44}{\c&H00D7FF&\b1}equipment{\c&HFFFFFF&\b0}{\k22}in{\k8}the
-Dialogue: 0,0:00:02.92,0:00:04.64,Default,,0,0,0,,{\k16}right{\k30}place{\k64}going{\k20}on{\k30}{\c&H00D7FF&\b1}alert.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:04.76,0:00:07.03,Default,,0,0,0,,{\k56}And{\k56}{\c&H00D7FF&\b1}with{\c&HFFFFFF&\b0}{\k32}this{\k50}{\c&H00D7FF&\b1}kind{\c&HFFFFFF&\b0}{\k20}of,{\k6}I
-Dialogue: 0,0:00:07.06,0:00:08.17,Default,,0,0,0,,{\k14}{\c&H00D7FF&\b1}guess{\c&HFFFFFF&\b0}{\k12}in{\k10}the{\k24}{\c&H00D7FF&\b1}longer{\c&HFFFFFF&\b0}{\k32}term,{\k2}if
-Dialogue: 0,0:00:08.20,0:00:08.95,Default,,0,0,0,,{\k28}I'm,{\k10}you{\k8}know,{\k10}{\c&H00D7FF&\b1}from{\c&HFFFFFF&\b0}{\k14}my
-Dialogue: 0,0:00:08.98,0:00:09.69,Default,,0,0,0,,{\k32}{\c&H00D7FF&\b1}perspective{\c&HFFFFFF&\b0}{\k20}as{\k8}a{\k14}structural
-Dialogue: 0,0:00:09.72,0:00:10.57,Default,,0,0,0,,{\k36}engineer,{\k1}I've{\k8}been{\k30}{\c&H00D7FF&\b1}involved{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:10.60,0:00:12.53,Default,,0,0,0,,{\k44}in,{\k76}you{\k14}know,{\k16}urban{\k30}{\c&H00D7FF&\b1}planning{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:12.56,0:00:14.43,Default,,0,0,0,,{\k44}and{\k22}{\c&H00D7FF&\b1}looking{\c&HFFFFFF&\b0}{\k28}at{\k46}{\c&H00D7FF&\b1}cities{\c&HFFFFFF&\b0}{\k28}and{\k22}so
-Dialogue: 0,0:00:14.46,0:00:16.09,Default,,0,0,0,,{\k30}on,{\k26}how{\k20}{\c&H00D7FF&\b1}can{\c&HFFFFFF&\b0}{\k12}we{\k18}{\c&H00D7FF&\b1}use{\c&HFFFFFF&\b0}{\k8}the
-Dialogue: 0,0:00:16.12,0:00:17.33,Default,,0,0,0,,{\k14}{\c&H00D7FF&\b1}kind{\c&HFFFFFF&\b0}{\k8}of{\k32}{\c&H00D7FF&\b1}modeling{\c&HFFFFFF&\b0}{\k28}that{\k14}you{\k28}do
-Dialogue: 0,0:00:17.36,0:00:19.33,Default,,0,0,0,,{\k36}to{\k60}maybe{\k34}better{\k40}{\c&H00D7FF&\b1}design{\c&HFFFFFF&\b0}{\k30}where
-Dialogue: 0,0:00:19.36,0:00:20.93,Default,,0,0,0,,{\k32}human{\k34}beings{\k60}decide{\k18}to{\k16}{\c&H00D7FF&\b1}settle{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:20.96,0:00:21.24,Default,,0,0,0,,{\k28}{\c&H00D7FF&\b1}down?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.00,0:00:00.95,Default,,0,0,0,,{\k22}Are{\k8} you{\k18} able{\k14} to{\k18}{\c&H00D7FF&\b1} make{\c&HFFFFFF&\b0}{\k18}{\c&H00D7FF&\b1} these{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.98,0:00:02.04,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}predictions{\c&HFFFFFF&\b0}{\k30} on{\k28} now?
+Dialogue: 0,0:00:02.16,0:00:03.61,Default,,0,0,0,,{\k2}So{\k14} when{\k14} we're{\k22}{\c&H00D7FF&\b1} thinking{\c&HFFFFFF&\b0}{\k36}{\c&H00D7FF&\b1} about{\c&HFFFFFF&\b0}{\k60} an
+Dialogue: 0,0:00:03.64,0:00:04.89,Default,,0,0,0,,{\k24}{\c&H00D7FF&\b1}upcoming{\c&HFFFFFF&\b0}{\k32} flood,{\k12} so{\k34} it's{\k14} going
+Dialogue: 0,0:00:04.92,0:00:06.96,Default,,0,0,0,,{\k8}to{\k32}{\c&H00D7FF&\b1} flood{\c&HFFFFFF&\b0}{\k52}{\c&H00D7FF&\b1} tomorrow{\c&HFFFFFF&\b0}{\k44} or{\k24} next{\k32} week,
+Dialogue: 0,0:00:07.10,0:00:08.61,Default,,0,0,0,,{\k16}we{\k32} can{\k26} say{\k14} with{\k18}{\c&H00D7FF&\b1} some{\c&HFFFFFF&\b0}{\k48}{\c&H00D7FF&\b1} confidence{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:08.64,0:00:09.73,Default,,0,0,0,,{\k30}{\c&H00D7FF&\b1}whether{\c&HFFFFFF&\b0}{\k22} that{\k22} flood{\k14} is{\k16}{\c&H00D7FF&\b1} going{\c&HFFFFFF&\b0}{\k8} to
+Dialogue: 0,0:00:09.76,0:00:10.10,Default,,0,0,0,,{\k22}{\c&H00D7FF&\b1}happen.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:10.50,0:00:11.61,Default,,0,0,0,,{\k22}But{\k16} when{\k12} we{\k20}{\c&H00D7FF&\b1} look{\c&HFFFFFF&\b0}{\k20} a{\k24}{\c&H00D7FF&\b1} long{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:11.64,0:00:12.97,Default,,0,0,0,,{\k32}term{\k20} and{\k12} we{\k20}{\c&H00D7FF&\b1} think{\c&HFFFFFF&\b0}{\k32}{\c&H00D7FF&\b1} about{\c&HFFFFFF&\b0}{\k20} our
+Dialogue: 0,0:00:13.00,0:00:14.75,Default,,0,0,0,,{\k26}{\c&H00D7FF&\b1}changing{\c&HFFFFFF&\b0}{\k46} climate,{\k40} we{\k18} can{\k24} see
+Dialogue: 0,0:00:14.78,0:00:16.61,Default,,0,0,0,,{\k30}how{\k46}{\c&H00D7FF&\b1} likely{\c&HFFFFFF&\b0}{\k50} those{\k42} types{\k18} of
+Dialogue: 0,0:00:16.64,0:00:17.87,Default,,0,0,0,,{\k26}{\c&H00D7FF&\b1}floods{\c&HFFFFFF&\b0}{\k40} are{\k12} to{\k22}{\c&H00D7FF&\b1} happen{\c&HFFFFFF&\b0}{\k16} in{\k10} the
+Dialogue: 0,0:00:17.90,0:00:18.34,Default,,0,0,0,,{\k32}{\c&H00D7FF&\b1}future.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:18.78,0:00:19.61,Default,,0,0,0,,{\k20}And{\k14} some{\k8} of{\k8} the{\k16}{\c&H00D7FF&\b1} things{\c&HFFFFFF&\b0}{\k20}{\c&H00D7FF&\b1} we're{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:19.64,0:00:20.89,Default,,0,0,0,,{\k32}most{\k30} worried{\k20} about{\k32}{\c&H00D7FF&\b1} actually{\c&HFFFFFF&\b0}{\k14} are
+Dialogue: 0,0:00:20.92,0:00:21.72,Default,,0,0,0,,{\k36}flash{\k32}{\c&H00D7FF&\b1} floods.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:22.02,0:00:22.89,Default,,0,0,0,,{\k14}Those{\k24} ones{\k16} that{\k8} are{\k28}{\c&H00D7FF&\b1} really{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:22.92,0:00:24.11,Default,,0,0,0,,{\k38}{\c&H00D7FF&\b1}difficult{\c&HFFFFFF&\b0}{\k24} to{\k28} predict{\k22} in{\k10} the
+Dialogue: 0,0:00:24.14,0:00:24.76,Default,,0,0,0,,{\k18}{\c&H00D7FF&\b1}short{\c&HFFFFFF&\b0}{\k32} term.
+Dialogue: 0,0:00:25.22,0:00:26.49,Default,,0,0,0,,{\k4}And{\k58}{\c&H00D7FF&\b1} sometimes{\c&HFFFFFF&\b0}{\k22} they{\k30} come{\k16} along
+Dialogue: 0,0:00:26.52,0:00:27.50,Default,,0,0,0,,{\k16}in{\k16} an{\k18} hour{\k24} or{\k24}{\c&H00D7FF&\b1} something.{\c&HFFFFFF&\b0}

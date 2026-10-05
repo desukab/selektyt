@@ -1,135 +1,83 @@
 1
-0:00:00,045 --> 0:00:02,152
-The risk changes that factor if
+0:00:00,000 --> 0:00:02,007
+Now last year the UK recorded
 
 2
-0:00:02,185 --> 0:00:03,252
-it's going to happen more
+0:00:02,040 --> 0:00:03,847
+its highest ever temperature of
 
 3
-0:00:03,285 --> 0:00:04,572
-often, it's going to be worse.
+0:00:03,880 --> 0:00:06,407
+40.3 degrees Celsius and on
 
 4
-0:00:04,605 --> 0:00:07,632
-And how good are we at
+0:00:06,440 --> 0:00:07,647
+the news recently We've seen
 
 5
-0:00:07,665 --> 0:00:10,252
-predicting the next flood or
+0:00:07,680 --> 0:00:09,967
+devastating floods droughts and
 
 6
-0:00:10,285 --> 0:00:11,852
-the next extreme event like
+0:00:10,000 --> 0:00:12,667
+wildfires worldwide My next
 
 7
-0:00:11,885 --> 0:00:12,265
-that?
+0:00:12,700 --> 0:00:14,307
+guest is Hannah cloak a
 
 8
-0:00:12,805 --> 0:00:14,072
-We've got some really good
+0:00:14,340 --> 0:00:16,127
+specialist in extreme weather
 
 9
-0:00:14,105 --> 0:00:15,005
-models now.
+0:00:16,160 --> 0:00:18,627
+and professor of hydrology at
 
 10
-0:00:15,165 --> 0:00:16,972
-So we have huge computer models
+0:00:18,660 --> 0:00:20,787
+the University of Reading She
 
 11
-0:00:17,005 --> 0:00:18,592
-of the Earth system that can
+0:00:20,820 --> 0:00:22,647
+has appeared on TV including in
 
 12
-0:00:18,625 --> 0:00:20,252
-put together how the atmosphere
+0:00:22,680 --> 0:00:24,427
+the panorama episode wild
 
 13
-0:00:20,285 --> 0:00:21,872
-moves around and what's
+0:00:24,460 --> 0:00:26,107
+weather our world under threat
 
 14
-0:00:21,905 --> 0:00:23,252
-happening on the land surface
+0:00:26,140 --> 0:00:28,127
+And she was a subject of
 
 15
-0:00:23,285 --> 0:00:24,185
-and in our rivers.
+0:00:28,160 --> 0:00:29,927
+the Life Scientific on Radio 4
 
 16
-0:00:24,545 --> 0:00:25,852
-And we're actually pretty good
+0:00:29,960 --> 0:00:30,760
+in 2021.
 
 17
-0:00:25,885 --> 0:00:27,552
-now at saying whether a natural
+0:00:31,300 --> 0:00:32,280
+Welcome Hannah.
 
 18
-0:00:27,585 --> 0:00:29,552
-hazard like a fire or a
+0:00:32,400 --> 0:00:33,340
+It's lovely to be here.
 
 19
-0:00:29,585 --> 0:00:30,732
-heat wave or a flood is
+0:00:33,780 --> 0:00:35,627
+When did you first discover
 
 20
-0:00:30,765 --> 0:00:32,372
-going to happen even sometimes
+0:00:35,660 --> 0:00:37,927
+your fascination with water and
 
 21
-0:00:32,405 --> 0:00:33,625
-two or three weeks ahead.
-
-22
-0:00:34,145 --> 0:00:35,812
-So is that enough?
-
-23
-0:00:35,845 --> 0:00:36,852
-Is two or three weeks ahead
-
-24
-0:00:36,885 --> 0:00:38,572
-I guess enough to respond to
-
-25
-0:00:38,605 --> 0:00:39,845
-that adequately?
-
-26
-0:00:39,965 --> 0:00:40,872
-So it depends what you're
-
-27
-0:00:40,905 --> 0:00:41,445
-trying to do.
-
-28
-0:00:41,605 --> 0:00:42,412
-So if you're trying to get
-
-29
-0:00:42,445 --> 0:00:44,392
-people out of the way, then
-
-30
-0:00:44,425 --> 0:00:46,332
-you need at least a week
-
-31
-0:00:46,365 --> 0:00:47,912
-sometimes to prepare all of
-
-32
-0:00:47,945 --> 0:00:49,245
-that stuff in advance.
-
-33
-0:00:49,365 --> 0:00:50,952
-We only tend to hear about
-
-34
-0:00:50,985 --> 0:00:52,265
-things a day in advance.
+0:00:37,960 --> 0:00:38,260
+geography?

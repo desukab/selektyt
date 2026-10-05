@@ -3,29 +3,33 @@
 Now in its eighth year, OOI
 
 2
-0:00:02,220 --> 0:00:03,927
-makes it possible to investigate
+0:00:02,220 --> 0:00:03,427
+makes it possible to
 
 3
-0:00:03,960 --> 0:00:05,827
-short -lived events as well as
+0:00:03,460 --> 0:00:04,907
+investigate short-lived events
 
 4
-0:00:05,860 --> 0:00:06,900
-multi -year trends.
+0:00:04,940 --> 0:00:06,900
+as well as multi-year trends.
 
 5
-0:00:07,020 --> 0:00:08,747
-That provides researchers around
+0:00:07,020 --> 0:00:08,227
+That provides researchers
 
 6
-0:00:08,780 --> 0:00:10,447
-the globe with critical insights
+0:00:08,260 --> 0:00:09,967
+around the globe with critical
 
 7
-0:00:10,480 --> 0:00:12,687
-into climate change and its effect
+0:00:10,000 --> 0:00:11,640
+insights into climate change
 
 8
-0:00:12,720 --> 0:00:13,980
-on marine ecosystems.
+0:00:11,820 --> 0:00:13,247
+and its effect on marine
+
+9
+0:00:13,280 --> 0:00:13,980
+ecosystems.

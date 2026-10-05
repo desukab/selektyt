@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="f1" name="FFVideoFormat" frameDuration="1001/30000s" />
+    <asset id="r1" name="pentagon-esper-briefing.mp4" start="0s" duration="30415385/30000s" hasVideo="1" videoSources="1" hasAudio="1" audioSources="1" audioChannels="2">
+      <media-rep kind="original-media" src="file:///home/azureuser/selektyt/corpus/media/pentagon-esper-briefing.mp4"/>
+    </asset>
+  </resources>
+  <library>
+    <event name="corpus/media/pentagon-esper-briefing.mp4 edit">
+      <project name="corpus/media/pentagon-esper-briefing.mp4 edit">
+        <sequence format="f1" tcFormat="NDF">
+          <spine>
+          <asset-clip ref="r1" offset="0s" start="3098095/30000s" duration="391391/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="391391/30000s" start="3512509/30000s" duration="296296/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="687687/30000s" start="3827824/30000s" duration="267267/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="954954/30000s" start="13567554/30000s" duration="277277/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="1232231/30000s" start="14018004/30000s" duration="167167/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="1399398/30000s" start="14198184/30000s" duration="312312/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="1711710/30000s" start="17511494/30000s" duration="134134/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="1845844/30000s" start="17658641/30000s" duration="343343/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="2189187/30000s" start="18088070/30000s" duration="261261/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="2450448/30000s" start="24941917/30000s" duration="297297/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="2747745/30000s" start="27300273/30000s" duration="180180/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="2927925/30000s" start="27508481/30000s" duration="337337/30000s" tcFormat="NDF" />
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>

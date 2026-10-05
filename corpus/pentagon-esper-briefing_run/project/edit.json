@@ -1,0 +1,341 @@
+{
+  "title": "corpus/media/pentagon-esper-briefing.mp4 edit",
+  "fps": 29.97002997002997,
+  "decisions": [
+    {
+      "id": "ed-ac5193eb61b3",
+      "anchor": {
+        "track": "V1",
+        "timeline_in": 0.0
+      },
+      "action": "keep",
+      "role": "resolution",
+      "reason": "role resolution — fact candidate that lands a clear closing thought, with opening middling at 0.53. Structural editorial score: opening=0.53; progression=0.65; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.02; coherence=1.00; completeness=1.00; audio_pace=0.93; silence=0.076; dead_air=0.06.",
+      "confidence": {
+        "value": 0.75,
+        "basis": "corpus thread 'remains, united, states' confidence"
+      },
+      "evidence": [],
+      "provenance": "engine.selection.select → engine.assembly.assemble (order=arc)",
+      "replaces": null
+    },
+    {
+      "id": "ed-0ce0bf2b7388",
+      "anchor": {
+        "track": "V1",
+        "timeline_in": 31.82
+      },
+      "action": "keep",
+      "role": "tension",
+      "reason": "role tension — conflict candidate that lands a clear closing thought, with opening middling at 0.55. Structural editorial score: opening=0.55; progression=0.99; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.11; coherence=1.00; completeness=1.00; audio_pace=0.81; silence=0.223; dead_air=0.21.",
+      "confidence": {
+        "value": 0.825,
+        "basis": "corpus thread 'destroy, canine, used' confidence"
+      },
+      "evidence": [],
+      "provenance": "engine.selection.select → engine.assembly.assemble (order=arc)",
+      "replaces": null
+    },
+    {
+      "id": "ed-5552b2891b50",
+      "anchor": {
+        "track": "V1",
+        "timeline_in": 57.02
+      },
+      "action": "keep",
+      "role": "tension",
+      "reason": "role tension — conflict candidate that opens with a hook the viewer can land on mid-scroll. Structural editorial score: opening=1.00; progression=1.00; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.03; coherence=1.00; completeness=0.75; audio_pace=0.83; silence=0.205; dead_air=0.14.",
+      "confidence": {
+        "value": 0.675,
+        "basis": "corpus thread 'whether, want, whose' confidence"
+      },
+      "evidence": [],
+      "provenance": "engine.selection.select → engine.assembly.assemble (order=arc)",
+      "replaces": null
+    },
+    {
+      "id": "ed-c7875b2b4d85",
+      "anchor": {
+        "track": "V1",
+        "timeline_in": 81.64
+      },
+      "action": "keep",
+      "role": "tension",
+      "reason": "kept with thread 'talk, know, question'; role tension — conflict candidate that carries substance per second, with opening middling at 0.55. Structural editorial score: opening=0.55; progression=0.96; payoff=0.88; density=1.00; fillers=0; standalone=1.00; repetition=0.16; coherence=0.89; completeness=0.75; audio_pace=0.93; silence=0.091; dead_air=0.00.",
+      "confidence": {
+        "value": 0.75,
+        "basis": "corpus thread 'talk, know, question' confidence"
+      },
+      "evidence": [],
+      "provenance": "engine.selection.select → engine.assembly.assemble (order=arc)",
+      "replaces": null
+    },
+    {
+      "id": "ed-bef2ea81f52b",
+      "anchor": {
+        "track": "V1",
+        "timeline_in": 91.56
+      },
+      "action": "keep",
+      "role": "resolution",
+      "reason": "kept with thread 'talk, know, question'; role resolution — revelation candidate that carries substance per second. Structural editorial score: opening=0.75; progression=0.82; payoff=0.96; density=1.00; fillers=0; standalone=1.00; repetition=0.13; coherence=1.00; completeness=0.75; audio_pace=0.93; silence=0.078; dead_air=0.06.",
+      "confidence": {
+        "value": 0.75,
+        "basis": "corpus thread 'talk, know, question' confidence"
+      },
+      "evidence": [],
+      "provenance": "engine.selection.select → engine.assembly.assemble (order=arc)",
+      "replaces": null
+    }
+  ],
+  "removed": [
+    {
+      "start": 116.31,
+      "end": 117.09,
+      "duration": 0.78,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-ac5193eb61b3"
+    },
+    {
+      "start": 126.95,
+      "end": 127.59,
+      "duration": 0.64,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-ac5193eb61b3"
+    },
+    {
+      "start": 461.5,
+      "end": 467.26,
+      "duration": 5.76,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-0ce0bf2b7388"
+    },
+    {
+      "start": 472.82,
+      "end": 473.28,
+      "duration": 0.46,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-0ce0bf2b7388"
+    },
+    {
+      "start": 588.16,
+      "end": 588.62,
+      "duration": 0.46,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-5552b2891b50"
+    },
+    {
+      "start": 600.08,
+      "end": 602.94,
+      "duration": 2.86,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-5552b2891b50"
+    },
+    {
+      "start": 916.02,
+      "end": 916.94,
+      "duration": 0.92,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-bef2ea81f52b"
+    },
+    {
+      "start": 633.57,
+      "end": 655.53,
+      "duration": 21.96,
+      "kind": "not_selected",
+      "reason": "revelation candidate that lands a clear closing thought, with opening middling at 0.55. Structural editorial score: opening=0.55; progression=0.80; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.05; coherence=1.00; completeness=1.00; audio_pace=0.91; silence=0.110; dead_air=0.00.",
+      "decision_id": ""
+    },
+    {
+      "start": 364.84,
+      "end": 393.98,
+      "duration": 29.14,
+      "kind": "not_selected",
+      "reason": "question candidate that lands a clear closing thought, with opening middling at 0.55. Structural editorial score: opening=0.55; progression=0.65; payoff=1.00; density=0.93; fillers=0; standalone=1.00; repetition=0.05; coherence=1.00; completeness=1.00; audio_pace=0.93; silence=0.078; dead_air=0.04.",
+      "decision_id": ""
+    },
+    {
+      "start": 403.08,
+      "end": 417.2,
+      "duration": 14.12,
+      "kind": "not_selected",
+      "reason": "question candidate that carries substance per second, with progression middling at 0.65. Structural editorial score: opening=0.77; progression=0.65; payoff=0.89; density=1.00; fillers=0; standalone=1.00; repetition=0.09; coherence=1.00; completeness=1.00; audio_pace=0.94; silence=0.069; dead_air=0.00.",
+      "decision_id": ""
+    },
+    {
+      "start": 513.36,
+      "end": 555.12,
+      "duration": 41.76,
+      "kind": "not_selected",
+      "reason": "conflict candidate that lands a clear closing thought, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.97; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.15; coherence=0.88; completeness=1.00; audio_pace=0.87; silence=0.160; dead_air=0.02.",
+      "decision_id": ""
+    },
+    {
+      "start": 749.79,
+      "end": 788.97,
+      "duration": 39.18,
+      "kind": "not_selected",
+      "reason": "conflict candidate that lands a clear closing thought. Structural editorial score: opening=0.77; progression=0.97; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.07; coherence=0.71; completeness=0.75; audio_pace=0.94; silence=0.077; dead_air=0.00.",
+      "decision_id": ""
+    },
+    {
+      "start": 671.79,
+      "end": 689.83,
+      "duration": 18.04,
+      "kind": "not_selected",
+      "reason": "revelation candidate that makes sense without the surrounding context, with opening middling at 0.55, and has enough silence that tightening it would help. Structural editorial score: opening=0.55; progression=0.71; payoff=0.85; density=0.81; fillers=0; standalone=1.00; repetition=0.05; coherence=1.00; completeness=1.00; audio_pace=0.75; silence=0.278; dead_air=0.26.",
+      "decision_id": ""
+    },
+    {
+      "start": 255.47,
+      "end": 273.37,
+      "duration": 17.9,
+      "kind": "not_selected",
+      "reason": "revelation candidate that makes sense without the surrounding context, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.82; payoff=0.89; density=0.96; fillers=0; standalone=1.00; repetition=0.04; coherence=1.00; completeness=1.00; audio_pace=0.91; silence=0.114; dead_air=0.00.",
+      "decision_id": ""
+    },
+    {
+      "start": 849.43,
+      "end": 860.17,
+      "duration": 10.74,
+      "kind": "not_selected",
+      "reason": "revelation candidate that carries substance per second, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.82; payoff=0.84; density=1.00; fillers=0; standalone=1.00; repetition=0.05; coherence=1.00; completeness=1.00; audio_pace=0.93; silence=0.084; dead_air=0.00.",
+      "decision_id": ""
+    },
+    {
+      "start": 793.01,
+      "end": 806.33,
+      "duration": 13.32,
+      "kind": "not_selected",
+      "reason": "revelation candidate that carries substance per second, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.70; payoff=0.87; density=1.00; fillers=0; standalone=1.00; repetition=0.14; coherence=1.00; completeness=1.00; audio_pace=0.98; silence=0.027; dead_air=0.00.",
+      "decision_id": ""
+    },
+    {
+      "start": 701.73,
+      "end": 717.97,
+      "duration": 16.24,
+      "kind": "not_selected",
+      "reason": "question candidate that makes sense without the surrounding context, with progression middling at 0.53. Structural editorial score: opening=0.77; progression=0.53; payoff=0.86; density=0.92; fillers=1; standalone=1.00; repetition=0.05; coherence=1.00; completeness=0.75; audio_pace=0.95; silence=0.065; dead_air=0.00.",
+      "decision_id": ""
+    }
+  ],
+  "markers": [
+    {
+      "time": 81.64,
+      "label": "thread: talk, know, question",
+      "kind": "chapter"
+    }
+  ],
+  "notes": [],
+  "anchors": [
+    {
+      "track": "V1",
+      "timeline_in": 0.0
+    },
+    {
+      "track": "V1",
+      "timeline_in": 13.04
+    },
+    {
+      "track": "V1",
+      "timeline_in": 22.9
+    },
+    {
+      "track": "V1",
+      "timeline_in": 31.82
+    },
+    {
+      "track": "V1",
+      "timeline_in": 41.06
+    },
+    {
+      "track": "V1",
+      "timeline_in": 46.62
+    },
+    {
+      "track": "V1",
+      "timeline_in": 57.02
+    },
+    {
+      "track": "V1",
+      "timeline_in": 61.48
+    },
+    {
+      "track": "V1",
+      "timeline_in": 72.94
+    },
+    {
+      "track": "V1",
+      "timeline_in": 81.64
+    },
+    {
+      "track": "V1",
+      "timeline_in": 91.56
+    },
+    {
+      "track": "V1",
+      "timeline_in": 97.58
+    }
+  ],
+  "dangling": 0,
+  "placements": [
+    {
+      "sequence": 0,
+      "thread_id": 3,
+      "thread_title": "remains, united, states",
+      "grouped": false,
+      "role": "resolution",
+      "decision": "Acting as a police force out to solve every dispute is not our mission.",
+      "start": 103.27,
+      "end": 136.51
+    },
+    {
+      "sequence": 1,
+      "thread_id": 27,
+      "thread_title": "destroy, canine, used",
+      "grouped": false,
+      "role": "tension",
+      "decision": "The terrorists should be aware of that.",
+      "start": 452.26,
+      "end": 483.68
+    },
+    {
+      "sequence": 2,
+      "thread_id": 31,
+      "thread_title": "whether, want, whose",
+      "grouped": false,
+      "role": "tension",
+      "decision": "I don't want to characterize exactly what or how much yet until it gets exploited properly.",
+      "start": 583.7,
+      "end": 611.64
+    },
+    {
+      "sequence": 3,
+      "thread_id": 35,
+      "thread_title": "talk, know, question",
+      "grouped": true,
+      "role": "tension",
+      "decision": "don't know what the source of that was there.",
+      "start": 831.39,
+      "end": 841.31
+    },
+    {
+      "sequence": 4,
+      "thread_id": 35,
+      "thread_title": "talk, know, question",
+      "grouped": true,
+      "role": "resolution",
+      "decision": "At the end of the day, my expectation is that it'll be fewer than what we had before.",
+      "start": 910.0,
+      "end": 928.18
+    }
+  ],
+  "skipped": []
+}

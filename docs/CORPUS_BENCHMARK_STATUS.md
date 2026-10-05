@@ -37,8 +37,10 @@ automatically.
 
 `tools/corpus_reproducibility.py` re-scores each run's committed
 `transcript.json` with the current editorial code and compares the result with
-the selection that run shipped. Selection is a function of the transcript
-alone, so this needs no media and runs in about a minute:
+the selection that run shipped. The selection it replays is the full stack the
+pipeline runs — `rank`, then the context gate, then `engine.selection.select`
+with the corpus built from the transcript — with the duration inferred from the
+segment ends, so this needs no media and runs in about a minute:
 
 ```sh
 .venv/bin/python tools/corpus_reproducibility.py
@@ -50,22 +52,31 @@ and fails on any change to it.
 
 **Current result — 3 of 7 delivering runs reproduce exactly:**
 
-The two sources that still hold media (`pentagon-esper-briefing`,
-`royal-society-cloke`) are re-run on real media whenever an engine fix could
-move their selection, so the tool reports them `ok` — exact agreement on spans
-*and* scores, the stronger of the two passing states, because the artifacts
-were written by the code under test rather than merely agreeing with it. The
-last such re-run was 2026-09-28, under the word-boundary, sentence-splitter and
-tracker fixes together; pentagon's re-transcription moved it 277 → 278
-segments and its clip 04 opening 359.140 → 365.680. A re-transcription is the
-honest reason for a moved selection: it is a different transcript, not a code
-change the docs do not record.
+The three sources that still hold media (`ooi-vertical`,
+`pentagon-esper-briefing`, `royal-society-cloke`) are re-run on real media
+whenever an engine fix could move their selection, so the tool reports them
+`ok` — exact agreement on spans *and* scores, the stronger of the two passing
+states, because the artifacts were written by the code under test rather than
+merely agreeing with it. The last such re-run was 2026-10-05, under the
+word-anchored sentence timer, the coherence re-scoring on the shipped text, and
+the render's audio-start fix together.
+
+That re-run was needed for a reason the previous revision of this table did not
+record. The audit used to replay only `rank` — the sort, not the stack. The
+policy layer (`engine.selection.select`) landed 2026-09-30, two days *after*
+pentagon and royal-society were last re-run on 2026-09-28, so the shipped
+artifacts described a pipeline stage the selection no longer ended in. The old
+audit agreed with them anyway because it compared against the sort alone; on
+`ooi-vertical` the two disagree outright (`rank` alone yields 113.42 / 41.42 /
+90.73 where the run shipped 113.42 / 12.22 / 41.42, because the corpus's
+threads moved the second clip in). The audit now replays all three stages, and
+the two media-holding runs were re-run to bring the artifacts back under it.
 
 | Run | Language | Clips | Status |
 | --- | --- | --- | --- |
-| `ooi-vertical` | en | 3 / 3 | reproduces |
-| `pentagon-esper-briefing` | en | 5 / 5 | **ok** (re-run 2026-09-28) |
-| `royal-society-cloke` | en | 4 / 4 | **ok** (re-run 2026-09-28) |
+| `ooi-vertical` | en | 3 / 3 | **ok** (re-run 2026-10-05) |
+| `pentagon-esper-briefing` | en | 5 / 5 | **ok** (re-run 2026-10-05) |
+| `royal-society-cloke` | en | 4 / 4 | **ok** (re-run 2026-10-05) |
 | `emwcon-panel-2018` | en | 5 shipped / 5 now | **moved** (scan reached the tail) |
 | `nasa360-ep5` | en | 6 shipped / 6 now | **moved** (scan reached the tail) |
 | `hadhazy-protest` | hu | 3 shipped / 1 now | **no longer ships** |
@@ -114,10 +125,13 @@ unpunctuated source that *is* well transcribed no longer fails silently.
 
 ### What "reproduces" means here
 
-The three reproducing runs come back with **the same spans to the millisecond,
-the same story types and the same scores**. Two fields differ on every clip —
-`confidence` and `reason` — and both are fields a later commit rewrote on
-purpose.
+The three `ok` runs come back with **the same spans to the millisecond, the same
+story types and the same scores**, because their artifacts were written by the
+code under test. `confidence` and `reason` agree with it too — these are
+re-runs, not re-scorings, so nothing on them is a re-measurement of an older
+artifact. Where those two fields *do* differ is on a run whose committed
+artifacts predate `d79bef3`, which is the other passing state, `reproduces`:
+spans and scores identical, and only the two rewritten fields changed.
 
 `d79bef3` replaced the literal confidence `0.90` with the measured per-word
 probability the transcriber actually emitted. It also moved the reason's

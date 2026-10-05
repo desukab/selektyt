@@ -8,13 +8,13 @@
     </asset>
   </resources>
   <library>
-    <event name="Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.">
-      <project name="Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.">
+    <event name="Scientists need to know where these changes are occurring and how fast.">
+      <project name="Scientists need to know where these changes are occurring and how fast.">
         <sequence format="f1" tcFormat="NDF">
           <spine>
-          <asset-clip ref="r1" offset="0s" start="3400397/30000s" duration="75075/30000s" tcFormat="NDF" />
-          <asset-clip ref="r1" offset="75075/30000s" start="3492489/30000s" duration="278278/30000s" tcFormat="NDF" />
-          <asset-clip ref="r1" offset="352352/30000s" start="3848845/30000s" duration="324324/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="0s" start="366366/30000s" duration="118118/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="118118/30000s" start="502502/30000s" duration="140140/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="258258/30000s" start="663663/30000s" duration="313313/30000s" tcFormat="NDF" />
           </spine>
         </sequence>
       </project>

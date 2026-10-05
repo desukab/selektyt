@@ -1,18 +1,13 @@
-TITLE:   The risk changes that factor if it's going to happen more often, it's going to be worse.
+TITLE:   Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently We've seen devastating floods droughts and wildfires
 
 FCM: NON-DROP FRAME
 
-001  ROYAL_SO V     C        00:03:01:18 00:03:41:16 00:00:00:00 00:00:39:23
+001  ROYAL_SO V     C        00:00:00:08 00:00:32:17 00:00:00:00 00:00:32:09
      M2   royal-society-cloke.webm
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
-001  ROYAL_SO A     C        00:03:01:18 00:03:41:16 00:00:00:00 00:00:39:23
+001  ROYAL_SO A     C        00:00:00:08 00:00:32:17 00:00:00:00 00:00:32:09
 
-002  ROYAL_SO V     C        00:03:42:06 00:03:51:16 00:00:39:23 00:00:49:08
+002  ROYAL_SO V     C        00:00:33:04 00:00:39:02 00:00:32:09 00:00:38:07
      M2   royal-society-cloke.webm
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
-002  ROYAL_SO A     C        00:03:42:06 00:03:51:16 00:00:39:23 00:00:49:08
-
-003  ROYAL_SO V     C        00:03:52:03 00:03:55:02 00:00:49:08 00:00:52:07
-     M2   royal-society-cloke.webm
-* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
-003  ROYAL_SO A     C        00:03:52:03 00:03:55:02 00:00:49:08 00:00:52:07
+002  ROYAL_SO A     C        00:00:33:04 00:00:39:02 00:00:32:09 00:00:38:07

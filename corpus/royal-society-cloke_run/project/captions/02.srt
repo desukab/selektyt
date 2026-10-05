@@ -1,87 +1,135 @@
 1
-0:00:00,000 --> 0:00:00,947
-Are you able to make these
+0:00:00,000 --> 0:00:02,107
+The risk changes that factor if
 
 2
-0:00:00,980 --> 0:00:02,040
-predictions on now?
+0:00:02,140 --> 0:00:03,207
+it's going to happen more
 
 3
-0:00:02,160 --> 0:00:03,607
-So when we're thinking about an
+0:00:03,240 --> 0:00:04,527
+often, it's going to be worse.
 
 4
-0:00:03,640 --> 0:00:04,887
-upcoming flood, so it's going
+0:00:04,560 --> 0:00:07,587
+And how good are we at
 
 5
-0:00:04,920 --> 0:00:06,960
-to flood tomorrow or next week,
+0:00:07,620 --> 0:00:10,207
+predicting the next flood or
 
 6
-0:00:07,100 --> 0:00:08,607
-we can say with some confidence
+0:00:10,240 --> 0:00:11,807
+the next extreme event like
 
 7
-0:00:08,640 --> 0:00:09,727
-whether that flood is going to
+0:00:11,840 --> 0:00:12,220
+that?
 
 8
-0:00:09,760 --> 0:00:10,100
-happen.
+0:00:12,760 --> 0:00:14,027
+We've got some really good
 
 9
-0:00:10,500 --> 0:00:11,607
-But when we look a long
+0:00:14,060 --> 0:00:14,960
+models now.
 
 10
-0:00:11,640 --> 0:00:12,967
-term and we think about our
+0:00:15,120 --> 0:00:16,927
+So we have huge computer models
 
 11
-0:00:13,000 --> 0:00:14,747
-changing climate, we can see
+0:00:16,960 --> 0:00:18,547
+of the Earth system that can
 
 12
-0:00:14,780 --> 0:00:16,607
-how likely those types of
+0:00:18,580 --> 0:00:20,207
+put together how the atmosphere
 
 13
-0:00:16,640 --> 0:00:17,867
-floods are to happen in the
+0:00:20,240 --> 0:00:21,827
+moves around and what's
 
 14
-0:00:17,900 --> 0:00:18,340
-future.
+0:00:21,860 --> 0:00:23,207
+happening on the land surface
 
 15
-0:00:18,780 --> 0:00:19,607
-And some of the things we're
+0:00:23,240 --> 0:00:24,140
+and in our rivers.
 
 16
-0:00:19,640 --> 0:00:20,887
-most worried about actually are
+0:00:24,500 --> 0:00:25,807
+And we're actually pretty good
 
 17
-0:00:20,920 --> 0:00:21,720
-flash floods.
+0:00:25,840 --> 0:00:27,507
+now at saying whether a natural
 
 18
-0:00:22,020 --> 0:00:22,887
-Those ones that are really
+0:00:27,540 --> 0:00:29,507
+hazard like a fire or a
 
 19
-0:00:22,920 --> 0:00:24,107
-difficult to predict in the
+0:00:29,540 --> 0:00:30,687
+heat wave or a flood is
 
 20
-0:00:24,140 --> 0:00:24,760
-short term.
+0:00:30,720 --> 0:00:32,327
+going to happen even sometimes
 
 21
-0:00:25,220 --> 0:00:26,487
-And sometimes they come along
+0:00:32,360 --> 0:00:33,580
+two or three weeks ahead.
 
 22
-0:00:26,520 --> 0:00:27,500
-in an hour or something.
+0:00:34,100 --> 0:00:35,767
+So is that enough?
+
+23
+0:00:35,800 --> 0:00:36,807
+Is two or three weeks ahead
+
+24
+0:00:36,840 --> 0:00:38,527
+I guess enough to respond to
+
+25
+0:00:38,560 --> 0:00:39,800
+that adequately?
+
+26
+0:00:39,920 --> 0:00:40,827
+So it depends what you're
+
+27
+0:00:40,860 --> 0:00:41,400
+trying to do.
+
+28
+0:00:41,560 --> 0:00:42,367
+So if you're trying to get
+
+29
+0:00:42,400 --> 0:00:44,347
+people out of the way, then
+
+30
+0:00:44,380 --> 0:00:46,287
+you need at least a week
+
+31
+0:00:46,320 --> 0:00:47,867
+sometimes to prepare all of
+
+32
+0:00:47,900 --> 0:00:49,200
+that stuff in advance.
+
+33
+0:00:49,320 --> 0:00:50,907
+We only tend to hear about
+
+34
+0:00:50,940 --> 0:00:52,160
+things a day in advance.

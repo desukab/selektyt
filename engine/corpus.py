@@ -287,10 +287,12 @@ def _norm_text(t: str) -> str:
 def _align_sentence_times(segments: list[Segment]) -> dict[int, list[tuple[float, float]]]:
     """Word-anchored start/end for each sentence of each segment.
 
-    ``segment_story_units`` times sentences by character proportion, which is
-    the only option without word timestamps but drifts inside long segments.
-    Where words exist, sentences are re-anchored to the words that compose them
-    by consuming the word stream until a sentence's normalised text is covered.
+    The anchoring itself lives in ``story_units._segment_sentences``, which runs
+    it at the source so the candidate scan inherits real bounds rather than this
+    layer repairing them after the fact. What remains here is the report the
+    corpus's own ``timing_source`` field needs: which segments were anchored and
+    which fell back to character-proportional timing.
+
     Deterministic and deliberately conservative: when the count does not line up
     (punctuation-heavy ASR, empty words), the sentence keeps its proportional
     timing and ``timing_source`` reports the fallback.
@@ -302,39 +304,12 @@ def _align_sentence_times(segments: list[Segment]) -> dict[int, list[tuple[float
         sents = _all_sentences([seg])
         if not sents:
             continue
-        words = seg.words
-        times: list[tuple[float, float]] = []
-        ptr = 0
-        ok = True
-        for sent, _ in sents:
-            target = _norm_text(sent.text)
-            if not target:
-                times.append((seg.start, seg.start))
-                continue
-            start_w = ptr
-            acc = ""
-            while ptr < len(words):
-                w = _norm_text(words[ptr].text)
-                if not w:
-                    ptr += 1
-                    continue
-                acc = (acc + " " + w) if acc else w
-                ptr += 1
-                if len(acc) >= len(target):
-                    break
-            if start_w >= len(words) or ptr <= start_w:
-                # The word stream ran out before this sentence was covered, or
-                # consumed nothing for it: the transcript's words and its
-                # sentence text disagree (common with punctuation-heavy ASR).
-                # Report the whole segment as unaligned rather than emitting a
-                # plausible-looking but wrong timecode for one sentence.
-                ok = False
-                break
-            s_t = words[start_w].start
-            e_t = words[max(start_w, ptr - 1)].end if ptr > start_w else words[start_w].end
-            times.append((s_t, max(e_t, s_t)))
-        if ok and len(times) == len(sents):
-            by_segment[si] = times
+        # A sentence carrying ``word_anchored=False`` means the segment fell
+        # back to proportional timing, so no entry is reported for it. This is
+        # the same per-segment all-or-nothing rule the anchoring itself applies.
+        if not all(sent.word_anchored for sent, _ in sents):
+            continue
+        by_segment[si] = [(sent.start, sent.end) for sent, _ in sents]
     return by_segment
 
 
@@ -367,7 +342,8 @@ def _build_units(
         units = [
             StoryUnit(
                 start=seg.start, end=seg.end, segment_indices=[i],
-                sentences=[Sentence(seg.text or "", seg.start, seg.end)]
+                sentences=[Sentence(seg.text or "", seg.start, seg.end,
+                                    word_anchored=False)]
                 if seg.text else [],
             )
             for i, seg in enumerate(segments)
@@ -425,7 +401,11 @@ def _build_units(
                 # might still match.
                 break
             if t is not None:
-                s = Sentence(s.text, round(t[0], 3), round(t[1], 3), s.boilerplate)
+                # Unrounded when anchored: these are word timestamps, and
+                # rounding them breaks ``sentence.start == word.start`` for
+                # ``edit_plan`` (see ``story_units._segment_sentences``).
+                s = Sentence(s.text, t[0], t[1], s.boilerplate,
+                             word_anchored=s.word_anchored)
             else:
                 fallback_used = True
             sents_out.append(s)

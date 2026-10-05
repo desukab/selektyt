@@ -8,11 +8,13 @@
     </asset>
   </resources>
   <library>
-    <event name="An additional cable array wires a region of the northeast ">
-      <project name="An additional cable array wires a region of the northeast ">
+    <event name="Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.">
+      <project name="Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.">
         <sequence format="f1" tcFormat="NDF">
           <spine>
-          <asset-clip ref="r1" offset="0s" start="2719717/30000s" duration="333333/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="0s" start="3402399/30000s" duration="73073/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="73073/30000s" start="3492489/30000s" duration="278278/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="351351/30000s" start="3848845/30000s" duration="324324/30000s" tcFormat="NDF" />
           </spine>
         </sequence>
       </project>

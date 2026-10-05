@@ -140,6 +140,35 @@ def _dominant_role(corpus, unit_indices: list[int]) -> tuple[str, float | None]:
     return kind, confidence.get(kind)
 
 
+# The confidence a thread reports when no setup->payoff relation could be
+# inferred for it (see ``threads._threads``). It is a sentinel for *unmeasured*,
+# not a low measurement: nothing was weak, nothing was examined. On the
+# committed corpus 26 of 28 threads carry it.
+_STANDALONE_SENTINEL = 0.25
+
+
+def _confidence_for(role_confidence: float | None, p) -> Confidence:
+    """Thread confidence for a decision, or the honest statement that the thread
+    never measured one.
+
+    ``role_confidence`` is ``None`` when the corpus has no beats for this clip's
+    units, and the sentinel when its thread is a standalone passage. Both are
+    unmeasured, and both are reported as such: ``Confidence(0.25, basis=...)``
+    reads as "this thread is weakly trusted", which is a claim the corpus did
+    make and a report that would not be refuted by any evidence, because none
+    was gathered. The thread already says so in its own reason; this puts the
+    same statement in the decision graph.
+    """
+    if role_confidence is None or p.thread_id is None:
+        return Confidence.unmeasured_of("no corpus thread characterised this clip")
+    if abs(role_confidence - _STANDALONE_SENTINEL) < 1e-9:
+        return Confidence.unmeasured_of(
+            "no setup->payoff relation could be inferred for thread "
+            f"{p.thread_title!r}; treated as a standalone passage")
+    return Confidence(role_confidence,
+                       basis=f"corpus thread {p.thread_title!r} confidence")
+
+
 def _thread_of(corpus, c) -> int | None:
     """The thread this candidate belongs to, or None.
 
@@ -428,12 +457,7 @@ def assemble(selected: list,
 
         action = _action_for(p.sequence, source_rank[id(c)])
         _role, role_confidence = _dominant_role(corpus, _covered_units(corpus, c))
-        confidence = (
-            Confidence(role_confidence,
-                       basis=f"corpus thread {p.thread_title!r} confidence")
-            if role_confidence is not None and p.thread_id is not None
-            else Confidence.unmeasured_of("no corpus thread characterised this clip")
-        )
+        confidence = _confidence_for(role_confidence, p)
         decisions.append(EditDecision(
             id=did,
             anchor_track="V1",

@@ -1,0 +1,43 @@
+TITLE:   corpus/media/ooi-vertical.webm edit
+
+FCM: NON-DROP FRAME
+
+001  OOI_VERT V     C        00:00:12:06 00:00:16:04 00:00:00:00 00:00:03:28
+     M2   ooi-vertical.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+001  OOI_VERT A     C        00:00:12:06 00:00:16:04 00:00:00:00 00:00:03:28
+
+002  OOI_VERT V     C        00:00:16:22 00:00:21:12 00:00:03:28 00:00:08:18
+     M2   ooi-vertical.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+002  OOI_VERT A     C        00:00:16:22 00:00:21:12 00:00:03:28 00:00:08:18
+
+003  OOI_VERT V     C        00:00:22:03 00:00:32:16 00:00:08:18 00:00:19:01
+     M2   ooi-vertical.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+003  OOI_VERT A     C        00:00:22:03 00:00:32:16 00:00:08:18 00:00:19:01
+
+004  OOI_VERT V     C        00:00:41:11 00:00:48:10 00:00:19:01 00:00:26:00
+     M2   ooi-vertical.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+004  OOI_VERT A     C        00:00:41:11 00:00:48:10 00:00:19:01 00:00:26:00
+
+005  OOI_VERT V     C        00:00:49:15 00:00:56:15 00:00:26:00 00:00:33:00
+     M2   ooi-vertical.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+005  OOI_VERT A     C        00:00:49:15 00:00:56:15 00:00:26:00 00:00:33:00
+
+006  OOI_VERT V     C        00:01:53:09 00:01:55:22 00:00:33:00 00:00:35:13
+     M2   ooi-vertical.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+006  OOI_VERT A     C        00:01:53:09 00:01:55:22 00:00:33:00 00:00:35:13
+
+007  OOI_VERT V     C        00:01:56:09 00:02:05:17 00:00:35:13 00:00:44:21
+     M2   ooi-vertical.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+007  OOI_VERT A     C        00:01:56:09 00:02:05:17 00:00:35:13 00:00:44:21
+
+008  OOI_VERT V     C        00:02:08:05 00:02:18:29 00:00:44:21 00:00:55:15
+     M2   ooi-vertical.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+008  OOI_VERT A     C        00:02:08:05 00:02:18:29 00:00:44:21 00:00:55:15

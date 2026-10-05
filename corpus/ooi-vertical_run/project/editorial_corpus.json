@@ -1,0 +1,949 @@
+{
+  "source": "corpus/media/ooi-vertical.webm",
+  "language": "en",
+  "detected_languages": [
+    "english"
+  ],
+  "duration": 144.57,
+  "build": {
+    "schema": "1.1",
+    "fingerprint": "e34ad400ecfbc2ff",
+    "unit_count": 7,
+    "segment_count": 26,
+    "duration_source": "given",
+    "note": "built from 26 segment(s) into 7 unit(s)"
+  },
+  "has_word_timestamps": true,
+  "has_speaker_labels": false,
+  "units": [
+    {
+      "index": 0,
+      "start": 4.08,
+      "end": 56.58,
+      "segment_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "text": "The ocean is changing, and these changes have important implications for all life on Earth. Scientists need to know where these changes are occurring and how fast. That's why we have the Ocean Observatories Initiative, or OOI. OOI is a science-driven ocean-observing network that delivers real-time data to researchers investigating our changing ocean on a coastal and planetary scale. Funded by the National Science Foundation, OOI data are freely available online to anyone with an internet connection. Now in its eighth year, OOI makes it possible to investigate short-lived events as well as multi-year trends. That provides researchers around the globe with critical insights into climate change and its effect on marine ecosystems.",
+      "sentence_count": 14,
+      "word_count": 113,
+      "coherence": 0.113,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 0,
+      "thread_id": 0,
+      "beat_id": 0,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 0
+    },
+    {
+      "index": 1,
+      "start": 56.58,
+      "end": 80.84,
+      "segment_indices": [
+        14,
+        15,
+        16,
+        17
+      ],
+      "text": "systems. With OOI data, they can track changes in fisheries, ocean acidification, and the potential of the ocean to recycle even more carbon. OOI consists of five arrays that continuously collect ocean data with instrumented moorings, linked to shore via satellite. Two global arrays address planetary scale changes in the Irminger Sea and Gulf of Alaska.",
+      "sentence_count": 7,
+      "word_count": 56,
+      "coherence": 0.133,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 1,
+      "thread_id": 1,
+      "beat_id": 1,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 0
+    },
+    {
+      "index": 2,
+      "start": 88.17,
+      "end": 89.55,
+      "segment_indices": [
+        17,
+        18
+      ],
+      "text": "Two US continental shelf.",
+      "sentence_count": 2,
+      "word_count": 4,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 2,
+      "thread_id": 2,
+      "beat_id": 2,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 1
+    },
+    {
+      "index": 3,
+      "start": 90.73,
+      "end": 101.73,
+      "segment_indices": [
+        18,
+        19,
+        20
+      ],
+      "text": "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
+      "sentence_count": 3,
+      "word_count": 28,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 3,
+      "thread_id": 3,
+      "beat_id": 3,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 2
+    },
+    {
+      "index": 4,
+      "start": 102.29,
+      "end": 110.31,
+      "segment_indices": [
+        20,
+        21
+      ],
+      "text": "Located over an active tectonic plate, this array provides a window into hydrothermal vents and an active undersea volcano.",
+      "sentence_count": 2,
+      "word_count": 19,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 4,
+      "thread_id": 4,
+      "beat_id": 4,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 2
+    },
+    {
+      "index": 5,
+      "start": 113.42,
+      "end": 139.13,
+      "segment_indices": [
+        21,
+        22,
+        23,
+        24
+      ],
+      "text": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface. The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
+      "sentence_count": 4,
+      "word_count": 44,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 5,
+      "thread_id": 5,
+      "beat_id": 5,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 3
+    },
+    {
+      "index": 6,
+      "start": 139.77,
+      "end": 144.57,
+      "segment_indices": [
+        25
+      ],
+      "text": "The only question left to answer is, how will you use OOI?",
+      "sentence_count": 1,
+      "word_count": 12,
+      "coherence": 1.0,
+      "boilerplate": false,
+      "timing_source": "character_proportional",
+      "restatement_count": 0,
+      "topic_id": 6,
+      "thread_id": 6,
+      "beat_id": 6,
+      "redundancy_group_id": -1,
+      "speaker_block_id": 3
+    }
+  ],
+  "topics": [
+    {
+      "topic_id": 0,
+      "label": "year, why, well",
+      "terms": [
+        "year",
+        "why",
+        "well",
+        "trends"
+      ],
+      "unit_indices": [
+        0
+      ],
+      "segment_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "start": 4.08,
+      "end": 56.58,
+      "runs": 1,
+      "span_share": 0.3631,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "The ocean is changing, and these changes have important implications for all life on Eart…"
+      ]
+    },
+    {
+      "topic_id": 1,
+      "label": "via, track, systems",
+      "terms": [
+        "via",
+        "track",
+        "systems",
+        "shore"
+      ],
+      "unit_indices": [
+        1
+      ],
+      "segment_indices": [
+        14,
+        15,
+        16,
+        17
+      ],
+      "start": 56.58,
+      "end": 80.84,
+      "runs": 1,
+      "span_share": 0.1678,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "systems. With OOI data, they can track changes in fisheries, ocean acidification, and the…"
+      ]
+    },
+    {
+      "topic_id": 2,
+      "label": "shelf, continental",
+      "terms": [
+        "shelf",
+        "continental"
+      ],
+      "unit_indices": [
+        2
+      ],
+      "segment_indices": [
+        17,
+        18
+      ],
+      "start": 88.17,
+      "end": 89.55,
+      "runs": 1,
+      "span_share": 0.0095,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "Two US continental shelf."
+      ]
+    },
+    {
+      "topic_id": 3,
+      "label": "wires, water, speed",
+      "terms": [
+        "wires",
+        "water",
+        "speed",
+        "seafloor"
+      ],
+      "unit_indices": [
+        3
+      ],
+      "segment_indices": [
+        18,
+        19,
+        20
+      ],
+      "start": 90.73,
+      "end": 101.73,
+      "runs": 1,
+      "span_share": 0.0761,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "An additional cable array wires a region of the northeast Pacific Ocean with a high-power…"
+      ]
+    },
+    {
+      "topic_id": 4,
+      "label": "window, volcano, vents",
+      "terms": [
+        "window",
+        "volcano",
+        "vents",
+        "undersea"
+      ],
+      "unit_indices": [
+        4
+      ],
+      "segment_indices": [
+        20,
+        21
+      ],
+      "start": 102.29,
+      "end": 110.31,
+      "runs": 1,
+      "span_share": 0.0555,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "Located over an active tectonic plate, this array provides a window into hydrothermal ven…"
+      ]
+    },
+    {
+      "topic_id": 5,
+      "label": "unprecedented, traveling, timescales",
+      "terms": [
+        "unprecedented",
+        "traveling",
+        "timescales",
+        "surface"
+      ],
+      "unit_indices": [
+        5
+      ],
+      "segment_indices": [
+        21,
+        22,
+        23,
+        24
+      ],
+      "start": 113.42,
+      "end": 139.13,
+      "runs": 1,
+      "span_share": 0.1778,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic mea…"
+      ]
+    },
+    {
+      "topic_id": 6,
+      "label": "use, question, left",
+      "terms": [
+        "use",
+        "question",
+        "left",
+        "answer"
+      ],
+      "unit_indices": [
+        6
+      ],
+      "segment_indices": [
+        25
+      ],
+      "start": 139.77,
+      "end": 144.57,
+      "runs": 1,
+      "span_share": 0.0332,
+      "confidence": 0.3,
+      "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "evidence": [
+        "The only question left to answer is, how will you use OOI?"
+      ]
+    }
+  ],
+  "threads": [
+    {
+      "thread_id": 0,
+      "title": "year, why, well",
+      "terms": [
+        "year",
+        "why",
+        "well",
+        "trends"
+      ],
+      "unit_indices": [
+        0
+      ],
+      "links": [],
+      "beat_indices": [
+        0
+      ],
+      "start": 4.08,
+      "end": 56.58,
+      "arc": "resolution",
+      "span_share": 0.3631,
+      "confidence": 0.25,
+      "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
+      "evidence": [
+        "The ocean is changing, and these changes have important implications for all life on Earth. Scientists need t…"
+      ]
+    },
+    {
+      "thread_id": 1,
+      "title": "via, track, systems",
+      "terms": [
+        "via",
+        "track",
+        "systems",
+        "shore"
+      ],
+      "unit_indices": [
+        1
+      ],
+      "links": [],
+      "beat_indices": [
+        1
+      ],
+      "start": 56.58,
+      "end": 80.84,
+      "arc": "continuation",
+      "span_share": 0.1678,
+      "confidence": 0.25,
+      "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
+      "evidence": [
+        "systems. With OOI data, they can track changes in fisheries, ocean acidification, and the potential of the oc…"
+      ]
+    },
+    {
+      "thread_id": 2,
+      "title": "shelf, continental",
+      "terms": [
+        "shelf",
+        "continental"
+      ],
+      "unit_indices": [
+        2
+      ],
+      "links": [],
+      "beat_indices": [
+        2
+      ],
+      "start": 88.17,
+      "end": 89.55,
+      "arc": "continuation",
+      "span_share": 0.0095,
+      "confidence": 0.25,
+      "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
+      "evidence": [
+        "Two US continental shelf."
+      ]
+    },
+    {
+      "thread_id": 3,
+      "title": "wires, water, speed",
+      "terms": [
+        "wires",
+        "water",
+        "speed",
+        "seafloor"
+      ],
+      "unit_indices": [
+        3
+      ],
+      "links": [],
+      "beat_indices": [
+        3
+      ],
+      "start": 90.73,
+      "end": 101.73,
+      "arc": "continuation",
+      "span_share": 0.0761,
+      "confidence": 0.25,
+      "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
+      "evidence": [
+        "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber op…"
+      ]
+    },
+    {
+      "thread_id": 4,
+      "title": "window, volcano, vents",
+      "terms": [
+        "window",
+        "volcano",
+        "vents",
+        "undersea"
+      ],
+      "unit_indices": [
+        4
+      ],
+      "links": [],
+      "beat_indices": [
+        4
+      ],
+      "start": 102.29,
+      "end": 110.31,
+      "arc": "continuation",
+      "span_share": 0.0555,
+      "confidence": 0.25,
+      "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
+      "evidence": [
+        "Located over an active tectonic plate, this array provides a window into hydrothermal vents and an active und…"
+      ]
+    },
+    {
+      "thread_id": 5,
+      "title": "unprecedented, traveling, timescales",
+      "terms": [
+        "unprecedented",
+        "traveling",
+        "timescales",
+        "surface"
+      ],
+      "unit_indices": [
+        5
+      ],
+      "links": [],
+      "beat_indices": [
+        5
+      ],
+      "start": 113.42,
+      "end": 139.13,
+      "arc": "continuation",
+      "span_share": 0.1778,
+      "confidence": 0.25,
+      "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
+      "evidence": [
+        "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OO…"
+      ]
+    },
+    {
+      "thread_id": 6,
+      "title": "use, question, left",
+      "terms": [
+        "use",
+        "question",
+        "left",
+        "answer"
+      ],
+      "unit_indices": [
+        6
+      ],
+      "links": [],
+      "beat_indices": [
+        6
+      ],
+      "start": 139.77,
+      "end": 144.57,
+      "arc": "tension",
+      "span_share": 0.0332,
+      "confidence": 0.25,
+      "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
+      "evidence": [
+        "The only question left to answer is, how will you use OOI?"
+      ]
+    }
+  ],
+  "beats": [
+    {
+      "unit_index": 0,
+      "start": 4.08,
+      "end": 56.58,
+      "kind": "resolution",
+      "polarity": "neutral",
+      "intensity": 0.286,
+      "percentile": 0.833,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [
+        "That's why"
+      ],
+      "thread_id": 0,
+      "confidence": 0.593,
+      "reason": "resolution beat; 1× result cue; cues: That's why; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 1,
+      "start": 56.58,
+      "end": 80.84,
+      "kind": "continuation",
+      "polarity": "neutral",
+      "intensity": 0.134,
+      "percentile": 0.667,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [],
+      "thread_id": 1,
+      "confidence": 0.517,
+      "reason": "continuation beat; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 2,
+      "start": 88.17,
+      "end": 89.55,
+      "kind": "continuation",
+      "polarity": "neutral",
+      "intensity": 0.007,
+      "percentile": 0.333,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [],
+      "thread_id": 2,
+      "confidence": 0.454,
+      "reason": "continuation beat; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 3,
+      "start": 90.73,
+      "end": 101.73,
+      "kind": "continuation",
+      "polarity": "neutral",
+      "intensity": 0.003,
+      "percentile": 0.167,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [],
+      "thread_id": 3,
+      "confidence": 0.452,
+      "reason": "continuation beat; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 4,
+      "start": 102.29,
+      "end": 110.31,
+      "kind": "continuation",
+      "polarity": "neutral",
+      "intensity": 0.0,
+      "percentile": 0.0,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [],
+      "thread_id": 4,
+      "confidence": 0.45,
+      "reason": "continuation beat; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 5,
+      "start": 113.42,
+      "end": 139.13,
+      "kind": "continuation",
+      "polarity": "neutral",
+      "intensity": 0.13,
+      "percentile": 0.5,
+      "is_thread_peak": true,
+      "is_corpus_peak": false,
+      "cues": [],
+      "thread_id": 5,
+      "confidence": 0.515,
+      "reason": "continuation beat; polarity neutral: no lexicon match, not guessed"
+    },
+    {
+      "unit_index": 6,
+      "start": 139.77,
+      "end": 144.57,
+      "kind": "tension",
+      "polarity": "positive",
+      "intensity": 0.394,
+      "percentile": 1.0,
+      "is_thread_peak": true,
+      "is_corpus_peak": true,
+      "cues": [
+        "answer"
+      ],
+      "thread_id": 6,
+      "confidence": 0.647,
+      "reason": "tension beat; opens a question (“The only question left to answer is, how will you use OOI?”); 1× solution cue; cues: answer; polarity positive from lexicon matches"
+    }
+  ],
+  "links": [],
+  "redundancy_groups": [],
+  "speaker_blocks": [
+    {
+      "block_id": 0,
+      "start": 4.08,
+      "end": 80.84,
+      "speaker": null,
+      "unit_indices": [
+        0,
+        1
+      ],
+      "boundary_reason": "corpus start",
+      "confidence": 0.0,
+      "reason": "transcript carries no speaker labels; this block is a turn hypothesis from pause + subject-change evidence, and the speaker is deliberately not guessed"
+    },
+    {
+      "block_id": 1,
+      "start": 88.17,
+      "end": 89.55,
+      "speaker": null,
+      "unit_indices": [
+        2
+      ],
+      "boundary_reason": "7.3s silence followed by a subject change — a turn boundary hypothesis",
+      "confidence": 0.0,
+      "reason": "transcript carries no speaker labels; this block is a turn hypothesis from pause + subject-change evidence, and the speaker is deliberately not guessed"
+    },
+    {
+      "block_id": 2,
+      "start": 90.73,
+      "end": 110.31,
+      "speaker": null,
+      "unit_indices": [
+        3,
+        4
+      ],
+      "boundary_reason": "1.2s silence followed by a subject change — a turn boundary hypothesis",
+      "confidence": 0.0,
+      "reason": "transcript carries no speaker labels; this block is a turn hypothesis from pause + subject-change evidence, and the speaker is deliberately not guessed"
+    },
+    {
+      "block_id": 3,
+      "start": 113.42,
+      "end": 144.57,
+      "speaker": null,
+      "unit_indices": [
+        5,
+        6
+      ],
+      "boundary_reason": "3.1s silence followed by a subject change — a turn boundary hypothesis",
+      "confidence": 0.0,
+      "reason": "transcript carries no speaker labels; this block is a turn hypothesis from pause + subject-change evidence, and the speaker is deliberately not guessed"
+    }
+  ],
+  "broll": [],
+  "rhythm": {
+    "available": true,
+    "total_words": 283,
+    "speech_seconds": 109.8,
+    "speech_rate_wpm": 154.6,
+    "median_rate_wpm": 165.9,
+    "pause_counts": {
+      "intentional": 6,
+      "breathing": 9,
+      "hesitation": 7,
+      "dead_air": 1
+    },
+    "pause_rate_per_minute": {
+      "intentional": 2.49,
+      "breathing": 3.74,
+      "hesitation": 2.91,
+      "dead_air": 0.42
+    },
+    "filler_count": 0,
+    "filler_rate_per_minute": 0.0,
+    "false_start_count": 0,
+    "incomplete_count": 0,
+    "per_unit": [
+      {
+        "unit_index": 0,
+        "start": 4.08,
+        "end": 56.58,
+        "word_count": 118,
+        "speech_seconds": 44.44,
+        "pause_seconds": 8.06,
+        "speech_rate_wpm": 159.3,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "intentional": 3,
+          "breathing": 6,
+          "hesitation": 2
+        },
+        "longest_pause": 1.42,
+        "emphatic_pause": 1.42,
+        "pre_pause": 0.0,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.94,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 1,
+        "start": 56.58,
+        "end": 80.84,
+        "word_count": 56,
+        "speech_seconds": 19.6,
+        "pause_seconds": 4.66,
+        "speech_rate_wpm": 171.4,
+        "rush": 0.033,
+        "drag": false,
+        "pause_counts": {
+          "breathing": 3,
+          "hesitation": 3,
+          "intentional": 1
+        },
+        "longest_pause": 1.14,
+        "emphatic_pause": 1.14,
+        "pre_pause": 0.0,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.91,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 2,
+        "start": 88.17,
+        "end": 89.55,
+        "word_count": 4,
+        "speech_seconds": 1.38,
+        "pause_seconds": 0.0,
+        "speech_rate_wpm": 173.9,
+        "rush": 0.048,
+        "drag": false,
+        "pause_counts": {},
+        "longest_pause": 0.0,
+        "emphatic_pause": 0.0,
+        "pre_pause": 7.33,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 1.0,
+        "confidence": 0.55,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 3,
+        "start": 90.73,
+        "end": 101.73,
+        "word_count": 30,
+        "speech_seconds": 10.62,
+        "pause_seconds": 0.38,
+        "speech_rate_wpm": 169.5,
+        "rush": 0.022,
+        "drag": false,
+        "pause_counts": {
+          "hesitation": 1
+        },
+        "longest_pause": 0.38,
+        "emphatic_pause": 0.38,
+        "pre_pause": 1.18,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.97,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 4,
+        "start": 102.29,
+        "end": 110.31,
+        "word_count": 19,
+        "speech_seconds": 7.38,
+        "pause_seconds": 0.64,
+        "speech_rate_wpm": 154.5,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "intentional": 1
+        },
+        "longest_pause": 0.64,
+        "emphatic_pause": 0.64,
+        "pre_pause": 0.56,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 1.0,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 5,
+        "start": 113.42,
+        "end": 139.13,
+        "word_count": 44,
+        "speech_seconds": 22.04,
+        "pause_seconds": 3.67,
+        "speech_rate_wpm": 119.8,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "intentional": 1,
+          "dead_air": 1
+        },
+        "longest_pause": 2.89,
+        "emphatic_pause": 2.89,
+        "pre_pause": 3.11,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.95,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      },
+      {
+        "unit_index": 6,
+        "start": 139.77,
+        "end": 144.57,
+        "word_count": 12,
+        "speech_seconds": 4.34,
+        "pause_seconds": 0.46,
+        "speech_rate_wpm": 165.9,
+        "rush": 0.0,
+        "drag": false,
+        "pause_counts": {
+          "hesitation": 1
+        },
+        "longest_pause": 0.46,
+        "emphatic_pause": 0.46,
+        "pre_pause": 0.64,
+        "filler_count": 0,
+        "false_start_count": 0,
+        "incomplete": false,
+        "fluency": 0.97,
+        "confidence": 0.85,
+        "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
+      }
+    ],
+    "confidence": 0.85,
+    "reason": "pauses reconstructed from inter-word gaps and classified with the shared pause classifier; word timing stands in for audio truth, so timing-derived confidence is capped below an audio-VAD measurement"
+  },
+  "arc_summary": "7 coherent passage(s) over 2.4 min (7 subject cluster(s), 7 narrative chain(s)). no subject recurs after an interruption; this recording moves from topic to topic rather than developing one. highest dramatic intensity at 97% of runtime (tension, intensity 0.39). speech rate 155 wpm over voiced time (0 filler marker(s), 0 false start(s), 0 truncated passage(s)). scripts detected: english.",
+  "unit_threads": [
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      4
+    ],
+    [
+      5
+    ],
+    [
+      6
+    ]
+  ],
+  "notes": [
+    "some sentence timecodes could not be word-anchored (ASR text and word stream disagree); those sentences keep character-proportional timing",
+    "no speaker labels in the transcript: speaker identity is not guessed; block boundaries are turn hypotheses from pause and subject-change evidence"
+  ]
+}

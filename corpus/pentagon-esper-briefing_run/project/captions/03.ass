@@ -6,23 +6,23 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
-Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+Style: Default,Fredoka,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
 
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
-Dialogue: 0,0:00:00.00,0:00:01.57,Default,,0,0,0,,{\k40}Can{\k20}you{\k18}in{\k26}any{\k16}{\c&H00D7FF&\b1}way{\c&HFFFFFF&\b0}{\k40}{\c&H00D7FF&\b1}elaborate{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:01.60,0:00:03.14,Default,,0,0,0,,{\k32}on{\k50}what's{\k12}been{\k48}{\c&H00D7FF&\b1}collected,{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:03.22,0:00:04.03,Default,,0,0,0,,{\k18}what's{\k18}being{\k20}looked{\k28}{\c&H00D7FF&\b1}through{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:04.06,0:00:06.16,Default,,0,0,0,,{\k24}now,{\k32}and{\k28}what{\k14}that{\k14}{\c&H00D7FF&\b1}might{\c&HFFFFFF&\b0}{\k20}{\c&H00D7FF&\b1}mean?{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:06.22,0:00:07.39,Default,,0,0,0,,{\k8}We{\k26}{\c&H00D7FF&\b1}best{\c&HFFFFFF&\b0}{\k20}not{\k16}do{\k16}for{\k34}{\c&H00D7FF&\b1}operational{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:07.42,0:00:08.29,Default,,0,0,0,,{\k34}reasons,{\k32}{\c&H00D7FF&\b1}because{\c&HFFFFFF&\b0}{\k24}that
-Dialogue: 0,0:00:08.32,0:00:09.87,Default,,0,0,0,,{\k70}{\c&H00D7FF&\b1}information{\c&HFFFFFF&\b0}{\k64}needs{\k14}to{\k10}be
-Dialogue: 0,0:00:09.90,0:00:11.81,Default,,0,0,0,,{\k32}{\c&H00D7FF&\b1}exploited{\c&HFFFFFF&\b0}{\k42}properly{\k48}for{\k18}any
-Dialogue: 0,0:00:11.84,0:00:12.77,Default,,0,0,0,,{\k24}{\c&H00D7FF&\b1}follow{\c&HFFFFFF&\b0}{\k12}-on{\k20}{\c&H00D7FF&\b1}missions{\c&HFFFFFF&\b0}{\k18}that{\k8}we{\k14}may
-Dialogue: 0,0:00:12.80,0:00:13.58,Default,,0,0,0,,{\k22}{\c&H00D7FF&\b1}choose{\c&HFFFFFF&\b0}{\k24}to{\k20}do.
-Dialogue: 0,0:00:13.72,0:00:14.63,Default,,0,0,0,,{\k24}And{\k14}I{\k10}{\c&H00D7FF&\b1}think{\c&HFFFFFF&\b0}{\k18}the{\k4}–{\k24}{\c&H00D7FF&\b1}what{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:14.66,0:00:16.51,Default,,0,0,0,,{\k26}next{\k26}is{\k48}we{\k40}{\c&H00D7FF&\b1}will{\c&HFFFFFF&\b0}{\k30}{\c&H00D7FF&\b1}continue{\c&HFFFFFF&\b0}{\k18}the
-Dialogue: 0,0:00:16.54,0:00:17.87,Default,,0,0,0,,{\k24}{\c&H00D7FF&\b1}mission,{\c&HFFFFFF&\b0}{\k12}and{\k12}the{\k22}{\c&H00D7FF&\b1}mission{\c&HFFFFFF&\b0}{\k24}is{\k26}to
-Dialogue: 0,0:00:17.90,0:00:19.19,Default,,0,0,0,,{\k36}ensure{\k14}the{\k32}{\c&H00D7FF&\b1}enduring{\c&HFFFFFF&\b0}{\k26}defeat{\k24}of
-Dialogue: 0,0:00:19.22,0:00:21.61,Default,,0,0,0,,{\k28}{\c&H00D7FF&\b1}ISIS{\c&HFFFFFF&\b0}{\k90}in{\k12}the{\k24}{\c&H00D7FF&\b1}region,{\c&HFFFFFF&\b0}{\k26}and{\k20}that's
-Dialogue: 0,0:00:21.64,0:00:21.96,Default,,0,0,0,,{\k12}our{\k20}{\c&H00D7FF&\b1}mission.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.00,0:00:00.79,Default,,0,0,0,,{\k8}I{\k24} don't{\k12} want{\k8} to{\k30}{\c&H00D7FF&\b1} characterize{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.82,0:00:02.79,Default,,0,0,0,,{\k60}{\c&H00D7FF&\b1}exactly{\c&HFFFFFF&\b0}{\k44} what{\k34} or{\k14} how{\k26}{\c&H00D7FF&\b1} much{\c&HFFFFFF&\b0}{\k22} yet
+Dialogue: 0,0:00:02.82,0:00:03.87,Default,,0,0,0,,{\k40}until{\k14} it{\k18} gets{\k36}{\c&H00D7FF&\b1} exploited{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:03.90,0:00:04.40,Default,,0,0,0,,{\k38}{\c&H00D7FF&\b1}properly.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:04.52,0:00:05.74,Default,,0,0,0,,{\k26}But{\k18} as{\k8} a{\k16}{\c&H00D7FF&\b1} matter{\c&HFFFFFF&\b0}{\k20} of{\k22}{\c&H00D7FF&\b1} course,{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:05.80,0:00:08.11,Default,,0,0,0,,{\k26}we{\k42} always{\k114} do{\k32}{\c&H00D7FF&\b1} sensitive{\c&HFFFFFF&\b0}{\k20} site
+Dialogue: 0,0:00:08.14,0:00:09.59,Default,,0,0,0,,{\k40}{\c&H00D7FF&\b1}exploitation{\c&HFFFFFF&\b0}{\k28} on{\k22} any{\k58} objective
+Dialogue: 0,0:00:09.62,0:00:11.13,Default,,0,0,0,,{\k46}{\c&H00D7FF&\b1}anywhere{\c&HFFFFFF&\b0}{\k78} to{\k14} do{\k16} that.
+Dialogue: 0,0:00:11.16,0:00:12.17,Default,,0,0,0,,{\k58}As{\k10} to{\k12}{\c&H00D7FF&\b1} whether{\c&HFFFFFF&\b0}{\k20} it's{\k4} his
+Dialogue: 0,0:00:12.20,0:00:13.91,Default,,0,0,0,,{\k34}{\c&H00D7FF&\b1}headquarters,{\c&HFFFFFF&\b0}{\k6} it{\k26} was{\k44} an{\k24}{\c&H00D7FF&\b1} area{\c&HFFFFFF&\b0}{\k22} in
+Dialogue: 0,0:00:13.94,0:00:15.86,Default,,0,0,0,,{\k28}which{\k84} he{\k24} was{\k44}{\c&H00D7FF&\b1} staying.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:15.98,0:00:18.08,Default,,0,0,0,,{\k36}And{\k22} what{\k24} about{\k116}{\c&H00D7FF&\b1} prisoners?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:18.50,0:00:20.57,Default,,0,0,0,,{\k16}You{\k18} took{\k26}{\c&H00D7FF&\b1} some,{\c&HFFFFFF&\b0}{\k28} how{\k22}{\c&H00D7FF&\b1} many,{\c&HFFFFFF&\b0}{\k28} and
+Dialogue: 0,0:00:20.60,0:00:22.46,Default,,0,0,0,,{\k28}whose{\k40}{\c&H00D7FF&\b1} custody{\c&HFFFFFF&\b0}{\k44} are{\k20} they{\k20} in{\k22}{\c&H00D7FF&\b1} now?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:22.66,0:00:23.61,Default,,0,0,0,,{\k24}They're{\k8} in{\k14} our{\k34}{\c&H00D7FF&\b1} custody{\c&HFFFFFF&\b0}{\k18} and
+Dialogue: 0,0:00:23.64,0:00:24.62,Default,,0,0,0,,{\k14}they're{\k8} at{\k8} a{\k22} secure{\k46}{\c&H00D7FF&\b1} facility.{\c&HFFFFFF&\b0}

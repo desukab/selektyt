@@ -1,23 +1,47 @@
 1
-0:00:00,060 --> 0:00:02,387
-An additional cable array wires a
+0:00:00,000 --> 0:00:01,647
+Gliders fill in gaps between
 
 2
-0:00:02,420 --> 0:00:03,607
-region of the northeast Pacific
+0:00:01,680 --> 0:00:03,047
+the arrays, traveling
 
 3
-0:00:03,640 --> 0:00:06,067
-Ocean with a high -power high
+0:00:03,080 --> 0:00:06,427
+on
 
 4
-0:00:06,100 --> 0:00:08,007
--speed fiber optic grid that
+0:00:06,460 --> 0:00:08,347
+a data mules send oceanographic
 
 5
-0:00:08,040 --> 0:00:09,307
-enables observation of the
+0:00:08,380 --> 0:00:10,087
+measurements back to OOI
 
 6
-0:00:09,340 --> 0:00:11,120
-seafloor and water column.
+0:00:10,120 --> 0:00:11,640
+servers when they surface.
+
+7
+0:00:11,760 --> 0:00:12,907
+The Ocean Observatories
+
+8
+0:00:12,940 --> 0:00:15,047
+Initiative has revolutionized
+
+9
+0:00:15,080 --> 0:00:17,007
+marine research with free
+
+10
+0:00:17,040 --> 0:00:18,727
+access to high quality data
+
+11
+0:00:18,760 --> 0:00:20,847
+from remote locations and at
+
+12
+0:00:20,880 --> 0:00:22,520
+unprecedented timescales.

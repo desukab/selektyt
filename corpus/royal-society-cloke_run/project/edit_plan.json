@@ -1,12 +1,31 @@
 [
   {
     "index": 1,
-    "source_start": 181.735,
-    "source_end": 235.237,
-    "source_duration": 53.502,
+    "source_start": 0.3,
+    "source_end": 39.08,
+    "source_duration": 38.78,
     "intervals": [
       [
-        181.735,
+        0.3,
+        32.64
+      ],
+      [
+        33.16,
+        39.08
+      ]
+    ],
+    "edited_duration": 38.26,
+    "removed_seconds": 0.52,
+    "story_type": "question"
+  },
+  {
+    "index": 2,
+    "source_start": 181.78,
+    "source_end": 235.02,
+    "source_duration": 53.24,
+    "intervals": [
+      [
+        181.78,
         221.64
       ],
       [
@@ -15,15 +34,15 @@
       ],
       [
         232.12,
-        235.08
+        235.02
       ]
     ],
-    "edited_duration": 52.265,
-    "removed_seconds": 1.237,
+    "edited_duration": 52.16,
+    "removed_seconds": 1.08,
     "story_type": "conflict"
   },
   {
-    "index": 2,
+    "index": 3,
     "source_start": 311.92,
     "source_end": 340.3,
     "source_duration": 28.38,
@@ -42,41 +61,26 @@
     "story_type": "conflict"
   },
   {
-    "index": 3,
-    "source_start": 242.28,
-    "source_end": 265.52,
-    "source_duration": 23.24,
-    "intervals": [
-      [
-        242.28,
-        246.98
-      ],
-      [
-        248.98,
-        265.52
-      ]
-    ],
-    "edited_duration": 21.24,
-    "removed_seconds": 2.0,
-    "story_type": "revelation"
-  },
-  {
     "index": 4,
-    "source_start": 0.3,
-    "source_end": 39.08,
-    "source_duration": 38.78,
+    "source_start": 483.03999999999996,
+    "source_end": 535.6800000000001,
+    "source_duration": 52.64,
     "intervals": [
       [
-        0.3,
-        32.64
+        483.04,
+        490.74
       ],
       [
-        33.16,
-        39.08
+        491.26,
+        492.28
+      ],
+      [
+        493.04,
+        535.68
       ]
     ],
-    "edited_duration": 38.26,
-    "removed_seconds": 0.52,
-    "story_type": "question"
+    "edited_duration": 51.36,
+    "removed_seconds": 1.28,
+    "story_type": "conflict"
   }
 ]

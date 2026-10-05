@@ -1,18 +1,19 @@
 {
   "titles": [
-    "An additional cable array wires a region of the northeast",
-    "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
-    "An additional cable array wires a region of the northeast Pacific Ocean with a high-power "
+    "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.",
+    "The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
+    "The Ocean Observatories Initiative has revolutionized marine research with free access to "
   ],
-  "instagram_caption": "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
+  "instagram_caption": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface. The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
   "hashtags": [
-    "#india",
-    "#insight",
     "#reels",
-    "#shorts"
+    "#shorts",
+    "#story"
   ],
-  "story_type": "insight",
+  "story_type": "story",
   "source_based": true,
   "policy": "Generated from selected source speech; no fabricated claims.",
-  "clip_index": 3
+  "clip_index": 3,
+  "source_start": 113.42,
+  "source_end": 139.13
 }

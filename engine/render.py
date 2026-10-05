@@ -175,6 +175,54 @@ def _has_audio(path: Path) -> bool:
         return False
 
 
+def _audio_start(path: Path) -> float | None:
+    """The presentation time of the first audio packet, or ``None`` if unknown.
+
+    Input seeking (``-ss`` before ``-i``) on some containers does not drop the
+    audio stream outright but shifts it: the demuxer seeks the video to the
+    keyframe and the audio to its own packet nearest the target, and the two
+    land at different presentation times. The part then carries a track that
+    ffprobe is happy to report and that begins seconds after the picture — a
+    deliverable that looks complete and opens on silence. Measured on the
+    OOI AV1/Opus source, a 12.220 s seek produced a 19.052 s part whose audio
+    started at 2.946 s, so the retry below was never taken: ``_has_audio`` saw
+    a stream and stopped looking.
+    """
+    try:
+        out = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "a:0",
+             "-show_entries", "stream=start_time",
+             "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
+            capture_output=True, text=True, check=True, encoding="utf-8",
+        )
+        return float(out.stdout.strip())
+    except (ValueError, subprocess.CalledProcessError, OSError):
+        return None
+
+
+# Audio this far behind the picture is a seek artefact rather than an edit. The
+# part's own video starts at 0.0 by construction, so any positive audio start is
+# sound the viewer does not hear at the beginning of the clip; a small
+# container-level rounding is tolerated to keep the retry for genuine cases.
+_AUDIO_START_TOLERANCE = 0.25
+
+
+def _audio_is_unusable(path: Path) -> bool:
+    """Whether a rendered part's audio is missing or starts after the picture.
+
+    This is the retry's actual trigger. A part with no audio stream at all is
+    one half of it; a part whose stream exists but starts late is the other,
+    and ``_has_audio`` cannot see it, because the stream is present and
+    decodable and simply begins in the wrong place.
+    """
+    if not _has_audio(path):
+        return True
+    start = _audio_start(path)
+    if start is None:
+        return False
+    return start > _AUDIO_START_TOLERANCE
+
+
 def _encoder_args() -> list[str]:
     """The x264 settings the deliverable is mastered with.
 
@@ -359,7 +407,7 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
     # discards and therefore cannot drop a stream.
     subprocess.run(["ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", str(source), *common],
                    check=True)
-    if not _has_audio(out) and _has_audio(source):
+    if _audio_is_unusable(out) and _has_audio(source):
         subprocess.run(["ffmpeg", "-y", "-i", str(source), "-ss", f"{start:.3f}", *common],
                        check=True)
 

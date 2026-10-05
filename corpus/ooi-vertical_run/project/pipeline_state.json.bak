@@ -1,27 +1,44 @@
 {
   "source": "corpus/media/ooi-vertical.webm",
   "media_info": {},
-  "fingerprint": "808ec6c79f65fffa27de25088fa1437deac5b9f949c39bf7a2e76bf6147bf20d",
+  "fingerprint": "222fbd208794261a7fc0cb52dff5dae7021cfc70fe7d1a31c7c8ea58ca719c3a",
   "model": "small",
   "language": "en",
   "renders": {
     "01": {
-      "fingerprint": "808ec6c79f65fffa27de25088fa1437deac5b9f949c39bf7a2e76bf6147bf20d",
-      "selection_digest": "5507506e8f51c4a66c9e242c86abe7261c82d5b7a799340b98d6c822816961cd",
-      "facebook": "corpus/ooi-vertical_run/project/facebook/01.mp4",
-      "shorts": "corpus/ooi-vertical_run/project/shorts/01.mp4"
+      "fingerprint": "222fbd208794261a7fc0cb52dff5dae7021cfc70fe7d1a31c7c8ea58ca719c3a",
+      "selection_digest": "4760359b6616fd568ff14037ab6f24de92a51d3775350e67cdee0fab804662e3",
+      "program_digest": "c272208c7a92a6b380a320a34f8631d899bb9fab67226dee47d63836af1be18f",
+      "caption_style": "minimal",
+      "ass_digest": "e4cc0beefe81b52652d65af8855ec3e6fb5cf800e304a081ce3ecfadd9cd36dc",
+      "facebook": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/facebook/01.mp4",
+      "shorts": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/shorts/01.mp4"
     },
     "02": {
-      "fingerprint": "808ec6c79f65fffa27de25088fa1437deac5b9f949c39bf7a2e76bf6147bf20d",
-      "selection_digest": "5507506e8f51c4a66c9e242c86abe7261c82d5b7a799340b98d6c822816961cd",
-      "facebook": "corpus/ooi-vertical_run/project/facebook/02.mp4",
-      "shorts": "corpus/ooi-vertical_run/project/shorts/02.mp4"
+      "fingerprint": "222fbd208794261a7fc0cb52dff5dae7021cfc70fe7d1a31c7c8ea58ca719c3a",
+      "selection_digest": "4760359b6616fd568ff14037ab6f24de92a51d3775350e67cdee0fab804662e3",
+      "program_digest": "c272208c7a92a6b380a320a34f8631d899bb9fab67226dee47d63836af1be18f",
+      "caption_style": "minimal",
+      "ass_digest": "932e61ff566ed1a7f56aaec379442131337fc750e65927fd476d23e69c633d61",
+      "facebook": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/facebook/02.mp4",
+      "shorts": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/shorts/02.mp4"
     },
     "03": {
-      "fingerprint": "808ec6c79f65fffa27de25088fa1437deac5b9f949c39bf7a2e76bf6147bf20d",
-      "selection_digest": "5507506e8f51c4a66c9e242c86abe7261c82d5b7a799340b98d6c822816961cd",
-      "facebook": "corpus/ooi-vertical_run/project/facebook/03.mp4",
-      "shorts": "corpus/ooi-vertical_run/project/shorts/03.mp4"
+      "fingerprint": "222fbd208794261a7fc0cb52dff5dae7021cfc70fe7d1a31c7c8ea58ca719c3a",
+      "selection_digest": "4760359b6616fd568ff14037ab6f24de92a51d3775350e67cdee0fab804662e3",
+      "program_digest": "c272208c7a92a6b380a320a34f8631d899bb9fab67226dee47d63836af1be18f",
+      "caption_style": "minimal",
+      "ass_digest": "ef4af1b786759df9394e5456889e9c2bb59f6773ac6d7987d125839ed1e368bb",
+      "facebook": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/facebook/03.mp4",
+      "shorts": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/shorts/03.mp4"
+    },
+    "program": {
+      "fingerprint": "222fbd208794261a7fc0cb52dff5dae7021cfc70fe7d1a31c7c8ea58ca719c3a",
+      "program_digest": "c272208c7a92a6b380a320a34f8631d899bb9fab67226dee47d63836af1be18f",
+      "caption_style": "minimal",
+      "parts_digest": "bdc2e2cd59f33ad4b5728a380354a852307e23a9bfb1b6f3b339987ed69105f5",
+      "facebook": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/facebook/program.mp4",
+      "shorts": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/shorts/program.mp4"
     }
   }
 }

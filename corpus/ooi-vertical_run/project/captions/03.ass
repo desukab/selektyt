@@ -6,13 +6,19 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
-Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+Style: Default,Fredoka,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
 
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
-Dialogue: 0,0:00:00.06,0:00:02.39,Default,,0,0,0,,{\k18}An {\k38}{\c&H00D7FF&\b1}additional{\c&HFFFFFF&\b0} {\k46}cable {\k36}array {\k80}{\c&H00D7FF&\b1}wires{\c&HFFFFFF&\b0} {\k18}a
-Dialogue: 0,0:00:02.42,0:00:03.61,Default,,0,0,0,,{\k26}region {\k16}of {\k16}the {\k24}{\c&H00D7FF&\b1}northeast{\c&HFFFFFF&\b0} {\k40}Pacific
-Dialogue: 0,0:00:03.64,0:00:06.07,Default,,0,0,0,,{\k48}{\c&H00D7FF&\b1}Ocean{\c&HFFFFFF&\b0} {\k36}with {\k14}a {\k24}high {\k32}{\c&H00D7FF&\b1}-power{\c&HFFFFFF&\b0} {\k54}high
-Dialogue: 0,0:00:06.10,0:00:08.01,Default,,0,0,0,,{\k30}-speed {\k34}fiber {\k30}{\c&H00D7FF&\b1}optic{\c&HFFFFFF&\b0} {\k38}grid {\k62}that
-Dialogue: 0,0:00:08.04,0:00:09.31,Default,,0,0,0,,{\k34}enables {\k50}{\c&H00D7FF&\b1}observation{\c&HFFFFFF&\b0} {\k34}of {\k12}the
-Dialogue: 0,0:00:09.34,0:00:11.12,Default,,0,0,0,,{\k56}{\c&H00D7FF&\b1}seafloor{\c&HFFFFFF&\b0} {\k56}and {\k24}water {\k36}column.
+Dialogue: 0,0:00:00.00,0:00:01.65,Default,,0,0,0,,{\k52}Gliders{\k32} fill{\k14} in{\k24} gaps{\k46}{\c&H00D7FF&\b1} between{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:01.68,0:00:03.05,Default,,0,0,0,,{\k26}the{\k32} arrays,{\k58}{\c&H00D7FF&\b1} traveling{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:03.08,0:00:06.43,Default,,0,0,0,,{\k338}on
+Dialogue: 0,0:00:06.46,0:00:08.35,Default,,0,0,0,,{\k1}a{\k38} data{\k42} mules{\k56} send{\k56}{\c&H00D7FF&\b1} oceanographic{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:08.38,0:00:10.09,Default,,0,0,0,,{\k62}{\c&H00D7FF&\b1}measurements{\c&HFFFFFF&\b0}{\k42} back{\k20} to{\k50} OOI
+Dialogue: 0,0:00:10.12,0:00:11.64,Default,,0,0,0,,{\k44}servers{\k52} when{\k16} they{\k28}{\c&H00D7FF&\b1} surface.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:11.76,0:00:12.91,Default,,0,0,0,,{\k10}The{\k34} Ocean{\k74}{\c&H00D7FF&\b1} Observatories{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:12.94,0:00:15.05,Default,,0,0,0,,{\k52}Initiative{\k52} has{\k110}{\c&H00D7FF&\b1} revolutionized{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:15.08,0:00:17.01,Default,,0,0,0,,{\k28}marine{\k54}{\c&H00D7FF&\b1} research{\c&HFFFFFF&\b0}{\k78} with{\k36} free
+Dialogue: 0,0:00:17.04,0:00:18.73,Default,,0,0,0,,{\k38}access{\k26} to{\k32} high{\k32}{\c&H00D7FF&\b1} quality{\c&HFFFFFF&\b0}{\k44} data
+Dialogue: 0,0:00:18.76,0:00:20.85,Default,,0,0,0,,{\k48}from{\k34} remote{\k50}{\c&H00D7FF&\b1} locations{\c&HFFFFFF&\b0}{\k66} and{\k14} at
+Dialogue: 0,0:00:20.88,0:00:22.52,Default,,0,0,0,,{\k72}{\c&H00D7FF&\b1}unprecedented{\c&HFFFFFF&\b0}{\k92} timescales.

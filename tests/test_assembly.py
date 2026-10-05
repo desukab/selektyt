@@ -280,6 +280,25 @@ class TestConfidence:
         a = assemble([_Cand(0.0, 20.0, hook="x")], corpus=None)
         assert a.graph.decisions[0].confidence.unmeasured
 
+    def test_a_standalone_passage_is_unmeasured_not_measured_low(
+            self, two_threads):
+        """A thread with no setup->payoff relation reports the sentinel, which
+        means *nothing was inferred*, not "weakly trusted".
+
+        ``Confidence(0.25, basis=...)`` reads as a low measurement -- a claim the
+        corpus did not make, and one no evidence could refute, because none was
+        gathered. 26 of 28 threads on the committed corpus carry it.
+        """
+        standalone = _Thread(2, "the aside", [6], 0.25)
+        corpus = _Corpus(two_threads.units, two_threads.beats,
+                         two_threads.threads + [standalone])
+        corpus.units.append(_U(6, 300.0, 320.0, thread_id=2, beat_id=0))
+        a = assemble([_Cand(300.0, 320.0, hook="aside")], corpus=corpus)
+        d = a.graph.decisions[0]
+        assert d.confidence.unmeasured
+        assert d.confidence.value is None
+        assert "standalone passage" in d.confidence.basis
+
     def test_no_decision_carries_a_fabricated_number(self, two_threads):
         a = assemble([_Cand(5.0, 55.0, hook="incident"),
                       _Cand(400.0, 430.0, hook="stray")], corpus=two_threads)

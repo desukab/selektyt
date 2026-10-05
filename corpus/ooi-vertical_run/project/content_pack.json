@@ -1,13 +1,12 @@
 [
   {
     "titles": [
-      "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.",
-      "The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
-      "The Ocean Observatories Initiative has revolutionized marine research with free access to "
+      "Scientists need to know where these changes are occurring and how fast.",
+      "OOI is a science-driven ocean-observing network that delivers real-time data to researchers investigating our changing ocean on a coastal and planetary scale.",
+      "Scientists need to know where these changes are occurring and how fast"
     ],
-    "instagram_caption": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface. The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
+    "instagram_caption": "Scientists need to know where these changes are occurring and how fast. That's why we have the Ocean Observatories Initiative, or OOI. OOI is a science-driven ocean-observing network that delivers real-time data to researchers investigating our changing ocean on a coastal and planetary scale.",
     "hashtags": [
-      "#india",
       "#reels",
       "#shorts",
       "#story"
@@ -15,7 +14,9 @@
     "story_type": "story",
     "source_based": true,
     "policy": "Generated from selected source speech; no fabricated claims.",
-    "clip_index": 1
+    "clip_index": 1,
+    "source_start": 12.22,
+    "source_end": 32.56
   },
   {
     "titles": [
@@ -25,7 +26,6 @@
     ],
     "instagram_caption": "Now in its eighth year, OOI makes it possible to investigate short-lived events as well as multi-year trends. That provides researchers around the globe with critical insights into climate change and its effect on marine ecosystems.",
     "hashtags": [
-      "#india",
       "#reels",
       "#shorts",
       "#story"
@@ -33,24 +33,27 @@
     "story_type": "story",
     "source_based": true,
     "policy": "Generated from selected source speech; no fabricated claims.",
-    "clip_index": 2
+    "clip_index": 2,
+    "source_start": 41.42,
+    "source_end": 56.58
   },
   {
     "titles": [
-      "An additional cable array wires a region of the northeast",
-      "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
-      "An additional cable array wires a region of the northeast Pacific Ocean with a high-power "
+      "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.",
+      "The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
+      "The Ocean Observatories Initiative has revolutionized marine research with free access to "
     ],
-    "instagram_caption": "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
+    "instagram_caption": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface. The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
     "hashtags": [
-      "#india",
-      "#insight",
       "#reels",
-      "#shorts"
+      "#shorts",
+      "#story"
     ],
-    "story_type": "insight",
+    "story_type": "story",
     "source_based": true,
     "policy": "Generated from selected source speech; no fabricated claims.",
-    "clip_index": 3
+    "clip_index": 3,
+    "source_start": 113.42,
+    "source_end": 139.13
   }
 ]

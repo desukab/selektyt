@@ -3,18 +3,18 @@
   "selected_count": 5,
   "rejected_count": 0,
   "context_guard_rejections": 0,
-  "truncated_by_limit": 7,
-  "avg_duration": 24.75,
+  "truncated_by_limit": 10,
+  "avg_duration": 24.14,
   "duration_distribution": {
     "<15s": 1,
-    "15-30s": 3,
-    "30-45s": 1,
+    "15-30s": 2,
+    "30-45s": 2,
     "45-55s": 0
   },
-  "silence_pct": 7.8,
+  "silence_pct": 9.4,
   "filler_pct": 0.0,
-  "avg_words_per_second": 3.08,
-  "avg_hook_latency": 1.79,
+  "avg_words_per_second": 3.32,
+  "avg_hook_latency": 1.88,
   "payoff_presence_rate": 1.0,
   "duplicate_overlap_rate": 0.0
 }

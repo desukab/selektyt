@@ -1,0 +1,3567 @@
+{
+  "items": [
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0001",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.7999999999999998,
+        "intervals": [
+          {
+            "end": 5.28,
+            "start": 4.48
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 4.48..5.28s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0002",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.8639999999999999,
+        "intervals": [
+          {
+            "end": 6.336,
+            "start": 5.472
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 5.472..6.336s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0003",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.024,
+        "intervals": [
+          {
+            "end": 8.096,
+            "start": 7.072
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 7.072..8.096s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0004",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.3759999999999994,
+        "intervals": [
+          {
+            "end": 9.6,
+            "start": 8.224
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 8.224..9.6s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0005",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.8960000000000008,
+        "intervals": [
+          {
+            "end": 10.752,
+            "start": 9.856
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 9.856..10.752s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0006",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.6079999999999988,
+        "intervals": [
+          {
+            "end": 11.488,
+            "start": 10.88
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 10.88..11.488s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0007",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.4000000000000004,
+        "intervals": [
+          {
+            "end": 14.784,
+            "start": 12.384
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 12.384..14.784s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0008",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.927999999999999,
+        "intervals": [
+          {
+            "end": 16.224,
+            "start": 15.296000000000001
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 15.296..16.224s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0009",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.847999999999999,
+        "intervals": [
+          {
+            "end": 19.808,
+            "start": 16.96
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 16.96..19.808s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0010",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.28800000000000026,
+        "intervals": [
+          {
+            "end": 20.352,
+            "start": 20.064
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 20.064..20.352s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0011",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.8640000000000008,
+        "intervals": [
+          {
+            "end": 21.344,
+            "start": 20.48
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 20.48..21.344s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0012",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.911999999999999,
+        "intervals": [
+          {
+            "end": 25.28,
+            "start": 22.368000000000002
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 22.368..25.28s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0013",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 4.096,
+        "intervals": [
+          {
+            "end": 30.016000000000002,
+            "start": 25.92
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 25.92..30.016s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0014",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.7999999999999972,
+        "intervals": [
+          {
+            "end": 31.2,
+            "start": 30.400000000000002
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 30.4..31.2s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0015",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.3120000000000047,
+        "intervals": [
+          {
+            "end": 32.736000000000004,
+            "start": 31.424
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 31.424..32.736s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0016",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.112000000000002,
+        "intervals": [
+          {
+            "end": 35.488,
+            "start": 33.376
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 33.376..35.488s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0017",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.911999999999999,
+        "intervals": [
+          {
+            "end": 38.688,
+            "start": 35.776
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 35.776..38.688s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0018",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.9199999999999946,
+        "intervals": [
+          {
+            "end": 40.992,
+            "start": 39.072
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 39.072..40.992s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0019",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.2480000000000047,
+        "intervals": [
+          {
+            "end": 42.752,
+            "start": 41.504
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 41.504..42.752s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0020",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.6000000000000014,
+        "intervals": [
+          {
+            "end": 44.736000000000004,
+            "start": 43.136
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 43.136..44.736s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0021",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.695999999999998,
+        "intervals": [
+          {
+            "end": 46.56,
+            "start": 44.864000000000004
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 44.864..46.56s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0022",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.568000000000005,
+        "intervals": [
+          {
+            "end": 48.352000000000004,
+            "start": 46.784
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 46.784..48.352s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0023",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 4.5120000000000005,
+        "intervals": [
+          {
+            "end": 54.4,
+            "start": 49.888
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 49.888..54.4s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0024",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.368000000000002,
+        "intervals": [
+          {
+            "end": 57.024,
+            "start": 54.656
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 54.656..57.024s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0025",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.2480000000000047,
+        "intervals": [
+          {
+            "end": 59.52,
+            "start": 58.272
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 58.272..59.52s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0026",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.6640000000000015,
+        "intervals": [
+          {
+            "end": 61.408,
+            "start": 59.744
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 59.744..61.408s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0027",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.1839999999999975,
+        "intervals": [
+          {
+            "end": 63.04,
+            "start": 61.856
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 61.856..63.04s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0028",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 3.1999999999999957,
+        "intervals": [
+          {
+            "end": 66.72,
+            "start": 63.52
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 63.52..66.72s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0029",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 5.152000000000001,
+        "intervals": [
+          {
+            "end": 72.608,
+            "start": 67.456
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 67.456..72.608s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0030",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.5359999999999872,
+        "intervals": [
+          {
+            "end": 74.624,
+            "start": 73.08800000000001
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 73.088..74.624s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0031",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 4.0,
+        "intervals": [
+          {
+            "end": 79.552,
+            "start": 75.552
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 75.552..79.552s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0032",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.3440000000000083,
+        "intervals": [
+          {
+            "end": 81.21600000000001,
+            "start": 79.872
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 79.872..81.216s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0033",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 3.808000000000007,
+        "intervals": [
+          {
+            "end": 87.456,
+            "start": 83.648
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 83.648..87.456s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0034",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.9520000000000124,
+        "intervals": [
+          {
+            "end": 89.72800000000001,
+            "start": 87.776
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 87.776..89.728s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0035",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.5040000000000049,
+        "intervals": [
+          {
+            "end": 92.352,
+            "start": 90.848
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 90.848..92.352s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0036",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.4639999999999986,
+        "intervals": [
+          {
+            "end": 94.976,
+            "start": 92.512
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 92.512..94.976s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0037",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.9279999999999973,
+        "intervals": [
+          {
+            "end": 96.384,
+            "start": 95.456
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 95.456..96.384s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0038",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.5040000000000049,
+        "intervals": [
+          {
+            "end": 98.176,
+            "start": 96.672
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 96.672..98.176s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0039",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.9840000000000089,
+        "intervals": [
+          {
+            "end": 100.608,
+            "start": 98.624
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 98.624..100.608s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0040",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.9279999999999973,
+        "intervals": [
+          {
+            "end": 101.888,
+            "start": 100.96000000000001
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 100.96..101.888s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0041",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.368000000000009,
+        "intervals": [
+          {
+            "end": 104.96000000000001,
+            "start": 102.592
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 102.592..104.96s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0042",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.719999999999999,
+        "intervals": [
+          {
+            "end": 108.16,
+            "start": 105.44
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 105.44..108.16s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0043",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.048000000000002,
+        "intervals": [
+          {
+            "end": 110.592,
+            "start": 108.544
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 108.544..110.592s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0044",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.2079999999999984,
+        "intervals": [
+          {
+            "end": 115.904,
+            "start": 113.696
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 113.696..115.904s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0045",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 3.0720000000000027,
+        "intervals": [
+          {
+            "end": 119.872,
+            "start": 116.8
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 116.8..119.872s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0046",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.088000000000008,
+        "intervals": [
+          {
+            "end": 121.376,
+            "start": 120.288
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 120.288..121.376s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0047",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.4399999999999977,
+        "intervals": [
+          {
+            "end": 123.136,
+            "start": 121.696
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 121.696..123.136s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0048",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.5040000000000049,
+        "intervals": [
+          {
+            "end": 124.768,
+            "start": 123.264
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 123.264..124.768s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0049",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.8320000000000078,
+        "intervals": [
+          {
+            "end": 125.76,
+            "start": 124.928
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 124.928..125.76s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0050",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.8559999999999945,
+        "intervals": [
+          {
+            "end": 130.272,
+            "start": 128.416
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 128.416..130.272s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0051",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.27200000000002,
+        "intervals": [
+          {
+            "end": 132.8,
+            "start": 130.528
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 130.528..132.8s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0052",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.304000000000002,
+        "intervals": [
+          {
+            "end": 135.52,
+            "start": 133.216
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 133.216..135.52s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0053",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.2159999999999798,
+        "intervals": [
+          {
+            "end": 136.992,
+            "start": 135.776
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 135.776..136.992s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0054",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.015999999999991,
+        "intervals": [
+          {
+            "end": 139.296,
+            "start": 137.28
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 137.28..139.296s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0055",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.920000000000016,
+        "intervals": [
+          {
+            "end": 141.728,
+            "start": 139.808
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 139.808..141.728s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0056",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.8319999999999936,
+        "intervals": [
+          {
+            "end": 143.04,
+            "start": 142.208
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 142.208..143.04s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Speech is present",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0057",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.1519999999999868,
+        "intervals": [
+          {
+            "end": 144.576,
+            "start": 143.424
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "VAD backend silero reported speech across 143.424..144.576s",
+      "schema": "1.1",
+      "source": {
+        "method": "segment_with_meta",
+        "module": "engine.vad",
+        "params_digest": "2da8d90f156e"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0058",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 4.48,
+        "intervals": [
+          {
+            "end": 4.48,
+            "start": 0.0
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 0..4.48s (4.48s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0059",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.19200000000000017,
+        "intervals": [
+          {
+            "end": 5.472,
+            "start": 5.28
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 5.28..5.472s (0.192s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0060",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.7359999999999998,
+        "intervals": [
+          {
+            "end": 7.072,
+            "start": 6.336
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 6.336..7.072s (0.736s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0061",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.1280000000000001,
+        "intervals": [
+          {
+            "end": 8.224,
+            "start": 8.096
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 8.096..8.224s (0.128s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0062",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.2560000000000002,
+        "intervals": [
+          {
+            "end": 9.856,
+            "start": 9.6
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 9.6..9.856s (0.256s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0063",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.1280000000000001,
+        "intervals": [
+          {
+            "end": 10.88,
+            "start": 10.752
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 10.752..10.88s (0.128s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0064",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.8960000000000008,
+        "intervals": [
+          {
+            "end": 12.384,
+            "start": 11.488
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 11.488..12.384s (0.896s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0065",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.5120000000000005,
+        "intervals": [
+          {
+            "end": 15.296000000000001,
+            "start": 14.784
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 14.784..15.296s (0.512s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0066",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.7360000000000007,
+        "intervals": [
+          {
+            "end": 16.96,
+            "start": 16.224
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 16.224..16.96s (0.736s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0067",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.2560000000000002,
+        "intervals": [
+          {
+            "end": 20.064,
+            "start": 19.808
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 19.808..20.064s (0.256s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0068",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.1280000000000001,
+        "intervals": [
+          {
+            "end": 20.48,
+            "start": 20.352
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 20.352..20.48s (0.128s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0069",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.024000000000001,
+        "intervals": [
+          {
+            "end": 22.368000000000002,
+            "start": 21.344
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 21.344..22.368s (1.024s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0070",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.6400000000000006,
+        "intervals": [
+          {
+            "end": 25.92,
+            "start": 25.28
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 25.28..25.92s (0.64s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0071",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.38400000000000034,
+        "intervals": [
+          {
+            "end": 30.400000000000002,
+            "start": 30.016000000000002
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 30.016..30.4s (0.384s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0072",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.2240000000000002,
+        "intervals": [
+          {
+            "end": 31.424,
+            "start": 31.2
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 31.2..31.424s (0.224s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0073",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.6399999999999935,
+        "intervals": [
+          {
+            "end": 33.376,
+            "start": 32.736000000000004
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 32.736..33.376s (0.64s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0074",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.2880000000000038,
+        "intervals": [
+          {
+            "end": 35.776,
+            "start": 35.488
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 35.488..35.776s (0.288s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0075",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.38400000000000034,
+        "intervals": [
+          {
+            "end": 39.072,
+            "start": 38.688
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 38.688..39.072s (0.384s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0076",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.5120000000000005,
+        "intervals": [
+          {
+            "end": 41.504,
+            "start": 40.992
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 40.992..41.504s (0.512s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0077",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.38400000000000034,
+        "intervals": [
+          {
+            "end": 43.136,
+            "start": 42.752
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 42.752..43.136s (0.384s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0078",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.1280000000000001,
+        "intervals": [
+          {
+            "end": 44.864000000000004,
+            "start": 44.736000000000004
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 44.736..44.864s (0.128s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0079",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.22399999999999665,
+        "intervals": [
+          {
+            "end": 46.784,
+            "start": 46.56
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 46.56..46.784s (0.224s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0080",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.5359999999999943,
+        "intervals": [
+          {
+            "end": 49.888,
+            "start": 48.352000000000004
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 48.352..49.888s (1.536s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0081",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.2560000000000002,
+        "intervals": [
+          {
+            "end": 54.656,
+            "start": 54.4
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 54.4..54.656s (0.256s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0082",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.2479999999999976,
+        "intervals": [
+          {
+            "end": 58.272,
+            "start": 57.024
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 57.024..58.272s (1.248s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0083",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.22399999999999665,
+        "intervals": [
+          {
+            "end": 59.744,
+            "start": 59.52
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 59.52..59.744s (0.224s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0084",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.4480000000000004,
+        "intervals": [
+          {
+            "end": 61.856,
+            "start": 61.408
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 61.408..61.856s (0.448s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0085",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.480000000000004,
+        "intervals": [
+          {
+            "end": 63.52,
+            "start": 63.04
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 63.04..63.52s (0.48s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0086",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.7360000000000042,
+        "intervals": [
+          {
+            "end": 67.456,
+            "start": 66.72
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 66.72..67.456s (0.736s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0087",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.480000000000004,
+        "intervals": [
+          {
+            "end": 73.08800000000001,
+            "start": 72.608
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 72.608..73.088s (0.48s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0088",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.9280000000000115,
+        "intervals": [
+          {
+            "end": 75.552,
+            "start": 74.624
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 74.624..75.552s (0.928s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0089",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.3199999999999932,
+        "intervals": [
+          {
+            "end": 79.872,
+            "start": 79.552
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 79.552..79.872s (0.32s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0090",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.431999999999988,
+        "intervals": [
+          {
+            "end": 83.648,
+            "start": 81.21600000000001
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 81.216..83.648s (2.432s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0091",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.3199999999999932,
+        "intervals": [
+          {
+            "end": 87.776,
+            "start": 87.456
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 87.456..87.776s (0.32s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0092",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.1199999999999903,
+        "intervals": [
+          {
+            "end": 90.848,
+            "start": 89.72800000000001
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 89.728..90.848s (1.12s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0093",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.1599999999999966,
+        "intervals": [
+          {
+            "end": 92.512,
+            "start": 92.352
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 92.352..92.512s (0.16s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0094",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.480000000000004,
+        "intervals": [
+          {
+            "end": 95.456,
+            "start": 94.976
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 94.976..95.456s (0.48s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0095",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.2879999999999967,
+        "intervals": [
+          {
+            "end": 96.672,
+            "start": 96.384
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 96.384..96.672s (0.288s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0096",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.4479999999999933,
+        "intervals": [
+          {
+            "end": 98.624,
+            "start": 98.176
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 98.176..98.624s (0.448s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0097",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.35200000000000387,
+        "intervals": [
+          {
+            "end": 100.96000000000001,
+            "start": 100.608
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 100.608..100.96s (0.352s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0098",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.7039999999999935,
+        "intervals": [
+          {
+            "end": 102.592,
+            "start": 101.888
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 101.888..102.592s (0.704s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0099",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.47999999999998977,
+        "intervals": [
+          {
+            "end": 105.44,
+            "start": 104.96000000000001
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 104.96..105.44s (0.48s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0100",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.38400000000000034,
+        "intervals": [
+          {
+            "end": 108.544,
+            "start": 108.16
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 108.16..108.544s (0.384s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0101",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 3.103999999999999,
+        "intervals": [
+          {
+            "end": 113.696,
+            "start": 110.592
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 110.592..113.696s (3.104s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0102",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.8960000000000008,
+        "intervals": [
+          {
+            "end": 116.8,
+            "start": 115.904
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 115.904..116.8s (0.896s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0103",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.4159999999999968,
+        "intervals": [
+          {
+            "end": 120.288,
+            "start": 119.872
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 119.872..120.288s (0.416s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0104",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.3199999999999932,
+        "intervals": [
+          {
+            "end": 121.696,
+            "start": 121.376
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 121.376..121.696s (0.32s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0105",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.1280000000000001,
+        "intervals": [
+          {
+            "end": 123.264,
+            "start": 123.136
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 123.136..123.264s (0.128s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0106",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.1599999999999966,
+        "intervals": [
+          {
+            "end": 124.928,
+            "start": 124.768
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 124.768..124.928s (0.16s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0107",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 2.6559999999999917,
+        "intervals": [
+          {
+            "end": 128.416,
+            "start": 125.76
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 125.76..128.416s (2.656s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0108",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.2560000000000002,
+        "intervals": [
+          {
+            "end": 130.528,
+            "start": 130.272
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 130.272..130.528s (0.256s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0109",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.4159999999999968,
+        "intervals": [
+          {
+            "end": 133.216,
+            "start": 132.8
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 132.8..133.216s (0.416s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0110",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.2560000000000002,
+        "intervals": [
+          {
+            "end": 135.776,
+            "start": 135.52
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 135.52..135.776s (0.256s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0111",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.2880000000000109,
+        "intervals": [
+          {
+            "end": 137.28,
+            "start": 136.992
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 136.992..137.28s (0.288s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0112",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.5120000000000005,
+        "intervals": [
+          {
+            "end": 139.808,
+            "start": 139.296
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 139.296..139.808s (0.512s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0113",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.47999999999998977,
+        "intervals": [
+          {
+            "end": 142.208,
+            "start": 141.728
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 141.728..142.208s (0.48s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0114",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 0.38400000000001455,
+        "intervals": [
+          {
+            "end": 143.424,
+            "start": 143.04
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 143.04..143.424s (0.384s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "Silence: no speech detected",
+      "confidence": 1.0,
+      "grounded": true,
+      "id": "e0115",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 7.424000000000007,
+        "intervals": [
+          {
+            "end": 152.0,
+            "start": 144.576
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "audio",
+      "rationale": "no VAD speech inside 144.576..152s (7.424s)",
+      "schema": "1.1",
+      "source": {
+        "method": "silence_from_speech",
+        "module": "engine.vad",
+        "params_digest": ""
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "The topic “year, why, well” is discussed",
+      "confidence": 0.3,
+      "grounded": true,
+      "id": "e0116",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 52.5,
+        "intervals": [
+          {
+            "end": 56.58,
+            "start": 4.08
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "schema": "1.1",
+      "source": {
+        "method": "cluster_topics",
+        "module": "engine.topics",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "The topic “via, track, systems” is discussed",
+      "confidence": 0.3,
+      "grounded": true,
+      "id": "e0117",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 24.260000000000005,
+        "intervals": [
+          {
+            "end": 80.84,
+            "start": 56.58
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "schema": "1.1",
+      "source": {
+        "method": "cluster_topics",
+        "module": "engine.topics",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "The topic “shelf, continental” is discussed",
+      "confidence": 0.3,
+      "grounded": true,
+      "id": "e0118",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.3799999999999955,
+        "intervals": [
+          {
+            "end": 89.55,
+            "start": 88.17
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "schema": "1.1",
+      "source": {
+        "method": "cluster_topics",
+        "module": "engine.topics",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "The topic “wires, water, speed” is discussed",
+      "confidence": 0.3,
+      "grounded": true,
+      "id": "e0119",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 11.0,
+        "intervals": [
+          {
+            "end": 101.73,
+            "start": 90.73
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "schema": "1.1",
+      "source": {
+        "method": "cluster_topics",
+        "module": "engine.topics",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "The topic “window, volcano, vents” is discussed",
+      "confidence": 0.3,
+      "grounded": true,
+      "id": "e0120",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 8.019999999999996,
+        "intervals": [
+          {
+            "end": 110.31,
+            "start": 102.29
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "schema": "1.1",
+      "source": {
+        "method": "cluster_topics",
+        "module": "engine.topics",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "The topic “unprecedented, traveling, timescales” is discussed",
+      "confidence": 0.3,
+      "grounded": true,
+      "id": "e0121",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 25.709999999999994,
+        "intervals": [
+          {
+            "end": 139.13,
+            "start": 113.42
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "schema": "1.1",
+      "source": {
+        "method": "cluster_topics",
+        "module": "engine.topics",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "The topic “use, question, left” is discussed",
+      "confidence": 0.3,
+      "grounded": true,
+      "id": "e0122",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 4.799999999999983,
+        "intervals": [
+          {
+            "end": 144.57,
+            "start": 139.77
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
+      "schema": "1.1",
+      "source": {
+        "method": "cluster_topics",
+        "module": "engine.topics",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "A neutral resolution beat occurs, and it is a peak",
+      "confidence": 0.593,
+      "grounded": true,
+      "id": "e0123",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 52.5,
+        "intervals": [
+          {
+            "end": 56.58,
+            "start": 4.08
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "resolution beat at 4.08..56.58s, intensity 0.286, neutral",
+      "schema": "1.1",
+      "source": {
+        "method": "build_beats",
+        "module": "engine.threads",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "A neutral continuation beat occurs, and it is a peak",
+      "confidence": 0.517,
+      "grounded": true,
+      "id": "e0124",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 24.260000000000005,
+        "intervals": [
+          {
+            "end": 80.84,
+            "start": 56.58
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "continuation beat at 56.58..80.84s, intensity 0.134, neutral",
+      "schema": "1.1",
+      "source": {
+        "method": "build_beats",
+        "module": "engine.threads",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "A neutral continuation beat occurs, and it is a peak",
+      "confidence": 0.454,
+      "grounded": true,
+      "id": "e0125",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 1.3799999999999955,
+        "intervals": [
+          {
+            "end": 89.55,
+            "start": 88.17
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "continuation beat at 88.17..89.55s, intensity 0.007, neutral",
+      "schema": "1.1",
+      "source": {
+        "method": "build_beats",
+        "module": "engine.threads",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "A neutral continuation beat occurs, and it is a peak",
+      "confidence": 0.452,
+      "grounded": true,
+      "id": "e0126",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 11.0,
+        "intervals": [
+          {
+            "end": 101.73,
+            "start": 90.73
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "continuation beat at 90.73..101.73s, intensity 0.003, neutral",
+      "schema": "1.1",
+      "source": {
+        "method": "build_beats",
+        "module": "engine.threads",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "A neutral continuation beat occurs, and it is a peak",
+      "confidence": 0.45,
+      "grounded": true,
+      "id": "e0127",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 8.019999999999996,
+        "intervals": [
+          {
+            "end": 110.31,
+            "start": 102.29
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "continuation beat at 102.29..110.31s, intensity 0, neutral",
+      "schema": "1.1",
+      "source": {
+        "method": "build_beats",
+        "module": "engine.threads",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "A neutral continuation beat occurs, and it is a peak",
+      "confidence": 0.515,
+      "grounded": true,
+      "id": "e0128",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 25.709999999999994,
+        "intervals": [
+          {
+            "end": 139.13,
+            "start": 113.42
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "continuation beat at 113.42..139.13s, intensity 0.13, neutral",
+      "schema": "1.1",
+      "source": {
+        "method": "build_beats",
+        "module": "engine.threads",
+        "params_digest": "70537f6e7d21"
+      }
+    },
+    {
+      "artifacts": [],
+      "claim": "A positive tension beat occurs, and it is a peak",
+      "confidence": 0.647,
+      "grounded": true,
+      "id": "e0129",
+      "intervals": {
+        "cardinality": 1,
+        "duration": 4.799999999999983,
+        "intervals": [
+          {
+            "end": 144.57,
+            "start": 139.77
+          }
+        ],
+        "schema": "1.0"
+      },
+      "links": [],
+      "modality": "editorial",
+      "rationale": "tension beat at 139.77..144.57s, intensity 0.394, positive, corpus peak",
+      "schema": "1.1",
+      "source": {
+        "method": "build_beats",
+        "module": "engine.threads",
+        "params_digest": "70537f6e7d21"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "coverage": {
+        "cardinality": 1,
+        "duration": 152.0,
+        "intervals": [
+          {
+            "end": 152.0,
+            "start": 0.0
+          }
+        ],
+        "schema": "1.0"
+      },
+      "items": 0,
+      "level": 0,
+      "notes": ""
+    },
+    {
+      "coverage": {
+        "cardinality": 1,
+        "duration": 152.0,
+        "intervals": [
+          {
+            "end": 152.0,
+            "start": 0.0
+          }
+        ],
+        "schema": "1.0"
+      },
+      "items": 115,
+      "level": 1,
+      "notes": "populated from artifacts a pipeline run already held; no second decode or listen"
+    },
+    {
+      "coverage": {
+        "cardinality": 6,
+        "duration": 127.66999999999997,
+        "intervals": [
+          {
+            "end": 80.84,
+            "start": 4.08
+          },
+          {
+            "end": 89.55,
+            "start": 88.17
+          },
+          {
+            "end": 101.73,
+            "start": 90.73
+          },
+          {
+            "end": 110.31,
+            "start": 102.29
+          },
+          {
+            "end": 139.13,
+            "start": 113.42
+          },
+          {
+            "end": 144.57,
+            "start": 139.77
+          }
+        ],
+        "schema": "1.0"
+      },
+      "items": 14,
+      "level": 3,
+      "notes": "populated from artifacts a pipeline run already held; no second decode or listen"
+    }
+  ],
+  "meta": {
+    "duration": 152.0,
+    "fingerprint": "545bdf1cc1e70c13dc533804949d7c1c25f882633a15972cf72d29cd026b26b9",
+    "fps": 0.0,
+    "height": 0,
+    "path": "corpus/media/ooi-vertical.webm",
+    "transcript_fingerprint": "222fbd208794261a7fc0cb52dff5dae7021cfc70fe7d1a31c7c8ea58ca719c3a",
+    "width": 0
+  },
+  "schema": "1.1"
+}

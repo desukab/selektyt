@@ -10,7 +10,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 5520288,
+      "size": 7578916,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/01.mp4": {
@@ -20,7 +20,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 4024672,
+      "size": 4598583,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/facebook/02.mp4": {
@@ -30,7 +30,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 6482221,
+      "size": 6492496,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/02.mp4": {
@@ -40,7 +40,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 3621243,
+      "size": 3625827,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/facebook/03.mp4": {
@@ -50,7 +50,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 5156857,
+      "size": 5523506,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/03.mp4": {
@@ -60,7 +60,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 3310012,
+      "size": 4028046,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/facebook/04.mp4": {
@@ -70,7 +70,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 6518100,
+      "size": 2209218,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/04.mp4": {
@@ -80,7 +80,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 3762640,
+      "size": 1595229,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/facebook/05.mp4": {
@@ -90,7 +90,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 3320396,
+      "size": 4722897,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/05.mp4": {
@@ -100,14 +100,34 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 1778867,
+      "size": 3051653,
+      "warnings": []
+    },
+    "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/facebook/program.mp4": {
+      "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 26275376,
+      "warnings": []
+    },
+    "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/program.mp4": {
+      "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (88200 sampled samples)",
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 16128791,
       "warnings": []
     }
   },
-  "diversity": 0.263,
+  "diversity": 0.305,
   "source_coverage": {
-    "coverage_pct": 12.2,
-    "total_covered_sec": 123.74,
+    "coverage_pct": 11.9,
+    "total_covered_sec": 120.7,
     "overlaps": [],
     "overlap_count": 0
   },
@@ -116,18 +136,18 @@
     "selected_count": 5,
     "rejected_count": 0,
     "context_guard_rejections": 0,
-    "truncated_by_limit": 7,
-    "avg_duration": 24.75,
+    "truncated_by_limit": 10,
+    "avg_duration": 24.14,
     "duration_distribution": {
       "<15s": 1,
-      "15-30s": 3,
-      "30-45s": 1,
+      "15-30s": 2,
+      "30-45s": 2,
       "45-55s": 0
     },
-    "silence_pct": 7.8,
+    "silence_pct": 9.4,
     "filler_pct": 0.0,
-    "avg_words_per_second": 3.08,
-    "avg_hook_latency": 1.79,
+    "avg_words_per_second": 3.32,
+    "avg_hook_latency": 1.88,
     "payoff_presence_rate": 1.0,
     "duplicate_overlap_rate": 0.0
   }

@@ -48,7 +48,7 @@ number below, and no aggregation over one sample is a trend.
 
 Section A4 is the exception and says so in its own header: its figures are
 measured across the whole committed corpus — 11 sources, of which 7 exported a
-timeline, 27 clips — because the corpus rather than one run carries the
+timeline, 30 timelines — because the corpus rather than one run carries the
 interchange artifacts. Where an A4 metric is measurable only on the one run it
 says so, and where the corpus media is absent from the checkout it reports the
 gap as a SKIP rather than a PASS.
@@ -507,7 +507,9 @@ These are the metrics that would have to be true for the editor beachhead to wor
 and they are the only ones measured by tools *outside* SelekyT's own parsers.
 
 Unlike A1–A3, **every figure in this section is corpus-wide**: 11 sources, of
-which 7 exported a timeline, 27 clips, 27 EDLs, 27 FCPXMLs. The command above
+which 7 exported a timeline, 30 timelines (27 per-clip, plus a program reel for
+each of the three media-holding runs the 2026-10-05 re-run regenerated), 30
+EDLs, 30 FCPXMLs. The command above
 audits one of those seven; the sweep over all of them is
 `tests/test_nle_frame_deltas.py`, which is also what pins the numbers below. Two
 limits of that corpus are stated where they bite and are not hidden behind a
@@ -540,22 +542,29 @@ invoked by hand or by `tools/corpus_run.py` rather than by the pipeline, the web
 shell or CI, so the 6/6 figure is real on demand and is still not enforced
 anywhere automated (`TECHNICAL_AUDIT.md` §"CI does not run the tools").
 
-### A4.2 Timeline-vs-render duration agreement — worst case 0.69 frames
+### A4.2 Timeline-vs-render duration agreement — worst case 0.70 frames
 
 **Definition:** |declared timeline duration − measured MP4 duration| in frames,
 per preset. This is the only metric that proves the exported timeline describes
 the video that was actually shipped.
 
-**Current value (VERIFIED on this machine):** 54 measurements (27 clips × 2
-presets, all 7 sources that exported a timeline), all PASS, worst case **0.69 frames**
-(pentagon-esper-briefing clip 04: timeline 28.762 s vs render 28.785 s at
-30 fps). 32 of the 54 pairs agree to **0.00 frames**; the 22 that do not fall
-into three narrow bands — 0.53, 0.63 and 0.69 frames. The tolerance is 2 frames,
+**Current value (VERIFIED on this machine):** 60 measurements (30 timelines × 2
+presets, all 7 sources that exported a timeline), all PASS, worst case **0.70 frames**
+(pentagon-esper-briefing clip 01: timeline 31.832 s vs render 31.855 s at
+30 fps). 32 of the 60 pairs agree to **0.00 frames**; the 28 that do not fall
+into six narrow bands — 0.53, 0.63, 0.64, 0.65, 0.69 and 0.70 frames. The
+tolerance is 2 frames,
 set by measuring the committed corpus rather than by taste, which makes it ~2.9×
 the largest gap measured.
 
-> **Provenance.** The EDLs and FCPXMLs are committed (27 of each), but **the
-> rendered MP4s are not** — all 54 are gitignored, so this metric recomputes
+The bands widened from three to six on 2026-10-05, when the three media-holding
+sources were re-run and their per-clip durations moved by fractions of a second.
+The spread did not widen: the largest gap moved 0.69 → 0.70 frames, and every
+pair is still the same ~21 ms container-overhead shortfall against a different
+whole-frame count.
+
+> **Provenance.** The EDLs and FCPXMLs are committed (30 of each), but **the
+> rendered MP4s are not** — all 60 are gitignored, so this metric recomputes
 > only where the renders are present. `tests/test_nle_frame_deltas.py` pins it
 > when they are and skips with a stated reason when they are not; it does not
 > silently pass. Read "VERIFIED" above as *verified here*, not as a claim a
@@ -563,11 +572,12 @@ the largest gap measured.
 > from committed artifacts alone.
 
 Per-clip timeline vs render, the sources that render: 0.00 f throughout on
-nasa360-ep5 (all six clips) and telugu-tutorial; 0.63 f on ooi-vertical clip 01;
-0.69 f on pentagon-esper-briefing clips 02/04/05 and emwcon-panel-2018 clip 05;
+nasa360-ep5 (all six clips) and telugu-tutorial; 0.63/0.64/0.65 f on
+ooi-vertical clips 01/02/03; 0.69/0.70 f on pentagon-esper-briefing clips
+02/04/05 and clip 01, and emwcon-panel-2018 clip 05;
 0.53 f on royal-society-cloke (all four clips, 25 fps).
 
-**Residual imprecision, stated rather than tuned away:** the 22 non-exact pairs
+**Residual imprecision, stated rather than tuned away:** the 28 non-exact pairs
 are each ~21 ms short regardless of frame rate, which is container overhead
 rather than a cut disagreement — the timeline declares a whole frame count and
 the MP4 carries the muxer's own duration. A shortfall of 0–1 frame is therefore
@@ -588,13 +598,13 @@ systematic (`docs/NLE_COMPATIBILITY.md`).
 > cannot go stale again.
 <!-- stale-end -->
 
-### A4.3 EDL-vs-FCPXML agreement — 0.00 frames on all 27
+### A4.3 EDL-vs-FCPXML agreement — 0.00 frames on all 30
 
 **Definition:** |EDL total record span − FCPXML spine total|. The two formats are
 emitted by separate code paths; their agreement is evidence both describe the same
 cut.
 
-**Current value: 0.00 frames on all 27 clips.** VERIFIED, and recomputed by
+**Current value: 0.00 frames on all 30 timelines.** VERIFIED, and recomputed by
 `tests/test_nle_frame_deltas.py`. The render is a third
 independent path (an ffmpeg filter chain), and its agreement with both is A4.2.
 
@@ -603,7 +613,7 @@ independent path (an ffmpeg filter chain), and its agreement with both is A4.2.
 **Definition:** |EDL source in/out − the selection the cut was made from|. If this
 drifts, the timeline points at the wrong part of the source media.
 
-**Current value (VERIFIED):** all 54 PASS — 27 clips read in both formats —
+**Current value (VERIFIED):** all 60 PASS — 30 timelines read in both formats —
 worst case **1.00 frames** (royal-society-cloke clip 03, a two-interval cut,
 25 fps). That is inside the 1.5-frame tolerance, which is set to that measured
 worst case rather than chosen. nasa360-ep5 alone is tighter, 0.72 frames at clip

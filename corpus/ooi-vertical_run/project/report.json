@@ -1,24 +1,199 @@
 {
   "source": "corpus/media/ooi-vertical.webm",
-  "title": null,
+  "title": "ooi-vertical",
   "language": "en",
-  "candidate_count": 168,
+  "candidate_count": 144,
   "selected_count": 3,
+  "program_count": 3,
   "rejected_by_context_guard": 0,
-  "truncated_by_limit": 1,
+  "truncated_by_limit": 2,
+  "bench": [
+    {
+      "start": 90.73,
+      "end": 101.73,
+      "text": "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
+      "story_type": "insight",
+      "hook": "An additional cable array wires a region of the northeast ",
+      "payoff": "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
+      "editorial_score": 0.5996686147186147,
+      "virality_score": 0.14485714285714285,
+      "context_score": 0.767154761904762,
+      "confidence": 0.8869860947132111,
+      "reason": "insight candidate that makes sense without the surrounding context, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.42; payoff=0.55; density=0.97; fillers=0; standalone=1.00; repetition=0.07; coherence=1.00; completeness=1.00; audio_pace=0.97; silence=0.035; dead_air=0.00.",
+      "visual_potential": 0.35,
+      "coherence_score": 1.0,
+      "completeness": 1.0,
+      "opening_score": 1.0,
+      "total_score": 0.5936
+    },
+    {
+      "start": 67.28,
+      "end": 80.84,
+      "text": "OOI consists of five arrays that continuously collect ocean data with instrumented moorings, linked to shore via satellite. Two global arrays address planetary scale changes in the Irminger Sea and Gulf of Alaska.",
+      "story_type": "story",
+      "hook": "OOI consists of five arrays that continuously collect ocean data with instrumented moorings, linked to shore via satellite.",
+      "payoff": "Two global arrays address planetary scale changes in the Irminger Sea and Gulf of Alaska.",
+      "editorial_score": 0.4318409241466499,
+      "virality_score": 0.14914285714285716,
+      "context_score": 0.8295952380952382,
+      "confidence": 0.9616146186987559,
+      "reason": "story candidate that makes sense without the surrounding context, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.53; payoff=0.81; density=0.87; fillers=0; standalone=1.00; repetition=0.00; coherence=0.50; completeness=1.00; audio_pace=0.89; silence=0.122; dead_air=0.08.",
+      "visual_potential": 0.35,
+      "coherence_score": 0.5,
+      "completeness": 1.0,
+      "opening_score": 1.0,
+      "total_score": 0.4441
+    }
+  ],
   "rejection_reasons": {},
   "outputs": {
-    "facebook": "corpus/ooi-vertical_run/project/facebook",
-    "shorts": "corpus/ooi-vertical_run/project/shorts"
+    "facebook": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/facebook",
+    "shorts": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/shorts"
   },
-  "captions": "corpus/ooi-vertical_run/project/captions",
-  "timeline": "corpus/ooi-vertical_run/project/timeline",
-  "content_pack": "corpus/ooi-vertical_run/project/content_pack.json",
-  "editorial_report": "corpus/ooi-vertical_run/project/editorial_report.json",
-  "pacing_report": "corpus/ooi-vertical_run/project/pacing_report.json",
-  "qa": "corpus/ooi-vertical_run/project/qa.json",
+  "program": {
+    "facebook": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/facebook/program.mp4",
+    "shorts": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/shorts/program.mp4"
+  },
+  "captions": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/captions",
+  "timeline": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/timeline",
+  "content_pack": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/content_pack.json",
+  "editorial_report": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/editorial_report.json",
+  "editorial_corpus": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/editorial_corpus.json",
+  "pacing_report": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/pacing_report.json",
+  "qa": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/qa.json",
   "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
+  "transcription": {
+    "provider": "local",
+    "engine": "faster-whisper",
+    "requested_model": "small",
+    "model": "small",
+    "downgrade_reason": null,
+    "word_timestamps": "per-token",
+    "fallback_reason": null
+  },
+  "container_recovery": null,
+  "coverage": {
+    "duration_s": 152.0,
+    "vad_speech_s": 107.2,
+    "vad_speech_frac": 0.7053,
+    "asr_speech_s": 129.64,
+    "asr_speech_frac": 0.8529,
+    "verdict": "ok",
+    "detail": "transcript covers 85.3% against 70.5% speech heard by the silero VAD (ratio 1.209)",
+    "coverage_ratio": 1.2093,
+    "vad_backend": "silero"
+  },
+  "language_fitness": {
+    "verdict": "usable",
+    "language": "en",
+    "model": "small",
+    "wer": 0.0338,
+    "cer": 0.0135,
+    "clip_count": 50,
+    "record": "c9-small.json",
+    "alternatives": [
+      {
+        "model": "medium",
+        "wer": 0.0299,
+        "cer": 0.0127,
+        "clip_count": 50,
+        "record": "c9-medium.json"
+      },
+      {
+        "model": "large-v3",
+        "wer": 0.0338,
+        "cer": 0.0171,
+        "clip_count": 50,
+        "record": "c9-large-v3.json"
+      },
+      {
+        "model": "small",
+        "wer": 0.0338,
+        "cer": 0.0135,
+        "clip_count": 50,
+        "record": "c9-small.json"
+      }
+    ],
+    "excluded": [
+      "c9-small-beam5.json",
+      "nasa-c4-small.json"
+    ],
+    "superseded": [
+      "redteam-small-verify.json",
+      "verify-current-small.json"
+    ]
+  },
+  "memory": {
+    "path": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/memory.json",
+    "summary": {
+      "items": 129,
+      "errors": [],
+      "findings": []
+    }
+  },
+  "retrieval": {
+    "path": "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/retrieval-index.json",
+    "summary": {
+      "schema": "1.0",
+      "terms": 189,
+      "words": 283,
+      "segments": 26,
+      "ngram_fallback": false,
+      "channels": {
+        "vad": {
+          "loaded": true,
+          "count": 57,
+          "note": ""
+        },
+        "editorial_corpus": {
+          "loaded": true,
+          "count": 7,
+          "note": ""
+        }
+      }
+    }
+  },
   "audio": {
     "enabled": false
+  },
+  "provenance": {
+    "source_path": "corpus/media/ooi-vertical.webm",
+    "source_fingerprint": "222fbd208794261a7fc0cb52dff5dae7021cfc70fe7d1a31c7c8ea58ca719c3a",
+    "audio_fingerprint": "",
+    "whisper_model": "",
+    "whisper_language": "",
+    "whisper_version": "",
+    "vad_backend": "",
+    "vad_version": "",
+    "software_version": "0.3.0",
+    "git_sha": "f0af4e2",
+    "started_at": "2026-10-04T23:31:27+0000",
+    "finished_at": "2026-10-04T23:51:08+0000",
+    "duration_seconds": 1181.232,
+    "cache_status": "transcript-fresh",
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.3"
+  },
+  "config": {
+    "model": "small",
+    "language": "en",
+    "limit": 3,
+    "chunk_minutes": 5,
+    "beam_size": 1,
+    "cpu_threads": null,
+    "audio_analysis": false,
+    "vad_backend": null,
+    "silence_threshold": 0.5,
+    "silence_padding": 0.0,
+    "min_speech_ms": 150,
+    "min_silence_ms": 100,
+    "keep_pauses": true,
+    "remove_filler": true,
+    "export_fcpxml": false,
+    "transcription_provider": "local",
+    "skip_coverage_check": false,
+    "caption_style": "minimal",
+    "ollama_url": null,
+    "cookies": null
   }
 }

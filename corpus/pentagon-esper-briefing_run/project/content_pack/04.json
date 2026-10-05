@@ -1,17 +1,19 @@
 {
   "titles": [
-    "Has the deployment of reinforcements that you announced last week begun?",
-    "E other day, it includes mechanized forces and other types of forces that will continue until we believe we have sufficient capability to ensure ISIS and other destabilizing actors are denied access to that oil facility.",
-    "Has the deployment of reinforcements that you announced last week begun? And could you des"
+    "Don't know what the source of that was there.",
+    "I have not talked to unit members.",
+    "Don't know what the source of that was there"
   ],
-  "instagram_caption": "Has the deployment of reinforcements that you announced last week begun? And could you describe more fully what you intend to do there? We have begun deploying and repositioning additional assets into the vicinity of Dar-Arzara. As I said the other day, it includes mechanized forces and other types of forces that will continue until we believe we have sufficient capability to ensure ISIS and other destabilizing actors are denied access to that oil facility.",
+  "instagram_caption": "Don't know what the source of that was there. But I assume it was talking directly to unit and unit members. So you don't have to talk to any unit members who have described that to you? I have not talked to unit members.",
   "hashtags": [
-    "#question",
+    "#conflict",
     "#reels",
     "#shorts"
   ],
-  "story_type": "question",
+  "story_type": "conflict",
   "source_based": true,
   "policy": "Generated from selected source speech; no fabricated claims.",
-  "clip_index": 4
+  "clip_index": 4,
+  "source_start": 831.39,
+  "source_end": 841.31
 }

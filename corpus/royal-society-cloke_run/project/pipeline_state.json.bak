@@ -1,41 +1,53 @@
 {
   "source": "corpus/media/royal-society-cloke.webm",
   "media_info": {},
-  "fingerprint": "85f408e904aa5a63e6d919acc3ac22ba8a11a2c2cd8bcf8a19afda537415397a",
+  "fingerprint": "8c5125c57517dd08212919daa576a4905e106f0497779fbe06b8783cb95f0ddb",
   "model": "small",
   "language": "en",
   "renders": {
     "01": {
-      "fingerprint": "85f408e904aa5a63e6d919acc3ac22ba8a11a2c2cd8bcf8a19afda537415397a",
-      "selection_digest": "7546f77ec96a48a2250946ad54f833ba48dce094bd2e0da0e3798d1dce4445f2",
+      "fingerprint": "8c5125c57517dd08212919daa576a4905e106f0497779fbe06b8783cb95f0ddb",
+      "selection_digest": "857170d20756280af18f93a31ce75482d7c4b765cb86ddffa9e2df004cfc2251",
+      "program_digest": "df4b2cb7a12070f401e6bd9a88248feaf108ee778d402fa8e8505a2e0d42f67b",
       "caption_style": "minimal",
-      "ass_digest": "45c44b90720a74192464af87b0be55bb6156d1e207d3096f5927840744632229",
+      "ass_digest": "c3a41803a106dfe818ea2f214a740ce0359d61657b5adb5ed446d7ceb6e179a3",
       "facebook": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/facebook/01.mp4",
       "shorts": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts/01.mp4"
     },
     "02": {
-      "fingerprint": "85f408e904aa5a63e6d919acc3ac22ba8a11a2c2cd8bcf8a19afda537415397a",
-      "selection_digest": "7546f77ec96a48a2250946ad54f833ba48dce094bd2e0da0e3798d1dce4445f2",
+      "fingerprint": "8c5125c57517dd08212919daa576a4905e106f0497779fbe06b8783cb95f0ddb",
+      "selection_digest": "857170d20756280af18f93a31ce75482d7c4b765cb86ddffa9e2df004cfc2251",
+      "program_digest": "df4b2cb7a12070f401e6bd9a88248feaf108ee778d402fa8e8505a2e0d42f67b",
       "caption_style": "minimal",
-      "ass_digest": "b2e145998f24fc53ad3370217ba9daf0dfd724ce61dc761e07f8115c547ecf8b",
+      "ass_digest": "f8725b4c6d4aa247875f0d5b33f2fc24ecb71875c94220d1235fc7e46d89caf0",
       "facebook": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/facebook/02.mp4",
       "shorts": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts/02.mp4"
     },
     "03": {
-      "fingerprint": "85f408e904aa5a63e6d919acc3ac22ba8a11a2c2cd8bcf8a19afda537415397a",
-      "selection_digest": "7546f77ec96a48a2250946ad54f833ba48dce094bd2e0da0e3798d1dce4445f2",
+      "fingerprint": "8c5125c57517dd08212919daa576a4905e106f0497779fbe06b8783cb95f0ddb",
+      "selection_digest": "857170d20756280af18f93a31ce75482d7c4b765cb86ddffa9e2df004cfc2251",
+      "program_digest": "df4b2cb7a12070f401e6bd9a88248feaf108ee778d402fa8e8505a2e0d42f67b",
       "caption_style": "minimal",
-      "ass_digest": "1a829b09b18d41331de92e33699462d842eaa7dc94a76db2aee130ea886288d9",
+      "ass_digest": "f3d4f7c46c8bcb279157ff2143075f52d711d90dd32a1040f3484a75b1710781",
       "facebook": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/facebook/03.mp4",
       "shorts": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts/03.mp4"
     },
     "04": {
-      "fingerprint": "85f408e904aa5a63e6d919acc3ac22ba8a11a2c2cd8bcf8a19afda537415397a",
-      "selection_digest": "7546f77ec96a48a2250946ad54f833ba48dce094bd2e0da0e3798d1dce4445f2",
+      "fingerprint": "8c5125c57517dd08212919daa576a4905e106f0497779fbe06b8783cb95f0ddb",
+      "selection_digest": "857170d20756280af18f93a31ce75482d7c4b765cb86ddffa9e2df004cfc2251",
+      "program_digest": "df4b2cb7a12070f401e6bd9a88248feaf108ee778d402fa8e8505a2e0d42f67b",
       "caption_style": "minimal",
-      "ass_digest": "a1a212ce6cec9cb7bf6f1fc0b7ab32ef486ba66c31cade84891f915d9721f5b4",
+      "ass_digest": "98b764907b898c006fb31af3d4cbfb29f7fcfc13bafcd05dee43a611f8fb1dd4",
       "facebook": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/facebook/04.mp4",
       "shorts": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts/04.mp4"
+    },
+    "program": {
+      "fingerprint": "8c5125c57517dd08212919daa576a4905e106f0497779fbe06b8783cb95f0ddb",
+      "program_digest": "df4b2cb7a12070f401e6bd9a88248feaf108ee778d402fa8e8505a2e0d42f67b",
+      "caption_style": "minimal",
+      "parts_digest": "cabf105a2d8639e0ddd113dff6d36c80726df6bdb642ac44ae59388a732346b9",
+      "facebook": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/facebook/program.mp4",
+      "shorts": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts/program.mp4"
     }
   }
 }

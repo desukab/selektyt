@@ -1,53 +1,67 @@
 {
   "source": "corpus/media/pentagon-esper-briefing.mp4",
   "media_info": {},
-  "fingerprint": "6a9ee1f01fcb4713febf3ac5d94158e2e5c24cfa587eb628fe0c0de056652d61",
+  "fingerprint": "a54f41cc35f2a1bb0acd58ba5ab51a3c47cd8254a2f9f880c56abe8f52fa961e",
   "model": "small",
   "language": "en",
   "renders": {
     "01": {
-      "fingerprint": "6a9ee1f01fcb4713febf3ac5d94158e2e5c24cfa587eb628fe0c0de056652d61",
-      "selection_digest": "34671d8b3074c783e8e272a69c24d2296c4a900e286b46d3e18f748c8636df7f",
+      "fingerprint": "a54f41cc35f2a1bb0acd58ba5ab51a3c47cd8254a2f9f880c56abe8f52fa961e",
+      "selection_digest": "6f4ec675d8a7994bf5b137325da1dcffdad4521554f09e53e4407c24cf8c2e3b",
+      "program_digest": "d9cd9be9620440e7e12952ac4a9a7ccb7e8d2b0a8ed588dec6b13744291fc4ee",
       "caption_style": "minimal",
-      "ass_digest": "240239ade08391a065386cfff6d231fa5791772ea06992f7a6dbfcb19ba75d74",
+      "ass_digest": "ec065ce8fb272f599c76307cce93ddaa3087b7af310500db22a5d2bdcdd81352",
       "facebook": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/facebook/01.mp4",
       "shorts": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/01.mp4"
     },
     "02": {
-      "fingerprint": "6a9ee1f01fcb4713febf3ac5d94158e2e5c24cfa587eb628fe0c0de056652d61",
-      "selection_digest": "34671d8b3074c783e8e272a69c24d2296c4a900e286b46d3e18f748c8636df7f",
+      "fingerprint": "a54f41cc35f2a1bb0acd58ba5ab51a3c47cd8254a2f9f880c56abe8f52fa961e",
+      "selection_digest": "6f4ec675d8a7994bf5b137325da1dcffdad4521554f09e53e4407c24cf8c2e3b",
+      "program_digest": "d9cd9be9620440e7e12952ac4a9a7ccb7e8d2b0a8ed588dec6b13744291fc4ee",
       "caption_style": "minimal",
-      "ass_digest": "68c2586e0011389ec72a2defb7f950a67759e3a8caf62e010257ba605401eff3",
+      "ass_digest": "eaf406725d1bfe1bd20b2529d24e09d8a19e4a3c29ec1cc4d28cfc8c738a1023",
       "facebook": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/facebook/02.mp4",
       "shorts": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/02.mp4"
     },
     "03": {
-      "fingerprint": "6a9ee1f01fcb4713febf3ac5d94158e2e5c24cfa587eb628fe0c0de056652d61",
-      "selection_digest": "34671d8b3074c783e8e272a69c24d2296c4a900e286b46d3e18f748c8636df7f",
+      "fingerprint": "a54f41cc35f2a1bb0acd58ba5ab51a3c47cd8254a2f9f880c56abe8f52fa961e",
+      "selection_digest": "6f4ec675d8a7994bf5b137325da1dcffdad4521554f09e53e4407c24cf8c2e3b",
+      "program_digest": "d9cd9be9620440e7e12952ac4a9a7ccb7e8d2b0a8ed588dec6b13744291fc4ee",
       "caption_style": "minimal",
-      "ass_digest": "fb3999fe8e256f2add75d82eb25b2e1d3f44d6a94e186439ad53527fc8739750",
+      "ass_digest": "7324fc9050f6c522a27b20a2ea6b943a12cd98356e47c80d8aa6b8479dfe5a6c",
       "facebook": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/facebook/03.mp4",
       "shorts": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/03.mp4"
     },
     "04": {
-      "fingerprint": "6a9ee1f01fcb4713febf3ac5d94158e2e5c24cfa587eb628fe0c0de056652d61",
-      "selection_digest": "34671d8b3074c783e8e272a69c24d2296c4a900e286b46d3e18f748c8636df7f",
+      "fingerprint": "a54f41cc35f2a1bb0acd58ba5ab51a3c47cd8254a2f9f880c56abe8f52fa961e",
+      "selection_digest": "6f4ec675d8a7994bf5b137325da1dcffdad4521554f09e53e4407c24cf8c2e3b",
+      "program_digest": "d9cd9be9620440e7e12952ac4a9a7ccb7e8d2b0a8ed588dec6b13744291fc4ee",
       "caption_style": "minimal",
-      "ass_digest": "ff0703e44fc41f9bb175d091509c1790d50b24b7e86a1b884fb8f04a31f5ce68",
+      "ass_digest": "d3d6455bc684754dc319deffcbcec9f425eba2ab83e30f90899b042516bdb391",
       "facebook": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/facebook/04.mp4",
       "shorts": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/04.mp4"
     },
     "05": {
-      "fingerprint": "6a9ee1f01fcb4713febf3ac5d94158e2e5c24cfa587eb628fe0c0de056652d61",
-      "selection_digest": "34671d8b3074c783e8e272a69c24d2296c4a900e286b46d3e18f748c8636df7f",
+      "fingerprint": "a54f41cc35f2a1bb0acd58ba5ab51a3c47cd8254a2f9f880c56abe8f52fa961e",
+      "selection_digest": "6f4ec675d8a7994bf5b137325da1dcffdad4521554f09e53e4407c24cf8c2e3b",
+      "program_digest": "d9cd9be9620440e7e12952ac4a9a7ccb7e8d2b0a8ed588dec6b13744291fc4ee",
       "caption_style": "minimal",
-      "ass_digest": "da052e66fa1f543a164968a7ce85a79ba4c6ed4151a5f68eafef526a959a6aa4",
+      "ass_digest": "8efbc42a9f4a7d857d4db543ccf87de825c61492c3be9da6f7cae28122b52a8f",
       "facebook": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/facebook/05.mp4",
       "shorts": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/05.mp4"
+    },
+    "program": {
+      "fingerprint": "a54f41cc35f2a1bb0acd58ba5ab51a3c47cd8254a2f9f880c56abe8f52fa961e",
+      "program_digest": "d9cd9be9620440e7e12952ac4a9a7ccb7e8d2b0a8ed588dec6b13744291fc4ee",
+      "caption_style": "minimal",
+      "parts_digest": "1edf8b5d870f9a83aab78ee426af0ef69831c4e5111e49272fbeca20b4516e53",
+      "facebook": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/facebook/program.mp4",
+      "shorts": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/shorts/program.mp4"
     }
   },
-  "render_fingerprint": "6a9ee1f01fcb4713febf3ac5d94158e2e5c24cfa587eb628fe0c0de056652d61",
-  "render_selection_digest": "34671d8b3074c783e8e272a69c24d2296c4a900e286b46d3e18f748c8636df7f",
+  "render_fingerprint": "a54f41cc35f2a1bb0acd58ba5ab51a3c47cd8254a2f9f880c56abe8f52fa961e",
+  "render_selection_digest": "6f4ec675d8a7994bf5b137325da1dcffdad4521554f09e53e4407c24cf8c2e3b",
   "selected_count": 5,
+  "program_count": 5,
   "qa": "/home/azureuser/selektyt/corpus/pentagon-esper-briefing_run/project/qa.json"
 }

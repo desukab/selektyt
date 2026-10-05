@@ -974,6 +974,109 @@ def test_render_leaves_video_only_sources_alone(tmp_path, monkeypatch):
     )
 
 
+def test_render_restores_audio_that_starts_after_the_picture(monkeypatch, tmp_path):
+    """A part whose audio the fast path ruined is re-rendered, on real media.
+
+    Input seeking (``-ss`` before ``-i``) is the fast path, and on the OOI
+    AV1/Opus source it does not ruin the audio in one fixed way. Which of the
+    two shapes appears depends on the seek position and the requested duration:
+    a 5 s part at 12.220 s keeps the stream but starts it at 2.946 s, while the
+    72-frame part this clip actually asks for drops the stream outright. Both
+    are what ``_audio_is_unusable`` exists to tell apart from a good render, so
+    this test asserts that verdict rather than guessing which shape the demuxer
+    will pick — the offset form specifically is pinned by
+    ``test_audio_is_unusable_distinguishes_offset_from_aligned``.
+
+    The demuxer behaviour is the point, so this runs against the real source
+    that reproduces it; the synthetic files this host can build all normalise
+    the audio start to zero and cannot stand in for it.
+    """
+    import shutil
+    import subprocess
+
+    from engine import render as render_mod
+    from engine.render import _audio_is_unusable, _audio_start
+
+    source = ROOT / "corpus" / "media" / "ooi-vertical.webm"
+    if not source.is_file():
+        pytest.skip("needs corpus/media/ooi-vertical.webm (gitignored media)")
+
+    c = _candidate_with_words(12.22, 17.0)
+    out = tmp_path / "fb" / "01.mp4"
+
+    real = subprocess.run
+    calls: list[list[str]] = []
+    # The fallback overwrites the same part path, so the fast path's output has
+    # to be copied aside while it still exists; probing after the render
+    # finishes reads the fallback's file and proves nothing about the fast path.
+    fast_path_parts: list[Path] = []
+
+    def fake_run(cmd, **kw):
+        calls.append(list(cmd))
+        if "-i" in cmd and cmd.index("-ss") < cmd.index("-i"):
+            r = real(cmd, **kw)
+            done = Path(cmd[-1])
+            if done.is_file():
+                snapshot = done.with_name(done.stem + "_fast.mp4")
+                shutil.copyfile(done, snapshot)
+                fast_path_parts.append(snapshot)
+            return r
+        return real(cmd, **kw)
+
+    monkeypatch.setattr(render_mod.subprocess, "run", fake_run)
+    render_clip(source, c, out, fps=15)
+
+    def _is_input_seek(cmd: list[str]) -> bool:
+        return "-i" in cmd and cmd.index("-ss") < cmd.index("-i")
+
+    output_seek = [x for x in calls if "-i" in x and not _is_input_seek(x)]
+    assert output_seek, "the offset-audio fallback did not fire"
+
+    # The fast path genuinely produced the defect on real media, not a
+    # simulation of it — whatever shape the demuxer chose for this position.
+    assert fast_path_parts, "the fast path wrote no part to inspect"
+    for part in fast_path_parts:
+        assert _audio_is_unusable(part), (
+            f"the fast path's part was usable (start={_audio_start(part)!r}), "
+            f"so the fallback had nothing real to fix")
+
+    assert not _audio_is_unusable(out), (
+        f"shipped part still has unusable audio (start={_audio_start(out)})")
+
+
+def test_audio_is_unusable_distinguishes_offset_from_aligned(tmp_path):
+    """The detector sees the difference a stream-existence check cannot.
+
+    The offset case is the real OOI part; the aligned case is the same clip
+    rendered with the fallback's output seeking. Both have an audio stream —
+    that is what made the defect invisible to ``_has_audio``.
+    """
+    import subprocess
+
+    from engine.render import _audio_is_unusable, _audio_start, _has_audio
+
+    source = ROOT / "corpus" / "media" / "ooi-vertical.webm"
+    if not source.is_file():
+        pytest.skip("needs corpus/media/ooi-vertical.webm (gitignored media)")
+
+    aligned = tmp_path / "aligned.mp4"
+    offset = tmp_path / "offset.mp4"
+    common = ["-loglevel", "error", "-frames:v", "150", "-t", "5",
+              "-vf", "scale=400:222", "-c:v", "libx264", "-preset", "veryfast",
+              "-c:a", "aac", "-b:a", "160k"]
+    subprocess.run(["ffmpeg", "-y", "-i", str(source), "-ss", "12.22", *common,
+                    str(aligned)], check=True)
+    subprocess.run(["ffmpeg", "-y", "-ss", "12.22", "-i", str(source), *common,
+                    str(offset)], check=True)
+
+    assert _has_audio(aligned) and _has_audio(offset), (
+        "both shapes carry a stream, which is why the old check missed it")
+    assert _audio_start(aligned) is not None and _audio_start(aligned) < 0.25
+    assert _audio_start(offset) is not None and _audio_start(offset) > 1.0
+    assert not _audio_is_unusable(aligned)
+    assert _audio_is_unusable(offset)
+
+
 def _probe_frames(path: Path) -> int:
     import subprocess
 

@@ -254,7 +254,19 @@ def test_the_gate_reports_the_guards_own_verdict():
     # not compose a sentence of its own
     assert gate["verdict"] == (
         "refused — starts mid-conversation (which) — depends on prior context")
-    assert all(m["gate"]["ok"] is True for m in v["moments"][1:])
+    # Moment 4 is the other refusal, and a different kind: once sentence bounds
+    # are read off the word stream it is its own 4.4 s unit,
+    # ``"The vendor paid the replacement cost."``, rather than the tail of the
+    # longer unit its ``"So the battery was replaced."`` setup used to be
+    # estimated into. A clip that short cannot establish substance, and the
+    # gate's standalone-context branch says so. That is the gate judging the
+    # clip on its own merits — the alternative, the old proportional estimate,
+    # had it inherit a passing score from a span it did not occupy.
+    assert v["moments"][4]["gate"]["ok"] is False
+    assert v["moments"][4]["gate"]["verdict"] == (
+        "refused — insufficient standalone context")
+    assert all(m["gate"]["ok"] is True
+               for m in v["moments"][1:4])
 
 
 def test_the_gate_of_a_passing_moment_says_so():
@@ -364,8 +376,12 @@ def test_a_story_block_carries_its_shape_not_a_timeline():
     assert s["roles"] == {0: "tension", 2: "tension", 3: "resolution"}
     assert s["moments_in_source_order"] == [0, 2, 3]
     # the span is the story's extent in the source; the view says at the top
-    # level that these are source timestamps rather than SMPTE frames
-    assert s["timecode"] == "00:00–00:51"
+    # level that these are source timestamps rather than SMPTE frames. The end
+    # is the last word of the story's final sentence — ``"replaced."`` at
+    # 51.636 s — now that sentence bounds are read off the word stream. It used
+    # to read 51 s, which was the character-proportional estimate of the same
+    # split: the estimate put the boundary 0.24 s inside the word after it.
+    assert s["timecode"] == "00:00–00:52"
     assert "not SMPTE" in v["timing_note"]
 
 

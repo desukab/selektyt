@@ -242,7 +242,7 @@ def test_the_asset_src_is_an_absolute_uri_to_that_source(source: Path) -> None:
 # it summarises cannot shrink to nothing without a test noticing.
 DOC = ROOT / "docs" / "NLE_COMPATIBILITY.md"
 ROW = ("| FCPXML asset duration and frame rate == the real container, read by "
-       "`ffprobe` | **PASS** — 9 timelines over 2 sources; worst disagreement "
+       "`ffprobe` | **PASS** — 11 timelines over 2 sources; worst disagreement "
        "0.425 frame (`royal-society-cloke`, the other source reads 0.168), "
        "within the 0.95-frame tolerance |")
 
@@ -255,9 +255,13 @@ def test_the_doc_row_matches_the_sweep_that_produced_it() -> None:
         "row must be re-run. If SOURCES or a run's timeline count changed, update "
         "the row and this constant together."
     )
+    # 11 = the two media-holding runs' per-clip timelines plus the program reel
+    # each now ships, which the 2026-10-05 re-run added (royal-society 4 + 1,
+    # pentagon 5 + 1). The program spine describes the same container, so the
+    # measurement covers it on the same terms.
     covered = sum(len(_timelines_for(MEDIA / s)) for s in SOURCES)
-    assert covered == 9, (
-        f"the doc row says 9 timelines over 2 sources, but this sweep now covers "
+    assert covered == 11, (
+        f"the doc row says 11 timelines over 2 sources, but this sweep now covers "
         f"{covered}; the row and the constant above disagree"
     )
     assert DURATION_TOLERANCE_S < 1.0 / 25.0, (

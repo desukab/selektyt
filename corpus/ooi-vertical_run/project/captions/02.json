@@ -12,58 +12,65 @@
     },
     {
       "start": 43.64,
-      "end": 45.38,
-      "text": "makes it possible to investigate",
+      "end": 44.88,
+      "text": "makes it possible to",
+      "emphasis": [
+        " possible"
+      ]
+    },
+    {
+      "start": 44.88,
+      "end": 46.36,
+      "text": "investigate short-lived events",
       "emphasis": [
         " investigate"
       ]
     },
     {
-      "start": 45.38,
-      "end": 47.28,
-      "text": "short -lived events as well as",
-      "emphasis": [
-        "-lived",
-        " events"
-      ]
-    },
-    {
-      "start": 47.28,
+      "start": 46.36,
       "end": 48.2,
-      "text": "multi -year trends.",
+      "text": "as well as multi-year trends.",
       "emphasis": [
+        " multi",
         " trends."
       ]
     },
     {
       "start": 49.62,
-      "end": 51.38,
-      "text": "That provides researchers around",
+      "end": 50.86,
+      "text": "That provides researchers",
       "emphasis": [
         " researchers"
       ]
     },
     {
-      "start": 51.38,
-      "end": 53.08,
-      "text": "the globe with critical insights",
+      "start": 50.86,
+      "end": 52.6,
+      "text": "around the globe with critical",
+      "emphasis": [
+        " critical"
+      ]
+    },
+    {
+      "start": 52.6,
+      "end": 54.12,
+      "text": "insights into climate change",
       "emphasis": [
         " insights"
       ]
     },
     {
-      "start": 53.08,
-      "end": 55.32,
-      "text": "into climate change and its effect",
+      "start": 54.42,
+      "end": 55.88,
+      "text": "and its effect on marine",
       "emphasis": [
-        " climate",
-        " effect"
+        " marine"
       ]
     },
     {
-      "start": 55.32,
+      "start": 55.88,
       "end": 56.58,
-      "text": "on marine ecosystems.",
+      "text": "ecosystems.",
       "emphasis": [
         " ecosystems."
       ]

@@ -48,13 +48,20 @@ DOCS = ROOT / "docs"
 # The inventory is spelled out rather than globbed blind: a sweep that finds no
 # files passes vacuously, and a corpus restructure would then silently delete
 # every assertion in this file. Add a project here when a new run is committed.
+#
+# The three media-holding runs (ooi, pentagon, royal-society) are one pair above
+# their neighbours: the re-run on 2026-10-05 emitted a ``program.edl`` /
+# ``program.fcpxml`` pair the 2026-09-19 artifacts did not have, because the
+# program reel landed after they were first run. The extra pair is the reel, and
+# it is held to the same per-clip assertions as the per-clip pairs — measured on
+# it directly, worst offset deviation 0.000 frames on all three.
 EXPECTED_TIMELINE_PAIRS = {
     "emwcon-panel-2018_run": 5,
     "hadhazy-protest_run": 3,
     "nasa360-ep5_run": 6,
-    "ooi-vertical_run": 3,
-    "pentagon-esper-briefing_run": 5,
-    "royal-society-cloke_run": 4,
+    "ooi-vertical_run": 4,
+    "pentagon-esper-briefing_run": 6,
+    "royal-society-cloke_run": 5,
     "telugu-tutorial_run": 1,
 }
 

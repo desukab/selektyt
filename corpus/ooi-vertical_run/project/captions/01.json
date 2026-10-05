@@ -2,92 +2,102 @@
   "style": "minimal",
   "blocks": [
     {
-      "start": 113.42,
-      "end": 115.36,
-      "text": "Gliders fill in gaps between the",
+      "start": 12.22,
+      "end": 13.56,
+      "text": "Scientists need to know where",
       "emphasis": [
-        " Gliders",
-        " between"
+        " Scientists"
       ]
     },
     {
-      "start": 115.36,
-      "end": 117.04,
-      "text": "arrays, traveling",
+      "start": 13.56,
+      "end": 15.44,
+      "text": "these changes are occurring and",
       "emphasis": [
-        " traveling"
+        " occurring"
       ]
     },
     {
-      "start": 117.04,
-      "end": 120.42,
-      "text": "on",
-      "emphasis": []
-    },
-    {
-      "start": 120.42,
-      "end": 122.34,
-      "text": "a data mules send oceanographic",
+      "start": 15.44,
+      "end": 15.98,
+      "text": "how fast.",
       "emphasis": [
-        " oceanographic"
+        " fast."
       ]
     },
     {
-      "start": 122.34,
-      "end": 124.52,
-      "text": "measurements back to OOI servers",
+      "start": 16.8,
+      "end": 18.14,
+      "text": "That's why we have the Ocean",
       "emphasis": [
-        " measurements"
+        " That's",
+        " Ocean"
       ]
     },
     {
-      "start": 124.52,
-      "end": 125.48,
-      "text": "when they surface.",
-      "emphasis": [
-        " surface."
-      ]
-    },
-    {
-      "start": 128.37,
-      "end": 130.07,
-      "text": "The Ocean Observatories Initiative",
+      "start": 18.14,
+      "end": 20.24,
+      "text": "Observatories Initiative, or",
       "emphasis": [
         " Observatories"
       ]
     },
     {
-      "start": 130.07,
-      "end": 132.51,
-      "text": "has revolutionized marine research",
+      "start": 20.24,
+      "end": 21.24,
+      "text": "OOI.",
       "emphasis": [
-        " revolutionized"
+        " OOI."
       ]
     },
     {
-      "start": 132.51,
-      "end": 134.93,
-      "text": "with free access to high quality",
+      "start": 22.18,
+      "end": 24.36,
+      "text": "OOI is a science-driven ocean",
       "emphasis": [
-        " access",
-        " quality"
+        " OOI",
+        " science"
       ]
     },
     {
-      "start": 134.93,
-      "end": 137.49,
-      "text": "data from remote locations and at",
+      "start": 24.36,
+      "end": 26.0,
+      "text": "-observing network that",
       "emphasis": [
-        " remote",
-        " locations"
+        "-observing"
       ]
     },
     {
-      "start": 137.49,
-      "end": 139.13,
-      "text": "unprecedented timescales.",
+      "start": 26.0,
+      "end": 27.52,
+      "text": "delivers real-time data to",
       "emphasis": [
-        " unprecedented"
+        " delivers"
+      ]
+    },
+    {
+      "start": 27.52,
+      "end": 28.96,
+      "text": "researchers investigating our",
+      "emphasis": [
+        " investigating"
+      ]
+    },
+    {
+      "start": 28.96,
+      "end": 31.52,
+      "text": "changing ocean on a coastal and",
+      "emphasis": [
+        " changing",
+        " coastal"
+      ]
+    },
+    {
+      "start": 31.52,
+      "end": 32.56,
+      "text": "planetary scale.",
+      "emphasis": [
+        " planetary"
       ]
     }
   ]

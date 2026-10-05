@@ -10,7 +10,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 19939929,
+      "size": 12640498,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts/01.mp4": {
@@ -20,7 +20,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 13026358,
+      "size": 8756552,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/facebook/02.mp4": {
@@ -30,7 +30,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 9245721,
+      "size": 19932102,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts/02.mp4": {
@@ -40,7 +40,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 5850393,
+      "size": 14488369,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/facebook/03.mp4": {
@@ -50,7 +50,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 8694721,
+      "size": 9260045,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts/03.mp4": {
@@ -60,7 +60,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 4718246,
+      "size": 6433637,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/facebook/04.mp4": {
@@ -70,7 +70,7 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 12623992,
+      "size": 19158025,
       "warnings": []
     },
     "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts/04.mp4": {
@@ -80,14 +80,34 @@
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 7042050,
+      "size": 14097792,
+      "warnings": []
+    },
+    "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/facebook/program.mp4": {
+      "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 58090457,
+      "warnings": []
+    },
+    "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts/program.mp4": {
+      "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 41517881,
       "warnings": []
     }
   },
-  "diversity": 0.289,
+  "diversity": 0.239,
   "source_coverage": {
-    "coverage_pct": 23.0,
-    "total_covered_sec": 143.9,
+    "coverage_pct": 27.6,
+    "total_covered_sec": 173.04,
     "overlaps": [],
     "overlap_count": 0
   },
@@ -96,18 +116,18 @@
     "selected_count": 4,
     "rejected_count": 0,
     "context_guard_rejections": 0,
-    "truncated_by_limit": 3,
-    "avg_duration": 35.98,
+    "truncated_by_limit": 8,
+    "avg_duration": 43.26,
     "duration_distribution": {
       "<15s": 0,
-      "15-30s": 2,
+      "15-30s": 1,
       "30-45s": 1,
-      "45-55s": 1
+      "45-55s": 2
     },
-    "silence_pct": 4.6,
+    "silence_pct": 3.0,
     "filler_pct": 0.0,
-    "avg_words_per_second": 3.2,
-    "avg_hook_latency": 4.2,
+    "avg_words_per_second": 3.33,
+    "avg_hook_latency": 8.71,
     "payoff_presence_rate": 1.0,
     "duplicate_overlap_rate": 0.0
   }

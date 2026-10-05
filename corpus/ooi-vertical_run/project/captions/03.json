@@ -2,53 +2,97 @@
   "style": "minimal",
   "blocks": [
     {
-      "start": 90.73,
-      "end": 93.09,
-      "text": "An additional cable array wires a",
+      "start": 113.42,
+      "end": 115.1,
+      "text": "Gliders fill in gaps between",
       "emphasis": [
-        " additional",
-        " wires"
+        " between"
       ]
     },
     {
-      "start": 93.09,
-      "end": 94.31,
-      "text": "region of the northeast Pacific",
+      "start": 115.1,
+      "end": 117.04,
+      "text": "the arrays, traveling",
       "emphasis": [
-        " northeast"
+        " traveling"
       ]
     },
     {
-      "start": 94.31,
-      "end": 96.77,
-      "text": "Ocean with a high -power high",
+      "start": 117.04,
+      "end": 120.42,
+      "text": "on",
+      "emphasis": []
+    },
+    {
+      "start": 120.42,
+      "end": 122.34,
+      "text": "a data mules send oceanographic",
       "emphasis": [
-        " Ocean",
-        "-power"
+        " oceanographic"
       ]
     },
     {
-      "start": 96.77,
-      "end": 98.71,
-      "text": "-speed fiber optic grid that",
+      "start": 122.34,
+      "end": 124.08,
+      "text": "measurements back to OOI",
       "emphasis": [
-        " optic"
+        " measurements"
       ]
     },
     {
-      "start": 98.71,
-      "end": 100.01,
-      "text": "enables observation of the",
+      "start": 124.08,
+      "end": 125.48,
+      "text": "servers when they surface.",
       "emphasis": [
-        " observation"
+        " surface."
       ]
     },
     {
-      "start": 100.01,
-      "end": 101.73,
-      "text": "seafloor and water column.",
+      "start": 128.37,
+      "end": 129.55,
+      "text": "The Ocean Observatories",
       "emphasis": [
-        " seafloor"
+        " Observatories"
+      ]
+    },
+    {
+      "start": 129.55,
+      "end": 131.69,
+      "text": "Initiative has revolutionized",
+      "emphasis": [
+        " revolutionized"
+      ]
+    },
+    {
+      "start": 131.69,
+      "end": 133.65,
+      "text": "marine research with free",
+      "emphasis": [
+        " research"
+      ]
+    },
+    {
+      "start": 133.65,
+      "end": 135.37,
+      "text": "access to high quality data",
+      "emphasis": [
+        " quality"
+      ]
+    },
+    {
+      "start": 135.37,
+      "end": 137.49,
+      "text": "from remote locations and at",
+      "emphasis": [
+        " locations"
+      ]
+    },
+    {
+      "start": 137.49,
+      "end": 139.13,
+      "text": "unprecedented timescales.",
+      "emphasis": [
+        " unprecedented"
       ]
     }
   ]

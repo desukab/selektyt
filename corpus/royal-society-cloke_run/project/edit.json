@@ -1,0 +1,289 @@
+{
+  "title": "corpus/media/royal-society-cloke.webm edit",
+  "fps": 25.0,
+  "decisions": [
+    {
+      "id": "ed-c1e1d41e5c61",
+      "anchor": {
+        "track": "V1",
+        "timeline_in": 0.0
+      },
+      "action": "keep",
+      "role": "tension",
+      "reason": "kept with thread 'wildfires, wild, university'; role tension — question candidate that lands a clear closing thought, with progression middling at 0.65. Structural editorial score: opening=0.77; progression=0.65; payoff=1.00; density=0.90; fillers=0; standalone=1.00; repetition=0.00; coherence=0.83; completeness=0.75; audio_pace=0.93; silence=0.080; dead_air=0.02.",
+      "confidence": {
+        "value": 0.825,
+        "basis": "corpus thread 'wildfires, wild, university' confidence"
+      },
+      "evidence": [],
+      "provenance": "engine.selection.select → engine.assembly.assemble (order=arc)",
+      "replaces": null
+    },
+    {
+      "id": "ed-c4bfa6a28b6a",
+      "anchor": {
+        "track": "V1",
+        "timeline_in": 38.26
+      },
+      "action": "keep",
+      "role": "tension",
+      "reason": "kept with thread 'wildfires, wild, university'; role tension — conflict candidate that opens with a hook the viewer can land on mid-scroll. Structural editorial score: opening=1.00; progression=0.94; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.18; coherence=1.00; completeness=1.00; audio_pace=0.93; silence=0.083; dead_air=0.03.",
+      "confidence": {
+        "value": null,
+        "basis": "no corpus thread characterised this clip"
+      },
+      "evidence": [],
+      "provenance": "engine.selection.select → engine.assembly.assemble (order=arc)",
+      "replaces": null
+    },
+    {
+      "id": "ed-b93fe211dbf5",
+      "anchor": {
+        "track": "V1",
+        "timeline_in": 90.42
+      },
+      "action": "keep",
+      "role": "tension",
+      "reason": "role tension — conflict candidate that opens with a hook the viewer can land on mid-scroll. Structural editorial score: opening=1.00; progression=0.98; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.13; coherence=1.00; completeness=0.75; audio_pace=0.89; silence=0.135; dead_air=0.04.",
+      "confidence": {
+        "value": 0.825,
+        "basis": "corpus thread 'see, means, way' confidence"
+      },
+      "evidence": [],
+      "provenance": "engine.selection.select → engine.assembly.assemble (order=arc)",
+      "replaces": null
+    },
+    {
+      "id": "ed-8d183db6346d",
+      "anchor": {
+        "track": "V1",
+        "timeline_in": 117.92
+      },
+      "action": "keep",
+      "role": "tension",
+      "reason": "role tension — conflict candidate that opens with a hook the viewer can land on mid-scroll, though it carries filler words an edit would cut. Structural editorial score: opening=1.00; progression=0.92; payoff=1.00; density=1.00; fillers=4; standalone=1.00; repetition=0.17; coherence=0.75; completeness=0.75; audio_pace=0.92; silence=0.093; dead_air=0.03.",
+      "confidence": {
+        "value": 0.825,
+        "basis": "corpus thread 'communicate, arts, something' confidence"
+      },
+      "evidence": [
+        {
+          "source": "engine.selection.score_in_context#arc",
+          "claim": "closes the arc 'tension' — a causal relation whose setup and payoff both fall inside the clip (2/3 of the story's passages; corpus confidence 0.80)",
+          "id": "",
+          "confidence": null
+        }
+      ],
+      "provenance": "engine.selection.select → engine.assembly.assemble (order=arc)",
+      "replaces": null
+    }
+  ],
+  "removed": [
+    {
+      "start": 32.64,
+      "end": 33.16,
+      "duration": 0.52,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-c1e1d41e5c61"
+    },
+    {
+      "start": 221.64,
+      "end": 222.24,
+      "duration": 0.6,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-c4bfa6a28b6a"
+    },
+    {
+      "start": 231.64,
+      "end": 232.12,
+      "duration": 0.48,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-c4bfa6a28b6a"
+    },
+    {
+      "start": 314.02,
+      "end": 314.9,
+      "duration": 0.88,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-b93fe211dbf5"
+    },
+    {
+      "start": 490.74,
+      "end": 491.26,
+      "duration": 0.52,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-8d183db6346d"
+    },
+    {
+      "start": 492.28,
+      "end": 493.04,
+      "duration": 0.76,
+      "kind": "remove_silence",
+      "reason": "pause shortened by engine.edit_plan.retention_intervals (min_pause=0.70, keeps a 0.18s breath)",
+      "decision_id": "ed-8d183db6346d"
+    },
+    {
+      "start": 242.28,
+      "end": 265.52,
+      "duration": 23.24,
+      "kind": "not_selected",
+      "reason": "revelation candidate that lands a clear closing thought, with fillers middling at 0.50. Structural editorial score: opening=0.77; progression=0.71; payoff=1.00; density=1.00; fillers=2; standalone=1.00; repetition=0.08; coherence=1.00; completeness=1.00; audio_pace=0.88; silence=0.148; dead_air=0.10.",
+      "decision_id": ""
+    },
+    {
+      "start": 417.24,
+      "end": 446.88,
+      "duration": 29.64,
+      "kind": "not_selected",
+      "reason": "conflict candidate that lands a clear closing thought. Structural editorial score: opening=0.75; progression=0.96; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.11; coherence=0.78; completeness=1.00; audio_pace=0.90; silence=0.118; dead_air=0.02.",
+      "decision_id": ""
+    },
+    {
+      "start": 592.6,
+      "end": 611.2,
+      "duration": 18.6,
+      "kind": "not_selected",
+      "reason": "conflict candidate that moves from one idea to the next rather than circling, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=1.00; payoff=0.89; density=0.92; fillers=0; standalone=1.00; repetition=0.09; coherence=1.00; completeness=1.00; audio_pace=0.87; silence=0.156; dead_air=0.10.",
+      "decision_id": ""
+    },
+    {
+      "start": 84.5,
+      "end": 120.72,
+      "duration": 36.22,
+      "kind": "not_selected",
+      "reason": "conflict candidate that lands a clear closing thought. Structural editorial score: opening=0.75; progression=1.00; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.08; coherence=0.75; completeness=1.00; audio_pace=0.88; silence=0.146; dead_air=0.06.",
+      "decision_id": ""
+    },
+    {
+      "start": 616.16,
+      "end": 625.6,
+      "duration": 9.44,
+      "kind": "not_selected",
+      "reason": "conflict candidate that carries substance per second, with opening middling at 0.53. Structural editorial score: opening=0.53; progression=0.88; payoff=0.84; density=1.00; fillers=1; standalone=1.00; repetition=0.05; coherence=1.00; completeness=1.00; audio_pace=0.90; silence=0.131; dead_air=0.00.",
+      "decision_id": ""
+    },
+    {
+      "start": 276.48,
+      "end": 299.78,
+      "duration": 23.3,
+      "kind": "not_selected",
+      "reason": "conflict candidate that lands a clear closing thought, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.96; payoff=1.00; density=1.00; fillers=1; standalone=1.00; repetition=0.13; coherence=0.91; completeness=1.00; audio_pace=0.88; silence=0.142; dead_air=0.08.",
+      "decision_id": ""
+    },
+    {
+      "start": 543.76,
+      "end": 553.3,
+      "duration": 9.54,
+      "kind": "not_selected",
+      "reason": "revelation candidate that carries substance per second, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.59; payoff=0.61; density=1.00; fillers=0; standalone=1.00; repetition=0.25; coherence=1.00; completeness=1.00; audio_pace=0.99; silence=0.010; dead_air=0.00.",
+      "decision_id": ""
+    },
+    {
+      "start": 354.8,
+      "end": 408.5,
+      "duration": 53.7,
+      "kind": "not_selected",
+      "reason": "conflict candidate that carries substance per second, with coherence middling at 0.41. Structural editorial score: opening=0.55; progression=0.93; payoff=0.85; density=1.00; fillers=2; standalone=1.00; repetition=0.13; coherence=0.41; completeness=0.75; audio_pace=0.90; silence=0.115; dead_air=0.04.",
+      "decision_id": ""
+    }
+  ],
+  "markers": [
+    {
+      "time": 0.0,
+      "label": "thread: wildfires, wild, university",
+      "kind": "chapter"
+    }
+  ],
+  "notes": [],
+  "anchors": [
+    {
+      "track": "V1",
+      "timeline_in": 0.0
+    },
+    {
+      "track": "V1",
+      "timeline_in": 32.34
+    },
+    {
+      "track": "V1",
+      "timeline_in": 38.26
+    },
+    {
+      "track": "V1",
+      "timeline_in": 78.12
+    },
+    {
+      "track": "V1",
+      "timeline_in": 87.52
+    },
+    {
+      "track": "V1",
+      "timeline_in": 90.42
+    },
+    {
+      "track": "V1",
+      "timeline_in": 92.52
+    },
+    {
+      "track": "V1",
+      "timeline_in": 117.92
+    },
+    {
+      "track": "V1",
+      "timeline_in": 125.62
+    },
+    {
+      "track": "V1",
+      "timeline_in": 126.64
+    }
+  ],
+  "dangling": 0,
+  "placements": [
+    {
+      "sequence": 0,
+      "thread_id": 0,
+      "thread_title": "wildfires, wild, university",
+      "grouped": true,
+      "role": "tension",
+      "decision": "Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently We've seen devastating floods droughts and wildfires",
+      "start": 0.3,
+      "end": 39.08
+    },
+    {
+      "sequence": 1,
+      "thread_id": 0,
+      "thread_title": "wildfires, wild, university",
+      "grouped": true,
+      "role": "tension",
+      "decision": "The risk changes that factor if it's going to happen more often, it's going to be worse.",
+      "start": 181.78,
+      "end": 235.02
+    },
+    {
+      "sequence": 2,
+      "thread_id": 1,
+      "thread_title": "see, means, way",
+      "grouped": false,
+      "role": "tension",
+      "decision": "Are you able to make these predictions on now?",
+      "start": 311.92,
+      "end": 340.3
+    },
+    {
+      "sequence": 3,
+      "thread_id": 8,
+      "thread_title": "communicate, arts, something",
+      "grouped": false,
+      "role": "tension",
+      "decision": "sounds like I mean I know this but you know arts and sciences if we need to talk to each other then we can learn new things from each other which which is brill",
+      "start": 483.04,
+      "end": 535.68
+    }
+  ],
+  "skipped": []
+}

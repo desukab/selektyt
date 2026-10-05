@@ -1,26 +1,26 @@
 [
   {
     "index": 1,
-    "source_start": 583.7,
-    "source_end": 611.64,
-    "source_duration": 27.94,
+    "source_start": 103.27,
+    "source_end": 136.51,
+    "source_duration": 33.24,
     "intervals": [
       [
-        583.7,
-        588.16
+        103.27,
+        116.31
       ],
       [
-        588.62,
-        600.08
+        117.09,
+        126.95
       ],
       [
-        602.94,
-        611.64
+        127.59,
+        136.51
       ]
     ],
-    "edited_duration": 24.62,
-    "removed_seconds": 3.32,
-    "story_type": "conflict"
+    "edited_duration": 31.82,
+    "removed_seconds": 1.42,
+    "story_type": "fact"
   },
   {
     "index": 2,
@@ -47,51 +47,59 @@
   },
   {
     "index": 3,
-    "source_start": 633.57,
-    "source_end": 655.53,
-    "source_duration": 21.96,
+    "source_start": 583.7,
+    "source_end": 611.64,
+    "source_duration": 27.94,
     "intervals": [
       [
-        633.57,
-        655.53
+        583.7,
+        588.16
+      ],
+      [
+        588.62,
+        600.08
+      ],
+      [
+        602.94,
+        611.64
       ]
     ],
-    "edited_duration": 21.96,
-    "removed_seconds": 0.0,
-    "story_type": "revelation"
+    "edited_duration": 24.62,
+    "removed_seconds": 3.32,
+    "story_type": "conflict"
   },
   {
     "index": 4,
-    "source_start": 365.68,
-    "source_end": 393.98,
-    "source_duration": 28.3,
+    "source_start": 831.39,
+    "source_end": 841.31,
+    "source_duration": 9.92,
     "intervals": [
       [
-        365.68,
-        370.18
-      ],
-      [
-        371.08,
-        393.98
+        831.39,
+        841.31
       ]
     ],
-    "edited_duration": 27.4,
-    "removed_seconds": 0.9,
-    "story_type": "question"
+    "edited_duration": 9.92,
+    "removed_seconds": 0.0,
+    "story_type": "conflict"
   },
   {
     "index": 5,
-    "source_start": 403.08,
-    "source_end": 417.2,
-    "source_duration": 14.12,
+    "source_start": 910.0,
+    "source_end": 928.18,
+    "source_duration": 18.18,
     "intervals": [
       [
-        403.08,
-        417.2
+        910.0,
+        916.02
+      ],
+      [
+        916.94,
+        928.18
       ]
     ],
-    "edited_duration": 14.12,
-    "removed_seconds": 0.0,
-    "story_type": "question"
+    "edited_duration": 17.26,
+    "removed_seconds": 0.92,
+    "story_type": "revelation"
   }
 ]

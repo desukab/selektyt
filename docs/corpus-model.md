@@ -395,23 +395,30 @@ shareable without the recipient having to trust the sender's presentation.
 
 ## Measured on the committed corpus
 
-Run across every committed transcript (11 sources, 1,772 segments,
-18,748 word-timestamp entries). Last measured 2026-09-28, after the sentence
-splitter stopped breaking on abbreviations: an acronym, a title of address or a
-decimal no longer ends a sentence where the text continues, so three sources
-carry fewer, longer units -- emwcon 112→108, nasa360 93→89,
-pentagon 70→61 -- and the topic counts that follow from unit boundaries moved
-with them. The two sources that still hold media were then re-run under both
-that fix and the tracker fix, which re-transcribed pentagon and moved it one
-segment and one unit again (277→278, 60→61); selection is a function of the
-transcript, so a re-transcription is the honest reason for a moved selection,
-not a code change.
+Run across every committed transcript (11 sources, 1,771 segments,
+18,749 word-timestamp entries). Last measured 2026-10-05, when the three
+media-holding sources were re-run under the word-anchored sentence timer and the
+coherence re-scoring on the shipped text; the counts below are what those
+re-runs left on disk.
+
+The unit and topic counts are unchanged by that re-run — those are functions of
+the transcript alone, and the re-run did not re-split it. What moved is
+pentagon's *segment* count, because re-running re-transcribes: the same `small`
+model over the same audio returned a different sentence at one chunk boundary
+(`'Thank you.'` became `'Thank you for watching.'`), which is 278→277 segments
+and one word-timestamp entry more. A re-transcription is the honest reason for a
+moved selection — the transcript is a different transcript, not a code change
+the docs do not record. The earlier figures in this paragraph's history are
+2026-09-28's: the sentence splitter stopping on abbreviations moved three
+sources to fewer, longer units (emwcon 112→108, nasa360 93→89,
+pentagon 70→61), and that day's re-transcription moved pentagon a segment the
+other way (277→278).
 
 | Source | Segments | Units | Topics | Threads | Redundancy groups |
 |---|---|---|---|---|---|
 | emwcon-panel-2018 | 842 | 108 | 49 | 49 | 1 |
 | nasa360-ep5 | 425 | 89 | 49 | 42 | 6 |
-| pentagon-esper-briefing | 278 | 61 | 38 | 45 | 2 |
+| pentagon-esper-briefing | 277 | 61 | 38 | 45 | 2 |
 | royal-society-cloke | 156 | 22 | 9 | 11 | 0 |
 | hadhazy-protest | 38 | 6 | 4 | 4 | 0 |
 | ooi-vertical | 26 | 7 | 7 | 7 | 0 |

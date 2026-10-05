@@ -13,5 +13,7 @@
   "story_type": "conflict",
   "source_based": true,
   "policy": "Generated from selected source speech; no fabricated claims.",
-  "clip_index": 2
+  "clip_index": 2,
+  "source_start": 452.26,
+  "source_end": 483.68
 }

@@ -2,67 +2,165 @@
   "source": "corpus/media/royal-society-cloke.webm",
   "title": "royal-society-cloke",
   "language": "en",
-  "candidate_count": 1805,
+  "candidate_count": 1807,
   "selected_count": 4,
+  "program_count": 4,
   "rejected_by_context_guard": 0,
-  "truncated_by_limit": 3,
+  "truncated_by_limit": 8,
   "bench": [
     {
-      "start": 520.34,
-      "end": 543.3399999999999,
-      "text": "music box. You know, she gave it to me, sadly she's passed away. it means a lot for my childhood and it sits on my shelf and I always imagine, you know, how would I feel if that got swept away in a flood? And to me that's the real meaning of being at flood risk. Yeah and I guess it's a way to explain the risk to other people like you said that, you know, it might feel like a very distant",
-      "story_type": "question",
-      "hook": "music box.",
-      "payoff": "Yeah and I guess it's a way to explain the risk to other people like you said that, you know, it might feel like a very distant",
-      "editorial_score": 0.6731122480620155,
-      "virality_score": 0.5435,
-      "context_score": 1.0,
-      "confidence": 0.9333949591740068,
-      "reason": "question candidate that carries substance per second, though it carries filler words an edit would cut. Structural editorial score: opening=0.77; progression=0.61; payoff=0.85; density=1.00; fillers=3; standalone=1.00; repetition=0.08; coherence=1.00; completeness=1.00; audio_pace=0.92; silence=0.097; dead_air=0.00.",
-      "visual_potential": 0.6,
-      "coherence_score": 1.0,
-      "completeness": 1.0,
-      "total_score": 0.7626
-    },
-    {
-      "start": 101.18,
-      "end": 109.92,
-      "text": "really why I do what I do. So I'm interested in flood forecasting, warning people, making sure people can get out of the way of dangerous floods.",
+      "start": 242.28,
+      "end": 265.52,
+      "text": "the scenes people are moving around putting equipment in the right place going on alert. And with this kind of, I guess in the longer term, if I'm, you know, from my perspective as a structural engineer, I've been involved in, you know, urban planning and looking at cities and so on, how can we use the kind of modeling that you do to maybe better design where human beings decide to settle down?",
       "story_type": "revelation",
-      "hook": "really why I do what I do.",
-      "payoff": "So I'm interested in flood forecasting, warning people, making sure people can get out of the way of dangerous floods.",
-      "editorial_score": 0.7328933333333334,
-      "virality_score": 0.3385,
-      "context_score": 0.8406666666666666,
-      "confidence": 0.937639026178254,
-      "reason": "revelation candidate that carries substance per second, with opening middling at 0.53. Structural editorial score: opening=0.53; progression=0.71; payoff=0.79; density=1.00; fillers=0; standalone=1.00; repetition=0.07; coherence=1.00; completeness=1.00; audio_pace=0.88; silence=0.151; dead_air=0.00.",
-      "visual_potential": 0.44999999999999996,
+      "hook": "the scenes people are moving around putting equipment in the right place going on alert.",
+      "payoff": " as a structural engineer, I've been involved in, you know, urban planning and looking at cities and so on, how can we use the kind of modeling that you do to maybe better design where human beings decide to settle down?",
+      "editorial_score": 0.7880133333333332,
+      "virality_score": 0.6635,
+      "context_score": 1.0,
+      "confidence": 0.9489030153364748,
+      "reason": "revelation candidate that lands a clear closing thought, with fillers middling at 0.50. Structural editorial score: opening=0.77; progression=0.71; payoff=1.00; density=1.00; fillers=2; standalone=1.00; repetition=0.08; coherence=1.00; completeness=1.00; audio_pace=0.88; silence=0.148; dead_air=0.10.",
+      "visual_potential": 0.7,
       "coherence_score": 1.0,
       "completeness": 1.0,
-      "total_score": 0.6961
+      "opening_score": 1.0,
+      "total_score": 0.8331
     },
     {
-      "start": 472.98,
-      "end": 482.196,
-      "text": "musicians across the board do a lot of work with museums and it's brought a lot and much richer way of communicating things like flood risk.",
-      "story_type": "insight",
-      "hook": "musicians across the board do a lot of work wi",
-      "payoff": "musicians across the board do a lot of work with museums and it's brought a lot and much richer way of communicating things like flood risk.",
-      "editorial_score": 0.5138549107142858,
-      "virality_score": 0.14057142857142857,
-      "context_score": 0.7277976190476192,
-      "confidence": 0.9042273817154077,
-      "reason": "insight candidate that carries substance per second, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.42; payoff=0.54; density=1.00; fillers=0; standalone=1.00; repetition=0.08; coherence=1.00; completeness=0.75; audio_pace=1.00; silence=0.000; dead_air=0.00.",
-      "visual_potential": 0.35,
+      "start": 417.24,
+      "end": 446.88,
+      "text": "Yeah. And we do have global models and they do provide like flood forecasts and flood heat wave forecasts. But actually getting that message to the people on the ground, that's really, really tough. So you can only really do that at the local level. So you're moving from global environmental models to actually psychology at the local level. And that's a big chain of events. Completely. So now I'm going to ask you a completely different question, which is poetry. Apparently, I've heard that you've written some poetry.",
+      "story_type": "conflict",
+      "hook": "Yeah.",
+      "payoff": "Apparently, I've heard that you've written some poetry.",
+      "editorial_score": 0.8499952480526316,
+      "virality_score": 0.595,
+      "context_score": 1.0,
+      "confidence": 0.934668061606,
+      "reason": "conflict candidate that lands a clear closing thought. Structural editorial score: opening=0.75; progression=0.96; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.11; coherence=0.78; completeness=1.00; audio_pace=0.90; silence=0.118; dead_air=0.02.",
+      "visual_potential": 0.65,
+      "coherence_score": 0.781,
+      "completeness": 1.0,
+      "opening_score": 1.0,
+      "total_score": 0.7838
+    },
+    {
+      "start": 592.6,
+      "end": 611.2,
+      "text": "where it's absolutely inhospitable to live so heat is a giant killer it's a silent killer as well floodwater coming through your house. It really picks the vulnerable people as well. So that's an obvious example of where climate and health are so intricately linked.",
+      "story_type": "conflict",
+      "hook": "where it's absolutely inhospitable to live so heat is a giant killer it's a silent killer as well floodwater coming through your house.",
+      "payoff": "So that's an obvious example of where climate and health are so intricately linked.",
+      "editorial_score": 0.8121152995391704,
+      "virality_score": 0.41057142857142853,
+      "context_score": 0.9947142857142858,
+      "confidence": 0.96051224315608,
+      "reason": "conflict candidate that moves from one idea to the next rather than circling, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=1.00; payoff=0.89; density=0.92; fillers=0; standalone=1.00; repetition=0.09; coherence=1.00; completeness=1.00; audio_pace=0.87; silence=0.156; dead_air=0.10.",
+      "visual_potential": 0.65,
       "coherence_score": 1.0,
+      "completeness": 1.0,
+      "opening_score": 1.0,
+      "total_score": 0.7829
+    },
+    {
+      "start": 84.5,
+      "end": 120.72,
+      "text": "Heavy rainfall, rivers can turn fluddy, and they will absolutely devastate communities. So it's really interesting being very fascinated by water and how it moves around the planet, but yet being very aware of how dangerous it can be. And that's really why I do what I do. So I'm interested in flood forecasting, warning people, making sure people can get out of the way of dangerous floods. Now, it seems like some scientists perhaps are a bit reluctant to kind of pinpoint the cause of some of these extreme weather events as being because of the climate crisis.",
+      "story_type": "conflict",
+      "hook": "Heavy rainfall, rivers can turn fluddy, and they will absolutely devastate communities.",
+      "payoff": "Now, it seems like some scientists perhaps are a bit reluctant to kind of pinpoint the cause of some of these extreme weather events as being because of the climate crisis.",
+      "editorial_score": 0.8347903316993464,
+      "virality_score": 0.595,
+      "context_score": 1.0,
+      "confidence": 0.9473695384733605,
+      "reason": "conflict candidate that lands a clear closing thought. Structural editorial score: opening=0.75; progression=1.00; payoff=1.00; density=1.00; fillers=0; standalone=1.00; repetition=0.08; coherence=0.75; completeness=1.00; audio_pace=0.88; silence=0.146; dead_air=0.06.",
+      "visual_potential": 0.65,
+      "coherence_score": 0.75,
+      "completeness": 1.0,
+      "opening_score": 1.0,
+      "total_score": 0.7724
+    },
+    {
+      "start": 616.16,
+      "end": 625.6,
+      "text": "a major problem worldwide, but also, you know, like you said, the psychology of the family or the person or the community that then has to respond to that on a local level. So I really appreciate your time.",
+      "story_type": "conflict",
+      "hook": "a major problem worldwide, but also, you know, like you said, the psychology of the family or the person or the community that then has to respond to that on a ",
+      "payoff": "So I really appreciate your time.",
+      "editorial_score": 0.739464761904762,
+      "virality_score": 0.4742142857142857,
+      "context_score": 0.9283095238095238,
+      "confidence": 0.9534288965738736,
+      "reason": "conflict candidate that carries substance per second, with opening middling at 0.53. Structural editorial score: opening=0.53; progression=0.88; payoff=0.84; density=1.00; fillers=1; standalone=1.00; repetition=0.05; coherence=1.00; completeness=1.00; audio_pace=0.90; silence=0.131; dead_air=0.00.",
+      "visual_potential": 0.65,
+      "coherence_score": 1.0,
+      "completeness": 1.0,
+      "opening_score": 1.0,
+      "total_score": 0.7632
+    },
+    {
+      "start": 276.48,
+      "end": 299.78,
+      "text": "London it's a really nice place to live. People want to live there. It's really expensive. But it can be very, very dangerous indeed. So we have this legacy of people living in really, really dangerous places. But we can use the same types of model that we use when we're forecasting whether a flood is coming next week. We can use that to work out what the risk is of any types of floods coming along. We can say, you know, these.",
+      "story_type": "conflict",
+      "hook": "London it's a really nice place to live.",
+      "payoff": "We can say, you know, these.",
+      "editorial_score": 0.7810726144186048,
+      "virality_score": 0.44199999999999995,
+      "context_score": 1.0,
+      "confidence": 0.9687605643846903,
+      "reason": "conflict candidate that lands a clear closing thought, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.96; payoff=1.00; density=1.00; fillers=1; standalone=1.00; repetition=0.13; coherence=0.91; completeness=1.00; audio_pace=0.88; silence=0.142; dead_air=0.08.",
+      "visual_potential": 0.65,
+      "coherence_score": 0.905,
+      "completeness": 1.0,
+      "opening_score": 1.0,
+      "total_score": 0.7598
+    },
+    {
+      "start": 543.76,
+      "end": 553.3,
+      "text": "Yeah and they have to imagine it so they have to be able to imagine those flood waters in the house and putting their possessions at risk, perhaps putting their family at risk and you need to help that imagination along.",
+      "story_type": "revelation",
+      "hook": "Yeah and they have to imagine it so they have to be able to imagine those",
+      "payoff": "Yeah and they have to imagine it so they have to be able to imagine those flood waters in the house and putting their possessions at risk, perhaps putting their family at risk and you need to help that imagination along.",
+      "editorial_score": 0.6865112078977933,
+      "virality_score": 0.2805714285714286,
+      "context_score": 0.8537407084785134,
+      "confidence": 0.9221219078796666,
+      "reason": "revelation candidate that carries substance per second, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.59; payoff=0.61; density=1.00; fillers=0; standalone=1.00; repetition=0.25; coherence=1.00; completeness=1.00; audio_pace=0.99; silence=0.010; dead_air=0.00.",
+      "visual_potential": 0.5499999999999999,
+      "coherence_score": 1.0,
+      "completeness": 1.0,
+      "opening_score": 1.0,
+      "total_score": 0.6847
+    },
+    {
+      "start": 354.8,
+      "end": 408.5,
+      "text": "more intense rainfall, more flash floods. What about the scene kind of more globally? I guess we've talked a little bit more specifically at the UK perhaps. What's happening on the worldwide basis with flood prediction? Some of the most vulnerable places in the world are desperately in need of much better flood forecasting and warning systems. A lot of those places, you know, they don't have enough funding to really get to grips with some of these global models. So it's about working together with partners, perhaps in Mozambique and Bangladesh, places that are very filled with floods often, and a lot of people die every year from these types of floods. So the more that we can support those countries and provide kind of the infrastructure and work together with them to help them get the warnings to the people so they can get out of the way of those floods the better. Yeah, seems like it's one of those things where, you know, the more we come together,",
+      "story_type": "conflict",
+      "hook": "more intense rainfall, more flash floods.",
+      "payoff": "Yeah, seems like it's one of those things where, you know, the more we come together,",
+      "editorial_score": 0.41399665942968744,
+      "virality_score": 0.707,
+      "context_score": 1.0,
+      "confidence": 0.9459034921655878,
+      "reason": "conflict candidate that carries substance per second, with coherence middling at 0.41. Structural editorial score: opening=0.55; progression=0.93; payoff=0.85; density=1.00; fillers=2; standalone=1.00; repetition=0.13; coherence=0.41; completeness=0.75; audio_pace=0.90; silence=0.115; dead_air=0.04.",
+      "visual_potential": 0.8,
+      "coherence_score": 0.411,
       "completeness": 0.75,
-      "total_score": 0.5607
+      "opening_score": 1.0,
+      "total_score": 0.612
     }
   ],
   "rejection_reasons": {},
   "outputs": {
     "facebook": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/facebook",
     "shorts": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts"
+  },
+  "program": {
+    "facebook": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/facebook/program.mp4",
+    "shorts": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/shorts/program.mp4"
   },
   "captions": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/captions",
   "timeline": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/timeline",
@@ -73,6 +171,7 @@
   "qa": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/qa.json",
   "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
   "transcription": {
+    "provider": "local",
     "engine": "faster-whisper",
     "requested_model": "small",
     "model": "small",
@@ -92,12 +191,82 @@
     "coverage_ratio": 0.996,
     "vad_backend": "silero"
   },
+  "language_fitness": {
+    "verdict": "usable",
+    "language": "en",
+    "model": "small",
+    "wer": 0.0338,
+    "cer": 0.0135,
+    "clip_count": 50,
+    "record": "c9-small.json",
+    "alternatives": [
+      {
+        "model": "medium",
+        "wer": 0.0299,
+        "cer": 0.0127,
+        "clip_count": 50,
+        "record": "c9-medium.json"
+      },
+      {
+        "model": "large-v3",
+        "wer": 0.0338,
+        "cer": 0.0171,
+        "clip_count": 50,
+        "record": "c9-large-v3.json"
+      },
+      {
+        "model": "small",
+        "wer": 0.0338,
+        "cer": 0.0135,
+        "clip_count": 50,
+        "record": "c9-small.json"
+      }
+    ],
+    "excluded": [
+      "c9-small-beam5.json",
+      "nasa-c4-small.json"
+    ],
+    "superseded": [
+      "redteam-small-verify.json",
+      "verify-current-small.json"
+    ]
+  },
+  "memory": {
+    "path": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/memory.json",
+    "summary": {
+      "items": 302,
+      "errors": [],
+      "findings": []
+    }
+  },
+  "retrieval": {
+    "path": "/home/azureuser/selektyt/corpus/royal-society-cloke_run/project/retrieval-index.json",
+    "summary": {
+      "schema": "1.0",
+      "terms": 644,
+      "words": 1980,
+      "segments": 156,
+      "ngram_fallback": false,
+      "channels": {
+        "vad": {
+          "loaded": true,
+          "count": 114,
+          "note": ""
+        },
+        "editorial_corpus": {
+          "loaded": true,
+          "count": 9,
+          "note": ""
+        }
+      }
+    }
+  },
   "audio": {
     "enabled": false
   },
   "provenance": {
     "source_path": "corpus/media/royal-society-cloke.webm",
-    "source_fingerprint": "85f408e904aa5a63e6d919acc3ac22ba8a11a2c2cd8bcf8a19afda537415397a",
+    "source_fingerprint": "8c5125c57517dd08212919daa576a4905e106f0497779fbe06b8783cb95f0ddb",
     "audio_fingerprint": "",
     "whisper_model": "",
     "whisper_language": "",
@@ -105,10 +274,10 @@
     "vad_backend": "",
     "vad_version": "",
     "software_version": "0.3.0",
-    "git_sha": "691b2f7",
-    "started_at": "2026-09-28T04:40:38+0000",
-    "finished_at": "2026-09-28T04:40:38+0000",
-    "duration_seconds": 0.005,
+    "git_sha": "f0af4e2",
+    "started_at": "2026-10-05T01:16:21+0000",
+    "finished_at": "2026-10-05T01:30:51+0000",
+    "duration_seconds": 870.425,
     "cache_status": "transcript-fresh",
     "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
     "python": "3.12.3"
@@ -129,6 +298,7 @@
     "keep_pauses": true,
     "remove_filler": true,
     "export_fcpxml": false,
+    "transcription_provider": "local",
     "skip_coverage_check": false,
     "caption_style": "minimal",
     "ollama_url": null,

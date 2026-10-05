@@ -717,13 +717,21 @@ def test_the_audit_verdict_on_the_committed_corpus_is_the_recorded_baseline():
             "review": {"clip 02"},
         },
         "pentagon-esper-briefing_run": {
-            "review": {"clip 03"},
+            # clip 03's edge became decidable under the word-anchored timer, and
+            # clip 05 is a different clip entirely (the ranking moved it to
+            # 910.0-928.18) whose opening utterance — "At the end of the day, my
+            # expectation" — carries no terminal punctuation at all, so the
+            # transcript cannot say where its sentence ends there.
+            "review": {"clip 05"},
         },
         "roman-portrait-trailer_run": {
             "fail": [("project", "no selections.json")],
         },
         "royal-society-cloke_run": {
-            "review": {"clip 04"},
+            # clip 01 is the reel's new opening (0.3-39.08, the 40.3-degrees
+            # passage) and its opening utterance is likewise unpunctuated; the
+            # edge is undecidable, not wrong. clip 04 was already review.
+            "review": {"clip 01", "clip 04"},
         },
         "telugu-launch_run": {
             "fail": [("project", "no selections.json")],
@@ -876,7 +884,7 @@ def test_the_corpus_candidate_words_are_already_the_kept_set():
 
 
 CORPUS = TOOLS.parent / "corpus"
-BASELINE_SWEEP = CORPUS / "eval" / "audit-baseline-2026-09-28.json"
+BASELINE_SWEEP = CORPUS / "eval" / "audit-baseline-2026-10-05.json"
 
 
 def test_the_corpus_sweep_counts_every_run_and_every_clip():
@@ -886,7 +894,7 @@ def test_the_corpus_sweep_counts_every_run_and_every_clip():
     Eleven committed runs; six produced a timeline and five were stopped by the
     VAD gate before selection ran, which the sweep records as project-level
     failures rather than as clean runs they never had. Of the 27 clips those six
-    shipped, 16 are clean and 11 sit on transcripts the edge check cannot
+    shipped, 15 are clean and 12 sit on transcripts the edge check cannot
     decide. **No clip fails**: the five failures are all project-level, a source
     that never reached selection.
 
@@ -905,11 +913,37 @@ def test_the_corpus_sweep_counts_every_run_and_every_clip():
     swept from were overwritten by the second re-run and a baseline that
     describes no artifact is not evidence. That was a new finding the re-run
     surfaced, not a regression the fix introduced.
+
+    `audit-baseline-2026-10-05.json` is the third re-run, under the
+    word-anchored sentence timer and the coherence re-scoring on the shipped
+    text. It reads 15 clean / 12 review against the previous 16 / 11, and the
+    three verdicts that moved are all consequence rather than judgement:
+
+    - **pentagon-esper-briefing clip 03: review -> clean.** The word-anchored
+      timer gave its opening edge a sentence boundary the transcript actually
+      marks, so what was undecidable became decidable and the clip is clean.
+    - **pentagon-esper-briefing clip 05: clean -> review.** The clip itself
+      changed (the ranking moved it to 910.0-928.18), and its *new* opening
+      utterance is ``'At the end of the day, my expectation'`` -- 8 words, none
+      of them terminal-punctuated. The transcript cannot say where its own
+      sentence ends there, so the edge is undecidable, which is the honest
+      report rather than a clean one the text does not support.
+    - **royal-society-cloke clip 01: clean -> review.** Same shape: the reel's
+      opening moved to the 0.3-39.08 clip whose opening utterance is the
+      40.3-degrees passage, and that utterance also carries no terminal
+      punctuation.
+
+    Neither ``review`` verdict is a clip that became wrong. ``review`` means the
+    transcript cannot decide, and on these two utterances it provably cannot --
+    the word lists are committed above. The count moved against the fix on
+    paper because two clips changed identity entirely and the ones that replaced
+    them open on unpunctuated speech; stating that here is the point of keeping
+    the number pinned.
     """
     from tools.editorial_audit import sweep
 
     record = sweep(CORPUS)
-    assert record["totals"] == {"runs": 11, "clean": 16, "review": 11, "fail": 4}
+    assert record["totals"] == {"runs": 11, "clean": 15, "review": 12, "fail": 4}
     sources = {run["source"] for run in record["runs"]}
     assert len(sources) == 11, "a run was audited twice or missed"
     # A clean clip is counted but not recorded: the comparison treats an absent

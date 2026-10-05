@@ -8,13 +8,13 @@
     </asset>
   </resources>
   <library>
-    <event name="I don&apos;t want to characterize exactly what or how much yet until it gets exploited properly.">
-      <project name="I don&apos;t want to characterize exactly what or how much yet until it gets exploited properly.">
+    <event name="Acting as a police force out to solve every dispute is not our mission.">
+      <project name="Acting as a police force out to solve every dispute is not our mission.">
         <sequence format="f1" tcFormat="NDF">
           <spine>
-          <asset-clip ref="r1" offset="0s" start="17511494/30000s" duration="134134/30000s" tcFormat="NDF" />
-          <asset-clip ref="r1" offset="134134/30000s" start="17658641/30000s" duration="343343/30000s" tcFormat="NDF" />
-          <asset-clip ref="r1" offset="477477/30000s" start="18088070/30000s" duration="261261/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="0s" start="3098095/30000s" duration="391391/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="391391/30000s" start="3512509/30000s" duration="296296/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="687687/30000s" start="3827824/30000s" duration="267267/30000s" tcFormat="NDF" />
           </spine>
         </sequence>
       </project>

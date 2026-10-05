@@ -5272,20 +5272,32 @@
     },
     {
       "start": 299.73,
-      "end": 299.97,
-      "text": "Thank you.",
+      "end": 299.83,
+      "text": "Thank you for watching.",
       "words": [
         {
           "text": " Thank",
           "start": 299.73,
-          "end": 299.97,
-          "confidence": 0.05051031336188316
+          "end": 299.73,
+          "confidence": 0.057164110243320465
         },
         {
-          "text": " you.",
-          "start": 299.97,
-          "end": 299.97,
-          "confidence": 0.9762499332427979
+          "text": " you",
+          "start": 299.73,
+          "end": 299.73,
+          "confidence": 0.9770421981811523
+        },
+        {
+          "text": " for",
+          "start": 299.73,
+          "end": 299.81,
+          "confidence": 0.1860160082578659
+        },
+        {
+          "text": " watching.",
+          "start": 299.81,
+          "end": 299.83,
+          "confidence": 0.5852086544036865
         }
       ]
     }

@@ -8,12 +8,11 @@
     </asset>
   </resources>
   <library>
-    <event name="Has the deployment of reinforcements that you announced last week begun?">
-      <project name="Has the deployment of reinforcements that you announced last week begun?">
+    <event name="don&apos;t know what the source of that was there.">
+      <project name="don&apos;t know what the source of that was there.">
         <sequence format="f1" tcFormat="NDF">
           <spine>
-          <asset-clip ref="r1" offset="0s" start="10969959/30000s" duration="135135/30000s" tcFormat="NDF" />
-          <asset-clip ref="r1" offset="135135/30000s" start="11132121/30000s" duration="686686/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="0s" start="24941917/30000s" duration="297297/30000s" tcFormat="NDF" />
           </spine>
         </sequence>
       </project>

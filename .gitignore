@@ -45,6 +45,10 @@ apps/desktop/src-tauri/binaries/
 # tools/corpus_run.py, and committing ~400 MB of binary per run makes the
 # repo unclonable for no evidentiary gain.
 corpus/media/
+# Acceptance-run sources fetched outside the manifest (tools/corpus_run.py is
+# pointed at Tears of Steel for the real-media acceptance run). Same class of
+# regenerable binary, fetched ad hoc rather than by manifest id.
+corpus/movie-test/
 
 # WER scratch (tools/wer_bench.py): ground-truth audio, downloaded corpus
 # tarballs, cached PCM, and model weights live here — several GB of regenerable
@@ -85,6 +89,11 @@ corpus/*_run/project/source/
 corpus/*_run/project/transcription/audio.wav
 corpus/*_run/project/transcription/chunks/*.wav
 
+# Per-run stdout from tools/corpus_run.py. The evidence it produced is the
+# project/ artifacts and the one-line record in results.jsonl; the log is the
+# terminal scrollback of producing it, and every run writes one.
+corpus/*_run/run.log
+
 # tools/microbench.py output: decoded WAVs, re-rendered MP4s and the
 # per-run whisper chunk checkpoints. All regenerable from the committed
 # transcript/selections plus local media; the numbers belong in
@@ -99,3 +108,9 @@ corpus/*_run/project/microbench_*/
 # scrollback of producing it.
 corpus/wer_*.log
 corpus/rerun_*.log
+
+# Whole-suite stdout from a local pytest run. The evidence is the pass/fail
+# line, which belongs in a commit message or a report, not in a 200 kB
+# scrollback that every run overwrites.
+.suite*.log
+.base*.log

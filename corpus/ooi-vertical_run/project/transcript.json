@@ -9,7 +9,9 @@
     "fallback_reason": null,
     "chunks": 1,
     "chunking": "5 min chunks (+15s overlap)",
-    "num_threads": 4
+    "num_threads": 2,
+    "vad_filter": true,
+    "provider": "local"
   },
   "segments": [
     {
@@ -107,7 +109,8 @@
           "end": 11.22,
           "confidence": 0.8117725849151611
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 12.22,
@@ -186,7 +189,8 @@
           "end": 15.98,
           "confidence": 0.9981348514556885
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 16.8,
@@ -253,7 +257,8 @@
           "end": 21.24,
           "confidence": 0.868942141532898
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 22.18,
@@ -374,7 +379,8 @@
           "end": 29.82,
           "confidence": 0.9960600733757019
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 29.82,
@@ -417,7 +423,8 @@
           "end": 32.56,
           "confidence": 0.9987000226974487
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 33.3,
@@ -460,7 +467,8 @@
           "end": 35.24,
           "confidence": 0.9983003735542297
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 35.78,
@@ -503,7 +511,8 @@
           "end": 38.5,
           "confidence": 0.9874086380004883
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 38.5,
@@ -546,7 +555,8 @@
           "end": 40.72,
           "confidence": 0.9988981485366821
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 41.42,
@@ -583,7 +593,8 @@
           "end": 42.56,
           "confidence": 0.9921897053718567
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 43.04,
@@ -644,7 +655,8 @@
           "end": 46.36,
           "confidence": 0.9990643858909607
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 46.36,
@@ -687,7 +699,8 @@
           "end": 48.2,
           "confidence": 0.9990646243095398
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 49.62,
@@ -730,7 +743,8 @@
           "end": 51.96,
           "confidence": 0.999574601650238
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 51.96,
@@ -773,7 +787,8 @@
           "end": 54.12,
           "confidence": 0.9995668530464172
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 54.42,
@@ -816,7 +831,8 @@
           "end": 56.58,
           "confidence": 0.9965099692344666
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 56.58,
@@ -907,7 +923,8 @@
           "end": 63.76,
           "confidence": 0.9927775859832764
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 63.76,
@@ -1010,7 +1027,8 @@
           "end": 70.02,
           "confidence": 0.994368851184845
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 70.02,
@@ -1095,7 +1113,8 @@
           "end": 76.16,
           "confidence": 0.9736632108688354
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 76.16,
@@ -1186,7 +1205,8 @@
           "end": 88.19,
           "confidence": 0.9946468472480774
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 88.19,
@@ -1283,7 +1303,8 @@
           "end": 94.79,
           "confidence": 0.8119404911994934
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 95.17,
@@ -1392,7 +1413,8 @@
           "end": 101.37,
           "confidence": 0.9665219187736511
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 101.37,
@@ -1489,7 +1511,8 @@
           "end": 107.99,
           "confidence": 0.9974320530891418
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 107.99,
@@ -1586,7 +1609,8 @@
           "end": 120.42,
           "confidence": 0.9919915795326233
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 120.42,
@@ -1665,7 +1689,8 @@
           "end": 125.48,
           "confidence": 0.993164598941803
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 128.37,
@@ -1756,7 +1781,8 @@
           "end": 134.93,
           "confidence": 0.3181547522544861
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 134.93,
@@ -1811,7 +1837,8 @@
           "end": 139.13,
           "confidence": 0.8980148235956827
         }
-      ]
+      ],
+      "speaker": null
     },
     {
       "start": 139.77,
@@ -1890,7 +1917,8 @@
           "end": 144.57,
           "confidence": 0.9900574882825216
         }
-      ]
+      ],
+      "speaker": null
     }
   ]
 }

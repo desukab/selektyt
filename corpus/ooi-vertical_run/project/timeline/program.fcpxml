@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.11">
+  <resources>
+    <format id="f1" name="FFVideoFormat" frameDuration="1001/30000s" />
+    <asset id="r1" name="ooi-vertical.webm" start="0s" duration="4560556/30000s" hasVideo="1" videoSources="1" hasAudio="1" audioSources="1" audioChannels="2">
+      <media-rep kind="original-media" src="file:///home/azureuser/selektyt/corpus/media/ooi-vertical.webm"/>
+    </asset>
+  </resources>
+  <library>
+    <event name="corpus/media/ooi-vertical.webm edit">
+      <project name="corpus/media/ooi-vertical.webm edit">
+        <sequence format="f1" tcFormat="NDF">
+          <spine>
+          <asset-clip ref="r1" offset="0s" start="366366/30000s" duration="118118/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="118118/30000s" start="502502/30000s" duration="140140/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="258258/30000s" start="663663/30000s" duration="313313/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="571571/30000s" start="1242241/30000s" duration="209209/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="780780/30000s" start="1486485/30000s" duration="210210/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="990990/30000s" start="3402399/30000s" duration="73073/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="1064063/30000s" start="3492489/30000s" duration="278278/30000s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="1342341/30000s" start="3848845/30000s" duration="324324/30000s" tcFormat="NDF" />
+          </spine>
+        </sequence>
+      </project>
+    </event>
+  </library>
+</fcpxml>

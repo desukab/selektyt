@@ -61,8 +61,12 @@ def test_the_corpus_is_present():
     count is asserted up front."""
     assert PROJECTS, "no corpus projects with a timeline/ directory were found"
     edls = list((ROOT / "corpus").glob("*_run/project/timeline/*.edl"))
-    assert len(edls) == 27, (
-        f"27 clips have committed EDLs; found {len(edls)}. The counts in the "
+    # 30 = the 27 per-clip EDLs the corpus has always carried, plus a program
+    # reel each for the three media-holding runs, added by the 2026-10-05
+    # re-run. The reel is one EDL for a whole concatenation, so it counts as one
+    # here even though it describes every clip.
+    assert len(edls) == 30, (
+        f"30 clips have committed EDLs; found {len(edls)}. The counts in the "
         f"docs are stated per clip and move with this number"
     )
 
@@ -158,12 +162,22 @@ def test_every_timeline_render_pair_passes_the_documented_tolerance():
     reason="no rendered MP4s in the corpus; A4.2 needs the gitignored renders",
 )
 def test_the_documented_band_set_is_the_measured_one():
-    """The docs say the non-exact pairs fall into three narrow bands. That is a
+    """The docs say the non-exact pairs fall into narrow bands. That is a
     specific claim about the shape of the discrepancy, so it is pinned: a new
-    band appearing is a change worth noticing, not noise."""
+    band appearing is a change worth noticing, not noise.
+
+    The 2026-10-05 re-run widened the set from three bands to six. That is not a
+    wider spread — the largest gap moved 0.69 -> 0.70 frames — but the three
+    media-holding sources were re-rendered and their per-clip durations moved by
+    fractions of a second, so the pairs that were 0.63/0.69 now also read
+    0.64/0.65/0.70 on the clips whose length changed. Every one is the same
+    container-overhead shortfall the section has always described (~21 ms), just
+    measured against a different whole-frame count.
+    """
     bands = sorted({round(d, 2) for d, _ in _render_findings()})
-    assert bands == [0.0, 0.53, 0.63, 0.69], (
-        f"the documented bands are 0.00/0.53/0.63/0.69; measured {bands}"
+    assert bands == [0.0, 0.53, 0.63, 0.64, 0.65, 0.69, 0.7], (
+        f"the documented bands are 0.00/0.53/0.63/0.64/0.65/0.69/0.70; "
+        f"measured {bands}"
     )
 
 
@@ -213,22 +227,22 @@ def _doc_text(path: Path) -> str:
 DOC_CLAIMS = [
     (
         ROOT / "docs" / "METRICS.md",
-        "0.69 frames",
+        "0.70 frames",
         "A4.2's worst-case timeline-vs-render gap",
     ),
     (
         ROOT / "docs" / "NLE_COMPATIBILITY.md",
-        "0.69 frames",
+        "0.70 frames",
         "the worst-case gap the 2-frame tolerance is justified by",
     ),
     (
         ROOT / "docs" / "METRICS.md",
-        "0.00 frames on all 27",
-        "A4.3's EDL-vs-FCPXML agreement, stated over all 27 clips",
+        "0.00 frames on all 30",
+        "A4.3's EDL-vs-FCPXML agreement, stated over all 30 timelines",
     ),
     (
         ROOT / "docs" / "NLE_COMPATIBILITY.md",
-        "0.00 frames on all 27",
+        "0.00 frames on all 30",
         "the same A4.3 figure, restated in the NLE summary",
     ),
 ]

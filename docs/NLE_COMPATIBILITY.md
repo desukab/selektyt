@@ -61,24 +61,24 @@ measured by `ffprobe`.
 | No asset-clip reads past its asset's declared extent | **PASS** — 6/6 |
 | FCPXML spine advances; no clip precedes its predecessor | **PASS** |
 | EDL total span == FCPXML spine total | **PASS** — 0.00 frames on all six |
-| Timeline duration == rendered MP4 duration (both presets) | **PASS** — 0.00–0.69 frames |
-| EDL source in/out == the selection the cut was made from | **PASS** — worst endpoint deviation 1.00 frame over 54 timeline/format pairs, inside the 1.5-frame tolerance |
-| FCPXML asset duration and frame rate == the real container, read by `ffprobe` | **PASS** — 9 timelines over 2 sources; worst disagreement 0.425 frame (`royal-society-cloke`, the other source reads 0.168), within the 0.95-frame tolerance |
+| Timeline duration == rendered MP4 duration (both presets) | **PASS** — 0.00–0.70 frames |
+| EDL source in/out == the selection the cut was made from | **PASS** — worst endpoint deviation 1.00 frame over 60 timeline/format pairs, inside the 1.5-frame tolerance |
+| FCPXML asset duration and frame rate == the real container, read by `ffprobe` | **PASS** — 11 timelines over 2 sources; worst disagreement 0.425 frame (`royal-society-cloke`, the other source reads 0.168), within the 0.95-frame tolerance |
 
 Full output is in `docs/nle-audit-output.txt`.
 
 ### The three formats agree with each other and with the render
 
 For each cut the EDL's total record span, the FCPXML's spine total, and both
-rendered MP4s agree to within 0.69 frames, measured over all 27 clips across
+rendered MP4s agree to within 0.70 frames, measured over all 30 timelines across
 the seven sources that render. This matters more than it sounds:
 the EDL and the FCPXML are emitted by separate code paths, and the render by a
 third (ffmpeg filter chains). Their agreement is the only evidence available
 here that all three describe the same cut. The EDL and the FCPXML agree with
-each other exactly — 0.00 frames on all 27 — so the whole 0.69-frame spread
+each other exactly — 0.00 frames on all 30 — so the whole 0.70-frame spread
 comes from the render side.
 
-A systematic 0–1 frame shortfall remains: 22 of the 54 clip/render pairs are
+A systematic 0–1 frame shortfall remains: 28 of the 60 timeline/render pairs are
 short by a fraction of a frame, each ~21 ms regardless of frame rate, which is
 container overhead rather than a cut disagreement. The tolerance is 2 frames,
 set by measuring the committed corpus rather than by taste — it is ~2.9× the

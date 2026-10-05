@@ -9,9 +9,12 @@ exists.
 
 This tool re-scores each run's committed ``transcript.json`` with the current
 editorial code and compares the result with the selection the run shipped. It
-needs no media — selection is a function of the transcript alone, which is
-what makes this check cheap enough to run in CI — and it changes nothing on
-disk. It reports, per run:
+needs no media — the duration the corpus uses is inferred from the segment ends,
+which is what makes this check cheap enough to run in CI — and it changes
+nothing on disk. The selection it replays is the full stack the pipeline runs,
+``rank`` then the context gate then ``engine.selection.select`` with the corpus
+built from the transcript, because the shipped artifact is the last stage's
+output and the first stage alone is not it. It reports, per run:
 
   * span reproduction   the same clips in the same order, to the millisecond;
   * score reproduction  the same story type and total score per clip;
@@ -167,11 +170,31 @@ def audit_run(run_dir: Path) -> dict:
         if probs else "none recorded — confidence reads as unknown",
     }
 
-    # The pipeline calls rank with three times the requested clip count and
-    # truncates afterwards. Reproducing that exactly matters: the
-    # topic-overlap and story-kind caps relax on the last slot, so a smaller
-    # limit can yield a different final clip.
-    current = rank(make_thoughts(segments), limit=max(n * 3, n))[:n]
+    # The pipeline's selection is three stages, not one, and only the first is
+    # a sort. Replicating just the sort was enough while the policy layer had
+    # not changed anything, but the shipped selection is the policy layer's
+    # output: on ooi-vertical ``rank`` alone returns 113.42 / 41.42 / 90.73
+    # while the run shipped 113.42 / 12.22 / 41.42, because the corpus's threads
+    # moved the second clip in. An audit that replays the sort and calls that
+    # difference drift is reporting a code path the pipeline no longer ends in.
+    #
+    # The pipeline itself degrades rather than failing when the corpus cannot be
+    # built — the selector reads a missing corpus as absent and falls back to
+    # its diversity-only terms — so the audit has to degrade the same way rather
+    # than crash. A replay that cannot reach the policy layer reports the rank
+    # head and says what it did not run, which is a weaker check stated as such,
+    # not a verdict pretending to be the full stack.
+    try:
+        current, replay_note = _select_as_pipeline(segments, language, n)
+    except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+        current = rank(make_thoughts(segments),
+                       limit=max(n * 3, n), select_limit=n)[:n]
+        replay_note = (
+            f"the policy layer could not be replayed ({type(exc).__name__}: "
+            f"{exc}), so this is the ranked head, not the shipped stack"
+        )
+    if replay_note:
+        out["replay"] = replay_note
     out["clips_now"] = len(current)
 
     if len(current) != n:
@@ -323,12 +346,68 @@ def _explain_field_drift(differing: list[str], prose_moved: bool,
     return " ".join(parts)
 
 
+def _select_as_pipeline(segments, language: str, limit: int):
+    """Replay the selection the way the pipeline actually makes it.
+
+    The shipped ``selections.json`` is not the head of the ranked list. The
+    pipeline is, in order, ``rank`` then the context gate then
+    ``engine.selection.select`` over the survivors with the corpus built from
+    this transcript — see ``selekyt.pipeline`` at the ``_apply_selection_policy``
+    call. Replaying the first stage alone reads as drift whenever the policy
+    layer re-orders anything, which is a claim that the code changed its
+    judgement when it only changed which stage finishes the job.
+
+    Duration is inferred from the segment ends exactly as the pipeline infers
+    it, so the audit needs no media: ``source`` reaches the corpus as a label
+    only and is not part of thread construction.
+
+    Returns ``(selected, note)`` where ``note`` is empty on a complete replay
+    and otherwise names what the replay could not run, so the report can say
+    whether it is the shipped stack or a partial one.
+    """
+    from engine.corpus import build_corpus
+    from engine.selection import select
+
+    ranked = rank(make_thoughts(segments),
+                  limit=max(limit * 3, limit), select_limit=limit)
+    passed = [c for c in ranked if validate(c)[0]]
+    if not passed:
+        return [], "the context gate passed no candidates, so there was " \
+                   "nothing for the policy layer to order"
+    duration = max((s.end for s in segments), default=0.0)
+    corpus = build_corpus(segments, duration=duration,
+                          language=language or "unknown")
+    return list(select(passed, limit=limit, corpus=corpus).candidates), ""
+
+
 def _gate_verdict_for(candidates, start: float, end: float) -> str:
-    """Why the current gate treats the clip that spanned start-end."""
-    for c in candidates:
-        if abs(c.start - start) < 1e-9 and abs(c.end - end) < 1e-9:
-            ok, why = validate(c)
-            return "passes" if ok else f"rejected: {why}"
+    """Why the current gate treats the clip that spanned start-end.
+
+    The word-anchored sentence timer lands a sentence's bound on the word that
+    composes it, where the old proportional timer put it at a share of the
+    segment's length. On telugu-tutorial that moved the shipped span's end from
+    332.06 to 331.20 — same sentences, same rejection, a bound that is now the
+    last word's end instead of a fraction of the segment. A lookup that demands
+    the exact span would then report "not generated" for a clip the code does
+    generate and does reject, which reads as the clip vanishing when it is the
+    *reason* it vanishes that the report is for. When no exact match exists the
+    nearest candidate at the same start is used, and the report names the span
+    it actually read so the substitution is visible rather than silent.
+    """
+    exact = [c for c in candidates
+             if abs(c.start - start) < 1e-9 and abs(c.end - end) < 1e-9]
+    if exact:
+        ok, why = validate(exact[0])
+        return "passes" if ok else f"rejected: {why}"
+    same_start = [c for c in candidates if abs(c.start - start) < 1e-9]
+    if same_start:
+        # Nearest by end, so the report reads the candidate that most nearly is
+        # this clip rather than one that happens to open here and run on.
+        near = min(same_start, key=lambda c: abs(c.end - end))
+        ok, why = validate(near)
+        return (f"rejected: {why}"
+                f" (span now {near.start:.2f}-{near.end:.2f}, "
+                f"the word-anchored sentence timer moved the bound)")
     return "not generated at this span by the current code"
 
 
@@ -364,6 +443,8 @@ def _print_human(report: dict) -> None:
         print(f"    clips       {r['clips']} shipped / {r.get('clips_now')} now")
         print(f"    confidence  transcript mean={mean} "
               f"({wc.get('provenance')})")
+        if r.get("replay"):
+            print(f"    replay      {r['replay']}")
         if r["status"] == "count_drift":
             print(f"    note        {r['note']}")
             for d in r.get("dropped", []):

@@ -6,28 +6,43 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
-Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+Style: Default,Fredoka,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
 
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
-Dialogue: 0,0:00:00.00,0:00:02.01,Default,,0,0,0,,{\k50}Now{\k32}last{\k28}{\c&H00D7FF&\b1}year{\c&HFFFFFF&\b0}{\k18}the{\k26}UK{\k50}{\c&H00D7FF&\b1}recorded{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:02.04,0:00:03.85,Default,,0,0,0,,{\k24}its{\k56}highest{\k28}ever{\k44}{\c&H00D7FF&\b1}temperature{\c&HFFFFFF&\b0}{\k32}of
-Dialogue: 0,0:00:03.88,0:00:06.41,Default,,0,0,0,,{\k32}40{\k52}.3{\k26}{\c&H00D7FF&\b1}degrees{\c&HFFFFFF&\b0}{\k42}{\c&H00D7FF&\b1}Celsius{\c&HFFFFFF&\b0}{\k94}and{\k10}on
-Dialogue: 0,0:00:06.44,0:00:07.65,Default,,0,0,0,,{\k8}the{\k16}news{\k46}{\c&H00D7FF&\b1}recently{\c&HFFFFFF&\b0}{\k38}We've{\k16}seen
-Dialogue: 0,0:00:07.68,0:00:09.97,Default,,0,0,0,,{\k50}{\c&H00D7FF&\b1}devastating{\c&HFFFFFF&\b0}{\k74}floods{\k88}droughts{\k20}and
-Dialogue: 0,0:00:10.00,0:00:12.67,Default,,0,0,0,,{\k62}wildfires{\k82}{\c&H00D7FF&\b1}worldwide{\c&HFFFFFF&\b0}{\k50}My{\k20}next
-Dialogue: 0,0:00:12.70,0:00:14.31,Default,,0,0,0,,{\k28}guest{\k38}is{\k28}{\c&H00D7FF&\b1}Hannah{\c&HFFFFFF&\b0}{\k30}cloak{\k40}a
-Dialogue: 0,0:00:14.34,0:00:16.13,Default,,0,0,0,,{\k58}{\c&H00D7FF&\b1}specialist{\c&HFFFFFF&\b0}{\k30}in{\k48}extreme{\k46}weather
-Dialogue: 0,0:00:16.16,0:00:18.63,Default,,0,0,0,,{\k34}and{\k44}professor{\k46}of{\k80}{\c&H00D7FF&\b1}hydrology{\c&HFFFFFF&\b0}{\k46}at
-Dialogue: 0,0:00:18.66,0:00:20.79,Default,,0,0,0,,{\k8}the{\k36}{\c&H00D7FF&\b1}University{\c&HFFFFFF&\b0}{\k50}of{\k20}Reading{\k44}She
-Dialogue: 0,0:00:20.82,0:00:22.65,Default,,0,0,0,,{\k14}has{\k20}{\c&H00D7FF&\b1}appeared{\c&HFFFFFF&\b0}{\k26}on{\k28}TV{\k58}{\c&H00D7FF&\b1}including{\c&HFFFFFF&\b0}{\k40}in
-Dialogue: 0,0:00:22.68,0:00:24.43,Default,,0,0,0,,{\k10}the{\k52}{\c&H00D7FF&\b1}panorama{\c&HFFFFFF&\b0}{\k54}episode{\k62}wild
-Dialogue: 0,0:00:24.46,0:00:26.11,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}weather{\c&HFFFFFF&\b0}{\k36}our{\k36}world{\k30}under{\k30}threat
-Dialogue: 0,0:00:26.14,0:00:28.13,Default,,0,0,0,,{\k84}And{\k32}{\c&H00D7FF&\b1}she{\c&HFFFFFF&\b0}{\k12}was{\k14}a{\k28}{\c&H00D7FF&\b1}subject{\c&HFFFFFF&\b0}{\k32}of
-Dialogue: 0,0:00:28.16,0:00:29.93,Default,,0,0,0,,{\k12}the{\k26}Life{\k48}{\c&H00D7FF&\b1}Scientific{\c&HFFFFFF&\b0}{\k44}on{\k24}{\c&H00D7FF&\b1}Radio{\c&HFFFFFF&\b0}{\k26}4
-Dialogue: 0,0:00:29.96,0:00:30.76,Default,,0,0,0,,{\k22}in{\k46}{\c&H00D7FF&\b1}2021.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:31.30,0:00:32.28,Default,,0,0,0,,{\k50}{\c&H00D7FF&\b1}Welcome{\c&HFFFFFF&\b0}{\k36}Hannah.
-Dialogue: 0,0:00:32.40,0:00:33.34,Default,,0,0,0,,{\k16}It's{\k16}{\c&H00D7FF&\b1}lovely{\c&HFFFFFF&\b0}{\k18}to{\k12}be{\k20}here.
-Dialogue: 0,0:00:33.78,0:00:35.63,Default,,0,0,0,,{\k50}When{\k18}did{\k12}you{\k44}first{\k64}{\c&H00D7FF&\b1}discover{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:35.66,0:00:37.93,Default,,0,0,0,,{\k36}your{\k84}{\c&H00D7FF&\b1}fascination{\c&HFFFFFF&\b0}{\k50}with{\k36}water{\k24}and
-Dialogue: 0,0:00:37.96,0:00:38.26,Default,,0,0,0,,{\k30}{\c&H00D7FF&\b1}geography?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.00,0:00:01.15,Default,,0,0,0,,{\k20}{\c&H00D7FF&\b1}sounds{\c&HFFFFFF&\b0}{\k30} like{\k38} I{\k6} mean{\k12} I{\k12}{\c&H00D7FF&\b1} know{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:01.18,0:00:02.71,Default,,0,0,0,,{\k24}this{\k28} but{\k32} you{\k12}{\c&H00D7FF&\b1} know{\c&HFFFFFF&\b0}{\k34}{\c&H00D7FF&\b1} arts{\c&HFFFFFF&\b0}{\k26} and
+Dialogue: 0,0:00:02.74,0:00:03.85,Default,,0,0,0,,{\k40}{\c&H00D7FF&\b1}sciences{\c&HFFFFFF&\b0}{\k30} if{\k10} we{\k12} need{\k8} to{\k14}{\c&H00D7FF&\b1} talk{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:03.88,0:00:04.63,Default,,0,0,0,,{\k10}to{\k12} each{\k18}{\c&H00D7FF&\b1} other{\c&HFFFFFF&\b0}{\k14}{\c&H00D7FF&\b1} then{\c&HFFFFFF&\b0}{\k10} we{\k14} can
+Dialogue: 0,0:00:04.66,0:00:06.31,Default,,0,0,0,,{\k32}learn{\k74} new{\k22}{\c&H00D7FF&\b1} things{\c&HFFFFFF&\b0}{\k20} from{\k20} each
+Dialogue: 0,0:00:06.34,0:00:07.64,Default,,0,0,0,,{\k22}other{\k32} which{\k32} which{\k10} is{\k22}{\c&H00D7FF&\b1} brilliant.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:07.76,0:00:08.66,Default,,0,0,0,,{\k1}Yeah{\k20} and{\k10} not{\k14} be{\k34}{\c&H00D7FF&\b1} frightened.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:08.78,0:00:10.67,Default,,0,0,0,,{\k12}I{\k1}{\c&H00D7FF&\b1} know{\c&HFFFFFF&\b0}{\k54}{\c&H00D7FF&\b1} 100{\c&HFFFFFF&\b0}{\k16}%{\k52} and{\k58} so
+Dialogue: 0,0:00:10.70,0:00:12.43,Default,,0,0,0,,{\k40}that's{\k16}{\c&H00D7FF&\b1} really{\c&HFFFFFF&\b0}{\k32} great{\k30} and{\k58} is
+Dialogue: 0,0:00:12.46,0:00:13.81,Default,,0,0,0,,{\k10}there{\k28}{\c&H00D7FF&\b1} something{\c&HFFFFFF&\b0}{\k60} that{\k26} you{\k14} would
+Dialogue: 0,0:00:13.84,0:00:16.03,Default,,0,0,0,,{\k22}be{\k44}{\c&H00D7FF&\b1} devastated{\c&HFFFFFF&\b0}{\k40} to{\k22}{\c&H00D7FF&\b1} lose{\c&HFFFFFF&\b0}{\k32} if{\k62} it
+Dialogue: 0,0:00:16.06,0:00:17.20,Default,,0,0,0,,{\k14}got{\k16}{\c&H00D7FF&\b1} swept{\c&HFFFFFF&\b0}{\k30} away{\k16} in{\k10} the{\k16}{\c&H00D7FF&\b1} flood?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:17.72,0:00:18.89,Default,,0,0,0,,{\k32}It's{\k20} really{\k44}{\c&H00D7FF&\b1} important{\c&HFFFFFF&\b0}{\k24} actually
+Dialogue: 0,0:00:18.92,0:00:20.13,Default,,0,0,0,,{\k14}to{\k36}{\c&H00D7FF&\b1} focus{\c&HFFFFFF&\b0}{\k28} on{\k14} that{\k14} when{\k18}{\c&H00D7FF&\b1} you're{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:20.16,0:00:21.39,Default,,0,0,0,,{\k18}trying{\k16} to{\k38}{\c&H00D7FF&\b1} communicate{\c&HFFFFFF&\b0}{\k30} to{\k24} people
+Dialogue: 0,0:00:21.42,0:00:22.61,Default,,0,0,0,,{\k28}{\c&H00D7FF&\b1}whether{\c&HFFFFFF&\b0}{\k32} they're{\k6} at{\k24} flood{\k32} risk
+Dialogue: 0,0:00:22.64,0:00:24.13,Default,,0,0,0,,{\k20}and{\k60} what's{\k40}{\c&H00D7FF&\b1} actually{\c&HFFFFFF&\b0}{\k22} going{\k10} to
+Dialogue: 0,0:00:24.16,0:00:24.95,Default,,0,0,0,,{\k22}{\c&H00D7FF&\b1}happen{\c&HFFFFFF&\b0}{\k24} to{\k22} them.
+Dialogue: 0,0:00:24.98,0:00:25.97,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}Because{\c&HFFFFFF&\b0}{\k16} if{\k14} they{\k16} just{\k20} think
+Dialogue: 0,0:00:26.00,0:00:27.59,Default,,0,0,0,,{\k24}{\c&H00D7FF&\b1}about{\c&HFFFFFF&\b0}{\k28} like{\k38} how{\k36} much{\k20}{\c&H00D7FF&\b1} rain{\c&HFFFFFF&\b0}{\k16} is
+Dialogue: 0,0:00:27.62,0:00:29.17,Default,,0,0,0,,{\k30}{\c&H00D7FF&\b1}falling{\c&HFFFFFF&\b0}{\k48} or{\k34} how{\k20} high{\k10} the{\k16}{\c&H00D7FF&\b1} river{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:29.20,0:00:30.78,Default,,0,0,0,,{\k30}is,{\k12} it{\k14}{\c&H00D7FF&\b1} means{\c&HFFFFFF&\b0}{\k34}{\c&H00D7FF&\b1} nothing{\c&HFFFFFF&\b0}{\k28} to{\k18} them.
+Dialogue: 0,0:00:31.06,0:00:32.13,Default,,0,0,0,,{\k20}But{\k12} if{\k14} you{\k28} pick{\k36}{\c&H00D7FF&\b1} something{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:32.16,0:00:33.39,Default,,0,0,0,,{\k32}that's{\k30} really{\k38}{\c&H00D7FF&\b1} precious{\c&HFFFFFF&\b0}{\k26} to
+Dialogue: 0,0:00:33.42,0:00:35.41,Default,,0,0,0,,{\k30}{\c&H00D7FF&\b1}someone,{\c&HFFFFFF&\b0}{\k18} so{\k16} for{\k34} me{\k58}{\c&H00D7FF&\b1} that's{\c&HFFFFFF&\b0}{\k14} my
+Dialogue: 0,0:00:35.44,0:00:36.68,Default,,0,0,0,,{\k58}{\c&H00D7FF&\b1}grandmother's{\c&HFFFFFF&\b0}{\k24} music{\k30} box.
+Dialogue: 0,0:00:37.10,0:00:37.71,Default,,0,0,0,,{\k1}You{\k12}{\c&H00D7FF&\b1} know,{\c&HFFFFFF&\b0}{\k12} she{\k20}{\c&H00D7FF&\b1} gave{\c&HFFFFFF&\b0}{\k8} it{\k10} to
+Dialogue: 0,0:00:37.74,0:00:39.31,Default,,0,0,0,,{\k22}me,{\k28} sadly{\k30} she's{\k18}{\c&H00D7FF&\b1} passed{\c&HFFFFFF&\b0}{\k36} away.
+Dialogue: 0,0:00:39.34,0:00:41.19,Default,,0,0,0,,{\k76}it{\k40}{\c&H00D7FF&\b1} means{\c&HFFFFFF&\b0}{\k26} a{\k14}{\c&H00D7FF&\b1} lot{\c&HFFFFFF&\b0}{\k18} for{\k14} my
+Dialogue: 0,0:00:41.22,0:00:42.89,Default,,0,0,0,,{\k46}{\c&H00D7FF&\b1}childhood{\c&HFFFFFF&\b0}{\k44} and{\k10} it{\k30}{\c&H00D7FF&\b1} sits{\c&HFFFFFF&\b0}{\k24} on{\k16} my
+Dialogue: 0,0:00:42.92,0:00:45.49,Default,,0,0,0,,{\k34}shelf{\k64} and{\k14} I{\k38}{\c&H00D7FF&\b1} always{\c&HFFFFFF&\b0}{\k70}{\c&H00D7FF&\b1} imagine,{\c&HFFFFFF&\b0}{\k14} you
+Dialogue: 0,0:00:45.52,0:00:46.91,Default,,0,0,0,,{\k10}know,{\k36} how{\k18}{\c&H00D7FF&\b1} would{\c&HFFFFFF&\b0}{\k16} I{\k40}{\c&H00D7FF&\b1} feel{\c&HFFFFFF&\b0}{\k20} if
+Dialogue: 0,0:00:46.94,0:00:48.05,Default,,0,0,0,,{\k16}that{\k14} got{\k24}{\c&H00D7FF&\b1} swept{\c&HFFFFFF&\b0}{\k34}{\c&H00D7FF&\b1} away{\c&HFFFFFF&\b0}{\k18} in{\k8} a
+Dialogue: 0,0:00:48.08,0:00:48.34,Default,,0,0,0,,{\k14}{\c&H00D7FF&\b1}flood?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:48.64,0:00:49.91,Default,,0,0,0,,{\k16}And{\k12} to{\k22} me{\k38}{\c&H00D7FF&\b1} that's{\c&HFFFFFF&\b0}{\k12} the{\k30}{\c&H00D7FF&\b1} real{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:49.94,0:00:51.36,Default,,0,0,0,,{\k34}{\c&H00D7FF&\b1}meaning{\c&HFFFFFF&\b0}{\k20} of{\k20} being{\k16} at{\k18}{\c&H00D7FF&\b1} flood{\c&HFFFFFF&\b0}{\k34} risk.

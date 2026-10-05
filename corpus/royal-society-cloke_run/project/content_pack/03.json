@@ -1,17 +1,19 @@
 {
   "titles": [
-    "The scenes people are moving around putting equipment in the right place going on alert.",
-    "As a structural engineer, I've been involved in, you know, urban planning and looking at cities and so on, how can we use the kind of modeling that you do to maybe better design where human beings decide to settle down?",
-    "The scenes people are moving around putting equipment in the right place going on alert"
+    "Are you able to make these predictions on now?",
+    "And sometimes they come along in an hour or something.",
+    "And some of the things we're most worried about actually are flash floods"
   ],
-  "instagram_caption": "The scenes people are moving around putting equipment in the right place going on alert. And with this kind of, I guess in the longer term, if I'm, you know, from my perspective as a structural engineer, I've been involved in, you know, urban planning and looking at cities and so on, how can we use the kind of modeling that you do to maybe better design where human beings decide to settle down?",
+  "instagram_caption": "Are you able to make these predictions on now? So when we're thinking about an upcoming flood, so it's going to flood tomorrow or next week, we can say with some confidence whether that flood is going to happen. But when we look a long term and we think about our changing climate, we can see how likely those types of floods are to happen in the future. And some of the things we're most worried about actually are flash floods. Those ones that are really difficult to predict in the short term. And sometimes they come along in an hour or something.",
   "hashtags": [
+    "#conflict",
     "#reels",
-    "#revelation",
     "#shorts"
   ],
-  "story_type": "revelation",
+  "story_type": "conflict",
   "source_based": true,
   "policy": "Generated from selected source speech; no fabricated claims.",
-  "clip_index": 3
+  "clip_index": 3,
+  "source_start": 311.92,
+  "source_end": 340.3
 }

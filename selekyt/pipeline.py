@@ -267,6 +267,41 @@ def _fingerprint(media: Path, source: str, model: str, language: str | None,
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
+def _cached_or_require_key(state: dict, source: str, model: str,
+                           language: str | None, provider: str,
+                           transcript_path: Path | None = None) -> str | None:
+    """Return the API key, unless this run will reuse a transcript it already has.
+
+    A cloud run whose transcript is already on disk for this exact source,
+    model and language never calls the transcriber, so it needs no live
+    credential. Anything else still requires one, and ``require_api_key``
+    raises rather than letting an explicit cloud choice fall back to local.
+
+    The reuse predicate here is the one the transcribe stage itself uses: the
+    fingerprint must match **and** no explicit language may have been asked
+    for, since a cached transcript plus ``--language x`` falls through and
+    re-transcribes. Checking the fingerprint alone would hand a ``None`` key to
+    a transcription that does run.
+
+    ``None`` is the sentinel for "no key needed" rather than an empty string,
+    because an empty key is what a misconfigured environment looks like and the
+    distinction between "unused" and "missing" has to survive to the call site.
+    """
+    if language:
+        return require_transcription_api_key(provider)
+    media = Path(state.get("media_path") or source).expanduser()
+    try:
+        already = (_fingerprint(media, source, model, language, provider)
+                   == state.get("fingerprint"))
+    except OSError:
+        # The source is a URL that has not been downloaded yet, so there is no
+        # file to fingerprint and therefore no transcript to reuse.
+        already = False
+    if already and (transcript_path is None or transcript_path.is_file()):
+        return None
+    return require_transcription_api_key(provider)
+
+
 def _render_is_valid(path: Path, *, vertical: bool, source: Path | None = None) -> bool:
     """Confirm a cached render is a complete, correctly-oriented video.
 
@@ -866,19 +901,29 @@ def run(
         raise ValueError(
             f"transcription provider must be one of: {', '.join(TRANSCRIPTION_PROVIDERS)}"
         )
-    cloud_key = None
-    if provider != "local":
-        # Resolve credentials before downloading a URL or creating output. An
-        # explicit cloud choice never changes into a local run on error.
-        cloud_key = require_transcription_api_key(provider)
-    if provider == "local" and select_engine(model) is None:
-        raise RuntimeError(_ENGINE_INSTALLED_MESSAGE)
-    # The report's provenance needs the wall-clock moment the run began, not the
-    # moment the report was assembled — the latter made ``duration_seconds``
-    # read as the whole run while measuring only the final write (0.015 s on a
-    # nine-minute run).
     run_started = time.time()
     project = out_root / "project"
+    state_path = project / STATE_NAME
+    # Read before the directory is created: the transcript cache decides
+    # whether a cloud run needs a credential at all, and that decision has to
+    # be made before anything is written, so a run that cannot authenticate
+    # leaves no project behind. Reading a state file that does not exist yet
+    # yields an empty state rather than creating the directory.
+    state = _load_state(state_path)
+    cloud_key = None
+    if provider != "local":
+        # Credentials are resolved only when a transcription will actually run.
+        # An already-completed transcript for this source and model is reused
+        # without a live key, which is what the cache is for: an expired or
+        # absent key must not block re-running a fixed pipeline over a
+        # transcript that was already paid for. An explicit cloud choice still
+        # never falls back to local — when the transcript is not cached the key
+        # is required and the run fails rather than switching engines.
+        cloud_key = _cached_or_require_key(
+            state, source, model, language, provider,
+            transcript_path=project / "transcript.json")
+    if provider == "local" and select_engine(model) is None:
+        raise RuntimeError(_ENGINE_INSTALLED_MESSAGE)
     project.mkdir(parents=True, exist_ok=True)
     # Resolved before anything is recorded: report.json quotes these paths to
     # readers that are not standing where the CLI was invoked — the desktop

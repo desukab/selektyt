@@ -3,59 +3,91 @@
   "errors": [],
   "warnings": [],
   "per_file": {
-    "corpus/ooi-vertical_run/project/facebook/01.mp4": {
+    "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/facebook/01.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 13102213,
+      "size": 7938388,
       "warnings": []
     },
-    "corpus/ooi-vertical_run/project/shorts/01.mp4": {
+    "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/shorts/01.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 28129334,
+      "size": 17675302,
       "warnings": []
     },
-    "corpus/ooi-vertical_run/project/facebook/02.mp4": {
+    "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/facebook/02.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.25,
-      "size": 4723895,
+      "size": 6722064,
       "warnings": []
     },
-    "corpus/ooi-vertical_run/project/shorts/02.mp4": {
+    "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/shorts/02.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 10509297,
+      "size": 14427730,
       "warnings": []
     },
-    "corpus/ooi-vertical_run/project/facebook/03.mp4": {
+    "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/facebook/03.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 3263846,
+      "size": 17275037,
       "warnings": []
     },
-    "corpus/ooi-vertical_run/project/shorts/03.mp4": {
+    "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/shorts/03.mp4": {
       "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
       "silent_tail": false,
       "silent_tail_sec": 0.0,
       "black_frame_pct": 0.0,
-      "size": 7854626,
+      "size": 35051233,
+      "warnings": []
+    },
+    "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/facebook/program.mp4": {
+      "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.125,
+      "size": 30203784,
+      "warnings": []
+    },
+    "/home/azureuser/selektyt/corpus/ooi-vertical_run/project/shorts/program.mp4": {
+      "errors": [],
+      "audio_condition": "present",
+      "audio_message": "audio decodes (96000 sampled samples)",
+      "silent_tail": false,
+      "silent_tail_sec": 0.0,
+      "black_frame_pct": 0.0,
+      "size": 63648871,
       "warnings": []
     }
   },
-  "diversity": 0.44,
+  "diversity": 0.386,
   "source_coverage": {
-    "coverage_pct": 35.5,
-    "total_covered_sec": 53.96,
+    "coverage_pct": 40.3,
+    "total_covered_sec": 61.21,
     "overlaps": [],
     "overlap_count": 0
   },
@@ -64,18 +96,18 @@
     "selected_count": 3,
     "rejected_count": 0,
     "context_guard_rejections": 0,
-    "truncated_by_limit": 1,
-    "avg_duration": 17.99,
+    "truncated_by_limit": 2,
+    "avg_duration": 20.4,
     "duration_distribution": {
-      "<15s": 1,
-      "15-30s": 2,
+      "<15s": 0,
+      "15-30s": 3,
       "30-45s": 0,
       "45-55s": 0
     },
-    "silence_pct": 7.7,
+    "silence_pct": 10.8,
     "filler_pct": 0.0,
-    "avg_words_per_second": 2.21,
-    "avg_hook_latency": 5.47,
+    "avg_words_per_second": 2.19,
+    "avg_hook_latency": 4.95,
     "payoff_presence_rate": 1.0,
     "duplicate_overlap_rate": 0.0
   }

@@ -6,25 +6,25 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
-Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+Style: Default,Fredoka,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
 
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
-Dialogue: 0,0:00:00.00,0:00:01.27,Default,,0,0,0,,{\k44}The{\k30}{\c&H00D7FF&\b1}terrorists{\c&HFFFFFF&\b0}{\k22}should{\k14}be{\k20}aware
-Dialogue: 0,0:00:01.30,0:00:01.53,Default,,0,0,0,,{\k14}of{\k12}{\c&H00D7FF&\b1}that.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:01.56,0:00:02.71,Default,,0,0,0,,{\k28}They{\k16}{\c&H00D7FF&\b1}should{\c&HFFFFFF&\b0}{\k22}have{\k22}{\c&H00D7FF&\b1}seen{\c&HFFFFFF&\b0}{\k14}that{\k16}now
-Dialogue: 0,0:00:02.74,0:00:04.45,Default,,0,0,0,,{\k30}after{\k84}us{\k16}doing{\k18}this{\k26}{\c&H00D7FF&\b1}multiple{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:04.48,0:00:06.07,Default,,0,0,0,,{\k44}{\c&H00D7FF&\b1}times{\c&HFFFFFF&\b0}{\k46}and{\k32}with{\k20}{\c&H00D7FF&\b1}regard{\c&HFFFFFF&\b0}{\k16}to{\k4}your
-Dialogue: 0,0:00:06.10,0:00:07.53,Default,,0,0,0,,{\k24}question{\k24}{\c&H00D7FF&\b1}regarding{\c&HFFFFFF&\b0}{\k44}the{\k42}stf{\k12}We
-Dialogue: 0,0:00:07.56,0:00:08.83,Default,,0,0,0,,{\k20}stay{\k10}in{\k36}{\c&H00D7FF&\b1}continuous{\c&HFFFFFF&\b0}{\k36}contact{\k28}with
+Dialogue: 0,0:00:00.00,0:00:01.27,Default,,0,0,0,,{\k44}The{\k30}{\c&H00D7FF&\b1} terrorists{\c&HFFFFFF&\b0}{\k22} should{\k14} be{\k20} aware
+Dialogue: 0,0:00:01.30,0:00:01.53,Default,,0,0,0,,{\k14}of{\k12}{\c&H00D7FF&\b1} that.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:01.56,0:00:02.71,Default,,0,0,0,,{\k28}They{\k16}{\c&H00D7FF&\b1} should{\c&HFFFFFF&\b0}{\k22} have{\k22}{\c&H00D7FF&\b1} seen{\c&HFFFFFF&\b0}{\k14} that{\k16} now
+Dialogue: 0,0:00:02.74,0:00:04.45,Default,,0,0,0,,{\k30}after{\k84} us{\k16} doing{\k18} this{\k26}{\c&H00D7FF&\b1} multiple{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:04.48,0:00:06.07,Default,,0,0,0,,{\k44}{\c&H00D7FF&\b1}times{\c&HFFFFFF&\b0}{\k46} and{\k32} with{\k20}{\c&H00D7FF&\b1} regard{\c&HFFFFFF&\b0}{\k16} to{\k4} your
+Dialogue: 0,0:00:06.10,0:00:07.53,Default,,0,0,0,,{\k24}question{\k24}{\c&H00D7FF&\b1} regarding{\c&HFFFFFF&\b0}{\k44} the{\k42} stf{\k12} We
+Dialogue: 0,0:00:07.56,0:00:08.83,Default,,0,0,0,,{\k20}stay{\k10} in{\k36}{\c&H00D7FF&\b1} continuous{\c&HFFFFFF&\b0}{\k36} contact{\k28} with
 Dialogue: 0,0:00:08.86,0:00:09.18,Default,,0,0,0,,{\k20}{\c&H00D7FF&\b1}them{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:09.30,0:00:11.79,Default,,0,0,0,,{\k48}What{\k48}was{\k30}{\c&H00D7FF&\b1}used{\c&HFFFFFF&\b0}{\k48}to{\k50}{\c&H00D7FF&\b1}destroy{\c&HFFFFFF&\b0}{\k28}the
-Dialogue: 0,0:00:11.82,0:00:13.27,Default,,0,0,0,,{\k40}compound{\k40}what{\k30}kind{\k18}of{\k20}{\c&H00D7FF&\b1}ordinance{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:13.30,0:00:14.74,Default,,0,0,0,,{\k30}is{\k14}used{\k18}to{\k24}{\c&H00D7FF&\b1}destroy{\c&HFFFFFF&\b0}{\k18}the{\k28}{\c&H00D7FF&\b1}compound{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:14.86,0:00:15.99,Default,,0,0,0,,{\k48}Also,{\k16}you{\k22}{\c&H00D7FF&\b1}mentioned{\c&HFFFFFF&\b0}{\k18}that{\k10}you
-Dialogue: 0,0:00:16.02,0:00:17.23,Default,,0,0,0,,{\k22}had{\k28}{\c&H00D7FF&\b1}video{\c&HFFFFFF&\b0}{\k16}do{\k12}you{\k16}have{\k30}{\c&H00D7FF&\b1}video{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:17.26,0:00:19.64,Default,,0,0,0,,{\k28}from{\k76}inside{\k34}the{\k32}tunnel{\k56}{\c&H00D7FF&\b1}itself?{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:19.80,0:00:20.69,Default,,0,0,0,,{\k8}And{\k14}if{\k16}so{\k18}were{\k8}you{\k28}{\c&H00D7FF&\b1}able{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:20.72,0:00:21.99,Default,,0,0,0,,{\k8}to{\k10}get{\k14}that{\k28}{\c&H00D7FF&\b1}because{\c&HFFFFFF&\b0}{\k28}the{\k42}{\c&H00D7FF&\b1}canine{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:22.02,0:00:24.47,Default,,0,0,0,,{\k24}was{\k56}{\c&H00D7FF&\b1}wearing{\c&HFFFFFF&\b0}{\k110}{\c&H00D7FF&\b1}video{\c&HFFFFFF&\b0}{\k24}or{\k18}did{\k16}you
-Dialogue: 0,0:00:24.50,0:00:25.20,Default,,0,0,0,,{\k22}have{\k32}something{\k16}{\c&H00D7FF&\b1}else?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:09.30,0:00:11.79,Default,,0,0,0,,{\k48}What{\k48} was{\k30}{\c&H00D7FF&\b1} used{\c&HFFFFFF&\b0}{\k48} to{\k50}{\c&H00D7FF&\b1} destroy{\c&HFFFFFF&\b0}{\k28} the
+Dialogue: 0,0:00:11.82,0:00:13.27,Default,,0,0,0,,{\k40}compound{\k40} what{\k30} kind{\k18} of{\k20}{\c&H00D7FF&\b1} ordinance{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:13.30,0:00:14.74,Default,,0,0,0,,{\k30}is{\k14} used{\k18} to{\k24}{\c&H00D7FF&\b1} destroy{\c&HFFFFFF&\b0}{\k18} the{\k28}{\c&H00D7FF&\b1} compound{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:14.86,0:00:15.99,Default,,0,0,0,,{\k48}Also,{\k16} you{\k22}{\c&H00D7FF&\b1} mentioned{\c&HFFFFFF&\b0}{\k18} that{\k10} you
+Dialogue: 0,0:00:16.02,0:00:17.23,Default,,0,0,0,,{\k22}had{\k28}{\c&H00D7FF&\b1} video{\c&HFFFFFF&\b0}{\k16} do{\k12} you{\k16} have{\k30}{\c&H00D7FF&\b1} video{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:17.26,0:00:19.64,Default,,0,0,0,,{\k28}from{\k76} inside{\k34} the{\k32} tunnel{\k56}{\c&H00D7FF&\b1} itself?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:19.80,0:00:20.69,Default,,0,0,0,,{\k8}And{\k14} if{\k16} so{\k18} were{\k8} you{\k28}{\c&H00D7FF&\b1} able{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:20.72,0:00:21.99,Default,,0,0,0,,{\k8}to{\k10} get{\k14} that{\k28}{\c&H00D7FF&\b1} because{\c&HFFFFFF&\b0}{\k28} the{\k42}{\c&H00D7FF&\b1} canine{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:22.02,0:00:24.47,Default,,0,0,0,,{\k24}was{\k56}{\c&H00D7FF&\b1} wearing{\c&HFFFFFF&\b0}{\k110}{\c&H00D7FF&\b1} video{\c&HFFFFFF&\b0}{\k24} or{\k18} did{\k16} you
+Dialogue: 0,0:00:24.50,0:00:25.20,Default,,0,0,0,,{\k22}have{\k32} something{\k16}{\c&H00D7FF&\b1} else?{\c&HFFFFFF&\b0}

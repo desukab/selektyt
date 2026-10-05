@@ -1,43 +1,47 @@
 1
-0:00:00,060 --> 0:00:01,967
-Gliders fill in gaps between the
+0:00:00,000 --> 0:00:01,307
+Scientists need to know where
 
 2
-0:00:02,000 --> 0:00:03,107
-arrays, traveling
+0:00:01,340 --> 0:00:03,187
+these changes are occurring and
 
 3
-0:00:03,140 --> 0:00:06,487
-on
+0:00:03,220 --> 0:00:03,880
+how fast.
 
 4
-0:00:06,520 --> 0:00:08,407
-a data mules send oceanographic
+0:00:03,999 --> 0:00:05,307
+That's why we have the Ocean
 
 5
-0:00:08,440 --> 0:00:10,587
-measurements back to OOI servers
+0:00:05,340 --> 0:00:07,407
+Observatories Initiative, or
 
 6
-0:00:10,620 --> 0:00:11,700
-when they surface.
+0:00:07,440 --> 0:00:08,560
+OOI.
 
 7
-0:00:11,820 --> 0:00:13,487
-The Ocean Observatories Initiative
+0:00:08,680 --> 0:00:10,827
+OOI is a science-driven ocean
 
 8
-0:00:13,520 --> 0:00:15,927
-has revolutionized marine research
+0:00:10,860 --> 0:00:12,467
+-observing network that
 
 9
-0:00:15,960 --> 0:00:18,347
-with free access to high quality
+0:00:12,500 --> 0:00:13,987
+delivers real-time data to
 
 10
-0:00:18,380 --> 0:00:20,907
-data from remote locations and at
+0:00:14,020 --> 0:00:15,427
+researchers investigating our
 
 11
-0:00:20,940 --> 0:00:22,580
-unprecedented timescales.
+0:00:15,460 --> 0:00:17,987
+changing ocean on a coastal and
+
+12
+0:00:18,020 --> 0:00:19,060
+planetary scale.

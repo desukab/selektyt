@@ -28,17 +28,22 @@ from tools.corpus_reproducibility import (
 
 _REPO = Path(__file__).resolve().parent.parent
 # Fixture for the tool-behaviour tests below. ooi-vertical is a delivering run
-# that still reproduces, so it is a valid stand-in for a committed selection the
-# current code agrees with. nasa360-ep5 used to hold this role but no longer
-# can: the candidate-scan fix described in docs/CORPUS_BENCHMARK_STATUS.md let
-# its tail generate candidates for the first time, so its committed selection is
-# now an intentional drift. pentagon-esper-briefing held it, lost it to the
-# word-boundary fix in engine/edit_plan.py, and then had its media re-run under
-# the fixed engine, so it agrees with the current code again -- and reads ``ok``
-# rather than ``reproduces``, because nothing about it is stale enough to need
-# re-measuring. ooi-vertical stays the fixture because it exercises the harder
-# case: its committed reason strings predate the sentence move, so it is a real
-# "spans identical, confidence re-measured" comparison rather than an exact one.
+# whose media this host holds, so it is a valid stand-in for a committed
+# selection the current code agrees with. nasa360-ep5 used to hold this role
+# but no longer can: the candidate-scan fix described in
+# docs/CORPUS_BENCHMARK_STATUS.md let its tail generate candidates for the
+# first time, so its committed selection is now an intentional drift.
+# pentagon-esper-briefing held it, lost it to the word-boundary fix in
+# engine/edit_plan.py, and then had its media re-run under the fixed engine, so
+# it agrees with the current code again -- and reads ``ok`` rather than
+# ``reproduces``, because nothing about it is stale enough to need re-measuring.
+#
+# ooi exercises a different and harder case: its media was re-run on this host
+# too, so it reads ``ok``, and the reason strings its artifacts carry were
+# written by the code under test rather than by a pre-sentence-move version.
+# That makes it the fixture for the tolerance test, which needs a run whose
+# total_score the current code agrees with at the precision the artifact
+# records.
 _RUN = _REPO / "corpus" / "ooi-vertical_run"
 _HAVE_CORPUS = (_REPO / "corpus" / "ooi-vertical_run" / "project" / "selections.json").is_file()
 
@@ -107,6 +112,10 @@ def test_committed_selections_reproduce_except_four_named_changed_runs():
     written by the code under test. That is the honest way to close the loop:
     the alternative is a selection that reproduces on paper while the render
     still ships the clipped word.
+
+    **ooi-vertical** went the same way: its media is on this host, and the
+    render's audio-start fix was confirmed by re-running it, so it too reads
+    ``ok`` rather than ``reproduces``.
 
     This test fails if any *other* run stops reproducing, or if any named
     run's scores change in a way the docs do not record — either would mean
@@ -182,7 +191,21 @@ def test_low_confidence_sources_are_now_named_as_such():
             # a working gate rather than of editorial decay.
             assert dropped["total_score"] is not None
             assert dropped["confidence_recorded"] == 0.9
-            assert "rejected: low factual confidence" == dropped["gate_verdict_now"]
+            # telugu's span is the one case where the bound itself moved: the
+            # word-anchored sentence timer puts a sentence's end on the word
+            # that composes it, and this shipped clip's end lands at 331.20
+            # now rather than 332.06. The rejection is the same one and is
+            # reported in the verdict's own words, with the moved bound named
+            # alongside it so the clip is not silently read at a span the
+            # artifact does not record.
+            verdict = dropped["gate_verdict_now"]
+            if name == "telugu-tutorial_run":
+                assert verdict.startswith("rejected: low factual confidence"), verdict
+                assert "word-anchored sentence timer moved the bound" in verdict, (
+                    f"{name}: the bound moved, and the report must say so rather "
+                    f"than present the substituted span as the recorded one")
+            else:
+                assert "rejected: low factual confidence" == verdict
 
 
 # ── the audit tool's own behaviour ──
@@ -191,9 +214,15 @@ def test_low_confidence_sources_are_now_named_as_such():
 def test_comparison_tolerates_recorded_precision_but_not_real_change():
     """``total_score`` is written rounded to four decimals. Comparing at full
     float precision flags every clip; the audit has to see through the
-    rounding while still catching a genuinely different score."""
+    rounding while still catching a genuinely different score.
+
+    ``ooi-vertical`` was re-run on its real media under the fixed engine, so
+    the fixture is a selection the code under test wrote — the exact case the
+    tolerance exists for, where a score agrees at the precision it is recorded
+    at and disagrees only in the bits below it.
+    """
     run = audit_run(_RUN)
-    assert run["status"] == "reproduces"
+    assert run["status"] == "ok"
     for clip in run["clips_detail"]:
         assert "total_score" not in clip["differing_fields"]
 

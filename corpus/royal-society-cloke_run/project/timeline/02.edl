@@ -1,13 +1,18 @@
-TITLE:   Are you able to make these predictions on now?
+TITLE:   The risk changes that factor if it's going to happen more often, it's going to be worse.
 
 FCM: NON-DROP FRAME
 
-001  ROYAL_SO V     C        00:05:11:23 00:05:14:00 00:00:00:00 00:00:02:02
+001  ROYAL_SO V     C        00:03:01:19 00:03:41:16 00:00:00:00 00:00:39:22
      M2   royal-society-cloke.webm
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
-001  ROYAL_SO A     C        00:05:11:23 00:05:14:00 00:00:00:00 00:00:02:02
+001  ROYAL_SO A     C        00:03:01:19 00:03:41:16 00:00:00:00 00:00:39:22
 
-002  ROYAL_SO V     C        00:05:14:22 00:05:40:07 00:00:02:02 00:00:27:12
+002  ROYAL_SO V     C        00:03:42:06 00:03:51:16 00:00:39:22 00:00:49:07
      M2   royal-society-cloke.webm
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
-002  ROYAL_SO A     C        00:05:14:22 00:05:40:07 00:00:02:02 00:00:27:12
+002  ROYAL_SO A     C        00:03:42:06 00:03:51:16 00:00:39:22 00:00:49:07
+
+003  ROYAL_SO V     C        00:03:52:03 00:03:55:01 00:00:49:07 00:00:52:05
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+003  ROYAL_SO A     C        00:03:52:03 00:03:55:01 00:00:49:07 00:00:52:05

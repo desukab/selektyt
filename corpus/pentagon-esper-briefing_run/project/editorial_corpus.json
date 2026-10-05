@@ -7,11 +7,11 @@
   "duration": 959.6800000000001,
   "build": {
     "schema": "1.1",
-    "fingerprint": "5c8b1c7a14d0984c",
+    "fingerprint": "1b08e0d77976094f",
     "unit_count": 61,
-    "segment_count": 278,
+    "segment_count": 277,
     "duration_source": "given",
-    "note": "built from 278 segment(s) into 61 unit(s)"
+    "note": "built from 277 segment(s) into 61 unit(s)"
   },
   "has_word_timestamps": true,
   "has_speaker_labels": false,
@@ -34,7 +34,7 @@
       "word_count": 74,
       "coherence": 0.708,
       "boilerplate": false,
-      "timing_source": "word_aligned",
+      "timing_source": "character_proportional",
       "restatement_count": 0,
       "topic_id": 0,
       "thread_id": 0,
@@ -55,7 +55,7 @@
       "word_count": 29,
       "coherence": 1.0,
       "boilerplate": false,
-      "timing_source": "word_aligned",
+      "timing_source": "character_proportional",
       "restatement_count": 0,
       "topic_id": 0,
       "thread_id": 1,
@@ -80,7 +80,7 @@
       "word_count": 81,
       "coherence": 0.536,
       "boilerplate": false,
-      "timing_source": "word_aligned",
+      "timing_source": "character_proportional",
       "restatement_count": 0,
       "topic_id": 1,
       "thread_id": 2,
@@ -101,7 +101,7 @@
       "word_count": 23,
       "coherence": 0.5,
       "boilerplate": false,
-      "timing_source": "word_aligned",
+      "timing_source": "character_proportional",
       "restatement_count": 0,
       "topic_id": 2,
       "thread_id": 3,
@@ -124,7 +124,7 @@
       "word_count": 45,
       "coherence": 1.0,
       "boilerplate": false,
-      "timing_source": "word_aligned",
+      "timing_source": "character_proportional",
       "restatement_count": 0,
       "topic_id": 3,
       "thread_id": 4,
@@ -151,7 +151,7 @@
       "word_count": 95,
       "coherence": 1.0,
       "boilerplate": false,
-      "timing_source": "word_aligned",
+      "timing_source": "character_proportional",
       "restatement_count": 0,
       "topic_id": 2,
       "thread_id": 3,
@@ -177,7 +177,7 @@
       "word_count": 71,
       "coherence": 0.474,
       "boilerplate": false,
-      "timing_source": "word_aligned",
+      "timing_source": "character_proportional",
       "restatement_count": 0,
       "topic_id": 4,
       "thread_id": 5,
@@ -199,7 +199,7 @@
       "word_count": 31,
       "coherence": 1.0,
       "boilerplate": false,
-      "timing_source": "word_aligned",
+      "timing_source": "character_proportional",
       "restatement_count": 0,
       "topic_id": 5,
       "thread_id": 6,
@@ -210,7 +210,7 @@
     {
       "index": 8,
       "start": 175.83,
-      "end": 182.102,
+      "end": 182.07,
       "segment_indices": [
         39,
         40
@@ -220,7 +220,7 @@
       "word_count": 22,
       "coherence": 1.0,
       "boilerplate": false,
-      "timing_source": "word_aligned",
+      "timing_source": "character_proportional",
       "restatement_count": 0,
       "topic_id": 6,
       "thread_id": 7,
@@ -230,7 +230,7 @@
     },
     {
       "index": 9,
-      "start": 182.102,
+      "start": 182.79,
       "end": 191.75,
       "segment_indices": [
         40,
@@ -382,7 +382,7 @@
     {
       "index": 16,
       "start": 255.47,
-      "end": 273.387,
+      "end": 273.37,
       "segment_indices": [
         58,
         59,
@@ -406,7 +406,7 @@
     },
     {
       "index": 17,
-      "start": 273.387,
+      "start": 274.05,
       "end": 286.33,
       "segment_indices": [
         63,
@@ -429,16 +429,16 @@
     {
       "index": 18,
       "start": 286.33,
-      "end": 299.97,
+      "end": 299.83,
       "segment_indices": [
         65,
         66,
         67,
         68
       ],
-      "text": "In order to reduce the risk to U.S. forces and prevent miscalculation and escalation, an action consistent with operations in the past, we coordinated with appropriate militaries and other organizations in the region Thank you.",
+      "text": "In order to reduce the risk to U.S. forces and prevent miscalculation and escalation, an action consistent with operations in the past, we coordinated with appropriate militaries and other organizations in the region Thank you for watching.",
       "sentence_count": 4,
-      "word_count": 35,
+      "word_count": 37,
       "coherence": 1.0,
       "boilerplate": false,
       "timing_source": "character_proportional",
@@ -452,7 +452,7 @@
     {
       "index": 19,
       "start": 303.34,
-      "end": 309.318,
+      "end": 309.4,
       "segment_indices": [
         69,
         70
@@ -472,7 +472,7 @@
     },
     {
       "index": 20,
-      "start": 309.318,
+      "start": 309.98,
       "end": 340.44,
       "segment_indices": [
         70,
@@ -549,7 +549,7 @@
     },
     {
       "index": 23,
-      "start": 364.84,
+      "start": 364.84000000000003,
       "end": 393.98,
       "segment_indices": [
         90,
@@ -557,13 +557,12 @@
         92,
         93,
         94,
-        95,
-        96
+        95
       ],
-      "text": "India. Has the deployment of reinforcements that you announced last week begun? And could you describe more fully what you intend to do there? We have begun deploying and repositioning additional assets into the vicinity of Dar-Arzara. As I said the other day, it includes mechanized forces and other types of forces that will continue until we believe we have sufficient capability to ensure ISIS and other destabilizing actors are denied access to that oil facility.",
-      "sentence_count": 7,
-      "word_count": 76,
-      "coherence": 0.75,
+      "text": "Has the deployment of reinforcements that you announced last week begun, and could you describe more fully what you intend to do there? We have begun deploying and repositioning additional assets into the vicinity of Dar-Arzara. As I said the other day, it includes mechanized forces and other types of forces. That will continue until we believe we have sufficient capability to ensure ISIS and other destabilizing actors are denied access to that oil facility.",
+      "sentence_count": 6,
+      "word_count": 75,
+      "coherence": 1.0,
       "boilerplate": false,
       "timing_source": "character_proportional",
       "restatement_count": 0,
@@ -578,8 +577,8 @@
       "start": 393.98,
       "end": 400.7,
       "segment_indices": [
-        97,
-        98
+        96,
+        97
       ],
       "text": "Have you had any indications of any challenges to your presence there? Not at this time.",
       "sentence_count": 2,
@@ -599,10 +598,10 @@
       "start": 403.08,
       "end": 417.2,
       "segment_indices": [
+        98,
         99,
         100,
-        101,
-        102
+        101
       ],
       "text": "Sir, do you have video of Baghdadi's final moments? And also, are you partnering with the Kurds again on the ground? Can you explain how difficult this operation would have been if you didn't have troops or bases on the ground in Syria and in Iraq?",
       "sentence_count": 4,
@@ -622,8 +621,8 @@
       "start": 417.72,
       "end": 418.72,
       "segment_indices": [
-        103,
-        104
+        102,
+        103
       ],
       "text": "All right. Go ahead, Hamst.",
       "sentence_count": 2,
@@ -640,12 +639,12 @@
     },
     {
       "index": 27,
-      "start": 418.92,
+      "start": 418.91999999999996,
       "end": 424.68,
       "segment_indices": [
+        104,
         105,
-        106,
-        107
+        106
       ],
       "text": "Well, we do have video photos. We're not prepared at this time to release those. They're going through a declassification process.",
       "sentence_count": 3,
@@ -663,11 +662,11 @@
     {
       "index": 28,
       "start": 424.68,
-      "end": 434.74,
+      "end": 434.72,
       "segment_indices": [
+        107,
         108,
-        109,
-        110
+        109
       ],
       "text": "I think what you'll see here in the coming days is we'll set up some operational and tactical level briefings by Central Command, and you'll be provided some video and photos, etc.",
       "sentence_count": 3,
@@ -684,12 +683,12 @@
     },
     {
       "index": 29,
-      "start": 434.74,
+      "start": 435.0,
       "end": 440.18,
       "segment_indices": [
+        109,
         110,
-        111,
-        112
+        111
       ],
       "text": "of that. How difficult would it have been to carry out this operation if you didn't have troops on the ground?",
       "sentence_count": 3,
@@ -709,8 +708,8 @@
       "start": 441.76,
       "end": 445.62,
       "segment_indices": [
-        113,
-        114
+        112,
+        113
       ],
       "text": "From an operational standpoint, the United States military can strike any target anywhere anytime.",
       "sentence_count": 2,
@@ -727,12 +726,12 @@
     },
     {
       "index": 31,
-      "start": 446.54,
+      "start": 446.53999999999996,
       "end": 451.5,
       "segment_indices": [
+        114,
         115,
-        116,
-        117
+        116
       ],
       "text": "Yeah, I was going to say the same thing. We have incredible reach. We can strike anybody, anytime, anywhere.",
       "sentence_count": 3,
@@ -752,12 +751,12 @@
       "start": 452.26,
       "end": 483.68,
       "segment_indices": [
+        117,
         118,
         119,
         120,
         121,
-        122,
-        123
+        122
       ],
       "text": "The terrorists should be aware of that. They should have seen that now after us doing this multiple times and with regard to your question regarding the stf We stay in continuous contact with them What was used to destroy the compound what kind of ordinance is used to destroy the compound Also, you mentioned that you had video do you have video from inside the tunnel itself? And if so were you able to get that because the canine was wearing video or did you have something else?",
       "sentence_count": 6,
@@ -774,11 +773,11 @@
     },
     {
       "index": 33,
-      "start": 484.66,
+      "start": 484.65999999999997,
       "end": 488.02,
       "segment_indices": [
-        124,
-        125
+        123,
+        124
       ],
       "text": "wait She's getting one.",
       "sentence_count": 2,
@@ -798,6 +797,7 @@
       "start": 488.5,
       "end": 522.24,
       "segment_indices": [
+        125,
         126,
         127,
         128,
@@ -814,8 +814,7 @@
         139,
         140,
         141,
-        142,
-        143
+        142
       ],
       "text": "OK, how about one and a half? The name of the canine, please. And um. That was mine. That's it. You have three. That's three. So ordnance used. There's multiple types of ordnance used to include the jasms, the GBUs, health fires, as well as miniguns, small arms fire, et cetera. So we used a variety of munitions. And the bombs were used at the tail end in order to destroy the compound, which you saw on various videos, et cetera. Your second question about the video, I'm not going to classify the video what we do have and don't have.",
       "sentence_count": 18,
@@ -835,6 +834,7 @@
       "start": 522.58,
       "end": 541.52,
       "segment_indices": [
+        143,
         144,
         145,
         146,
@@ -842,8 +842,7 @@
         148,
         149,
         150,
-        151,
-        152
+        151
       ],
       "text": "At this time, I've seen a lot, and I'll wait until everything's appropriately declassified here in the coming days, and we'll make sure that you have provided that. We're not releasing the name of the dog right now. The dog is still in theater. The dog, the K-9, the military working dog, performed a tremendous service as they all do in a variety of situations.",
       "sentence_count": 9,
@@ -863,9 +862,9 @@
       "start": 542.06,
       "end": 555.12,
       "segment_indices": [
+        152,
         153,
-        154,
-        155
+        154
       ],
       "text": "slightly wounded and fully recovering, but the dog is still in theater, returned to duty, with its handler. So we're not going to release just yet photos or names of dogs or anything else. It's a classified unit protecting the dog's identity.",
       "sentence_count": 3,
@@ -885,8 +884,8 @@
       "start": 555.4,
       "end": 559.3199999999999,
       "segment_indices": [
-        156,
-        157
+        155,
+        156
       ],
       "text": "Do you want to say that whether Baghdadi burned at sea? That's four questions now.",
       "sentence_count": 2,
@@ -906,8 +905,8 @@
       "start": 559.7,
       "end": 561.3,
       "segment_indices": [
-        158,
-        159
+        157,
+        158
       ],
       "text": "Follow-up. That's a follow-up.",
       "sentence_count": 2,
@@ -924,11 +923,11 @@
     },
     {
       "index": 39,
-      "start": 561.32,
+      "start": 561.3199999999999,
       "end": 567.4,
       "segment_indices": [
-        160,
-        161
+        159,
+        160
       ],
       "text": "Baghdadi was just his remains were disposed of appropriately in accordance with our SOPs and in accordance with the law of law of conflict. Next.",
       "sentence_count": 2,
@@ -945,9 +944,10 @@
     },
     {
       "index": 40,
-      "start": 570.66,
+      "start": 570.6600000000001,
       "end": 621.16,
       "segment_indices": [
+        161,
         162,
         163,
         164,
@@ -958,8 +958,7 @@
         169,
         170,
         171,
-        172,
-        173
+        172
       ],
       "text": "Baggaddy's headquarters, this compound. Or was he just passing through? And if it was his headquarters, how much material did you take away? There was material taken away. I don't want to characterize exactly what or how much yet until it gets exploited properly. But as a matter of course, we always do sensitive site exploitation on any objective anywhere to do that. As to whether it's his headquarters, it was an area in which he was staying. And what about prisoners? You took some, how many, and whose custody are they in now? They're in our custody and they're at a secure facility. Can you tell us how many? There were two adult males taken off the objective alive, and they're in our custody.",
       "sentence_count": 13,
@@ -979,8 +978,8 @@
       "start": 624.25,
       "end": 625.79,
       "segment_indices": [
-        174,
-        175
+        173,
+        174
       ],
       "text": "MR. GERMAN, THANK YOU FOR YOUR TIME TODAY.",
       "sentence_count": 2,
@@ -1000,14 +999,14 @@
       "start": 626.27,
       "end": 655.53,
       "segment_indices": [
+        175,
         176,
         177,
         178,
         179,
         180,
         181,
-        182,
-        183
+        182
       ],
       "text": "I wanted to look at the what's next aspect. The President alluded to materials being collected from the site itself. Can you in any way elaborate on what's been collected, what's being looked through now, and what that might mean? We best not do for operational reasons, because that information needs to be exploited properly for any follow-on missions that we may choose to do. And I think the – what next is we will continue the mission, and the mission is to ensure the enduring defeat of ISIS in the region, and that's our mission.",
       "sentence_count": 8,
@@ -1027,11 +1026,11 @@
       "start": 655.89,
       "end": 671.79,
       "segment_indices": [
+        183,
         184,
         185,
         186,
-        187,
-        188
+        187
       ],
       "text": "Follow-up, please. We've seen reporting that this raid was launched from Al-Assad, from Erbil. Can you clarify and where it came from? Well, virtually we're not going to discuss the location from which the raid took place. It took place, obviously, somewhere in the region.",
       "sentence_count": 5,
@@ -1051,10 +1050,10 @@
       "start": 671.79,
       "end": 689.83,
       "segment_indices": [
+        188,
         189,
         190,
-        191,
-        192
+        191
       ],
       "text": "Can I take you back to the question on the oil fields and the military role in the oil field mission, if I may? So you're going to protect them again and keep control against ISIS and other potential adversaries.",
       "sentence_count": 4,
@@ -1074,13 +1073,13 @@
       "start": 690.61,
       "end": 723.4300000000001,
       "segment_indices": [
+        192,
         193,
         194,
         195,
         196,
         197,
-        198,
-        199
+        198
       ],
       "text": "Does it include the possibility, in your view, that U.S. troops are prepared to deny access to the oil fields to either Russian and or Syrian forces? is that in fact part of your mission to specifically deny them access? And my follow-on to that is, how do you know when you – what do you need to see to know you're done with the oil field mission? Presumably you're not keeping troops there absolutely forever. How do you know when you're done?",
       "sentence_count": 7,
@@ -1100,8 +1099,8 @@
       "start": 723.55,
       "end": 726.85,
       "segment_indices": [
-        200,
-        201
+        199,
+        200
       ],
       "text": "What do you need to see? But Russia and Syria, please.",
       "sentence_count": 2,
@@ -1121,6 +1120,7 @@
       "start": 726.85,
       "end": 776.37,
       "segment_indices": [
+        201,
         202,
         203,
         204,
@@ -1132,8 +1132,7 @@
         210,
         211,
         212,
-        213,
-        214
+        213
       ],
       "text": "Yeah, so the question you're asking, Barbara, is about purpose and end state on – and then the ways would be the military question. So I'm going to punt over to the Secretary specifically for that. But your – the military task that we've been given is to secure – continue to secure TAMF, which is down along the – you know where that is – down along the tri-border area. We'll continue to do that and to secure the Conoco oil fields in and around Dar-o-Zir. That is in the vicinity of the Middle Euphrates River Valley that you're familiar with. And the fundamental purpose of securing those oil fields is to deny those oil fields access to ISIS in order to prevent ISIS from resurgence, because we are still committed to the counter-ISIS campaign and we don't want them to resurge. They get a lot of their revenues from that. But I'll let the Secretary talk about in-states.",
       "sentence_count": 13,
@@ -1153,13 +1152,13 @@
       "start": 776.37,
       "end": 806.33,
       "segment_indices": [
+        214,
         215,
         216,
         217,
         218,
         219,
-        220,
-        221
+        220
       ],
       "text": "The second question is within what you want to do in the oilfield. Does that include denying access, preventing Russian or Syrian forces, which now have changed the battle spinoff? Yes, so the short answer is yes, it presently does, because in that case we want to make sure that SDF does have access to the resources in order to guard the prisons, in order to arm their own troops, in order to assist us with the defeat ISIS mission. And so that's our mission, is to secure the oil fields.",
       "sentence_count": 7,
@@ -1179,8 +1178,8 @@
       "start": 806.63,
       "end": 810.55,
       "segment_indices": [
-        222,
-        223
+        221,
+        222
       ],
       "text": "Next. You just said you would deny Russia and the regime.",
       "sentence_count": 2,
@@ -1200,10 +1199,10 @@
       "start": 811.11,
       "end": 821.11,
       "segment_indices": [
+        223,
         224,
         225,
-        226,
-        227
+        226
       ],
       "text": "Okay. General Milley, President Trump described yesterday, Baghdadi, whimpering and crying before he died. Can you elaborate or confirm those details?",
       "sentence_count": 4,
@@ -1223,6 +1222,7 @@
       "start": 822.55,
       "end": 846.6700000000001,
       "segment_indices": [
+        227,
         228,
         229,
         230,
@@ -1232,8 +1232,7 @@
         234,
         235,
         236,
-        237,
-        238
+        237
       ],
       "text": "Secretary was asked the same question yesterday. I know the President had planned to talk down to the unit and unit members, but I don't know what the source of that was there. But I assume it was talking directly to unit and unit members. So you don't have to talk to any unit members who have described that to you? I have not talked to unit members. No, that's correct. I've talked to the commander, Sincum, and others, but not down to the unit members, down at that level of fidelity.",
       "sentence_count": 11,
@@ -1250,11 +1249,11 @@
     },
     {
       "index": 52,
-      "start": 846.83,
+      "start": 846.8299999999999,
       "end": 848.81,
       "segment_indices": [
-        239,
-        240
+        238,
+        239
       ],
       "text": "All right, last question. What about the program?",
       "sentence_count": 2,
@@ -1271,14 +1270,14 @@
     },
     {
       "index": 53,
-      "start": 849.43,
+      "start": 849.4300000000001,
       "end": 860.1700000000001,
       "segment_indices": [
+        240,
         241,
         242,
         243,
-        244,
-        245
+        244
       ],
       "text": "Thank you for doing this. So the SDF commander has said that there was an SDF member that was part of this raid. He's talked about the intelligence that the SDF provided, putting a person inside with ISIS.",
       "sentence_count": 5,
@@ -1298,10 +1297,10 @@
       "start": 860.35,
       "end": 875.13,
       "segment_indices": [
+        245,
         246,
         247,
-        248,
-        249
+        248
       ],
       "text": "Can you confirm all of those details on your end And then also on the oil fields, can you just talk about the overall picture in Syria now after these last couple of weeks, putting more people in to protect these oil fields? Are there going to be more troops now in Syria than there were before?",
       "sentence_count": 4,
@@ -1321,9 +1320,9 @@
       "start": 875.45,
       "end": 880.61,
       "segment_indices": [
+        249,
         250,
-        251,
-        252
+        251
       ],
       "text": "Or is it? Well, I'll take the second question first, and I'll let the chairman answer the first one.",
       "sentence_count": 3,
@@ -1343,8 +1342,8 @@
       "start": 881.07,
       "end": 890.81,
       "segment_indices": [
-        253,
-        254
+        252,
+        253
       ],
       "text": "Look, we're, as I said, we're reinforcing our position at Dar-Azar, that area. We also were given the earlier directive to retain forces at the Antanth Garrison.",
       "sentence_count": 2,
@@ -1364,12 +1363,12 @@
       "start": 890.81,
       "end": 908.46,
       "segment_indices": [
+        254,
         255,
         256,
         257,
         258,
-        259,
-        260
+        259
       ],
       "text": "At the end of the day, we will be sending troops home. That's the President made a commitment to do that. But in the meantime, we're going to reinforce and make some other mo- that mission of securing the oil fields in order to deny them access to ISIS. So will there be more going in than there were coming out?",
       "sentence_count": 6,
@@ -1387,10 +1386,10 @@
     {
       "index": 58,
       "start": 908.68,
-      "end": 909.78,
+      "end": 909.5,
       "segment_indices": [
-        261,
-        262
+        260,
+        261
       ],
       "text": "Sorry, just to clear that up. No, no, no.",
       "sentence_count": 2,
@@ -1410,6 +1409,7 @@
       "start": 910.0,
       "end": 956.02,
       "segment_indices": [
+        262,
         263,
         264,
         265,
@@ -1421,8 +1421,7 @@
         271,
         272,
         273,
-        274,
-        275
+        274
       ],
       "text": "At the end of the day, my expectation is that it'll be fewer than what we had before. and they will be going home. And help me remind me of the first question. The first question was about the SDF commander saying that. Yeah, the SDF. So this was a U.S.-only operation for personnel that were on the objective. I know what you're referring to. There was a comment somewhere reported in the media that the SDF had soldiers or troops or one person or something on the objective with our forces. I'm not going to comment on what may or may not have happened with the SDF on the objective, the actions on the objective, the aircraft coming in, the aircraft overhead, and the soldiers conducting assault was a U.S.-only operation.",
       "sentence_count": 13,
@@ -1442,8 +1441,8 @@
       "start": 956.02,
       "end": 959.6800000000001,
       "segment_indices": [
-        276,
-        277
+        275,
+        276
       ],
       "text": "All right, thanks guys. If you have any follow-ups, you can come to me and Mr. Hoffman.",
       "sentence_count": 2,
@@ -1668,7 +1667,7 @@
         40
       ],
       "start": 175.83,
-      "end": 182.102,
+      "end": 182.07,
       "runs": 1,
       "span_share": 0.0065,
       "confidence": 0.3,
@@ -1694,10 +1693,10 @@
         41,
         42
       ],
-      "start": 182.102,
+      "start": 182.79,
       "end": 191.75,
       "runs": 1,
-      "span_share": 0.0101,
+      "span_share": 0.0093,
       "confidence": 0.3,
       "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
       "evidence": [
@@ -1835,9 +1834,9 @@
         63
       ],
       "start": 242.91,
-      "end": 273.387,
+      "end": 273.37,
       "runs": 1,
-      "span_share": 0.0318,
+      "span_share": 0.0317,
       "confidence": 0.679,
       "reason": "established subject: 2 units across 1 run(s) share signature terms general, united, operation (containment 0.25-0.25, rarity-weighted 0.18))",
       "evidence": [
@@ -1862,10 +1861,10 @@
         64,
         65
       ],
-      "start": 273.387,
+      "start": 274.05,
       "end": 286.33,
       "runs": 1,
-      "span_share": 0.0135,
+      "span_share": 0.0128,
       "confidence": 0.3,
       "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
       "evidence": [
@@ -1874,12 +1873,12 @@
     },
     {
       "topic_id": 14,
-      "label": "reduce, past, miscalculation",
+      "label": "watching, reduce, past",
       "terms": [
+        "watching",
         "reduce",
         "past",
-        "miscalculation",
-        "militaries"
+        "miscalculation"
       ],
       "unit_indices": [
         18
@@ -1891,9 +1890,9 @@
         68
       ],
       "start": 286.33,
-      "end": 299.97,
+      "end": 299.83,
       "runs": 1,
-      "span_share": 0.0142,
+      "span_share": 0.0141,
       "confidence": 0.3,
       "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
       "evidence": [
@@ -1960,11 +1959,12 @@
         84,
         85,
         86,
+        96,
         97,
-        98,
+        104,
         105,
         106,
-        107,
+        125,
         126,
         127,
         128,
@@ -1981,8 +1981,7 @@
         139,
         140,
         141,
-        142,
-        143
+        142
       ],
       "start": 340.44,
       "end": 522.24,
@@ -2041,17 +2040,16 @@
         92,
         93,
         94,
-        95,
-        96
+        95
       ],
-      "start": 364.84,
+      "start": 364.84000000000003,
       "end": 393.98,
       "runs": 1,
       "span_share": 0.0304,
       "confidence": 0.3,
       "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
       "evidence": [
-        "India. Has the deployment of reinforcements that you announced last week begun? And could…"
+        "Has the deployment of reinforcements that you announced last week begun, and could you de…"
       ]
     },
     {
@@ -2068,13 +2066,13 @@
         29
       ],
       "segment_indices": [
+        98,
         99,
         100,
         101,
-        102,
+        109,
         110,
-        111,
-        112
+        111
       ],
       "start": 403.08,
       "end": 440.18,
@@ -2099,8 +2097,8 @@
         26
       ],
       "segment_indices": [
-        103,
-        104
+        102,
+        103
       ],
       "start": 417.72,
       "end": 418.72,
@@ -2125,12 +2123,12 @@
         28
       ],
       "segment_indices": [
+        107,
         108,
-        109,
-        110
+        109
       ],
       "start": 424.68,
-      "end": 434.74,
+      "end": 434.72,
       "runs": 1,
       "span_share": 0.0105,
       "confidence": 0.3,
@@ -2153,11 +2151,11 @@
         31
       ],
       "segment_indices": [
+        112,
         113,
         114,
         115,
-        116,
-        117
+        116
       ],
       "start": 441.76,
       "end": 451.5,
@@ -2183,12 +2181,12 @@
         32
       ],
       "segment_indices": [
+        117,
         118,
         119,
         120,
         121,
-        122,
-        123
+        122
       ],
       "start": 452.26,
       "end": 483.68,
@@ -2216,8 +2214,9 @@
         53
       ],
       "segment_indices": [
+        123,
         124,
-        125,
+        143,
         144,
         145,
         146,
@@ -2226,16 +2225,15 @@
         149,
         150,
         151,
-        152,
+        173,
         174,
-        175,
+        240,
         241,
         242,
         243,
-        244,
-        245
+        244
       ],
-      "start": 484.66,
+      "start": 484.65999999999997,
       "end": 860.1700000000001,
       "runs": 4,
       "span_share": 0.3913,
@@ -2260,9 +2258,9 @@
         36
       ],
       "segment_indices": [
+        152,
         153,
-        154,
-        155
+        154
       ],
       "start": 542.06,
       "end": 555.12,
@@ -2288,8 +2286,9 @@
         40
       ],
       "segment_indices": [
+        155,
         156,
-        157,
+        161,
         162,
         163,
         164,
@@ -2300,8 +2299,7 @@
         169,
         170,
         171,
-        172,
-        173
+        172
       ],
       "start": 555.4,
       "end": 621.16,
@@ -2328,16 +2326,16 @@
         42
       ],
       "segment_indices": [
+        157,
         158,
-        159,
+        175,
         176,
         177,
         178,
         179,
         180,
         181,
-        182,
-        183
+        182
       ],
       "start": 559.7,
       "end": 655.53,
@@ -2363,10 +2361,10 @@
         39
       ],
       "segment_indices": [
-        160,
-        161
+        159,
+        160
       ],
-      "start": 561.32,
+      "start": 561.3199999999999,
       "end": 567.4,
       "runs": 1,
       "span_share": 0.0063,
@@ -2389,11 +2387,11 @@
         43
       ],
       "segment_indices": [
+        183,
         184,
         185,
         186,
-        187,
-        188
+        187
       ],
       "start": 655.89,
       "end": 671.79,
@@ -2420,6 +2418,7 @@
         46
       ],
       "segment_indices": [
+        188,
         189,
         190,
         191,
@@ -2431,8 +2430,7 @@
         197,
         198,
         199,
-        200,
-        201
+        200
       ],
       "start": 671.79,
       "end": 726.85,
@@ -2460,6 +2458,7 @@
         49
       ],
       "segment_indices": [
+        201,
         202,
         203,
         204,
@@ -2472,9 +2471,8 @@
         211,
         212,
         213,
-        214,
-        222,
-        223
+        221,
+        222
       ],
       "start": 726.85,
       "end": 810.55,
@@ -2501,16 +2499,16 @@
         55
       ],
       "segment_indices": [
+        214,
         215,
         216,
         217,
         218,
         219,
         220,
-        221,
+        249,
         250,
-        251,
-        252
+        251
       ],
       "start": 776.37,
       "end": 880.61,
@@ -2536,10 +2534,10 @@
         50
       ],
       "segment_indices": [
+        223,
         224,
         225,
-        226,
-        227
+        226
       ],
       "start": 811.11,
       "end": 821.11,
@@ -2568,6 +2566,7 @@
         59
       ],
       "segment_indices": [
+        227,
         228,
         229,
         230,
@@ -2580,17 +2579,17 @@
         237,
         238,
         239,
-        240,
+        245,
         246,
         247,
         248,
-        249,
+        254,
         255,
         256,
         257,
         258,
         259,
-        260,
+        262,
         263,
         264,
         265,
@@ -2602,8 +2601,7 @@
         271,
         272,
         273,
-        274,
-        275
+        274
       ],
       "start": 822.55,
       "end": 956.02,
@@ -2630,8 +2628,8 @@
         56
       ],
       "segment_indices": [
-        253,
-        254
+        252,
+        253
       ],
       "start": 881.07,
       "end": 890.81,
@@ -2654,13 +2652,13 @@
         58
       ],
       "segment_indices": [
-        261,
-        262
+        260,
+        261
       ],
       "start": 908.68,
-      "end": 909.78,
+      "end": 909.5,
       "runs": 1,
-      "span_share": 0.0011,
+      "span_share": 0.0009,
       "confidence": 0.3,
       "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
       "evidence": [
@@ -2680,8 +2678,8 @@
         60
       ],
       "segment_indices": [
-        276,
-        277
+        275,
+        276
       ],
       "start": 956.02,
       "end": 959.6800000000001,
@@ -2914,7 +2912,7 @@
         8
       ],
       "start": 175.83,
-      "end": 182.102,
+      "end": 182.07,
       "arc": "continuation",
       "span_share": 0.0065,
       "confidence": 0.25,
@@ -2939,10 +2937,10 @@
       "beat_indices": [
         9
       ],
-      "start": 182.102,
+      "start": 182.79,
       "end": 191.75,
       "arc": "tension",
-      "span_share": 0.0101,
+      "span_share": 0.0093,
       "confidence": 0.25,
       "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
       "evidence": [
@@ -3023,7 +3021,7 @@
           "setup_start": 207.95,
           "setup_end": 216.61,
           "payoff_start": 255.47,
-          "payoff_end": 273.387,
+          "payoff_end": 273.37,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.19) — the speaker asserts the causation",
           "evidence": [
@@ -3037,7 +3035,7 @@
         16
       ],
       "start": 207.95,
-      "end": 273.387,
+      "end": 273.37,
       "arc": "continuation → resolution",
       "span_share": 0.0682,
       "confidence": 0.825,
@@ -3121,7 +3119,7 @@
           "setup_start": 242.91,
           "setup_end": 254.97,
           "payoff_start": 255.47,
-          "payoff_end": 273.387,
+          "payoff_end": 273.37,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
           "evidence": [
@@ -3135,9 +3133,9 @@
         16
       ],
       "start": 242.91,
-      "end": 273.387,
+      "end": 273.37,
       "arc": "continuation → resolution",
-      "span_share": 0.0318,
+      "span_share": 0.0317,
       "confidence": 0.825,
       "reason": "chain of 2 unit(s) joined by 1 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
       "evidence": [
@@ -3161,10 +3159,10 @@
       "beat_indices": [
         17
       ],
-      "start": 273.387,
+      "start": 274.05,
       "end": 286.33,
       "arc": "continuation",
-      "span_share": 0.0135,
+      "span_share": 0.0128,
       "confidence": 0.25,
       "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
       "evidence": [
@@ -3173,12 +3171,12 @@
     },
     {
       "thread_id": 16,
-      "title": "reduce, past, miscalculation",
+      "title": "watching, reduce, past",
       "terms": [
+        "watching",
         "reduce",
         "past",
-        "miscalculation",
-        "militaries"
+        "miscalculation"
       ],
       "unit_indices": [
         18
@@ -3188,9 +3186,9 @@
         18
       ],
       "start": 286.33,
-      "end": 299.97,
+      "end": 299.83,
       "arc": "tension",
-      "span_share": 0.0142,
+      "span_share": 0.0141,
       "confidence": 0.25,
       "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
       "evidence": [
@@ -3214,9 +3212,9 @@
         19
       ],
       "start": 303.34,
-      "end": 309.318,
+      "end": 309.4,
       "arc": "continuation",
-      "span_share": 0.0062,
+      "span_share": 0.0063,
       "confidence": 0.25,
       "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
       "evidence": [
@@ -3239,10 +3237,10 @@
       "beat_indices": [
         20
       ],
-      "start": 309.318,
+      "start": 309.98,
       "end": 340.44,
       "arc": "continuation",
-      "span_share": 0.0324,
+      "span_share": 0.0317,
       "confidence": 0.25,
       "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
       "evidence": [
@@ -3287,7 +3285,7 @@
           "strength": 0.45,
           "setup_start": 340.44,
           "setup_end": 354.54,
-          "payoff_start": 418.92,
+          "payoff_start": 418.91999999999996,
           "payoff_end": 424.68,
           "confidence": 0.45,
           "reason": "subject returns after 5 intervening unit(s) — the return pays off the earlier setup",
@@ -3303,7 +3301,7 @@
           "strength": 0.65,
           "setup_start": 393.98,
           "setup_end": 400.7,
-          "payoff_start": 418.92,
+          "payoff_start": 418.91999999999996,
           "payoff_end": 424.68,
           "confidence": 0.65,
           "reason": "setup asks, payoff answers on the same subject (overlap 0.25)",
@@ -3372,14 +3370,14 @@
       "beat_indices": [
         23
       ],
-      "start": 364.84,
+      "start": 364.84000000000003,
       "end": 393.98,
       "arc": "tension",
       "span_share": 0.0304,
       "confidence": 0.25,
       "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
       "evidence": [
-        "India. Has the deployment of reinforcements that you announced last week begun? And could you describe more f…"
+        "Has the deployment of reinforcements that you announced last week begun, and could you describe more fully wh…"
       ]
     },
     {
@@ -3403,7 +3401,7 @@
           "strength": 0.45,
           "setup_start": 403.08,
           "setup_end": 417.2,
-          "payoff_start": 434.74,
+          "payoff_start": 435.0,
           "payoff_end": 440.18,
           "confidence": 0.45,
           "reason": "subject returns after 3 intervening unit(s) — the return pays off the earlier setup",
@@ -3470,7 +3468,7 @@
         28
       ],
       "start": 424.68,
-      "end": 434.74,
+      "end": 434.72,
       "arc": "continuation",
       "span_share": 0.0105,
       "confidence": 0.25,
@@ -3521,7 +3519,7 @@
       "beat_indices": [
         31
       ],
-      "start": 446.54,
+      "start": 446.53999999999996,
       "end": 451.5,
       "arc": "continuation",
       "span_share": 0.0052,
@@ -3591,7 +3589,7 @@
       "beat_indices": [
         33
       ],
-      "start": 484.66,
+      "start": 484.65999999999997,
       "end": 488.02,
       "arc": "continuation",
       "span_share": 0.0035,
@@ -3694,7 +3692,7 @@
           "strength": 0.45,
           "setup_start": 555.4,
           "setup_end": 559.3199999999999,
-          "payoff_start": 570.66,
+          "payoff_start": 570.6600000000001,
           "payoff_end": 621.16,
           "confidence": 0.45,
           "reason": "subject returns after 2 intervening unit(s) — the return pays off the earlier setup",
@@ -3781,7 +3779,7 @@
       "beat_indices": [
         39
       ],
-      "start": 561.32,
+      "start": 561.3199999999999,
       "end": 567.4,
       "arc": "continuation",
       "span_share": 0.0063,
@@ -4095,7 +4093,7 @@
           "payoff_unit": 57,
           "kind": "callback",
           "strength": 0.45,
-          "setup_start": 846.83,
+          "setup_start": 846.8299999999999,
           "setup_end": 848.81,
           "payoff_start": 890.81,
           "payoff_end": 908.46,
@@ -4128,7 +4126,7 @@
         57,
         59
       ],
-      "start": 846.83,
+      "start": 846.8299999999999,
       "end": 956.02,
       "arc": "tension → resolution",
       "span_share": 0.1138,
@@ -4156,7 +4154,7 @@
       "beat_indices": [
         53
       ],
-      "start": 849.43,
+      "start": 849.4300000000001,
       "end": 860.1700000000001,
       "arc": "resolution",
       "span_share": 0.0112,
@@ -4253,9 +4251,9 @@
         58
       ],
       "start": 908.68,
-      "end": 909.78,
+      "end": 909.5,
       "arc": "continuation",
-      "span_share": 0.0011,
+      "span_share": 0.0009,
       "confidence": 0.25,
       "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
       "evidence": [
@@ -4368,7 +4366,7 @@
       "kind": "continuation",
       "polarity": "neutral",
       "intensity": 0.133,
-      "percentile": 0.417,
+      "percentile": 0.4,
       "is_thread_peak": true,
       "is_corpus_peak": false,
       "cues": [],
@@ -4426,11 +4424,11 @@
     {
       "unit_index": 8,
       "start": 175.83,
-      "end": 182.102,
+      "end": 182.07,
       "kind": "continuation",
       "polarity": "neutral",
       "intensity": 0.006,
-      "percentile": 0.183,
+      "percentile": 0.2,
       "is_thread_peak": true,
       "is_corpus_peak": false,
       "cues": [],
@@ -4440,7 +4438,7 @@
     },
     {
       "unit_index": 9,
-      "start": 182.102,
+      "start": 182.79,
       "end": 191.75,
       "kind": "tension",
       "polarity": "negative",
@@ -4477,7 +4475,7 @@
       "kind": "continuation",
       "polarity": "neutral",
       "intensity": 0.01,
-      "percentile": 0.2,
+      "percentile": 0.217,
       "is_thread_peak": true,
       "is_corpus_peak": false,
       "cues": [],
@@ -4552,7 +4550,7 @@
     {
       "unit_index": 16,
       "start": 255.47,
-      "end": 273.387,
+      "end": 273.37,
       "kind": "resolution",
       "polarity": "neutral",
       "intensity": 0.286,
@@ -4569,7 +4567,7 @@
     },
     {
       "unit_index": 17,
-      "start": 273.387,
+      "start": 274.05,
       "end": 286.33,
       "kind": "continuation",
       "polarity": "neutral",
@@ -4585,7 +4583,7 @@
     {
       "unit_index": 18,
       "start": 286.33,
-      "end": 299.97,
+      "end": 299.83,
       "kind": "tension",
       "polarity": "negative",
       "intensity": 0.259,
@@ -4602,7 +4600,7 @@
     {
       "unit_index": 19,
       "start": 303.34,
-      "end": 309.318,
+      "end": 309.4,
       "kind": "continuation",
       "polarity": "neutral",
       "intensity": 0.0,
@@ -4616,7 +4614,7 @@
     },
     {
       "unit_index": 20,
-      "start": 309.318,
+      "start": 309.98,
       "end": 340.44,
       "kind": "continuation",
       "polarity": "neutral",
@@ -4654,7 +4652,7 @@
       "kind": "continuation",
       "polarity": "neutral",
       "intensity": 0.146,
-      "percentile": 0.433,
+      "percentile": 0.417,
       "is_thread_peak": true,
       "is_corpus_peak": false,
       "cues": [],
@@ -4664,7 +4662,7 @@
     },
     {
       "unit_index": 23,
-      "start": 364.84,
+      "start": 364.84000000000003,
       "end": 393.98,
       "kind": "tension",
       "polarity": "neutral",
@@ -4675,7 +4673,7 @@
       "cues": [],
       "thread_id": 21,
       "confidence": 0.617,
-      "reason": "tension beat; opens a question (“Has the deployment of reinforcements that you announced last week begun?”); polarity neutral: no lexicon match, not guessed"
+      "reason": "tension beat; opens a question (“more fully what you intend to do there?”); polarity neutral: no lexicon match, not guessed"
     },
     {
       "unit_index": 24,
@@ -4713,18 +4711,18 @@
       "end": 418.72,
       "kind": "continuation",
       "polarity": "neutral",
-      "intensity": 0.104,
+      "intensity": 0.11,
       "percentile": 0.333,
       "is_thread_peak": true,
       "is_corpus_peak": false,
       "cues": [],
       "thread_id": 23,
-      "confidence": 0.502,
+      "confidence": 0.505,
       "reason": "continuation beat; polarity neutral: no lexicon match, not guessed"
     },
     {
       "unit_index": 27,
-      "start": 418.92,
+      "start": 418.91999999999996,
       "end": 424.68,
       "kind": "continuation",
       "polarity": "neutral",
@@ -4740,7 +4738,7 @@
     {
       "unit_index": 28,
       "start": 424.68,
-      "end": 434.74,
+      "end": 434.72,
       "kind": "continuation",
       "polarity": "neutral",
       "intensity": 0.0,
@@ -4754,7 +4752,7 @@
     },
     {
       "unit_index": 29,
-      "start": 434.74,
+      "start": 435.0,
       "end": 440.18,
       "kind": "tension",
       "polarity": "neutral",
@@ -4773,28 +4771,28 @@
       "end": 445.62,
       "kind": "continuation",
       "polarity": "neutral",
-      "intensity": 0.133,
-      "percentile": 0.4,
+      "intensity": 0.005,
+      "percentile": 0.183,
       "is_thread_peak": true,
       "is_corpus_peak": false,
       "cues": [],
       "thread_id": 25,
-      "confidence": 0.516,
+      "confidence": 0.452,
       "reason": "continuation beat; polarity neutral: no lexicon match, not guessed"
     },
     {
       "unit_index": 31,
-      "start": 446.54,
+      "start": 446.53999999999996,
       "end": 451.5,
       "kind": "continuation",
       "polarity": "neutral",
-      "intensity": 0.044,
+      "intensity": 0.038,
       "percentile": 0.283,
       "is_thread_peak": true,
       "is_corpus_peak": false,
       "cues": [],
       "thread_id": 26,
-      "confidence": 0.472,
+      "confidence": 0.469,
       "reason": "continuation beat; polarity neutral: no lexicon match, not guessed"
     },
     {
@@ -4803,8 +4801,8 @@
       "end": 483.68,
       "kind": "tension",
       "polarity": "neutral",
-      "intensity": 0.431,
-      "percentile": 0.9,
+      "intensity": 0.43,
+      "percentile": 0.883,
       "is_thread_peak": false,
       "is_corpus_peak": false,
       "cues": [
@@ -4816,17 +4814,17 @@
     },
     {
       "unit_index": 33,
-      "start": 484.66,
+      "start": 484.65999999999997,
       "end": 488.02,
       "kind": "continuation",
       "polarity": "neutral",
-      "intensity": 0.01,
-      "percentile": 0.217,
+      "intensity": 0.172,
+      "percentile": 0.45,
       "is_thread_peak": true,
       "is_corpus_peak": false,
       "cues": [],
       "thread_id": 28,
-      "confidence": 0.455,
+      "confidence": 0.536,
       "reason": "continuation beat; polarity neutral: no lexicon match, not guessed"
     },
     {
@@ -4854,7 +4852,7 @@
       "kind": "continuation",
       "polarity": "neutral",
       "intensity": 0.15,
-      "percentile": 0.45,
+      "percentile": 0.433,
       "is_thread_peak": true,
       "is_corpus_peak": false,
       "cues": [
@@ -4871,7 +4869,7 @@
       "kind": "turn",
       "polarity": "neutral",
       "intensity": 0.43,
-      "percentile": 0.883,
+      "percentile": 0.9,
       "is_thread_peak": true,
       "is_corpus_peak": false,
       "cues": [
@@ -4904,33 +4902,33 @@
       "end": 561.3,
       "kind": "continuation",
       "polarity": "neutral",
-      "intensity": 0.017,
-      "percentile": 0.233,
+      "intensity": 0.037,
+      "percentile": 0.267,
       "is_thread_peak": false,
       "is_corpus_peak": false,
       "cues": [],
       "thread_id": 32,
-      "confidence": 0.459,
+      "confidence": 0.468,
       "reason": "continuation beat; polarity neutral: no lexicon match, not guessed"
     },
     {
       "unit_index": 39,
-      "start": 561.32,
+      "start": 561.3199999999999,
       "end": 567.4,
       "kind": "continuation",
       "polarity": "neutral",
-      "intensity": 0.029,
-      "percentile": 0.267,
+      "intensity": 0.025,
+      "percentile": 0.233,
       "is_thread_peak": true,
       "is_corpus_peak": false,
       "cues": [],
       "thread_id": 33,
-      "confidence": 0.465,
+      "confidence": 0.462,
       "reason": "continuation beat; polarity neutral: no lexicon match, not guessed"
     },
     {
       "unit_index": 40,
-      "start": 570.66,
+      "start": 570.6600000000001,
       "end": 621.16,
       "kind": "tension",
       "polarity": "neutral",
@@ -5137,22 +5135,22 @@
     },
     {
       "unit_index": 52,
-      "start": 846.83,
+      "start": 846.8299999999999,
       "end": 848.81,
       "kind": "tension",
       "polarity": "neutral",
-      "intensity": 0.299,
+      "intensity": 0.307,
       "percentile": 0.7,
       "is_thread_peak": false,
       "is_corpus_peak": false,
       "cues": [],
       "thread_id": 39,
-      "confidence": 0.599,
+      "confidence": 0.604,
       "reason": "tension beat; opens a question (“What about the program?”); polarity neutral: no lexicon match, not guessed"
     },
     {
       "unit_index": 53,
-      "start": 849.43,
+      "start": 849.4300000000001,
       "end": 860.1700000000001,
       "kind": "resolution",
       "polarity": "neutral",
@@ -5235,7 +5233,7 @@
     {
       "unit_index": 58,
       "start": 908.68,
-      "end": 909.78,
+      "end": 909.5,
       "kind": "continuation",
       "polarity": "neutral",
       "intensity": 0.13,
@@ -5305,7 +5303,7 @@
       "setup_start": 207.95,
       "setup_end": 216.61,
       "payoff_start": 255.47,
-      "payoff_end": 273.387,
+      "payoff_end": 273.37,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.19) — the speaker asserts the causation",
       "evidence": [
@@ -5321,7 +5319,7 @@
       "setup_start": 242.91,
       "setup_end": 254.97,
       "payoff_start": 255.47,
-      "payoff_end": 273.387,
+      "payoff_end": 273.37,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
       "evidence": [
@@ -5352,7 +5350,7 @@
       "strength": 0.45,
       "setup_start": 340.44,
       "setup_end": 354.54,
-      "payoff_start": 418.92,
+      "payoff_start": 418.91999999999996,
       "payoff_end": 424.68,
       "confidence": 0.45,
       "reason": "subject returns after 5 intervening unit(s) — the return pays off the earlier setup",
@@ -5368,7 +5366,7 @@
       "strength": 0.65,
       "setup_start": 393.98,
       "setup_end": 400.7,
-      "payoff_start": 418.92,
+      "payoff_start": 418.91999999999996,
       "payoff_end": 424.68,
       "confidence": 0.65,
       "reason": "setup asks, payoff answers on the same subject (overlap 0.25)",
@@ -5384,7 +5382,7 @@
       "strength": 0.45,
       "setup_start": 403.08,
       "setup_end": 417.2,
-      "payoff_start": 434.74,
+      "payoff_start": 435.0,
       "payoff_end": 440.18,
       "confidence": 0.45,
       "reason": "subject returns after 3 intervening unit(s) — the return pays off the earlier setup",
@@ -5432,7 +5430,7 @@
       "strength": 0.45,
       "setup_start": 555.4,
       "setup_end": 559.3199999999999,
-      "payoff_start": 570.66,
+      "payoff_start": 570.6600000000001,
       "payoff_end": 621.16,
       "confidence": 0.45,
       "reason": "subject returns after 2 intervening unit(s) — the return pays off the earlier setup",
@@ -5622,7 +5620,7 @@
       "payoff_unit": 57,
       "kind": "callback",
       "strength": 0.45,
-      "setup_start": 846.83,
+      "setup_start": 846.8299999999999,
       "setup_end": 848.81,
       "payoff_start": 890.81,
       "payoff_end": 908.46,
@@ -5709,7 +5707,7 @@
       "relation": "recap",
       "similarity": 0.586,
       "start": 6.67,
-      "end": 273.387,
+      "end": 273.37,
       "confidence": 0.784,
       "reason": "keep unit 16: closes on a full stop, 29 content terms (67% of the group's most substantive member); weak link containment 0.59; the group spans a long gap; the later passage is a recap of an earlier point — keep in a long edit, cut in a short one",
       "evidence": [
@@ -5820,7 +5818,7 @@
     {
       "block_id": 6,
       "start": 231.33,
-      "end": 299.97,
+      "end": 299.83,
       "speaker": null,
       "unit_indices": [
         14,
@@ -5846,7 +5844,7 @@
         23,
         24
       ],
-      "boundary_reason": "3.4s silence followed by a subject change — a turn boundary hypothesis",
+      "boundary_reason": "3.5s silence followed by a subject change — a turn boundary hypothesis",
       "confidence": 0.0,
       "reason": "transcript carries no speaker labels; this block is a turn hypothesis from pause + subject-change evidence, and the speaker is deliberately not guessed"
     },
@@ -5882,7 +5880,7 @@
     },
     {
       "block_id": 10,
-      "start": 484.66,
+      "start": 484.65999999999997,
       "end": 567.4,
       "speaker": null,
       "unit_indices": [
@@ -5894,13 +5892,13 @@
         38,
         39
       ],
-      "boundary_reason": "2.5s silence followed by a subject change — a turn boundary hypothesis",
+      "boundary_reason": "1.0s silence followed by a subject change — a turn boundary hypothesis",
       "confidence": 0.0,
       "reason": "transcript carries no speaker labels; this block is a turn hypothesis from pause + subject-change evidence, and the speaker is deliberately not guessed"
     },
     {
       "block_id": 11,
-      "start": 570.66,
+      "start": 570.6600000000001,
       "end": 621.16,
       "speaker": null,
       "unit_indices": [
@@ -5975,23 +5973,23 @@
   ],
   "rhythm": {
     "available": true,
-    "total_words": 2745,
-    "speech_seconds": 798.14,
+    "total_words": 2746,
+    "speech_seconds": 798.24,
     "speech_rate_wpm": 206.4,
     "median_rate_wpm": 211.1,
     "pause_counts": {
-      "breathing": 110,
-      "intentional": 29,
+      "breathing": 105,
+      "intentional": 30,
       "hesitation": 32,
       "uncertain": 35,
-      "dead_air": 7
+      "dead_air": 8
     },
     "pause_rate_per_minute": {
-      "breathing": 6.88,
-      "intentional": 1.81,
+      "breathing": 6.56,
+      "intentional": 1.88,
       "hesitation": 2.0,
       "uncertain": 2.19,
-      "dead_air": 0.44
+      "dead_air": 0.5
     },
     "filler_count": 5,
     "filler_rate_per_minute": 0.31,
@@ -6193,7 +6191,7 @@
       {
         "unit_index": 8,
         "start": 175.83,
-        "end": 182.102,
+        "end": 182.07,
         "word_count": 22,
         "speech_seconds": 6.02,
         "pause_seconds": 0.22,
@@ -6215,7 +6213,7 @@
       },
       {
         "unit_index": 9,
-        "start": 182.102,
+        "start": 182.79,
         "end": 191.75,
         "word_count": 30,
         "speech_seconds": 8.96,
@@ -6371,7 +6369,7 @@
       {
         "unit_index": 16,
         "start": 255.47,
-        "end": 273.387,
+        "end": 273.37,
         "word_count": 48,
         "speech_seconds": 15.9,
         "pause_seconds": 2.0,
@@ -6394,7 +6392,7 @@
       },
       {
         "unit_index": 17,
-        "start": 273.387,
+        "start": 274.05,
         "end": 286.33,
         "word_count": 30,
         "speech_seconds": 11.56,
@@ -6416,11 +6414,11 @@
       {
         "unit_index": 18,
         "start": 286.33,
-        "end": 299.97,
-        "word_count": 36,
-        "speech_seconds": 12.56,
+        "end": 299.83,
+        "word_count": 38,
+        "speech_seconds": 12.42,
         "pause_seconds": 1.06,
-        "speech_rate_wpm": 172.0,
+        "speech_rate_wpm": 183.6,
         "rush": 0.0,
         "drag": false,
         "pause_counts": {
@@ -6440,7 +6438,7 @@
       {
         "unit_index": 19,
         "start": 303.34,
-        "end": 309.318,
+        "end": 309.4,
         "word_count": 18,
         "speech_seconds": 5.36,
         "pause_seconds": 0.7,
@@ -6453,7 +6451,7 @@
         },
         "longest_pause": 0.54,
         "emphatic_pause": 0.54,
-        "pre_pause": 3.37,
+        "pre_pause": 3.51,
         "filler_count": 0,
         "false_start_count": 0,
         "incomplete": false,
@@ -6463,7 +6461,7 @@
       },
       {
         "unit_index": 20,
-        "start": 309.318,
+        "start": 309.98,
         "end": 340.44,
         "word_count": 87,
         "speech_seconds": 27.42,
@@ -6535,19 +6533,20 @@
       },
       {
         "unit_index": 23,
-        "start": 364.84,
+        "start": 364.84000000000003,
         "end": 393.98,
-        "word_count": 77,
-        "speech_seconds": 26.76,
-        "pause_seconds": 2.38,
-        "speech_rate_wpm": 172.6,
+        "word_count": 76,
+        "speech_seconds": 26.94,
+        "pause_seconds": 2.2,
+        "speech_rate_wpm": 169.3,
         "rush": 0.0,
         "drag": false,
         "pause_counts": {
-          "breathing": 4
+          "intentional": 1,
+          "breathing": 3
         },
-        "longest_pause": 1.14,
-        "emphatic_pause": 1.14,
+        "longest_pause": 1.04,
+        "emphatic_pause": 1.04,
         "pre_pause": 0.0,
         "filler_count": 0,
         "false_start_count": 0,
@@ -6606,14 +6605,14 @@
         "unit_index": 26,
         "start": 417.72,
         "end": 418.72,
-        "word_count": 6,
-        "speech_seconds": 0.96,
-        "pause_seconds": 0.42,
-        "speech_rate_wpm": 375.0,
-        "rush": 0.777,
+        "word_count": 5,
+        "speech_seconds": 0.78,
+        "pause_seconds": 0.22,
+        "speech_rate_wpm": 384.6,
+        "rush": 0.822,
         "drag": false,
         "pause_counts": {
-          "breathing": 2
+          "breathing": 1
         },
         "longest_pause": 0.22,
         "emphatic_pause": 0.22,
@@ -6627,13 +6626,13 @@
       },
       {
         "unit_index": 27,
-        "start": 418.92,
+        "start": 418.91999999999996,
         "end": 424.68,
-        "word_count": 20,
-        "speech_seconds": 4.78,
+        "word_count": 21,
+        "speech_seconds": 5.0,
         "pause_seconds": 0.76,
-        "speech_rate_wpm": 251.0,
-        "rush": 0.189,
+        "speech_rate_wpm": 252.0,
+        "rush": 0.194,
         "drag": false,
         "pause_counts": {
           "breathing": 2
@@ -6651,7 +6650,7 @@
       {
         "unit_index": 28,
         "start": 424.68,
-        "end": 434.74,
+        "end": 434.72,
         "word_count": 32,
         "speech_seconds": 9.3,
         "pause_seconds": 0.74,
@@ -6674,7 +6673,7 @@
       },
       {
         "unit_index": 29,
-        "start": 434.74,
+        "start": 435.0,
         "end": 440.18,
         "word_count": 21,
         "speech_seconds": 4.5,
@@ -6699,34 +6698,32 @@
         "unit_index": 30,
         "start": 441.76,
         "end": 445.62,
-        "word_count": 15,
-        "speech_seconds": 4.18,
-        "pause_seconds": 0.92,
-        "speech_rate_wpm": 215.3,
-        "rush": 0.02,
+        "word_count": 14,
+        "speech_seconds": 3.86,
+        "pause_seconds": 0.0,
+        "speech_rate_wpm": 217.6,
+        "rush": 0.031,
         "drag": false,
-        "pause_counts": {
-          "breathing": 1
-        },
-        "longest_pause": 0.92,
-        "emphatic_pause": 0.92,
+        "pause_counts": {},
+        "longest_pause": 0.0,
+        "emphatic_pause": 0.0,
         "pre_pause": 1.58,
         "filler_count": 0,
         "false_start_count": 0,
         "incomplete": false,
         "fluency": 1.0,
-        "confidence": 0.85,
+        "confidence": 0.55,
         "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
       },
       {
         "unit_index": 31,
-        "start": 446.54,
+        "start": 446.53999999999996,
         "end": 451.5,
-        "word_count": 18,
-        "speech_seconds": 3.92,
+        "word_count": 19,
+        "speech_seconds": 4.28,
         "pause_seconds": 0.68,
-        "speech_rate_wpm": 275.5,
-        "rush": 0.305,
+        "speech_rate_wpm": 266.4,
+        "rush": 0.262,
         "drag": false,
         "pause_counts": {
           "breathing": 1,
@@ -6734,7 +6731,7 @@
         },
         "longest_pause": 0.58,
         "emphatic_pause": 0.58,
-        "pre_pause": 0.0,
+        "pre_pause": 0.92,
         "filler_count": 0,
         "false_start_count": 0,
         "incomplete": false,
@@ -6746,16 +6743,16 @@
         "unit_index": 32,
         "start": 452.26,
         "end": 483.68,
-        "word_count": 90,
-        "speech_seconds": 24.46,
-        "pause_seconds": 7.96,
-        "speech_rate_wpm": 220.8,
-        "rush": 0.046,
+        "word_count": 89,
+        "speech_seconds": 24.44,
+        "pause_seconds": 6.98,
+        "speech_rate_wpm": 218.5,
+        "rush": 0.035,
         "drag": false,
         "pause_counts": {
           "dead_air": 1,
           "intentional": 1,
-          "breathing": 2
+          "breathing": 1
         },
         "longest_pause": 6.0,
         "emphatic_pause": 6.0,
@@ -6769,23 +6766,25 @@
       },
       {
         "unit_index": 33,
-        "start": 484.66,
+        "start": 484.65999999999997,
         "end": 488.02,
-        "word_count": 3,
-        "speech_seconds": 0.8,
-        "pause_seconds": 0.0,
-        "speech_rate_wpm": 225.0,
-        "rush": 0.066,
+        "word_count": 4,
+        "speech_seconds": 0.82,
+        "pause_seconds": 2.54,
+        "speech_rate_wpm": 292.7,
+        "rush": 0.387,
         "drag": false,
-        "pause_counts": {},
-        "longest_pause": 0.0,
-        "emphatic_pause": 0.0,
-        "pre_pause": 2.54,
+        "pause_counts": {
+          "dead_air": 1
+        },
+        "longest_pause": 2.54,
+        "emphatic_pause": 2.54,
+        "pre_pause": 0.98,
         "filler_count": 0,
         "false_start_count": 0,
         "incomplete": false,
-        "fluency": 1.0,
-        "confidence": 0.55,
+        "fluency": 0.95,
+        "confidence": 0.85,
         "reason": "word-timed pauses classified with the shared pause classifier; speech rate measured over voiced time only"
       },
       {
@@ -6892,11 +6891,11 @@
         "unit_index": 38,
         "start": 559.7,
         "end": 561.3,
-        "word_count": 7,
-        "speech_seconds": 1.78,
+        "word_count": 6,
+        "speech_seconds": 1.36,
         "pause_seconds": 0.24,
-        "speech_rate_wpm": 236.0,
-        "rush": 0.118,
+        "speech_rate_wpm": 264.7,
+        "rush": 0.254,
         "drag": false,
         "pause_counts": {
           "breathing": 1
@@ -6913,13 +6912,13 @@
       },
       {
         "unit_index": 39,
-        "start": 561.32,
+        "start": 561.3199999999999,
         "end": 567.4,
-        "word_count": 24,
-        "speech_seconds": 5.68,
+        "word_count": 25,
+        "speech_seconds": 6.08,
         "pause_seconds": 0.0,
-        "speech_rate_wpm": 253.5,
-        "rush": 0.201,
+        "speech_rate_wpm": 246.7,
+        "rush": 0.169,
         "drag": false,
         "pause_counts": {},
         "longest_pause": 0.0,
@@ -6934,7 +6933,7 @@
       },
       {
         "unit_index": 40,
-        "start": 570.66,
+        "start": 570.6600000000001,
         "end": 621.16,
         "word_count": 125,
         "speech_seconds": 38.86,
@@ -7207,14 +7206,14 @@
         "unit_index": 51,
         "start": 822.55,
         "end": 846.6700000000001,
-        "word_count": 93,
-        "speech_seconds": 20.76,
-        "pause_seconds": 3.6,
-        "speech_rate_wpm": 268.8,
-        "rush": 0.273,
+        "word_count": 92,
+        "speech_seconds": 20.68,
+        "pause_seconds": 3.44,
+        "speech_rate_wpm": 266.9,
+        "rush": 0.264,
         "drag": false,
         "pause_counts": {
-          "breathing": 6,
+          "breathing": 5,
           "hesitation": 1,
           "uncertain": 3
         },
@@ -7230,13 +7229,13 @@
       },
       {
         "unit_index": 52,
-        "start": 846.83,
+        "start": 846.8299999999999,
         "end": 848.81,
-        "word_count": 7,
-        "speech_seconds": 1.32,
+        "word_count": 8,
+        "speech_seconds": 1.4,
         "pause_seconds": 0.58,
-        "speech_rate_wpm": 318.2,
-        "rush": 0.508,
+        "speech_rate_wpm": 342.9,
+        "rush": 0.625,
         "drag": false,
         "pause_counts": {
           "breathing": 1
@@ -7253,7 +7252,7 @@
       },
       {
         "unit_index": 53,
-        "start": 849.43,
+        "start": 849.4300000000001,
         "end": 860.1700000000001,
         "word_count": 38,
         "speech_seconds": 9.84,
@@ -7376,7 +7375,7 @@
       {
         "unit_index": 58,
         "start": 908.68,
-        "end": 909.78,
+        "end": 909.5,
         "word_count": 9,
         "speech_seconds": 1.1,
         "pause_seconds": 0.0,

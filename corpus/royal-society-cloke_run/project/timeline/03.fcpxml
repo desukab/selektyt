@@ -8,12 +8,12 @@
     </asset>
   </resources>
   <library>
-    <event name="the scenes people are moving around putting equipment in the right place going on alert.">
-      <project name="the scenes people are moving around putting equipment in the right place going on alert.">
+    <event name="Are you able to make these predictions on now?">
+      <project name="Are you able to make these predictions on now?">
         <sequence format="f1" tcFormat="NDF">
           <spine>
-          <asset-clip ref="r1" offset="0s" start="6057/25s" duration="118/25s" tcFormat="NDF" />
-          <asset-clip ref="r1" offset="118/25s" start="6224/25s" duration="413/25s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="0s" start="7798/25s" duration="52/25s" tcFormat="NDF" />
+          <asset-clip ref="r1" offset="52/25s" start="7872/25s" duration="635/25s" tcFormat="NDF" />
           </spine>
         </sequence>
       </project>

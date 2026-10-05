@@ -1,8 +1,18 @@
-TITLE:   An additional cable array wires a region of the northeast 
+TITLE:   Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.
 
 FCM: NON-DROP FRAME
 
-001  OOI_VERT V     C        00:01:30:17 00:01:41:20 00:00:00:00 00:00:11:03
+001  OOI_VERT V     C        00:01:53:09 00:01:55:22 00:00:00:00 00:00:02:13
      M2   ooi-vertical.webm
-* FROM CLIP: corpus/media/ooi-vertical.webm
-001  OOI_VERT A     C        00:01:30:17 00:01:41:20 00:00:00:00 00:00:11:03
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+001  OOI_VERT A     C        00:01:53:09 00:01:55:22 00:00:00:00 00:00:02:13
+
+002  OOI_VERT V     C        00:01:56:09 00:02:05:17 00:00:02:13 00:00:11:21
+     M2   ooi-vertical.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+002  OOI_VERT A     C        00:01:56:09 00:02:05:17 00:00:02:13 00:00:11:21
+
+003  OOI_VERT V     C        00:02:08:05 00:02:18:29 00:00:11:21 00:00:22:15
+     M2   ooi-vertical.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/ooi-vertical.webm
+003  OOI_VERT A     C        00:02:08:05 00:02:18:29 00:00:11:21 00:00:22:15

@@ -1,19 +1,35 @@
 [
   {
-    "start": 112.471,
+    "start": 113.42,
     "end": 139.13,
     "text": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface. The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
     "story_type": "story",
     "hook": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.",
     "payoff": "The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
-    "editorial_score": 0.613,
+    "editorial_score": 0.618,
     "virality_score": 0.165,
-    "context_score": 0.96,
-    "confidence": 0.9,
+    "context_score": 0.951,
+    "confidence": 0.923,
     "visual_potential": 0.45,
     "total_score": 0.644,
-    "reason": "Structural editorial score: opening=0.30; progression=0.53; payoff=0.87; density=0.59; fillers=0; standalone=1.00; repetition=0.00; coherence=1.00; completeness=1.00; audio_pace=0.87; silence=0.138; dead_air=0.14.",
-    "llm_metadata": null
+    "reason": "story candidate that makes sense without the surrounding context, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.53; payoff=0.87; density=0.61; fillers=0; standalone=1.00; repetition=0.00; coherence=1.00; completeness=1.00; audio_pace=0.87; silence=0.143; dead_air=0.14.",
+    "llm_metadata": 0.3
+  },
+  {
+    "start": 12.22,
+    "end": 32.56,
+    "text": "Scientists need to know where these changes are occurring and how fast. That's why we have the Ocean Observatories Initiative, or OOI. OOI is a science-driven ocean-observing network that delivers real-time data to researchers investigating our changing ocean on a coastal and planetary scale.",
+    "story_type": "story",
+    "hook": "Scientists need to know where these changes are occurring and how fast.",
+    "payoff": "OOI is a science-driven ocean-observing network that delivers real-time data to researchers investigating our changing ocean on a coastal and planetary scale.",
+    "editorial_score": 0.553,
+    "virality_score": 0.324,
+    "context_score": 0.9,
+    "confidence": 0.958,
+    "visual_potential": 0.45,
+    "total_score": 0.583,
+    "reason": "story candidate that makes sense without the surrounding context, with progression middling at 0.65. Structural editorial score: opening=0.75; progression=0.65; payoff=0.89; density=0.84; fillers=0; standalone=1.00; repetition=0.00; coherence=0.70; completeness=0.75; audio_pace=0.89; silence=0.116; dead_air=0.09.",
+    "llm_metadata": 0.75
   },
   {
     "start": 41.42,
@@ -25,26 +41,18 @@
     "editorial_score": 0.665,
     "virality_score": 0.156,
     "context_score": 0.854,
-    "confidence": 0.9,
+    "confidence": 0.974,
     "visual_potential": 0.45,
     "total_score": 0.641,
-    "reason": "Structural editorial score: opening=0.30; progression=0.53; payoff=0.84; density=0.90; fillers=0; standalone=1.00; repetition=0.00; coherence=1.00; completeness=1.00; audio_pace=0.87; silence=0.145; dead_air=0.09.",
-    "llm_metadata": null
-  },
-  {
-    "start": 89.697,
-    "end": 101.843,
-    "text": "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
-    "story_type": "insight",
-    "hook": "An additional cable array wires a region of the northeast ",
-    "payoff": "An additional cable array wires a region of the northeast Pacific Ocean with a high-power high-speed fiber optic grid that enables observation of the seafloor and water column.",
-    "editorial_score": 0.578,
-    "virality_score": 0.145,
-    "context_score": 0.767,
-    "confidence": 0.9,
-    "visual_potential": 0.35,
-    "total_score": 0.587,
-    "reason": "Structural editorial score: opening=0.30; progression=0.42; payoff=0.55; density=0.88; fillers=0; standalone=1.00; repetition=0.07; coherence=1.00; completeness=1.00; audio_pace=0.98; silence=0.031; dead_air=0.00.",
-    "llm_metadata": null
+    "reason": "story candidate that makes sense without the surrounding context, though it opens slowly, with no hook in the first sentence. Structural editorial score: opening=0.30; progression=0.53; payoff=0.84; density=0.90; fillers=0; standalone=1.00; repetition=0.00; coherence=1.00; completeness=1.00; audio_pace=0.87; silence=0.145; dead_air=0.09.",
+    "llm_metadata": 0.3,
+    "policy": [
+      {
+        "term": "scene",
+        "delta": -0.44,
+        "against": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.",
+        "reason": "2 clip(s) already chosen within 60s of this span"
+      }
+    ]
   }
 ]

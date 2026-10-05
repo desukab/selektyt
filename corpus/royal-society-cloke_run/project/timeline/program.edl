@@ -1,0 +1,53 @@
+TITLE:   corpus/media/royal-society-cloke.webm edit
+
+FCM: NON-DROP FRAME
+
+001  ROYAL_SO V     C        00:00:00:08 00:00:32:17 00:00:00:00 00:00:32:09
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+001  ROYAL_SO A     C        00:00:00:08 00:00:32:17 00:00:00:00 00:00:32:09
+
+002  ROYAL_SO V     C        00:00:33:04 00:00:39:02 00:00:32:09 00:00:38:07
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+002  ROYAL_SO A     C        00:00:33:04 00:00:39:02 00:00:32:09 00:00:38:07
+
+003  ROYAL_SO V     C        00:03:01:19 00:03:41:16 00:00:38:07 00:01:18:04
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+003  ROYAL_SO A     C        00:03:01:19 00:03:41:16 00:00:38:07 00:01:18:04
+
+004  ROYAL_SO V     C        00:03:42:06 00:03:51:16 00:01:18:04 00:01:27:14
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+004  ROYAL_SO A     C        00:03:42:06 00:03:51:16 00:01:18:04 00:01:27:14
+
+005  ROYAL_SO V     C        00:03:52:03 00:03:55:01 00:01:27:14 00:01:30:12
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+005  ROYAL_SO A     C        00:03:52:03 00:03:55:01 00:01:27:14 00:01:30:12
+
+006  ROYAL_SO V     C        00:05:11:23 00:05:14:00 00:01:30:12 00:01:32:14
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+006  ROYAL_SO A     C        00:05:11:23 00:05:14:00 00:01:30:12 00:01:32:14
+
+007  ROYAL_SO V     C        00:05:14:22 00:05:40:07 00:01:32:14 00:01:57:24
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+007  ROYAL_SO A     C        00:05:14:22 00:05:40:07 00:01:32:14 00:01:57:24
+
+008  ROYAL_SO V     C        00:08:03:01 00:08:10:19 00:01:57:24 00:02:05:17
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+008  ROYAL_SO A     C        00:08:03:01 00:08:10:19 00:01:57:24 00:02:05:17
+
+009  ROYAL_SO V     C        00:08:11:07 00:08:12:08 00:02:05:17 00:02:06:18
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+009  ROYAL_SO A     C        00:08:11:07 00:08:12:08 00:02:05:17 00:02:06:18
+
+010  ROYAL_SO V     C        00:08:13:01 00:08:55:17 00:02:06:18 00:02:49:09
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+010  ROYAL_SO A     C        00:08:13:01 00:08:55:17 00:02:06:18 00:02:49:09

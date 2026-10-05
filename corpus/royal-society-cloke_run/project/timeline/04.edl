@@ -1,13 +1,18 @@
-TITLE:   Now last year the UK recorded its highest ever temperature of 40.3 degrees Celsius and on the news recently We've seen devastating floods droughts and wildfires
+TITLE:   sounds like I mean I know this but you know arts and sciences if we need to talk to each other then we can learn new things from each other which which is brill
 
 FCM: NON-DROP FRAME
 
-001  ROYAL_SO V     C        00:00:00:08 00:00:32:17 00:00:00:00 00:00:32:09
+001  ROYAL_SO V     C        00:08:03:01 00:08:10:19 00:00:00:00 00:00:07:18
      M2   royal-society-cloke.webm
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
-001  ROYAL_SO A     C        00:00:00:08 00:00:32:17 00:00:00:00 00:00:32:09
+001  ROYAL_SO A     C        00:08:03:01 00:08:10:19 00:00:00:00 00:00:07:18
 
-002  ROYAL_SO V     C        00:00:33:04 00:00:39:02 00:00:32:09 00:00:38:07
+002  ROYAL_SO V     C        00:08:11:07 00:08:12:08 00:00:07:18 00:00:08:19
      M2   royal-society-cloke.webm
 * FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
-002  ROYAL_SO A     C        00:00:33:04 00:00:39:02 00:00:32:09 00:00:38:07
+002  ROYAL_SO A     C        00:08:11:07 00:08:12:08 00:00:07:18 00:00:08:19
+
+003  ROYAL_SO V     C        00:08:13:01 00:08:55:17 00:00:08:19 00:00:51:10
+     M2   royal-society-cloke.webm
+* FROM CLIP: /home/azureuser/selektyt/corpus/media/royal-society-cloke.webm
+003  ROYAL_SO A     C        00:08:13:01 00:08:55:17 00:00:08:19 00:00:51:10

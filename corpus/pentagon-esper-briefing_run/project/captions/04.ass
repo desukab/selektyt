@@ -6,25 +6,17 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
-Style: Default,Noto Sans,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
+Style: Default,Fredoka,54,&H00FFFFFF,&H00FFFFFF,&H99000000,&H00000000,0,0,0,0,100,100,0,0,1,2,1,2,70,70,170,1
 
 [Events]
 Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
-Dialogue: 0,0:00:00.00,0:00:02.03,Default,,0,0,0,,{\k60}Has{\k34}the{\k84}{\c&H00D7FF&\b1}deployment{\c&HFFFFFF&\b0}{\k28}of
-Dialogue: 0,0:00:02.06,0:00:03.09,Default,,0,0,0,,{\k74}{\c&H00D7FF&\b1}reinforcements{\c&HFFFFFF&\b0}{\k20}that{\k12}you
-Dialogue: 0,0:00:03.12,0:00:04.44,Default,,0,0,0,,{\k28}announced{\k28}last{\k24}week{\k40}{\c&H00D7FF&\b1}begun?{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:04.56,0:00:05.73,Default,,0,0,0,,{\k20}And{\k30}could{\k10}you{\k36}{\c&H00D7FF&\b1}describe{\c&HFFFFFF&\b0}{\k24}more
-Dialogue: 0,0:00:05.76,0:00:07.39,Default,,0,0,0,,{\k30}{\c&H00D7FF&\b1}fully{\c&HFFFFFF&\b0}{\k26}what{\k58}you{\k22}{\c&H00D7FF&\b1}intend{\c&HFFFFFF&\b0}{\k18}to{\k12}do
-Dialogue: 0,0:00:07.42,0:00:07.72,Default,,0,0,0,,{\k18}{\c&H00D7FF&\b1}there?{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:07.76,0:00:09.49,Default,,0,0,0,,{\k54}We{\k18}have{\k48}begun{\k44}{\c&H00D7FF&\b1}deploying{\c&HFFFFFF&\b0}{\k12}and
-Dialogue: 0,0:00:09.52,0:00:10.91,Default,,0,0,0,,{\k68}{\c&H00D7FF&\b1}repositioning{\c&HFFFFFF&\b0}{\k26}additional{\k48}assets
-Dialogue: 0,0:00:10.94,0:00:12.79,Default,,0,0,0,,{\k34}into{\k26}the{\k50}{\c&H00D7FF&\b1}vicinity{\c&HFFFFFF&\b0}{\k38}of{\k40}Dar
-Dialogue: 0,0:00:12.82,0:00:13.38,Default,,0,0,0,,{\k44}{\c&H00D7FF&\b1}-Arzara.{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:13.62,0:00:14.91,Default,,0,0,0,,{\k44}As{\k16}I{\k22}{\c&H00D7FF&\b1}said{\c&HFFFFFF&\b0}{\k16}the{\k10}{\c&H00D7FF&\b1}other{\c&HFFFFFF&\b0}{\k18}day,
-Dialogue: 0,0:00:14.94,0:00:16.07,Default,,0,0,0,,{\k2}it{\k28}includes{\k54}{\c&H00D7FF&\b1}mechanized{\c&HFFFFFF&\b0}{\k32}forces
-Dialogue: 0,0:00:16.10,0:00:18.31,Default,,0,0,0,,{\k34}and{\k16}other{\k22}{\c&H00D7FF&\b1}types{\c&HFFFFFF&\b0}{\k18}of{\k28}{\c&H00D7FF&\b1}forces{\c&HFFFFFF&\b0}{\k106}that
-Dialogue: 0,0:00:18.34,0:00:20.55,Default,,0,0,0,,{\k20}will{\k48}{\c&H00D7FF&\b1}continue{\c&HFFFFFF&\b0}{\k46}until{\k30}we{\k80}believe
-Dialogue: 0,0:00:20.58,0:00:21.73,Default,,0,0,0,,{\k14}we{\k10}have{\k22}sufficient{\k72}{\c&H00D7FF&\b1}capability{\c&HFFFFFF&\b0}
-Dialogue: 0,0:00:21.76,0:00:23.15,Default,,0,0,0,,{\k32}to{\k30}ensure{\k32}{\c&H00D7FF&\b1}ISIS{\c&HFFFFFF&\b0}{\k26}and{\k22}other
-Dialogue: 0,0:00:23.18,0:00:25.61,Default,,0,0,0,,{\k78}{\c&H00D7FF&\b1}destabilizing{\c&HFFFFFF&\b0}{\k40}actors{\k102}are{\k26}denied
-Dialogue: 0,0:00:25.64,0:00:27.40,Default,,0,0,0,,{\k46}access{\k26}to{\k20}that{\k40}oil{\k44}{\c&H00D7FF&\b1}facility.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:00.00,0:00:01.41,Default,,0,0,0,,{\k46}don't{\k26} know{\k16}{\c&H00D7FF&\b1} what{\c&HFFFFFF&\b0}{\k14} the{\k20}{\c&H00D7FF&\b1} source{\c&HFFFFFF&\b0}{\k22} of
+Dialogue: 0,0:00:01.44,0:00:02.01,Default,,0,0,0,,{\k18}that{\k22} was{\k20}{\c&H00D7FF&\b1} there.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:02.04,0:00:03.43,Default,,0,0,0,,{\k10}But{\k12} I{\k28}{\c&H00D7FF&\b1} assume{\c&HFFFFFF&\b0}{\k16} it{\k18} was{\k58}{\c&H00D7FF&\b1} talking{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:03.46,0:00:04.47,Default,,0,0,0,,{\k36}{\c&H00D7FF&\b1}directly{\c&HFFFFFF&\b0}{\k20} to{\k16} unit{\k18} and{\k14} unit
+Dialogue: 0,0:00:04.50,0:00:04.90,Default,,0,0,0,,{\k28}{\c&H00D7FF&\b1}members.{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:05.00,0:00:06.11,Default,,0,0,0,,{\k16}So{\k14} you{\k16} don't{\k20}{\c&H00D7FF&\b1} have{\c&HFFFFFF&\b0}{\k10} to{\k38}{\c&H00D7FF&\b1} talk{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:06.14,0:00:07.25,Default,,0,0,0,,{\k16}to{\k14} any{\k20} unit{\k38}{\c&H00D7FF&\b1} members{\c&HFFFFFF&\b0}{\k18} who{\k8}{\c&H00D7FF&\b1} have{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:07.28,0:00:08.16,Default,,0,0,0,,{\k26}described{\k20} that{\k18} to{\k12}{\c&H00D7FF&\b1} you?{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:08.72,0:00:09.63,Default,,0,0,0,,{\k22}I{\k10} have{\k12} not{\k22}{\c&H00D7FF&\b1} talked{\c&HFFFFFF&\b0}{\k16} to{\k12}{\c&H00D7FF&\b1} unit{\c&HFFFFFF&\b0}
+Dialogue: 0,0:00:09.66,0:00:09.92,Default,,0,0,0,,{\k26}{\c&H00D7FF&\b1}members.{\c&HFFFFFF&\b0}

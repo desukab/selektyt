@@ -337,3 +337,84 @@ def test_confidence_is_measured_not_constant_and_the_guard_can_fire():
     # to translate into a rejection.
     c = score_candidate(Segment(5.0, 5.0 + 0.3 * n, text, []))
     assert c.confidence == 1.0 and validate(c)[0] is True
+
+
+# ── the clip the pipeline scores is the clip it ships ────────────────────────
+
+
+def _word(text, start, end):
+    return Word(text, start, end)
+
+
+def test_scan_refuses_to_open_on_an_unanchored_sentence():
+    """A sentence whose bounds were estimated may not be the first thing a clip
+    opens on, when the transcript carries word timing to contradict them.
+
+    The estimate lands wherever the character count falls, which can be inside a
+    word belonging to the *previous* sentence; ``align_span`` then rebuilds the
+    opening from the words that survive the cut and the subject is deleted. This
+    is the ``"We have main engine start."`` -> ``"have main engine start."``
+    defect, reproduced minimally: sentence two has no words of its own.
+    """
+    segs = [Segment(0.0, 7.0, "We have main engine start. Four, three, two, one.", [
+        _word("We", 0.00, 0.30), _word("have", 0.30, 0.60),
+        _word("main", 0.60, 0.90), _word("engine", 0.90, 1.20),
+        _word("start.", 1.20, 1.50),
+    ])]
+    thoughts = make_thoughts(segs, min_sec=6.0, max_sec=55.0)
+    for t in thoughts:
+        assert not t.text.startswith("have "), \
+            f"a clip opened on an estimated sentence boundary: {t.text!r}"
+        assert t.text.startswith("We have main engine start.")
+
+
+def test_scan_opens_on_unanchored_sentence_when_no_words_exist():
+    """A wordless transcript has no measurement to contradict the estimate, so
+    the estimate is honest and clips are still produced."""
+    segs = [
+        Segment(0, 2, "People think this is simple.", []),
+        Segment(2, 5, "But the real reason is much stranger.", []),
+        Segment(5, 10, "It changes the entire way the system behaves.", []),
+    ]
+    assert make_thoughts(segs, min_sec=5)
+
+
+def test_score_candidate_reports_coherence_of_the_shipped_text():
+    """``coherence_score`` is recomputed on the text that ships, not copied from
+    the pre-alignment estimate.
+
+    ``align_span`` can rebuild a candidate's text from its words; a coherence
+    recorded before that is a reading of a clip that never ships, and the gate's
+    ``coherence < 0.20`` branch would then be judging it. A candidate whose
+    shipped text is incoherent must carry an incoherent score.
+    """
+    from engine.story_units import coherence_score
+    # The sentence text spans more than its words cover, so align_span rebuilds.
+    seg = Segment(0.0, 12.0,
+                  "Inland marine operations have struggled with limited "
+                  "connectivity for decades. The satellite network reached "
+                  "global coverage in 1995.",
+                  [_word("Inland", 0.0, 0.4), _word("marine", 0.4, 0.8),
+                   _word("operations", 0.8, 1.3), _word("have", 1.3, 1.5),
+                   _word("struggled", 1.5, 2.0), _word("with", 2.0, 2.2),
+                   _word("limited", 2.2, 2.6), _word("connectivity", 2.6, 3.2),
+                   _word("for", 3.2, 3.4), _word("decades.", 3.4, 3.9)])
+    c = score_candidate(seg)
+    assert c.text.strip()
+    assert c.coherence_score == coherence_score(c.text)
+
+
+def test_clip_words_keeps_the_opening_word_of_its_sentence():
+    """A word straddling the seam belongs to the sentence before it and is
+    dropped from the opening; the sentence's own first word is kept."""
+    from engine.editorial import _clip_words
+    segs = [Segment(23.0, 25.0, "You're a jerk, Tom. Look, Celia, we have to go.", [
+        _word("You're", 23.00, 23.30), _word("a", 23.30, 23.40),
+        _word("jerk,", 23.40, 23.80), _word("Tom.", 23.80, 24.14),
+        _word("Look,", 24.14, 24.40), _word("Celia,", 24.40, 24.80),
+        _word("we", 24.80, 25.00),
+    ])]
+    from engine.story_units import segment_story_units, Sentence
+    opening = Sentence("Look, Celia, we have to go.", 24.14, 25.0)
+    words = _clip_words(segs, [opening], 24.14, 25.0)
+    assert [w.text for w in words[:2]] == ["Look,", "Celia,"]

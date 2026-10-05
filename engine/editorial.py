@@ -3,7 +3,7 @@ import re
 from collections import Counter
 from models.core import Segment, Candidate
 from engine.context_guard import validate
-from engine.edit_plan import align_span
+from engine.edit_plan import align_span, _BOUND_EPS
 from engine.story_units import (
     boilerplate_fraction,
     coherence_score,
@@ -119,6 +119,16 @@ def _words_in(segs: list[Segment], start: float, end: float) -> list:
     snap, it changed one clip's bounds by 0.27 s on a source whose selection
     does not reproduce from the committed transcript anyway, and fixed
     nothing, so the decision belongs in one place.
+
+    The one exception is the *opening* word. A word that starts exactly at
+    ``start`` and ends after it passes every containment test there is, yet can
+    still be the previous sentence's last word: word and sentence boundaries
+    coincide whenever one sentence ends where the next begins, and ASR words
+    routinely straddle that seam. ``edit_plan.align_span`` rebuilds the clip's
+    text from this list, so such a word becomes the clip's opening word and its
+    hook. That is not a containment question and ``align_span`` cannot answer
+    it from a word list alone, so ``_clip_words`` answers it from the sentence
+    bounds the scan already knows.
     """
     out = []
     for seg in segs:
@@ -129,6 +139,68 @@ def _words_in(segs: list[Segment], start: float, end: float) -> list:
                 continue
             out.append(w)
     return out
+
+
+def _clip_words(all_segs: list[Segment], cur: list, start: float, end: float) -> list:
+    """The word list for a candidate, with the previous sentence's words removed.
+
+    ``cur`` is the sentence window the candidate declares it opens on.
+    ``_words_in`` admits any word overlapping the span, which is permissive by
+    design (``align_span`` settles the bounds), but a word can straddle a
+    sentence boundary where one sentence ends and the next begins. Such a word
+    belongs to the sentence *before* the opening one — ASR assigns words to
+    sentences by text, not by span — and ``edit_plan.align_span`` rebuilds the
+    clip's text from this list, so it becomes the clip's opening word and its
+    hook. The clip is then hooked on a word the sentence it claims to open does
+    not contain.
+
+    Containment cannot separate that word from the opening sentence's own first
+    word, because both start at or after the bound and end after it. The word's
+    membership in the sentence's *text* is what separates them, and the text is
+    known here, so the test is done here.
+
+    On the committed Tears of Steel transcript ``"You're a jerk, Tom."`` ends at
+    exactly 24.140 s, where ``"Look, Celia, we have to follow our passions."``
+    begins, and the word ``"Tom."`` straddles the seam. A clip opening at
+    24.140 s shipped the text ``"Tom. Look, Celia, ..."`` — hooked on a word
+    belonging to the sentence before the one it opens on.
+    """
+    words = _words_in(all_segs, start, end)
+    if not cur:
+        return words
+    opening = cur[0].text
+    if not words:
+        return words
+    # Only the *opening* word is constrained: it must be a word of the sentence
+    # the clip declares it opens on. Interior words belong to the later
+    # sentences of ``cur`` and are kept on the same permissive terms as before,
+    # because ``align_span`` settles the closing bound against them.
+    first = words[0]
+    if (first.start >= start - _BOUND_EPS
+            and _sentence_contains(opening, first.text)):
+        return words
+    return words[1:]
+
+
+def _sentence_contains(sentence: str, word_text: str) -> bool:
+    """Whether a word token belongs to a sentence, judged on normalised text.
+
+    Comparison is on letters only, because the token and the sentence disagree
+    about punctuation and case by construction: faster-whisper emits
+    ``"Tom."`` while the sentence holds ``"Tom"`` at the end of a clause, and a
+    token glued to the next word (``"-lived"``) has no standalone form at all.
+    A token whose letters appear in order at a word boundary of the sentence is
+    that sentence's word; anything looser matches inside a longer word and
+    anything tighter fails on the punctuation ASR attaches.
+    """
+    token = re.sub(r"[^\w]", "", word_text, flags=re.UNICODE).lower()
+    if not token:
+        return True
+    body = " ".join(re.sub(r"[^\w]", "", t, flags=re.UNICODE).lower()
+                    for t in sentence.split())
+    if not body:
+        return False
+    return token in body.split()
 
 
 def _completeness(unit, thought: Segment) -> float:
@@ -238,7 +310,29 @@ def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float 
         unpunctuated run, which has no punctuation to end on anywhere.
         """
         out: list[Segment] = []
+        # ``word_anchored`` only means something against a transcript that
+        # carries word timing. A wholly wordless source -- the corpus's Hindi
+        # interview, or a transcript from a provider that emits none -- has no
+        # measurement to contradict the estimate, and its proportional bounds
+        # are the honest ones; gating on them there would refuse every sentence
+        # and yield no candidate at all. The gate bites only where a measurement
+        # exists and was *rejected*.
+        gated = any(seg.words for seg in all_segs)
         for i in range(0, starts, stride):
+            # A clip may only open on a sentence whose start was read off the
+            # word stream. A sentence timed by character proportion (see
+            # ``story_units._segment_sentences``) has a bound wherever the
+            # character count fell, which can be inside a word belonging to the
+            # *previous* sentence; ``edit_plan.align_span`` then rebuilds the
+            # clip's opening from the words that survive the cut and the subject
+            # is silently deleted. On the committed Tears of Steel transcript
+            # this shipped a reel opening on ``"have main engine start."`` — the
+            # subjectless remainder of ``"We have main engine start."`` — because
+            # the sentence it claimed to open, ``"Four, three, two, one."``, has
+            # no word timing of its own at all. Such a sentence may still appear
+            # mid-clip; it just cannot be the first thing the viewer hears.
+            if gated and not sentences[i][0].word_anchored:
+                continue
             cur: list = []
             for s, u in sentences[i:]:
                 if s.boilerplate:
@@ -260,7 +354,7 @@ def make_thoughts(segments: list[Segment], min_sec: float = 6.0, max_sec: float 
                 # it finishes one.
                 out.append(Segment(
                     cur[0].start, cur[-1].end, text,
-                    _words_in(all_segs, cur[0].start, cur[-1].end),
+                    _clip_words(all_segs, cur, cur[0].start, cur[-1].end),
                     coherence=coherence_score(text),
                     completeness=min(
                         _completeness(sentences[i][1], Segment(cur[0].start, cur[-1].end, text, [])),
@@ -487,7 +581,31 @@ def score_candidate(s: Segment) -> Candidate:
     # below burned that disagreement. See edit_plan.align_span.
     start, end, text, aligned_words = align_span(
         s.start, s.end, s.words or [], s.text.strip())
-    aligned = Segment(start, end, text, aligned_words, s.coherence, s.completeness)
+    # The clip that ships is the aligned one, so the measurement that gates it
+    # must describe that clip and not the pre-alignment span. ``coherence`` and
+    # ``completeness`` were measured by ``make_thoughts`` on the pre-alignment
+    # text, and ``align_span`` can change that text — snapping a bound back to a
+    # word boundary drops whichever partial words the cut crossed. Carrying the
+    # old value through meant ``context_guard.validate``'s coherence branch
+    # judged a clip that never shipped: on the committed Tears of Steel
+    # transcript, a candidate recorded at coherence 0.500 shipped a text that
+    # scores 0.000, and the gate passed it on the reading for a clip it did not
+    # render. Recomputing here is what makes the existing branch live — no
+    # threshold is changed. ``coherence_score`` is a pure function of the text,
+    # so this is exact rather than an approximation.
+    #
+    # Only when the text actually moved. Recomputing unconditionally also
+    # recomputes for a clip ``align_span`` left alone, and then a *measured*
+    # coherence is replaced by the scorer's opinion of the same string — a
+    # splice the caller measured at 0.0 was rewritten to 0.5 and the gate's
+    # branch was defeated by the repair that was supposed to arm it. The
+    # measured value is the evidence; the scorer is the fallback.
+    if text.strip() and text.strip() != s.text.strip():
+        coherence_for_aligned = coherence_score(text)
+    else:
+        coherence_for_aligned = s.coherence
+    aligned = Segment(start, end, text, aligned_words,
+                      coherence_for_aligned, s.completeness)
     editorial, virality, context, visual, story_type, reason, coherence, completeness, opening = _score(aligned)
     hook, payoff = _clean_hook_payoff(text)
     words = aligned.words or []

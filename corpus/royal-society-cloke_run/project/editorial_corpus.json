@@ -19,7 +19,7 @@
     {
       "index": 0,
       "start": 0.3,
-      "end": 31.317,
+      "end": 30.94,
       "segment_indices": [
         0,
         1,
@@ -42,7 +42,7 @@
     },
     {
       "index": 1,
-      "start": 31.317,
+      "start": 31.6,
       "end": 109.92,
       "segment_indices": [
         4,
@@ -128,7 +128,7 @@
     {
       "index": 4,
       "start": 140.44,
-      "end": 180.227,
+      "end": 180.14,
       "segment_indices": [
         32,
         33,
@@ -156,8 +156,8 @@
     },
     {
       "index": 5,
-      "start": 180.227,
-      "end": 235.237,
+      "start": 180.48,
+      "end": 235.02,
       "segment_indices": [
         41,
         42,
@@ -187,7 +187,7 @@
     },
     {
       "index": 6,
-      "start": 235.237,
+      "start": 235.22,
       "end": 265.52,
       "segment_indices": [
         52,
@@ -306,7 +306,7 @@
     {
       "index": 10,
       "start": 363.22,
-      "end": 374.982,
+      "end": 374.34000000000003,
       "segment_indices": [
         94,
         95,
@@ -327,7 +327,7 @@
     },
     {
       "index": 11,
-      "start": 374.982,
+      "start": 375.4,
       "end": 417.12,
       "segment_indices": [
         96,
@@ -357,7 +357,7 @@
     {
       "index": 12,
       "start": 417.24,
-      "end": 438.91,
+      "end": 439.24,
       "segment_indices": [
         106,
         107,
@@ -381,8 +381,8 @@
     },
     {
       "index": 13,
-      "start": 438.91,
-      "end": 446.622,
+      "start": 439.86,
+      "end": 446.88,
       "segment_indices": [
         111,
         112
@@ -402,7 +402,7 @@
     },
     {
       "index": 14,
-      "start": 446.622,
+      "start": 447.02,
       "end": 451.68,
       "segment_indices": [
         112,
@@ -424,7 +424,7 @@
     {
       "index": 15,
       "start": 452.64,
-      "end": 491.159,
+      "end": 490.56,
       "segment_indices": [
         114,
         115,
@@ -451,8 +451,8 @@
     },
     {
       "index": 16,
-      "start": 491.159,
-      "end": 543.613,
+      "start": 491.32,
+      "end": 543.76,
       "segment_indices": [
         122,
         123,
@@ -485,8 +485,8 @@
     },
     {
       "index": 17,
-      "start": 543.613,
-      "end": 553.269,
+      "start": 543.76,
+      "end": 553.3,
       "segment_indices": [
         136,
         137,
@@ -508,7 +508,7 @@
     },
     {
       "index": 18,
-      "start": 553.269,
+      "start": 553.8,
       "end": 568.6800000000001,
       "segment_indices": [
         139,
@@ -532,7 +532,7 @@
     {
       "index": 19,
       "start": 569.4,
-      "end": 573.326,
+      "end": 573.06,
       "segment_indices": [
         143,
         144
@@ -552,7 +552,7 @@
     },
     {
       "index": 20,
-      "start": 573.326,
+      "start": 573.44,
       "end": 611.2,
       "segment_indices": [
         144,
@@ -622,9 +622,9 @@
         4
       ],
       "start": 0.3,
-      "end": 31.317,
+      "end": 30.94,
       "runs": 1,
-      "span_share": 0.0496,
+      "span_share": 0.049,
       "confidence": 0.3,
       "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
       "evidence": [
@@ -744,12 +744,12 @@
         154,
         155
       ],
-      "start": 31.317,
+      "start": 31.6,
       "end": 625.6,
       "runs": 5,
-      "span_share": 0.9499,
+      "span_share": 0.9495,
       "confidence": 0.964,
-      "reason": "established subject: 8 units across 5 run(s) share signature terms things, floods, week (containment 0.23-0.39, rarity-weighted 0.29) over a 252s interruption)",
+      "reason": "established subject: 8 units across 5 run(s) share signature terms things, floods, week (containment 0.23-0.39, rarity-weighted 0.29) over a 253s interruption)",
       "evidence": [
         "Welcome Hannah. It's lovely to be here. When did you first discover your fascination with…",
         "What it does is it makes it more likely. So we see more of them, sometimes they're more f…",
@@ -856,7 +856,7 @@
         57,
         58
       ],
-      "start": 235.237,
+      "start": 235.22,
       "end": 265.52,
       "runs": 1,
       "span_share": 0.0484,
@@ -884,9 +884,9 @@
         96
       ],
       "start": 363.22,
-      "end": 374.982,
+      "end": 374.34000000000003,
       "runs": 1,
-      "span_share": 0.0188,
+      "span_share": 0.0178,
       "confidence": 0.3,
       "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
       "evidence": [
@@ -909,10 +909,10 @@
         111,
         112
       ],
-      "start": 438.91,
-      "end": 446.622,
+      "start": 439.86,
+      "end": 446.88,
       "runs": 1,
-      "span_share": 0.0123,
+      "span_share": 0.0112,
       "confidence": 0.3,
       "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
       "evidence": [
@@ -935,10 +935,10 @@
         112,
         113
       ],
-      "start": 446.622,
+      "start": 447.02,
       "end": 451.68,
       "runs": 1,
-      "span_share": 0.0081,
+      "span_share": 0.0074,
       "confidence": 0.3,
       "reason": "passing mention: a single unit carries these terms and nothing later returns to them, so the subject is not corroborated elsewhere in the corpus",
       "evidence": [
@@ -988,7 +988,7 @@
         139
       ],
       "start": 452.64,
-      "end": 553.269,
+      "end": 553.3,
       "runs": 1,
       "span_share": 0.1609,
       "confidence": 0.739,
@@ -1018,9 +1018,9 @@
         0
       ],
       "start": 0.3,
-      "end": 31.317,
+      "end": 30.94,
       "arc": "tension",
-      "span_share": 0.0496,
+      "span_share": 0.049,
       "confidence": 0.25,
       "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
       "evidence": [
@@ -1050,10 +1050,10 @@
           "payoff_unit": 4,
           "kind": "causal",
           "strength": 0.75,
-          "setup_start": 31.317,
+          "setup_start": 31.6,
           "setup_end": 109.92,
           "payoff_start": 140.44,
-          "payoff_end": 180.227,
+          "payoff_end": 180.14,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.23) — the speaker asserts the causation",
           "evidence": [
@@ -1067,7 +1067,7 @@
           "kind": "causal",
           "strength": 0.75,
           "setup_start": 140.44,
-          "setup_end": 180.227,
+          "setup_end": 180.14,
           "payoff_start": 301.88,
           "payoff_end": 356.42,
           "confidence": 0.75,
@@ -1084,7 +1084,7 @@
           "strength": 0.75,
           "setup_start": 301.88,
           "setup_end": 356.42,
-          "payoff_start": 374.982,
+          "payoff_start": 375.4,
           "payoff_end": 417.12,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
@@ -1098,10 +1098,10 @@
           "payoff_unit": 16,
           "kind": "causal",
           "strength": 0.75,
-          "setup_start": 374.982,
+          "setup_start": 375.4,
           "setup_end": 417.12,
-          "payoff_start": 491.159,
-          "payoff_end": 543.613,
+          "payoff_start": 491.32,
+          "payoff_end": 543.76,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.17) — the speaker asserts the causation",
           "evidence": [
@@ -1114,10 +1114,10 @@
           "payoff_unit": 17,
           "kind": "causal",
           "strength": 0.75,
-          "setup_start": 374.982,
+          "setup_start": 375.4,
           "setup_end": 417.12,
-          "payoff_start": 543.613,
-          "payoff_end": 553.269,
+          "payoff_start": 543.76,
+          "payoff_end": 553.3,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.20) — the speaker asserts the causation",
           "evidence": [
@@ -1130,10 +1130,10 @@
           "payoff_unit": 17,
           "kind": "causal",
           "strength": 0.75,
-          "setup_start": 491.159,
-          "setup_end": 543.613,
-          "payoff_start": 543.613,
-          "payoff_end": 553.269,
+          "setup_start": 491.32,
+          "setup_end": 543.76,
+          "payoff_start": 543.76,
+          "payoff_end": 553.3,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.27) — the speaker asserts the causation",
           "evidence": [
@@ -1150,10 +1150,10 @@
         16,
         17
       ],
-      "start": 31.317,
-      "end": 553.269,
+      "start": 31.6,
+      "end": 553.3,
       "arc": "tension → resolution → tension",
-      "span_share": 0.8343,
+      "span_share": 0.8339,
       "confidence": 0.825,
       "reason": "chain of 6 unit(s) joined by 6 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
       "evidence": [
@@ -1184,7 +1184,7 @@
           "setup_start": 111.28,
           "setup_end": 120.72,
           "payoff_start": 140.44,
-          "payoff_end": 180.227,
+          "payoff_end": 180.14,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.21) — the speaker asserts the causation",
           "evidence": [
@@ -1198,9 +1198,9 @@
         4
       ],
       "start": 111.28,
-      "end": 180.227,
+      "end": 180.14,
       "arc": "tension",
-      "span_share": 0.1102,
+      "span_share": 0.1101,
       "confidence": 0.825,
       "reason": "chain of 2 unit(s) joined by 1 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
       "evidence": [
@@ -1230,7 +1230,7 @@
           "setup_start": 121.06,
           "setup_end": 140.02,
           "payoff_start": 140.44,
-          "payoff_end": 180.227,
+          "payoff_end": 180.14,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.15) — the speaker asserts the causation",
           "evidence": [
@@ -1244,9 +1244,9 @@
         4
       ],
       "start": 121.06,
-      "end": 180.227,
+      "end": 180.14,
       "arc": "tension",
-      "span_share": 0.0946,
+      "span_share": 0.0944,
       "confidence": 0.825,
       "reason": "chain of 2 unit(s) joined by 1 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
       "evidence": [
@@ -1273,7 +1273,7 @@
           "payoff_unit": 8,
           "kind": "causal",
           "strength": 0.75,
-          "setup_start": 235.237,
+          "setup_start": 235.22,
           "setup_end": 265.52,
           "payoff_start": 301.88,
           "payoff_end": 356.42,
@@ -1289,7 +1289,7 @@
         6,
         8
       ],
-      "start": 235.237,
+      "start": 235.22,
       "end": 356.42,
       "arc": "tension",
       "span_share": 0.1937,
@@ -1321,7 +1321,7 @@
           "strength": 0.75,
           "setup_start": 356.92,
           "setup_end": 362.92,
-          "payoff_start": 374.982,
+          "payoff_start": 375.4,
           "payoff_end": 417.12,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.22) — the speaker asserts the causation",
@@ -1366,8 +1366,8 @@
           "kind": "causal",
           "strength": 0.75,
           "setup_start": 363.22,
-          "setup_end": 374.982,
-          "payoff_start": 374.982,
+          "setup_end": 374.34000000000003,
+          "payoff_start": 375.4,
           "payoff_end": 417.12,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.20) — the speaker asserts the causation",
@@ -1408,10 +1408,10 @@
       "beat_indices": [
         13
       ],
-      "start": 438.91,
-      "end": 446.622,
+      "start": 439.86,
+      "end": 446.88,
       "arc": "resolution",
-      "span_share": 0.0123,
+      "span_share": 0.0112,
       "confidence": 0.25,
       "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
       "evidence": [
@@ -1438,10 +1438,10 @@
           "payoff_unit": 15,
           "kind": "question_answer",
           "strength": 0.65,
-          "setup_start": 446.622,
+          "setup_start": 447.02,
           "setup_end": 451.68,
           "payoff_start": 452.64,
-          "payoff_end": 491.159,
+          "payoff_end": 490.56,
           "confidence": 0.65,
           "reason": "setup asks, payoff answers on the same subject (overlap 0.20)",
           "evidence": [
@@ -1455,9 +1455,9 @@
           "kind": "causal",
           "strength": 0.75,
           "setup_start": 452.64,
-          "setup_end": 491.159,
-          "payoff_start": 491.159,
-          "payoff_end": 543.613,
+          "setup_end": 490.56,
+          "payoff_start": 491.32,
+          "payoff_end": 543.76,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.28) — the speaker asserts the causation",
           "evidence": [
@@ -1471,10 +1471,10 @@
         15,
         16
       ],
-      "start": 446.622,
-      "end": 543.613,
+      "start": 447.02,
+      "end": 543.76,
       "arc": "tension",
-      "span_share": 0.155,
+      "span_share": 0.1546,
       "confidence": 0.8,
       "reason": "chain of 3 unit(s) joined by 2 setup->payoff link(s) (mean evidence strength 0.70); strongest: causal",
       "evidence": [
@@ -1502,10 +1502,10 @@
           "payoff_unit": 19,
           "kind": "causal",
           "strength": 0.75,
-          "setup_start": 553.269,
+          "setup_start": 553.8,
           "setup_end": 568.6800000000001,
           "payoff_start": 569.4,
-          "payoff_end": 573.326,
+          "payoff_end": 573.06,
           "confidence": 0.75,
           "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
           "evidence": [
@@ -1518,10 +1518,10 @@
         18,
         19
       ],
-      "start": 553.269,
-      "end": 573.326,
+      "start": 553.8,
+      "end": 573.06,
       "arc": "tension → resolution",
-      "span_share": 0.0321,
+      "span_share": 0.0308,
       "confidence": 0.825,
       "reason": "chain of 2 unit(s) joined by 1 setup->payoff link(s) (mean evidence strength 0.75); strongest: causal",
       "evidence": [
@@ -1545,10 +1545,10 @@
       "beat_indices": [
         20
       ],
-      "start": 573.326,
+      "start": 573.44,
       "end": 611.2,
       "arc": "tension",
-      "span_share": 0.0605,
+      "span_share": 0.0604,
       "confidence": 0.25,
       "reason": "no setup->payoff relation could be inferred from this unit within the evidence window; treated as a standalone passage",
       "evidence": [
@@ -1560,7 +1560,7 @@
     {
       "unit_index": 0,
       "start": 0.3,
-      "end": 31.317,
+      "end": 30.94,
       "kind": "tension",
       "polarity": "negative",
       "intensity": 0.259,
@@ -1577,7 +1577,7 @@
     },
     {
       "unit_index": 1,
-      "start": 31.317,
+      "start": 31.6,
       "end": 109.92,
       "kind": "tension",
       "polarity": "neutral",
@@ -1639,7 +1639,7 @@
     {
       "unit_index": 4,
       "start": 140.44,
-      "end": 180.227,
+      "end": 180.14,
       "kind": "tension",
       "polarity": "negative",
       "intensity": 0.636,
@@ -1660,8 +1660,8 @@
     },
     {
       "unit_index": 5,
-      "start": 180.227,
-      "end": 235.237,
+      "start": 180.48,
+      "end": 235.02,
       "kind": "tension",
       "polarity": "negative",
       "intensity": 0.661,
@@ -1682,7 +1682,7 @@
     },
     {
       "unit_index": 6,
-      "start": 235.237,
+      "start": 235.22,
       "end": 265.52,
       "kind": "tension",
       "polarity": "neutral",
@@ -1759,7 +1759,7 @@
     {
       "unit_index": 10,
       "start": 363.22,
-      "end": 374.982,
+      "end": 374.34000000000003,
       "kind": "tension",
       "polarity": "neutral",
       "intensity": 0.394,
@@ -1775,7 +1775,7 @@
     },
     {
       "unit_index": 11,
-      "start": 374.982,
+      "start": 375.4,
       "end": 417.12,
       "kind": "resolution",
       "polarity": "neutral",
@@ -1796,7 +1796,7 @@
     {
       "unit_index": 12,
       "start": 417.24,
-      "end": 438.91,
+      "end": 439.24,
       "kind": "turn",
       "polarity": "neutral",
       "intensity": 0.556,
@@ -1816,8 +1816,8 @@
     },
     {
       "unit_index": 13,
-      "start": 438.91,
-      "end": 446.622,
+      "start": 439.86,
+      "end": 446.88,
       "kind": "resolution",
       "polarity": "neutral",
       "intensity": 0.355,
@@ -1835,7 +1835,7 @@
     },
     {
       "unit_index": 14,
-      "start": 446.622,
+      "start": 447.02,
       "end": 451.68,
       "kind": "tension",
       "polarity": "neutral",
@@ -1851,7 +1851,7 @@
     {
       "unit_index": 15,
       "start": 452.64,
-      "end": 491.159,
+      "end": 490.56,
       "kind": "tension",
       "polarity": "negative",
       "intensity": 0.667,
@@ -1872,8 +1872,8 @@
     },
     {
       "unit_index": 16,
-      "start": 491.159,
-      "end": 543.613,
+      "start": 491.32,
+      "end": 543.76,
       "kind": "tension",
       "polarity": "neutral",
       "intensity": 0.756,
@@ -1894,8 +1894,8 @@
     },
     {
       "unit_index": 17,
-      "start": 543.613,
-      "end": 553.269,
+      "start": 543.76,
+      "end": 553.3,
       "kind": "tension",
       "polarity": "negative",
       "intensity": 0.494,
@@ -1913,7 +1913,7 @@
     },
     {
       "unit_index": 18,
-      "start": 553.269,
+      "start": 553.8,
       "end": 568.6800000000001,
       "kind": "tension",
       "polarity": "negative",
@@ -1933,7 +1933,7 @@
     {
       "unit_index": 19,
       "start": 569.4,
-      "end": 573.326,
+      "end": 573.06,
       "kind": "resolution",
       "polarity": "neutral",
       "intensity": 0.237,
@@ -1949,7 +1949,7 @@
     },
     {
       "unit_index": 20,
-      "start": 573.326,
+      "start": 573.44,
       "end": 611.2,
       "kind": "tension",
       "polarity": "neutral",
@@ -1995,10 +1995,10 @@
       "payoff_unit": 4,
       "kind": "causal",
       "strength": 0.75,
-      "setup_start": 31.317,
+      "setup_start": 31.6,
       "setup_end": 109.92,
       "payoff_start": 140.44,
-      "payoff_end": 180.227,
+      "payoff_end": 180.14,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.23) — the speaker asserts the causation",
       "evidence": [
@@ -2011,10 +2011,10 @@
       "payoff_unit": 5,
       "kind": "callback",
       "strength": 0.45,
-      "setup_start": 31.317,
+      "setup_start": 31.6,
       "setup_end": 109.92,
-      "payoff_start": 180.227,
-      "payoff_end": 235.237,
+      "payoff_start": 180.48,
+      "payoff_end": 235.02,
       "confidence": 0.45,
       "reason": "subject returns after 3 intervening unit(s) — the return pays off the earlier setup",
       "evidence": [
@@ -2030,7 +2030,7 @@
       "setup_start": 111.28,
       "setup_end": 120.72,
       "payoff_start": 140.44,
-      "payoff_end": 180.227,
+      "payoff_end": 180.14,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.21) — the speaker asserts the causation",
       "evidence": [
@@ -2046,7 +2046,7 @@
       "setup_start": 121.06,
       "setup_end": 140.02,
       "payoff_start": 140.44,
-      "payoff_end": 180.227,
+      "payoff_end": 180.14,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.15) — the speaker asserts the causation",
       "evidence": [
@@ -2060,7 +2060,7 @@
       "kind": "callback",
       "strength": 0.45,
       "setup_start": 140.44,
-      "setup_end": 180.227,
+      "setup_end": 180.14,
       "payoff_start": 266.24,
       "payoff_end": 299.78,
       "confidence": 0.45,
@@ -2076,7 +2076,7 @@
       "kind": "causal",
       "strength": 0.75,
       "setup_start": 140.44,
-      "setup_end": 180.227,
+      "setup_end": 180.14,
       "payoff_start": 301.88,
       "payoff_end": 356.42,
       "confidence": 0.75,
@@ -2091,8 +2091,8 @@
       "payoff_unit": 8,
       "kind": "causal",
       "strength": 0.75,
-      "setup_start": 180.227,
-      "setup_end": 235.237,
+      "setup_start": 180.48,
+      "setup_end": 235.02,
       "payoff_start": 301.88,
       "payoff_end": 356.42,
       "confidence": 0.75,
@@ -2107,9 +2107,9 @@
       "payoff_unit": 11,
       "kind": "causal",
       "strength": 0.75,
-      "setup_start": 180.227,
-      "setup_end": 235.237,
-      "payoff_start": 374.982,
+      "setup_start": 180.48,
+      "setup_end": 235.02,
+      "payoff_start": 375.4,
       "payoff_end": 417.12,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.23) — the speaker asserts the causation",
@@ -2123,7 +2123,7 @@
       "payoff_unit": 8,
       "kind": "causal",
       "strength": 0.75,
-      "setup_start": 235.237,
+      "setup_start": 235.22,
       "setup_end": 265.52,
       "payoff_start": 301.88,
       "payoff_end": 356.42,
@@ -2139,9 +2139,9 @@
       "payoff_unit": 11,
       "kind": "causal",
       "strength": 0.75,
-      "setup_start": 235.237,
+      "setup_start": 235.22,
       "setup_end": 265.52,
-      "payoff_start": 374.982,
+      "payoff_start": 375.4,
       "payoff_end": 417.12,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.16) — the speaker asserts the causation",
@@ -2173,7 +2173,7 @@
       "strength": 0.75,
       "setup_start": 266.24,
       "setup_end": 299.78,
-      "payoff_start": 374.982,
+      "payoff_start": 375.4,
       "payoff_end": 417.12,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.26) — the speaker asserts the causation",
@@ -2190,7 +2190,7 @@
       "setup_start": 266.24,
       "setup_end": 299.78,
       "payoff_start": 417.24,
-      "payoff_end": 438.91,
+      "payoff_end": 439.24,
       "confidence": 0.65,
       "reason": "setup asks, payoff answers on the same subject (overlap 0.21)",
       "evidence": [
@@ -2205,7 +2205,7 @@
       "strength": 0.75,
       "setup_start": 301.88,
       "setup_end": 356.42,
-      "payoff_start": 374.982,
+      "payoff_start": 375.4,
       "payoff_end": 417.12,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
@@ -2222,7 +2222,7 @@
       "setup_start": 301.88,
       "setup_end": 356.42,
       "payoff_start": 417.24,
-      "payoff_end": 438.91,
+      "payoff_end": 439.24,
       "confidence": 0.65,
       "reason": "setup asks, payoff answers on the same subject (overlap 0.25)",
       "evidence": [
@@ -2237,7 +2237,7 @@
       "strength": 0.75,
       "setup_start": 356.92,
       "setup_end": 362.92,
-      "payoff_start": 374.982,
+      "payoff_start": 375.4,
       "payoff_end": 417.12,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.22) — the speaker asserts the causation",
@@ -2252,8 +2252,8 @@
       "kind": "causal",
       "strength": 0.75,
       "setup_start": 363.22,
-      "setup_end": 374.982,
-      "payoff_start": 374.982,
+      "setup_end": 374.34000000000003,
+      "payoff_start": 375.4,
       "payoff_end": 417.12,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.20) — the speaker asserts the causation",
@@ -2268,9 +2268,9 @@
       "kind": "question_answer",
       "strength": 0.65,
       "setup_start": 363.22,
-      "setup_end": 374.982,
+      "setup_end": 374.34000000000003,
       "payoff_start": 452.64,
-      "payoff_end": 491.159,
+      "payoff_end": 490.56,
       "confidence": 0.65,
       "reason": "setup asks, payoff answers on the same subject (overlap 0.20)",
       "evidence": [
@@ -2283,10 +2283,10 @@
       "payoff_unit": 12,
       "kind": "contrast_turn",
       "strength": 0.55,
-      "setup_start": 374.982,
+      "setup_start": 375.4,
       "setup_end": 417.12,
       "payoff_start": 417.24,
-      "payoff_end": 438.91,
+      "payoff_end": 439.24,
       "confidence": 0.55,
       "reason": "payoff opens with a reversal marker on the same subject (overlap 0.33)",
       "evidence": [
@@ -2299,10 +2299,10 @@
       "payoff_unit": 16,
       "kind": "causal",
       "strength": 0.75,
-      "setup_start": 374.982,
+      "setup_start": 375.4,
       "setup_end": 417.12,
-      "payoff_start": 491.159,
-      "payoff_end": 543.613,
+      "payoff_start": 491.32,
+      "payoff_end": 543.76,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.17) — the speaker asserts the causation",
       "evidence": [
@@ -2315,10 +2315,10 @@
       "payoff_unit": 17,
       "kind": "causal",
       "strength": 0.75,
-      "setup_start": 374.982,
+      "setup_start": 375.4,
       "setup_end": 417.12,
-      "payoff_start": 543.613,
-      "payoff_end": 553.269,
+      "payoff_start": 543.76,
+      "payoff_end": 553.3,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.20) — the speaker asserts the causation",
       "evidence": [
@@ -2332,9 +2332,9 @@
       "kind": "contrast_turn",
       "strength": 0.55,
       "setup_start": 417.24,
-      "setup_end": 438.91,
+      "setup_end": 439.24,
       "payoff_start": 452.64,
-      "payoff_end": 491.159,
+      "payoff_end": 490.56,
       "confidence": 0.55,
       "reason": "payoff opens with a reversal marker on the same subject (overlap 0.21)",
       "evidence": [
@@ -2348,9 +2348,9 @@
       "kind": "causal",
       "strength": 0.75,
       "setup_start": 417.24,
-      "setup_end": 438.91,
-      "payoff_start": 491.159,
-      "payoff_end": 543.613,
+      "setup_end": 439.24,
+      "payoff_start": 491.32,
+      "payoff_end": 543.76,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
       "evidence": [
@@ -2363,10 +2363,10 @@
       "payoff_unit": 15,
       "kind": "question_answer",
       "strength": 0.65,
-      "setup_start": 446.622,
+      "setup_start": 447.02,
       "setup_end": 451.68,
       "payoff_start": 452.64,
-      "payoff_end": 491.159,
+      "payoff_end": 490.56,
       "confidence": 0.65,
       "reason": "setup asks, payoff answers on the same subject (overlap 0.20)",
       "evidence": [
@@ -2380,9 +2380,9 @@
       "kind": "causal",
       "strength": 0.75,
       "setup_start": 452.64,
-      "setup_end": 491.159,
-      "payoff_start": 491.159,
-      "payoff_end": 543.613,
+      "setup_end": 490.56,
+      "payoff_start": 491.32,
+      "payoff_end": 543.76,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.28) — the speaker asserts the causation",
       "evidence": [
@@ -2396,9 +2396,9 @@
       "kind": "causal",
       "strength": 0.75,
       "setup_start": 452.64,
-      "setup_end": 491.159,
-      "payoff_start": 543.613,
-      "payoff_end": 553.269,
+      "setup_end": 490.56,
+      "payoff_start": 543.76,
+      "payoff_end": 553.3,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.27) — the speaker asserts the causation",
       "evidence": [
@@ -2412,7 +2412,7 @@
       "kind": "causal",
       "strength": 0.75,
       "setup_start": 452.64,
-      "setup_end": 491.159,
+      "setup_end": 490.56,
       "payoff_start": 611.2,
       "payoff_end": 625.6,
       "confidence": 0.75,
@@ -2427,10 +2427,10 @@
       "payoff_unit": 17,
       "kind": "causal",
       "strength": 0.75,
-      "setup_start": 491.159,
-      "setup_end": 543.613,
-      "payoff_start": 543.613,
-      "payoff_end": 553.269,
+      "setup_start": 491.32,
+      "setup_end": 543.76,
+      "payoff_start": 543.76,
+      "payoff_end": 553.3,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.27) — the speaker asserts the causation",
       "evidence": [
@@ -2443,10 +2443,10 @@
       "payoff_unit": 19,
       "kind": "causal",
       "strength": 0.75,
-      "setup_start": 491.159,
-      "setup_end": 543.613,
+      "setup_start": 491.32,
+      "setup_end": 543.76,
       "payoff_start": 569.4,
-      "payoff_end": 573.326,
+      "payoff_end": 573.06,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
       "evidence": [
@@ -2459,8 +2459,8 @@
       "payoff_unit": 21,
       "kind": "causal",
       "strength": 0.75,
-      "setup_start": 491.159,
-      "setup_end": 543.613,
+      "setup_start": 491.32,
+      "setup_end": 543.76,
       "payoff_start": 611.2,
       "payoff_end": 625.6,
       "confidence": 0.75,
@@ -2475,10 +2475,10 @@
       "payoff_unit": 19,
       "kind": "causal",
       "strength": 0.75,
-      "setup_start": 553.269,
+      "setup_start": 553.8,
       "setup_end": 568.6800000000001,
       "payoff_start": 569.4,
-      "payoff_end": 573.326,
+      "payoff_end": 573.06,
       "confidence": 0.75,
       "reason": "payoff opens with a result connective on the same subject (overlap 0.25) — the speaker asserts the causation",
       "evidence": [
@@ -2505,7 +2505,7 @@
     {
       "block_id": 1,
       "start": 111.28,
-      "end": 374.982,
+      "end": 374.34000000000003,
       "speaker": null,
       "unit_indices": [
         2,
@@ -2524,7 +2524,7 @@
     },
     {
       "block_id": 2,
-      "start": 374.982,
+      "start": 375.4,
       "end": 451.68,
       "speaker": null,
       "unit_indices": [
@@ -2558,7 +2558,7 @@
   ],
   "broll": [
     {
-      "start": 30.657,
+      "start": 30.94,
       "end": 109.92,
       "kind": "reaction",
       "cue": "Welcome Hannah.",
@@ -2594,7 +2594,7 @@
       "reason": "visualisable analogy in the transcript; an illustrative cutaway is possible, not guaranteed"
     },
     {
-      "start": 373.922,
+      "start": 374.34,
       "end": 417.12,
       "kind": "reaction",
       "cue": "A lot of those places, you know, they don't have enough funding",
@@ -2604,12 +2604,21 @@
     },
     {
       "start": 451.68,
-      "end": 491.159,
+      "end": 490.56,
       "kind": "reaction",
       "cue": "Yeah I think as a scientist I was a bit wary about it thinking that there's a b…",
       "unit_index": 15,
       "confidence": 0.5,
       "reason": "1.0s held silence precedes a tension beat at intensity 0.67; a reaction cutaway would land here — inferred from timing, not stated by the speaker"
+    },
+    {
+      "start": 490.56,
+      "end": 543.76,
+      "kind": "reaction",
+      "cue": "Yeah and not be frightened.",
+      "unit_index": 16,
+      "confidence": 0.5,
+      "reason": "0.8s held silence precedes a tension beat at intensity 0.76; a reaction cutaway would land here — inferred from timing, not stated by the speaker"
     },
     {
       "start": 509.3,
@@ -2630,7 +2639,7 @@
       "reason": "visualisable analogy in the transcript; an illustrative cutaway is possible, not guaranteed"
     },
     {
-      "start": 543.613,
+      "start": 543.76,
       "end": 545.6,
       "kind": "illustration",
       "cue": "imagine",
@@ -2656,14 +2665,14 @@
     "median_rate_wpm": 221.8,
     "pause_counts": {
       "intentional": 9,
-      "breathing": 79,
+      "breathing": 78,
       "hesitation": 26,
       "uncertain": 15,
       "dead_air": 2
     },
     "pause_rate_per_minute": {
       "intentional": 0.86,
-      "breathing": 7.58,
+      "breathing": 7.48,
       "hesitation": 2.49,
       "uncertain": 1.44,
       "dead_air": 0.19
@@ -2676,7 +2685,7 @@
       {
         "unit_index": 0,
         "start": 0.3,
-        "end": 31.317,
+        "end": 30.94,
         "word_count": 78,
         "speech_seconds": 29.5,
         "pause_seconds": 1.14,
@@ -2698,7 +2707,7 @@
       },
       {
         "unit_index": 1,
-        "start": 31.317,
+        "start": 31.6,
         "end": 109.92,
         "word_count": 242,
         "speech_seconds": 69.92,
@@ -2768,7 +2777,7 @@
       {
         "unit_index": 4,
         "start": 140.44,
-        "end": 180.227,
+        "end": 180.14,
         "word_count": 124,
         "speech_seconds": 35.5,
         "pause_seconds": 4.2,
@@ -2792,16 +2801,16 @@
       },
       {
         "unit_index": 5,
-        "start": 180.227,
-        "end": 235.237,
-        "word_count": 173,
-        "speech_seconds": 50.08,
-        "pause_seconds": 4.82,
-        "speech_rate_wpm": 207.3,
+        "start": 180.48,
+        "end": 235.02,
+        "word_count": 172,
+        "speech_seconds": 49.92,
+        "pause_seconds": 4.62,
+        "speech_rate_wpm": 206.7,
         "rush": 0.0,
         "drag": false,
         "pause_counts": {
-          "breathing": 9,
+          "breathing": 8,
           "uncertain": 1,
           "hesitation": 1
         },
@@ -2817,12 +2826,12 @@
       },
       {
         "unit_index": 6,
-        "start": 235.237,
+        "start": 235.22,
         "end": 265.52,
-        "word_count": 97,
-        "speech_seconds": 26.46,
+        "word_count": 98,
+        "speech_seconds": 26.62,
         "pause_seconds": 3.68,
-        "speech_rate_wpm": 220.0,
+        "speech_rate_wpm": 220.9,
         "rush": 0.0,
         "drag": false,
         "pause_counts": {
@@ -2917,7 +2926,7 @@
       {
         "unit_index": 10,
         "start": 363.22,
-        "end": 374.982,
+        "end": 374.34000000000003,
         "word_count": 30,
         "speech_seconds": 10.12,
         "pause_seconds": 1.0,
@@ -2939,7 +2948,7 @@
       },
       {
         "unit_index": 11,
-        "start": 374.982,
+        "start": 375.4,
         "end": 417.12,
         "word_count": 144,
         "speech_seconds": 38.14,
@@ -2965,7 +2974,7 @@
       {
         "unit_index": 12,
         "start": 417.24,
-        "end": 438.91,
+        "end": 439.24,
         "word_count": 66,
         "speech_seconds": 19.98,
         "pause_seconds": 2.02,
@@ -2988,8 +2997,8 @@
       },
       {
         "unit_index": 13,
-        "start": 438.91,
-        "end": 446.622,
+        "start": 439.86,
+        "end": 446.88,
         "word_count": 23,
         "speech_seconds": 6.24,
         "pause_seconds": 0.78,
@@ -3012,7 +3021,7 @@
       },
       {
         "unit_index": 14,
-        "start": 446.622,
+        "start": 447.02,
         "end": 451.68,
         "word_count": 20,
         "speech_seconds": 4.42,
@@ -3036,7 +3045,7 @@
       {
         "unit_index": 15,
         "start": 452.64,
-        "end": 491.159,
+        "end": 490.56,
         "word_count": 132,
         "speech_seconds": 34.46,
         "pause_seconds": 3.46,
@@ -3061,8 +3070,8 @@
       },
       {
         "unit_index": 16,
-        "start": 491.159,
-        "end": 543.613,
+        "start": 491.32,
+        "end": 543.76,
         "word_count": 184,
         "speech_seconds": 47.7,
         "pause_seconds": 4.74,
@@ -3086,8 +3095,8 @@
       },
       {
         "unit_index": 17,
-        "start": 543.613,
-        "end": 553.269,
+        "start": 543.76,
+        "end": 553.3,
         "word_count": 41,
         "speech_seconds": 9.54,
         "pause_seconds": 0.0,
@@ -3107,7 +3116,7 @@
       },
       {
         "unit_index": 18,
-        "start": 553.269,
+        "start": 553.8,
         "end": 568.6800000000001,
         "word_count": 51,
         "speech_seconds": 13.74,
@@ -3132,7 +3141,7 @@
       {
         "unit_index": 19,
         "start": 569.4,
-        "end": 573.326,
+        "end": 573.06,
         "word_count": 18,
         "speech_seconds": 3.46,
         "pause_seconds": 0.2,
@@ -3154,7 +3163,7 @@
       },
       {
         "unit_index": 20,
-        "start": 573.326,
+        "start": 573.44,
         "end": 611.2,
         "word_count": 103,
         "speech_seconds": 34.26,

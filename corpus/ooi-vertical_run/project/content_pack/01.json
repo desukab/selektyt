@@ -1,12 +1,11 @@
 {
   "titles": [
-    "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface.",
-    "The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
-    "The Ocean Observatories Initiative has revolutionized marine research with free access to "
+    "Scientists need to know where these changes are occurring and how fast.",
+    "OOI is a science-driven ocean-observing network that delivers real-time data to researchers investigating our changing ocean on a coastal and planetary scale.",
+    "Scientists need to know where these changes are occurring and how fast"
   ],
-  "instagram_caption": "Gliders fill in gaps between the arrays, traveling on a data mules send oceanographic measurements back to OOI servers when they surface. The Ocean Observatories Initiative has revolutionized marine research with free access to high quality data from remote locations and at unprecedented timescales.",
+  "instagram_caption": "Scientists need to know where these changes are occurring and how fast. That's why we have the Ocean Observatories Initiative, or OOI. OOI is a science-driven ocean-observing network that delivers real-time data to researchers investigating our changing ocean on a coastal and planetary scale.",
   "hashtags": [
-    "#india",
     "#reels",
     "#shorts",
     "#story"
@@ -14,5 +13,7 @@
   "story_type": "story",
   "source_based": true,
   "policy": "Generated from selected source speech; no fabricated claims.",
-  "clip_index": 1
+  "clip_index": 1,
+  "source_start": 12.22,
+  "source_end": 32.56
 }

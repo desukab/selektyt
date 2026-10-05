@@ -2,87 +2,104 @@
   "style": "minimal",
   "blocks": [
     {
-      "start": 403.08,
-      "end": 404.82,
-      "text": "Sir, do you have video of",
+      "start": 910.0,
+      "end": 911.0,
+      "text": "At the end of the day,",
       "emphasis": [
-        " have",
-        " video"
+        " end",
+        " day,"
       ]
     },
     {
-      "start": 404.82,
-      "end": 406.18,
-      "text": "Baghdadi's final moments?",
+      "start": 911.06,
+      "end": 913.76,
+      "text": "my expectation is that it'll be",
       "emphasis": [
-        " moments?"
+        " expectation",
+        " it'll"
       ]
     },
     {
-      "start": 406.52,
-      "end": 407.72,
-      "text": "And also, are you partnering",
+      "start": 913.76,
+      "end": 914.76,
+      "text": "fewer than what we had before.",
       "emphasis": [
-        " partnering"
+        " fewer",
+        " before."
       ]
     },
     {
-      "start": 407.72,
-      "end": 409.22,
-      "text": "with the Kurds again on the",
+      "start": 914.76,
+      "end": 915.84,
+      "text": "and they will be going home.",
       "emphasis": [
-        " Kurds",
-        " again"
+        " going",
+        " home."
       ]
     },
     {
-      "start": 409.22,
-      "end": 409.52,
-      "text": "ground?",
+      "start": 917.0,
+      "end": 918.22,
+      "text": "And help me remind me of",
       "emphasis": [
-        " ground?"
+        " help",
+        " remind"
       ]
     },
     {
-      "start": 410.0,
-      "end": 411.12,
-      "text": "Can you explain how difficult",
+      "start": 918.22,
+      "end": 918.72,
+      "text": "the first question.",
       "emphasis": [
-        " difficult"
+        " question."
       ]
     },
     {
-      "start": 411.12,
-      "end": 412.72,
-      "text": "this operation would have been",
+      "start": 918.88,
+      "end": 919.94,
+      "text": "The first question was about",
       "emphasis": [
-        " operation"
+        " question"
       ]
     },
     {
-      "start": 412.72,
-      "end": 413.9,
-      "text": "if you didn't have troops or",
+      "start": 919.94,
+      "end": 921.02,
+      "text": "the SDF commander saying that.",
       "emphasis": [
-        " didn't",
-        " troops"
+        " commander"
       ]
     },
     {
-      "start": 413.9,
-      "end": 416.48,
-      "text": "bases on the ground in Syria",
+      "start": 921.02,
+      "end": 921.4,
+      "text": "Yeah, the SDF.",
       "emphasis": [
-        " ground",
-        " Syria"
+        " SDF."
       ]
     },
     {
-      "start": 416.48,
-      "end": 417.2,
-      "text": "and in Iraq?",
+      "start": 921.42,
+      "end": 923.36,
+      "text": "So this was a U.S.-only",
       "emphasis": [
-        " Iraq?"
+        ".S.-only"
+      ]
+    },
+    {
+      "start": 923.36,
+      "end": 926.36,
+      "text": "operation for personnel",
+      "emphasis": [
+        " personnel"
+      ]
+    },
+    {
+      "start": 926.36,
+      "end": 928.18,
+      "text": "that were on the objective.",
+      "emphasis": [
+        " objective."
       ]
     }
   ]

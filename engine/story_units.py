@@ -85,6 +85,13 @@ class Sentence:
     start: float
     end: float
     boilerplate: str = ""  # "" | "section" | "meta" | "dateline"
+    # Whether ``start``/``end`` were read off the word stream, as opposed to
+    # estimated from character span. A clip may only *open* on a sentence this
+    # is true of: an estimated bound lands inside whichever word happens to be
+    # speaking, and ``edit_plan.align_span`` then rebuilds the clip's text from
+    # the words that survive the cut, silently deleting the subject. See
+    # ``_segment_sentences`` and ``editorial.make_thoughts``.
+    word_anchored: bool = True
 
 
 @dataclass
@@ -209,13 +216,17 @@ def _split_markers(sentence: str) -> list[str]:
     return [sentence]
 
 
-def _segment_sentences(seg: Segment) -> list[Sentence]:
-    """Sentences of one ASR segment, timed proportionally to character span."""
-    pieces: list[str] = []
-    for piece in split_sentences(seg.text):
-        pieces.extend(_split_markers(piece))
-    if not pieces:
-        return []
+def _proportional_sentences(pieces: list[str], seg: Segment) -> list[Sentence]:
+    """Sentences timed proportionally to character span — the fallback.
+
+    This is the only option when a segment carries no word timestamps, and the
+    bound returned for a sentence that the word stream cannot cover. It is
+    marked ``word_anchored=False`` so no clip is allowed to open on it: the
+    estimate lands wherever the character count happens to fall, which can be
+    inside a word belonging to the previous sentence, and
+    ``edit_plan.align_span`` would then rebuild the clip's opening from the
+    words that survive the cut.
+    """
     total_chars = max(1, sum(len(p) for p in pieces))
     dur = max(0.0, seg.end - seg.start)
     out: list[Sentence] = []
@@ -224,10 +235,155 @@ def _segment_sentences(seg: Segment) -> list[Sentence]:
         frac = len(piece) / total_chars
         s = seg.start + cursor * dur
         e = seg.start + min(cursor + frac, 1.0) * dur
-        out.append(Sentence(piece, round(s, 3), round(e, 3), _classify(piece)))
+        out.append(Sentence(piece, round(s, 3), round(e, 3), _classify(piece),
+                            word_anchored=False))
         cursor += frac
     if out:
         out[-1].end = seg.end
+    return out
+
+
+# Punctuation stripped before a sentence's text is matched against the word
+# stream: ASR emits punctuation as part of the word token ("start."), and a
+# sentence boundary in one writing system is a word-joiner in another. Kept in
+# sync with ``corpus._norm_text``; defined here because ``corpus`` imports this
+# module and not the reverse.
+_STRIP_PUNCT = str.maketrans("", "", "।॥？！.,;:—-–\"'()[]{}")
+
+
+def _norm_text(t: str) -> str:
+    return t.translate(_STRIP_PUNCT).strip()
+
+
+def _piece_tokens(t: str) -> set[str]:
+    """Letters-and-digits of each token of ``t``, case-folded, as a set.
+
+    The sentence text and the word stream are two decodes of the same audio and
+    disagree on punctuation and capitalisation (``"hand?"`` vs ``"hand"``) and
+    on contraction spelling (``"I'm"`` vs ``"Im"``). Reducing both to a set of
+    alphanumeric token bodies makes the coverage test below compare content
+    rather than spelling, while still refusing a sentence whose words are
+    simply different words -- ``"Speed"`` does not cover
+    ``"Speed it up, guys."`` no matter how it is spelt.
+
+    A token that is entirely digits is split into its digits rather than kept
+    as one body. faster-whisper emits a decimal number as two words --
+    ``"40"`` and ``".3"`` for the spoken ``"40.3"`` -- where the sentence text
+    has the one token ``"40.3"``. Kept whole, the sentence's body is ``"403"``,
+    which no word ever produces, and the sentence is judged uncovered. On the
+    committed Royal Society transcript that refusal cost the reel's opening:
+    segment 0 (``"Now last year the UK recorded its highest ever temperature of
+    40.3 degrees Celsius..."``) fell back to proportional timing, the scan
+    refused it as an opening sentence, and the clip lost 12 s of its hook.
+    Letters still decide identity, so the loosening is only in how digits pair
+    up: a sentence's own words are what cover it, and two numbers sharing digits
+    cannot cover a sentence that shares none of its words. ``"34"`` is a subset
+    of ``"40.3"``'s digits, and that is the accepted cost — against the
+    alternative of a covered sentence judged uncovered.
+    """
+    out: set[str] = set()
+    for p in t.split():
+        body = re.sub(r"[^\w]", "", p, flags=re.UNICODE).lower()
+        if not body:
+            continue
+        if body.isdigit():
+            out.update(body)
+        else:
+            out.add(body)
+    return out
+
+
+def _segment_sentences(seg: Segment) -> list[Sentence]:
+    """Sentences of one ASR segment, timed from the word stream where it exists.
+
+    Word timing is measured and sentence timing is not: splitting a segment by
+    character proportion puts a boundary wherever the character count falls,
+    which is routinely inside a word, and even inside a *different* sentence's
+    word. On the committed Tears of Steel transcript, segment 0 spans 0.0–7.0 s
+    with the text ``"We have main engine start. Four, three, two, one."`` but
+    only five words — ``We / have / main / engine / start.`` — which cover the
+    first sentence alone. The proportional split therefore manufactured a
+    boundary at 3.792 s for a sentence whose words do not exist, a clip opening
+    there snapped back to the word ``have``, and the shipped reel opened on
+    ``"have main engine start."`` with its subject deleted.
+
+    Where the words exist, each sentence is anchored to the words that compose
+    it by consuming the stream until the sentence's normalised text is covered,
+    which is the same calculation ``corpus._align_sentence_times`` already
+    performed for the corpus — moved here so the candidate scan sees real
+    bounds instead of inheriting the corpus's post-hoc repair.
+
+    Deliberately conservative: when the count does not line up — the words ran
+    out before a sentence was covered, or consumed nothing for it — the whole
+    segment keeps proportional timing and every sentence is marked
+    ``word_anchored=False``. One plausible-looking timecode is worse than an
+    admitted estimate.
+    """
+    pieces: list[str] = []
+    for piece in split_sentences(seg.text):
+        pieces.extend(_split_markers(piece))
+    if not pieces:
+        return []
+    words = seg.words or []
+    if not words:
+        return _proportional_sentences(pieces, seg)
+
+    times: list[tuple[float, float]] = []
+    ptr = 0
+    for piece in pieces:
+        target = _norm_text(piece)
+        # ``_norm_text`` keeps case and punctuation, which the word stream also
+        # carries, but the two decode them differently -- ``"hand?"`` vs
+        # ``"hand"``, ``"I'm"`` vs ``"Im"`` -- so the comparison is on the
+        # letters and digits of each token, case-folded.
+        need = _piece_tokens(target)
+        if not need:
+            times.append((seg.start, seg.start))
+            continue
+        while ptr < len(words) and not _norm_text(words[ptr].text):
+            ptr += 1
+        start_w = ptr
+        have: set[str] = set()
+        while ptr < len(words):
+            w = _norm_text(words[ptr].text)
+            if not w:
+                ptr += 1
+                continue
+            have |= _piece_tokens(w)
+            ptr += 1
+            if need <= have:
+                break
+        if start_w >= len(words) or ptr <= start_w or not need <= have:
+            # The word stream ran out before this sentence was covered, consumed
+            # nothing for it, or covered only its *length*: the transcript's
+            # words and its sentence text disagree. That last case is the one
+            # the character-count test used to pass, and it is the worst of the
+            # three, because the bounds it emits look exact. On the committed
+            # transcript, ``"Speed it up, guys."`` has one word -- ``Speed`` --
+            # and the old test consumed ``"Speed Why don't you just admit"``,
+            # reached the character count, and anchored the sentence at 342.78 s
+            # to speech that is not that sentence. Requiring the sentence's own
+            # tokens to be present rejects it, and the segment falls back to the
+            # proportional bounds it admits to.
+            return _proportional_sentences(pieces, seg)
+        s_t = words[start_w].start
+        e_t = words[max(start_w, ptr - 1)].end if ptr > start_w else words[start_w].end
+        times.append((s_t, max(e_t, s_t)))
+    if len(times) != len(pieces):
+        return _proportional_sentences(pieces, seg)
+
+    out: list[Sentence] = []
+    for piece, (s, e) in zip(pieces, times):
+        # Unrounded: ``s`` and ``e`` *are* word timestamps, and rounding them
+        # breaks the identity ``sentence.start == word.start`` that
+        # ``edit_plan`` relies on. On the committed transcript, ``"Я люблю
+        # это!"`` opens at the word ``"Я"`` (213.01999 s) and rounding the
+        # sentence to 213.02 put that word 1e-5 s outside the bound;
+        # ``_BOUND_EPS`` is 1e-6, so ``_clip_words`` decided ``"Я"`` belonged to
+        # the previous sentence and dropped it, and the clip shipped as
+        # ``"люблю это!"`` minus its subject. Estimates are rounded (below);
+        # measurements are not.
+        out.append(Sentence(piece, s, e, _classify(piece)))
     return out
 
 

@@ -62,6 +62,46 @@ def test_split_sentences_keeps_a_lettered_list_item_short():
     assert split_sentences("a. The first step is to read.") == ["a. The first step is to read."]
 
 
+def test_coverage_pairs_a_split_decimal_with_the_sentence_token():
+    """``"40.3"`` in the sentence is ``"40"`` and ``".3"`` in the word stream.
+
+    faster-whisper emits the decimal as two words. The coverage test compares
+    token bodies, and ``"40.3"`` reduces to the one body ``"403"``, which no
+    word ever produces -- so a sentence the words plainly cover fell back to
+    proportional timing, and on the committed Royal Society transcript that
+    refusal cost the reel's opening 12 s of hook. Digits pair digit by digit;
+    letters still decide identity.
+    """
+    from engine.story_units import _piece_tokens
+    assert _piece_tokens("40.3 degrees") == {"4", "0", "3", "degrees"}
+    assert _piece_tokens("40") | _piece_tokens(".3") >= _piece_tokens("40.3")
+    # A different number is still a different number.
+    assert not (_piece_tokens("34 degrees") <= _piece_tokens("40.3 Celsius"))
+
+
+def test_a_split_decimal_sentence_anchors_to_its_words():
+    """The Royal Society segment that used to fall back now anchors."""
+    from engine.story_units import _segment_sentences
+    seg = _wseg(0.3, 7.44, "Now last year the UK recorded its highest ever "
+                            "temperature of 40.3 degrees Celsius and on the news recently", [
+        _word(" Now", 0.30, 0.80), _word(" last", 0.80, 1.12),
+        _word(" year", 1.12, 1.40), _word(" the", 1.40, 1.58),
+        _word(" UK", 1.58, 1.84), _word(" recorded", 1.84, 2.34),
+        _word(" its", 2.34, 2.58), _word(" highest", 2.58, 3.14),
+        _word(" ever", 3.14, 3.42), _word(" temperature", 3.42, 3.86),
+        _word(" of", 3.86, 4.18), _word(" 40", 4.18, 4.50),
+        _word(".3", 4.50, 5.02), _word(" degrees", 5.02, 5.28),
+        _word(" Celsius", 5.28, 5.70), _word(" and", 5.70, 6.64),
+        _word(" on", 6.64, 6.74), _word(" the", 6.74, 6.82),
+        _word(" news", 6.82, 6.98), _word(" recently", 6.98, 7.44),
+    ])
+    sents = _segment_sentences(seg)
+    assert len(sents) == 1
+    assert sents[0].word_anchored is True
+    assert sents[0].start == 0.30
+    assert sents[0].end == 7.44
+
+
 def test_split_sentences_errs_towards_not_splitting():
     """The rule cannot see ``I saw Dr. He left.`` as two sentences.
 
@@ -309,3 +349,95 @@ def test_coherence_detects_seam_with_two_boundaries():
                "limited connectivity for decades.")
     assert coherence_score(one_story) > coherence_score(spliced)
     assert coherence_score(spliced) < 0.2
+
+
+# ── word-anchored sentence timing ────────────────────────────────────────────
+
+
+def _wseg(start, end, text, words):
+    return Segment(start, end, text, words)
+
+
+def _word(text, start, end):
+    return Word(text, start, end)
+
+
+def test_segment_sentences_anchors_bounds_to_words():
+    """A sentence's bounds are the bounds of the words that compose it."""
+    from engine.story_units import _segment_sentences
+    seg = _wseg(0.0, 7.0, "We have main engine start. Four, three, two, one.", [
+        _word("We", 0.00, 0.30), _word("have", 0.30, 0.60),
+        _word("main", 0.60, 0.90), _word("engine", 0.90, 1.20),
+        _word("start.", 1.20, 1.50),
+    ])
+    sents = _segment_sentences(seg)
+    assert len(sents) == 2
+    # The second sentence has no words of its own, so rather than manufacture a
+    # bound for it the whole segment admits proportional timing. That is the
+    # conservative direction: one admitted estimate beats one plausible-looking
+    # exact timecode for a sentence whose words do not exist. The reel used to
+    # open on ``"have main engine start."`` because the manufactured bound at
+    # 3.792 s sat inside the word ``have``.
+    assert all(not s.word_anchored for s in sents)
+    assert sents[1].text == "Four, three, two, one."
+
+
+def test_segment_sentences_refuses_a_length_only_match():
+    """Words that reach the character count but are not the sentence do not
+    anchor it.
+
+    ``"Speed it up, guys."`` has one word in the stream, ``"Speed"``; the old
+    character-count test consumed ``"Speed Why don't you just admit"``,
+    reached the count, and anchored the sentence to speech that is not it.
+    """
+    from engine.story_units import _segment_sentences
+    seg = _wseg(342.0, 349.0, "Speed it up, guys. Why don't you just admit it?", [
+        _word("Speed", 342.78, 343.18),
+        _word("Why", 346.94, 347.16), _word("don't", 347.16, 347.36),
+        _word("you", 347.36, 347.56), _word("just", 347.56, 347.76),
+        _word("admit", 347.76, 348.00),
+    ])
+    sents = _segment_sentences(seg)
+    # The words cannot cover the first sentence, so the segment admits estimate.
+    assert all(not s.word_anchored for s in sents)
+
+
+def test_segment_sentences_anchors_when_punctuation_differs():
+    """The text and the word stream disagree about punctuation and case by
+    construction (``"hand?"`` vs ``"hand"``); coverage is judged on letters."""
+    from engine.story_units import _segment_sentences
+    seg = _wseg(0.0, 4.0, "Are you alright? Yes, I'm fine.", [
+        _word("Are", 0.0, 0.3), _word("you", 0.3, 0.6),
+        _word("alright?", 0.6, 1.2), _word("Yes,", 1.2, 1.6),
+        _word("I'm", 1.6, 1.8), _word("fine.", 1.8, 2.2),
+    ])
+    sents = _segment_sentences(seg)
+    assert [s.word_anchored for s in sents] == [True, True]
+    assert sents[0].start == 0.0 and sents[0].end == 1.2
+    assert sents[1].start == 1.2 and sents[1].end == 2.2
+
+
+def test_segment_sentences_proportional_when_words_disagree():
+    """Words and sentence text that cannot correspond leave the segment estimated."""
+    from engine.story_units import _segment_sentences
+    seg = _wseg(10.0, 14.0, "The weather is mild.", [
+        _word("Completely", 10.0, 10.5), _word("different", 10.5, 11.0),
+        _word("subject", 11.0, 11.5),
+    ])
+    assert all(not s.word_anchored for s in _segment_sentences(seg))
+
+
+def test_anchored_sentence_bounds_are_not_rounded():
+    """Rounding a word-derived bound breaks ``sentence.start == word.start``,
+    and ``_BOUND_EPS`` is 1e-6, so the word that *is* the opening then falls
+    outside the clip's own bound and is dropped."""
+    from engine.story_units import _segment_sentences
+    ya = 213.01999
+    seg = _wseg(ya, 214.2, "Я люблю это!", [
+        _word("Я", ya, ya + 0.48),
+        _word("люблю", ya + 0.48, ya + 0.72),
+        _word("это!", ya + 0.72, ya + 1.16),
+    ])
+    sents = _segment_sentences(seg)
+    assert sents[0].word_anchored
+    assert sents[0].start == ya
