@@ -1,51 +1,103 @@
-SELEKYT PROPRIETARY LICENSE
+SELEKYT NON-COMMERCIAL SOURCE-AVAILABLE LICENSE v1.0
 
-Copyright (c) 2026 Bharath Bheemreddy
+Copyright (c) 2026 Bharath Bheemreddy / SeleKyT
 
-All rights reserved.
+1. GRANT
 
-1. Ownership
-The SelekyT software, source code, documentation, architecture, editorial
-logic, and associated materials are proprietary intellectual property of the
-copyright holder, except for third-party components that are separately
-licensed.
+Subject to the terms of this License, the copyright holder grants you a
+worldwide, non-exclusive, royalty-free license to use, reproduce, modify,
+and distribute the Software solely for Non-Commercial Purposes.
 
-2. Limited permission
-Access to this repository is provided for authorized evaluation, development,
-and collaboration purposes only. Such access does not transfer ownership or
-grant a general license to use the software.
+2. NON-COMMERCIAL PURPOSE
 
-3. Restrictions
+"Non-Commercial Purpose" means a use that is not primarily intended for
+commercial advantage, monetary compensation, revenue generation, or use in
+the operation of a commercial business or product.
+
+Examples include personal use, private experimentation, education, academic
+research, non-profit research, evaluation, and hobby projects.
+
+3. COMMERCIAL USE
+
+Commercial use is not granted by this License.
+
 Without prior written permission from the copyright holder, you may not:
-- copy, reproduce, or redistribute the software or substantial portions of it;
-- publish or make the source code available to third parties;
-- sell, license, sublicense, lease, or commercially exploit the software;
-- create or distribute a competing product or service based substantially on
-  the software;
-- remove copyright or proprietary notices; or
-- use the software as part of a commercial product or hosted service.
 
-4. Authorized collaborators
-A person or organization explicitly authorized by the copyright holder may
-access and modify the software only within the scope of that authorization.
-Additional rights must be granted in a separate written agreement.
+- use the Software as part of a commercial product, service, or business
+  workflow;
+- sell, license, sublicense, lease, or commercially distribute the Software;
+- provide the Software or a substantially derived implementation as a paid
+  hosted or managed service;
+- create or operate a competing commercial service substantially based on the
+  Software or its proprietary mechanisms;
+- package the Software or substantial portions of its mechanisms into a
+  commercial SDK, platform, appliance, or other commercial product; or
+- distribute a derivative work for commercial purposes.
 
-5. Third-party software
-This license does not replace or override licenses applicable to third-party
-software, libraries, models, assets, or other materials included with or used
-by SelekyT. Those components remain subject to their respective licenses.
+Commercial permission may be granted separately in writing by the copyright
+holder and may be subject to additional terms.
 
-6. No warranty
-The software is provided "AS IS", without warranty of any kind, express or
-implied, to the maximum extent permitted by applicable law.
+4. MODIFICATIONS AND DERIVATIVES
 
-7. Termination
-Any permission granted under this license terminates automatically if these
-terms are materially violated. Upon termination, the recipient must stop the
-unauthorized use and distribution of the software.
+You may modify and create derivative works of the Software for Non-Commercial
+Purposes, provided that this License and applicable copyright and provenance
+notices remain with the Software.
 
-For commercial licensing, partnership, or other permissions, contact the
-copyright holder.
+This License does not grant permission for commercial use of modifications or
+derivative works.
 
-This license is intended as a proprietary source-available license and is not
-an open-source license.
+5. PROPRIETARY RIGHTS
+
+The Software, its original source code, and proprietary mechanisms remain the
+property of the copyright holder except for components separately owned or
+licensed by third parties.
+
+Nothing in this License transfers ownership or grants rights beyond those
+expressly stated here.
+
+6. TRADEMARKS
+
+This License does not grant any rights to use the SeleKyT name, trademarks,
+logos, or branding except as reasonably necessary to identify an unmodified
+copy of the Software.
+
+7. THIRD-PARTY COMPONENTS
+
+Third-party libraries, models, assets, fonts, and other components included
+with or used by SeleKyT remain subject to their own licenses. This License
+does not replace or override those licenses.
+
+8. ATTRIBUTION AND NOTICES
+
+You may not remove or obscure copyright, license, provenance, or other
+proprietary notices included with the Software.
+
+9. NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT, TO THE MAXIMUM EXTENT
+PERMITTED BY APPLICABLE LAW.
+
+10. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE COPYRIGHT HOLDER
+SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL,
+OR EXEMPLARY DAMAGES ARISING FROM OR RELATED TO THE SOFTWARE OR ITS USE.
+
+11. TERMINATION
+
+Your rights under this License terminate automatically if you materially
+violate its terms. Upon termination, you must cease the unauthorized use and
+distribution of the Software.
+
+12. SEVERABILITY
+
+If any provision of this License is held unenforceable, the remaining
+provisions remain in effect.
+
+13. COMPLETE TERMS
+
+This License states the permissions granted for the Software. Any additional
+commercial rights must be granted separately in writing by the copyright
+holder.
