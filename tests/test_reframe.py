@@ -392,7 +392,7 @@ def test_an_anamorphic_source_renders_to_a_genuinely_9_16_frame(tmp_path):
     # count measures DAR 0.6337 instead of 0.5625
     assert filt.endswith("setsar=8/9"), filt
     # the scale stage lands on the SAR-aware target height
-    assert "scale=308:486" in filt, filt
+    assert "scale=456:720" in filt, filt
     # the window's pixel aspect matches the frame's, so the scale onto it is a
     # pure resize and the content is not squeezed sideways
     assert abs(cw / ch - 308 / 486) < 0.01, (
@@ -402,7 +402,7 @@ def test_an_anamorphic_source_renders_to_a_genuinely_9_16_frame(tmp_path):
 
     out = tmp_path / "vertical.mp4"
     dar, w, h = _rendered_dar(video, filt, out)
-    assert (w, h) == (308, 486), (
+    assert (w, h) == (456, 720), (
         f"the anamorphic crop is already sub-1080, so it must not be "
         f"rescaled, got {w}x{h}"
     )
@@ -491,7 +491,7 @@ def test_an_anamorphic_slide_is_not_squeezed(tmp_path):
     delivered_h = ys.max() - ys.min() + 1
 
     pw, ph, sar_w, sar_h = _probe_geometry(out)
-    assert (pw, ph, sar_w, sar_h) == (308, 486, 8, 9), (
+    assert (pw, ph, sar_w, sar_h) == (456, 720, 8, 9), (
         f"the anamorphic deliverable is {pw}x{ph} SAR {sar_w}:{sar_h}, "
         "expected 308x486 SAR 8:9"
     )
@@ -600,6 +600,18 @@ def test_a_4k_source_renders_to_exactly_1080x1920(tmp_path):
     assert abs(dar - 9 / 16) < 0.001
 
 
+def test_a_low_resolution_landscape_source_is_delivered_at_720_lines(tmp_path):
+    """A 426x240 source must not ship as a 240p deliverable: the caption burn
+    needs a real delivery canvas even when the source itself is low resolution."""
+    from engine.reframe import landscape_filter
+
+    video = _anamorphic_video(tmp_path / "low.mp4", sar="1/1", size="426x240")
+    out = tmp_path / "landscape_low.mp4"
+    dar, w, h = _rendered_dar(video, landscape_filter(video), out)
+    assert (w, h) == (1280, 720), f"low-res landscape must deliver 720 lines, got {w}x{h}"
+    assert abs(dar - 16 / 9) < 0.005
+
+
 def test_a_16_9_source_is_left_alone(tmp_path):
     """The common case must be a no-op: an already-16:9 square-pixel source is
     neither padded nor needlessly rescaled."""
@@ -675,7 +687,7 @@ def test_a_square_pixel_source_is_unchanged_by_the_aspect_correction(tmp_path):
 
     out = tmp_path / "vertical.mp4"
     dar, w, h = _rendered_dar(video, filt, out)
-    assert (w, h) == (270, 480), f"the crop is exact here; got {w}x{h}"
+    assert (w, h) == (406, 722), f"the low-resolution crop must be raised to the 720-line delivery floor; got {w}x{h}"
     assert abs(dar - 9 / 16) < 0.005
 
 
@@ -690,9 +702,9 @@ def test_the_vertical_scale_lands_on_an_exact_9_16_display_ratio():
 
     cases = [
         # (crop_w, sar_w, sar_h, expected frame)
-        (270, 1, 1, (270, 480)),    # 480 * 9/16 is exact
-        (274, 1, 1, (274, 488)),    # 274 * 16/9 = 487.1 -> 488
-        (308, 8, 9, (308, 486)),    # NTSC: the SAR cancels the crop's own width
+        (270, 1, 1, (406, 722)),    # 480 * 9/16 is exact
+        (274, 1, 1, (406, 722)),    # 274 * 16/9 = 487.1 -> 488
+        (308, 8, 9, (456, 720)),    # NTSC: the SAR cancels the crop's own width
         (406, 1, 1, (406, 722)),    # 720-high source: 406 * 16/9 = 721.8 -> 722
         (1216, 1, 1, (1080, 1920)), # 4K: the crop rounds to 1216, the frame is exact
         (720, 1, 1, (720, 1280)),   # portrait passes through untouched
@@ -710,11 +722,15 @@ def test_the_vertical_scale_lands_on_an_exact_9_16_display_ratio():
         )
 
 
-def test_the_vertical_scale_does_not_widen_a_sub_1080_crop():
-    """``min(1080, iw)`` was there to stop upscaling; deriving the width in
-    Python has to keep that property, or a 720-wide source ships blown up to
-    1080 and softer than its source for the extra encode time."""
+def test_the_vertical_scale_raises_low_resolution_delivery_to_720_lines():
+    """Low-resolution inputs are deliberately upscaled for delivery so the
+    burned-in ASS captions have a useful physical canvas on phones."""
     from engine.reframe import vertical_scale_filter
+
+    assert vertical_scale_filter(270, 1, 1).startswith("scale=406:")
+    assert vertical_scale_filter(406, 1, 1).startswith("scale=406:")
+    assert vertical_scale_filter(1216, 1, 1).startswith("scale=1080:")
+
 
     assert vertical_scale_filter(406, 1, 1).startswith("scale=406:")
     assert vertical_scale_filter(1216, 1, 1).startswith("scale=1080:")
