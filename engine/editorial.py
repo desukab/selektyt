@@ -644,6 +644,33 @@ def _hook_similarity(a: str, b: str) -> float:
     return _similarity(a[:50], b[:50])
 
 
+def score_all(thoughts: list[Segment]) -> list[Candidate]:
+    """Score every eligible candidate without applying an output budget.
+
+    Story discovery and publishing are different decisions. ``rank`` is the
+    historical budgeted selector; using it during the pipeline meant
+    ``--limit 6`` reduced the candidate set to a small multiple of six before
+    the final selection policy ever saw it. That made the output budget a
+    hidden discovery budget.
+
+    This keeps only the objective candidate eligibility rules (8-55 seconds
+    and 20 words), scores every eligible span, and returns the complete scored
+    pool in deterministic score order. The caller's editorial gate and
+    selection policy then decide what actually ships.
+    """
+    candidates = [
+        score_candidate(s)
+        for s in thoughts
+        if 8 <= s.duration <= 55
+        and len(re.findall(r"\w+", s.text, re.UNICODE)) >= 20
+    ]
+    candidates.sort(
+        key=lambda c: (c.total_score, c.editorial_score,
+                       c.context_score, c.end - c.start),
+        reverse=True,
+    )
+    return candidates
+
 def rank(thoughts: list[Segment], limit: int = 8,
          select_limit: int | None = None) -> list[Candidate]:
     """Rank candidates, keeping a bench beyond the budget the caller selects from.
