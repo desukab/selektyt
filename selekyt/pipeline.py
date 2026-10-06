@@ -1344,7 +1344,6 @@ def run(
         # the evidence and narrative closure decide that. The composer already
         # penalises unnecessary moments and searches all lengths up to the
         # bounded ceiling, so runtime is an outcome rather than a target.
-        story_source_seconds = max((c.end for c in transcript), default=0.0)
         story_max_moments = max(10, min(24, 8 + math.ceil(math.log2(max(1, len(passed)))))
         story_variants = compose_story_variants(
             passed,
