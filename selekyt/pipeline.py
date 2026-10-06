@@ -451,6 +451,55 @@ def _report_detail(report: dict, project: Any) -> dict[str, Any]:
     return {"artifacts": len(named)}
 
 
+def _story_discovery_report(corpus) -> dict[str, Any] | None:
+    """Expose the story graph independently of the render budget.
+
+    ``EditorialCorpus.threads`` is the source's discovered story inventory.
+    This report is deliberately derived from the already-built graph: it does
+    not invent a second story detector and it is not capped by ``--limit``.
+    A thread can contain several moments and can overlap another thread; that
+    is a property of the source, not a reason to collapse it to one clip.
+    """
+    if corpus is None:
+        return None
+    stories = []
+    for thread in corpus.threads:
+        stories.append({
+            "story_id": thread.thread_id,
+            "title": thread.title,
+            "terms": list(thread.terms),
+            "unit_indices": list(thread.unit_indices),
+            "start": round(thread.start, 3),
+            "end": round(thread.end, 3),
+            "duration": round(max(0.0, thread.end - thread.start), 3),
+            "arc": thread.arc,
+            "span_share": round(thread.span_share, 3),
+            "confidence": round(thread.confidence, 3),
+            "reason": thread.reason,
+            "evidence": list(thread.evidence),
+            "links": [
+                {
+                    "setup_unit": link.setup_unit,
+                    "payoff_unit": link.payoff_unit,
+                    "kind": link.kind,
+                    "strength": round(link.strength, 3),
+                    "confidence": round(link.confidence, 3),
+                    "reason": link.reason,
+                    "evidence": list(link.evidence),
+                }
+                for link in thread.links
+            ],
+        })
+    return {
+        "story_count": len(stories),
+        "stories": stories,
+        "selection_note": (
+            "Story discovery is independent of --limit. --limit controls the "
+            "number of final candidate cuts rendered; it does not cap this "
+            "story inventory."
+        ),
+    }
+
 def _apply_selection_policy(passed: list, *, limit: int, corpus=None) -> tuple:
     """Choose the set, in the context of the set being chosen.
 
