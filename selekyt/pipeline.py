@@ -1280,6 +1280,15 @@ def run(
                 text=f"corpus analysis unavailable: {exc}")
         corpus_report = None
 
+    # Persist the complete story inventory before any output-budget selection.
+    # This is the evidence that ``6 selected`` does not mean ``6 stories found``.
+    story_discovery = _story_discovery_report(corpus_report)
+    if story_discovery is not None:
+        (project / "story_discovery.json").write_text(
+            json.dumps(story_discovery, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
     thoughts = make_thoughts(transcript)
     # ``--limit`` is an output budget, not a discovery budget. Score the
     # complete eligible candidate pool before the gate and set-selection layers;
@@ -2076,6 +2085,7 @@ def run(
             "content_pack": str(project / "content_pack.json"),
             "editorial_report": str(project / "editorial_report.json"),
             "editorial_corpus": str(corpus_path) if corpus_path.is_file() else None,
+            "story_discovery": str(project / "story_discovery.json") if (project / "story_discovery.json").is_file() else None,
             "pacing_report": str(project / "pacing_report.json"),
             "qa": str(qa_path),
             "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
