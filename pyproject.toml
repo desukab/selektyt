@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "LicenseRef-SeleKyT-NonCommercial-Source-Available"
 license-files = ["LICENSE"]
-dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26", "yt-dlp>=2026.8.19", "requests>=2.31"]
+dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26", "yt-dlp>=2026.8.19", "requests>=2.31", "groq>=0.31", "keyring>=25"]
 
 [project.optional-dependencies]
 # faster-whisper is the preferred engine (attention-based, per-token
