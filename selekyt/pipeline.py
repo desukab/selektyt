@@ -16,7 +16,7 @@ from typing import Any, Callable
 from providers.atomic import read_json, write_json_atomic
 from providers.audio import peak_dbfs, AudioReadError
 
-from engine.editorial import make_thoughts, rank, score_candidate
+from engine.editorial import make_thoughts, rank, score_all, score_candidate
 from engine.captions import ship_captions
 from engine.caption_director import caption_metadata, style_name
 from engine.content_pack import build_content_pack
@@ -1232,7 +1232,11 @@ def run(
         corpus_report = None
 
     thoughts = make_thoughts(transcript)
-    ranked = rank(thoughts, limit=max(limit * 3, limit), select_limit=limit)
+    # ``--limit`` is an output budget, not a discovery budget. Score the
+    # complete eligible candidate pool before the gate and set-selection layers;
+    # the old ``rank(limit * 3)`` call silently reduced discovery to 18 candidates
+    # on the default six-output run.
+    ranked = score_all(thoughts)
     # Validate once, not twice: the previous form called validate() again when
     # building the rejected list, so a candidate's gate reason was computed two
     # expensive times and the two lists could disagree on a non-deterministic
