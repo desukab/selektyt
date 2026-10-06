@@ -1091,16 +1091,17 @@ def landscape_filter(video: Path, target: tuple[int, int] = (16, 9),
     sar_w, sar_h = probe_sample_aspect(video)
     tw, th = target
 
-    # The largest frame of this aspect whose height does not exceed the
-    # source's, capped at the delivery width. Height is derived from the
-    # rounded width so the two stay at the target aspect to within the
-    # rounding residue documented above.
-    frame_w = _even(min(h * tw / th, max_width))
+    # Deliver at a minimum 720-line frame so a low-resolution source does not
+    # leave the ASS caption canvas physically tiny. Higher-resolution sources
+    # keep their native delivery height, capped by max_width.
+    min_height = 720
+    frame_h = max(_even(h * 16 / 9), min_height)
+    frame_w = _even(min(frame_h * tw / th, max_width))
     frame_h = _even(frame_w * th / tw)
 
     # Square-pixel extent of the source picture at its own pixel height.
     content_w = w * sar_w / sar_h
-    scale = min(frame_w / content_w, frame_h / h, 1.0)
+    scale = min(frame_w / content_w, frame_h / h)
     cw, ch = _even(content_w * scale), _even(h * scale)
 
     return (
@@ -1151,7 +1152,11 @@ def vertical_scale_filter(crop_w: int, sar_w: int, sar_h: int,
     deliverable keeps its SAR and the math accounts for it. Never enlarge: the
     width is capped at the crop's own width, not just at 1080.
     """
-    frame_w = _even(min(crop_w, max_width))
+    # Burn captions onto a minimum 720-line delivery. Keep the source sample
+    # aspect in the geometry calculation so anamorphic crops are not squeezed.
+    min_display_height = 720
+    frame_w = _even(max(min(crop_w, max_width),
+                        min_display_height * 9 * sar_h / (16 * sar_w)))
     frame_h = _even(frame_w * sar_w * 16 / (9 * sar_h))
     return f"scale={frame_w}:{frame_h}:flags=lanczos"
 
