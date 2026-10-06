@@ -636,10 +636,29 @@ def start_screen(
     if dims:
         bits.append(dims)
     bits += [f"model {model}", language or "auto-detect"]
+
+    # The CLI identity is terminal-native: black is supplied by the user's
+    # terminal, while SeleKyT owns one unmistakable neon-lime accent.
+    wordmark = [
+        "  ███████╗███████╗██╗     ███████╗██╗  ██╗██╗   ██╗████████╗",
+        "  ██╔════╝██╔════╝██║     ██╔════╝██║ ██╔╝╚██╗ ██╔╝╚══██╔══╝",
+        "  ███████╗█████╗  ██║     █████╗  █████╔╝  ╚████╔╝    ██║   ",
+        "  ╚════██║██╔══╝  ██║     ██╔══╝  ██╔═██╗   ╚██╔╝     ██║   ",
+        "  ███████║███████╗███████╗███████╗██║  ██╗   ██║      ██║   ",
+        "  ╚══════╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝   ╚═╝      ╚═╝   ",
+    ]
+    # On phones/Termux the compact identity is more readable than wrapping a
+    # block wordmark.
+    identity = (
+        [t.s(LIME + BOLD, row) for row in wordmark]
+        if t.width >= 68
+        else [t.s(LIME + BOLD, "  S E L E K Y T")]
+    )
     lines = [
         "",
-        t.s(LIME + BOLD, "S E L E K Y T"),
-        t.s(GRAY, _truncate("editorial intelligence for long-form video", t.width)),
+        *identity,
+        t.s(LIME, "  EDITORIAL INTELLIGENCE"),
+        t.s(GRAY, _truncate("  long-form video → stories → edits → publishable cuts", t.width)),
         "",
         _truncate("  ·  ".join(bits), t.width),
         t.s(GRAY, _truncate(_transcription_notice(transcription_provider), t.width)),
