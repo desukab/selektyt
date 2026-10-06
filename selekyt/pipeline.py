@@ -445,7 +445,7 @@ def _report_detail(report: dict, project: Any) -> dict[str, Any]:
     named = [
         key
         for key in ("captions", "timeline", "content_pack", "editorial_report",
-                    "editorial_corpus", "qa")
+                    "editorial_corpus", "story_discovery", "qa")
         if report.get(key) and Path(str(report[key])).exists()
     ]
     return {"artifacts": len(named)}
