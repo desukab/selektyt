@@ -18,6 +18,7 @@ from selekyt.transcription_settings import (
     TranscriptionSettingsError,
     configure_interactive as configure_transcription_interactive,
     default_provider as default_transcription_provider,
+    api_key as transcription_api_key,
 )
 from selekyt.ui import (
     ProgressRenderer,
@@ -58,6 +59,7 @@ def _doctor() -> int:
         except ImportError:
             asr_ok = False
         checks.append(("groq", True, asr_ok))
+        checks.append(("groq key", True, bool(transcription_api_key("groq"))))
     else:
         try:
             import google.genai  # noqa: F401
@@ -65,6 +67,7 @@ def _doctor() -> int:
         except ImportError:
             asr_ok = False
         checks.append(("google-genai", True, asr_ok))
+        checks.append(("gemini key", True, bool(transcription_api_key("gemini"))))
     missing = [name for name, required, present in checks if required and not present]
     for name, required, present in checks:
         status = "OK" if present else ("MISSING" if required else "OPTIONAL")
@@ -74,7 +77,10 @@ def _doctor() -> int:
         return 0
     extra = {"local": "[transcription]", "groq": "[cloud-transcription]",
              "gemini": "[cloud-transcription]"}[provider]
-    print(f"Install the missing REQUIRED tools with: pip install 'selekyt{extra}'")
+    if any(name.endswith(" key") for name in missing):
+        print(f"Configure the selected cloud provider with: selekyt setup --provider {provider}")
+    else:
+        print(f"Install the missing REQUIRED tools with: pip install 'selekyt{extra}'")
     return 1
 
 
