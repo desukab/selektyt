@@ -292,6 +292,13 @@ def _whole_score(
     for i, (a, b) in enumerate(zip(seq, seq[1:]), 1):
         score += _pair_score(a, b, fs[i - 1], fs[i], style)
         score += _role_position_score(fs[i].roles, i, len(seq), style)
+        if style != "chronological" and i == 1:
+            if b.start < a.start:
+                score += 0.22
+                if fs[i].roles & {"setup", "tension"}:
+                    score += 0.12
+            else:
+                score -= 0.10
 
     closure_count = 0
     closure_strength = 0.0
@@ -355,6 +362,12 @@ def _eligible_next(seq: Sequence[Candidate], c: Candidate, style: str) -> bool:
     if any(not (c.end <= x.start + 1e-6 or c.start >= x.end - 1e-6) for x in seq):
         return False
     if not seq:
+        return True
+    # The first jump is the construction: a cold-open/payoff-first story may
+    # open on a later reveal and then return to the earlier setup. Once that
+    # return happens, the body stays chronological so the editor is not asking
+    # the viewer to solve an arbitrary permutation.
+    if style != "chronological" and len(seq) == 1:
         return True
     last = seq[-1]
     return c.start >= last.end - 1e-6
