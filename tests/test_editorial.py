@@ -1,5 +1,5 @@
 from models.core import Segment, Word
-from engine.editorial import make_thoughts, rank, score_candidate
+from engine.editorial import make_thoughts, rank, score_all, score_candidate
 from engine.context_guard import validate
 
 
@@ -97,6 +97,23 @@ def test_the_scan_bounds_its_cost_without_truncating_the_tail():
         rs = [t.start for t in real]
         assert rs == sorted(rs), f"{path.name} is not in start order"
 
+
+def test_score_all_does_not_treat_the_output_budget_as_discovery_budget():
+    """All eligible candidates remain available before final selection.
+
+    ``rank`` is intentionally budgeted for compatibility; the pipeline's
+    discovery pass must use ``score_all`` so ``--limit 2`` cannot hide the
+    third and fourth eligible stories before the selection policy sees them.
+    """
+    segs = [
+        Segment(0, 20, "The first story has a surprising discovery that changes how the team understands the problem and what they should do next.", []),
+        Segment(25, 48, "The second story reveals a completely different result after the experiment failed and the researchers changed their approach.", []),
+        Segment(55, 80, "The third story explains why the original assumption was wrong and what evidence finally proved the alternative beyond any doubt.", []),
+    ]
+    all_scored = score_all(segs)
+    assert len(all_scored) == 3
+    budgeted = rank(segs, 2)
+    assert len(budgeted) == 2
 
 def test_rank_is_deterministic_and_non_overlapping():
     """Three claims that clear the filter (each 20+ words, 8-55 s, distinct
