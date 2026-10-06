@@ -1152,11 +1152,15 @@ def vertical_scale_filter(crop_w: int, sar_w: int, sar_h: int,
     deliverable keeps its SAR and the math accounts for it. Never enlarge: the
     width is capped at the crop's own width, not just at 1080.
     """
-    # Burn captions onto a minimum 720-line delivery. Keep the source sample
-    # aspect in the geometry calculation so anamorphic crops are not squeezed.
+    # Burn captions onto a minimum 720-line delivery. Unlike the old
+    # source-preserving cap, this deliberately permits upscaling: a 426x240
+    # source has only ~135 px of 9:16 crop width, but the shipped vertical
+    # frame still needs to be 405x720 so the caption canvas is readable.
+    # Keep the source sample aspect in the geometry calculation so anamorphic
+    # crops are not squeezed.
     min_display_height = 720
-    frame_w = _even(max(min(crop_w, max_width),
-                        min_display_height * 9 * sar_h / (16 * sar_w)))
+    min_frame_w = min_display_height * 9 * sar_h / (16 * sar_w)
+    frame_w = _even(min(max_width, max(crop_w, min_frame_w)))
     frame_h = _even(frame_w * sar_w * 16 / (9 * sar_h))
     return f"scale={frame_w}:{frame_h}:flags=lanczos"
 
