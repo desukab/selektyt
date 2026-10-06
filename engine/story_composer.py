@@ -89,14 +89,20 @@ def _features(c: Candidate, corpus) -> _Features:
         units.add(i)
         if u.thread_id is not None:
             threads.add(u.thread_id)
-        if u.topic_id is not None and u.topic_id >= 0:
-            topics.add(u.topic_id)
-        if u.beat_id is not None and 0 <= u.beat_id < len(corpus.beats):
-            roles.add(corpus.beats[u.beat_id].kind)
+        topic_id = getattr(u, "topic_id", -1)
+        if topic_id is not None and topic_id >= 0:
+            topics.add(topic_id)
+        beat_id = getattr(u, "beat_id", None)
+        if beat_id is not None and 0 <= beat_id < len(corpus.beats):
+            roles.add(corpus.beats[beat_id].kind)
 
+    corpus_links = list(getattr(corpus, "links", ()) or ())
+    if not corpus_links:
+        for thread in getattr(corpus, "threads", ()) or ():
+            corpus_links.extend(getattr(thread, "links", ()) or ())
     links = tuple(
-        (link.setup_unit, link.payoff_unit, link.confidence, link.kind)
-        for link in corpus.links
+        (link.setup_unit, link.payoff_unit, getattr(link, "confidence", 0.0), getattr(link, "kind", ""))
+        for link in corpus_links
         if link.setup_unit in units or link.payoff_unit in units
     )
 
