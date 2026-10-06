@@ -338,7 +338,10 @@ def main() -> None:
     # names what the default does. A file genuinely called ``analyze`` remains
     # reachable as ``./analyze``.
     argv = sys.argv[1:]
-    if argv and argv[0] == "setup":
+    # Setup is a real CLI command, not a video source. Handle it before
+    # argparse's positional source path so an installed entry point cannot
+    # accidentally send "setup" into the normal pipeline.
+    if argv[:1] == ["setup"]:
         setup = argparse.ArgumentParser(
             prog="selekyt setup",
             description="Set up SeleKyT transcription for this machine.",
