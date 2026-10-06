@@ -283,6 +283,16 @@ def _whole_score(
         for c, f in zip(seq, fs)
     )
 
+    # A single candidate that contains both halves of an explicit setup/payoff
+    # relation is already a complete thought. Preserve that as story evidence
+    # instead of requiring the composer to split it into two moments.
+    self_closures = sum(
+        1 for f in fs
+        if any(setup in f.units and payoff in f.units
+               for setup, payoff, _confidence, _kind in f.links)
+    )
+    score += min(0.48, 0.16 * self_closures)
+
     score += 0.28 * max(0.0, min(1.0, seq[0].opening_score))
     if fs[0].roles & {"revelation", "resolution", "turn"}:
         score += 0.14
