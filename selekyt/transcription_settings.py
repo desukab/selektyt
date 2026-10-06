@@ -42,14 +42,18 @@ def _write_preference(provider: str) -> None:
         path.parent.chmod(0o700)
     except OSError:
         pass
+    try:
+        data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    except (OSError, ValueError, TypeError):
+        data = {}
+    data["transcription_provider"] = provider
     tmp = path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps({"transcription_provider": provider}, indent=2) + "\n", encoding="utf-8")
+    tmp.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     try:
         tmp.chmod(0o600)
     except OSError:
         pass
     os.replace(tmp, path)
-
 
 def _keyring_module():
     try:
