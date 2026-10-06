@@ -114,6 +114,8 @@ def configure(provider: str, key: str | None = None) -> None:
         raise TranscriptionSettingsError(f"Choose one of: {', '.join(PROVIDERS)}")
     if provider != "local":
         if not key:
+            key = api_key(provider)
+        if not key:
             env_value = os.environ.get(_ENV_KEYS[provider], "").strip()
             if env_value:
                 key = env_value
