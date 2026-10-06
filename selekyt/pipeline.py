@@ -38,7 +38,7 @@ from engine.nle_export import (
     validate_fcpxml,
 )
 from engine.llm_editorial import attach_metadata
-from engine.story_composer import compose_story
+from engine.story_composer import compose_story, compose_story_variants
 from engine.selection import Scored, SelectionReport
 from engine.pipeline_audio import run_pipeline_audio
 from providers.ffmpeg import FfmpegError, probe_duration, probe_fps
@@ -1339,10 +1339,37 @@ def run(
         # than composing only the six clips the policy happened to rank first.
         # This is the important distinction between "six good clips" and "one
         # coherent story made from six good moments".
-        story_plan = compose_story(
+        story_source_seconds = max((c.end for c in transcript), default=0.0)
+        story_target_seconds = max(120.0, min(600.0, story_source_seconds * 0.12))
+        story_max_moments = max(10, min(24, math.ceil(story_target_seconds / 20.0)))
+        story_variants = compose_story_variants(
+            passed,
+            corpus=corpus_report,
+            max_moments=story_max_moments,
+            target_seconds=story_target_seconds,
+        )
+        story_plan = story_variants[0] if story_variants else compose_story(
             passed,
             corpus=corpus_report,
             limit=limit,
+            max_moments=story_max_moments,
+            target_seconds=story_target_seconds,
+        )
+        (project / "story_variants.json").write_text(
+            json.dumps([
+                {
+                    "style": p.style,
+                    "score": round(p.score, 4),
+                    "duration": round(sum(max(0.0, c.end - c.start) for c in p.candidates), 3),
+                    "moments": len(p.candidates),
+                    "source_spans": [
+                        {"start": round(c.start, 3), "end": round(c.end, 3)}
+                        for c in p.candidates
+                    ],
+                }
+                for p in story_variants
+            ], ensure_ascii=False, indent=2),
+            encoding="utf-8",
         )
         if story_plan.candidates:
             selected_ids = {id(c) for c in story_plan.candidates}
@@ -2129,7 +2156,7 @@ def run(
             "content_pack": str(project / "content_pack.json"),
             "editorial_report": str(project / "editorial_report.json"),
             "editorial_corpus": str(corpus_path) if corpus_path.is_file() else None,
-            "story_discovery": str(project / "story_discovery.json") if (project / "story_discovery.json").is_file() else None,
+            "story_discovery": str(project / "story_discovery.json") if (project / "story_discovery.json").is_file() else None,\n            "story_variants": str(project / "story_variants.json") if (project / "story_variants.json").is_file() else None,
             "pacing_report": str(project / "pacing_report.json"),
             "qa": str(qa_path),
             "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
