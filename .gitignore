@@ -114,3 +114,11 @@ corpus/rerun_*.log
 # scrollback that every run overwrites.
 .suite*.log
 .base*.log
+
+# setuptools build staging left in-tree by `python -m build`. The wheel is the
+# artifact; this is the intermediate copy of the tree it was made from, and it
+# goes stale the moment a source file changes. Dist holds the wheels themselves
+# when a build is run without --outdir; the published ones come from CI.
+build/
+dist/
+.pytesttmp/

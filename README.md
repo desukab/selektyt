@@ -42,15 +42,45 @@ The output is therefore more than an MP4: the editorial decisions behind the cut
 
 Requirements: **Python 3.10+** and **ffmpeg** on your PATH.
 
+The intended install is a pip install — no checkout of this repository needed:
+
 ```bash
-pip install -e '.[transcription]'
-selekyt analyze ./my-video.mp4 --limit 6
+python -m venv .venv
+source .venv/bin/activate      # on Windows: .venv\Scripts\activate
+pip install 'selekyt[transcription]'
+```
+
+The base `pip install selekyt` installs the CLI and the render/timeline path.
+Local transcription needs an ASR engine, which is why it is an extra — add it
+with the `[transcription]` suffix above.
+
+> **Status:** the distribution is built and verified in a clean virtual
+> environment, but it is **not yet published to PyPI**. This repository is
+> source-available and proprietary (see [LICENSE](./LICENSE)); publishing a
+> plain Python wheel would expose the editorial engine as readable source to
+> any installer, so the distribution boundary is still being decided. Until
+> then the commands above describe the intended path, not a live one.
+
+Then:
+
+```bash
+selekyt --doctor              # check the local processing environment
+selekyt ./my-video.mp4        # analyze a local video
 ```
 
 The same workflow can be started without the optional `analyze` verb:
 
 ```bash
 selekyt ./my-video.mp4
+```
+
+`--limit` controls how many stories the edit keeps. It defaults to 6 and
+accepts any positive count — it is a budget you choose, not a product cap:
+
+```bash
+selekyt ./my-video.mp4 --limit 1     # one cut
+selekyt ./my-video.mp4 --limit 10    # ten
+selekyt ./my-video.mp4               # the default
 ```
 
 Check the local environment:
@@ -68,7 +98,7 @@ A run writes its project under `out/` by default, including rendered 16:9 and 9:
 Groq and Gemini are optional BYOK cloud providers:
 
 ```bash
-pip install -e '.[cloud-transcription]'
+pip install 'selekyt[cloud-transcription]'
 
 selekyt configure-transcription groq
 # or: selekyt configure-transcription gemini

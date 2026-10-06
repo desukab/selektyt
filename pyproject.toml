@@ -6,14 +6,27 @@ build-backend = "setuptools.build_meta"
 name = "selekyt"
 version = "0.3.0"
 description = "Local-first long-form to publishable social video editorial engine"
+readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "SeleKyT Non-Commercial Source-Available License v1.0" }
 dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26", "yt-dlp>=2026.8.19"]
 
 [project.optional-dependencies]
 # faster-whisper is the preferred engine (attention-based, per-token
 # timestamps); sherpa-onnx is the fallback for hosts with no ctranslate2
 # wheel, e.g. Termux ARM64. Neither is a base dependency.
-transcription = ["faster-whisper>=1.1"]
+#
+# `av` is pinned because faster-whisper 1.2.1 calls
+# `av.open(..., metadata_errors="ignore")` (faster_whisper/audio.py), and
+# PyAV 19.0.1 removed that argument — so an unpinned `pip install
+# selekyt[transcription]` on a clean machine resolves av 19 and every
+# transcription dies on the first chunk with
+# `open() got an unexpected keyword argument 'metadata_errors'`. faster-whisper
+# declares only `av>=11`, so the bound has to come from here. 18.x is what this
+# project's own transcription runs and corpus WER measurements were made
+# against; lift the pin when faster-whisper releases a build that speaks the
+# PyAV 19 API.
+transcription = ["faster-whisper>=1.1", "av>=11,<19"]
 sherpa = ["sherpa-onnx>=1.10"]
 llm = ["requests>=2.31"]
 cloud-transcription = ["groq>=0.31", "google-genai>=2.0,<3", "keyring>=25"]
@@ -40,7 +53,7 @@ nle = ["pycmx>=1.5", "opentimelineio>=0.17.0"]
 # the imitation, so this extra keeps that check live in CI instead of skipping.
 dev = ["pytest>=8", "pycmx>=1.5", "opentimelineio>=0.17.0", "pyyaml>=6",
        "huggingface_hub>=0.23"]
-all = ["faster-whisper>=1.1", "sherpa-onnx>=1.10", "requests>=2.31", "pycmx>=1.5",
+all = ["faster-whisper>=1.1", "av>=11,<19", "sherpa-onnx>=1.10", "requests>=2.31", "pycmx>=1.5",
        "opentimelineio>=0.17.0"]
 
 [project.scripts]
@@ -53,7 +66,18 @@ include = ["selekyt*", "engine*", "models*", "providers*", "third_party*"]
 # recorded in third_party/PROVENANCE.md. It needs its licence file beside it for
 # Apache-2.0 redistribution, and the provenance record ships with it so the
 # origin claim travels with the wheel instead of only living in the repo.
+#
+# engine/models/ holds the silero VAD v6 and YuNet face-detection ONNX weights
+# (1.5 MB, both MIT — see the licences beside them). They are not optional data
+# a user can fetch: engine/vad.py and engine/reframe_perception.py resolve them
+# relative to __file__, and without them the preferred VAD backend and the face
+# detector both fall back to weaker paths on a machine that otherwise has
+# onnxruntime. A wheel that ships the code that loads a model without the model
+# is a wheel that silently degrades on first use, so they travel with the
+# package. Their licences and provenance ship beside them for the same reason
+# the FCPXML reader's do.
 [tool.setuptools.package-data]
-engine = ["assets/fonts/*.ttf", "assets/licenses/OFL-Fredoka.txt"]
+engine = ["assets/fonts/*.ttf", "assets/licenses/OFL-Fredoka.txt",
+          "models/*.onnx", "models/*.LICENSE", "models/*.PROVENANCE.md"]
 third_party = ["PROVENANCE.md"]
 "third_party.otio_fcpxml_adapter" = ["LICENSE"]

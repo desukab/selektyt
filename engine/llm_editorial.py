@@ -6,13 +6,32 @@ is unavailable, the pipeline continues normally with deterministic scoring.
 from __future__ import annotations
 import json
 import logging
-import requests
 from models.core import Candidate
+
+# `requests` is the optional `llm` extra, not a base dependency — a base
+# `pip install selekyt` has to be able to import this module, because
+# `selekyt/pipeline.py` imports `attach_metadata` unconditionally at the top.
+# Importing it eagerly meant a base install crashed on `selekyt --help` with
+# ModuleNotFoundError before a single flag was parsed. The module-level name is
+# kept (rather than importing inside `_ask_ollama`) so the tests that patch
+# `llm.requests.post` keep resolving it; `None` is the "extra not installed"
+# state and `_ask_ollama` turns it into the same failure every other Ollama
+# problem becomes — empty metadata, pipeline continues.
+try:
+    import requests
+except ImportError:  # pragma: no cover - exercised by the clean-install test
+    requests = None
 
 log = logging.getLogger(__name__)
 
 
 def _ask_ollama(text: str, ollama_url: str, model: str = "llama3.2") -> dict:
+    if requests is None:
+        raise ImportError(
+            "the `requests` package is required for LLM metadata; install it "
+            "with `pip install 'selekyt[llm]'`. The pipeline continues without "
+            "LLM metadata."
+        )
     prompt = (
         "Analyze this video transcript and classify its narrative arc.\n"
         "Return ONLY a JSON object with these fields:\n"
