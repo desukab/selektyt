@@ -322,7 +322,7 @@ def _render_is_valid(path: Path, *, vertical: bool, source: Path | None = None) 
     if not path.is_file() or path.stat().st_size < 1000:
         return False
     try:
-        ok, _errors = validate_output(path, vertical, source=source)
+        ok, _errors = validate_output(path, vertical, source=source, min_height=720)
     except Exception:
         return False
     return ok
