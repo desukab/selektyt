@@ -727,6 +727,7 @@ def test_the_vertical_scale_raises_low_resolution_delivery_to_720_lines():
     burned-in ASS captions have a useful physical canvas on phones."""
     from engine.reframe import vertical_scale_filter
 
+    assert vertical_scale_filter(135, 1, 1).startswith("scale=406:")
     assert vertical_scale_filter(270, 1, 1).startswith("scale=406:")
     assert vertical_scale_filter(406, 1, 1).startswith("scale=406:")
     assert vertical_scale_filter(1216, 1, 1).startswith("scale=1080:")
