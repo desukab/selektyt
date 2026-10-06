@@ -623,7 +623,8 @@ def test_start_screen_names_the_source_and_the_package():
     start_screen(term, source="video.mp4", model="small", language=None,
                  out="out/pkg", width=1920, height=1080)
     plain = _plain(err.getvalue())
-    assert "S E L E K Y T" in plain
+    assert ("S E L E K Y T" in plain or "███████╗" in plain)
+    assert "EDITORIAL INTELLIGENCE" in plain
     assert "video.mp4" in plain
     assert "1920x1080" in plain
     assert "out/pkg" in plain
@@ -791,7 +792,7 @@ def test_a_successful_run_renders_the_start_and_complete_screens(
     _run_cli(monkeypatch, tmp_path, [str(tmp_path / "src.mp4"), "--out", str(tmp_path)])
     cli_mod.main()
     plain_out = _plain(out.getvalue())
-    assert "S E L E K Y T" in _plain(err.getvalue())
+    assert ("S E L E K Y T" in _plain(err.getvalue()) or "███████╗" in _plain(err.getvalue()))
     assert "SELEKYT COMPLETE" in plain_out
     assert str(tmp_path) in plain_out
     assert "4 selected" in plain_out
