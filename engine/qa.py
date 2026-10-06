@@ -226,6 +226,7 @@ def _parse_rate(rate: str) -> float | None:
 
 def validate_output(path: Path, vertical: bool, *,
                     source: Path | None = None,
+                    min_height: int | None = None,
                     expected_fps: float | None = None,
                     expected_duration: float | None = None,
                     audio_cond: dict | None = None,
@@ -271,6 +272,10 @@ def validate_output(path: Path, vertical: bool, *,
                 errors.append(f"expected vertical video, got {w}x{h}")
             if not vertical and not w > h:
                 errors.append(f"expected landscape video, got {w}x{h}")
+            if min_height is not None and h < min_height:
+                errors.append(
+                    f"expected delivery height >= {min_height}px, got {w}x{h}"
+                )
             # The display aspect, not the pixel count, is the contract: a 9:16
             # *pixel* count is only 9:16 for square pixels, and an anamorphic
             # source inherits a sample aspect ratio that makes a correct-looking
