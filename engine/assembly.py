@@ -58,7 +58,7 @@ class AssemblyConfig:
     """The editorial choices the assembly is bound to, named so they can be
     audited rather than inferred from the output."""
 
-    order: str = "arc"             # "source" | "arc"
+    order: str = "arc"             # "source" | "story" | "arc"
     # A thread binds a group when at least this many selections come from it.
     # Two is the meaning of a group: one clip from a thread is a clip with a
     # subject, two clips from a thread are a story told in two parts, and
@@ -230,7 +230,9 @@ def _sequence(cands: list, corpus, config: AssemblyConfig) -> list[Placement]:
     shared = {tid for tid in counts
               if tid is not None and counts[tid] >= config.min_group_size}
 
-    if config.order == "arc" and corpus is not None and corpus.threads:
+    if config.order == "story":
+        ordered = list(enumerate(cands))
+    elif config.order == "arc" and corpus is not None and corpus.threads:
         groups: dict = {}
         for pos, c in enumerate(cands):
             tid = tid_by_id[id(c)]
