@@ -38,6 +38,8 @@ from engine.nle_export import (
     validate_fcpxml,
 )
 from engine.llm_editorial import attach_metadata
+from engine.story_composer import compose_story
+from engine.selection import Scored, SelectionReport
 from engine.pipeline_audio import run_pipeline_audio
 from providers.ffmpeg import FfmpegError, probe_duration, probe_fps
 from providers.youtube import download
@@ -1331,6 +1333,43 @@ def run(
         selection = _apply_selection_policy(passed, limit=limit,
                                             corpus=corpus_report)
         selected, policy_report = selection
+
+        # The selection policy chooses strong material; the story composer now
+        # chooses the *telling*.  It searches the full gate-passed pool rather
+        # than composing only the six clips the policy happened to rank first.
+        # This is the important distinction between "six good clips" and "one
+        # coherent story made from six good moments".
+        story_plan = compose_story(
+            passed,
+            corpus=corpus_report,
+            limit=limit,
+        )
+        if story_plan.candidates:
+            selected_ids = {id(c) for c in story_plan.candidates}
+            by_id = {
+                id(s.candidate): s
+                for s in policy_report.selected + policy_report.deferred
+            }
+            composed_scored = tuple(
+                by_id.get(id(c), Scored(candidate=c, base=c.total_score))
+                for c in story_plan.candidates
+            )
+            composed_deferred = tuple(
+                by_id.get(id(c), Scored(candidate=c, base=c.total_score))
+                for c in passed if id(c) not in selected_ids
+            )
+            policy_report = SelectionReport(
+                selected=composed_scored,
+                deferred=composed_deferred,
+                notes={
+                    **policy_report.notes,
+                    "story_composer": list(story_plan.reasons) + [
+                        f"chosen construction: {story_plan.style}",
+                        f"whole-story score: {story_plan.score:.3f}",
+                    ],
+                },
+            )
+            selected = list(story_plan.candidates)
         # The bench: candidates that passed every editorial gate and lost only to
         # the --limit budget — or to a selection-policy term, which is a different
         # loss and is reported separately below. Recording just the count left an
@@ -2065,6 +2104,11 @@ def run(
             # dropped only because --limit capped the output. A budget, not a
             # judgment — and the bench below is what it counts.
             "truncated_by_limit": truncated_by_limit,
+            "story_composition": {
+                "style": story_plan.style,
+                "score": round(story_plan.score, 4),
+                "reasons": list(story_plan.reasons),
+            },
             # The bench: these passed every gate and differ from the shipped clips
             # only in rank, so an editor raising --limit reads from here. The
             # entries are visible and comparable; promoting one without re-running
