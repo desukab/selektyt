@@ -80,14 +80,18 @@ def api_key(provider: str) -> str | None:
     if value:
         return value
     try:
-        return _keyring_module().get_password("selekyt", provider)
+        value = _keyring_module().get_password("selekyt", provider)
+        if value:
+            return value
     except Exception:
-        # A locked or unavailable desktop keyring behaves like an unconfigured
-        # credential. The explicit provider error below then gives the user a
-        # safe action without exposing a backend-specific exception.
+        pass
+    # Headless Linux servers often have no OS keyring. Setup still needs to be
+    # one simple flow, so the fallback is a mode-0600 config file.
+    try:
+        data = json.loads(settings_path().read_text(encoding="utf-8"))
+        return str(data.get("api_keys", {}).get(provider, "")).strip() or None
+    except (OSError, ValueError, TypeError, AttributeError):
         return None
-
-
 def require_api_key(provider: str) -> str:
     key = api_key(provider)
     if key:
@@ -110,22 +114,34 @@ def configure(provider: str, key: str | None = None) -> None:
             if env_value:
                 key = env_value
             else:
-                _keyring_module()
-                key = getpass.getpass(f"{provider.title()} API key (input hidden): ").strip()
+                try:
+                    key = getpass.getpass(f"{provider.title()} API key (input hidden): ").strip()
+                except (EOFError, KeyboardInterrupt):
+                    raise TranscriptionSettingsError("No API key entered; saved settings were not changed.")
         if not key:
             raise TranscriptionSettingsError("No API key entered; saved settings were not changed.")
-        if os.environ.get(_ENV_KEYS[provider], "").strip() != key:
+        if not os.environ.get(_ENV_KEYS[provider], "").strip():
             try:
                 _keyring_module().set_password("selekyt", provider, key)
-            except TranscriptionSettingsError:
-                raise
-            except Exception as exc:
-                raise TranscriptionSettingsError(
-                    "Could not save the API key to the system credential store. "
-                    "Saved settings were not changed."
-                ) from exc
+            except Exception:
+                # Headless machines commonly have no desktop keyring. Keep the
+                # same one-step setup by storing the credential in the existing
+                # 0600 SeleKyT settings file rather than forcing env variables.
+                path = settings_path()
+                try:
+                    data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+                except (OSError, ValueError, TypeError):
+                    data = {}
+                data.setdefault("api_keys", {})[provider] = key
+                path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+                tmp = path.with_suffix(".json.tmp")
+                tmp.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+                try:
+                    tmp.chmod(0o600)
+                except OSError:
+                    pass
+                os.replace(tmp, path)
     _write_preference(provider)
-
 
 def configure_interactive(provider: str | None = None) -> str:
     if provider is None:
