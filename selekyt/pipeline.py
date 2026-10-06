@@ -16,7 +16,7 @@ from typing import Any, Callable
 from providers.atomic import read_json, write_json_atomic
 from providers.audio import peak_dbfs, AudioReadError
 
-from engine.editorial import make_thoughts, rank, score_all, score_candidate
+from engine.editorial import make_thoughts, score_all, score_candidate
 from engine.captions import ship_captions
 from engine.caption_director import caption_metadata, style_name
 from engine.content_pack import build_content_pack
