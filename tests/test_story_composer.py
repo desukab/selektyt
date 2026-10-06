@@ -53,7 +53,7 @@ def test_composer_can_build_a_story_from_more_than_the_final_budget():
         candidate(80, "A separate unrelated moment."),
     ]
 
-    plan = compose_story(candidates, corpus=corpus, limit=3)
+    plan = compose_story(candidates, corpus=corpus, limit=3, max_moments=3)
 
     assert len(plan.candidates) == 3
     assert {c.start for c in plan.candidates} >= {0, 40}
@@ -111,3 +111,22 @@ def test_composer_returns_ranked_story_variants():
     assert {p.style for p in variants} == {
         "chronological", "cold_open", "mystery", "payoff_first"
     }
+
+
+def test_composer_prefers_a_connected_arc_over_an_unrelated_high_score_clip():
+    corpus = corpus_for_story()
+    candidates = [
+        candidate(0, "Here is how the problem started.", score=0.72),
+        candidate(20, "Then everything went wrong.", score=0.72),
+        candidate(40, "And this is how we finally solved it.", score=0.72),
+        candidate(80, "An unrelated but extremely catchy sentence.", score=0.99),
+    ]
+
+    plan = compose_story(
+        candidates,
+        corpus=corpus,
+        limit=3,
+        max_moments=3,
+    )
+
+    assert [c.start for c in plan.candidates] == [0, 20, 40]
