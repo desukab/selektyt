@@ -1671,7 +1671,7 @@ def run(
                 # so they are unwrapped here rather than making the assembly
                 # learn the policy's record type.
                 deferred=[s.candidate for s in policy_report.deferred],
-                config=AssemblyConfig(order="arc"),
+                config=AssemblyConfig(order="story"),
             )
             edit_path.write_text(
                 json.dumps(assembly.as_dict(), ensure_ascii=False, indent=2),
