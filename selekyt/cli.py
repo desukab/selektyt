@@ -338,6 +338,37 @@ def main() -> None:
     # names what the default does. A file genuinely called ``analyze`` remains
     # reachable as ``./analyze``.
     argv = sys.argv[1:]
+    if argv and argv[0] == "setup":
+        setup = argparse.ArgumentParser(
+            prog="selekyt setup",
+            description="Set up SeleKyT transcription for this machine.",
+        )
+        setup.add_argument(
+            "--provider", choices=TRANSCRIPTION_PROVIDERS,
+            help="Transcription provider (default: interactive choice)",
+        )
+        setup_args = setup.parse_args(argv[1:])
+        print("S E L E K Y T")
+        print("First-run setup")
+        print()
+        print("Local transcription is the default and needs no API key.")
+        print("Groq and Gemini are optional cloud providers.")
+        print()
+        try:
+            provider = configure_transcription_interactive(setup_args.provider)
+        except (TranscriptionSettingsError, OSError, ValueError, EOFError) as exc:
+            print(str(exc), file=sys.stderr)
+            raise SystemExit(2) from None
+        label = {
+            "local": "private/offline",
+            "groq": "cloud using your Groq key",
+            "gemini": "cloud using your Gemini key",
+        }[provider]
+        print()
+        print(f"Saved default transcription provider: {provider} ({label}).")
+        print("Run `selekyt --doctor` to check the environment.")
+        print("Then run `selekyt ./my-video.mp4` to start editing.")
+        return
     if argv and argv[0] == "configure-transcription":
         setup = argparse.ArgumentParser(
             prog="selekyt configure-transcription",
