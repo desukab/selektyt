@@ -1,14 +1,10 @@
-"""Compose a set of source moments into a coherent editorial story.
+"""Compose coherent editorial stories from source moments.
 
-This layer is deliberately above per-clip scoring.  Candidates are evidence
-from the source; a story is a relationship between those candidates.  The
-composer keeps several plausible editorial constructions alive, scores the
-whole construction, and returns the strongest one under the caller's clip
-budget.
-
-It does not invent text or synthesize events.  It only reuses corpus threads,
-beats, setup/payoff links, and candidate measurements already produced by
-SeleKyT.
+This layer sits above per-clip scoring. Candidates are evidence from the source;
+the story is the relationship between those candidates. The composer keeps
+multiple plausible editorial constructions alive, evaluates complete
+constructions, and chooses a story length from a bounded budget rather than
+equating the number of social cuts with the number of story moments.
 """
 from __future__ import annotations
 
@@ -30,11 +26,12 @@ class StoryPlan:
 _ROLE_VALUE = {
     "setup": 0.16,
     "tension": 0.12,
-    "turn": 0.13,
-    "revelation": 0.16,
-    "resolution": 0.20,
+    "turn": 0.15,
+    "revelation": 0.18,
+    "resolution": 0.22,
     "continuation": 0.02,
 }
+_STYLES = ("chronological", "cold_open", "mystery", "payoff_first")
 
 
 def _thread_ids(c: Candidate, corpus) -> set[int]:
@@ -42,9 +39,8 @@ def _thread_ids(c: Candidate, corpus) -> set[int]:
         return set()
     out: set[int] = set()
     for i, u in enumerate(corpus.units):
-        if _covers(corpus, i, c):
-            if u.thread_id is not None:
-                out.add(u.thread_id)
+        if _covers(corpus, i, c) and u.thread_id is not None:
+            out.add(u.thread_id)
     return out
 
 
@@ -61,7 +57,6 @@ def _roles(c: Candidate, corpus) -> set[str]:
 
 
 def _links_closed(a: Candidate, b: Candidate, corpus) -> int:
-    """Number of measured setup/payoff links closed by the pair."""
     if corpus is None:
         return 0
     tids = _thread_ids(a, corpus) & _thread_ids(b, corpus)
@@ -69,8 +64,7 @@ def _links_closed(a: Candidate, b: Candidate, corpus) -> int:
     for tid in tids:
         if not 0 <= tid < len(corpus.threads):
             continue
-        thread = corpus.threads[tid]
-        for link in thread.links:
+        for link in corpus.threads[tid].links:
             if (_covers(corpus, link.setup_unit, a) and
                     _covers(corpus, link.payoff_unit, b)):
                 total += 1
@@ -82,40 +76,29 @@ def _links_closed(a: Candidate, b: Candidate, corpus) -> int:
 
 def _pair_score(a: Candidate, b: Candidate, corpus, style: str) -> float:
     score = 0.0
-
-    # Keep measured story relationships together.
     if _thread_ids(a, corpus) & _thread_ids(b, corpus):
         score += 0.10
     score += 0.18 * min(1.0, _links_closed(a, b, corpus))
 
-    # A later moment that resolves an earlier one is a strong narrative move.
     if b.start >= a.end:
         if "setup" in _roles(a, corpus):
             score += 0.05
         if _roles(b, corpus) & {"turn", "revelation", "resolution"}:
             score += 0.08
 
-    # Avoid stitching two near-identical moments together.
     if a.text and b.text:
         from engine.editorial import _similarity
         if _similarity(a.text, b.text) >= 0.78:
             score -= 0.18
 
-    # Different construction styles are intentionally explicit.  They are not
-    # claims about what a human editor must prefer; they are alternative search
-    # paths over the same measured material.
     if style == "chronological" and b.start >= a.start:
         score += 0.035
-    elif style == "cold_open":
-        if len(a.text.split()) >= 12:
-            score += 0.025
-    elif style == "mystery":
-        if "setup" in _roles(b, corpus) or "tension" in _roles(b, corpus):
-            score += 0.025
-    elif style == "payoff_first":
-        if _roles(a, corpus) & {"revelation", "resolution"}:
-            score += 0.04
-
+    elif style == "cold_open" and len(a.text.split()) >= 12:
+        score += 0.025
+    elif style == "mystery" and _roles(b, corpus) & {"setup", "tension"}:
+        score += 0.025
+    elif style == "payoff_first" and _roles(a, corpus) & {"revelation", "resolution"}:
+        score += 0.04
     return score
 
 
@@ -133,18 +116,14 @@ def _node_score(c: Candidate, corpus, style: str) -> float:
 
 
 def _candidate_pool(candidates: Sequence[Candidate], corpus, width: int = 72) -> list[Candidate]:
-    """Keep a diverse, bounded search frontier rather than factorial enumeration."""
     if len(candidates) <= width:
         return list(candidates)
 
     ranked = sorted(candidates, key=lambda c: c.total_score, reverse=True)
     chosen: list[Candidate] = []
     seen_threads: set[int] = set()
-
-    # Preserve the strongest general candidates first.
     chosen.extend(ranked[: min(24, width)])
 
-    # Then deliberately admit strong material from distinct story threads.
     for c in ranked[24:]:
         tids = _thread_ids(c, corpus)
         if tids - seen_threads:
@@ -153,49 +132,92 @@ def _candidate_pool(candidates: Sequence[Candidate], corpus, width: int = 72) ->
         if len(chosen) >= width:
             break
 
-    # Finally fill the frontier by score.
     if len(chosen) < width:
         chosen_ids = {id(c) for c in chosen}
         chosen.extend(c for c in ranked if id(c) not in chosen_ids)
     return chosen[:width]
 
 
-def _beam(candidates: list[Candidate], corpus, limit: int, style: str,
-          beam_width: int = 12) -> StoryPlan:
-    if not candidates or limit <= 0:
+def _whole_score(seq: Sequence[Candidate], corpus, style: str,
+                 target_seconds: float | None = None) -> float:
+    if not seq:
+        return -1.0
+
+    score = sum(_node_score(c, corpus, style) for c in seq)
+    score += sum(_pair_score(a, b, corpus, style)
+                 for a, b in zip(seq, seq[1:]))
+
+    roles = set().union(*(_roles(c, corpus) for c in seq)) if corpus else set()
+    if "setup" in roles:
+        score += 0.18
+    if roles & {"turn", "revelation"}:
+        score += 0.18
+    if "resolution" in roles:
+        score += 0.28
+
+    closed = sum(_links_closed(a, b, corpus) for a, b in zip(seq, seq[1:]))
+    score += min(0.36, 0.12 * closed)
+
+    unique_threads: set[int] = set()
+    for c in seq:
+        unique_threads.update(_thread_ids(c, corpus))
+    if len(unique_threads) > 1:
+        score += min(0.12, 0.03 * (len(unique_threads) - 1))
+
+    duration = sum(max(0.0, c.end - c.start) for c in seq)
+    if target_seconds and target_seconds > 0:
+        ratio = duration / target_seconds
+        if 0.65 <= ratio <= 1.20:
+            score += 0.20
+        elif ratio < 0.35:
+            score -= 0.12
+        elif ratio > 1.75:
+            score -= 0.08
+
+    score -= max(0, len(seq) - 8) * 0.025
+    return score
+
+
+def _beam(candidates: list[Candidate], corpus, max_moments: int,
+          style: str, beam_width: int, target_seconds: float | None) -> StoryPlan:
+    if not candidates or max_moments <= 0:
         return StoryPlan((), 0.0, style)
 
     states: list[tuple[list[Candidate], float]] = [
-        ([c], _node_score(c, corpus, style)) for c in candidates
+        ([c], _whole_score([c], corpus, style, target_seconds))
+        for c in candidates
     ]
     states.sort(key=lambda x: x[1], reverse=True)
     states = states[:beam_width]
+    all_states = list(states)
 
-    for _ in range(1, limit):
+    for _ in range(1, max_moments):
         expanded: list[tuple[list[Candidate], float]] = []
-        for seq, score in states:
+        for seq, _old_score in states:
             used = {id(c) for c in seq}
+            previous_tids = set().union(*(_thread_ids(x, corpus) for x in seq))
             for c in candidates:
                 if id(c) in used:
                     continue
-                delta = _node_score(c, corpus, style)
-                delta += _pair_score(seq[-1], c, corpus, style)
-
-                # Penalise returning to the same story after unrelated material.
                 tids = _thread_ids(c, corpus)
-                previous_tids = set().union(*(_thread_ids(x, corpus) for x in seq))
+                delta = _node_score(c, corpus, style) + _pair_score(
+                    seq[-1], c, corpus, style
+                )
                 if tids and previous_tids and not (tids & previous_tids):
                     delta -= 0.025
-
-                expanded.append((seq + [c], score + delta))
+                expanded.append((seq + [c], delta))
 
         if not expanded:
             break
-        expanded.sort(key=lambda x: x[1], reverse=True)
-        # De-duplicate equivalent source spans in the beam.
+        rescored = [
+            (seq, _whole_score(seq, corpus, style, target_seconds))
+            for seq, _delta in expanded
+        ]
+        rescored.sort(key=lambda x: x[1], reverse=True)
+
         seen: set[tuple[tuple[float, float], ...]] = set()
         next_states: list[tuple[list[Candidate], float]] = []
-        for seq, score in expanded:
+        for seq, score in rescored:
             key = tuple((round(c.start, 3), round(c.end, 3)) for c in seq)
             if key in seen:
                 continue
@@ -204,9 +226,28 @@ def _beam(candidates: list[Candidate], corpus, limit: int, style: str,
             if len(next_states) >= beam_width:
                 break
         states = next_states
+        all_states.extend(states)
 
-    best_seq, best_score = max(states, key=lambda x: x[1])
+    best_seq, best_score = max(all_states, key=lambda x: x[1])
     return StoryPlan(tuple(best_seq), best_score, style)
+
+
+def compose_story_variants(
+    candidates: Sequence[Candidate],
+    *,
+    corpus=None,
+    max_moments: int = 18,
+    beam_width: int = 12,
+    target_seconds: float | None = None,
+) -> tuple[StoryPlan, ...]:
+    pool = _candidate_pool(candidates, corpus)
+    if not pool:
+        return ()
+    plans = tuple(
+        _beam(pool, corpus, max_moments, style, beam_width, target_seconds)
+        for style in _STYLES
+    )
+    return tuple(sorted(plans, key=lambda p: p.score, reverse=True))
 
 
 def compose_story(
@@ -215,30 +256,36 @@ def compose_story(
     corpus=None,
     limit: int = 6,
     beam_width: int = 12,
+    max_moments: int | None = None,
+    target_seconds: float | None = None,
 ) -> StoryPlan:
-    """Find the best whole-edit story from a bounded editorial search.
+    """Choose the strongest whole story.
 
-    The search deliberately evaluates several constructions instead of
-    pretending there is one universal definition of a good edit.
+    limit remains accepted for compatibility, but story composition no longer
+    treats the social-output budget as the story length. Callers should prefer
+    max_moments; the fallback keeps older callers deterministic.
     """
-    pool = _candidate_pool(candidates, corpus)
-    if not pool:
+    if max_moments is None:
+        max_moments = max(6, limit)
+
+    variants = compose_story_variants(
+        candidates,
+        corpus=corpus,
+        max_moments=max_moments,
+        beam_width=beam_width,
+        target_seconds=target_seconds,
+    )
+    if not variants:
         return StoryPlan((), 0.0, "none")
 
-    styles = ("chronological", "cold_open", "mystery", "payoff_first")
-    plans = [
-        _beam(pool, corpus, limit, style, beam_width=beam_width)
-        for style in styles
-    ]
-    best = max(plans, key=lambda p: p.score)
-
-    reasons = [
-        f"searched {len(pool)} candidate moments with beam width {beam_width}",
-        f"compared {len(plans)} editorial constructions",
-        "whole-edit score rewards measured story roles and setup/payoff continuity",
-        "candidate count is a budget; story discovery remains independent of --limit",
-    ]
-    return StoryPlan(best.candidates, best.score, best.style, tuple(reasons))
+    best = variants[0]
+    reasons = (
+        f"searched {min(len(candidates), 72)} candidate moments with beam width {beam_width}",
+        f"compared {len(variants)} editorial constructions",
+        "whole-story scoring rewards setup, development, revelation, resolution, and measured payoff closure",
+        f"story length is adaptive up to {max_moments} moments; --limit is not used as the discovery budget",
+    )
+    return StoryPlan(best.candidates, best.score, best.style, reasons)
 
 
-__all__ = ["StoryPlan", "compose_story"]
+__all__ = ["StoryPlan", "compose_story", "compose_story_variants"]
