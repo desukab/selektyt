@@ -29,16 +29,8 @@ from selekyt.ui import (
 
 
 def _doctor() -> int:
-    print("SelekyT doctor")
-    # `python` is what the docs tell people to type, but a plain Debian/Ubuntu
-    # install ships only `python3`, and every distro that has `python` also has
-    # `python3`. Requiring the unversioned name reported a hard MISSING while
-    # SelekyT was running under a perfectly good interpreter, sending users to
-    # install a package they did not need.
-    # The mirror-image gap is Windows: a python.org install puts `python.exe`
-    # on PATH and usually no `python3` at all, so the versioned check fails
-    # there for the same reason. Require whichever name the platform actually
-    # uses and keep the other advisory.
+    """Check only the tools required by the user's saved/default workflow."""
+    print("SeleKyT doctor")
     if sys.platform == "win32":
         primary, alternate = "python", "python3"
     else:
@@ -50,12 +42,29 @@ def _doctor() -> int:
         ("ffprobe", True, shutil.which("ffprobe") is not None),
         ("yt-dlp", False, shutil.which("yt-dlp") is not None),
     ]
-    try:
-        import faster_whisper  # noqa: F401
-        whisper_ok = True
-    except ImportError:
-        whisper_ok = False
-    checks.append(("faster-whisper", True, whisper_ok))
+    provider = default_transcription_provider()
+    print(f"  transcription     {provider}")
+    if provider == "local":
+        try:
+            import faster_whisper  # noqa: F401
+            asr_ok = True
+        except ImportError:
+            asr_ok = False
+        checks.append(("faster-whisper", True, asr_ok))
+    elif provider == "groq":
+        try:
+            import groq  # noqa: F401
+            asr_ok = True
+        except ImportError:
+            asr_ok = False
+        checks.append(("groq", True, asr_ok))
+    else:
+        try:
+            import google.genai  # noqa: F401
+            asr_ok = True
+        except ImportError:
+            asr_ok = False
+        checks.append(("google-genai", True, asr_ok))
     missing = [name for name, required, present in checks if required and not present]
     for name, required, present in checks:
         status = "OK" if present else ("MISSING" if required else "OPTIONAL")
@@ -63,11 +72,9 @@ def _doctor() -> int:
     if not missing:
         print("Ready.")
         return 0
-    print(
-        "Install the missing REQUIRED tools before running: "
-        + ", ".join(missing)
-        + ". (OPTIONAL tools are only needed for some sources.)"
-    )
+    extra = {"local": "[transcription]", "groq": "[cloud-transcription]",
+             "gemini": "[cloud-transcription]"}[provider]
+    print(f"Install the missing REQUIRED tools with: pip install 'selekyt{extra}'")
     return 1
 
 
