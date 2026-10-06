@@ -33,6 +33,29 @@ def test_doctor_reports_tool_availability(capsys):
         assert name in out
 
 
+
+def test_doctor_checks_groq_instead_of_local_whisper(monkeypatch, capsys):
+    import types
+    monkeypatch.setattr(cli_mod, "default_transcription_provider", lambda: "groq")
+    monkeypatch.setitem(sys.modules, "groq", types.ModuleType("groq"))
+    monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/" + name)
+    assert cli_mod._doctor() == 0
+    out = capsys.readouterr().out
+    assert "transcription     groq" in out
+    assert "groq" in out
+    assert "faster-whisper" not in out
+
+
+def test_doctor_names_the_groq_extra_when_sdk_is_missing(monkeypatch, capsys):
+    monkeypatch.setattr(cli_mod, "default_transcription_provider", lambda: "groq")
+    monkeypatch.setitem(sys.modules, "groq", None)
+    monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/" + name)
+    assert cli_mod._doctor() == 1
+    out = capsys.readouterr().out
+    assert "groq             MISSING" in out
+    assert "pip install 'selekyt[cloud-transcription]'" in out
+
+
 def test_doctor_exits_nonzero_when_a_required_tool_is_missing(monkeypatch):
     import shutil
     monkeypatch.setattr(shutil, "which", lambda name: None)
