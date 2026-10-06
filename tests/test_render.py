@@ -87,11 +87,10 @@ def test_render_horizontal_clip(tmp_path):
     # source gets pillarboxed rather than stretched or cropped.
     sar_w, sar_h = (int(p) for p in sar.split(":"))
     assert (w * sar_w) / (h * sar_h) == pytest.approx(16 / 9, abs=0.02)
-    # F12: a sub-1080p source must not be *upscaled*. The frame is wider than
-    # the source now — pillarbox bars, not a rescale — so the invariant is that
-    # the frame is never taller than the source: the picture fits inside the
-    # frame, so its height cannot exceed the source's own 320 lines.
-    assert h <= 320, f"the source picture was upscaled to a {h}px-tall frame"
+    # Low-resolution sources are deliberately delivered at a 720-line frame so
+    # burned captions have a useful pixel canvas. The source picture itself is
+    # still scaled proportionally inside that frame.
+    assert h == 720, f"low-resolution landscape delivery must be 720p, got {w}x{h}"
     # no leftover part directories on the single-interval path
     assert not (tmp_path / "fb" / ".01_parts").exists()
 
