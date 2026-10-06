@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "selekyt"
-version = "0.3.0"
+version = "0.3.1"
 description = "Local-first long-form to publishable social video editorial engine"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "LicenseRef-SeleKyT-NonCommercial-Source-Available"
 license-files = ["LICENSE"]
-dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26", "yt-dlp>=2026.8.19"]
+dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26", "yt-dlp>=2026.8.19", "requests>=2.31"]
 
 [project.optional-dependencies]
 # faster-whisper is the preferred engine (attention-based, per-token
