@@ -1339,21 +1339,25 @@ def run(
         # than composing only the six clips the policy happened to rank first.
         # This is the important distinction between "six good clips" and "one
         # coherent story made from six good moments".
+        # Do not impose a percentage-of-source runtime on the story. A
+        # one-hour recording can contain a 90-second story or a 12-minute story;
+        # the evidence and narrative closure decide that. The composer already
+        # penalises unnecessary moments and searches all lengths up to the
+        # bounded ceiling, so runtime is an outcome rather than a target.
         story_source_seconds = max((c.end for c in transcript), default=0.0)
-        story_target_seconds = max(120.0, min(600.0, story_source_seconds * 0.12))
-        story_max_moments = max(10, min(24, math.ceil(story_target_seconds / 20.0)))
+        story_max_moments = max(10, min(24, 8 + math.ceil(math.log2(max(1, len(passed)))))
         story_variants = compose_story_variants(
             passed,
             corpus=corpus_report,
             max_moments=story_max_moments,
-            target_seconds=story_target_seconds,
+            target_seconds=None,
         )
         story_plan = story_variants[0] if story_variants else compose_story(
             passed,
             corpus=corpus_report,
             limit=limit,
             max_moments=story_max_moments,
-            target_seconds=story_target_seconds,
+            target_seconds=None,
         )
         (project / "story_variants.json").write_text(
             json.dumps([
