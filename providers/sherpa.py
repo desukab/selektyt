@@ -242,7 +242,7 @@ def _sherpa_onnx():
         raise RuntimeError(
             "sherpa-onnx is not installed. It is the transcription fallback "
             "for hosts where faster-whisper has no wheel (for example Termux "
-            "ARM64); install it with pip install -e '.[sherpa]'"
+            "ARM64); install it with `pip install 'selekyt[sherpa]'`"
         ) from exc
     return sherpa_onnx
 

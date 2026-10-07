@@ -736,8 +736,15 @@ def test_pipeline_reports_a_missing_transcription_engine_before_download(tmp_pat
     message = str(excinfo.value)
     # The message has to be the one that names the fix, and both extras have to
     # be in it: a user who cannot install ctranslate2 needs the sherpa path.
-    assert "pip install -e '.[transcription]'" in message
-    assert "pip install -e '.[sherpa]'" in message
+    # The install advice is checked for the form that works for a user who
+    # installed from PyPI rather than from a checkout: ``pip install -e ...``
+    # only resolves from the source tree, so it points a shipped install at a
+    # path it does not have.
+    assert "pip install 'selekyt[transcription]'" in message
+    assert "pip install 'selekyt[sherpa]'" in message
+    assert "pip install -e" not in message, (
+        "the hint advises an editable install, which only resolves inside a "
+        "source checkout; a user who pip-installed SeleKyT has no such tree")
 
 
 def test_a_run_with_an_engine_available_is_not_blocked_by_that_check(tmp_path):

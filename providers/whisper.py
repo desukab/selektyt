@@ -273,7 +273,7 @@ def transcribe(
     try:
         from faster_whisper import WhisperModel
     except ImportError as exc:
-        raise RuntimeError("Install transcription support: pip install -e '.[transcription]'") from exc
+        raise RuntimeError("Install transcription support: pip install 'selekyt[transcription]'") from exc
 
     if chunk_minutes < 1:
         raise ValueError("chunk_minutes must be >= 1")

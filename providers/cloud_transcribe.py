@@ -171,7 +171,7 @@ def _groq_request(path: Path, key: str, language: str | None):
         from groq import Groq
     except ImportError as exc:
         raise RuntimeError(
-            "Groq support is not installed. Run `pip install -e '.[cloud-transcription]'`."
+            "Groq support is not installed. Run `pip install 'selekyt[cloud-transcription]'`."
         ) from exc
     client = Groq(api_key=key)
     with path.open("rb") as audio:
@@ -190,7 +190,7 @@ def _gemini_request(path: Path, key: str, language: str | None):
         from google import genai
     except ImportError as exc:
         raise RuntimeError(
-            "Gemini support is not installed. Run `pip install -e '.[cloud-transcription]'`."
+            "Gemini support is not installed. Run `pip install 'selekyt[cloud-transcription]'`."
         ) from exc
     client = genai.Client(api_key=key)
     uploaded = None

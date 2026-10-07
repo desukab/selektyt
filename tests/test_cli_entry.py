@@ -28,7 +28,7 @@ def test_doctor_reports_tool_availability(capsys):
     rc = cli_mod._doctor()
     out = capsys.readouterr().out
     assert rc in (0, 1)
-    assert "SelekyT doctor" in out
+    assert "SeleKyT doctor" in out
     for name in ("python", "ffmpeg", "ffprobe", "yt-dlp", "faster-whisper"):
         assert name in out
 
@@ -39,6 +39,12 @@ def test_doctor_checks_groq_instead_of_local_whisper(monkeypatch, capsys):
     monkeypatch.setattr(cli_mod, "default_transcription_provider", lambda: "groq")
     monkeypatch.setitem(sys.modules, "groq", types.ModuleType("groq"))
     monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/" + name)
+    # The key lookup reads the host's saved settings and credential store, which
+    # this test has no opinion about -- it is testing which *checks* run for a
+    # groq provider, not whether a key exists on this machine. A host with a key
+    # configured otherwise reports MISSING and exits 1 here for a reason the
+    # test never meant to assert.
+    monkeypatch.setattr(cli_mod, "transcription_api_key", lambda provider: "key")
     assert cli_mod._doctor() == 0
     out = capsys.readouterr().out
     assert "transcription     groq" in out
@@ -50,9 +56,13 @@ def test_doctor_names_the_groq_extra_when_sdk_is_missing(monkeypatch, capsys):
     monkeypatch.setattr(cli_mod, "default_transcription_provider", lambda: "groq")
     monkeypatch.setitem(sys.modules, "groq", None)
     monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/" + name)
+    monkeypatch.setattr(cli_mod, "transcription_api_key", lambda provider: "key")
     assert cli_mod._doctor() == 1
     out = capsys.readouterr().out
-    assert "groq             MISSING" in out
+    # ``_doctor`` formats the name to 18 columns, so the gap after ``groq`` is
+    # the formatter's, not a literal the test gets to choose.
+    assert "groq" in out and "MISSING" in out
+    assert "faster-whisper" not in out
     assert "pip install 'selekyt[cloud-transcription]'" in out
 
 
@@ -117,7 +127,7 @@ def test_main_without_source_runs_doctor(monkeypatch, capsys):
     with pytest.raises(SystemExit) as exc:
         cli_mod.main()
     assert exc.value.code in (0, 1)
-    assert "SelekyT doctor" in capsys.readouterr().out
+    assert "SeleKyT doctor" in capsys.readouterr().out
 
 
 def test_the_analyze_verb_is_an_optional_prefix(monkeypatch, tmp_path):
@@ -148,7 +158,7 @@ def test_the_analyze_verb_alone_runs_doctor(monkeypatch, capsys):
     with pytest.raises(SystemExit) as exc:
         cli_mod.main()
     assert exc.value.code in (0, 1)
-    assert "SelekyT doctor" in capsys.readouterr().out
+    assert "SeleKyT doctor" in capsys.readouterr().out
 
 
 def test_main_server_flag_runs_the_sidecar(monkeypatch):
@@ -420,7 +430,7 @@ def test_python_m_selekyt_doctor_works():
     """The installed `python -m selekyt --doctor` path runs end to end."""
     proc = _run_module(["--doctor"])
     assert proc.returncode in (0, 1)
-    assert "SelekyT doctor" in proc.stdout
+    assert "SeleKyT doctor" in proc.stdout
 
 
 @pytest.mark.skipif(

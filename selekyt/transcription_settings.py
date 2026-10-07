@@ -60,7 +60,7 @@ def _keyring_module():
         import keyring
     except ImportError as exc:
         raise TranscriptionSettingsError(
-            "Secure key storage is unavailable. Install `pip install -e '.[cloud-transcription]'` "
+            "Secure key storage is unavailable. Install it with `pip install 'selekyt[cloud-transcription]'` "
             "or set GROQ_API_KEY / GEMINI_API_KEY in your environment."
         ) from exc
     try:

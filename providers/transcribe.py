@@ -28,8 +28,8 @@ def _faster_whisper_available() -> bool:
 
 _ENGINE_INSTALLED_MESSAGE = (
     "no transcription engine available: install faster-whisper "
-    "(pip install -e '.[transcription]'), or install sherpa-onnx "
-    "(pip install -e '.[sherpa]') and place a sherpa-onnx whisper model "
+    "(pip install 'selekyt[transcription]'), or install sherpa-onnx "
+    "(pip install 'selekyt[sherpa]') and place a sherpa-onnx whisper model "
     "under ~/.cache/telugify/models/sherpa-onnx-whisper-base"
 )
 
