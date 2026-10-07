@@ -757,3 +757,55 @@ def test_a_source_already_narrower_than_9_16_is_not_dropped(tmp_path):
     )
 
 
+
+def test_split_scene_keeps_speaker_and_slide_in_one_vertical_frame(tmp_path):
+    """A speaker+slide shot must not silently throw away one half of the story.
+
+    The scene planner already proves that no single 9:16 crop can preserve both.
+    The delivered composition should therefore stack the two source regions and
+    keep the result at the same vertical delivery size.
+    """
+    import cv2
+    import numpy as np
+
+    from engine.reframe_scenes import analyse_scene, SceneClass
+    from engine.reframe import vertical_reframe_filter
+
+    source = _speaker_and_slide_video(tmp_path / "split.mp4")
+    segments, _slides, w, h = analyse_scene(source, 0.0, 1.8, samples=18)
+    assert any(s.cls is SceneClass.SPLIT for s in segments), (
+        f"expected the lecture fixture to require SPLIT, got "
+        f"{[(s.cls, s.face, s.slide) for s in segments]}"
+    )
+    split = next(s for s in segments if s.cls is SceneClass.SPLIT)
+    assert split.face is not None and split.slide is not None
+
+    filt = vertical_reframe_filter(source, 0.0, 1.8)
+    assert "vstack=inputs=2" in filt, (
+        "a genuine SPLIT scene must compose both regions instead of reverting "
+        "to a single speaker crop"
+    )
+
+    out = tmp_path / "split-out.mp4"
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(source), "-t", "0.8",
+         "-vf", filt, "-c:v", "libx264", "-preset", "veryfast",
+         "-crf", "24", "-pix_fmt", "yuv420p", str(out)],
+        check=True, capture_output=True,
+    )
+    cap = cv2.VideoCapture(str(out))
+    ok, frame = cap.read()
+    cap.release()
+    assert ok, "the split composition produced no frame"
+    oh, ow = frame.shape[:2]
+    assert (ow, oh) == (405, 720), f"expected the 720-line 9:16 delivery, got {ow}x{oh}"
+
+    # The fixture deliberately puts a warm speaker on the left and bright slide
+    # text on the right. A real split should therefore have visibly different
+    # content in the two bands; this catches a graph that contains vstack but
+    # accidentally duplicates one source branch.
+    top = frame[: int(oh * 0.58)]
+    bottom = frame[int(oh * 0.58):]
+    assert float(np.mean(np.abs(
+        top.mean(axis=0).mean(axis=0) - bottom.mean(axis=0).mean(axis=0)
+    ))) > 2.0, "the two split bands appear to contain the same visual source"
