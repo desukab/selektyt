@@ -60,7 +60,7 @@ def test_pipeline_reuses_downloaded_media(tmp_path):
          patch("selekyt.pipeline.render_clip"), \
          patch("selekyt.pipeline.write_report"), \
          patch("selekyt.pipeline.make_thoughts", return_value=[Segment(10, 20, "hello", [])]), \
-         patch("selekyt.pipeline.rank", return_value=[_fake_candidate()]), \
+         patch("selekyt.pipeline.score_all", return_value=[_fake_candidate()]), \
          patch("selekyt.pipeline.validate", return_value=(True, "ok")), \
          patch("selekyt.pipeline.caption_metadata", return_value={"style": "minimal"}), \
          patch("selekyt.pipeline.build_content_pack", return_value={"pack": True}), \
@@ -72,20 +72,26 @@ def test_pipeline_reuses_downloaded_media(tmp_path):
     mock_download.assert_not_called()
 
 
-def _real_render_pair(project: Path, vertical_size: str = "360x640") -> None:
+def _real_render_pair(project: Path) -> None:
     """Write a genuine, ffprobe-valid pair of renders into a project.
 
-    F13: the render cache now validates a cached clip with ffprobe before
-    reusing it, so a 5-byte stub is no longer accepted as a finished render.
-    Tests of the cache path must hand it a real video.
+    F13: the render cache validates a cached clip with ffprobe before reusing
+    it, so a 5-byte stub is no longer accepted as a finished render. That
+    validation is the same one the deliverables gate on, and it floors the
+    canvas at ``LANDSCAPE_DELIVERY``/``VERTICAL_DELIVERY`` because the burned-in
+    ASS is laid out at that size -- so a short render is rejected as firmly as a
+    stub, and a test of the cache path must hand it a real video at the canvas
+    it is actually delivered on.
     """
     import subprocess
 
-    for kind, size in (("facebook", "640x360"), ("shorts", vertical_size)):
+    from engine.reframe import LANDSCAPE_DELIVERY, VERTICAL_DELIVERY
+
+    for kind, (w, h) in (("facebook", LANDSCAPE_DELIVERY), ("shorts", VERTICAL_DELIVERY)):
         out = project / kind / "01.mp4"
         out.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(
-            ["ffmpeg", "-y", "-f", "lavfi", "-i", f"color=c=blue:s={size}:d=3.0",
+            ["ffmpeg", "-y", "-f", "lavfi", "-i", f"color=c=blue:s={w}x{h}:d=3.0",
              "-f", "lavfi", "-i", "sine=frequency=440:duration=3.0",
              "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28",
              "-c:a", "aac", "-b:a", "64k", "-shortest", str(out)],
@@ -134,7 +140,7 @@ def test_pipeline_skips_render_when_clips_exist(tmp_path):
          patch("selekyt.pipeline.render_clip") as mock_render, \
          patch("selekyt.pipeline.write_report"), \
          patch("selekyt.pipeline.make_thoughts", return_value=[Segment(10, 20, "hello", [])]), \
-         patch("selekyt.pipeline.rank", return_value=[_fake_candidate()]), \
+         patch("selekyt.pipeline.score_all", return_value=[_fake_candidate()]), \
          patch("selekyt.pipeline.validate", return_value=(True, "ok")), \
          patch("selekyt.pipeline.caption_metadata", return_value={"style": "minimal"}), \
          patch("selekyt.pipeline.build_content_pack", return_value={"pack": True}), \
@@ -171,7 +177,7 @@ def test_pipeline_writes_editorial_and_pacing_reports(tmp_path):
          patch("selekyt.pipeline.render_clip"), \
          patch("selekyt.pipeline.write_report"), \
          patch("selekyt.pipeline.make_thoughts", return_value=[Segment(10, 20, "hello", [])]), \
-         patch("selekyt.pipeline.rank", return_value=[_fake_candidate()]), \
+         patch("selekyt.pipeline.score_all", return_value=[_fake_candidate()]), \
          patch("selekyt.pipeline.validate", return_value=(True, "ok")), \
          patch("selekyt.pipeline.caption_metadata", return_value={"style": "minimal"}), \
          patch("selekyt.pipeline.build_content_pack", return_value={"pack": True}), \

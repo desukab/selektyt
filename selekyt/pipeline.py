@@ -2181,11 +2181,13 @@ def run(
             "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
             # Which model actually produced the words, and at what timing
             # fidelity. The full provenance is in transcript.json under ``asr``;
-            # repeating the six fields a trust judgement needs keeps an editor
+            # repeating the fields a trust judgement needs keeps an editor
             # from hunting for them in a different file to decide whether the word
-            # timing is attention-based or character-proportional. A null
-            # downgrade_reason reads as "the requested model ran all the way
-            # through" — it is recorded on every run, not only when it fires.
+            # timing is attention-based or character-proportional. ``provider``
+            # is one of them because local and cloud timing differ in kind, not
+            # only in name. A null downgrade_reason reads as "the requested model
+            # ran all the way through" — it is recorded on every run, not only
+            # when it fires.
             "transcription": {
                 k: asr_provenance.get(k)
                 for k in ("provider", "engine", "requested_model", "model", "downgrade_reason",

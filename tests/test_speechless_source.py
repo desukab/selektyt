@@ -39,18 +39,18 @@ def _media(tmp_path: Path) -> Path:
 
 
 def test_a_speechless_source_fails_before_ranking(tmp_path):
-    """``rank`` must never be called on an empty transcript."""
+    """``score_all`` must never be called on an empty transcript."""
     media = _media(tmp_path)
     with patch("selekyt.pipeline.transcribe_auto",
                return_value=([], "en", _PROVENANCE)), \
          patch("selekyt.pipeline.make_thoughts") as thoughts, \
-         patch("selekyt.pipeline.rank") as rank:
+         patch("selekyt.pipeline.score_all") as score_all:
         with pytest.raises(RuntimeError) as exc:
             pipeline_mod.run(str(media), tmp_path / "out", limit=3)
     assert "no speech" in str(exc.value).lower(), str(exc.value)
     # The expensive downstream stages were never reached.
     thoughts.assert_not_called()
-    rank.assert_not_called()
+    score_all.assert_not_called()
 
 
 def test_the_message_names_the_actual_cause(tmp_path):
@@ -80,7 +80,7 @@ def test_a_speaking_source_is_unaffected(tmp_path):
     with patch("selekyt.pipeline.transcribe_auto",
                return_value=([seg], "en", _PROVENANCE)), \
          patch("selekyt.pipeline.make_thoughts", return_value=[seg]), \
-         patch("selekyt.pipeline.rank", return_value=[]):
+         patch("selekyt.pipeline.score_all", return_value=[]):
         with pytest.raises(RuntimeError) as exc:
             pipeline_mod.run(str(media), tmp_path / "out", limit=3)
     # Reaching the gate means the speech-free guard let the transcript through.
@@ -101,7 +101,7 @@ def test_a_speaking_source_is_unaffected(tmp_path):
 
 
 def _wordy_transcript():
-    """A ~12 s, 20-word span that clears rank's length and word floors."""
+    """A ~12 s, 20-word span that clears the scorer's length and word floors."""
     from models.core import Segment, Word
 
     text = " ".join(f"topic{i}" for i in range(24))
@@ -117,7 +117,7 @@ def test_a_transcript_the_scan_could_not_search_says_so(tmp_path):
     with patch("selekyt.pipeline.transcribe_auto",
                return_value=([seg], "en", _PROVENANCE)), \
          patch("selekyt.pipeline.make_thoughts", return_value=[]), \
-         patch("selekyt.pipeline.rank", return_value=[]):
+         patch("selekyt.pipeline.score_all", return_value=[]):
         with pytest.raises(RuntimeError) as exc:
             pipeline_mod.run(str(media), tmp_path / "out", limit=3)
     message = str(exc.value)
@@ -139,7 +139,7 @@ def test_a_transcript_with_no_stand_alone_span_names_the_floor(tmp_path):
     with patch("selekyt.pipeline.transcribe_auto",
                return_value=([short], "en", _PROVENANCE)), \
          patch("selekyt.pipeline.make_thoughts", return_value=[short]), \
-         patch("selekyt.pipeline.rank", return_value=[]):
+         patch("selekyt.pipeline.score_all", return_value=[]):
         with pytest.raises(RuntimeError) as exc:
             pipeline_mod.run(str(media), tmp_path / "out", limit=3)
     message = str(exc.value)
@@ -158,7 +158,7 @@ def test_a_low_confidence_transcript_is_reported_as_a_transcription_problem(tmp_
     the message must name the number and the fix.
 
     Nothing here is stubbed below the transcription boundary: ``make_thoughts``,
-    ``rank`` and ``validate`` are the real ones, so this is the refusal path a
+    ``score_all`` and ``validate`` are the real ones, so this is the refusal path a
     user would actually get.
     """
     from tests.fixtures import editorial_fixtures as fx
@@ -171,8 +171,22 @@ def test_a_low_confidence_transcript_is_reported_as_a_transcription_problem(tmp_
     for seg_ in transcript:
         for w in seg_.words:
             w.confidence = 0.5
-    ranked = pipeline_mod.rank(transcript)
-    assert not ranked, "the fixture must really yield no clip, or it tests nothing"
+    # ``score_all`` only applies the objective eligibility rules (8-55 s and 20
+    # words); the 0.75 confidence floor is the editorial gate's, not the
+    # scorer's, so it hands these candidates back scored. What must be true for
+    # the refusal message below to be earned is that the real gate refuses every
+    # one of them for low confidence — not that nothing was ever scored.
+    ranked = pipeline_mod.score_all(pipeline_mod.make_thoughts(transcript))
+    assert ranked, "the fixture must really yield scored candidates, or it tests nothing"
+    gate_results = [pipeline_mod.validate(c) for c in ranked]
+    assert all(not ok for ok, _reason in gate_results), (
+        "the fixture must really be refused by the editorial/context gate, or it "
+        "tests nothing"
+    )
+    assert {reason for _ok, reason in gate_results} == {"low factual confidence"}, (
+        "a candidate refused for another rule would exercise a different message: "
+        f"{sorted({r for _ok, r in gate_results})}"
+    )
 
     media = _media(tmp_path)
     with patch("selekyt.pipeline.transcribe_auto",
@@ -199,7 +213,7 @@ def test_a_gate_refusal_that_is_not_confidence_names_its_actual_reason(tmp_path)
     with patch("selekyt.pipeline.transcribe_auto",
                return_value=([seg], "en", _PROVENANCE)), \
          patch("selekyt.pipeline.make_thoughts", return_value=[seg]), \
-         patch("selekyt.pipeline.rank", return_value=[]), \
+         patch("selekyt.pipeline.score_all", return_value=[]), \
          patch("selekyt.pipeline.validate", return_value=refusal):
         with pytest.raises(RuntimeError) as exc:
             pipeline_mod.run(str(media), tmp_path / "out", limit=3)

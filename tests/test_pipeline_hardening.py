@@ -79,7 +79,7 @@ def _pipeline_patches(tmp_path, candidates, gate_results=None):
                               return_value=Path("qa.json")),
         "make_thoughts": patch("selekyt.pipeline.make_thoughts",
                                return_value=[Segment(10, 20, "hello", [])]),
-        "rank": patch("selekyt.pipeline.rank", return_value=candidates),
+        "score_all": patch("selekyt.pipeline.score_all", return_value=candidates),
         "validate": patch("selekyt.pipeline.validate", side_effect=gate_results),
         "caption_metadata": patch("selekyt.pipeline.caption_metadata",
                                   return_value={"style": "minimal"}),
@@ -269,6 +269,7 @@ def test_no_bench_when_everything_ships(tmp_path):
 # ── the report names the model that actually produced the words ──
 
 _ASR = {
+    "provider": "local",
     "engine": "whisper.cpp",
     "requested_model": "medium",
     "model": "small",
@@ -278,11 +279,14 @@ _ASR = {
 }
 
 
-def test_report_repeats_the_six_provenance_fields_a_trust_decision_needs(tmp_path):
+def test_report_repeats_the_provenance_fields_a_trust_decision_needs(tmp_path):
     """The model name sits in ``transcript.json`` under ``asr``. An editor
     deciding whether the word timing is trustworthy had to open a second file
-    to find it; the report now carries the six fields that decision turns on,
-    and the downgrade is named rather than inferred from a mismatch."""
+    to find it; the report now carries the fields that decision turns on, and
+    the downgrade is named rather than inferred from a mismatch. ``provider``
+    is among them because local and cloud timing differ in kind, not only in
+    name — an editor weighing a cloud transcript's word timing is weighing a
+    different thing than a local one."""
     report = json.loads((_bench_report(tmp_path, 1, 6, asr=_ASR)
                          / "report.json").read_text())
 
@@ -587,8 +591,13 @@ def test_valid_cached_render_is_reused(tmp_path):
     media.write_bytes(b"0" * 100)
     for sub in ("facebook", "shorts", "captions", "content_pack"):
         (project_dir / sub).mkdir(parents=True, exist_ok=True)
-    _real_video(project_dir / "facebook" / "01.mp4", "640x360")
-    _real_video(project_dir / "shorts" / "01.mp4", "360x640")
+    # The cache guard's floor is the delivery canvas itself (1920x1080 /
+    # 1080x1920): the burned-in ASS is laid out at that size, so a shorter
+    # deliverable carries proportionally smaller text and is re-rendered rather
+    # than shipped. A fixture below the floor is rejected as vigorously as a
+    # stub, which makes this test indistinguishable from the stub case below.
+    _real_video(project_dir / "facebook" / "01.mp4", "1920x1080")
+    _real_video(project_dir / "shorts" / "01.mp4", "1080x1920")
     fp = "test-fingerprint"
     # The cached render implies the previous run burned in the ASS it also left
     # on disk and recorded the digest of — without those two the record is from
