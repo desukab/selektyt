@@ -84,7 +84,7 @@ def _run(tmp_path, fp):
          patch("selekyt.pipeline.make_thoughts",
                return_value=[__import__("models.core", fromlist=["Segment"]).Segment(
                    10, 20, "hello", [])]), \
-         patch("selekyt.pipeline.rank", return_value=[_fake_candidate()]), \
+         patch("selekyt.pipeline.score_all", return_value=[_fake_candidate()]), \
          patch("selekyt.pipeline.validate", return_value=(True, "ok")), \
          patch("selekyt.pipeline.caption_metadata", return_value={}), \
          patch("selekyt.pipeline.build_content_pack", return_value={"pack": True}), \
