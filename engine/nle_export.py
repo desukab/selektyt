@@ -254,6 +254,7 @@ def _edl_events(timeline: Timeline) -> list[_EdlEvent]:
     # the previous event's out-point on that channel, which keeps the list
     # gap-free without re-timing anything: only the boundary frame moves.
     rec_end: dict[str, int] = {}
+    raw_end: dict[str, float] = {}
     for n, clip in enumerate(ordered, 1):
         reel = reels.setdefault(clip.source.key, _reel_name(clip.source.path, taken))
         # Snap source and record onto their own frame grids *once*, then build
@@ -268,13 +269,25 @@ def _edl_events(timeline: Timeline) -> list[_EdlEvent]:
         channels = _channel_codes(clip, timeline)
         # Video and audio of the same cut share one record in-point.
         own_in = int(round(clip.timeline_in / rec_rate.frame_seconds()))
-        rec_in_frames = max(own_in, max((rec_end.get(ch, 0) for ch in channels), default=0))
+        previous_end = max((rec_end.get(ch, 0) for ch in channels), default=0)
+        # Mirror FCPXML's serialization cursor: when the in-memory timeline
+        # says this clip starts where the previous clip on the channel ended,
+        # use the already-serialized record position. Independently rounding
+        # the raw float timeline_in can otherwise add a one-frame gap to the
+        # EDL while FCPXML correctly keeps the spine contiguous.
+        contiguous = all(
+            ch not in raw_end
+            or abs(clip.timeline_in - raw_end[ch]) <= rec_rate.frame_seconds() * 0.5
+            for ch in channels
+        )
+        rec_in_frames = previous_end if contiguous and previous_end else max(own_in, previous_end)
         src_in = clip.source_timecode_in()
         src_out = clip.source_timecode_out()
         rec_in = format_smpte(rec_in_frames * rec_rate.frame_seconds(), rec_rate)
         rec_out = format_smpte((rec_in_frames + rec_span_frames) * rec_rate.frame_seconds(), rec_rate)
         for ch in channels:
             rec_end[ch] = rec_in_frames + rec_span_frames
+            raw_end[ch] = clip.timeline_out
         name, substituted = _ascii_name(clip.name, reel)
         for ch in channels:
             events.append(
