@@ -371,8 +371,9 @@ def _asset_xml(
     asset_id: str, media: SourceMedia, duration: float, rate: timecode.TimecodeRate
 ) -> str:
     src = _to_file_uri(media.path)
+    media_rate = timecode.detect_rate(media.fps, ";" in (media.start_timecode or ""))
     start = timecode.seconds_to_rational(
-        timecode.parse_smpte(media.start_timecode, media.fps), rate
+        timecode.parse_smpte(media.start_timecode, media.fps), media_rate
     )
     video = ' hasVideo="1" videoSources="1"' if media.has_video else ' hasVideo="0"'
     audio = (
@@ -400,11 +401,12 @@ def _clip_xml(
     if offset is None:
         offset = clip.timeline_in
     start = timecode.parse_smpte(clip.source.start_timecode, clip.source.fps) + clip.source_in
+    source_rate = clip.rate
     lane_attr = f' lane="{lane}"' if lane is not None else ""
     return (
         f'<asset-clip ref="{asset_id}"{lane_attr} '
         f'offset="{timecode.seconds_to_rational(offset, rate)}" '
-        f'start="{timecode.seconds_to_rational(start, rate)}" '
+        f'start="{timecode.seconds_to_rational(start, source_rate)}" '
         f'duration="{timecode.seconds_to_rational(clip.duration, rate)}" '
         f'tcFormat="{tc_format}" />\n'
     )
