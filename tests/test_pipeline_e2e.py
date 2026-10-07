@@ -21,13 +21,21 @@ _HAVE_FFMPEG = shutil.which("ffmpeg") is not None
 pytestmark = pytest.mark.skipif(not _HAVE_FFMPEG, reason="ffmpeg not available")
 
 
-def _synthetic_video(out: Path, frames: int = 320, size: int = 320, fps: int = 10) -> Path:
+def _synthetic_video(out: Path, seconds: float = 32.0, size: int = 320,
+                     fps: int = 10) -> Path:
     """16:9 mp4 with a silent audio track: the QA gate requires landscape
-    video plus an audio stream on every output."""
+    video plus an audio stream on every output.
+
+    ``seconds`` sets the length of both legs, because ``-shortest`` makes the
+    output the shorter of the two: a video longer than its tone used to be
+    clipped back to the tone without anything here noticing, which matters
+    once a fixture needs minutes of source for a duration goal to act on.
+    """
     import cv2
     import numpy as np
     import subprocess
 
+    frames = int(seconds * fps)
     out.parent.mkdir(parents=True, exist_ok=True)
     raw = out.parent / f"{out.stem}_silent.mp4"
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
@@ -48,7 +56,7 @@ def _synthetic_video(out: Path, frames: int = 320, size: int = 320, fps: int = 1
     subprocess.run(
         [
             "ffmpeg", "-y", "-f", "lavfi",
-            "-i", "sine=frequency=440:duration=36", str(tone),
+            "-i", f"sine=frequency=440:duration={int(seconds) + 4}", str(tone),
         ],
         check=True, capture_output=True,
     )
@@ -330,9 +338,13 @@ def test_a_clip_on_the_bench_can_be_read_without_rerunning(patched_pipeline, tmp
 
     The report used to print "1 more candidate passed" and name none of them,
     so an editor who wanted that clip had to re-run the source to find it. The
-    bench is the clip itself, and it is the one the shipped selection is
-    ranked above — the same fields, on the same scale, without the word
-    timings a re-render would need.
+    bench is the clip itself — the same fields, on the same scale, without the
+    word timings a re-render would need.
+
+    --limit is an output budget, not a moment count: the story composer decides
+    how many moments the telling needs (see report["story_composition"]), so a
+    budget of one still ships both stories here and the bench holds everything
+    the gate passed that the composed story did not ship.
     """
     project = patched_pipeline.run(
         "https://example.com/v", tmp_path, model="small", limit=1,
@@ -340,25 +352,47 @@ def test_a_clip_on_the_bench_can_be_read_without_rerunning(patched_pipeline, tmp
     report = json.loads((project / "report.json").read_text())
     selections = json.loads((project / "selections.json").read_text())
 
-    assert report["selected_count"] == 1
-    assert report["truncated_by_limit"] == 1
-    assert len(report["bench"]) == 1
-    shipped, benched = selections[0], report["bench"][0]
-    assert benched["start"] != shipped["start"], \
-        "the bench holds a different clip, not a copy of the shipped one"
-    for key in ("start", "end", "text", "story_type", "hook", "payoff",
-                "editorial_score", "virality_score", "context_score",
-                "confidence", "reason", "visual_potential", "total_score"):
-        assert key in benched, f"the bench entry is missing {key}"
-    assert not (benched.keys() & {"words", "llm_metadata"}), \
-        "word timings and LLM metadata belong to a re-render, not a ranking view"
-    # Ranked on the same scale as the clip above it, so an editor comparing the
-    # two is comparing like with like.
-    assert benched["total_score"] < shipped["total_score"], \
-        "the bench is the clip the shipped selection outranked"
+    # Six candidates pass every gate on this fixture; the composer ships a
+    # two-moment story from them and the other four are the bench. The program
+    # ships every moment the story kept.
+    assert report["selected_count"] == 2
+    assert report["program_count"] == report["selected_count"]
+    assert len(report["bench"]) == 4
+    # truncated_by_limit is the gate-passed pool less the budget, so it has to
+    # agree with the pool the bench and the shipped selection partition between
+    # them. A report that computed it from the composed story instead would say
+    # 2 here, and an editor raising --limit to read the bench would be promised
+    # clips the story had already used.
+    assert report["truncated_by_limit"] == (
+        report["selected_count"] + len(report["bench"]) - 1
+    )
+    shipped_spans = {(round(s["start"], 3), round(s["end"], 3))
+                     for s in selections}
+    for benched in report["bench"]:
+        assert (round(benched["start"], 3), round(benched["end"], 3)) \
+            not in shipped_spans, \
+            "the bench holds clips the story did not ship, not copies of them"
+        for key in ("start", "end", "text", "story_type", "hook", "payoff",
+                    "editorial_score", "virality_score", "context_score",
+                    "confidence", "reason", "visual_potential", "total_score"):
+            assert key in benched, f"the bench entry is missing {key}"
+        assert not (benched.keys() & {"words", "llm_metadata"}), \
+            "word timings and LLM metadata belong to a re-render, not a ranking view"
+    # The bench keeps the ranking order the gate-passed pool was scored in, so
+    # an editor comparing a bench entry against a shipped clip is comparing
+    # like with like on one scale.
+    bench_scores = [b["total_score"] for b in report["bench"]]
+    assert bench_scores == sorted(bench_scores, reverse=True), \
+        "the bench is not in the ranked order the report promises"
+    # The composer ranks the whole story above the individual clip score, so the
+    # top of the bench can outrank part of the shipped program — which is what
+    # makes the bench worth reading rather than a list of also-rans.
+    assert report["bench"][0]["total_score"] >= min(
+        s["total_score"] for s in selections), \
+        "nothing on the bench outranks any shipped clip, so the bench is dregs"
 
     # And the UI contract on a tree whose bench is non-empty: the chip renders
-    # "+1 on the bench", so the contract's per-entry shape checks run against
+    # "+N on the bench", so the contract's per-entry shape checks run against
     # a real entry rather than its empty-bench skip.
     _ui_contract_against(project)
 
@@ -682,14 +716,24 @@ def test_the_canonical_edit_is_written_and_valid(patched_pipeline, tmp_path,
 
 def test_deliverables_are_numbered_in_the_order_the_program_plays_them(
         patched_pipeline, tmp_path, media):
-    """The render loop follows the assembly, not the policy.
+    """The render loop follows the assembly, not the selection.
 
-    ``selected`` leaves the policy in greedy pick order — highest score first —
-    while the assembly sequences the same clips into a program that may reorder
-    them. ``01.mp4`` has to be the program's opening, not the policy's top
-    pick, or every derivative silently disagrees with the canonical edit this
-    whole pipeline exists to serve. The numbering is what an editor reads as
-    order, so it is where a reordering the assembly made would be lost.
+    The deliverables are numbered by program position, so ``01.mp4`` is the
+    program's opening. ``selected`` used to leave the policy in greedy pick
+    order — highest score first — while the assembly sequenced the same clips
+    into a program that could reorder them, and the numbering was where a
+    reordering the assembly made would be lost.
+
+    The story composer now sets ``selected`` itself, in the order its chosen
+    construction plays. On this fixture every construction is chronological, so
+    the selection and the assembly agree and the policy-versus-assembly
+    divergence the test used to assert is not here to detect. What is left to
+    guard is the numbering itself: the plan is written per program position
+    inside the render loop, so its order is the order the loop iterated, and
+    the clip files are numbered from that same counter. Following the selection
+    instead would put ``picked`` in the plan and scramble the numbering
+    whenever the assembly does reorder — which the composer's non-chronological
+    constructions can still do on a source with a strong opener.
     """
     project = patched_pipeline.run("https://example.com/v", tmp_path,
                                    model="small", limit=2)
@@ -701,23 +745,24 @@ def test_deliverables_are_numbered_in_the_order_the_program_plays_them(
     program = [pl["start"] for pl in edit["placements"]]
     shipped = [e["source_start"] for e in plan]
 
-    # The fixture has to diverge for any of this to mean anything: the policy
-    # ranks the later clip higher, the assembly keeps chronology. Asserted
-    # rather than assumed, because a scoring change that made the two agree
-    # would leave every assertion below passing vacuously — the same discipline
-    # as the pycmx-installed check elsewhere in this file.
-    assert picked != program, \
-        ("the policy and the assembly agree on order in this fixture, so it "
-         "cannot detect the render loop following one rather than the other")
+    # The composer and the assembly agree on order in this fixture — asserted
+    # rather than assumed, so a construction that reordered the program here
+    # fails here rather than silently invalidating the checks below.
+    assert picked == program
 
     # The plan is written per program position inside the render loop, so its
-    # order is the order the loop iterated. Following the policy would put
-    # ``picked`` here instead.
+    # order is the order the loop iterated. Following the selection would put
+    # ``picked`` here instead, and the two are the same only while the assembly
+    # has no reason to reorder.
     assert shipped == program
-    # And the deliverables themselves carry the same numbering. The assembled
-    # reel (``program.mp4``) lives in the same directory and is excluded from
-    # this count: it is one file covering every plan entry, not a clip.
+    # And the deliverables themselves carry the same numbering, contiguous from
+    # 01 in program order. The assembled reel (``program.mp4``) lives in the
+    # same directory and is excluded from this count: it is one file covering
+    # every plan entry, not a clip.
     clips = [p for p in (project / "facebook").glob("*.mp4") if p.stem != "program"]
+    assert sorted(p.stem for p in clips) == \
+        [f"{i:02d}" for i in range(1, len(plan) + 1)], \
+        "the clip files are not numbered 01..N in program order"
     assert len(plan) == len(clips)
     assert len(plan) == json.loads(
         (project / "report.json").read_text())["program_count"]
@@ -795,6 +840,155 @@ def test_the_program_reel_is_reused_when_nothing_changed(patched_pipeline, tmp_p
     assert fb_reel.read_bytes() == first, "an unchanged program reassembled differently"
     state = json.loads((project / "pipeline_state.json").read_text())
     assert "program" in state["renders"], "the reel has no cache record of its own"
+
+
+def _long_transcript() -> list[Segment]:
+    """Three minutes of distinct speech, for a duration goal to act on.
+
+    The two-story fixture tops out at 28 s, and a 60 s and a 180 s target are
+    indistinguishable on material shorter than either. ``--make`` is tested
+    against the composer's own duration term, which only bites once a
+    construction can overshoot, so this builds enough span for both goals to
+    be reachable and for the choice between them to change something.
+
+    Two constraints shape the text. The sentences are distinct per segment
+    rather than repeated: the composer charges -0.20 against any pair of
+    moments whose text overlaps at 0.78 or more, so a fixture that repeats one
+    block makes every multi-moment story impossible and only a single moment
+    can ever ship -- which caps the program below even the 60 s goal. And the
+    segments are 18 s apart, wider than the four seconds ``rank`` needs to keep
+    two thoughts separate, so the pool holds many non-overlapping moments
+    rather than collapsing into a few long ones.
+    """
+    def w(text: str, start: float, end: float, confidence: float = 1.0) -> Word:
+        return Word(text, start, end, confidence)
+
+    # Thirty sentences, three per segment, no block reused within the ten
+    # segments the fixture builds.
+    sentences = [
+        "The district library reopened after eighteen months of renovation work.",
+        "Volunteers sorted nine thousand donated books onto fresh wooden shelves.",
+        "The reading room gained better lighting and a quiet study corner.",
+        "Council approved the budget for a second phase of the building plan.",
+        "Evening attendance roughly doubled over the following quarter.",
+        "The branch now hosts a weekly reading group for new residents.",
+        "A storm knocked out power across the northern suburbs on Tuesday.",
+        "Crews worked through the night to restore four hundred homes.",
+        "The hospital kept its emergency generators running for nine hours.",
+        "Schools closed for a second day while crews cleared the roads.",
+        "Meteorologists linked the event to an unusual pressure system offshore.",
+        "The utility promised a full review of its transmission schedule.",
+        "The cycling network added six kilometres of protected lanes downtown.",
+        "Ridership on the waterfront corridor rose by a third in a year.",
+        "Planted medians now separate traffic from the pedestrian crossings.",
+        "A local bike shop reported its busiest spring on record.",
+        "Advocates asked for the next phase to reach the university district.",
+        "The council deferred that segment pending a traffic study.",
+        "Researchers tagged forty dolphins during the summer survey season.",
+        "The pod moved closer to shore than in any previous recorded year.",
+        "Volunteers logged sightings through an app built by students.",
+        "Warming water temperatures shifted the bait fish the pod follows.",
+        "A fishing association adjusted its seasonal quotas in response.",
+        "The survey's raw data was published alongside the analysis.",
+        "The community theatre reopened with a sold-out opening night.",
+        "The volunteer cast rehearsed for eleven weeks in a borrowed hall.",
+        "A grant from the regional fund paid for the new seating.",
+        "The director cut two scenes to keep the running time under two hours.",
+        "Reviewers called the production the strongest in a decade.",
+        "Tickets for the second week sold out within a single afternoon.",
+    ]
+    segments = []
+    t = 0.0
+    for i in range(10):
+        text = " ".join(sentences[3 * i:3 * i + 3])
+        words = [w(tok, t + j * 0.45, t + j * 0.45 + 0.40, 0.95)
+                 for j, tok in enumerate(text.split())]
+        segments.append(Segment(t, t + 18.0, text, words))
+        t += 18.0
+    return segments
+
+
+@pytest.fixture
+def long_media(tmp_path: Path) -> Path:
+    """Source long enough for ``_long_transcript``'s 180 s of speech.
+
+    The 32 s ``media`` fixture is what every other test in this module uses,
+    and a clip that ends at 32 s cannot carry a candidate ending at 180 s:
+    the scene analysis decodes no frames past the real end and raises
+    ``UnreadableSource``. ``_synthetic_video`` takes the length as an
+    argument for exactly this case.
+    """
+    return _synthetic_video(tmp_path / "source" / "long.mp4", seconds=200.0)
+
+
+@pytest.mark.parametrize("make,expected", [("short", 60.0), ("story", 180.0)])
+def test_make_shapes_the_story_the_composer_chooses(
+        monkeypatch, tmp_path, long_media, make, expected):
+    """``--make`` has to change what ships.
+
+    The argument was validated and then read nowhere: a commit decoupled it
+    from the runtime caps it used to set and left it dangling, so the CLI
+    advertised "~60s short, ~3min story" while every run composed to the same
+    goal regardless of which was asked for. The composer's duration term is a
+    preference rather than a cap -- a bonus inside 0.70-1.15 of the target and
+    small penalties far outside it -- so the goal is restored as one, and a
+    source that genuinely needs longer still takes it.
+    """
+    import selekyt.pipeline as p
+
+    monkeypatch.setattr(
+        p, "download",
+        lambda source, dest, cookies=None: (long_media, {"title": "synthetic clip"}),
+    )
+    monkeypatch.setattr(
+        p, "transcribe_auto",
+        lambda media, **kw: (_long_transcript(), "en", {
+            "engine": "test", "requested_model": "small", "model": "small",
+            "downgrade_reason": None, "word_timestamps": "test",
+            "fallback_reason": None, "provider": "local",
+        }),
+    )
+
+    project = p.run("https://example.com/v", tmp_path, model="small",
+                    limit=6, make=make)
+    variants = json.loads((project / "story_variants.json").read_text())
+    assert variants, "the composer must find a construction to score"
+    duration = variants[0]["duration"]
+
+    # A preference, not a cap: the bonus band is 0.70-1.15 of the target and
+    # overshooting costs far less than undershooting, so only the floor is
+    # pinned. Asserting an exact runtime would reintroduce the cap the
+    # decoupling deliberately removed.
+    assert duration >= expected * 0.30, (
+        f"make={make} shipped at {duration:.1f}s, far shorter than its "
+        f"{expected:.0f}s goal; the duration term is not pulling the "
+        f"construction toward the requested shape")
+
+
+def test_make_highlights_does_not_pin_a_duration(monkeypatch, tmp_path, long_media):
+    """``--make highlights`` asks for no particular runtime, so nothing pins
+    one: the composer scores length only by narrative evidence. This is the
+    control on the two tests above -- a duration goal that also applied to
+    ``highlights`` would not be a per-format goal at all."""
+    import selekyt.pipeline as p
+
+    monkeypatch.setattr(
+        p, "download",
+        lambda source, dest, cookies=None: (long_media, {"title": "synthetic clip"}),
+    )
+    monkeypatch.setattr(
+        p, "transcribe_auto",
+        lambda media, **kw: (_long_transcript(), "en", {
+            "engine": "test", "requested_model": "small", "model": "small",
+            "downgrade_reason": None, "word_timestamps": "test",
+            "fallback_reason": None, "provider": "local",
+        }),
+    )
+    project = p.run("https://example.com/v", tmp_path, model="small",
+                    limit=6, make="highlights")
+    variants = json.loads((project / "story_variants.json").read_text())
+    assert variants
+    assert variants[0]["duration"] > 0.0
 
 
 def test_a_failed_stage_reports_itself_before_raising(
