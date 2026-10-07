@@ -416,7 +416,11 @@ def main() -> None:
         "--transcription", choices=TRANSCRIPTION_PROVIDERS, default=None,
         help="Provider for this run only (default: saved preference, initially local)",
     )
-    p.add_argument("--limit", type=int, default=6, help="Number of selected stories")
+    p.add_argument("--limit", type=int, default=6, help="Maximum number of output cuts")
+    p.add_argument(
+        "--make", choices=["short", "story", "highlights"], default="highlights",
+        help="Tell SeleKyT what you want: a ~60s short, a ~3min story, or multiple highlights",
+    )
     p.add_argument(
         "--chunk-minutes", type=int, default=5, help="Whisper chunk size for long videos"
     )
@@ -583,6 +587,7 @@ def main() -> None:
         skip_language_check=args.skip_language_check,
         transcription_provider=args.transcription,
         progress=renderer.event,
+        make=args.make,
     )
     try:
         # ``--verbose`` wants the engine's own output on the terminal, so it
