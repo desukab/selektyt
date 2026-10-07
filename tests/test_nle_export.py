@@ -477,6 +477,42 @@ def test_fcpxml_preserves_native_source_timebase_when_sequence_rate_differs():
     assert validate_fcpxml(xml, tl) == []
 
 
+def test_edl_and_fcpxml_share_the_same_serialized_program_positions():
+    """EDL and FCPXML must serialize one canonical timeline, not independently
+    round raw floating-point boundaries.
+
+    Small sub-frame duration errors can accumulate in the in-memory seconds.
+    FCPXML already advances its cursor from serialized frame durations; EDL
+    must use the same rule or it can gain a one-frame gap after several clips.
+    """
+    from engine.timeline import Clip, SourceMedia, Timeline
+
+    media = SourceMedia(path="source.mp4", fps=29.97, duration=20.0)
+    clips = []
+    cursor = 0.0
+    for i in range(5):
+        duration = 1.009  # < half a 29.97-frame, so Timeline remains valid
+        clips.append(Clip(media, float(i), float(i) + 1.0,
+                          cursor, cursor + duration))
+        cursor += duration
+    tl = Timeline(clips=clips, fps=29.97)
+    assert tl.validate() == []
+
+    edl_lines = [ln for ln in render_edl(tl).splitlines() if re.match(r"^\\d{3}\\s+.*\\sV\\s", ln)]
+    xml = ET.fromstring(render_fcpxml(tl))
+    fcpx = xml.findall(".//spine/asset-clip")
+    assert len(edl_lines) == len(fcpx) == len(clips)
+
+    def edl_frames(tc):
+        h, m, s, f = map(int, re.split(r"[:;]", tc))
+        return ((h * 60 + m) * 60 + s) * 30 + f
+
+    for edl_line, elem in zip(edl_lines, fcpx):
+        edl_in = edl_frames(edl_line.split()[6])
+        fcpx_in = round(_rational_sec(elem.get("offset")) / (1001 / 30000))
+        assert edl_in == fcpx_in
+
+
 def test_fcpxml_primary_clips_match_the_timeline():
     tl = two_clip_timeline()
     root = ET.fromstring(render_fcpxml(tl))
