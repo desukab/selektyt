@@ -1419,12 +1419,13 @@ def run(
                 },
             )
             selected = list(story_plan.candidates)
-        # The bench: candidates that passed every editorial gate and lost only to
-        # the --limit budget — or to a selection-policy term, which is a different
-        # loss and is reported separately below. Recording just the count left an
-        # editor staring at "5 more clips passed" with no way to see them, so the
-        # report now carries the candidates themselves and the count is a claim
-        # the artifact backs.
+        # The bench: candidates that passed every editorial gate and did not ship.
+        # They lost to one of three things — the --limit budget, a selection-policy
+        # term, or the story composer's choice of a different telling — which are
+        # reported separately below, since only the first is a budget an editor can
+        # widen. Recording just the count left an editor staring at "5 more clips
+        # passed" with no way to see them, so the report now carries the candidates
+        # themselves and the count is a claim the artifact backs.
         shipped = {id(c) for c in selected}
         bench = [c.to_bench_dict() for c in passed if id(c) not in shipped]
         if not selected:
@@ -2149,19 +2150,25 @@ def run(
             # policy chose, and how many the program shipped.
             "program_count": len(program_order),
             "rejected_by_context_guard": context_guard_rejections,
-            # Separate from the above: these passed every editorial gate and were
-            # dropped only because --limit capped the output. A budget, not a
-            # judgment — and the bench below is what it counts.
+            # Separate from the above: these passed every editorial gate and fell
+            # beyond the --limit budget. A budget, not a judgment. But it is a
+            # budget the story composer may overrun or underrun, because --limit
+            # bounds the pool the composer searches, not the cut it assembles —
+            # selected_count can therefore sit above or below limit, and the
+            # bench below is a superset of this count, not its membership list.
             "truncated_by_limit": truncated_by_limit,
             "story_composition": {
                 "style": story_plan.style,
                 "score": round(story_plan.score, 4),
                 "reasons": list(story_plan.reasons),
             },
-            # The bench: these passed every gate and differ from the shipped clips
-            # only in rank, so an editor raising --limit reads from here. The
-            # entries are visible and comparable; promoting one without re-running
-            # the source is not possible, because rank() has no include hook —
+            # The bench: candidates that passed every gate and did not ship. They
+            # lost to one of three things — the --limit budget, a selection-policy
+            # term, or the story composer's choice of a different telling — and
+            # only the first is a budget an editor can widen, so raising --limit
+            # will not necessarily promote from here. The entries are visible and
+            # comparable; promoting one without re-running the source is not
+            # possible, because score_all() has no include hook —
             # see docs/PRODUCT_WORKFLOW_AUDIT.md J2.
             "bench": bench,
             "rejection_reasons": dict(sorted(rejection_reasons.items(), key=lambda kv: -kv[1])),
