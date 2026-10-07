@@ -8,7 +8,9 @@ SeleKyT compresses the first-pass editorial workflow: understand long-form video
 
 ## What it does
 
-**Long-form video → editorial understanding → first-pass edits → editable timelines → social outputs**
+**Give SeleKyT a long video. Tell it what you want. It finds the story, makes the cut, and gives you something you can actually use.**
+
+**Long-form video → understand → choose the story → edit → publish**
 
 SeleKyT can:
 
@@ -24,19 +26,19 @@ SeleKyT can:
 
 The goal is not to replace the editor. It is to give the editor a strong, editable first pass.
 
-## Why SeleKyT
+## Why consumers choose SeleKyT
 
-Most AI video tools focus on generating a finished clip.
+You don't have to learn video editing before you can get something good out of a long recording.
 
-SeleKyT focuses on the **editorial decision layer**:
+SeleKyT is built around the things a person actually wants to say:
 
-- What is the story?
-- Which moments belong together?
-- What should be removed?
-- What context must be preserved?
-- How should the decision be handed back to a human?
+- **Make me a Short** — find one coherent, publishable story instead of stitching together random highlights.
+- **Make me a Story** — turn a long recording into a tighter narrative with a beginning, development, and payoff.
+- **Find the Highlights** — return multiple strong moments when you want options.
+- **Keep the context** — don't sacrifice the meaning of a moment just because an isolated sentence scores well.
+- **Give me something editable** — you get the rendered videos *and* the underlying edit decisions, captions, provenance, and timelines.
 
-The output is therefore more than an MP4: the editorial decisions behind the cut remain inspectable and editable.
+The hard part happens underneath: SeleKyT tries to understand the whole recording before deciding what belongs in the final cut.
 
 ## Quick start
 
@@ -65,8 +67,12 @@ Then:
 
 ```bash
 selekyt --doctor              # check the local processing environment
-selekyt ./my-video.mp4        # analyze a local video
+selekyt ./my-video.mp4        # find multiple strong highlights
+selekyt ./my-video.mp4 --make short   # make one ~60s short
+selekyt ./my-video.mp4 --make story   # make one ~3min story
 ```
+
+You can start with a simple goal instead of learning editorial settings. SeleKyT uses the same underlying evidence and story understanding, but changes the composition target to match what you asked for.
 
 The same workflow can be started without the optional `analyze` verb:
 
@@ -74,7 +80,7 @@ The same workflow can be started without the optional `analyze` verb:
 selekyt ./my-video.mp4
 ```
 
-`--limit` controls how many stories the edit keeps. It defaults to 6 and
+`--limit` controls the maximum number of output cuts. It defaults to 6 and
 accepts any positive count — it is a budget you choose, not a product cap:
 
 ```bash
