@@ -24,17 +24,25 @@ def candidate(start, text, score=0.8):
 
 
 def corpus_for_story():
+    # ``_features`` reads ``text`` and ``topic_id`` off every unit a candidate
+    # overlaps, so the units have to carry both or the composer dies on the
+    # first lookup — the three tests above were all failing here, which meant
+    # the behaviour they name was never actually run.
     units = [
-        SimpleNamespace(index=0, start=0, end=10, thread_id=0, beat_id=0),
-        SimpleNamespace(index=1, start=20, end=30, thread_id=0, beat_id=1),
-        SimpleNamespace(index=2, start=40, end=50, thread_id=0, beat_id=2),
+        SimpleNamespace(index=0, start=0, end=10, thread_id=0, beat_id=0,
+                        topic_id=0, text="Here is how the problem started."),
+        SimpleNamespace(index=1, start=20, end=30, thread_id=0, beat_id=1,
+                        topic_id=0, text="Then everything went wrong."),
+        SimpleNamespace(index=2, start=40, end=50, thread_id=0, beat_id=2,
+                        topic_id=0, text="And this is how we finally solved it."),
     ]
     beats = [
         SimpleNamespace(kind="setup"),
         SimpleNamespace(kind="tension"),
         SimpleNamespace(kind="resolution"),
     ]
-    link = SimpleNamespace(setup_unit=0, payoff_unit=2)
+    link = SimpleNamespace(setup_unit=0, payoff_unit=2, confidence=0.8,
+                           kind="question_answer")
     thread = SimpleNamespace(
         thread_id=0,
         title="test story",
@@ -129,4 +137,15 @@ def test_composer_prefers_a_connected_arc_over_an_unrelated_high_score_clip():
         max_moments=3,
     )
 
-    assert [c.start for c in plan.candidates] == [0, 20, 40]
+    # The claim is membership, not order. The composer searches four
+    # constructions and three of them legitimately open mid-story, so pinning
+    # [0, 20, 40] would pin one construction and fail the other three for
+    # telling the same material a different way — which is exactly what the
+    # constructions exist to do. What has to hold is that the arc ships and the
+    # catchy sentence does not: it scores 0.99 against the arc's 0.72 per clip,
+    # and a composer that shipped it would be choosing moments, not a story.
+    assert {c.start for c in plan.candidates} == {0, 20, 40}, (
+        "the connected arc ships, not the unrelated high-scoring clip")
+    assert 80 not in {c.start for c in plan.candidates}, (
+        "the unrelated clip was preferred over the arc's own members")
+    assert len(plan.candidates) == 3

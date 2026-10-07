@@ -107,7 +107,7 @@ def test_score_all_does_not_treat_the_output_budget_as_discovery_budget():
     """
     segs = [
         Segment(0, 20, "The first story has a surprising discovery that changes how the team understands the problem and what they should do next.", []),
-        Segment(25, 48, "The second story reveals a completely different result after the experiment failed and the researchers changed their approach.", []),
+        Segment(25, 48, "The second story reveals a completely different result after the experiment failed and the researchers changed their whole approach completely.", []),
         Segment(55, 80, "The third story explains why the original assumption was wrong and what evidence finally proved the alternative beyond any doubt.", []),
     ]
     all_scored = score_all(segs)

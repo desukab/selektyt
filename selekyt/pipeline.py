@@ -1344,7 +1344,7 @@ def run(
         # the evidence and narrative closure decide that. The composer already
         # penalises unnecessary moments and searches all lengths up to the
         # bounded ceiling, so runtime is an outcome rather than a target.
-        story_max_moments = max(10, min(24, 8 + math.ceil(math.log2(max(1, len(passed)))))
+        story_max_moments = max(10, min(24, 8 + math.ceil(math.log2(max(1, len(passed))))))
         story_variants = compose_story_variants(
             passed,
             corpus=corpus_report,
@@ -2159,7 +2159,8 @@ def run(
             "content_pack": str(project / "content_pack.json"),
             "editorial_report": str(project / "editorial_report.json"),
             "editorial_corpus": str(corpus_path) if corpus_path.is_file() else None,
-            "story_discovery": str(project / "story_discovery.json") if (project / "story_discovery.json").is_file() else None,\n            "story_variants": str(project / "story_variants.json") if (project / "story_variants.json").is_file() else None,
+            "story_discovery": str(project / "story_discovery.json") if (project / "story_discovery.json").is_file() else None,
+            "story_variants": str(project / "story_variants.json") if (project / "story_variants.json").is_file() else None,
             "pacing_report": str(project / "pacing_report.json"),
             "qa": str(qa_path),
             "policy": "retention-aware editorial heuristics; source speech is not rewritten; no fabricated claims",
