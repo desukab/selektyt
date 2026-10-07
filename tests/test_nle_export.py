@@ -498,7 +498,14 @@ def test_edl_and_fcpxml_share_the_same_serialized_program_positions():
     tl = Timeline(clips=clips, fps=29.97)
     assert tl.validate() == []
 
-    edl_lines = [ln for ln in render_edl(tl).splitlines() if re.match(r"^\\d{3}\\s+.*\\sV\\s", ln)]
+    # A real CMX record, e.g.
+    # ``001  SOURCE   V     C        00:00:00:00 ...``. The character classes
+    # were written as ``\\d`` and ``\\s`` inside a raw string, which matches a
+    # literal backslash rather than a digit or whitespace — the pattern matched
+    # nothing, the list came back empty, and the comparison below silently
+    # compared an empty list against five FCPXML clips.
+    edl_lines = [ln for ln in render_edl(tl).splitlines()
+                 if re.match(r"^\d{3}\s+.*\sV\s", ln)]
     xml = ET.fromstring(render_fcpxml(tl))
     fcpx = xml.findall(".//spine/asset-clip")
     assert len(edl_lines) == len(fcpx) == len(clips)

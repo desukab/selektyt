@@ -608,6 +608,36 @@ def _rational_seconds(text: str | None, rate: timecode.TimecodeRate) -> float | 
     return num / den
 
 
+def _native_rate_for(text: str | None, fallback: timecode.TimecodeRate) -> timecode.TimecodeRate:
+    """The rate a ``start`` was actually serialised on.
+
+    ``_clip_xml`` writes a clip's source position on the *media's* native grid,
+    not the sequence's: a 30000/1001 source keeps a denominator of 30000 even
+    inside a 30 fps sequence, because re-encoding it onto the sequence grid is
+    exactly the drift this export exists to avoid. Validating that rational
+    against the sequence rate therefore reports a frame-exact source position
+    as ``not frame-exact`` on the commonest camera rate there is.
+
+    ``seconds_to_rational`` writes ``frames * num / den`` unreduced, so the
+    denominator is the grid the emitter used and the source rate is recovered
+    from the value itself rather than assumed from the sequence. An exact whole
+    second or an unrecognised denominator falls back to the sequence rate,
+    which is correct for a source whose grid genuinely matches it.
+    """
+    parsed = _parse_rational(text)
+    if parsed is None:
+        return fallback
+    _num, den = parsed
+    if den in (0, 1):
+        return fallback
+    for _n, num, den_ntsc in timecode.NTSC_RATES:
+        if den == den_ntsc:
+            return timecode.TimecodeRate(_n, fallback.is_drop_frame, num, den_ntsc)
+    if den == round(fallback.frame_duration_den):
+        return fallback
+    return timecode.detect_rate(den, drop=fallback.is_drop_frame)
+
+
 def _rate_from_frame_duration(fd: str | None) -> timecode.TimecodeRate:
     parsed = _parse_rational(fd)
     if parsed is None or parsed[1] == 0:
@@ -702,13 +732,18 @@ def validate_fcpxml(text: str, timeline: Timeline | None = None) -> list[str]:
                 problems.append(
                     f"asset-clip tcFormat is {child.get('tcFormat')!r}, expected DF/NDF"
                 )
-            start = _rational_seconds(child.get("start"), rate)
+            # ``start`` is a position in the *asset's* media, serialised on
+            # that media's native frame grid, so it is measured against the
+            # rate the rational itself records rather than the sequence's.
+            # ``offset`` and ``duration`` are sequence time and stay on ``rate``.
+            source_rate = _native_rate_for(child.get("start"), rate)
+            start = _rational_seconds(child.get("start"), source_rate)
             if start is None:
                 problems.append(
                     f"asset-clip start {child.get('start')!r} is not frame-exact"
                 )
             if asset is not None and start is not None:
-                asset_start = _rational_seconds(asset.get("start"), rate) or 0.0
+                asset_start = _rational_seconds(asset.get("start"), source_rate) or 0.0
                 asset_dur = _rational_seconds(asset.get("duration"), rate) or 0.0
                 if start + duration > asset_start + asset_dur + 1.5 * rate.frame_seconds():
                     problems.append(
@@ -744,8 +779,12 @@ def _cross_check_fcpxml(
             problems.append(f"clip {clip.name!r} points at the wrong asset")
         want_start = timecode.parse_smpte(clip.source.start_timecode, clip.source.fps) + clip.source_in
         for attr, want in (("offset", clip.timeline_in), ("start", want_start), ("duration", clip.duration)):
-            got = _rational_seconds(elem.get(attr), rate)
-            if not _within_frames(got, want, rate):
+            # ``start`` is media time on the asset's native grid; the other two
+            # are sequence time. Comparing ``start`` on ``rate`` would report a
+            # correctly serialised NTSC source position as a mismatch.
+            attr_rate = _native_rate_for(elem.get(attr), rate) if attr == "start" else rate
+            got = _rational_seconds(elem.get(attr), attr_rate)
+            if not _within_frames(got, want, attr_rate):
                 problems.append(
                     f"clip {clip.name!r} {attr} is {elem.get(attr)!r}, expected the "
                     f"timeline value {want:.3f}s"
