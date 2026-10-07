@@ -5,7 +5,7 @@ it inside a full-height 9:16 window. That is the whole story for a talking head,
 and it is provably incomplete for a lecture, where the frame holds a speaker and
 a slide at the same time and the 9:16 window is too narrow for both. This module
 perceives the second content class and records when both regions cannot fit a
-single crop. The delivered frame remains one crop, with the speaker prioritized.
+single crop. The delivered frame remains vertical, but a SPLIT scene may deliberately compose two source regions so neither the speaker nor the content is silently discarded.
 
 Four scene classes
 ------------------
@@ -18,8 +18,9 @@ Four scene classes
              instead of on a face that is not there.
 
 ``SPLIT``    the detected speaker and content cannot both fit one legal 9:16
-             crop. This is a classification result, not a spatial layout: the
-             renderer keeps a single tracked speaker crop.
+             crop. The renderer turns that classification into an explicit
+             speaker+content two-band composition instead of silently discarding
+             one region.
 
 ``TRANSITION``  not a layout -- the fade the renderer inserts between two
              segments of differing classes, instead of a hard switch. See
@@ -208,8 +209,8 @@ def detect_slides(frames: list[np.ndarray | None], w: int, h: int
     matches a moving speaker's clothes, so neither suffices on its own.
 
     The result is a rectangle per surviving connected component rather than a
-    per-cell mask, because the consumer needs a region to frame, and the
-    component bbox is the smallest rectangle the evidence actually supports.
+    per-cell mask, because the consumer needs a region to frame or compose, and
+    the component bbox is the smallest rectangle the evidence actually supports.
     """
     good = [f for f in frames if f is not None]
     if len(good) < 4:
