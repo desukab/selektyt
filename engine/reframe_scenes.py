@@ -351,6 +351,10 @@ class SceneSegment:
     cls: SceneClass
     slide: SlideRect | None = None
     joint: bool = False
+    # The representative face that caused the SPLIT classification. Keeping it
+    # with the segment lets the renderer compose the speaker and content rather
+    # than throwing one side away.
+    face: FaceBox | None = None
 
 
 def classify_scene(face: FaceBox | None, slide: SlideRect | None,
@@ -616,12 +620,44 @@ def _layout_chains(seg: SceneSegment, src_w: int, src_h: int, sar_w: int,
                 f"{_scale_to(out_w, out_h)},{_set_sar(sar_w, sar_h)}{tail}"]
 
     if seg.cls is SceneClass.SPLIT:
-        # A vertical program is a crop of one source view at every instant.
-        # Slide detection is intentionally permissive enough to find screens,
-        # but static set dressing (as in the Royal Society interview) can also
-        # be mistaken for one. Stacking the two regions turns that detector
-        # error into an obvious split-screen. Keep the established face track
-        # and crop path instead; no source region is duplicated or composed.
+        # A single 9:16 crop cannot legally preserve both regions. Do not throw
+        # one away: compose a deliberate two-band frame, with the speaker given
+        # the larger band and the slide kept readable below it. This is the same
+        # visual decision an editor makes for a two-person/speaker+screen shot,
+        # and it is materially better than centring on one side and silently
+        # deleting the other.
+        if seg.face is not None and seg.slide is not None:
+            top_h = _even(out_h * 0.58)
+            bottom_h = max(2, out_h - top_h)
+            # Give the speaker enough surrounding context to avoid a claustrophobic
+            # face-only crop while keeping the face near the centre of its band.
+            face = seg.face
+            speaker_box = (
+                max(0.0, face.cx - max(2.0 * face.w, 0.22 * src_w)),
+                max(0.0, face.y - 1.5 * face.h),
+                min(float(src_w), max(4.0 * face.w, 0.44 * src_w)),
+                min(float(src_h), max(3.0 * face.h, 0.55 * src_h)),
+            )
+            sbw, sbh, sbx, sby = _band_geometry(
+                src_w, src_h, out_w, top_h, speaker_box
+            )
+            dbw, dbh, dbx, dby = _band_geometry(
+                src_w, src_h, out_w, bottom_h,
+                (seg.slide.x, seg.slide.y, seg.slide.w, seg.slide.h),
+            )
+            # The split is a single filter chain after the source split. Both
+            # bands are pixel-compatible before vstack; SAR is applied once to
+            # the finished frame so anamorphic sources retain their display
+            # geometry.
+            return [
+                f"{src}{pre}split=2[sp][sl];"
+                f"[sp]crop={sbw}:{sbh}:x='{sbx:.0f}':y='{sby:.0f}',"
+                f"{_scale_to(out_w, top_h)}[spv];"
+                f"[sl]crop={dbw}:{dbh}:x='{dbx:.0f}':y='{dby:.0f}',"
+                f"{_scale_to(out_w, bottom_h)}[slv];"
+                f"[spv][slv]vstack=inputs=2,{_set_sar(sar_w, sar_h)}{tail}"
+            ]
+        # If perception loses either region, retain the old safe tracked crop.
         x_expr = _x_expression(src_w, crop_w, track_pts)
         return [f"{src}{pre}crop={crop_w}:{src_h}:x='{x_expr}':y=0,"
                 f"{_scale_to(out_w, out_h)},{_set_sar(sar_w, sar_h)}{tail}"]
@@ -866,7 +902,7 @@ def _carry_slides(segments: list[SceneSegment], times: list[float],
                  and faces and any(
                      f is not None and both_fit_in_crop(f, slide, crop_w, src_w)
                      for f in faces))
-        out.append(SceneSegment(seg.start, seg.end, seg.cls, slide, joint))
+        out.append(SceneSegment(seg.start, seg.end, seg.cls, slide, joint, faces[i]))
     return out
 
 
