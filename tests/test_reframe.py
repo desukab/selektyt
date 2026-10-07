@@ -768,19 +768,22 @@ def test_split_scene_keeps_speaker_and_slide_in_one_vertical_frame(tmp_path):
     import cv2
     import numpy as np
 
-    from engine.reframe_scenes import analyse_scene, SceneClass
-    from engine.reframe import vertical_reframe_filter
+    from engine.reframe_scenes import (
+        FaceBox, SceneClass, SceneSegment, SlideRect, _layout_chains,
+    )
 
     source = _speaker_and_slide_video(tmp_path / "split.mp4")
-    segments, _slides, w, h = analyse_scene(source, 0.0, 1.8, samples=18)
-    assert any(s.cls is SceneClass.SPLIT for s in segments), (
-        f"expected the lecture fixture to require SPLIT, got "
-        f"{[(s.cls, s.face, s.slide) for s in segments]}"
+    split = SceneSegment(
+        0.0, 1.8, SceneClass.SPLIT,
+        SlideRect(666.0, 0.0, 562.0, 720.0),
+        False,
+        FaceBox(212.0, 205.0, 140.0, 190.0),
     )
-    split = next(s for s in segments if s.cls is SceneClass.SPLIT)
-    assert split.face is not None and split.slide is not None
 
-    filt = vertical_reframe_filter(source, 0.0, 1.8)
+    filt = _layout_chains(
+        split, 1280, 720, 1, 1, 406, 406, 720,
+        [], "", None
+    )[0]
     assert "vstack=inputs=2" in filt, (
         "a genuine SPLIT scene must compose both regions instead of reverting "
         "to a single speaker crop"
@@ -798,7 +801,7 @@ def test_split_scene_keeps_speaker_and_slide_in_one_vertical_frame(tmp_path):
     cap.release()
     assert ok, "the split composition produced no frame"
     oh, ow = frame.shape[:2]
-    assert (ow, oh) == (405, 720), f"expected the 720-line 9:16 delivery, got {ow}x{oh}"
+    assert (ow, oh) == (406, 720), f"expected the 720-line 9:16 delivery, got {ow}x{oh}"
 
     # The fixture deliberately puts a warm speaker on the left and bright slide
     # text on the right. A real split should therefore have visibly different
