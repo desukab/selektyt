@@ -929,8 +929,10 @@ def test_split_scene_keeps_speaker_and_slide_in_one_vertical_frame(tmp_path):
     """A speaker+slide shot must not silently throw away one half of the story.
 
     The scene planner already proves that no single 9:16 crop can preserve both.
-    The delivered composition should therefore stack the two source regions and
-    keep the result at the same vertical delivery size.
+    The delivered composition should therefore stack the two source regions, and
+    has to survive being scaled to the delivery canvas: the bands are cropped in
+    source space and scaled independently, so a wrong band height still stacks to
+    the right frame while showing the wrong part of each region.
     """
     import cv2
     import numpy as np
@@ -938,6 +940,7 @@ def test_split_scene_keeps_speaker_and_slide_in_one_vertical_frame(tmp_path):
     from engine.reframe_scenes import (
         FaceBox, SceneClass, SceneSegment, SlideRect, _layout_chains,
     )
+    from engine.reframe import VERTICAL_DELIVERY
 
     source = _speaker_and_slide_video(tmp_path / "split.mp4")
     split = SceneSegment(
@@ -947,8 +950,11 @@ def test_split_scene_keeps_speaker_and_slide_in_one_vertical_frame(tmp_path):
         FaceBox(212.0, 205.0, 140.0, 190.0),
     )
 
+    # The canvas ``scene_filter`` delivers on, passed explicitly because this
+    # test fixes the segment by hand rather than depending on the detector.
+    out_w, out_h = VERTICAL_DELIVERY
     filt = _layout_chains(
-        split, 1280, 720, 1, 1, 406, 406, 720,
+        split, 1280, 720, 1, 1, 406, out_w, out_h,
         [], "", None
     )[0]
     assert "vstack=inputs=2" in filt, (
@@ -968,7 +974,9 @@ def test_split_scene_keeps_speaker_and_slide_in_one_vertical_frame(tmp_path):
     cap.release()
     assert ok, "the split composition produced no frame"
     oh, ow = frame.shape[:2]
-    assert (ow, oh) == (406, 720), f"expected the 720-line 9:16 delivery, got {ow}x{oh}"
+    assert (ow, oh) == (out_w, out_h), (
+        f"the split composition must deliver on the caption canvas, "
+        f"got {ow}x{oh}")
 
     # The fixture deliberately puts a warm speaker on the left and bright slide
     # text on the right. A real split should therefore have visibly different
