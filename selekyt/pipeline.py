@@ -923,6 +923,7 @@ def run(
     skip_language_check: bool = False,
     transcription_provider: str | None = None,
     progress: ProgressFn | None = None,
+    make: str = "highlights",
 ) -> Path:
     # Reject unusable parameters before touching the network or the disk: a
     # bad --limit used to survive download + transcription and then surface as
@@ -930,6 +931,8 @@ def run(
     # --chunk-minutes died mid-transcription after the audio extraction.
     if limit is None or limit < 1:
         raise ValueError(f"limit must be >= 1 (got {limit})")
+    if make not in {"short", "story", "highlights"}:
+        raise ValueError("make must be one of: short, story, highlights")
     if chunk_minutes < 1:
         raise ValueError(f"chunk_minutes must be >= 1 (got {chunk_minutes})")
     if beam_size < 1:
@@ -1345,18 +1348,19 @@ def run(
         # penalises unnecessary moments and searches all lengths up to the
         # bounded ceiling, so runtime is an outcome rather than a target.
         story_max_moments = max(10, min(24, 8 + math.ceil(math.log2(max(1, len(passed))))))
+        target_seconds = {"short": 60.0, "story": 180.0, "highlights": None}[make]
         story_variants = compose_story_variants(
             passed,
             corpus=corpus_report,
             max_moments=story_max_moments,
-            target_seconds=None,
+            target_seconds=target_seconds,
         )
         story_plan = story_variants[0] if story_variants else compose_story(
             passed,
             corpus=corpus_report,
             limit=limit,
             max_moments=story_max_moments,
-            target_seconds=None,
+            target_seconds=target_seconds,
         )
         (project / "story_variants.json").write_text(
             json.dumps([
