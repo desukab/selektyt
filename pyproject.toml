@@ -10,7 +10,13 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "LicenseRef-SeleKyT-NonCommercial-Source-Available"
 license-files = ["LICENSE"]
-dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26", "yt-dlp>=2026.8.19", "groq>=0.31", "keyring>=25"]
+# A bare ``pip install selekyt`` is the local-only path: ffmpeg via yt-dlp,
+# OpenCV for the vision work, numpy. The cloud transcription clients and the
+# system credential store they read a key from are imported lazily and guarded
+# with an install hint naming this extra, so they belong to the group below
+# rather than to every install. A base install must reach ``selekyt --help``
+# and a full local run without any of them.
+dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26", "yt-dlp>=2026.8.19"]
 
 [project.optional-dependencies]
 # faster-whisper is the preferred engine (attention-based, per-token
@@ -54,8 +60,9 @@ nle = ["pycmx>=1.5", "opentimelineio>=0.17.0"]
 # the imitation, so this extra keeps that check live in CI instead of skipping.
 dev = ["pytest>=8", "pycmx>=1.5", "opentimelineio>=0.17.0", "pyyaml>=6",
        "huggingface_hub>=0.23"]
-all = ["faster-whisper>=1.1", "av>=11,<19", "sherpa-onnx>=1.10", "requests>=2.31", "pycmx>=1.5",
-       "opentimelineio>=0.17.0"]
+all = ["faster-whisper>=1.1", "av>=11,<19", "sherpa-onnx>=1.10", "requests>=2.31",
+       "groq>=0.31", "google-genai>=2.0,<3", "keyring>=25",
+       "pycmx>=1.5", "opentimelineio>=0.17.0"]
 
 [project.scripts]
 selekyt = "selekyt.cli:main"

@@ -127,6 +127,52 @@ def test_requests_is_not_a_base_dependency():
     )
 
 
+@pytest.mark.parametrize("module", ["keyring", "groq", "google-genai"])
+def test_a_cloud_client_is_not_a_base_dependency(module):
+    """``groq``, ``google-genai`` and the ``keyring`` store they read a key from
+    are the BYOK cloud path. Each is imported lazily and guarded with an install
+    hint naming ``[cloud-transcription]``, so a local-only install never reaches
+    them — and the local path is what a bare ``pip install selekyt`` is.
+
+    Keeping them base forces an async HTTP stack and a system credential backend
+    on every install for a feature the installer did not turn on. ``requests``
+    was the same defect and the same fix; this pins the rest so they do not
+    creep back one commit at a time."""
+    base = _project()["project"]["dependencies"]
+    assert not any(req.startswith(module) for req in base), (
+        f"{module} is a base dependency; it belongs to [cloud-transcription], "
+        f"which a local-only install never imports"
+    )
+    extras = _project()["project"]["optional-dependencies"]
+    assert any(req.startswith(module) for req in extras.get("cloud-transcription", [])), (
+        f"{module} left cloud-transcription, which is the only place it is "
+        f"declared, and the guarded import hint names that extra"
+    )
+
+
+def test_the_all_extra_installs_every_runtime_group():
+    """``[all]`` is the "give me everything" install. A group it omits is a
+    feature a user who asked for everything does not get — and the failure is
+    silent, surfacing later as an ImportError from the guarded import with an
+    install hint pointing at an extra they believe they already installed.
+
+    ``dev`` is excluded: it pulls in pytest and the corpus tooling, which are
+    not runtime dependencies and are covered by the CI install."""
+    extras = _project()["project"]["optional-dependencies"]
+    all_reqs = set(extras.get("all", []))
+    assert all_reqs, "the all extra is missing entirely"
+    expected = set()
+    for name, reqs in extras.items():
+        if name == "all" or name == "dev":
+            continue
+        expected |= set(reqs)
+    missing = sorted(r for r in expected if r not in all_reqs)
+    assert not missing, (
+        f"[all] does not install these runtime requirements, so a user who ran "
+        f"`pip install 'selekyt[all]'` does not have them: {missing}"
+    )
+
+
 def test_the_transcription_extra_pins_av_against_the_pyav_19_break():
     """faster-whisper 1.2.1 calls ``av.open(..., metadata_errors="ignore")``;
     PyAV 19 removed that argument and faster-whisper declares only ``av>=11``.
