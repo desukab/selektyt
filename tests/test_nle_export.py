@@ -449,6 +449,34 @@ def test_fcpxml_declares_one_asset_per_source_media():
     assert fmt.get("frameDuration") == "1001/30000s"  # 29.97 sequence
 
 
+def test_fcpxml_preserves_native_source_timebase_when_sequence_rate_differs():
+    """FCPXML source positions must stay on the media's native frame grid.
+
+    A 29.97 source in a 30fps sequence must not have its source timecode
+    re-encoded at 30fps: doing so accumulates roughly 1.2s of drift by the
+    20-minute mark even though the EDL remains correct.
+    """
+    from engine.timeline import Clip, SourceMedia, Timeline
+
+    media = SourceMedia(
+        path="source.mp4",
+        fps=30000 / 1001,
+        duration=2000.0,
+        start_timecode="00:00:00:00",
+    )
+    clip = Clip(media, 19 * 60 + 49 + 19 / (30000 / 1001),
+                19 * 60 + 50 + 19 / (30000 / 1001), 0.0, 1.0)
+    tl = Timeline(clips=[clip], fps=30.0)
+    xml = render_fcpxml(tl)
+    root = ET.fromstring(xml)
+    elem = root.find(".//spine/asset-clip")
+    assert elem is not None
+    got = _rational_sec(elem.get("start"))
+    want = clip.source_in
+    assert got == pytest.approx(want, abs=1.0 / (30000 / 1001))
+    assert validate_fcpxml(xml, tl) == []
+
+
 def test_fcpxml_primary_clips_match_the_timeline():
     tl = two_clip_timeline()
     root = ET.fromstring(render_fcpxml(tl))
