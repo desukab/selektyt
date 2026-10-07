@@ -536,7 +536,11 @@ def test_the_scene_cache_key_includes_the_tail(composed):
     plain = rs.scene_filter(composed, 0.0, 2.0, samples=12)
     captioned = rs.scene_filter(composed, 0.0, 2.0, samples=12, tail=tail)
 
-    assert not rs.is_composed(plain) and not rs.is_composed(captioned)
+    # The fixture is a SPLIT scene, so both graphs are composed multi-chain
+    # layouts rather than a single -vf chain. That is exactly why the tail has
+    # to ride *inside* the composition's output pad: a caller that appended it
+    # after the fact would be putting captions after a ``[v]`` label.
+    assert rs.is_composed(plain) and rs.is_composed(captioned)
     assert plain != captioned, (
         "the tail is part of the graph; a cache that ignored it would hand the "
         "second caller the first caller's filter")
@@ -575,35 +579,53 @@ def _gray_frames(path: Path) -> tuple[object, int, int]:
     return np.frombuffer(raw, np.uint8).reshape(n, h, w), w, h
 
 
-def test_a_split_classification_renders_one_coherent_speaker_crop(composed, tmp_path):
-    """Even when two regions cannot fit, one vertical frame is one source crop."""
+def test_a_split_classification_keeps_both_regions_in_one_vertical_frame(composed, tmp_path):
+    """A speaker and a slide no single crop can hold are stacked, not chosen between.
+
+    The fixture classifies as SPLIT, and the deliverable keeps both halves: the
+    speaker band above, the slide band below, on the 1080x1920 caption canvas
+    the burned ASS is authored for. The old behaviour cropped to the speaker and
+    silently deleted the slide's content; the two-band composition is the fix,
+    so this test pins that neither region is lost and that the two bands really
+    carry different source material rather than one duplicated branch.
+    """
     import numpy as np
 
     import engine.reframe_scenes as rs
 
     graph = rs.scene_filter(composed, 0.0, 2.0, samples=12)
-    assert not rs.is_composed(graph)
-    assert "vstack" not in graph and "split=2[a][b]" not in graph
-    assert graph.startswith("crop=406:720:")
+    # A SPLIT scene is a multi-chain graph even on its own, so it needs
+    # -filter_complex plus -map [v]; ``is_composed`` is the caller's signal.
+    assert rs.is_composed(graph), (
+        f"a SPLIT scene composes its bands rather than cropping to one: {graph}")
+    assert "vstack=inputs=2" in graph, "the two regions must be stacked"
 
     out = tmp_path / "split.mp4"
     _render(composed, graph, out, 2.0)
     frames, w, h = _gray_frames(out)
 
     # The delivered frame is the caption canvas the source's square pixels are
-    # scaled into: 1080x1920, the size the burned ASS is authored for. The crop
-    # itself is still 406 px of a 720-tall source; the scale stage raises it.
+    # scaled into: 1080x1920, the size the burned ASS is authored for.
     assert (w, h) == (1080, 1920), (
-        f"the crop is {CROP_W} wide and must be scaled into the canvas; "
-        f"got {w}x{h}")
+        f"the composition must deliver on the caption canvas; got {w}x{h}")
     assert abs(w / h - 9 / 16) < 0.005, f"the frame must display as 9:16; got {w}x{h}"
 
     frame = frames[len(frames) // 2]
-    bright = frame > 150
-    assert bright.any(), "the speaker marker must survive in the single crop"
-    assert bright.mean() < 0.15, (
-        "the delivered view should be the tracked speaker crop, not a stacked "
-        "slide region")
+    # The band split the layout uses: the speaker takes the larger upper band.
+    split_y = int(h * 0.58)
+    top, bottom = frame[:split_y], frame[split_y:]
+    assert (top > 150).any(), "the speaker marker must survive in the top band"
+    assert (bottom > 150).any(), "the slide block must survive in the bottom band"
+    # A graph that duplicated one source branch into both pads would stack the
+    # same picture twice; the two bands come from disjoint source regions, so
+    # their colours differ by far more than codec noise.
+    band_gap = float(np.mean(np.abs(
+        top.mean(axis=0).mean(axis=0).astype(float)
+        - bottom.mean(axis=0).mean(axis=0).astype(float)
+    )))
+    assert band_gap > 2.0, (
+        f"the two split bands appear to contain the same visual source "
+        f"(gap {band_gap:.2f}); one branch was duplicated")
 
 
 # ── the composition across a mid-clip change of layout ── #
@@ -663,10 +685,16 @@ def test_a_mid_clip_class_change_composes_and_keeps_the_interval(changing, tmp_p
         f"the deliverable must keep the whole {CHG_SPAN}s interval; got "
         f"{len(frames)} frames of {CHG_FPS * CHG_SPAN:g}")
 
-    # The scene classification may change, but no instant stacks two source
-    # regions into the vertical output.
-    assert "vstack" not in graph
-    assert graph.count("crop=406:720:") >= 2
+    # Each half carries the layout its scene called for: the opening SPLIT
+    # stacks its two bands, and the closing lone speaker stays a single crop. A
+    # graph that stacked the speaker-only half would be composing a band no
+    # scene asked for, and one that cropped the SPLIT half would be back to
+    # discarding the slide.
+    assert graph.count("vstack=inputs=2") == 1, (
+        "only the SPLIT half stacks its bands; the speaker-only half must be "
+        f"one crop: {graph}")
+    assert graph.count(f"crop={CROP_W}:{SRC_H}:") == 1, (
+        "only the speaker-only half is a plain tracked crop: {graph}")
     first = frames[0]
     assert (first > 150).any(), "the clip must open with the speaker in frame"
 

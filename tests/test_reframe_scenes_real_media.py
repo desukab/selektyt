@@ -168,37 +168,53 @@ def test_the_delivered_frame_still_contains_the_speaker(tmp_path):
         f"them")
 
 
-def test_false_background_slide_stays_one_coherent_vertical_crop(tmp_path):
-    """The selected Cloke interval misreads the bookshelf/lamp as a slide.
+def test_a_split_scene_on_real_footage_keeps_the_speaker_and_the_region(tmp_path):
+    """The selected Cloke interval misreads the bookshelf/lamp as a slide, and
+    classifies SPLIT.
 
-    That detector verdict used to reach the per-clip renderer as SPLIT and
-    become two source crops stacked with vstack. Pin the scene that triggered
-    the shipped artifact: it must remain a single tracked crop through actual
-    vertical rendering.
+    A single 9:16 crop cannot hold both that region and the speaker, so the
+    deliverable composes them into two bands. What has to survive on real
+    footage is the *subject*: the band the layout gives the speaker is the one
+    the face tracker planned against, so a composition that cropped the speaker
+    out -- the shipped artifact this interval used to trigger, when the region's
+    size was read before the face -- shows up as the oracle losing the face.
+    Measured on this window: the face is present in 100% of delivered frames.
 
-    The delivered size is the caption canvas (1080x1920) rather than the crop's
-    own 608 px: ``scene_filter`` raises a low-resolution crop to the canvas the
-    burned-in ASS is laid out on, because libass scales that layout onto the
-    frame it is burned on and a 608x1080 frame would carry the cues at 56% of
-    their authored size. The source-space crop is unchanged -- the tracking
-    window is still the one the geometry found -- it is scaled up to deliver.
+    The delivered size is the caption canvas (1080x1920) rather than either
+    band's source resolution: ``scene_filter`` raises a low-resolution crop to
+    the canvas the burned-in ASS is laid out on, because libass scales that
+    layout onto the frame it is burned on and a narrower frame would carry the
+    cues at a fraction of their authored size.
     """
     start, end = 0.3, 8.3
-    segments, _slides, _w, _h = analyse_scene(
+    segments, slides, _w, _h = analyse_scene(
         REAL_MEDIA, start, end, samples=24)
     assert segments and any(seg.cls is SceneClass.SPLIT for seg in segments), (
-        "the real interval no longer exercises the false slide classification")
+        "the real interval no longer exercises the split classification")
 
     graph = scene_filter(REAL_MEDIA, start, end, samples=24)
-    assert "vstack" not in graph and "split=2[a][b]" not in graph, (
-        "a 9:16 instant must come from one coherent source crop")
+    assert "vstack=inputs=2" in graph, (
+        "a SPLIT scene with no single legal crop composes its regions rather "
+        "than discarding one")
     assert "crop=" in graph and "scale=" in graph
 
-    clip = _deliver(graph, tmp_path / "single-crop.mp4", start, end)
+    clip = _deliver(graph, tmp_path / "split.mp4", start, end)
     result = subprocess.run(
         ["ffprobe", "-v", "error", "-select_streams", "v:0",
          "-show_entries", "stream=width,height", "-of", "csv=p=0",
          str(clip)], check=True, capture_output=True, text=True)
     assert result.stdout.strip() == "1080,1920", (
-        "a composed vertical scene delivers on the caption canvas, not at the "
+        "a composed vertical scene delivers on the caption canvas, not at a "
         "source crop's own resolution")
+
+    # The subject is what the composition can silently lose, so it is measured
+    # rather than assumed: the oracle is the same detector family the pipeline
+    # uses, so a window that put the face off-frame fails here regardless of
+    # how reasonable the geometry looks.
+    seen = _faces_per_frame(clip)
+    assert len(seen) > 4, "the deliverable decoded too few frames to score"
+    present = sum(seen) / float(len(seen))
+    assert present >= 0.9, (
+        f"a speaker detectable in the source is present in only {present:.0%} "
+        f"of the delivered frames; the split composition chose a speaker band "
+        f"that lost them")

@@ -649,16 +649,18 @@ def _layout_chains(seg: SceneSegment, src_w: int, src_h: int, sar_w: int,
             )
             # The split is a small labelled subgraph inside the enclosing
             # composition. Its final pad must carry the caller's output label;
-            # otherwise the outer xfade graph has nothing to consume.
-            tail_label = f"[{out_label}]" if out_label is not None else ""
+            # otherwise the outer xfade graph has nothing to consume. The
+            # subtitle tail is not folded in here -- ``_graph`` appends it to
+            # the last chain of the whole graph, which for a composed split is
+            # the xfade *after* this pad, so applying it here would burn the
+            # captions into a single band instead of onto the finished frame.
             return [
                 f"{src}{pre}split=2[sp][sl];"
                 f"[sp]crop={sbw}:{sbh}:x='{sbx:.0f}':y='{sby:.0f}',"
                 f"{_scale_to(out_w, top_h)}[spv];"
                 f"[sl]crop={dbw}:{dbh}:x='{dbx:.0f}':y='{dby:.0f}',"
                 f"{_scale_to(out_w, bottom_h)}[slv];"
-                f"[spv][slv]vstack=inputs=2,{_set_sar(sar_w, sar_h)}"
-                f"{(',' + ','.join(tail)) if tail else ''}{tail_label}"
+                f"[spv][slv]vstack=inputs=2,{_set_sar(sar_w, sar_h)}{tail}"
             ]
         # If perception loses either region, retain the old safe tracked crop.
         x_expr = _x_expression(src_w, crop_w, track_pts)
@@ -710,9 +712,22 @@ def _graph(segments: list[SceneSegment], src_w: int, src_h: int, sar_w: int,
     if len(segments) == 1:
         body = _layout_chains(segments[0], src_w, src_h, sar_w, sar_h,
                               crop_w, out_w, out_h, track_pts[0], "", None)[0]
+        if ";" not in body:
+            # The ordinary single-chain crop: it runs under ``-vf`` unchanged,
+            # and ``is_composed`` reports it as such.
+            if tail:
+                body = body + "," + ",".join(tail)
+            return body
+        # A single segment can still be a multi-chain layout -- a SPLIT composes
+        # its two bands -- and that needs ``-filter_complex`` plus an explicit
+        # ``-map [v]`` for exactly the same reason the multi-segment graph below
+        # does. ``_layout_chains`` was asked for no labels, so the input and the
+        # output pad are named here, wrapping the whole composition. The
+        # subtitle tail lands inside the output label rather than after it, so
+        # the captions burn onto the stacked frame and not into a pad name.
         if tail:
             body = body + "," + ",".join(tail)
-        return body
+        return f"[0]{body}[v]"
 
     # ``split`` without explicit output labels assigns its own generated names,
     # which are not the ``s{i}`` the per-segment chains refer to -- ffmpeg then
@@ -905,7 +920,13 @@ def _carry_slides(segments: list[SceneSegment], times: list[float],
                  and faces and any(
                      f is not None and both_fit_in_crop(f, slide, crop_w, src_w)
                      for f in faces))
-        out.append(SceneSegment(seg.start, seg.end, seg.cls, slide, joint, faces[i]))
+        # ``faces`` is tolerated as empty by the joint test just above, so the
+        # representative face is read with the same tolerance: a caller that
+        # supplies detections for the slide question only must not crash on the
+        # face field. ``SceneSegment.face`` defaults to None, and the layout
+        # falls back to the tracked crop without it.
+        face = faces[i] if i < len(faces) else None
+        out.append(SceneSegment(seg.start, seg.end, seg.cls, slide, joint, face))
     return out
 
 
