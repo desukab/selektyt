@@ -95,6 +95,7 @@ import cv2
 import numpy as np
 
 from engine.reframe import (
+    VERTICAL_DELIVERY,
     _even,
     _perceive_window,
     _x_expression,
@@ -1047,13 +1048,15 @@ def scene_filter(video: Path, start: float, end: float, tail: tuple[str, ...] = 
         _SCENE_CACHE[key] = result
         return result
 
-    # Composed scenes must obey the same minimum 720-line delivery as
-    # the plain speaker path. A low-resolution source can have a crop narrower
-    # than 405 px, so preserving crop_w here would silently ship a 240p
-    # vertical frame even though the caption burn claims a 720-line canvas.
-    min_display_height = 720
+    # Composed scenes must deliver on the same caption canvas as the plain
+    # speaker path. A low-resolution source can have a crop far below 1080 px
+    # wide, and preserving crop_w here would ship a frame on which the burned-in
+    # cue renders at a fraction of its designed size -- the ASS is laid out at
+    # 1080x1920 and libass scales that layout onto the frame it is burned on
+    # (measured: 492x42 px at 1080x1920, 185x16 px at 406x720, same ASS).
+    min_display_height = VERTICAL_DELIVERY[1]
     min_frame_w = min_display_height * 9 * sar_h / (16 * sar_w)
-    out_w = _even(min(1080, max(crop_w, min_frame_w)))
+    out_w = _even(min(VERTICAL_DELIVERY[0], max(crop_w, min_frame_w)))
     out_h = _even(out_w * sar_w * 16 / (9 * sar_h))
 
     # The crop trajectory uses the same cached detections as the scene planner;

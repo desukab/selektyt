@@ -590,8 +590,12 @@ def test_a_split_classification_renders_one_coherent_speaker_crop(composed, tmp_
     _render(composed, graph, out, 2.0)
     frames, w, h = _gray_frames(out)
 
-    # The delivered frame is the 9:16 frame the source's square pixels imply.
-    assert w == 406, f"the crop width is {CROP_W}; got {w}"
+    # The delivered frame is the caption canvas the source's square pixels are
+    # scaled into: 1080x1920, the size the burned ASS is authored for. The crop
+    # itself is still 406 px of a 720-tall source; the scale stage raises it.
+    assert (w, h) == (1080, 1920), (
+        f"the crop is {CROP_W} wide and must be scaled into the canvas; "
+        f"got {w}x{h}")
     assert abs(w / h - 9 / 16) < 0.005, f"the frame must display as 9:16; got {w}x{h}"
 
     frame = frames[len(frames) // 2]

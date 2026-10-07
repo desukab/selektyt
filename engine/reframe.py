@@ -8,9 +8,23 @@ import subprocess
 import cv2
 import numpy as np
 
+from engine.caption_director import PLAYRES_X, PLAYRES_Y
 from engine.reframe_perception import find_shot_boundaries, get_detector
 from providers.ffmpeg import (require_ffmpeg, require_ffprobe,
                              probe_sample_aspect)
+
+# The canvas the burned-in captions are laid out on is the only size the
+# delivery frame may be. The ASS declares ``PlayRes 1080x1920``
+# (``engine.caption_director``) and libass scales that layout onto the frame it
+# is burned on, so a frame of any other size renders every cue at a fraction of
+# its designed size -- measured on the shipped cue, 492x42 px on a 1080x1920
+# frame and 185x16 px on the 406x720 frame the old 720-line floor delivered: the
+# same ASS, the same font size, one sixth of the pixels. Raising the container
+# alone does nothing for the source either, so the delivery floor below is
+# derived from this canvas rather than stated next to it. The two orientations
+# are the same canvas rotated.
+VERTICAL_DELIVERY = (PLAYRES_X, PLAYRES_Y)    # 1080x1920
+LANDSCAPE_DELIVERY = (PLAYRES_Y, PLAYRES_X)   # 1920x1080
 
 # --------------------------------------------------------------------------- #
 # Tuning. Every value here is either measured on the corpus or is a deliberate
@@ -1082,19 +1096,22 @@ def landscape_filter(video: Path, target: tuple[int, int] = (16, 9),
     the residue is bounded by ``tests/test_reframe.py`` rather than assumed
     away.
 
-    The content is scaled to fit and never enlarged: a 720x486 NTSC source
-    becomes a 640x486 square-pixel picture inside an 864x486 frame, not an
-    upscaled 1080p one. Square pixels are forced (``setsar=1``) so the aspect
-    does not depend on the player honouring container metadata.
+    The content is scaled *up* to the delivery canvas when the source is below
+    it: the frame has to be the caption canvas or the burned-in cues render at a
+    fraction of their designed size, and a low-resolution source left at its own
+    height is a small picture inside a large container with unusable captions.
+    Square pixels are forced (``setsar=1``) so the aspect does not depend on the
+    player honouring container metadata.
     """
     w, h = _probe_dims(video)
     sar_w, sar_h = probe_sample_aspect(video)
     tw, th = target
 
-    # Deliver at a minimum 720-line frame so a low-resolution source does not
-    # leave the ASS caption canvas physically tiny. Higher-resolution sources
-    # keep their native delivery height, capped by max_width.
-    min_height = 720
+    # Deliver on the caption canvas. A frame below it shrinks the burned-in
+    # captions with it (see ``VERTICAL_DELIVERY``), so the floor is the canvas,
+    # not a height that happens to look acceptable; a source above it keeps its
+    # own height, capped by max_width.
+    min_height = LANDSCAPE_DELIVERY[1]
     frame_h = max(_even(h * 16 / 9), min_height)
     frame_w = _even(min(frame_h * tw / th, max_width))
     frame_h = _even(frame_w * th / tw)
@@ -1149,16 +1166,19 @@ def vertical_scale_filter(crop_w: int, sar_w: int, sar_h: int,
 
     The height is derived in *display* space through the source's sample aspect:
     a 9:16 pixel count is only 9:16 for square pixels, so an anamorphic source's
-    deliverable keeps its SAR and the math accounts for it. Never enlarge: the
-    width is capped at the crop's own width, not just at 1080.
+    deliverable keeps its SAR and the math accounts for it. The frame is never
+    below the canvas-derived width and never above ``max_width``, so a source
+    below the canvas is scaled up to it and one above is scaled down.
     """
-    # Burn captions onto a minimum 720-line delivery. Unlike the old
-    # source-preserving cap, this deliberately permits upscaling: a 426x240
-    # source has only ~135 px of 9:16 crop width, but the shipped vertical
-    # frame still needs to be 405x720 so the caption canvas is readable.
-    # Keep the source sample aspect in the geometry calculation so anamorphic
-    # crops are not squeezed.
-    min_display_height = 720
+    # Deliver on the caption canvas. This deliberately upscales: a 426x240
+    # source has only ~135 px of 9:16 crop width, and leaving it there ships a
+    # 135-wide frame on which the burned-in cue measures 16 px tall (measured)
+    # -- the ASS is laid out at 1080x1920 and libass scales that layout onto
+    # whatever frame it is burned on. The floor is therefore the canvas height,
+    # not a shorter height that was believed to be enough: a 720-line frame
+    # renders the same cue at 24 px. Keep the source sample aspect in the
+    # geometry calculation so anamorphic crops are not squeezed.
+    min_display_height = VERTICAL_DELIVERY[1]
     min_frame_w = min_display_height * 9 * sar_h / (16 * sar_w)
     frame_w = _even(min(max_width, max(crop_w, min_frame_w)))
     frame_h = _even(frame_w * sar_w * 16 / (9 * sar_h))

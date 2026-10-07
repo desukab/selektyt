@@ -378,6 +378,12 @@ def test_an_anamorphic_source_renders_to_a_genuinely_9_16_frame(tmp_path):
     that silently broke when the band geometry carried a sample-aspect factor
     that only a square-pixel band would need (see
     ``test_an_anamorphic_slide_is_not_squeezed``).
+
+    The delivery frame is 1080x1706: 9:16 *display* space through SAR 8:9, which
+    is wider in pixels than 9:16 because a wide pixel has to cover more of the
+    ratio. The crop is untouched by that -- the window's own geometry is what the
+    no-squeeze condition is about -- so the pins below are the invariants, and
+    the numbers move with the delivery canvas.
     """
     from engine.reframe import vertical_reframe_filter
 
@@ -392,7 +398,7 @@ def test_an_anamorphic_source_renders_to_a_genuinely_9_16_frame(tmp_path):
     # count measures DAR 0.6337 instead of 0.5625
     assert filt.endswith("setsar=8/9"), filt
     # the scale stage lands on the SAR-aware target height
-    assert "scale=456:720" in filt, filt
+    assert "scale=1080:1706" in filt, filt
     # the window's pixel aspect matches the frame's, so the scale onto it is a
     # pure resize and the content is not squeezed sideways
     assert abs(cw / ch - 308 / 486) < 0.01, (
@@ -402,9 +408,8 @@ def test_an_anamorphic_source_renders_to_a_genuinely_9_16_frame(tmp_path):
 
     out = tmp_path / "vertical.mp4"
     dar, w, h = _rendered_dar(video, filt, out)
-    assert (w, h) == (456, 720), (
-        f"the anamorphic crop is already sub-1080, so it must not be "
-        f"rescaled, got {w}x{h}"
+    assert (w, h) == (1080, 1706), (
+        f"the anamorphic crop is delivered at 9:16 in display space, got {w}x{h}"
     )
     pw, ph, sar_w, sar_h = _probe_geometry(out)
     assert (sar_w, sar_h) == (8, 9), (
@@ -491,9 +496,9 @@ def test_an_anamorphic_slide_is_not_squeezed(tmp_path):
     delivered_h = ys.max() - ys.min() + 1
 
     pw, ph, sar_w, sar_h = _probe_geometry(out)
-    assert (pw, ph, sar_w, sar_h) == (456, 720, 8, 9), (
+    assert (pw, ph, sar_w, sar_h) == (1080, 1706, 8, 9), (
         f"the anamorphic deliverable is {pw}x{ph} SAR {sar_w}:{sar_h}, "
-        "expected 308x486 SAR 8:9"
+        "expected 9:16 display space through SAR 8:9"
     )
     squeeze = (delivered_w / delivered_h) / (blob_w / blob_h)
     assert abs(squeeze - 1.0) < 0.02, (
@@ -600,27 +605,71 @@ def test_a_4k_source_renders_to_exactly_1080x1920(tmp_path):
     assert abs(dar - 9 / 16) < 0.001
 
 
-def test_a_low_resolution_landscape_source_is_delivered_at_720_lines(tmp_path):
-    """A 426x240 source must not ship as a 240p deliverable: the caption burn
-    needs a real delivery canvas even when the source itself is low resolution."""
+def test_a_low_resolution_landscape_source_is_delivered_on_the_caption_canvas(tmp_path):
+    """A 426x240 source must not ship as a 240p deliverable: the burned-in ASS
+    is laid out at 1920x1080, and libass scales that layout onto the frame it is
+    burned on, so a frame below the canvas renders every cue at the same
+    fraction of its designed size. The source has to be *scaled into* that
+    canvas -- raising the container alone would leave a small picture inside a
+    large frame with unusable captions."""
     from engine.reframe import landscape_filter
 
     video = _anamorphic_video(tmp_path / "low.mp4", sar="1/1", size="426x240")
     out = tmp_path / "landscape_low.mp4"
     dar, w, h = _rendered_dar(video, landscape_filter(video), out)
-    assert (w, h) == (1280, 720), f"low-res landscape must deliver 720 lines, got {w}x{h}"
+    assert (w, h) == (1920, 1080), (
+        f"low-res landscape must deliver on the caption canvas, got {w}x{h}")
+    assert abs(dar - 16 / 9) < 0.005
+
+    # The source pixels occupy the frame rather than sitting inside it: a
+    # 426x240 picture scaled to fill 1920x1080 covers the width. The even
+    # rounding can leave a residue of a pixel or two -- 426 * 4.5 is 1917, which
+    # centres as a 1 px bar each side -- so the claim is that the picture spans
+    # the frame, not that it is flush with it to the pixel.
+    import cv2
+    import numpy as np
+
+    cap = cv2.VideoCapture(str(out))
+    ok, frame = cap.read()
+    cap.release()
+    assert ok, "could not read a frame back"
+    grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    cols = np.where(grey.max(axis=0) > 16)[0]
+    rows = np.where(grey.max(axis=1) > 16)[0]
+    assert cols.min() < 3 and w - 1 - cols.max() < 3, (
+        f"the picture does not span the frame horizontally "
+        f"({cols.min()}..{cols.max()} of {w})"
+    )
+    assert rows.min() < 3 and h - 1 - rows.max() < 3, (
+        f"the picture does not span the frame vertically "
+        f"({rows.min()}..{rows.max()} of {h})"
+    )
+
+
+def test_a_source_already_on_the_canvas_is_left_alone(tmp_path):
+    """The common case must be a no-op: a source already at the delivery canvas
+    is neither padded nor needlessly rescaled."""
+    from engine.reframe import landscape_filter
+
+    video = _anamorphic_video(tmp_path / "wide.mp4", sar="1/1", size="1920x1080")
+    out = tmp_path / "landscape.mp4"
+    dar, w, h = _rendered_dar(video, landscape_filter(video), out)
+    assert (w, h) == (1920, 1080), (
+        f"an exact 16:9 source on the canvas should be untouched, got {w}x{h}")
     assert abs(dar - 16 / 9) < 0.005
 
 
-def test_a_16_9_source_is_left_alone(tmp_path):
-    """The common case must be a no-op: an already-16:9 square-pixel source is
-    neither padded nor needlessly rescaled."""
+def test_a_720p_source_is_scaled_up_to_the_caption_canvas(tmp_path):
+    """A 1280x720 source is below the canvas the captions are laid out on, so it
+    is scaled up to occupy it -- deliberately, and for the same reason a
+    426x240 source is: the caption size follows the frame, not the source."""
     from engine.reframe import landscape_filter
 
-    video = _anamorphic_video(tmp_path / "wide.mp4", sar="1/1", size="1280x720")
+    video = _anamorphic_video(tmp_path / "hd.mp4", sar="1/1", size="1280x720")
     out = tmp_path / "landscape.mp4"
     dar, w, h = _rendered_dar(video, landscape_filter(video), out)
-    assert (w, h) == (1280, 720), f"an exact 16:9 source should be untouched, got {w}x{h}"
+    assert (w, h) == (1920, 1080), (
+        f"a 720p source must be raised to the caption canvas, got {w}x{h}")
     assert abs(dar - 16 / 9) < 0.005
 
 
@@ -676,9 +725,11 @@ def test_a_square_pixel_source_is_unchanged_by_the_aspect_correction(tmp_path):
     cw, ch = (int(p) for p in crop.split(":")[:2])
     scale = filt.split(",scale=")[1].split(":")[0:2]
     sw, sh = int(scale[0]), int(scale[1].split(":")[-1])
-    # 480 * 9/16 = 270, and 270 * 16/9 = 480 exactly, so the delivered frame is
-    # square-pixel and the SAR the graph declares has to be 1/1 to match.
-    assert (sw, sh) == (270, 480), f"the frame is 270x480 by construction; got {sw}x{sh}"
+    # 480 * 9/16 = 270 exactly, and 270 * 16/9 = 480 exactly, so the crop window
+    # is square-pixel. The delivery canvas is 1080x1920, which is also
+    # square-pixel and 9:16, so the scale onto it is a pure resize and the SAR
+    # the graph declares has to be 1/1 to match.
+    assert (sw, sh) == (1080, 1920), f"the frame is 1080x1920 by construction; got {sw}x{sh}"
     assert filt.endswith("setsar=1/1"), filt
     # The no-squeeze condition: the window's pixel aspect is the frame's.
     assert abs(cw / ch - sw / sh) < 0.01, (
@@ -687,7 +738,9 @@ def test_a_square_pixel_source_is_unchanged_by_the_aspect_correction(tmp_path):
 
     out = tmp_path / "vertical.mp4"
     dar, w, h = _rendered_dar(video, filt, out)
-    assert (w, h) == (406, 722), f"the low-resolution crop must be raised to the 720-line delivery floor; got {w}x{h}"
+    assert (w, h) == (1080, 1920), (
+        f"the low-resolution crop must be raised to the caption canvas; "
+        f"got {w}x{h}")
     assert abs(dar - 9 / 16) < 0.005
 
 
@@ -702,12 +755,15 @@ def test_the_vertical_scale_lands_on_an_exact_9_16_display_ratio():
 
     cases = [
         # (crop_w, sar_w, sar_h, expected frame)
-        (270, 1, 1, (406, 722)),    # 480 * 9/16 is exact
-        (274, 1, 1, (406, 722)),    # 274 * 16/9 = 487.1 -> 488
-        (308, 8, 9, (456, 720)),    # NTSC: the SAR cancels the crop's own width
-        (406, 1, 1, (406, 722)),    # 720-high source: 406 * 16/9 = 721.8 -> 722
-        (1216, 1, 1, (1080, 1920)), # 4K: the crop rounds to 1216, the frame is exact
-        (720, 1, 1, (720, 1280)),   # portrait passes through untouched
+        (270, 1, 1, (1080, 1920)),   # 480 * 9/16 is exact
+        (274, 1, 1, (1080, 1920)),   # 274 * 16/9 = 487.1 -> 488
+        (308, 8, 9, (1080, 1706)),   # NTSC: the SAR widens the pixel, so the
+                                     # 9:16 *display* frame is 1706 px tall
+        (406, 1, 1, (1080, 1920)),   # 720-high source
+        (1216, 1, 1, (1080, 1920)),  # 4K: the crop is wider than the canvas and
+                                     # is scaled down to it
+        (720, 1, 1, (1080, 1920)),   # portrait: raised to the canvas, not
+                                     # passed through at its own height
     ]
     for crop_w, sar_w, sar_h, expect in cases:
         filt = vertical_scale_filter(crop_w, sar_w, sar_h)
@@ -722,19 +778,130 @@ def test_the_vertical_scale_lands_on_an_exact_9_16_display_ratio():
         )
 
 
-def test_the_vertical_scale_raises_low_resolution_delivery_to_720_lines():
+def test_the_vertical_scale_raises_low_resolution_delivery_to_the_caption_canvas():
     """Low-resolution inputs are deliberately upscaled for delivery so the
-    burned-in ASS captions have a useful physical canvas on phones."""
+    burned-in ASS captions render at the size they were laid out at.
+
+    The ASS declares ``PlayRes 1080x1920`` and libass scales that layout onto
+    the frame it is burned on, so the delivery frame has to *be* that canvas.
+    A 720-line floor is not a substitute: measured on the shipped cue, the same
+    ASS renders 492x42 px at 1080x1920 and 185x16 px at 406x720 -- the frame is
+    the only variable, and a sixth of the designed size is not usable.
+    """
     from engine.reframe import vertical_scale_filter
 
-    assert vertical_scale_filter(135, 1, 1).startswith("scale=406:")
-    assert vertical_scale_filter(270, 1, 1).startswith("scale=406:")
-    assert vertical_scale_filter(406, 1, 1).startswith("scale=406:")
+    assert vertical_scale_filter(135, 1, 1).startswith("scale=1080:")
+    assert vertical_scale_filter(270, 1, 1).startswith("scale=1080:")
+    assert vertical_scale_filter(406, 1, 1).startswith("scale=1080:")
     assert vertical_scale_filter(1216, 1, 1).startswith("scale=1080:")
 
 
-    assert vertical_scale_filter(406, 1, 1).startswith("scale=406:")
-    assert vertical_scale_filter(1216, 1, 1).startswith("scale=1080:")
+def test_the_delivery_frame_renders_captions_at_their_designed_size(tmp_path):
+    """The contract the canvas exists for, measured on burned pixels rather than
+    on the filter string: a cue from the shipped ASS has to come out at the size
+    its own font size declares on the delivered frame.
+
+    libass scales the ASS layout from its declared ``PlayRes`` onto the frame it
+    is burned on, so the frame has to *be* that canvas -- 1080x1920, the size
+    ``engine.caption_director`` authors against. This is the failure the earlier
+    "720-line delivery" floor did not fix: the container got taller, and the
+    caption shrank with it, because libass rescales the whole layout to whatever
+    frame it is given. Measured on the shipped cue: 42 px tall on 1080x1920,
+    16 px tall on 406x720 -- the same ASS, the same font size.
+    """
+    import cv2
+    import numpy as np
+
+    from engine.caption_director import PLAYRES_X, PLAYRES_Y
+    from engine.captions import ass_content
+    from engine.reframe import vertical_reframe_filter
+    from models.core import Candidate, Word
+
+    words = [Word(text=w, start=i * 0.3, end=i * 0.3 + 0.25, confidence=1.0)
+             for i, w in enumerate("This is a real caption spoken here".split())]
+    candidate = Candidate(
+        start=0.0, end=3.0, text=" ".join(w.text for w in words),
+        story_type="story", hook="x", payoff="y", editorial_score=0.8,
+        virality_score=0.8, context_score=0.8, confidence=0.9, reason="t",
+        coherence_score=0.8, visual_potential=0.8, opening_score=0.8,
+        words=words)
+    ass = tmp_path / "captions.ass"
+    ass.write_text(ass_content(candidate), encoding="utf-8")
+
+    font_dir = Path(__file__).resolve().parent.parent / "engine" / "assets" / "fonts"
+    subs = f"subtitles='{ass.as_posix()}':fontsdir='{font_dir.as_posix()}'"
+
+    def cue_height_on(frame_w: int, frame_h: int) -> int:
+        out = tmp_path / f"burn_{frame_w}x{frame_h}.mp4"
+        subprocess.run(
+            ["ffmpeg", "-y", "-f", "lavfi",
+             "-i", f"color=c=black:s={frame_w}x{frame_h}:d=1:r=10",
+             "-frames:v", "6", "-vf", subs,
+             "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out)],
+            check=True, capture_output=True)
+        cap = cv2.VideoCapture(str(out))
+        ok, frame = cap.read()
+        cap.release()
+        assert ok, f"no frame decoded from the {frame_w}x{frame_h} burn"
+        grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        ys, xs = np.where(grey > 40)
+        assert len(xs), (
+            f"the cue burned nothing visible at {frame_w}x{frame_h}; the caption "
+            "contract cannot be measured on an empty frame")
+        return ys.max() - ys.min() + 1
+
+    # What the shipped ASS renders on a frame the size of the old 720-line
+    # floor: the cue is a fraction of its authored height, because libass
+    # scaled the 1080x1920 layout down to the frame.
+    below = cue_height_on(406, 720)
+    authored = cue_height_on(PLAYRES_X, PLAYRES_Y)
+    assert below < authored * 0.5, (
+        f"the same cue is {below} px tall on a 406x720 frame and {authored} px "
+        "on the canvas; if that ratio is not well under half, the premise this "
+        "test pins -- that a shorter frame ships smaller captions -- is no "
+        "longer how libass behaves")
+
+    # The delivered frame, through the real reframe chain on a low-resolution
+    # source, burns the cue at the authored size rather than at a fraction. A
+    # plain dark source, because the measurement is of the cue's pixels alone.
+    source = tmp_path / "low.mp4"
+    subprocess.run(
+        ["ffmpeg", "-y", "-f", "lavfi",
+         "-i", "color=c=0x101010:s=426x240:d=2:r=30",
+         "-c:v", "libx264", "-pix_fmt", "yuv420p", str(source)],
+        check=True, capture_output=True)
+    filt = vertical_reframe_filter(source, start=0.0, end=1.0)
+    assert filt.startswith("crop="), filt
+    assert "scale=1080:1920" in filt, (
+        f"the low-resolution source has to be scaled into the canvas, not "
+        f"padded or passed through: {filt}")
+    out = tmp_path / "vertical_captioned.mp4"
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(source), "-t", "1", "-vf", f"{filt},{subs}",
+         "-c:v", "libx264", "-pix_fmt", "yuv420p", str(out)],
+        check=True, capture_output=True)
+    pw, ph, sar_w, sar_h = _probe_geometry(out)
+    assert (pw, ph) == (PLAYRES_X, PLAYRES_Y), (
+        f"the low-resolution source must be scaled into the caption canvas, "
+        f"got {pw}x{ph} -- a smaller frame scales the cue down with it")
+
+    cap = cv2.VideoCapture(str(out))
+    ok, frame = cap.read()
+    cap.release()
+    assert ok, "no frame decoded from the captioned reframe"
+    grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    ys, xs = np.where(grey > 40)
+    assert len(xs), "the shipped cue is not visible on the delivered frame"
+    delivered = ys.max() - ys.min() + 1
+    # A bright pixel count near the frame area would mean the source's own
+    # content was measured instead of the cue.
+    assert len(xs) < 0.25 * pw * ph, (
+        f"{len(xs)} bright pixels on a {pw}x{ph} frame -- the measurement is "
+        "not of the cue alone, and the size it reports is not the cue's size")
+    assert abs(delivered - authored) <= 2, (
+        f"the cue renders at {delivered} px on the delivered frame against "
+        f"{authored} px on the canvas it was authored for -- subtitles are "
+        "composited at the final delivery scale, not at a fraction of it")
 
 
 def test_a_source_already_narrower_than_9_16_is_not_dropped(tmp_path):

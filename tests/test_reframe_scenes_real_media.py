@@ -175,6 +175,13 @@ def test_false_background_slide_stays_one_coherent_vertical_crop(tmp_path):
     become two source crops stacked with vstack. Pin the scene that triggered
     the shipped artifact: it must remain a single tracked crop through actual
     vertical rendering.
+
+    The delivered size is the caption canvas (1080x1920) rather than the crop's
+    own 608 px: ``scene_filter`` raises a low-resolution crop to the canvas the
+    burned-in ASS is laid out on, because libass scales that layout onto the
+    frame it is burned on and a 608x1080 frame would carry the cues at 56% of
+    their authored size. The source-space crop is unchanged -- the tracking
+    window is still the one the geometry found -- it is scaled up to deliver.
     """
     start, end = 0.3, 8.3
     segments, _slides, _w, _h = analyse_scene(
@@ -192,4 +199,6 @@ def test_false_background_slide_stays_one_coherent_vertical_crop(tmp_path):
         ["ffprobe", "-v", "error", "-select_streams", "v:0",
          "-show_entries", "stream=width,height", "-of", "csv=p=0",
          str(clip)], check=True, capture_output=True, text=True)
-    assert result.stdout.strip() == "608,1080"
+    assert result.stdout.strip() == "1080,1920", (
+        "a composed vertical scene delivers on the caption canvas, not at the "
+        "source crop's own resolution")

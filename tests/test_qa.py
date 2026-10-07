@@ -71,6 +71,46 @@ def test_validate_orientation():
         assert ok
 
 
+def _anamorphic_vertical(out: Path) -> Path:
+    """A vertical frame whose pixels are wider than they are tall: 1080x1706 at
+    SAR 8:9 displays as exactly 9:16, 1920 lines tall, in fewer pixels.
+
+    This is the real geometry an NTSC-derived source delivers through
+    ``vertical_scale_filter``, and it is the case a pixel-height floor gets
+    wrong: 1706 < 1920 is true and the frame is still the canvas.
+    """
+    out.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        ["ffmpeg", "-y", "-v", "error", "-f", "lavfi",
+         "-i", "color=c=blue:s=1080x1706:d=1.0",
+         "-f", "lavfi", "-i", "sine=frequency=440:duration=1.0",
+         "-vf", "setsar=8/9",
+         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28",
+         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "64k",
+         "-shortest", str(out)],
+        check=True, capture_output=True)
+    return out
+
+
+def test_the_height_floor_is_judged_in_display_space():
+    """The delivery floor is how tall the frame *displays*, not how many pixels
+    it stores, because the burned-in cue scales with the displayed size."""
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        canvas = _anamorphic_vertical(td / "anamorphic.mp4")
+        ok, errors = validate_output(canvas, vertical=True, min_height=1920)
+        assert ok, (
+            f"an anamorphic frame that displays 1920 lines failed the 1920-line "
+            f"floor: {errors}")
+
+        # The floor still rejects a frame that genuinely displays short: the
+        # old 720-line delivery, which shipped cues at a sixth of their size.
+        short = td / "short.mp4"
+        _lavfi_video(short, size="406x720", tone=None)
+        ok, errors = validate_output(short, vertical=True, min_height=1920)
+        assert not ok and any("delivery height" in e for e in errors), errors
+
+
 def test_validate_outputs_gathers_missing():
     with tempfile.TemporaryDirectory() as td:
         missing = Path(td) / "nope.mp4"

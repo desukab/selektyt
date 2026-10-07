@@ -87,10 +87,14 @@ def test_render_horizontal_clip(tmp_path):
     # source gets pillarboxed rather than stretched or cropped.
     sar_w, sar_h = (int(p) for p in sar.split(":"))
     assert (w * sar_w) / (h * sar_h) == pytest.approx(16 / 9, abs=0.02)
-    # Low-resolution sources are deliberately delivered at a 720-line frame so
-    # burned captions have a useful pixel canvas. The source picture itself is
-    # still scaled proportionally inside that frame.
-    assert h == 720, f"low-resolution landscape delivery must be 720p, got {w}x{h}"
+    # Low-resolution sources are deliberately delivered on the caption canvas
+    # (1920x1080 landscape) so the burned cues render at the size their ASS was
+    # authored for: libass scales that layout onto the frame, so a shorter frame
+    # ships proportionally smaller text. The source picture itself is still
+    # scaled proportionally inside that frame.
+    assert h == 1080, (
+        f"low-resolution landscape delivery must be the caption canvas, "
+        f"got {w}x{h}")
     # no leftover part directories on the single-interval path
     assert not (tmp_path / "fb" / ".01_parts").exists()
 
@@ -639,6 +643,116 @@ def test_the_burned_captions_survive_the_vertical_crop(tmp_path):
         f"ink appears at row {ys.min()} of {h} on the vertical render, above "
         f"the caption band"
     )
+
+
+def test_the_aligned_ass_keeps_the_cues_and_only_the_canvas(tmp_path):
+    """The burn's canvas copy is header-only: cues, timings and tags are the
+    shipped document's, so an editor's hand on the ASS reaches both orientations
+    unchanged, and a document already on its canvas is burned as shipped."""
+    from engine.render import _aligned_ass
+
+    shipped = tmp_path / "captions" / "01.ass"
+    shipped.parent.mkdir(parents=True)
+    shipped.write_text(
+        "[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\n"
+        "ScaledBorderAndShadow: yes\n\n[V4+ Styles]\n"
+        "Style: Default,Fredoka,54,&H00FFFFFF\n\n[Events]\n"
+        "Dialogue: 0,0:00:00.10,0:00:01.40,Default,,0,0,0,,hello \\Nworld\n",
+        encoding="utf-8")
+
+    # A document already declaring the burn's canvas is passed through untouched,
+    # so the vertical burn reads the shipped file and leaves nothing behind.
+    same = _aligned_ass(shipped, (1080, 1920))
+    assert same == shipped, "an ASS already on the canvas is burned as shipped"
+
+    realigned = _aligned_ass(shipped, (1920, 1080))
+    assert realigned != shipped, "a mismatched canvas needs a realigned copy"
+    assert realigned.parent == shipped.parent
+    orig = shipped.read_text(encoding="utf-8").splitlines()
+    new = realigned.read_text(encoding="utf-8").splitlines()
+    assert len(orig) == len(new), (
+        "the realigned document must not add or drop lines")
+    changed = [(a, b) for a, b in zip(orig, new) if a != b]
+    assert [a for a, _ in changed] == ["PlayResX: 1080", "PlayResY: 1920"], (
+        f"only the PlayRes lines may change; saw {changed}")
+    assert [b for _, b in changed] == ["PlayResX: 1920", "PlayResY: 1080"], (
+        f"the canvas must be realigned to the frame's; saw {changed}")
+    assert realigned.read_text(encoding="utf-8").count("Dialogue:") == 1, (
+        "the cue and its tags are carried verbatim")
+
+    # The shipped document is the master: realigning a copy never rewrites it.
+    assert shipped.read_text(encoding="utf-8").startswith(
+        "[Script Info]\nScriptType: v4.00+\nPlayResX: 1080\nPlayResY: 1920\n"), (
+        "the shipped ASS was rewritten by the burn's realignment")
+
+
+def test_the_burned_caption_meets_the_frames_own_canvas_in_both_orientations(
+        tmp_path):
+    """The cue has to render at the size its ASS declares on the delivered
+    frame, in either orientation.
+
+    libass fits the layout the ASS declares in ``PlayResX``/``PlayResY`` into the
+    frame it is burned on, scaling uniformly to fit. The shipped document
+    declares a portrait canvas, and one clip is rendered both ways from that one
+    document, so without alignment a landscape burn fits a 1080x1920 layout into
+    a 1920x1080 frame and every cue comes out at 9/16 of its authored height --
+    26 px where the canvas renders 46 (measured). The render realigns the *burn's*
+    copy, not the shipped document, so the editor's file is untouched.
+
+    The two canvases are the same screen rotated, so the invariant is the cue's
+    *absolute* height: a viewer holding the phone either way sees the same
+    physical caption. Its share of the frame height legitimately differs, because
+    a landscape frame is 1080 lines and a portrait one is 1920.
+    """
+    from engine.reframe import LANDSCAPE_DELIVERY, VERTICAL_DELIVERY
+
+    source = _flat_source(tmp_path / "source.mp4")
+    c = _candidate_with_words(0.0, 1.5)
+    ass = ass_for_candidate(c, tmp_path / "captions" / "01.ass")
+
+    def ink_height(vertical: bool) -> tuple[int, int, int]:
+        label = "vertical" if vertical else "landscape"
+        control, _ = _frames(
+            render_clip(source, c, tmp_path / f"ctrl_{label}.mp4",
+                        vertical=vertical))
+        burned, (w, h) = _frames(
+            render_clip(source, c, tmp_path / f"burn_{label}.mp4", ass=ass,
+                        vertical=vertical))
+        ys, _ = _ink_mask(burned, control)
+        assert ys.size, (
+            f"the {label} render is pixel-identical with and without captions")
+        canvas = VERTICAL_DELIVERY if vertical else LANDSCAPE_DELIVERY
+        assert (w, h) == canvas, (
+            f"the {label} deliverable is {w}x{h}, not its delivery canvas "
+            f"{canvas[0]}x{canvas[1]}")
+        return ys.max() - ys.min() + 1, w, h
+
+    vert_h, vert_w, vert_fh = ink_height(True)
+    land_h, land_w, land_fh = ink_height(False)
+
+    for label, height, frame_h in (("vertical", vert_h, vert_fh),
+                                   ("landscape", land_h, land_fh)):
+        assert height / frame_h > 0.015, (
+            f"the {label} cue is {100 * height / frame_h:.2f}% of the frame "
+            "height, below the layout the ASS declares -- the burn is not on "
+            "its own canvas")
+
+    # The cue is the same physical size either way up. Tolerance is for
+    # rasterisation: the two canvases lay the same glyphs out at the same font
+    # size, but hinting to a different pixel grid does not land bit-identically.
+    ratio = land_h / vert_h
+    assert 0.9 < ratio < 1.1, (
+        f"the cue is {vert_h} px on a vertical frame and {land_h} px on a "
+        f"landscape one (ratio {ratio:.3f}); the two canvases are the same "
+        "screen rotated, so a cue that changes size between them is being "
+        "fitted into a frame of the wrong shape")
+
+    # The shipped document is the package's master and the burn does not leave
+    # its realigned copies beside it.
+    leftovers = [p.name for p in ass.parent.iterdir() if p.name.startswith(".")]
+    assert not leftovers, (
+        f"the burn left canvas-aligned copies beside the shipped document: "
+        f"{sorted(leftovers)}")
 
 
 def test_an_absent_ass_produces_no_ink(tmp_path):

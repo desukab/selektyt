@@ -1149,9 +1149,9 @@ class TestRenderedOutputKeepsTheSpeaker:
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
         w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
         h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
-        assert (w, h) == (406, 722), (
-            f"encoded geometry {(w, h)} -- expected 406x722, the exact 9:16 "
-            f"frame the reframe builds from this 720-high source"
+        assert (w, h) == (1080, 1920), (
+            f"encoded geometry {(w, h)} -- expected 1080x1920, the caption "
+            f"canvas the reframe scales this 720-high source into"
         )
         assert total > 600, f"only {total} frames encoded; the clip is ~884"
 

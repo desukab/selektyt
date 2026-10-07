@@ -9,7 +9,8 @@ from typing import Callable
 
 from engine.captions import slice_ass
 from engine.edit_plan import retention_intervals
-from engine.reframe import landscape_filter, vertical_reframe_filter
+from engine.reframe import (LANDSCAPE_DELIVERY, VERTICAL_DELIVERY, landscape_filter,
+                            vertical_reframe_filter)
 from engine.reframe_scenes import is_composed
 from models.core import Candidate
 
@@ -305,18 +306,22 @@ def _encoder_args() -> list[str]:
     of the wall clock is 55% faster, not 35% -- and the paragraph above stated
     the smaller number until 2026-09-28 for exactly that reason.
 
-    The resolution is *not* a lever here: a 9:16 crop of a 16:9 source is 406 px
-    wide at 720 tall by arithmetic. Pre-upscaling that to 1080x1920 before the
-    encoder was measured to be genuinely *better* at that display size on this
+    The resolution is a delivery contract, not a lever: the frame has to be the
+    canvas the burned-in captions are laid out on (1080x1920 vertical,
+    1920x1080 landscape, ``engine.reframe.VERTICAL_DELIVERY``), because libass
+    scales the ASS layout onto the frame it is burned on -- the same cue
+    measures 492x42 px at 1080x1920 and 185x16 px at 406x720. An earlier
+    revision deliberately kept the source-preserving crop and let the player do
+    that upscale, measuring the trade: pre-upscaling a 406x722 crop to 1080x1920
+    before the encoder was genuinely *better* at that display size on this
     footage (PSNR 50.101 vs 47.347 dB, both compared at 1080x1920 against the
-    same lossless reference) -- but at 4266 kbps against 932 kbps and 5.1x the
-    wall clock, for +2.75 dB. The pipeline ships the source-preserving crop and
-    lets the player do that upscale for free; the encoder spend above is where
-    the same perceptual budget buys far more.
-    ``corpus/render/runs/pentagon-240f-upscaled.json`` is the record. This is a
-    cost decision rather than a free win, and it is recorded here because the
-    opposite was once believed from a synthetic bench source that was later
-    overwritten.
+    same lossless reference) at 4266 kbps against 932 kbps and 5.1x the wall
+    clock, for +2.75 dB. That is a real cost and it is still paid; what changed
+    is that the alternative is not "the player upscales for free" but "the
+    deliverable's captions are 16 px tall". The delivery canvas is the floor
+    because the captions are unusable below it, not because the pixels are free.
+    ``corpus/render/runs/pentagon-240f-upscaled.json`` is the record of the
+    cost side, and it stays accurate as the cost side.
     """
     # yuv420p is the only plan every player and every platform accepts. ffmpeg
     # picks it for most sources anyway, but a 4:2:2 or 4:4:4 master (common for
@@ -325,13 +330,61 @@ def _encoder_args() -> list[str]:
     return ["-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p"]
 
 
+def _aligned_ass(ass: Path, canvas: tuple[int, int]) -> Path:
+    """The ASS to burn, with its declared canvas aligned to the frame.
+
+    libass fits the layout the ASS declares in ``PlayResX``/``PlayResY`` into the
+    frame it is burned on, scaling uniformly to fit, so a document authored for a
+    1080x1920 canvas and burned onto a 1920x1080 frame renders every cue at 9/16
+    of its designed size -- the portrait layout is fitted into a landscape frame,
+    and the cues come out 22 px tall where they were authored at 40 (measured).
+    The same document serves both orientations because one clip is rendered both
+    ways, so the burn adapts a copy's header instead of the package's document:
+    cues, timings and tags are copied verbatim, and the shipped ASS stays the
+    editor's hand-edited file.
+
+    The canvas asked for is the frame's *display* canvas rather than its pixel
+    buffer: an anamorphic frame is fewer pixels but still displays 9:16, and the
+    uniform scale keeps the cues' relative positions and sizes as authored.
+    """
+    text = ass.read_text(encoding="utf-8")
+    have = {}
+    for line in text.splitlines():
+        for key, name in (("x", "PlayResX"), ("y", "PlayResY")):
+            if line.startswith(f"{name}:"):
+                try:
+                    have[key] = int(line.split(":", 1)[1].strip())
+                except ValueError:
+                    pass
+    if have.get("x") == canvas[0] and have.get("y") == canvas[1]:
+        return ass
+    if have.get("x") and have.get("y"):
+        # Rewriting a header the document does not declare would invent a canvas
+        # it was never laid out against, so only an ASS that states one is
+        # realigned.
+        rewritten = []
+        for line in text.splitlines(keepends=True):
+            if line.startswith("PlayResX:"):
+                line = f"PlayResX: {canvas[0]}\n"
+            elif line.startswith("PlayResY:"):
+                line = f"PlayResY: {canvas[1]}\n"
+            rewritten.append(line)
+        text = "".join(rewritten)
+    out = ass.parent / f".{ass.stem}.canvas{canvas[0]}x{canvas[1]}.ass"
+    out.write_text(text, encoding="utf-8")
+    return out
+
+
 def _subtitle_terms(ass: Path | None) -> list[str]:
     """The ffmpeg filter terms that burn an ASS into the chain, or none.
 
     The escaping is load-bearing and easy to get wrong, so it lives in one place
     and is shared by the render and by the benchmark that records the filter the
     render actually used: a record whose graph omits the subtitles a deliverable
-    carries is not reproducible from the record.
+    carries is not reproducible from the record. The caller passes the document
+    to burn -- for the render that is the canvas-aligned copy from
+    :func:`_aligned_ass`, so the record names the shipped ASS and the burn reads
+    the same cues at the frame's own canvas.
     """
     if not ass:
         return []
@@ -364,7 +417,14 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
         # 16:9, and nothing in the pipeline would ever notice.
         vf.append(landscape_filter(source))
     frames, span = _frame_count(start, end, fps)
-    sub = _subtitle_terms(ass)
+    # The burned ASS is laid out on the canvas the delivered frame displays as,
+    # because libass scales that layout to the frame: a mismatched canvas ships
+    # the cues at a fraction of their authored size. ``_aligned_ass`` copies the
+    # document only when its declared canvas disagrees, so a matching ASS is
+    # burned as shipped and nothing is left to clean up.
+    canvas = VERTICAL_DELIVERY if vertical else LANDSCAPE_DELIVERY
+    burn_ass = _aligned_ass(ass, canvas) if ass else None
+    sub = _subtitle_terms(burn_ass)
     if vertical:
         # The complete 9:16 reframe: a tracked crop, then a scale onto a frame
         # whose display ratio is 9:16 by construction. Scaling by width with an
@@ -405,11 +465,19 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
     # audio throughout. An output-side deliverable with no sound is not a
     # warning-grade problem, so fall back to output seeking, which decodes and
     # discards and therefore cannot drop a stream.
-    subprocess.run(["ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", str(source), *common],
-                   check=True)
-    if _audio_is_unusable(out) and _has_audio(source):
-        subprocess.run(["ffmpeg", "-y", "-i", str(source), "-ss", f"{start:.3f}", *common],
+    try:
+        subprocess.run(["ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", str(source), *common],
                        check=True)
+        if _audio_is_unusable(out) and _has_audio(source):
+            subprocess.run(["ffmpeg", "-y", "-i", str(source), "-ss", f"{start:.3f}", *common],
+                           check=True)
+    finally:
+        # The canvas-aligned copy is burn-local: the shipped ASS is the package's
+        # document and stays beside the deliverable, so the copy goes once the
+        # part that needed it exists -- including when the encode failed and the
+        # part never did, or a retry would find a stale header beside the master.
+        if burn_ass is not None and burn_ass != ass:
+            burn_ass.unlink(missing_ok=True)
 
 
 def concat_renders(

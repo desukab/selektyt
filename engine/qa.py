@@ -272,10 +272,6 @@ def validate_output(path: Path, vertical: bool, *,
                 errors.append(f"expected vertical video, got {w}x{h}")
             if not vertical and not w > h:
                 errors.append(f"expected landscape video, got {w}x{h}")
-            if min_height is not None and h < min_height:
-                errors.append(
-                    f"expected delivery height >= {min_height}px, got {w}x{h}"
-                )
             # The display aspect, not the pixel count, is the contract: a 9:16
             # *pixel* count is only 9:16 for square pixels, and an anamorphic
             # source inherits a sample aspect ratio that makes a correct-looking
@@ -283,6 +279,22 @@ def validate_output(path: Path, vertical: bool, *,
             # landscape deliverable shipped at DAR 320:243 — 4:3 — labelled 16:9,
             # and nothing else in the pipeline would have noticed.
             dar = _display_aspect(video)
+            if min_height is not None:
+                # The floor is a display height, so the pixel count is compared
+                # through the same aspect: an anamorphic vertical frame is
+                # 1080x1706 and displays as 1920 lines, and judging it on its
+                # pixel height would reject an exactly-9:16 deliverable and
+                # re-render it on every run. The slack matches the DAR gate's
+                # own 1%, which is how much even rounding and a non-1:1 SAR can
+                # legitimately move the canvas -- 1% of a 42 px cue is half a
+                # pixel, and the floor exists to stop 6x shortfalls, not
+                # rounding.
+                shown = (w / dar) if dar else h
+                if shown < min_height * 0.99:
+                    errors.append(
+                        f"expected delivery height >= {min_height}px displayed, "
+                        f"got {w}x{h}"
+                    )
             if dar:
                 want = 9 / 16 if vertical else 16 / 9
                 if abs(dar - want) / want > 0.01:

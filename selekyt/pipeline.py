@@ -318,11 +318,18 @@ def _render_is_valid(path: Path, *, vertical: bool, source: Path | None = None) 
     guard but would re-render a genuinely video-only source on every run.
     """
     from engine.qa import validate_output
+    from engine.reframe import LANDSCAPE_DELIVERY, VERTICAL_DELIVERY
 
     if not path.is_file() or path.stat().st_size < 1000:
         return False
     try:
-        ok, _errors = validate_output(path, vertical, source=source, min_height=720)
+        # The floor is the caption canvas, not a height that looked acceptable:
+        # the burned-in ASS is laid out at this size and libass scales it onto
+        # the frame, so a shorter deliverable carries proportionally smaller
+        # text and QA's own gate would be certifying unreadable captions.
+        min_height = (VERTICAL_DELIVERY if vertical else LANDSCAPE_DELIVERY)[1]
+        ok, _errors = validate_output(path, vertical, source=source,
+                                      min_height=min_height)
     except Exception:
         return False
     return ok
