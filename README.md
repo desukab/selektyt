@@ -32,8 +32,8 @@ You don't have to learn video editing before you can get something good out of a
 
 SeleKyT is built around the things a person actually wants to say:
 
-- **Make me a Short** — find one coherent, publishable story instead of stitching together random highlights.
-- **Make me a Story** — turn a long recording into a tighter narrative with a beginning, development, and payoff.
+- **Make me a Short** — find one coherent, publishable short-form story instead of stitching together random highlights.
+- **Make me a Story** — turn a long recording into the strongest coherent narrative, with a beginning, development, and payoff.
 - **Find the Highlights** — return multiple strong moments when you want options.
 - **Keep the context** — don't sacrifice the meaning of a moment just because an isolated sentence scores well.
 - **Give me something editable** — you get the rendered videos *and* the underlying edit decisions, captions, provenance, and timelines.
@@ -68,11 +68,11 @@ Then:
 ```bash
 selekyt --doctor              # check the local processing environment
 selekyt ./my-video.mp4        # find multiple strong highlights
-selekyt ./my-video.mp4 --make short   # make one ~60s short
-selekyt ./my-video.mp4 --make story   # make one ~3min story
+selekyt ./my-video.mp4 --make short   # make the strongest short-form story
+selekyt ./my-video.mp4 --make story   # make the strongest complete story
 ```
 
-You can start with a simple goal instead of learning editorial settings. SeleKyT uses the same underlying evidence and story understanding, but changes the composition target to match what you asked for.
+You can start with a simple goal instead of learning editorial settings. SeleKyT uses the same underlying evidence and story understanding, then decides how much material the result actually needs. **Short** describes the format, not a fixed duration.
 
 The same workflow can be started without the optional `analyze` verb:
 
