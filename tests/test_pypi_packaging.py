@@ -79,6 +79,27 @@ def test_the_cli_imports_on_a_base_install(module, monkeypatch):
     module and re-importing is what reproduces the clean-install state.
     """
     monkeypatch.setitem(sys.modules, "requests", None)
+    # Snapshot every SelekyT module the process already holds, and put the same
+    # objects back at teardown. Deleting the entry is what forces the
+    # re-execution — but the re-import leaves a *different* object behind in two
+    # places at once, and both have to be undone or the simulation leaks.
+    #
+    # ``sys.modules[name]`` is the obvious one. The other is the attribute the
+    # import machinery sets on the parent package: importing ``selekyt.cli``
+    # binds ``selekyt.cli`` on the ``selekyt`` module object too, and the
+    # re-import overwrote it with the fresh copy. Restoring only ``sys.modules``
+    # left the two out of sync, so a later test's
+    # ``monkeypatch.setattr("selekyt.cli.run", ...)`` resolved through one and
+    # ``cli_mod.main()`` — bound at collection by ``from selekyt import cli`` —
+    # called through the other. The stub never reached the call, the real
+    # pipeline ran, and six unrelated CLI tests failed on a placeholder source.
+    originals = {name: mod for name, mod in sys.modules.items()
+                 if name == "selekyt" or name.startswith("selekyt.")}
+    for name, mod in originals.items():
+        monkeypatch.setitem(sys.modules, name, mod)
+        parent, _, attr = name.rpartition(".")
+        if parent in sys.modules:
+            monkeypatch.setattr(sys.modules[parent], attr, mod, raising=False)
     # Drop any cached copy so the module body actually re-executes.
     for name in list(sys.modules):
         if name == module or name.startswith(module + "."):

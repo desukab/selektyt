@@ -265,6 +265,27 @@ def test_module_entry_runs_the_cli(monkeypatch, tmp_path):
     assert callable(rc)
 
 
+def test_the_cli_module_a_patch_targets_is_the_one_main_runs_on():
+    """A test that re-imports ``selekyt.cli`` to simulate a missing optional
+    dependency leaves a second module object behind unless it restores the
+    parent-package attribute too.
+
+    ``from selekyt import cli as cli_mod`` binds the object this module holds,
+    while ``monkeypatch.setattr("selekyt.cli.run", ...)`` resolves through
+    whatever the import machinery last bound. When those two diverge, the stub
+    lands on an object ``main`` never calls and the real pipeline runs instead —
+    which is why six tests here failed only when the packaging module ran first.
+    Asserting identity is the whole fix, so it is what gets pinned.
+    """
+    import importlib
+
+    import selekyt
+
+    assert cli_mod is sys.modules["selekyt.cli"]
+    assert cli_mod is getattr(selekyt, "cli")
+    assert cli_mod is importlib.import_module("selekyt.cli")
+
+
 # ── failure reporting: a normal user error is a diagnosis, not a repr ────────
 
 
