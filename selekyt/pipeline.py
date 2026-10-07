@@ -1348,7 +1348,11 @@ def run(
         # penalises unnecessary moments and searches all lengths up to the
         # bounded ceiling, so runtime is an outcome rather than a target.
         story_max_moments = max(10, min(24, 8 + math.ceil(math.log2(max(1, len(passed))))))
-        target_seconds = {"short": 60.0, "story": 180.0, "highlights": None}[make]
+        # Consumer goals describe the shape of the result, not a runtime cap.
+        # A short should be as short as the story can honestly be; a story may
+        # need more time when the source needs setup or payoff. The composer
+        # decides from narrative evidence and its existing complexity penalty.
+        target_seconds = None
         story_variants = compose_story_variants(
             passed,
             corpus=corpus_report,
