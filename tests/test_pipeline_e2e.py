@@ -921,18 +921,30 @@ def long_media(tmp_path: Path) -> Path:
     return _synthetic_video(tmp_path / "source" / "long.mp4", seconds=200.0)
 
 
-@pytest.mark.parametrize("make,expected", [("short", 60.0), ("story", 180.0)])
-def test_make_shapes_the_story_the_composer_chooses(
-        monkeypatch, tmp_path, long_media, make, expected):
-    """``--make`` has to change what ships.
+def test_make_goals_reach_the_composer_on_a_multi_minute_source(
+        monkeypatch, tmp_path, long_media):
+    """``--make`` reaches the composer, on a source long enough to matter.
 
-    The argument was validated and then read nowhere: a commit decoupled it
-    from the runtime caps it used to set and left it dangling, so the CLI
-    advertised "~60s short, ~3min story" while every run composed to the same
-    goal regardless of which was asked for. The composer's duration term is a
-    preference rather than a cap -- a bonus inside 0.70-1.15 of the target and
-    small penalties far outside it -- so the goal is restored as one, and a
-    source that genuinely needs longer still takes it.
+    The two-story fixture tops out at 28 s, so nothing above ~30 s was ever
+    composed or rendered here. ``_long_transcript`` is three minutes of speech,
+    and this test is what exercises the whole path -- discovery, composition,
+    real renders, the program reel -- at a length the duration goals can even
+    reach. That alone surfaced a real bug: the transcript span has to fit the
+    source, or the scene analysis decodes past the end of the file and the run
+    dies in the reframe stage with ``UnreadableSource``.
+
+    The goals are observable in the composer's *scoring* but not yet in its
+    *choice*. Measured on this source, every construction style converges on
+    the same 115.1 s program, so the duration term shifts every variant by the
+    same amount and can never reorder them: ``make=short`` penalises that
+    program for overshooting (115.1 s is 1.9x the 60 s target, past the term's
+    1.80 threshold, so it scores 0.08 lower) while ``make=story`` and the
+    goal-less ``make=highlights`` score it identically, 115.1 s sitting at 0.64
+    of the 180 s target where the term adds nothing. The score comparison is
+    therefore the assertion that fails if ``target_seconds`` is set back to
+    None -- the three runs would then be indistinguishable -- and the span
+    comparison below it is a tripwire that fails the day the term becomes
+    strong enough to actually shape the program.
     """
     import selekyt.pipeline as p
 
@@ -949,46 +961,56 @@ def test_make_shapes_the_story_the_composer_chooses(
         }),
     )
 
-    project = p.run("https://example.com/v", tmp_path, model="small",
-                    limit=6, make=make)
-    variants = json.loads((project / "story_variants.json").read_text())
-    assert variants, "the composer must find a construction to score"
-    duration = variants[0]["duration"]
+    chosen = {}
+    for make in ("short", "story", "highlights"):
+        project = p.run("https://example.com/v", tmp_path / make,
+                        model="small", limit=6, make=make)
+        variants = json.loads((project / "story_variants.json").read_text())
+        assert variants, f"make={make} composed no construction at all"
+        # A multi-moment story is what the goals are meant to be choosing
+        # between; a single moment would mean the pool collapsed and the
+        # comparisons below would be between degenerate outputs.
+        assert variants[0]["moments"] >= 2, \
+            f"make={make} composed one moment, so no goal has anything to score"
+        chosen[make] = variants[0]
 
-    # A preference, not a cap: the bonus band is 0.70-1.15 of the target and
-    # overshooting costs far less than undershooting, so only the floor is
-    # pinned. Asserting an exact runtime would reintroduce the cap the
-    # decoupling deliberately removed.
-    assert duration >= expected * 0.30, (
-        f"make={make} shipped at {duration:.1f}s, far shorter than its "
-        f"{expected:.0f}s goal; the duration term is not pulling the "
-        f"construction toward the requested shape")
+        # The reason the long source is here at all: the program renders, QA
+        # passes and the reel assembles at a length the 32 s fixture cannot
+        # reach.
+        report = json.loads((project / "report.json").read_text())
+        assert report["program_count"] == variants[0]["moments"]
+        assert report["program"] is not None, "the program reel did not assemble"
+        assert (project / "facebook" / "program.mp4").is_file()
 
+    # The goal reaches the composer's scoring. The construction is 115.1 s,
+    # which overshoots the 60 s target past the term's penalty threshold, so
+    # make=short scores it below the goals that leave it alone. This is the
+    # assertion that fails without the fix: with target_seconds None for every
+    # make the three scores are identical, because the duration term is the
+    # only input that differs between these runs.
+    assert chosen["short"]["score"] < chosen["story"]["score"], (
+        f"make=short scores the construction {chosen['short']['score']} "
+        f"against make=story's {chosen['story']['score']}, so the duration "
+        "goal is not reaching the composer's scoring")
+    # And the control: 115.1 s sits at 0.64 of the 180 s story target, inside
+    # the band where the term adds nothing, so make=story scores it exactly as
+    # the goal-less make=highlights does. A duration goal that also applied to
+    # highlights would not be a per-format goal.
+    assert chosen["story"]["score"] == chosen["highlights"]["score"], (
+        f"make=story scores the construction {chosen['story']['score']} "
+        f"against make=highlights' {chosen['highlights']['score']}, so the "
+        "story goal is applying a term the goal-less control should not have")
 
-def test_make_highlights_does_not_pin_a_duration(monkeypatch, tmp_path, long_media):
-    """``--make highlights`` asks for no particular runtime, so nothing pins
-    one: the composer scores length only by narrative evidence. This is the
-    control on the two tests above -- a duration goal that also applied to
-    ``highlights`` would not be a per-format goal at all."""
-    import selekyt.pipeline as p
-
-    monkeypatch.setattr(
-        p, "download",
-        lambda source, dest, cookies=None: (long_media, {"title": "synthetic clip"}),
-    )
-    monkeypatch.setattr(
-        p, "transcribe_auto",
-        lambda media, **kw: (_long_transcript(), "en", {
-            "engine": "test", "requested_model": "small", "model": "small",
-            "downgrade_reason": None, "word_timestamps": "test",
-            "fallback_reason": None, "provider": "local",
-        }),
-    )
-    project = p.run("https://example.com/v", tmp_path, model="small",
-                    limit=6, make="highlights")
-    variants = json.loads((project / "story_variants.json").read_text())
-    assert variants
-    assert variants[0]["duration"] > 0.0
+    # Tripwire, not a contract: the goals score the program differently but
+    # still ship the same one, because every construction style converges on
+    # the same duration. The day this term reorders the variants, delete this
+    # assertion and test the shaping itself.
+    assert chosen["short"]["source_spans"] == chosen["story"]["source_spans"], (
+        "make=short now composes a different program from make=story, so the "
+        "duration term discriminates between constructions: replace this "
+        "identity with an assertion of the shaping it produces "
+        f"(short={chosen['short']['duration']}s, "
+        f"story={chosen['story']['duration']}s)")
 
 
 def test_a_failed_stage_reports_itself_before_raising(
