@@ -645,17 +645,18 @@ def _layout_chains(seg: SceneSegment, src_w: int, src_h: int, sar_w: int,
                 src_w, src_h, out_w, bottom_h,
                 (seg.slide.x, seg.slide.y, seg.slide.w, seg.slide.h),
             )
-            # The split is a single filter chain after the source split. Both
-            # bands are pixel-compatible before vstack; SAR is applied once to
-            # the finished frame so anamorphic sources retain their display
-            # geometry.
+            # The split is a small labelled subgraph inside the enclosing
+            # composition. Its final pad must carry the caller's output label;
+            # otherwise the outer xfade graph has nothing to consume.
+            tail_label = f"[{out_label}]" if out_label is not None else ""
             return [
                 f"{src}{pre}split=2[sp][sl];"
                 f"[sp]crop={sbw}:{sbh}:x='{sbx:.0f}':y='{sby:.0f}',"
                 f"{_scale_to(out_w, top_h)}[spv];"
                 f"[sl]crop={dbw}:{dbh}:x='{dbx:.0f}':y='{dby:.0f}',"
                 f"{_scale_to(out_w, bottom_h)}[slv];"
-                f"[spv][slv]vstack=inputs=2,{_set_sar(sar_w, sar_h)}{tail}"
+                f"[spv][slv]vstack=inputs=2,{_set_sar(sar_w, sar_h)}"
+                f"{(',' + ','.join(tail)) if tail else ''}{tail_label}"
             ]
         # If perception loses either region, retain the old safe tracked crop.
         x_expr = _x_expression(src_w, crop_w, track_pts)
