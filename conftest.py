@@ -43,6 +43,50 @@ _GAP_S = 0.8
 _SEED = 1234
 
 
+@pytest.fixture(autouse=True, scope="session")
+def _isolate_selekyt_settings(tmp_path_factory):
+    """Point SeleKyT's persistent transcription settings at a throwaway file.
+
+    ``settings_path`` resolves to the user's real per-machine config, which
+    ``configure-transcription`` writes -- a developer who set up a cloud
+    provider has ``transcription_provider`` saved there, and a key in its
+    ``api_keys``. Every test that drives the pipeline without naming a provider
+    inherits that preference, because ``run`` reads it to decide which engine
+    to start. So the same suite is green on a clean CI machine and red on the
+    machine of anyone who configured groq: tests that patch
+    ``transcribe_auto`` assume the default engine is local, a groq preference
+    routes through ``transcribe_cloud`` instead, the patch never applies, and
+    the run either reaches a real provider with a stale key or runs ffmpeg
+    against a stub media file.
+
+    Owning the resolution point here is what makes the suite independent of the
+    machine it runs on for this whole class, not just for the tests that
+    happened to remember. It also keeps the suite from overwriting a real
+    configuration: ``configure`` writes through ``settings_path``, and without
+    this a test exercising setup would be saving into the developer's own file.
+
+    Session scope, not function scope: the modules that run the whole pipeline
+    hold their project in a module-scoped fixture, and pytest sets a broader
+    scope up before a narrower one. A function-scoped isolation fixture runs
+    *after* the module-scoped project is already built, so the run read the
+    real settings file first, resolved provider=groq and left for the network
+    -- which surfaced as ten setup errors in one module rather than as a
+    settings test failing, because the whole module shares that one fixture.
+
+    Tests that need a specific file still win -- they monkeypatch the same
+    attribute after this fixture, and their own ``monkeypatch`` unwinds to the
+    scratch path this sets.
+    """
+    import selekyt.transcription_settings as transcription_settings
+
+    scratch = (tmp_path_factory.mktemp("selekyt-settings")
+               / "selekyt-settings.json")
+    mp = pytest.MonkeyPatch()
+    mp.setattr(transcription_settings, "settings_path", lambda: scratch)
+    yield scratch
+    mp.undo()
+
+
 @pytest.fixture(autouse=True)
 def _isolate_selekyt_env():
     """Restore every ``SELEKYT_*`` environment variable after each test.
