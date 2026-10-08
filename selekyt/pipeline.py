@@ -2162,6 +2162,21 @@ def run(
                 "style": story_plan.style,
                 "score": round(story_plan.score, 4),
                 "reasons": list(story_plan.reasons),
+                # ``--make`` is the one duration control the CLI exposes, and it
+                # is a goal rather than a cap, so what shipped can sit some way
+                # from it -- a source whose payoff needs longer takes the room,
+                # and a uniformly strong source is not truncated at all. Both
+                # numbers are what an editor needs to read the cut: the request
+                # alone is not enough to tell whether the composer honoured it,
+                # and the duration alone does not say what it was aiming for.
+                # ``None`` is the goal-less ``highlights`` make and is recorded
+                # as such rather than as a number, so a reader can tell an
+                # unbounded search from a 180 s one that happened to land short.
+                "make": make,
+                "target_seconds": target_seconds,
+                "duration": round(
+                    sum(max(0.0, c.end - c.start) for c in story_plan.candidates), 3),
+                "moments": len(story_plan.candidates),
             },
             # The bench: candidates that passed every gate and did not ship. They
             # lost to one of three things — the --limit budget, a selection-policy

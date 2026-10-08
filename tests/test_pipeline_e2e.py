@@ -397,6 +397,48 @@ def test_a_clip_on_the_bench_can_be_read_without_rerunning(patched_pipeline, tmp
     _ui_contract_against(project)
 
 
+def test_the_report_names_the_make_goal_and_the_duration_that_answered_it(
+        patched_pipeline, tmp_path, media):
+    """``--make`` is the one duration control the CLI exposes, and it is a goal
+    rather than a cap, so an editor reading the report has to be able to see
+    both what was asked for and what shipped. Either alone is unreadable: the
+    duration on its own does not say what it was aiming for, and the goal on its
+    own does not say whether the composer honoured it — a source whose payoff
+    needs longer takes the room, and a uniformly strong source is not truncated
+    at all, so the two are expected to differ.
+    """
+    project = patched_pipeline.run(
+        "https://example.com/v", tmp_path, model="small", limit=6, make="short",
+    )
+    composition = json.loads(
+        (project / "report.json").read_text())["story_composition"]
+
+    for key in ("make", "target_seconds", "duration", "moments"):
+        assert key in composition, f"story_composition is missing {key}"
+    assert composition["make"] == "short"
+    assert composition["target_seconds"] == 60.0
+    # The duration is the sum of the shipped moments' spans, which is the number
+    # the reel actually plays for. Recomputing it from the selections is what
+    # catches a copy of a stale or rounded figure.
+    selections = json.loads((project / "selections.json").read_text())
+    expected = round(sum(s["end"] - s["start"] for s in selections), 3)
+    assert composition["duration"] == expected, (
+        f"story_composition reports {composition['duration']}s but the shipped "
+        f"selections total {expected}s")
+
+    # The goal-less make records the absence as a null target rather than as a
+    # number, so a reader can tell an unbounded search from a bounded one that
+    # happened to land short.
+    project = patched_pipeline.run(
+        "https://example.com/v", tmp_path / "hl", model="small", limit=6,
+        make="highlights",
+    )
+    composition = json.loads(
+        (project / "report.json").read_text())["story_composition"]
+    assert composition["make"] == "highlights"
+    assert composition["target_seconds"] is None
+
+
 def test_audio_stage_reports_provenance_when_enabled(patched_pipeline, tmp_path, media):
     project = patched_pipeline.run(
         "https://example.com/v", tmp_path, model="small", limit=1,
