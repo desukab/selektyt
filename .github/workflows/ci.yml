@@ -223,6 +223,8 @@ jobs:
           /tmp/selekyt-clean/bin/selekyt --version
           /tmp/selekyt-clean/bin/selekyt --doctor
       - name: Run the real installed Silero regression suite
+        env:
+          SELEKYT_RELEASE_BUILD: "1"
         run: |
           cd /tmp
           /tmp/selekyt-clean/bin/python -m pytest "$GITHUB_WORKSPACE/tests/test_vad_silero.py" -q
