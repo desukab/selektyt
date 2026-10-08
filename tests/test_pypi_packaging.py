@@ -106,6 +106,23 @@ def test_llm_editorial_degrades_without_requests(monkeypatch):
     assert out.llm_metadata == {}
 
 
+def test_base_install_contains_every_default_runtime_dependency():
+    """Plain `pip install selekyt` is the product, not a shell of the product.
+
+    The default CLI is local transcription and the default output includes
+    independently readable timelines, so those runtime packages cannot live
+    behind extras. FFmpeg/ffprobe are also provisioned by static-ffmpeg.
+    """
+    base = _project()["project"]["dependencies"]
+    names = {req.split("[", 1)[0].split(";", 1)[0].split(">", 1)[0].split("=", 1)[0].split("<", 1)[0].strip() for req in base}
+    for required in (
+        "faster-whisper", "av", "onnxruntime", "pycmx",
+        "opentimelineio", "static-ffmpeg",
+    ):
+        assert required in names, f"{required} is missing from the base install"
+    assert not any(req.startswith("groq") for req in base)
+    assert not any(req.startswith("keyring") for req in base)
+
 def test_requests_is_not_a_base_dependency():
     """``requests`` belongs to the ``llm`` extra. If it appears in the base
     list, the extra is redundant; if it disappears from the extra, the LLM path
