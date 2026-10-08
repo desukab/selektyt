@@ -78,7 +78,14 @@ jobs:
         # tests/test_collapse_hub_cache.py asks to resolve a collapsed staged
         # cache offline — the check only means something against the real
         # library, so it stays installed here rather than skipping.
-        run: pip install -e ".[dev,llm,nle]"
+        # The source regression matrix deliberately keeps heavyweight runtime
+        # engines out of the test environment. Their clean-install contract is
+        # exercised separately by pypi-install below against the built wheel.
+        # This prevents optional-driver presence from silently turning historical
+        # environment-gated tests into a different suite.
+        run: |
+          pip install -e . --no-deps
+          pip install "pytest>=8" "pycmx>=1.5" "opentimelineio>=0.17.0" "pyyaml>=6" "huggingface_hub>=0.23" "requests>=2.31"
       - name: Node (for the web shell harness tests)
         run: node --version
       - name: Pytest
@@ -181,4 +188,7 @@ jobs:
           assert result.vad_model == "silero-v6"
           assert result.scores
           print("clean PyPI install: Silero VAD PASS")
+      - name: Exercise the real installed Silero regression suite
+        run: |
+          /tmp/selekyt-clean/bin/python -m pytest tests/test_vad_silero.py -q
           PY
