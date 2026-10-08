@@ -165,6 +165,7 @@ jobs:
           python -m venv /tmp/selekyt-clean
           /tmp/selekyt-clean/bin/python -m pip install --upgrade pip
           /tmp/selekyt-clean/bin/python -m pip install dist/selekyt-*.whl
+          /tmp/selekyt-clean/bin/python -m pip install "pytest>=8"
       - name: Exercise the installed product
         run: |
           /tmp/selekyt-clean/bin/selekyt --version
@@ -190,5 +191,6 @@ jobs:
           print("clean PyPI install: Silero VAD PASS")
       - name: Exercise the real installed Silero regression suite
         run: |
-          /tmp/selekyt-clean/bin/python -m pytest tests/test_vad_silero.py -q
+          cd /tmp
+          /tmp/selekyt-clean/bin/python -m pytest "$GITHUB_WORKSPACE/tests/test_vad_silero.py" -q
           PY
