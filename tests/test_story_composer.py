@@ -149,3 +149,132 @@ def test_composer_prefers_a_connected_arc_over_an_unrelated_high_score_clip():
     assert 80 not in {c.start for c in plan.candidates}, (
         "the unrelated clip was preferred over the arc's own members")
     assert len(plan.candidates) == 3
+
+
+def _declining_pool(n: int = 18, slope: float = 0.05):
+    """A source whose moments get steadily weaker, which is what a real one
+    looks like. Uniform pools are the degenerate case: when every moment is
+    equally valuable, no goal should truncate, because the only thing a
+    shorter program loses is material."""
+    return [
+        candidate(start=i * 10, text=f"moment {i} topic {i % 6}",
+                  score=max(0.25, 0.9 - i * slope))
+        for i in range(n)
+    ]
+
+
+def _duration(cands):
+    return sum(max(0.0, c.end - c.start) for c in cands)
+
+
+def test_a_make_goal_shortens_the_program_a_goalless_make_does_not():
+    """The duration goal has to reach the *choice*, not just the score.
+
+    ``--make`` is the only duration control the CLI exposes, and for a long time
+    the term was a constant offset in practice: it shifted every variant by the
+    same amount and never reordered them, so ``make=short`` and ``make=story``
+    shipped byte-identical programs. A preference that cannot change a decision
+    is not a preference.
+
+    On a declining pool the goalless make takes every moment, and asking for a
+    short has to return a shorter program than that. The assertion is the
+    comparison rather than an absolute duration, because the goal competes with
+    narrative value rather than overriding it — the exact number has to move
+    with how good the material is.
+    """
+    from engine.story_composer import compose_story
+
+    pool = _declining_pool()
+    goalless = compose_story(pool, corpus=None, limit=24, max_moments=12)
+    short = compose_story(
+        pool, corpus=None, limit=24, max_moments=12, target_seconds=60.0
+    )
+
+    assert _duration(short.candidates) < _duration(goalless.candidates), (
+        f"make=short shipped {_duration(short.candidates)}s against the "
+        f"goalless make's {_duration(goalless.candidates)}s, so the 60 s goal "
+        "reaches the composer's scoring but never its choice")
+
+
+def test_a_make_goal_does_not_truncate_a_source_whose_moments_are_all_strong():
+    """The other half of the contract, and the reason the goal is a preference.
+
+    A uniform pool is the case where every additional moment is worth its cost,
+    so truncating it would only destroy evidence. Imposing a 60 s program here
+    would be exactly the arbitrary runtime cap the product rejects; the goal has
+    to lose to the material when the material is uniformly good.
+    """
+    from engine.story_composer import compose_story
+
+    pool = _declining_pool(slope=0.0)
+    plan = compose_story(
+        pool, corpus=None, limit=24, max_moments=12, target_seconds=60.0
+    )
+
+    assert len(plan.candidates) == 12, (
+        f"a source of uniformly strong moments was truncated to "
+        f"{len(plan.candidates)} by a 60 s goal; the goal is a tie-breaker "
+        "against narrative value and should not override it")
+
+
+def test_an_overshoot_inside_the_terms_old_dead_zone_now_costs_points():
+    """The specific defect this replaces.
+
+    The earlier form gave a flat ``-0.08`` past a ratio of 1.80 and nothing
+    between 1.15 and 1.80. A 90 s program against a 60 s goal is ratio 1.5 --
+    squarely inside that dead zone -- so it scored exactly as if no goal had
+    been passed at all. This is the band the shipped construction actually
+    lands in, so a goal that does nothing there does nothing in practice. The
+    check scores one construction directly, because what is being pinned is the
+    arithmetic of the term rather than the search's response to it.
+    """
+    from engine.story_composer import _features, _index, _whole_score
+
+    pool = _declining_pool(slope=0.0)
+    construction = pool[:9]
+    features = _index(pool, None)
+
+    with_goal = _whole_score(
+        construction, None, features, "chronological", target_seconds=60.0
+    )
+    without_goal = _whole_score(
+        construction, None, features, "chronological", target_seconds=None
+    )
+
+    assert _duration(construction) == 90.0, "the fixture drifted off ratio 1.5"
+    assert with_goal < without_goal, (
+        f"a 90 s program against a 60 s goal (ratio 1.5) scores "
+        f"{with_goal:.4f} with the goal and {without_goal:.4f} without it, so "
+        "the goal has no effect anywhere in the 1.15-1.80 band the shipped "
+        "construction lands in"
+    )
+
+
+def test_a_story_goal_does_not_penalise_a_source_shorter_than_the_target():
+    """Undershoot must not cost points.
+
+    A source that only contains 115 s of story sits at 0.64 of a 180 s target.
+    Charging that overshoot-in-reverse would push the composer to pad the
+    program with weaker moments to reach a runtime the evidence does not
+    support, which inverts the product rule that duration emerges from
+    narrative evidence. The band's reward already declines to zero at 0.70,
+    which is the whole signal a short source needs.
+    """
+    from engine.story_composer import _index, _whole_score
+
+    pool = _declining_pool(slope=0.0)
+    construction = pool[:8]
+    features = _index(pool, None)
+
+    with_goal = _whole_score(
+        construction, None, features, "chronological", target_seconds=180.0
+    )
+    without_goal = _whole_score(
+        construction, None, features, "chronological", target_seconds=None
+    )
+
+    assert with_goal == without_goal, (
+        f"a program shorter than its target is penalised {without_goal - with_goal:.4f} "
+        "points for undershooting, which rewards padding a short source with "
+        "weaker moments"
+    )

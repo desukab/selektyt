@@ -358,8 +358,31 @@ def _whole_score(
             score += 0.14
         elif ratio < 0.30:
             score -= 0.10
-        elif ratio > 1.80:
-            score -= 0.08
+        elif ratio > 1.15:
+            # Charge a rising cost per moment of overshoot past the band. The
+            # earlier form penalised a ratio past 1.80 with a flat -0.08, which
+            # left a dead zone between 1.15 and 1.80 where a construction was
+            # neither rewarded nor punished -- 90 s against a 60 s goal lands at
+            # 1.5 and scored exactly as if no goal had been passed, which is
+            # the band the shipped construction actually lands in.
+            #
+            # The cost rises rather than staying flat because the marginal
+            # narrative value of a moment is roughly constant, so a flat rate
+            # only ever bites on moments already weak enough to be unrewarding.
+            # Rising cost is what makes the goal a format request rather than a
+            # tie-breaker: one moment past the goal is a payoff that genuinely
+            # needs the room and costs almost nothing, the sixth is the composer
+            # ignoring the format the editor asked for and costs more than a
+            # moment returns.
+            #
+            # Only overshoot charges. Charging undershoot as well would penalise
+            # a source that only contains 115 s of story for sitting at 0.64 of
+            # a 180 s target, pushing the composer to pad the program with
+            # weaker moments; the reward band already declines to zero at 0.70,
+            # which is the whole signal a short source needs.
+            moment = duration / len(seq) if seq else target_seconds
+            over = (ratio - 1.15) * target_seconds / moment
+            score -= 0.14 * over * (over + 1.0) / 2.0
 
     score -= 0.14 * len(seq)
     score -= max(0, len(seq) - 8) * 0.035

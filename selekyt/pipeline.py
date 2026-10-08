@@ -1355,14 +1355,15 @@ def run(
         # penalises unnecessary moments and searches all lengths up to the
         # bounded ceiling, so runtime is an outcome rather than a target.
         story_max_moments = max(10, min(24, 8 + math.ceil(math.log2(max(1, len(passed))))))
-        # ``--make`` is a goal, not a cap: the composer's duration term adds a
-        # bonus inside 0.70-1.15 of the target and small penalties far outside
-        # it, so a requested short is biased toward ~60 s and a story toward
-        # ~3 min while a source whose setup and payoff genuinely need longer is
-        # still allowed to take it. Passing None would keep the argument valid
-        # but silently ignore the choice the CLI advertises -- ``--make`` was
-        # decoupled from duration as a cap and accidentally decoupled from
-        # duration as a preference too.
+        # ``--make`` is a goal, not a cap: the composer's duration term rewards a
+        # program inside 0.70-1.15 of the target and charges a rising cost per
+        # moment of overshoot past it, so a requested short is biased toward
+        # ~60 s and a story toward ~3 min while a source whose setup and payoff
+        # genuinely need longer is still allowed to take it -- the first moment
+        # past the goal costs almost nothing. Passing None would keep the
+        # argument valid but silently ignore the choice the CLI advertises --
+        # ``--make`` was decoupled from duration as a cap and accidentally
+        # decoupled from duration as a preference too.
         target_seconds = {"short": 60.0, "story": 180.0, "highlights": None}[make]
         story_variants = compose_story_variants(
             passed,

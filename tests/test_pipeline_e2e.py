@@ -933,18 +933,16 @@ def test_make_goals_reach_the_composer_on_a_multi_minute_source(
     source, or the scene analysis decodes past the end of the file and the run
     dies in the reframe stage with ``UnreadableSource``.
 
-    The goals are observable in the composer's *scoring* but not yet in its
-    *choice*. Measured on this source, every construction style converges on
-    the same 115.1 s program, so the duration term shifts every variant by the
-    same amount and can never reorder them: ``make=short`` penalises that
-    program for overshooting (115.1 s is 1.9x the 60 s target, past the term's
-    1.80 threshold, so it scores 0.08 lower) while ``make=story`` and the
-    goal-less ``make=highlights`` score it identically, 115.1 s sitting at 0.64
-    of the 180 s target where the term adds nothing. The score comparison is
-    therefore the assertion that fails if ``target_seconds`` is set back to
-    None -- the three runs would then be indistinguishable -- and the span
-    comparison below it is a tripwire that fails the day the term becomes
-    strong enough to actually shape the program.
+    The goals reach the composer's *choice*, not just its scoring. Measured on
+    this source, the goal-less make ships a 115.1 s program, and asking for a
+    short composes a shorter one rather than scoring the same program lower.
+    Both halves are asserted, because either can break independently: the score
+    comparison is what fails if ``target_seconds`` is set back to ``None`` for
+    every make (the three runs become indistinguishable), and the duration
+    comparison is what fails if the term reverts to a constant offset that
+    shifts every variant by the same amount and never reorders them -- which is
+    what it was for a long time, the penalty being flat and the band's dead zone
+    covering exactly the duration a real program lands on.
     """
     import selekyt.pipeline as p
 
@@ -982,35 +980,32 @@ def test_make_goals_reach_the_composer_on_a_multi_minute_source(
         assert report["program"] is not None, "the program reel did not assemble"
         assert (project / "facebook" / "program.mp4").is_file()
 
-    # The goal reaches the composer's scoring. The construction is 115.1 s,
-    # which overshoots the 60 s target past the term's penalty threshold, so
-    # make=short scores it below the goals that leave it alone. This is the
-    # assertion that fails without the fix: with target_seconds None for every
-    # make the three scores are identical, because the duration term is the
-    # only input that differs between these runs.
+    # The goal reaches the composer's scoring: whatever program it shipped, the
+    # short goal scores it below the goals that leave it alone. This is what
+    # fails if ``target_seconds`` goes back to None for every make, because the
+    # duration term is then the only input that differs between these runs.
     assert chosen["short"]["score"] < chosen["story"]["score"], (
         f"make=short scores the construction {chosen['short']['score']} "
         f"against make=story's {chosen['story']['score']}, so the duration "
         "goal is not reaching the composer's scoring")
-    # And the control: 115.1 s sits at 0.64 of the 180 s story target, inside
-    # the band where the term adds nothing, so make=story scores it exactly as
-    # the goal-less make=highlights does. A duration goal that also applied to
+    # And the control: the goal-less make carries no duration term at all, so
+    # it has to score whatever it shipped exactly as the story goal does when
+    # the story goal is not active on it. A duration goal that also applied to
     # highlights would not be a per-format goal.
     assert chosen["story"]["score"] == chosen["highlights"]["score"], (
         f"make=story scores the construction {chosen['story']['score']} "
         f"against make=highlights' {chosen['highlights']['score']}, so the "
         "story goal is applying a term the goal-less control should not have")
 
-    # Tripwire, not a contract: the goals score the program differently but
-    # still ship the same one, because every construction style converges on
-    # the same duration. The day this term reorders the variants, delete this
-    # assertion and test the shaping itself.
-    assert chosen["short"]["source_spans"] == chosen["story"]["source_spans"], (
-        "make=short now composes a different program from make=story, so the "
-        "duration term discriminates between constructions: replace this "
-        "identity with an assertion of the shaping it produces "
-        f"(short={chosen['short']['duration']}s, "
-        f"story={chosen['story']['duration']}s)")
+    # The goal reaches the composer's choice, which is the part that was missing.
+    # The comparison, not an absolute duration, is the contract: the term
+    # competes with narrative value rather than overriding it, so how far the
+    # short falls short of 60 s moves with how much story the source holds.
+    # Asserting a number here would be asserting a cap the product rejects.
+    assert chosen["short"]["duration"] < chosen["story"]["duration"], (
+        f"make=short composes {chosen['short']['duration']}s against make=story's "
+        f"{chosen['story']['duration']}s, so the 60 s goal shifts every variant "
+        "by the same amount and never changes which program ships")
 
 
 def test_a_failed_stage_reports_itself_before_raising(
