@@ -42,7 +42,7 @@ The hard part happens underneath: SeleKyT tries to understand the whole recordin
 
 ## Quick start
 
-Requirements: **Python 3.10+**. The PyPI distribution brings the runtime dependencies, Silero VAD weights, and FFmpeg/ffprobe runtime it needs; no system FFmpeg install is required.
+Requirements: **Python 3.10+ on Linux x86_64** for the production PyPI wheel. The PyPI distribution brings the runtime dependencies, bundled local Whisper model, Silero VAD weights, Rust mechanical runtime, and FFmpeg/ffprobe runtime it needs; no system FFmpeg or Rust install is required.
 
 The intended install is a pip install — no checkout of this repository needed:
 
@@ -53,8 +53,11 @@ pip install selekyt
 ```
 
 A plain `pip install selekyt` is the production path. Local transcription is
-included, Silero VAD and its model are included, independent EDL/FCPXML readers
-are included, and the FFmpeg/ffprobe runtime is provisioned automatically.
+included with a bundled Whisper model, Silero VAD and its model are included,
+independent EDL/FCPXML readers are included, the Rust mechanical runtime is
+included for Linux x86_64, and the FFmpeg/ffprobe runtime is provisioned
+automatically. The PyPI release intentionally publishes a platform wheel rather
+than pretending the bundled native runtime is universal.
 The `[transcription]` extra remains as a compatibility alias for older install
 commands.
 
