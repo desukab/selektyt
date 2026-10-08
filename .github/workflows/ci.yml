@@ -162,7 +162,7 @@ jobs:
       - name: Install release build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends musl-tools ffmpeg
+          sudo apt-get install -y --no-install-recommends musl-tools
           python -m pip install --upgrade pip build huggingface_hub
       - name: Prepare every packaged runtime asset
         run: python tools/prepare_release_assets.py
