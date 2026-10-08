@@ -43,6 +43,12 @@ def _doctor() -> int:
         ("ffprobe", True, shutil.which("ffprobe") is not None),
         ("yt-dlp", False, shutil.which("yt-dlp") is not None),
     ]
+    try:
+        import onnxruntime  # noqa: F401
+        ort_ok = True
+    except ImportError:
+        ort_ok = False
+    checks.append(("onnxruntime", True, ort_ok))
     provider = default_transcription_provider()
     print(f"  transcription     {provider}")
     if provider == "local":
