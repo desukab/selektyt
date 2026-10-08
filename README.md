@@ -42,26 +42,25 @@ The hard part happens underneath: SeleKyT tries to understand the whole recordin
 
 ## Quick start
 
-Requirements: **Python 3.10+** and **ffmpeg** on your PATH.
+Requirements: **Python 3.10+**. The PyPI distribution brings the runtime dependencies, Silero VAD weights, and FFmpeg/ffprobe runtime it needs; no system FFmpeg install is required.
 
 The intended install is a pip install — no checkout of this repository needed:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate      # on Windows: .venv\Scripts\activate
-pip install 'selekyt[transcription]'
+pip install selekyt
 ```
 
-The base `pip install selekyt` installs the CLI and the render/timeline path.
-Local transcription needs an ASR engine, which is why it is an extra — add it
-with the `[transcription]` suffix above.
+A plain `pip install selekyt` is the production path. Local transcription is
+included, Silero VAD and its model are included, independent EDL/FCPXML readers
+are included, and the FFmpeg/ffprobe runtime is provisioned automatically.
+The `[transcription]` extra remains as a compatibility alias for older install
+commands.
 
-> **Status:** the distribution is built and verified in a clean virtual
-> environment, but it is **not yet published to PyPI**. This repository is
-> source-available and proprietary (see [LICENSE](./LICENSE)); publishing a
-> plain Python wheel would expose the editorial engine as readable source to
-> any installer, so the distribution boundary is still being decided. Until
-> then the commands above describe the intended path, not a live one.
+> **Release gate:** every PyPI release must pass the clean-install acceptance
+> workflow before publication. The package is source-available and proprietary
+> (see [LICENSE](./LICENSE)).
 
 Then:
 
