@@ -118,12 +118,15 @@ def _doctor() -> int:
     if not missing:
         print("Ready.")
         return 0
-    extra = {"local": "[transcription]", "groq": "[cloud-transcription]",
+    extra = {"local": "", "groq": "[cloud-transcription]",
              "gemini": "[cloud-transcription]"}[provider]
     if any(name.endswith(" key") for name in missing):
         print(f"Configure the selected cloud provider with: selekyt setup --provider {provider}")
     else:
-        print(f"Install the missing REQUIRED tools with: pip install 'selekyt{extra}'")
+        if provider == "local":
+            print("The production install is incomplete; reinstall `selekyt` from PyPI.")
+        else:
+            print(f"Install the missing optional cloud provider with: pip install 'selekyt{extra}'")
     return 1
 
 
