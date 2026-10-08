@@ -31,7 +31,9 @@ jobs:
       - name: Prepare every packaged runtime asset
         run: python tools/prepare_release_assets.py
       - name: Build the exact PyPI wheel
-        run: python -m build --wheel --outdir dist --config-setting=--build-option=--plat-name=linux_x86_64
+        env:
+          SELEKYT_WHEEL_PLATFORM: linux_x86_64
+        run: python -m build --wheel --outdir dist
       - name: Inspect wheel payload and metadata
         run: |
           python - <<'PY'
