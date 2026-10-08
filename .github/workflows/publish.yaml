@@ -6,27 +6,103 @@ on:
       - "v*"
 
 jobs:
-  publish:
+  release-gate:
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/p/selekyt
     permissions:
       id-token: write
-
     steps:
-      - name: Check out source
+      - name: Check out tagged source
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Build distribution
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
+      - name: Install release build tools
         run: |
-          python -m pip install --upgrade build
-          python -m build
-
-      - name: Publish distribution
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends musl-tools ffmpeg
+          python -m pip install --upgrade pip build
+      - name: Prepare every packaged runtime asset
+        run: python tools/prepare_release_assets.py
+      - name: Build the exact PyPI wheel
+        run: python -m build --wheel --outdir dist --config-setting=--build-option=--plat-name=linux_x86_64
+      - name: Inspect wheel payload and metadata
+        run: |
+          python - <<'PY'
+          import zipfile, glob
+          wheels = glob.glob("dist/*.whl")
+          assert len(wheels) == 1, wheels
+          wheel = wheels[0]
+          assert wheel.endswith("-linux_x86_64.whl"), wheel
+          with zipfile.ZipFile(wheel) as z:
+              names = set(z.namelist())
+              required = {
+                  "engine/models/silero_vad_v6.onnx",
+                  "engine/models/face_detection_yunet.onnx",
+                  "selekyt/assets/whisper/tiny/model.bin",
+                  "selekyt/assets/whisper/tiny/tokenizer.json",
+                  "selekyt/assets/whisper/tiny/config.json",
+                  "selekyt/assets/bin/linux-x86_64/selekyt-mech",
+                  "third_party/otio_fcpxml_adapter/fcpxml.py",
+              }
+              assert not sorted(required - names), sorted(required - names)
+              meta = z.read(next(n for n in names if n.endswith(".dist-info/METADATA"))).decode()
+              for dep in ("faster-whisper", "av", "onnxruntime", "pycmx", "opentimelineio", "static-ffmpeg"):
+                  assert f"Requires-Dist: {dep}" in meta, dep
+          print("wheel contract: PASS")
+          PY
+      - name: Install only the wheel into a clean environment
+        run: |
+          python -m venv /tmp/selekyt-clean
+          /tmp/selekyt-clean/bin/python -m pip install --upgrade pip
+          /tmp/selekyt-clean/bin/python -m pip install dist/*.whl
+          /tmp/selekyt-clean/bin/python -m pip install "pytest>=8"
+      - name: Prove the installed runtime
+        run: |
+          cd /tmp
+          /tmp/selekyt-clean/bin/python - <<'PY'
+          import engine, selekyt
+          import onnxruntime, faster_whisper, pycmx, opentimelineio, static_ffmpeg
+          from engine.vad import SileroVADBackend, get_vad_backend
+          from selekyt.runtime import bundled_mech_path, bundled_whisper_model, ping_mech
+          assert "/home/runner/work/" not in engine.__file__
+          assert SileroVADBackend().is_available()
+          assert get_vad_backend().name == "silero"
+          assert bundled_whisper_model() is not None
+          assert bundled_mech_path() is not None
+          assert ping_mech()["pong"] is True
+          print("installed runtime: PASS")
+          PY
+          /tmp/selekyt-clean/bin/selekyt --version
+          /tmp/selekyt-clean/bin/selekyt --doctor
+      - name: Run the installed Silero regression suite
+        run: |
+          cd /tmp
+          /tmp/selekyt-clean/bin/python -m pytest "$GITHUB_WORKSPACE/tests/test_vad_silero.py" -q
+      - name: Download real speech video
+        run: |
+          curl -L --fail --retry 3             "https://commons.wikimedia.org/wiki/Special:Redirect/file/Philip%20Nelson%20Interview.webm"             -o /tmp/release-real.webm
+          ffmpeg -y -v error -ss 0 -t 45 -i /tmp/release-real.webm -c copy /tmp/release-sample.webm
+      - name: Run the real local end-to-end product
+        run: |
+          cd /tmp
+          /tmp/selekyt-clean/bin/selekyt /tmp/release-sample.webm --limit 1 --audio-analysis --out /tmp/release-e2e
+          test -f /tmp/release-e2e/project/facebook/01.mp4
+          test -f /tmp/release-e2e/project/shorts/01.mp4
+          test -f /tmp/release-e2e/project/timeline/01.edl
+          test -f /tmp/release-e2e/project/timeline/01.fcpxml
+          test -f /tmp/release-e2e/project/captions/01.ass
+          /tmp/selekyt-clean/bin/python "$GITHUB_WORKSPACE/tools/nle_check.py" /tmp/release-e2e/project | tee /tmp/nle-check.txt
+          ! grep -q "SKIP" /tmp/nle-check.txt
+          if grep -RqiE "pycmx (absent|missing)|FCPXML reader (absent|missing)|vad ffmpeg" /tmp/release-e2e/project; then
+            echo "release-critical runtime warning found"
+            exit 1
+          fi
+      - name: Publish the already-tested wheel
         uses: pypa/gh-action-pypi-publish@release/v1
