@@ -29,7 +29,7 @@ def test_doctor_reports_tool_availability(capsys):
     out = capsys.readouterr().out
     assert rc in (0, 1)
     assert "SelekyT doctor" in out
-    for name in ("python", "ffmpeg", "ffprobe", "yt-dlp", "faster-whisper"):
+    for name in ("python", "ffmpeg", "ffprobe", "yt-dlp", "onnxruntime", "faster-whisper"):
         assert name in out
 
 
