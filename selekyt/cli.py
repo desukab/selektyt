@@ -13,6 +13,7 @@ from typing import TextIO
 from engine.captions import caption_presets
 from selekyt.pipeline import run
 from selekyt.server import serve_stdio as serve_python
+from selekyt.runtime import bundled_mech_path, bundled_whisper_model, ping_mech
 from selekyt.transcription_settings import (
     PROVIDERS as TRANSCRIPTION_PROVIDERS,
     TranscriptionSettingsError,
@@ -49,6 +50,42 @@ def _doctor() -> int:
     except ImportError:
         ort_ok = False
     checks.append(("onnxruntime", True, ort_ok))
+    try:
+        from engine.vad import SileroVADBackend
+        silero_ok = SileroVADBackend().is_available()
+    except Exception:
+        silero_ok = False
+    checks.append(("silero-vad model", True, silero_ok))
+    try:
+        import pycmx  # noqa: F401
+        pycmx_ok = True
+    except ImportError:
+        pycmx_ok = False
+    checks.append(("pycmx", True, pycmx_ok))
+    try:
+        import opentimelineio  # noqa: F401
+        otio_ok = True
+    except ImportError:
+        otio_ok = False
+    checks.append(("opentimelineio", True, otio_ok))
+    try:
+        import static_ffmpeg  # noqa: F401
+        static_ffmpeg_ok = True
+    except ImportError:
+        static_ffmpeg_ok = False
+    checks.append(("static-ffmpeg", True, static_ffmpeg_ok))
+    mech = bundled_mech_path()
+    if mech is not None:
+        try:
+            ping_mech()
+            mech_ok = True
+        except Exception:
+            mech_ok = False
+    else:
+        mech_ok = False
+    checks.append(("rust mechanical core", True, mech_ok))
+    whisper_model = bundled_whisper_model()
+    checks.append(("bundled whisper model", True, whisper_model is not None))
     provider = default_transcription_provider()
     print(f"  transcription     {provider}")
     if provider == "local":
