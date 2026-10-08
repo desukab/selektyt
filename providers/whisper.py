@@ -9,6 +9,7 @@ from typing import Callable
 
 from models.core import Segment, Word
 from providers.atomic import read_json, write_json_atomic
+from selekyt.runtime import bundled_whisper_model
 
 
 FALLBACK_CHAIN = ["small", "base", "tiny"]
@@ -307,7 +308,15 @@ def transcribe(
     fallback_consecutive = int(os.environ.get("SELEKYT_FALLBACK_CONSECUTIVE", "3"))
     chunk_timeout = int(os.environ.get("SELEKYT_CHUNK_TIMEOUT_MIN", "20")) * 60
     initial_model_name = model_name
-    model = WhisperModel(model_name, device="auto", compute_type="int8", cpu_threads=_threads)
+    bundled = bundled_whisper_model() if model_name == "small" else None
+    effective_model = str(bundled) if bundled is not None else model_name
+    if bundled is not None:
+        print(
+            f"[transcribe] using bundled local Whisper model: {bundled.name}",
+            flush=True,
+        )
+        model_name = "tiny"
+    model = WhisperModel(effective_model, device="auto", compute_type="int8", cpu_threads=_threads)
     all_segments: list[Segment] = []
     detected_languages: list[str] = []
     running_wall = 0.0
