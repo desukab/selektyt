@@ -163,7 +163,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends musl-tools ffmpeg
-          python -m pip install --upgrade pip build
+          python -m pip install --upgrade pip build huggingface_hub
       - name: Prepare every packaged runtime asset
         run: python tools/prepare_release_assets.py
       - name: Build the release wheel
