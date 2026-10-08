@@ -34,6 +34,7 @@ def prepare_whisper() -> None:
             "model.bin",
             "tokenizer.json",
             "vocabulary.*",
+            "LICENSE",
         ],
     )
     required = ["config.json", "model.bin", "tokenizer.json"]
