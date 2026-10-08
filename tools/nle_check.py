@@ -59,6 +59,12 @@ from pathlib import Path
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
+# A standalone NLE audit is part of the production contract too. Importing
+# the provider provisions the packaged static-ffmpeg runtime before this tool
+# invokes ffprobe directly; no system FFmpeg installation is part of the contract.
+from providers.ffmpeg import require_ffmpeg as _require_ffmpeg
+
+_require_ffmpeg("NLE audit", "ffmpeg", "ffprobe")
 
 # The FCPXML 1.11 element vocabulary, from Apple's Final Cut Pro XML
 # reference. An element outside this set is either a typo or a version
