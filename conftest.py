@@ -87,10 +87,14 @@ def _isolate_selekyt_settings(tmp_path_factory):
     mp.undo()
 
 
+# A key the environment did not carry. ``None`` is a legitimate env value for
+# several of these settings, so it cannot stand in for "absent".
+_ABSENT = object()
+
+
 @pytest.fixture(autouse=True)
 def _isolate_selekyt_env():
     """Restore every ``SELEKYT_*`` environment variable after each test.
-
     Production writes into the process environment and reads it back later —
     ``selekyt.cli.main`` exports the chosen caption style this way because the
     render cache key reads it from there, and the sidecar's
@@ -107,14 +111,33 @@ def _isolate_selekyt_env():
     ordering never put the two tests together — the failure only appeared when
     the module was run on its own. Owning the namespace here is what makes the
     suite order-independent for this whole class, not just for the one test.
+
+    ``FORCE_COLOR`` and ``NO_COLOR`` are cleared and restored for the same
+    reason: they are ambient in a parent shell and ``selekyt.ui`` reads both
+    unconditionally. ``test_cli_ui.py`` asserts the *default* colour decision,
+    so a ``FORCE_COLOR`` inherited from the environment that launched pytest
+    makes ``Terminal(out=FakePipe())`` report colour on a non-tty and three
+    capability tests fail — not because the UI is wrong, but because the
+    machine it ran on had an opinion the test never asked for. Clearing on
+    setup rather than only restoring on teardown is what matters here: the
+    ambient value is present *during* the test. Tests that do want the var set
+    it themselves with monkeypatch, which layers above the clear, so this is
+    neutral to them.
     """
-    before = {k: v for k, v in os.environ.items() if k.startswith("SELEKYT_")}
+    prefix_keys = [k for k in os.environ if k.startswith("SELEKYT_")]
+    before = {k: os.environ[k] for k in prefix_keys}
+    for k in ("FORCE_COLOR", "NO_COLOR"):
+        before[k] = os.environ.get(k, _ABSENT)
+        os.environ.pop(k, None)
     yield
     for k in list(os.environ):
-        if k.startswith("SELEKYT_") and k not in before:
+        if (k.startswith("SELEKYT_") or k in ("FORCE_COLOR", "NO_COLOR")) \
+                and k not in before:
             del os.environ[k]
     for k, v in before.items():
-        if os.environ.get(k) != v:
+        if v is _ABSENT:
+            os.environ.pop(k, None)
+        elif os.environ.get(k) != v:
             os.environ[k] = v
 
 
