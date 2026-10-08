@@ -241,4 +241,7 @@ jobs:
           test -f /tmp/release-e2e/project/captions/01.ass
           /tmp/selekyt-clean/bin/python "$GITHUB_WORKSPACE/tools/nle_check.py" /tmp/release-e2e/project | tee /tmp/nle-check.txt
           ! grep -q "SKIP" /tmp/nle-check.txt
-          ! grep -Eqi "pycmx (absent|missing)|FCPXML reader (absent|missing)|vad ffmpeg" /tmp/release-e2e/project/run.log /tmp/release-e2e/project/report.json 2>/dev/null || true
+          if grep -RqiE "pycmx (absent|missing)|FCPXML reader (absent|missing)|vad ffmpeg" /tmp/release-e2e/project; then
+            echo "release-critical runtime warning found"
+            exit 1
+          fi
