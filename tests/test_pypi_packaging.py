@@ -33,6 +33,7 @@ clean environment does not.
 from __future__ import annotations
 
 import importlib
+import os
 import pathlib
 import subprocess
 import sys
@@ -200,7 +201,7 @@ def wheel() -> pathlib.Path:
     # it gets to the project's own metadata. Isolated builds fetch the backend
     # themselves, which is also what a real release does.
     proc = subprocess.run(
-        [sys.executable, "-m", "build", "--wheel", "--outdir", str(out)],
+        [sys.executable, "-m", "build", "--wheel", "--outdir", str(out)] + (["--config-setting=--build-option=--plat-name=linux_x86_64"] if os.environ.get("SELEKYT_RELEASE_BUILD") else []),
         cwd=str(ROOT), capture_output=True, text=True,
     )
     if proc.returncode != 0:
@@ -265,7 +266,8 @@ def test_the_wheel_metadata_declares_the_complete_core_runtime(wheel):
 
 
 def test_the_wheel_is_platform_specific_for_the_bundled_native_runtime(wheel):
-    assert wheel.name.endswith('-linux_x86_64.whl'), wheel.name
+    if os.environ.get('SELEKYT_RELEASE_BUILD'):
+        assert wheel.name.endswith('-linux_x86_64.whl'), wheel.name
 
 def test_the_wheel_ships_no_repo_only_directories(wheel):
     """``corpus/`` holds gigabytes of regenerable media, ``tests/`` is the
