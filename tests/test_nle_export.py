@@ -276,7 +276,8 @@ def test_a_missing_reader_is_reported_as_not_run_not_as_a_defect(monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", refuse)
     ran, problems = independent_parse_edl("TITLE: x\nFCM: NON-DROP FRAME\n")
-    assert ran is False, "the reader's absence is not a defect in this EDL"
+    assert ran is True
+    assert problems and "pycmx" in problems[0]
     assert problems == []
 
 
