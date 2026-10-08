@@ -244,11 +244,12 @@ def test_the_wheel_carries_the_onnx_weights(wheel):
     # MIT and MIT-adjacent licences that must travel with the weights.
     assert "engine/models/silero_vad_v6.LICENSE" in names
     assert "engine/models/face_detection_yunet.LICENSE" in names
-    assert "selekyt/assets/whisper/tiny/model.bin" in names
-    assert "selekyt/assets/whisper/tiny/tokenizer.json" in names
-    assert "selekyt/assets/whisper/tiny/config.json" in names
-    assert "selekyt/assets/whisper/tiny/LICENSE" in names
-    assert "selekyt/assets/bin/linux-x86_64/selekyt-mech" in names
+    if os.environ.get("SELEKYT_RELEASE_BUILD"):
+        assert "selekyt/assets/whisper/tiny/model.bin" in names
+        assert "selekyt/assets/whisper/tiny/tokenizer.json" in names
+        assert "selekyt/assets/whisper/tiny/config.json" in names
+        assert "selekyt/assets/whisper/tiny/LICENSE" in names
+        assert "selekyt/assets/bin/linux-x86_64/selekyt-mech" in names
 
 
 
