@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "selekyt"
-version = "0.3.2"
+version = "0.4.0"
 description = "Local-first long-form to publishable social video editorial engine"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -50,5 +50,6 @@ include = ["selekyt*", "engine*", "models*", "providers*", "third_party*"]
 [tool.setuptools.package-data]
 engine = ["assets/fonts/*.ttf", "assets/licenses/OFL-Fredoka.txt",
           "models/*.onnx", "models/*.LICENSE", "models/*.PROVENANCE.md"]
+selekyt = ["assets/whisper/tiny/*", "assets/bin/**/*"]
 third_party = ["PROVENANCE.md"]
 "third_party.otio_fcpxml_adapter" = ["LICENSE"]
