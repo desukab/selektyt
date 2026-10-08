@@ -243,7 +243,29 @@ def test_the_wheel_carries_the_onnx_weights(wheel):
     # MIT and MIT-adjacent licences that must travel with the weights.
     assert "engine/models/silero_vad_v6.LICENSE" in names
     assert "engine/models/face_detection_yunet.LICENSE" in names
+    assert "selekyt/assets/whisper/tiny/model.bin" in names
+    assert "selekyt/assets/whisper/tiny/tokenizer.json" in names
+    assert "selekyt/assets/whisper/tiny/config.json" in names
+    assert "selekyt/assets/whisper/tiny/LICENSE" in names
+    assert "selekyt/assets/bin/linux-x86_64/selekyt-mech" in names
 
+
+
+def test_the_wheel_metadata_declares_the_complete_core_runtime(wheel):
+    import zipfile
+    with zipfile.ZipFile(wheel) as zf:
+        meta_name = next(n for n in zf.namelist() if n.endswith('.dist-info/METADATA'))
+        meta = zf.read(meta_name).decode('utf-8')
+    for line in [
+        'Requires-Dist: faster-whisper', 'Requires-Dist: av',
+        'Requires-Dist: onnxruntime', 'Requires-Dist: pycmx',
+        'Requires-Dist: opentimelineio', 'Requires-Dist: static-ffmpeg',
+    ]:
+        assert line in meta, f'{line} is missing from the built wheel METADATA'
+
+
+def test_the_wheel_is_platform_specific_for_the_bundled_native_runtime(wheel):
+    assert wheel.name.endswith('-linux_x86_64.whl'), wheel.name
 
 def test_the_wheel_ships_no_repo_only_directories(wheel):
     """``corpus/`` holds gigabytes of regenerable media, ``tests/`` is the
