@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 WHISPER_DIR = ROOT / "selekyt" / "assets" / "whisper" / "tiny"
 BIN_DIR = ROOT / "selekyt" / "assets" / "bin" / "linux-x86_64"
 MODEL_REPO = "Systran/faster-whisper-tiny"
+MODEL_REVISION = "d90ca5fe260221311c53c58e660288d3deb8d356"
 
 
 def prepare_whisper() -> None:
@@ -26,6 +27,7 @@ def prepare_whisper() -> None:
     WHISPER_DIR.mkdir(parents=True, exist_ok=True)
     snapshot_download(
         MODEL_REPO,
+        revision=MODEL_REVISION,
         local_dir=str(WHISPER_DIR),
         allow_patterns=[
             "config.json",
