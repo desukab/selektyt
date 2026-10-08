@@ -11,6 +11,33 @@ import subprocess
 from pathlib import Path
 
 
+
+
+def _ensure_bundled_ffmpeg() -> None:
+    """Make the pip-installed FFmpeg/ffprobe runtime available on PATH.
+
+    A PyPI install must not depend on an administrator installing system
+    FFmpeg. ``static-ffmpeg`` supplies matching ffmpeg + ffprobe binaries for
+    supported platforms and adds them to this process PATH when the host does
+    not already provide both. System binaries win when they are complete.
+    """
+    if shutil.which("ffmpeg") and shutil.which("ffprobe"):
+        return
+    try:
+        import static_ffmpeg
+        static_ffmpeg.add_paths(weak=True)
+    except Exception as exc:
+        raise RuntimeError(
+            "SelekyT could not initialize its bundled FFmpeg runtime; "
+            "install static-ffmpeg or provide ffmpeg and ffprobe on PATH"
+        ) from exc
+
+
+# Initialize the runtime when the production media layer is imported. This
+# gives every subprocess site in the engine the same binaries, including
+# modules that invoke ffmpeg directly rather than through run_capture().
+_ensure_bundled_ffmpeg()
+
 class FfmpegError(RuntimeError):
     """Raised when an ffmpeg/ffprobe invocation fails with diagnostics."""
 
@@ -43,13 +70,15 @@ class FfmpegError(RuntimeError):
 
 
 def require_ffmpeg() -> None:
+    _ensure_bundled_ffmpeg()
     if shutil.which("ffmpeg") is None:
-        raise RuntimeError("ffmpeg is required and must be on PATH")
+        raise RuntimeError("ffmpeg is required and must be available to SeleKyT")
 
 
 def require_ffprobe() -> None:
+    _ensure_bundled_ffmpeg()
     if shutil.which("ffprobe") is None:
-        raise RuntimeError("ffprobe is required and must be on PATH")
+        raise RuntimeError("ffprobe is required and must be available to SeleKyT")
 
 
 def run_capture(
