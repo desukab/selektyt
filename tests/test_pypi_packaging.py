@@ -200,9 +200,12 @@ def wheel() -> pathlib.Path:
     # build dies with "Backend 'setuptools.build_meta' is not available" before
     # it gets to the project's own metadata. Isolated builds fetch the backend
     # themselves, which is also what a real release does.
+    build_env = os.environ.copy()
+    if os.environ.get("SELEKYT_RELEASE_BUILD"):
+        build_env["SELEKYT_WHEEL_PLATFORM"] = "linux_x86_64"
     proc = subprocess.run(
-        [sys.executable, "-m", "build", "--wheel", "--outdir", str(out)] + (["--config-setting=--build-option=--plat-name=linux_x86_64"] if os.environ.get("SELEKYT_RELEASE_BUILD") else []),
-        cwd=str(ROOT), capture_output=True, text=True,
+        [sys.executable, "-m", "build", "--wheel", "--outdir", str(out)],
+        cwd=str(ROOT), env=build_env, capture_output=True, text=True,
     )
     if proc.returncode != 0:
         pytest.skip(f"wheel build failed in this environment: {proc.stderr[-400:]}")
