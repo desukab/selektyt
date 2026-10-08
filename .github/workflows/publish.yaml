@@ -81,6 +81,10 @@ jobs:
           PY
           /tmp/selekyt-clean/bin/selekyt --version
           /tmp/selekyt-clean/bin/selekyt --doctor
+      - name: Run the release packaging contract tests
+        env:
+          SELEKYT_RELEASE_BUILD: "1"
+        run: python -m pytest tests/test_pypi_packaging.py -q
       - name: Run the installed Silero regression suite
         run: |
           cd /tmp
