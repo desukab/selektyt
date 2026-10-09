@@ -939,9 +939,27 @@ def test_the_corpus_sweep_counts_every_run_and_every_clip():
     paper because two clips changed identity entirely and the ones that replaced
     them open on unpunctuated speech; stating that here is the point of keeping
     the number pinned.
+
+    The pinned split between ``review`` and ``fail`` rests on an acoustic
+    measurement of the shipped renders — a word-free window is REVIEW when the
+    decode shows content and FAIL when it corroborates dead air, and FAIL is
+    also what an unmeasurable window stays. ``.gitignore`` excludes the renders
+    wholesale (they are regenerable and large), so a checkout that never ran the
+    corpus reads one clip as FAIL that a checkout with the renders reads as
+    REVIEW, and the pinned totals cannot be reproduced. That is a property of
+    what is committed, not of the audit, so the guard names the renders rather
+    than pinning a number the checkout cannot derive.
     """
     from tools.editorial_audit import sweep
 
+    if not any(CORPUS.glob(f"*_run/project/{kind}/*.mp4")
+               for kind in ("facebook", "shorts")):
+        # ``measure_clip_render`` reads the facebook render and falls back to
+        # shorts; without either it measures nothing, an undecidable clip reads
+        # as FAIL, and the review/fail split this pins moves with it.
+        pytest.skip(
+            "the pinned totals need the shipped renders, which .gitignore "
+            "excludes; run the corpus to produce them")
     record = sweep(CORPUS)
     assert record["totals"] == {"runs": 11, "clean": 15, "review": 12, "fail": 4}
     sources = {run["source"] for run in record["runs"]}
@@ -1063,6 +1081,14 @@ def test_the_recorded_baseline_sweep_is_the_current_corpus():
 
     if not BASELINE_SWEEP.is_file():
         pytest.skip("the recorded baseline sweep is not in this checkout")
+    if not any(CORPUS.glob(f"*_run/project/{kind}/*.mp4")
+               for kind in ("facebook", "shorts")):
+        # The recorded states include the acoustic decode of each shipped render,
+        # which .gitignore excludes: without the renders the undecidable clips
+        # read as failures and this reports a regression that is not one.
+        pytest.skip(
+            "the baseline comparison needs the shipped renders, which "
+            ".gitignore excludes; run the corpus to produce them")
     recorded = json.loads(BASELINE_SWEEP.read_text(encoding="utf-8"))
     changes = compare_sweeps(recorded, sweep(CORPUS))
     assert changes == [], (

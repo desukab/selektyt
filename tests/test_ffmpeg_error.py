@@ -134,20 +134,29 @@ def test_provisioning_chatter_goes_to_stderr_not_stdout(monkeypatch, capsys):
     emits on a host's first run — this was read back as ``'Downloading h'``
     where a subprocess expected a JSON document. ``static_ffmpeg`` writes its
     download and extract progress to *stdout*, so the call has to redirect it
-    to stderr, where a user running interactively still sees it."""
+    to stderr, where a user running interactively still sees it.
+
+    ``static_ffmpeg`` is stubbed rather than imported because the source matrix
+    in CI runs without the heavyweight wheels, and the contract under test is
+    the redirect, not the library: whatever ``add_paths`` prints must not reach
+    stdout, whatever it is."""
     import sys as _sys
+    import types as _types
 
-    import static_ffmpeg
+    import providers.ffmpeg as ffmpeg_mod
 
-    def _chatty_add_paths(*args, **kwargs):
-        # What static_ffmpeg does on a first-run download: progress on stdout.
-        _sys.stdout.write("Downloading https://github.com/zackees/ffmpeg_bins/\n")
-        _sys.stdout.flush()
+    class _ChattyStaticFFmpeg:
+        @staticmethod
+        def add_paths(*args, **kwargs):
+            # What static_ffmpeg does on a first-run download: progress on
+            # stdout, which is exactly the stream a consumer parses.
+            _sys.stdout.write("Downloading https://github.com/zackees/ffmpeg_bins/\n")
+            _sys.stdout.flush()
 
-    monkeypatch.setattr("providers.ffmpeg.shutil.which", lambda _: None)
-    monkeypatch.setattr(static_ffmpeg, "add_paths", _chatty_add_paths)
+    monkeypatch.setattr(ffmpeg_mod, "shutil", _types.SimpleNamespace(which=lambda _: None))
+    monkeypatch.setitem(_sys.modules, "static_ffmpeg", _ChattyStaticFFmpeg)
 
-    _ensure_bundled_ffmpeg()
+    ffmpeg_mod._ensure_bundled_ffmpeg()
 
     captured = capsys.readouterr()
     assert captured.out == "", (

@@ -61,12 +61,20 @@ jobs:
       - name: Make sidecar executable
         run: chmod +x rust/target/release/selekyt-mech
       - name: Install package (test + LLM + NLE audit deps)
+        # The suite is installed WITH its declared dependencies, not --no-deps.
+        # faster-whisper, av, onnxruntime, static-ffmpeg and yt-dlp are all base
+        # dependencies in pyproject.toml — not optional drivers — and roughly a
+        # fifth of the suite exercises them directly: the pipeline's
+        # select_engine preflight (selekyt/pipeline.py) raises before a run
+        # starts when no engine is importable, and `selekyt --doctor` hard-requires
+        # onnxruntime, the vendored Silero model, pycmx and opentimelineio.
+        # A --no-deps install removed those and turned 76 passing tests into
+        # preflight RuntimeErrors plus doctor exit-code failures, which is not
+        # isolation from the clean-install contract — it is the suite run against
+        # an install state the package never declares. The clean-install contract
+        # itself is still proven separately by pypi-install below, which installs
+        # only the built wheel into a fresh venv.
         # requests is imported at collection time via engine.llm_editorial;
-        # faster-whisper and sherpa-onnx are transcription backends that are
-        # imported lazily and are deliberately optional extras here. The
-        # sherpa backend's missing-library and missing-model error paths are
-        # pinned by tests/test_sherpa.py without needing the wheel, so CI
-        # stays green on hosts where neither engine is installed.
         # pycmx is the independent CMX 3600 reader that
         # tools/nle_check.py uses to parse SelekyT's own EDL with a parser it
         # did not write. Without it that check FAILS rather than skipping, so
@@ -78,23 +86,17 @@ jobs:
         # tests/test_collapse_hub_cache.py asks to resolve a collapsed staged
         # cache offline — the check only means something against the real
         # library, so it stays installed here rather than skipping.
-        # The source regression matrix deliberately keeps heavyweight runtime
-        # engines out of the test environment. Their clean-install contract is
-        # exercised separately by pypi-install below against the built wheel.
-        # This prevents optional-driver presence from silently turning historical
-        # environment-gated tests into a different suite.
+        # Pillow is test-only and undeclared in the metadata: the caption
+        # safe-area suite measures the rendered PNG to count visible caption
+        # lines, and without the imaging library those measurements error rather
+        # than skip. It is installed here so the measurements run; the suite
+        # still guards itself for a host without it.
+        # numpy and opencv are reached at collection time (conftest imports
+        # numpy, and the caption/reframe tests pull cv2 through engine.reframe
+        # and engine.caption_font) and come in with the base install above.
         run: |
-          pip install -e . --no-deps
-          # numpy and opencv are base dependencies that test modules and the
-          # engine modules they import reach at collection time — conftest
-          # imports numpy, and the caption/reframe tests pull cv2 through
-          # engine.reframe and engine.caption_font. A --no-deps install that
-          # omits either dies collecting rather than running, which reports a
-          # packaging failure that is really an install-list gap. The
-          # heavyweight engines stay out on purpose (see the comment above):
-          # the silero suite skips cleanly without onnxruntime, and their
-          # clean-install contract is exercised by pypi-install below.
-          pip install "pytest>=8" "pycmx>=1.5" "opentimelineio>=0.17.0" "pyyaml>=6" "huggingface_hub>=0.23" "requests>=2.31" "numpy>=1.26" "opencv-python-headless>=4.9"
+          pip install -e ".[dev,llm,nle]"
+          pip install "pillow>=10"
       - name: Node (for the web shell harness tests)
         run: node --version
       - name: Pytest
@@ -282,7 +284,15 @@ jobs:
       - name: Run the release packaging contract tests
         env:
           SELEKYT_RELEASE_BUILD: "1"
-        run: python -m pytest tests/test_pypi_packaging.py -q
+        # From /tmp rather than the checkout: the interpreter that has pytest is
+        # the clean venv, not the checkout's own. Running this from the source
+        # tree used the checkout's python, which has no pytest — the step
+        # installed it only into /tmp/selekyt-clean. The tests build a wheel
+        # from $GITHUB_WORKSPACE themselves, so the working directory is not
+        # what selects the code under test.
+        run: |
+          cd /tmp
+          /tmp/selekyt-clean/bin/python -m pytest "$GITHUB_WORKSPACE/tests/test_pypi_packaging.py" -q
       - name: Run the real installed Silero regression suite
         env:
           SELEKYT_RELEASE_BUILD: "1"

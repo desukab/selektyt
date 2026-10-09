@@ -48,7 +48,21 @@ from engine.captions import (MARGIN_H, PLAYRES_X, caption_geometry,
 from engine.timeline_captions import CaptionConfig
 
 _HAVE_FFMPEG = shutil.which("ffmpeg") is not None
-pytestmark = pytest.mark.skipif(not _HAVE_FFMPEG, reason="ffmpeg not available")
+try:
+    import PIL  # noqa: F401
+except ImportError:
+    _HAVE_PIL = False
+else:
+    _HAVE_PIL = True
+pytestmark = [
+    pytest.mark.skipif(not _HAVE_FFMPEG, reason="ffmpeg not available"),
+    # ``_ink`` measures the rendered PNG to count visible caption lines, which
+    # is what makes these assertions about line wrapping measurements rather
+    # than inspections of the ASS text. Without the imaging library the check
+    # cannot look at the render at all, and a skip names that rather than
+    # reporting a measurement it never made.
+    pytest.mark.skipif(not _HAVE_PIL, reason="Pillow is not installed"),
+]
 
 
 def _resolved_font(declared: str) -> str:

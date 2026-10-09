@@ -328,6 +328,7 @@ def test_the_committed_captions_are_what_the_current_emitter_writes(tmp_path):
     """
     import shutil
     import subprocess
+    import sys
 
     from engine.captions import ass_for_candidate, srt_for_candidate
     from models.core import Candidate, Word
@@ -336,7 +337,11 @@ def test_the_committed_captions_are_what_the_current_emitter_writes(tmp_path):
     assert stems, "no corpus selections found; the test below would pass vacuously"
 
     changed = total = 0
-    venv = str(_REPO / ".venv" / "bin" / "python")
+    # ``sys.executable`` rather than a hard-coded ``.venv/bin/python``: the
+    # source matrix in CI runs off the setup-python interpreter and has no
+    # ``.venv`` at all, so a hard-coded path raises FileNotFoundError there and
+    # reports a caption contract that was never measured.
+    venv = sys.executable
     tool = str(_REPO / "tools" / "regenerate_captions.py")
     for selections in stems:
         project = selections.parent

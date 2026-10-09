@@ -401,6 +401,7 @@ def patched_pipeline(media: Path, transcript: list[Segment], language: str = "en
 
     real_download = pipeline_mod.download
     real_transcribe = pipeline_mod.transcribe_auto
+    real_engine_probe = pipeline_mod.select_engine
     pipeline_mod.download = lambda source, dest, cookies=None: (
         media, {"title": "synthetic fixture clip"},
     )
@@ -414,11 +415,19 @@ def patched_pipeline(media: Path, transcript: list[Segment], language: str = "en
             "fallback_reason": "",
         },
     )
+    # The run preflights ``select_engine`` to fail before touching the network
+    # on a default install — an install with no ASR wheel should say so rather
+    # than download a video it cannot transcribe. That check is a property of
+    # the *real* transcription boundary, which the stub above has already
+    # replaced, so leaving it live makes every fixture run depend on an engine
+    # being importable. Nothing here transcribes, so nothing needs one.
+    pipeline_mod.select_engine = lambda model_name="small": "fixture"
     try:
         yield pipeline_mod
     finally:
         pipeline_mod.download = real_download
         pipeline_mod.transcribe_auto = real_transcribe
+        pipeline_mod.select_engine = real_engine_probe
 
 
 def run_fixture_pipeline(

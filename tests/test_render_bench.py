@@ -465,11 +465,18 @@ def test_the_disk_ceiling_is_scaled_on_the_outputs_dims_not_the_sources():
 def test_the_default_source_is_the_checked_in_corpus_clip():
     assert render_bench.DEFAULT_SOURCE == (ROOT / "corpus" / "media"
                                            / "pentagon-esper-briefing.mp4")
-    assert render_bench.DEFAULT_SOURCE.is_file(), (
-        "the bench's default source is not in the checkout; a table measured "
-        "against a scratch file is a table nobody can re-derive")
     assert render_bench.SCRATCH == ROOT / "corpus" / "render"
     assert RUNS == ROOT / "corpus" / "render" / "runs"
+    if not render_bench.DEFAULT_SOURCE.is_file():
+        # ``.gitignore`` excludes ``corpus/media/`` wholesale — the sources are
+        # hundreds of megabytes — so a clean checkout never carries one, and
+        # every other test in the suite that needs one skips for that reason
+        # (see test_render.py, test_fcpxml_vs_real_container.py). The two
+        # assertions above are the part that is checkable everywhere: the bench
+        # must point at the corpus, not at a scratch file, or a quoted figure
+        # is re-derivable nowhere. Where the media is present, this asserts it.
+        pytest.skip("needs corpus/media/pentagon-esper-briefing.mp4 "
+                    "(gitignored media)")
 
 
 def test_the_run_records_are_evidence_and_the_scratch_is_not():

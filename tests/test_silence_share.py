@@ -418,8 +418,19 @@ def test_review_does_not_clear_the_exit_code(project):
     if shutil.which("ffmpeg") is None:
         pytest.skip("ffmpeg is not installed")
 
-    ok, rep = audit(ROOT / "corpus" / project / "project")
-    assert not ok
+    project_dir = ROOT / "corpus" / project / "project"
+    ok, rep = audit(project_dir)
+    assert not ok, "an over-bar clip exited clean"
+    # The telugu REVIEW is the acoustic-decode branch of ``word_free_finding``,
+    # which has to measure the shipped render to contradict the dead air. A
+    # clean checkout has no renders — .gitignore excludes them — and the clip
+    # then reads as FAIL, the *other* nonzero state, which still clears nothing.
+    # The exit-code assertion above is the part that holds everywhere; the
+    # REVIEW content needs the media (see test_render.py for the same guard).
+    if not any(project_dir.glob(f"{kind}/*.mp4") for kind in ("facebook", "shorts")):
+        pytest.skip(
+            "the REVIEW findings this asserts need the shipped renders, which "
+            ".gitignore excludes; run the corpus to produce them")
     assert rep["review"], "an over-bar clip produced no REVIEW finding"
     for name in rep["review"]:
         assert name.startswith("clip "), f"{name} is not a clip finding"
