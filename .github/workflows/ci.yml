@@ -85,11 +85,16 @@ jobs:
         # environment-gated tests into a different suite.
         run: |
           pip install -e . --no-deps
-          # numpy is a base dependency but conftest.py imports it at collection
-          # time, so a --no-deps install that omits it fails before the first
-          # test can run. The heavyweight engines stay out on purpose (see the
-          # comment above); numpy is small enough that excluding it buys nothing.
-          pip install "pytest>=8" "pycmx>=1.5" "opentimelineio>=0.17.0" "pyyaml>=6" "huggingface_hub>=0.23" "requests>=2.31" "numpy>=1.26"
+          # numpy and opencv are base dependencies that test modules and the
+          # engine modules they import reach at collection time — conftest
+          # imports numpy, and the caption/reframe tests pull cv2 through
+          # engine.reframe and engine.caption_font. A --no-deps install that
+          # omits either dies collecting rather than running, which reports a
+          # packaging failure that is really an install-list gap. The
+          # heavyweight engines stay out on purpose (see the comment above):
+          # the silero suite skips cleanly without onnxruntime, and their
+          # clean-install contract is exercised by pypi-install below.
+          pip install "pytest>=8" "pycmx>=1.5" "opentimelineio>=0.17.0" "pyyaml>=6" "huggingface_hub>=0.23" "requests>=2.31" "numpy>=1.26" "opencv-python-headless>=4.9"
       - name: Node (for the web shell harness tests)
         run: node --version
       - name: Pytest
@@ -243,6 +248,10 @@ jobs:
           assert bundled_whisper_model() is not None
           assert bundled_mech_path() is not None
           assert ping_mech()["pong"] is True
+          print("clean installed runtime: PASS")
+          PY
+          /tmp/selekyt-clean/bin/selekyt --version
+          /tmp/selekyt-clean/bin/selekyt --doctor
       - name: Prove the install works with no system ffmpeg
         # The claim is that a machine with no ffmpeg installed is still usable.
         # This host has one (installed above as the first-choice resolver), so
@@ -270,12 +279,6 @@ jobs:
           print("no-system-ffmpeg fallback resolves ->", ff)
           print("no-system-ffmpeg fallback: PASS")
           PY
-
-          print("bundled ffmpeg resolves to:", bundled_ffmpeg)
-          print("clean installed runtime: PASS")
-          PY
-          /tmp/selekyt-clean/bin/selekyt --version
-          /tmp/selekyt-clean/bin/selekyt --doctor
       - name: Run the release packaging contract tests
         env:
           SELEKYT_RELEASE_BUILD: "1"
