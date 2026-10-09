@@ -169,7 +169,6 @@ jobs:
       - name: Build the release wheel
         env:
           SELEKYT_RELEASE_BUILD: "1"
-        env:
           SELEKYT_WHEEL_PLATFORM: linux_x86_64
         run: python -m build --wheel --outdir dist
       - name: Inspect the wheel as the product artifact
