@@ -81,13 +81,15 @@ class FfmpegError(RuntimeError):
 def _static_ffmpeg_bin(name: str) -> str | None:
     """Locate a binary inside the ``static-ffmpeg`` wheel, or None.
 
-    ``static-ffmpeg`` ships platform zips that it extracts into its own
-    ``bin/<platform>/`` directory at first use. The extraction happens on
-    ``add_paths()``, which is what puts the directory on ``PATH``; but a caller
-    that resolves the path directly rather than inheriting a mutated ``PATH``
-    still needs the file, and a zip that was never unpacked has no file to
-    find. Returns None in both the "not installed" and "not yet extracted"
-    cases, so the caller falls through to the next strategy instead of
+    ``static-ffmpeg`` downloads platform zips on first ``add_paths()`` and
+    unpacks them into its own ``bin/<platform>/`` directory, which is also what
+    puts that directory on ``PATH``; the wheel itself ships no binaries. A
+    caller that resolves the path directly rather than inheriting a mutated
+    ``PATH`` still needs the file, and a zip that was never downloaded has no
+    file to find — which is the normal state on a host where a system ffmpeg
+    already answered, since ``add_paths(weak=True)`` skips the download
+    entirely. Returns None in the "not installed" and "not yet downloaded"
+    cases alike, so the caller falls through to the next strategy instead of
     raising from inside a lookup.
     """
     try:

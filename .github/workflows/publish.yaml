@@ -255,8 +255,17 @@ jobs:
           import onnxruntime, faster_whisper, pycmx, opentimelineio, static_ffmpeg
           from engine.vad import SileroVADBackend, get_vad_backend
           from selekyt.runtime import bundled_mech_path, bundled_whisper_model, ping_mech
-          assert "/home/runner/work/" not in engine.__file__, \
-              "engine imported from the checkout, not the installed wheel"
+          # engine ships as a namespace package, so engine.__file__ is None and
+          # an "in engine.__file__" check raises instead of asserting anything.
+          # selekyt is a regular package installed beside it, so its directory is
+          # where both came from — had the checkout leaked onto sys.path, that
+          # directory would be the source tree rather than this venv.
+          import os as _os
+          _pkgs = _os.path.dirname(_os.path.dirname(selekyt.__file__))
+          assert "/home/runner/work/" not in _pkgs, \
+              f"selekyt resolved from {_pkgs}, the checkout rather than the wheel"
+          assert _os.path.isdir(_os.path.join(_pkgs, "engine")), \
+              "engine is not installed beside selekyt"
           assert SileroVADBackend().is_available(), "silero VAD backend unavailable"
           assert get_vad_backend().name == "silero", \
               f"VAD resolved to {get_vad_backend().name}, not silero"

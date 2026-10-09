@@ -85,7 +85,11 @@ jobs:
         # environment-gated tests into a different suite.
         run: |
           pip install -e . --no-deps
-          pip install "pytest>=8" "pycmx>=1.5" "opentimelineio>=0.17.0" "pyyaml>=6" "huggingface_hub>=0.23" "requests>=2.31"
+          # numpy is a base dependency but conftest.py imports it at collection
+          # time, so a --no-deps install that omits it fails before the first
+          # test can run. The heavyweight engines stay out on purpose (see the
+          # comment above); numpy is small enough that excluding it buys nothing.
+          pip install "pytest>=8" "pycmx>=1.5" "opentimelineio>=0.17.0" "pyyaml>=6" "huggingface_hub>=0.23" "requests>=2.31" "numpy>=1.26"
       - name: Node (for the web shell harness tests)
         run: node --version
       - name: Pytest
@@ -223,24 +227,50 @@ jobs:
           import onnxruntime, faster_whisper, pycmx, opentimelineio, static_ffmpeg
           from engine.vad import SileroVADBackend, get_vad_backend
           from selekyt.runtime import bundled_mech_path, bundled_whisper_model, ping_mech
-          assert "/tmp/selekyt-release" not in engine.__file__
-          assert "/tmp/selekyt-release" not in selekyt.__file__
+          # engine ships as a namespace package, so engine.__file__ is None and
+          # an "in engine.__file__" check raises instead of asserting anything.
+          # selekyt is a regular package installed beside it, so its directory is
+          # where both came from — and had the checkout leaked onto sys.path,
+          # that directory would be the source tree, not this venv.
+          import os as _os
+          _pkgs = _os.path.dirname(_os.path.dirname(selekyt.__file__))
+          assert _pkgs.startswith("/tmp/selekyt-clean"), \
+              f"selekyt resolved from {_pkgs}, not the clean venv"
+          assert _os.path.isdir(_os.path.join(_pkgs, "engine")), \
+              "engine is not installed beside selekyt"
           assert SileroVADBackend().is_available()
           assert get_vad_backend().name == "silero"
           assert bundled_whisper_model() is not None
           assert bundled_mech_path() is not None
           assert ping_mech()["pong"] is True
-          # The fallback that makes a host with no system ffmpeg usable: the
-          # wheel's own static-ffmpeg must have unpacked a runnable binary, not
-          # merely a package that imports.
-          from providers.ffmpeg import _static_ffmpeg_bin
-          import subprocess as _sp
-          bundled_ffmpeg = _static_ffmpeg_bin("ffmpeg")
-          assert bundled_ffmpeg, "the static-ffmpeg wheel provided no ffmpeg"
-          probe = _sp.run([bundled_ffmpeg, "-version"],
-                          capture_output=True, text=True)
+      - name: Prove the install works with no system ffmpeg
+        # The claim is that a machine with no ffmpeg installed is still usable.
+        # This host has one (installed above as the first-choice resolver), so
+        # the claim is only testable in an environment where PATH cannot reach
+        # it. static_ffmpeg does not ship its binaries in the wheel — it
+        # downloads them on first add_paths(), and that download is skipped
+        # entirely when a system ffmpeg already answers, so
+        # _static_ffmpeg_bin() is expected to be empty here rather than
+        # evidence of a broken install. The static-ffmpeg rung is the only one
+        # left in this env; resolving and executing it is the real proof.
+        run: |
+          cd /tmp
+          env -i PATH="/tmp/selekyt-clean/bin" HOME="$HOME" \
+          /tmp/selekyt-clean/bin/python - <<'PY'
+          import shutil, subprocess
+          assert shutil.which("ffmpeg") is None, \
+              "ffmpeg is still reachable, so this is not exercising the fallback"
+          from providers.ffmpeg import ffmpeg_bin, ffprobe_bin
+          ff = ffmpeg_bin()
+          probe = subprocess.run([ff, "-version"], capture_output=True, text=True)
           assert probe.returncode == 0, \
-              f"the bundled ffmpeg is not runnable: {(probe.stderr or '')[:200]}"
+              f"the fallback ffmpeg is not runnable: {(probe.stderr or '')[:200]}"
+          assert subprocess.run([ffprobe_bin(), "-version"],
+                                capture_output=True, text=True).returncode == 0
+          print("no-system-ffmpeg fallback resolves ->", ff)
+          print("no-system-ffmpeg fallback: PASS")
+          PY
+
           print("bundled ffmpeg resolves to:", bundled_ffmpeg)
           print("clean installed runtime: PASS")
           PY
