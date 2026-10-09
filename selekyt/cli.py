@@ -13,6 +13,7 @@ from typing import TextIO
 from engine.captions import caption_presets
 from selekyt.pipeline import run
 from selekyt.server import serve_stdio as serve_python
+from selekyt.runtime import bundled_mech_path, bundled_whisper_model, ping_mech
 from selekyt.transcription_settings import (
     PROVIDERS as TRANSCRIPTION_PROVIDERS,
     TranscriptionSettingsError,
@@ -37,9 +38,9 @@ def _doctor() -> int:
     else:
         primary, alternate = "python3", "python"
     # ffmpeg/ffprobe are resolved through the shared provider rather than a bare
-    # ``which`` so an install that carries its own (the static-ffmpeg wheel) is
-    # reported as ready instead of told to install a system package it does not
-    # need. The distinction is what makes the [media] extra worth having.
+    # ``which`` so an install that carries its own (the static-ffmpeg wheel,
+    # which is a base dependency) is reported as ready instead of told to
+    # install a system package it does not need.
     from providers.ffmpeg import _static_ffmpeg_bin
 
     def _have(name: str) -> bool:
@@ -52,6 +53,48 @@ def _doctor() -> int:
         ("ffprobe", True, _have("ffprobe")),
         ("yt-dlp", False, shutil.which("yt-dlp") is not None),
     ]
+    try:
+        import onnxruntime  # noqa: F401
+        ort_ok = True
+    except ImportError:
+        ort_ok = False
+    checks.append(("onnxruntime", True, ort_ok))
+    try:
+        from engine.vad import SileroVADBackend
+        silero_ok = SileroVADBackend().is_available()
+    except Exception:
+        silero_ok = False
+    checks.append(("silero-vad model", True, silero_ok))
+    try:
+        import pycmx  # noqa: F401
+        pycmx_ok = True
+    except ImportError:
+        pycmx_ok = False
+    checks.append(("pycmx", True, pycmx_ok))
+    try:
+        import opentimelineio  # noqa: F401
+        otio_ok = True
+    except ImportError:
+        otio_ok = False
+    checks.append(("opentimelineio", True, otio_ok))
+    try:
+        import static_ffmpeg  # noqa: F401
+        static_ffmpeg_ok = True
+    except ImportError:
+        static_ffmpeg_ok = False
+    checks.append(("static-ffmpeg", True, static_ffmpeg_ok))
+    mech = bundled_mech_path()
+    if mech is not None:
+        try:
+            ping_mech()
+            mech_ok = True
+        except Exception:
+            mech_ok = False
+    else:
+        mech_ok = False
+    checks.append(("rust mechanical core", True, mech_ok))
+    whisper_model = bundled_whisper_model()
+    checks.append(("bundled whisper model", True, whisper_model is not None))
     provider = default_transcription_provider()
     print(f"  transcription     {provider}")
     if provider == "local":
@@ -84,12 +127,15 @@ def _doctor() -> int:
     if not missing:
         print("Ready.")
         return 0
-    extra = {"local": "[transcription]", "groq": "[cloud-transcription]",
+    extra = {"local": "", "groq": "[cloud-transcription]",
              "gemini": "[cloud-transcription]"}[provider]
     if any(name.endswith(" key") for name in missing):
         print(f"Configure the selected cloud provider with: selekyt setup --provider {provider}")
     else:
-        print(f"Install the missing REQUIRED tools with: pip install 'selekyt{extra}'")
+        if provider == "local":
+            print("The production install is incomplete; reinstall `selekyt` from PyPI.")
+        else:
+            print(f"Install the missing optional cloud provider with: pip install 'selekyt{extra}'")
     return 1
 
 

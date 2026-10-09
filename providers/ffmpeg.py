@@ -12,6 +12,41 @@ import subprocess
 from pathlib import Path
 
 
+
+
+def _ensure_bundled_ffmpeg() -> None:
+    """Make the pip-installed FFmpeg/ffprobe runtime available on PATH.
+
+    A PyPI install must not depend on an administrator installing system
+    FFmpeg. ``static-ffmpeg`` supplies matching ffmpeg + ffprobe binaries for
+    supported platforms and adds them to this process PATH when the host does
+    not already provide both. System binaries win when they are complete.
+    """
+    if shutil.which("ffmpeg") and shutil.which("ffprobe"):
+        return
+    try:
+        import static_ffmpeg
+    except ImportError:
+        # Neither a system ffmpeg nor the wheel that provides one. Say nothing
+        # here and let ``resolve()`` raise at the site that actually needs a
+        # binary, with the message naming both remedies — raising at import time
+        # would instead make every importer of this module fail, including
+        # ``selekyt --help`` on a machine that never touches media.
+        return
+    try:
+        static_ffmpeg.add_paths(weak=True)
+    except Exception as exc:
+        raise RuntimeError(
+            "SelekyT could not initialize its bundled FFmpeg runtime; "
+            "install static-ffmpeg or provide ffmpeg and ffprobe on PATH"
+        ) from exc
+
+
+# Initialize the runtime when the production media layer is imported. This
+# gives every subprocess site in the engine the same binaries, including
+# modules that invoke ffmpeg directly rather than through run_capture().
+_ensure_bundled_ffmpeg()
+
 class FfmpegError(RuntimeError):
     """Raised when an ffmpeg/ffprobe invocation fails with diagnostics."""
 
@@ -115,12 +150,22 @@ def ffprobe_bin() -> str:
 
 
 def require_ffmpeg() -> None:
-    """Keep the old name working: raise if ffmpeg cannot be resolved."""
+    """Provision a bundled ffmpeg if the host has none, then resolve it.
+
+    ``_ensure_bundled_ffmpeg`` is what makes a machine with no system ffmpeg
+    usable: it unpacks the ``static-ffmpeg`` binaries onto ``PATH``, which the
+    engine sites that invoke a bare ``ffmpeg`` (``engine/qa.py``,
+    ``selekyt/server.py``) depend on resolving. ``ffmpeg_bin`` then resolves the
+    explicit path the rest of the engine invokes, and raises an actionable error
+    if neither source supplied one.
+    """
+    _ensure_bundled_ffmpeg()
     ffmpeg_bin()
 
 
 def require_ffprobe() -> None:
-    """Keep the old name working: raise if ffprobe cannot be resolved."""
+    """Provision, then resolve ffprobe — the pair of ``require_ffmpeg``."""
+    _ensure_bundled_ffmpeg()
     ffprobe_bin()
 
 

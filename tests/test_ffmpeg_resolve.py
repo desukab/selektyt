@@ -8,12 +8,12 @@ pin what happens at each boundary, because the order is load-bearing:
   and an operator who set the variable means it;
 - ``shutil.which`` next, because a system ffmpeg is the normal case and the one
   the corpus was measured against;
-- the ``static-ffmpeg`` wheel last, which is what makes ``pip install
-  selekyt[media]`` work on a machine with no ffmpeg at all.
+- the ``static-ffmpeg`` wheel last, which is what makes ``pip install selekyt``
+  work on a machine with no ffmpeg at all.
 
 Reordering the first two would silently ignore a bundle's own ffmpeg; dropping
-the third would restore the "must be on PATH" failure mode that the extra
-exists to remove.
+the third would restore the "must be on PATH" failure mode that carrying the
+wheel exists to remove.
 """
 from __future__ import annotations
 

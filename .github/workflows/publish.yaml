@@ -12,6 +12,8 @@ on:
 # publish. Every job here is a gate the publish job waits on, and the publish
 # job itself only runs when all of them succeeded — `if: success()` is
 # belt-and-braces against a `needs:` graph that a future edit might loosen.
+# No `continue-on-error` appears anywhere below; a step that could fail must
+# not be able to look like a pass.
 jobs:
   # ── the gate: the same acceptance the release claims ─────────────────────
   #
@@ -42,9 +44,9 @@ jobs:
 
       - name: Stage the release assets
         # Copies the built sidecar to the path the wheel ships it from, and
-        # verifies the bundled models are present. `--check` fails the job with
-        # a message naming whatever is missing rather than building a wheel
-        # that silently lacks it.
+        # verifies the bundled models are present. Fails the job with a message
+        # naming whatever is missing rather than building a wheel that silently
+        # lacks it.
         run: python tools/prepare_release_assets.py
 
       - name: Set up Python ${{ matrix.python-version }}
@@ -70,11 +72,14 @@ jobs:
           python -m venv /tmp/acceptance
           /tmp/acceptance/bin/pip install --upgrade pip
           /tmp/acceptance/bin/pip install --no-deps dist/*.whl
-          # The extras the acceptance suite needs: transcription for the
-          # bundled-model path, nle for the independent timeline validators
-          # (a missing validator must fail the check, so it has to be
-          # installed for the failure to be meaningful), dev for pytest.
-          /tmp/acceptance/bin/pip install 'selekyt[transcription,nle,dev]'
+          # The acceptance suite needs pytest, and the wheel's own declared
+          # dependencies for everything else (they are base now, so the plain
+          # install already pulled them; this reinstall is a no-op that keeps
+          # the command honest if that ever changes). `build` is what
+          # tests/test_pypi_packaging.py invokes to construct the wheel its
+          # assertions inspect — without it those tests *skip*, which would
+          # turn a broken package-data glob into a green run.
+          /tmp/acceptance/bin/pip install 'selekyt[dev]' build
 
       - name: The installed package imports and its CLI answers
         run: |
@@ -105,13 +110,20 @@ jobs:
 
       - name: Run the suite against the installed wheel
         # -rs so a skipped suite cannot pass as green without a reason printed.
-        # The acceptance runs from a directory the wheel was installed into,
-        # not from the checkout, so tests/ is copied alongside to be importable.
         run: |
-          /tmp/acceptance/bin/pip install pytest
           /tmp/acceptance/bin/python -m pytest tests/ -q -rs
         env:
           SELEKYT_MECH: ${{ github.workspace }}/engine/bin/selekyt-mech
+
+      - name: Assert the wheel's release-only contents
+        # SELEKYT_RELEASE_BUILD turns on the assertions that the built wheel
+        # actually carries the weights, the sidecar and the vendored reader.
+        # Without it those assert nothing, and a package-data glob that stopped
+        # matching would ship a wheel that silently degrades.
+        run: |
+          /tmp/acceptance/bin/python -m pytest tests/test_pypi_packaging.py -q
+        env:
+          SELEKYT_RELEASE_BUILD: "1"
 
   # ── the version the tag claims is the version that ships ────────────────
   #
@@ -140,6 +152,7 @@ jobs:
         env:
           REF: ${{ github.ref_name }}
 
+  # ── build the artifact that will actually be uploaded ────────────────────
   build:
     needs: [acceptance, version]
     runs-on: ubuntu-latest
@@ -148,12 +161,51 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build the Rust sidecar
+        working-directory: rust
+        run: cargo build --release --locked
       - name: Stage the release assets
+        # --check: nothing is staged here, this only refuses to proceed until
+        # every asset a user's first run depends on is present and named.
         run: python tools/prepare_release_assets.py --check
       - name: Build the distribution
         run: |
           python -m pip install --upgrade build
           python -m build
+      - name: Inspect the wheel payload and metadata
+        # The contract the release claims, checked against the artifact rather
+        # than the tree: the models, the weights, the sidecar, the vendored
+        # reader, and the dependency declarations a clean install resolves
+        # against.
+        run: |
+          python - <<'PY'
+          import zipfile, glob
+          wheels = glob.glob("dist/*.whl")
+          assert len(wheels) == 1, wheels
+          with zipfile.ZipFile(wheels[0]) as z:
+              names = set(z.namelist())
+              required = {
+                  "engine/models/silero_vad_v6.onnx",
+                  "engine/models/face_detection_yunet.onnx",
+                  "engine/models/whisper_tiny/model.bin",
+                  "engine/models/whisper_tiny/tokenizer.json",
+                  "engine/models/whisper_tiny/config.json",
+                  "engine/bin/selekyt-mech",
+                  "third_party/otio_fcpxml_adapter/fcpxml.py",
+                  "third_party/otio_fcpxml_adapter/LICENSE",
+              }
+              missing = sorted(required - names)
+              assert not missing, f"missing from the wheel: {missing}"
+              meta = z.read(next(n for n in names if n.endswith(".dist-info/METADATA"))).decode()
+              for dep in ("faster-whisper", "av", "onnxruntime", "static-ffmpeg",
+                          "pycmx", "opentimelineio"):
+                  assert f"Requires-Dist: {dep}" in meta, f"{dep} missing from METADATA"
+              # The pin that keeps faster-whisper 1.2.1 runnable: PyAV 19 removed
+              # the argument it calls av.open() with.
+              assert "Requires-Dist: av<19,>=11" in meta, "the av<19 upper bound is not in METADATA"
+          print("wheel contract: PASS")
+          PY
       - name: Record the built artifacts
         run: ls -la dist/
       - uses: actions/upload-artifact@v4
@@ -162,12 +214,118 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
-  publish:
+  # ── the real product, on real media, from the built wheel ────────────────
+  #
+  # Everything above proves the wheel is well-formed. This proves the thing a
+  # user installs actually works: it installs the artifact built by the `build`
+  # job into a venv that has never seen the checkout, points it at a real
+  # downloadable speech video, and takes the installed CLI through
+  # transcription, story, render, captions and timeline interchange. Nothing
+  # here is mocked, and no path comes from the source tree.
+  real-media:
     needs: [build]
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ffmpeg / ffprobe
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Download the built wheel
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Install only the built wheel into a clean environment
+        run: |
+          rm -rf /tmp/selekyt-clean
+          python -m venv /tmp/selekyt-clean
+          /tmp/selekyt-clean/bin/python -m pip install --upgrade pip
+          /tmp/selekyt-clean/bin/python -m pip install dist/*.whl
+          /tmp/selekyt-clean/bin/python -m pip install "pytest>=8"
+      - name: Prove the installed runtime
+        # Run from /tmp so the checkout cannot supply anything the wheel did
+        # not. The VAD chain must resolve to silero — the top of the measured
+        # fallback order, not the ffmpeg rung.
+        run: |
+          cd /tmp
+          /tmp/selekyt-clean/bin/python - <<'PY'
+          import engine, selekyt
+          import onnxruntime, faster_whisper, pycmx, opentimelineio, static_ffmpeg
+          from engine.vad import SileroVADBackend, get_vad_backend
+          from selekyt.runtime import bundled_mech_path, bundled_whisper_model, ping_mech
+          assert "/home/runner/work/" not in engine.__file__, \
+              "engine imported from the checkout, not the installed wheel"
+          assert SileroVADBackend().is_available(), "silero VAD backend unavailable"
+          assert get_vad_backend().name == "silero", \
+              f"VAD resolved to {get_vad_backend().name}, not silero"
+          assert bundled_whisper_model() is not None, "no bundled whisper model"
+          assert bundled_mech_path() is not None, "no bundled sidecar"
+          assert ping_mech()["pong"] is True, "sidecar did not answer a ping"
+          print("installed runtime: PASS")
+          PY
+          /tmp/selekyt-clean/bin/selekyt --version
+          /tmp/selekyt-clean/bin/selekyt --doctor
+      - name: Run the installed Silero regression suite
+        run: |
+          cd /tmp
+          /tmp/selekyt-clean/bin/python -m pytest "$GITHUB_WORKSPACE/tests/test_vad_silero.py" -q
+      - name: Download real speech video
+        run: |
+          curl -L --fail --retry 3 \
+            "https://commons.wikimedia.org/wiki/Special:Redirect/file/Philip%20Nelson%20Interview.webm" \
+            -o /tmp/release-real.webm
+          ffmpeg -y -v error -ss 0 -t 45 -i /tmp/release-real.webm -c copy /tmp/release-sample.webm
+      - name: Run the real local end-to-end product
+        # --model tiny forces the bundled model, which is what this run exists
+        # to prove: the wheel's own weights, transcribing real speech, with no
+        # download and no source tree in reach.
+        run: |
+          cd /tmp
+          /tmp/selekyt-clean/bin/selekyt /tmp/release-sample.webm \
+            --model tiny --limit 1 --audio-analysis --out /tmp/release-e2e
+          test -f /tmp/release-e2e/project/facebook/01.mp4
+          test -f /tmp/release-e2e/project/shorts/01.mp4
+          test -f /tmp/release-e2e/project/timeline/01.edl
+          test -f /tmp/release-e2e/project/timeline/01.fcpxml
+          test -f /tmp/release-e2e/project/captions/01.ass
+          /tmp/selekyt-clean/bin/python "$GITHUB_WORKSPACE/tools/nle_check.py" /tmp/release-e2e/project | tee /tmp/nle-check.txt
+          # An independent validator that skipped proved nothing. A SKIP here
+          # means pycmx or the FCPXML reader was unavailable, which is a
+          # release failure, not a pass.
+          ! grep -q "SKIP" /tmp/nle-check.txt
+          # Fail closed on the runtime warnings that mean the install degraded
+          # silently instead of using the bundled runtime it ships.
+          if grep -RqiE "pycmx (absent|missing)|FCPXML reader (absent|missing)|vad ffmpeg" /tmp/release-e2e/project; then
+            echo "release-critical runtime warning found"
+            exit 1
+          fi
+      - name: The deliverables are non-empty and correctly shaped
+        # A zero-byte EDL or an empty FCPXML passes the file-exists checks
+        # above; the interchange files must carry real events.
+        run: |
+          set -e
+          for f in /tmp/release-e2e/project/timeline/01.edl /tmp/release-e2e/project/timeline/01.fcpxml /tmp/release-e2e/project/captions/01.ass; do
+            test -s "$f" || { echo "$f is empty"; exit 1; }
+          done
+          /tmp/selekyt-clean/bin/python - <<'PY'
+          import pathlib, re
+          root = pathlib.Path("/tmp/release-e2e/project")
+          edl = (root / "timeline/01.edl").read_text()
+          fcpxml = (root / "timeline/01.fcpxml").read_text()
+          assert re.search(r"^\s*(TITLE|FCM:)", edl, re.M), "EDL has no TITLE record"
+          assert "<fcpxml" in fcpxml, "FCPXML is not an FCPXML document"
+          assert "spine" in fcpxml, "FCPXML has no spine — no clip was placed"
+          print("deliverable shape: PASS")
+          PY
+
+  # ── publish, only after every gate above went green ──────────────────────
+  publish:
+    needs: [build, real-media]
+    runs-on: ubuntu-latest
     # Both guards: `needs` is the graph, `success()` survives a future edit
-    # that reorders it. No `continue-on-error` anywhere above makes a failure
-    # look like a pass.
+    # that reorders it.
     if: success()
     environment:
       name: pypi
@@ -179,5 +337,5 @@ jobs:
         with:
           name: dist
           path: dist/
-      - name: Publish distribution
+      - name: Publish the already-tested distribution
         uses: pypa/gh-action-pypi-publish@release/v1

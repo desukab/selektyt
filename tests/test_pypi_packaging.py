@@ -33,6 +33,7 @@ clean environment does not.
 from __future__ import annotations
 
 import importlib
+import os
 import pathlib
 import subprocess
 import sys
@@ -127,6 +128,23 @@ def test_llm_editorial_degrades_without_requests(monkeypatch):
     assert out.llm_metadata == {}
 
 
+def test_base_install_contains_every_default_runtime_dependency():
+    """Plain `pip install selekyt` is the product, not a shell of the product.
+
+    The default CLI is local transcription and the default output includes
+    independently readable timelines, so those runtime packages cannot live
+    behind extras. FFmpeg/ffprobe are also provisioned by static-ffmpeg.
+    """
+    base = _project()["project"]["dependencies"]
+    names = {req.split("[", 1)[0].split(";", 1)[0].split(">", 1)[0].split("=", 1)[0].split("<", 1)[0].strip() for req in base}
+    for required in (
+        "faster-whisper", "av", "onnxruntime", "pycmx",
+        "opentimelineio", "static-ffmpeg",
+    ):
+        assert required in names, f"{required} is missing from the base install"
+    assert not any(req.startswith("groq") for req in base)
+    assert not any(req.startswith("keyring") for req in base)
+
 def test_requests_is_not_a_base_dependency():
     """``requests`` belongs to the ``llm`` extra. If it appears in the base
     list, the extra is redundant; if it disappears from the extra, the LLM path
@@ -178,8 +196,15 @@ def test_the_all_extra_installs_every_runtime_group():
     install hint pointing at an extra they believe they already installed.
 
     ``dev`` is excluded: it pulls in pytest and the corpus tooling, which are
-    not runtime dependencies and are covered by the CI install."""
-    extras = _project()["project"]["optional-dependencies"]
+    not runtime dependencies and are covered by the CI install.
+
+    Base ``dependencies`` are subtracted from both sides: they are installed by
+    *every* ``pip install selekyt``, so a group that graduated from an extra to
+    base is still covered. Listing them in ``[all]`` too would duplicate the
+    version specs in two places where only one is authoritative."""
+    project = _project()["project"]
+    extras = project["optional-dependencies"]
+    base = set(project.get("dependencies", []))
     all_reqs = set(extras.get("all", []))
     assert all_reqs, "the all extra is missing entirely"
     expected = set()
@@ -187,7 +212,8 @@ def test_the_all_extra_installs_every_runtime_group():
         if name == "all" or name == "dev":
             continue
         expected |= set(reqs)
-    missing = sorted(r for r in expected if r not in all_reqs)
+    installed = base | all_reqs
+    missing = sorted(r for r in expected if r not in installed)
     assert not missing, (
         f"[all] does not install these runtime requirements, so a user who ran "
         f"`pip install 'selekyt[all]'` does not have them: {missing}"
@@ -231,15 +257,24 @@ def test_the_wheel_bundles_the_onnx_models_the_engine_loads():
 
 @pytest.fixture(scope="module")
 def wheel() -> pathlib.Path:
-    """A built wheel, or a skip when the build backend is unavailable.
+    """A built wheel.
 
     Built into the pytest tmp tree rather than the repo's own ``dist/`` so the
     artifact never has to be cleaned out of the working tree, and so a failure
     here is a packaging failure rather than a stray-file surprise.
-    """
+
+    A wheel build that runs and fails is never a skip. Every assertion in this
+    module is downstream of this fixture, so turning a failed build into a skip
+    would publish a wheel whose contents were never checked — the tests would
+    report green having proven nothing. The one legitimate skip is a checkout
+    without the ``build`` backend at all, which is an environment limitation
+    rather than a packaging defect; and not even that under
+    SELEKYT_RELEASE_BUILD, where the backend is a release requirement."""
     try:
         import build  # noqa: F401
     except ImportError:
+        if os.environ.get("SELEKYT_RELEASE_BUILD"):
+            pytest.fail("the `build` backend is not installed in a release build")
         pytest.skip("the `build` backend is not installed")
 
     import tempfile
@@ -249,12 +284,15 @@ def wheel() -> pathlib.Path:
     # build dies with "Backend 'setuptools.build_meta' is not available" before
     # it gets to the project's own metadata. Isolated builds fetch the backend
     # themselves, which is also what a real release does.
+    build_env = os.environ.copy()
     proc = subprocess.run(
         [sys.executable, "-m", "build", "--wheel", "--outdir", str(out)],
-        cwd=str(ROOT), capture_output=True, text=True,
+        cwd=str(ROOT), env=build_env, capture_output=True, text=True,
     )
     if proc.returncode != 0:
-        pytest.skip(f"wheel build failed in this environment: {proc.stderr[-400:]}")
+        pytest.fail(
+            "the wheel does not build, so no packaging assertion in this "
+            f"module can be trusted:\n{proc.stderr[-1200:]}")
     wheels = sorted(out.glob("selekyt-*.whl"))
     assert wheels, "build reported success but wrote no wheel"
     return wheels[-1]
@@ -293,7 +331,48 @@ def test_the_wheel_carries_the_onnx_weights(wheel):
     # MIT and MIT-adjacent licences that must travel with the weights.
     assert "engine/models/silero_vad_v6.LICENSE" in names
     assert "engine/models/face_detection_yunet.LICENSE" in names
+    if os.environ.get("SELEKYT_RELEASE_BUILD"):
+        # The layout the wheel actually vendors — engine/models/whisper_tiny/
+        # and engine/bin/, which is where providers/whisper.py and
+        # providers/sidecar.py resolve them from. Asserting these paths is what
+        # makes a package-data glob that silently stopped matching a red test
+        # instead of a wheel that degrades on first use.
+        assert "engine/models/whisper_tiny/model.bin" in names
+        assert "engine/models/whisper_tiny/tokenizer.json" in names
+        assert "engine/models/whisper_tiny/config.json" in names
+        assert "engine/models/whisper_tiny/LICENSE" in names
+        assert "engine/models/whisper_tiny/PROVENANCE.md" in names
+        assert "engine/bin/selekyt-mech" in names
 
+
+
+def test_the_wheel_metadata_declares_the_complete_core_runtime(wheel):
+    import zipfile
+    with zipfile.ZipFile(wheel) as zf:
+        meta_name = next(n for n in zf.namelist() if n.endswith('.dist-info/METADATA'))
+        meta = zf.read(meta_name).decode('utf-8')
+    for line in [
+        'Requires-Dist: faster-whisper', 'Requires-Dist: av',
+        'Requires-Dist: onnxruntime', 'Requires-Dist: pycmx',
+        'Requires-Dist: opentimelineio', 'Requires-Dist: static-ffmpeg',
+    ]:
+        assert line in meta, f'{line} is missing from the built wheel METADATA'
+
+
+def test_the_wheel_is_portable_and_says_what_native_runtime_it_carries(wheel):
+    """The wheel is deliberately ``py3-none-any`` rather than platform-tagged.
+
+    Tagging it ``linux_x86_64`` would deny the editorial engine to macOS,
+    Windows and aarch64 hosts for the sake of one binary. Nothing on the
+    pipeline's critical path requires the sidecar — ``providers.sidecar``'
+    resolvers return ``None`` and every caller degrades — so the honest
+    contract is a portable wheel that carries the Linux x86_64 binary and
+    reports it unavailable elsewhere. What must not happen is a portable tag
+    with no binary inside, which is why this runs under SELEKYT_RELEASE_BUILD."""
+    if os.environ.get('SELEKYT_RELEASE_BUILD'):
+        assert wheel.name.endswith('-py3-none-any.whl'), wheel.name
+        names = _wheel_names(wheel)
+        assert "engine/bin/selekyt-mech" in names
 
 def test_the_wheel_ships_no_repo_only_directories(wheel):
     """``corpus/`` holds gigabytes of regenerable media, ``tests/`` is the

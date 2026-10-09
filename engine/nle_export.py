@@ -967,13 +967,9 @@ def independent_parse_edl(text: str) -> tuple[bool, list[str]]:
     """Parse an EDL with a third-party CMX 3600 reader, not our own.
 
     Returns (ran, problems). ``ran`` is False when the reader is absent —
-    ``pycmx`` is an optional extra, and its absence is a property of this
-    install rather than a defect in this EDL, so a missing reader is *not*
-    reported as a problem here. The runtime pipeline reports it as an advisory
-    instead, because failing every export on a base install would be worse
-    than an unverified one. ``tools/nle_check.py`` takes the opposite stance
-    deliberately: invoked by name on a finished project, a check that passes
-    while its validator is missing proves nothing, so it FAILs there.
+    The reader is release-critical. A missing reader is therefore returned as
+    a problem, never as a successful-but-unverified result. ``ran`` remains in
+    the return shape for compatibility with callers, but is always True.
 
     ``validate_edl`` above and this function read the text with different
     parsers for the same reason: a single regex that both emits and checks a
@@ -981,8 +977,11 @@ def independent_parse_edl(text: str) -> tuple[bool, list[str]]:
     """
     try:
         from pycmx import parse_cmx3600
-    except ImportError:
-        return False, []
+    except ImportError as exc:
+        return True, [
+            "required independent EDL reader pycmx is unavailable: "
+            f"{type(exc).__name__}: {exc}"
+        ]
     try:
         parsed = parse_cmx3600(io.StringIO(text))
         list(parsed.events)
@@ -994,13 +993,8 @@ def independent_parse_edl(text: str) -> tuple[bool, list[str]]:
 def independent_parse_fcpxml(text: str) -> tuple[bool, list[str]]:
     """Parse an FCPXML with a third-party reader, not our own.
 
-    The mirror of ``independent_parse_edl``. Returns (ran, problems): ``ran``
-    is False when the reader is absent, which is a property of this install
-    rather than a defect in this file, so the runtime pipeline reports it as an
-    advisory instead of failing an export on a base install.
-    ``tools/nle_check.py`` takes the opposite stance for the same reason it
-    does for pycmx: invoked by name on a finished project, a check that passes
-    while its validator is missing proves nothing, so it FAILs there.
+    The mirror of ``independent_parse_edl``. The reader is release-critical;
+    absence is a problem, never a successful-but-unverified result.
 
     The reader is the OpenTimelineIO FCPXML adapter, vendored under
     ``third_party/otio_fcpxml_adapter/`` (Apache-2.0, see
@@ -1022,8 +1016,11 @@ def independent_parse_fcpxml(text: str) -> tuple[bool, list[str]]:
     try:
         import opentimelineio as otio  # type: ignore[import-not-found]
         from third_party.otio_fcpxml_adapter.fcpxml import FcpxXml
-    except ImportError:
-        return False, []
+    except ImportError as exc:
+        return True, [
+            "required independent FCPXML reader is unavailable: "
+            f"{type(exc).__name__}: {exc}"
+        ]
     try:
         obj = FcpxXml(text).to_otio()
         clips = list(obj.find_children(otio.schema.Clip))

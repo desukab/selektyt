@@ -101,6 +101,22 @@ def require(name: str) -> str:
     return resolve(name)
 
 
+def _ffmpeg_available() -> bool:
+    """Whether ffmpeg resolved, so the format chooser knows it can mux halves.
+
+    Resolved through the shared provider rather than a bare ``which`` on
+    purpose: an install that carries its own ffmpeg (the static-ffmpeg wheel,
+    or a desktop bundle naming it through ``SELEKYT_FFMPEG``) is able to merge
+    a video-only stream with its audio half, and reporting it as absent would
+    silently demote every source to an older, lower-resolution one.
+    """
+    try:
+        require("ffmpeg")
+    except RuntimeError:
+        return False
+    return True
+
+
 def _max_source_height() -> int:
     """The tallest source SeleKyT asks for, from ``SELEKYT_MAX_SOURCE_HEIGHT``.
 

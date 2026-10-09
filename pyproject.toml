@@ -10,74 +10,55 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "LicenseRef-SeleKyT-NonCommercial-Source-Available"
 license-files = ["LICENSE"]
-# A bare ``pip install selekyt`` is the local-only path: ffmpeg via yt-dlp,
-# OpenCV for the vision work, numpy. The cloud transcription clients and the
-# system credential store they read a key from are imported lazily and guarded
-# with an install hint naming this extra, so they belong to the group below
-# rather than to every install. A base install must reach ``selekyt --help``
-# and a full local run without any of them.
+# Local transcription is part of the base product, not an opt-in: the wheel
+# bundles the whisper tiny weights precisely so a bare ``pip install selekyt``
+# transcribes offline, and an install that ships those weights without the
+# library that loads them ships dead weight. faster-whisper, the pinned PyAV,
+# onnxruntime (the silero VAD and YuNet face detector), and static-ffmpeg (a
+# usable ffmpeg/ffprobe on a host with no system one) therefore all sit here.
 #
-# ffmpeg is deliberately NOT a base dependency. ``providers.ffmpeg.resolve``
-# looks for a system ffmpeg first and falls back to the ``static-ffmpeg`` wheel
-# (see the ``media`` extra below), and a machine that already has ffmpeg must
-# not pay for a second one. Making it optional rather than unconditional is
-# what keeps that order meaningful.
-dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26", "yt-dlp>=2026.8.19"]
+# The ``av`` pin is load-bearing: faster-whisper 1.2.1 calls
+# ``av.open(..., metadata_errors="ignore")`` (faster_whisper/audio.py), and
+# PyAV 19 removed that argument — so an unpinned resolve pulls av 19 and every
+# transcription dies on the first chunk with an unexpected keyword argument.
+# faster-whisper declares only ``av>=11``, so the upper bound has to come from
+# here. Lift it when faster-whisper releases a build that speaks the PyAV 19 API.
+#
+# pycmx and opentimelineio are base because the readers they provide are
+# release-critical: the independent EDL/FCPXML validation in tools/nle_check.py
+# must find them installed, and a dependency a gate depends on belongs where the
+# gate can rely on it.
+#
+# The cloud transcription clients and the system credential store they read a
+# key from are imported lazily and guarded with an install hint naming their
+# extra, so they stay optional: a base install must reach ``selekyt --help``
+# and a full local run without any of them.
+dependencies = [
+  "opencv-python-headless>=4.9",
+  "numpy>=1.26",
+  "yt-dlp>=2026.8.19",
+  "faster-whisper>=1.1",
+  "av>=11,<19",
+  "onnxruntime>=1.18.0",
+  "static-ffmpeg>=3.0",
+  "pycmx>=1.5",
+  "opentimelineio>=0.17.0",
+]
 
 [project.optional-dependencies]
-# ffmpeg/ffprobe without a manual install. ``static-ffmpeg`` downloads a
-# static build at first use into its own wheel directory, which
-# ``providers.ffmpeg`` resolves directly (no PATH mutation, no download at
-# import). Pulled into the extras that actually need media I/O rather than the
-# base install, so a host with a system ffmpeg installs nothing extra.
-media = ["static-ffmpeg>=2.7"]
-# faster-whisper is the preferred engine (attention-based, per-token
-# timestamps); sherpa-onnx is the fallback for hosts with no ctranslate2
-# wheel, e.g. Termux ARM64. Neither is a base dependency.
-#
-# `av` is pinned because faster-whisper 1.2.1 calls
-# `av.open(..., metadata_errors="ignore")` (faster_whisper/audio.py), and
-# PyAV 19.0.1 removed that argument — so an unpinned `pip install
-# selekyt[transcription]` on a clean machine resolves av 19 and every
-# transcription dies on the first chunk with
-# `open() got an unexpected keyword argument 'metadata_errors'`. faster-whisper
-# declares only `av>=11`, so the bound has to come from here. 18.x is what this
-# project's own transcription runs and corpus WER measurements were made
-# against; lift the pin when faster-whisper releases a build that speaks the
-# PyAV 19 API.
-#
-# `media` is included because transcription cannot run without an audio
-# extractor, and a clean install of this extra must be able to transcribe.
-transcription = ["faster-whisper>=1.1", "av>=11,<19", "static-ffmpeg>=2.7"]
-sherpa = ["sherpa-onnx>=1.10", "static-ffmpeg>=2.7"]
+# Compatibility alias: local transcription is base now, but existing
+# installation commands that name this extra must keep resolving.
+transcription = ["faster-whisper>=1.1", "av>=11,<19"]
+# The fallback transcription backend for hosts with no ctranslate2 wheel,
+# e.g. Termux ARM64.
+sherpa = ["sherpa-onnx>=1.10"]
 llm = ["requests>=2.31"]
 cloud-transcription = ["groq>=0.31", "google-genai>=2.0,<3", "keyring>=25"]
-# pycmx is an independent CMX 3600 reader, and the vendored
-# otio_fcpxml_adapter (see third_party/PROVENANCE.md) is an independent FCPXML
-# reader. tools/nle_check.py uses both to parse SelekyT's own EDL and FCPXML
-# output with parsers SelekyT did not write, which is the only kind of check
-# that can catch a self-consistent-but-wrong emitter — a writer and a validator
-# drawn from the same codebase cannot see each other's mistakes. Without either
-# the corresponding check fails loudly rather than skipping, so this extra is
-# installed in CI. opentimelineio is a build-time requirement of the FCPXML
-# reader only, so it stays out of the base install.
+# Independent timeline readers are production validation dependencies now.
 nle = ["pycmx>=1.5", "opentimelineio>=0.17.0"]
-# pyyaml reads the release workflows in tests/test_desktop_packaging.py, which
-# pins the signed/unsigned label against the YAML that actually ships the
-# installer. Without it those tests error at collection on a clean checkout
-# rather than silently not running, which is worse than a skip but still a red
-# CI for a dependency reason. opentimelineio is here for the same reason as
-# pycmx: the corpus interchange sweep importorskips the readers, and a CI that
-# skips them is a CI that never exercised the independent FCPXML parse.
-# huggingface_hub is the library whose cache layout the staged installer ships,
-# and tests/test_collapse_hub_cache.py asks the installed library to resolve a
-# collapsed cache offline — a fixture imitating the format would only ever test
-# the imitation, so this extra keeps that check live in CI instead of skipping.
-dev = ["pytest>=8", "pycmx>=1.5", "opentimelineio>=0.17.0", "pyyaml>=6",
-       "huggingface_hub>=0.23", "static-ffmpeg>=2.7"]
-all = ["faster-whisper>=1.1", "av>=11,<19", "sherpa-onnx>=1.10", "requests>=2.31",
-       "groq>=0.31", "google-genai>=2.0,<3", "keyring>=25", "static-ffmpeg>=2.7",
-       "pycmx>=1.5", "opentimelineio>=0.17.0"]
+dev = ["pytest>=8", "pyyaml>=6", "huggingface_hub>=0.23", "static-ffmpeg>=3.0"]
+all = ["sherpa-onnx>=1.10", "requests>=2.31",
+       "groq>=0.31", "google-genai>=2.0,<3", "keyring>=25"]
 
 [project.scripts]
 selekyt = "selekyt.cli:main"
@@ -107,6 +88,13 @@ include = ["selekyt*", "engine*", "models*", "providers*", "third_party*"]
 # still die on a connection error. See engine/models/whisper_tiny/PROVENANCE.md
 # for the origin record. model.bin is the overwhelming majority of the wheel;
 # the three sidecar files are needed to construct the model from a directory.
+#
+# engine/bin/selekyt-mech is the compiled Rust sidecar. It is a Linux x86_64
+# binary inside a platform-agnostic wheel, which is deliberate: nothing on the
+# pipeline's critical path requires it (providers/sidecar.py resolves to None
+# and callers degrade), so tagging the wheel linux_x86_64 would deny the
+# editorial engine to aarch64 and macOS hosts for the sake of a binary they
+# would never run.
 [tool.setuptools.package-data]
 engine = ["assets/fonts/*.ttf", "assets/licenses/OFL-Fredoka.txt",
           "models/*.onnx", "models/*.LICENSE", "models/*.PROVENANCE.md",

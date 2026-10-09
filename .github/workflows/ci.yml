@@ -78,7 +78,14 @@ jobs:
         # tests/test_collapse_hub_cache.py asks to resolve a collapsed staged
         # cache offline — the check only means something against the real
         # library, so it stays installed here rather than skipping.
-        run: pip install -e ".[dev,llm,nle]"
+        # The source regression matrix deliberately keeps heavyweight runtime
+        # engines out of the test environment. Their clean-install contract is
+        # exercised separately by pypi-install below against the built wheel.
+        # This prevents optional-driver presence from silently turning historical
+        # environment-gated tests into a different suite.
+        run: |
+          pip install -e . --no-deps
+          pip install "pytest>=8" "pycmx>=1.5" "opentimelineio>=0.17.0" "pyyaml>=6" "huggingface_hub>=0.23" "requests>=2.31"
       - name: Node (for the web shell harness tests)
         run: node --version
       - name: Pytest
@@ -138,3 +145,133 @@ jobs:
       - name: Unit tests
         working-directory: apps/desktop/src-tauri
         run: cargo test --locked
+
+  pypi-install:
+    # This is the hard clean-install product gate. It builds the exact Linux
+    # platform wheel that the release workflow publishes, installs only that
+    # wheel into a brand-new venv, and runs the real runtime plus media path.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install build tools
+        run: python -m pip install --upgrade pip build
+      - name: Install ffmpeg / ffprobe
+        # Present as the first-choice resolver for the real render path. The
+        # static-ffmpeg fallback is proven separately below, so this job does
+        not depend on it silently working.
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Prepare every packaged runtime asset
+        # Builds the sidecar from the Cargo workspace at rust/ and stages it at
+        # the path the wheel vendors it from; fails the job naming anything
+        # missing rather than building a wheel that silently lacks it.
+        run: python tools/prepare_release_assets.py
+      - name: Build the release wheel
+        env:
+          SELEKYT_RELEASE_BUILD: "1"
+        run: python -m build --wheel --outdir dist
+      - name: Inspect the wheel as the product artifact
+        run: |
+          python - <<'PY'
+          import zipfile, glob
+          wheel = glob.glob("dist/*.whl")
+          assert len(wheel) == 1, wheel
+          wheel = wheel[0]
+          # Deliberately portable: a platform tag would deny the editorial
+          # engine to macOS/Windows/aarch64 hosts for the sake of one binary
+          # that nothing on the pipeline's critical path requires.
+          assert wheel.endswith("-py3-none-any.whl"), wheel
+          with zipfile.ZipFile(wheel) as z:
+              names = set(z.namelist())
+              required = {
+                  "engine/models/silero_vad_v6.onnx",
+                  "engine/models/face_detection_yunet.onnx",
+                  "engine/models/whisper_tiny/model.bin",
+                  "engine/models/whisper_tiny/tokenizer.json",
+                  "engine/models/whisper_tiny/config.json",
+                  "engine/models/whisper_tiny/LICENSE",
+                  "engine/models/whisper_tiny/PROVENANCE.md",
+                  "engine/bin/selekyt-mech",
+                  "third_party/otio_fcpxml_adapter/fcpxml.py",
+                  "third_party/otio_fcpxml_adapter/LICENSE",
+              }
+              missing = sorted(required - names)
+              assert not missing, missing
+              meta = z.read(next(n for n in names if n.endswith(".dist-info/METADATA"))).decode()
+              for dep in ("faster-whisper", "av", "onnxruntime", "static-ffmpeg",
+                          "pycmx", "opentimelineio"):
+                  assert f"Requires-Dist: {dep}" in meta, dep
+              # The pin that keeps faster-whisper 1.2.1 runnable.
+              assert "Requires-Dist: av<19,>=11" in meta, "av<19 upper bound missing"
+          print("wheel contract: PASS")
+          PY
+      - name: Install only the wheel into a clean environment
+        run: |
+          rm -rf /tmp/selekyt-clean
+          python -m venv /tmp/selekyt-clean
+          /tmp/selekyt-clean/bin/python -m pip install --upgrade pip
+          /tmp/selekyt-clean/bin/python -m pip install dist/*.whl
+          /tmp/selekyt-clean/bin/python -m pip install "pytest>=8"
+      - name: Prove imports and installed paths are clean
+        run: |
+          cd /tmp
+          /tmp/selekyt-clean/bin/python - <<'PY'
+          import engine, selekyt
+          import onnxruntime, faster_whisper, pycmx, opentimelineio, static_ffmpeg
+          from engine.vad import SileroVADBackend, get_vad_backend
+          from selekyt.runtime import bundled_mech_path, bundled_whisper_model, ping_mech
+          assert "/tmp/selekyt-release" not in engine.__file__
+          assert "/tmp/selekyt-release" not in selekyt.__file__
+          assert SileroVADBackend().is_available()
+          assert get_vad_backend().name == "silero"
+          assert bundled_whisper_model() is not None
+          assert bundled_mech_path() is not None
+          assert ping_mech()["pong"] is True
+          # The fallback that makes a host with no system ffmpeg usable: the
+          # wheel's own static-ffmpeg must have unpacked a runnable binary, not
+          # merely a package that imports.
+          from providers.ffmpeg import _static_ffmpeg_bin
+          import subprocess as _sp
+          bundled_ffmpeg = _static_ffmpeg_bin("ffmpeg")
+          assert bundled_ffmpeg, "the static-ffmpeg wheel provided no ffmpeg"
+          probe = _sp.run([bundled_ffmpeg, "-version"],
+                          capture_output=True, text=True)
+          assert probe.returncode == 0, \
+              f"the bundled ffmpeg is not runnable: {(probe.stderr or '')[:200]}"
+          print("bundled ffmpeg resolves to:", bundled_ffmpeg)
+          print("clean installed runtime: PASS")
+          PY
+          /tmp/selekyt-clean/bin/selekyt --version
+          /tmp/selekyt-clean/bin/selekyt --doctor
+      - name: Run the release packaging contract tests
+        env:
+          SELEKYT_RELEASE_BUILD: "1"
+        run: python -m pytest tests/test_pypi_packaging.py -q
+      - name: Run the real installed Silero regression suite
+        env:
+          SELEKYT_RELEASE_BUILD: "1"
+        run: |
+          cd /tmp
+          /tmp/selekyt-clean/bin/python -m pytest "$GITHUB_WORKSPACE/tests/test_vad_silero.py" -q
+      - name: Download real speech video
+        run: |
+          curl -L --fail --retry 3             "https://commons.wikimedia.org/wiki/Special:Redirect/file/Philip%20Nelson%20Interview.webm"             -o /tmp/release-real.webm
+          ffmpeg -y -v error -ss 0 -t 45 -i /tmp/release-real.webm -c copy /tmp/release-sample.webm
+      - name: Run the real local end-to-end product
+        run: |
+          cd /tmp
+          /tmp/selekyt-clean/bin/selekyt /tmp/release-sample.webm --model tiny --limit 1 --audio-analysis --out /tmp/release-e2e
+          test -f /tmp/release-e2e/project/facebook/01.mp4
+          test -f /tmp/release-e2e/project/shorts/01.mp4
+          test -f /tmp/release-e2e/project/timeline/01.edl
+          test -f /tmp/release-e2e/project/timeline/01.fcpxml
+          test -f /tmp/release-e2e/project/captions/01.ass
+          /tmp/selekyt-clean/bin/python "$GITHUB_WORKSPACE/tools/nle_check.py" /tmp/release-e2e/project | tee /tmp/nle-check.txt
+          ! grep -q "SKIP" /tmp/nle-check.txt
+          if grep -RqiE "pycmx (absent|missing)|FCPXML reader (absent|missing)|vad ffmpeg" /tmp/release-e2e/project; then
+            echo "release-critical runtime warning found"
+            exit 1
+          fi

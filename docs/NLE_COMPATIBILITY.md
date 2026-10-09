@@ -271,7 +271,7 @@ reader above covers the spine, but neither of them is an NLE.
 ```sh
 # The audit. pycmx is an independent CMX 3600 reader and the vendored
 # otio_fcpxml_adapter is an independent FCPXML reader; both are declared as
-# the optional extra `nle` in pyproject.toml rather than core dependencies,
+# the core runtime dependencies in pyproject.toml,
 # so they do not travel with every install (opentimelineio ships compiled
 # C++ extensions, which is why it stays out of the base and Termux install).
 # If either is absent the corresponding check FAILS rather than skipping —
