@@ -162,7 +162,7 @@ jobs:
       - name: Install ffmpeg / ffprobe
         # Present as the first-choice resolver for the real render path. The
         # static-ffmpeg fallback is proven separately below, so this job does
-        not depend on it silently working.
+        # not depend on it silently working.
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
       - name: Prepare every packaged runtime asset
         # Builds the sidecar from the Cargo workspace at rust/ and stages it at

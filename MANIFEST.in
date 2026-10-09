@@ -1,0 +1,14 @@
+# SeleKyT publishes an sdist, and the license is source-available — so the
+# source distribution has to carry the Cargo workspace that builds the
+# mechanical runtime, not just the prebuilt binary it vendors. Without it the
+# artifact a downloader can inspect is source-available in name only for
+# everything under rust/.
+#
+# The patterns are extension-scoped rather than a blanket `recursive-include
+# rust *` on purpose: rust/target holds ~42 MB of build artifacts that are not
+# source and would balloon the sdist for no one's benefit.
+recursive-include rust *.rs *.toml *.lock *.md
+prune rust/target
+
+global-exclude *.pyc
+global-exclude __pycache__
