@@ -65,21 +65,28 @@ jobs:
           python -m build
 
       - name: Install the wheel in a clean venv
-        # --no-deps because the dependencies are installed by name next, so a
-        # pinned bound in METADATA is what is exercised rather than whatever
-        # the build env happened to have.
+        # The wheel's own METADATA drives the dependency resolution: this is the
+        # clean-install contract, exercised against the built artifact rather
+        # than the source tree an editable install would put on sys.path.
         run: |
           python -m venv /tmp/acceptance
           /tmp/acceptance/bin/pip install --upgrade pip
-          /tmp/acceptance/bin/pip install --no-deps dist/*.whl
-          # The acceptance suite needs pytest, and the wheel's own declared
-          # dependencies for everything else (they are base now, so the plain
-          # install already pulled them; this reinstall is a no-op that keeps
-          # the command honest if that ever changes). `build` is what
-          # tests/test_pypi_packaging.py invokes to construct the wheel its
-          # assertions inspect — without it those tests *skip*, which would
-          # turn a broken package-data glob into a green run.
-          /tmp/acceptance/bin/pip install 'selekyt[dev]' build
+          /tmp/acceptance/bin/pip install dist/*.whl
+          # The extras the acceptance suite needs beyond the package's own base
+          # dependencies, plus a builder. These are named explicitly rather than
+          # as `selekyt[dev]` for a reason: a requirement *by name* resolves
+          # from the index, and the index already carries a published selekyt
+          # (0.3.1 today), so that spelling silently installs the released
+          # package instead of the wheel this job just built and tests an
+          # artifact the release never shipped. Attaching the extra to the
+          # local path is not the answer either — `dist/*.whl[dev]` is a shell
+          # character class that matches no file, and quoting it makes pip read
+          # the glob literally (verified: "Invalid wheel filename: '*'").
+          # `build` is what tests/test_pypi_packaging.py invokes to construct
+          # the wheel its assertions inspect — without it those tests *skip*,
+          # which would turn a broken package-data glob into a green run.
+          /tmp/acceptance/bin/pip install pytest build pyyaml huggingface_hub \
+            requests "pillow>=10"
 
       - name: The installed package imports and its CLI answers
         run: |
@@ -138,19 +145,48 @@ jobs:
         with:
           python-version: "3.12"
       - name: The tag must match the declared version
+        # The tag is read from REF rather than argv: a heredoc gives python no
+        # arguments (argv is exactly ['-']), so argv[1] would raise IndexError
+        # and fail this gate on every well-formed tag.
         run: |
           python - <<'PY'
-          import re, sys, tomllib
+          import os, re, tomllib
           declared = tomllib.load(open("pyproject.toml","rb"))["project"]["version"]
-          tag = re.sub(r"^v", "", sys.argv[1])
+          tag = re.sub(r"^v", "", os.environ["REF"])
           if tag != declared:
-              sys.exit(f"tag {sys.argv[1]!r} does not match pyproject.toml "
-                       f"version {declared!r}; the tag would publish a build "
-                       "whose METADATA disagrees with the tag")
+              raise SystemExit(f"tag v{tag} does not match pyproject.toml "
+                               f"version {declared!r}; the tag would publish a "
+                               "build whose METADATA disagrees with the tag")
           print(f"tag matches declared version {declared}")
           PY
         env:
           REF: ${{ github.ref_name }}
+      - name: The version must not already be published
+        # A version that is already on PyPI cannot be uploaded again — the
+        # publish job would fail at the upload after ~20 minutes of building.
+        # Failing here names the collision in seconds and points at the fix:
+        # bump pyproject.toml and retag. A missing package or a network problem
+        # is not a release blocker, only an unpublishable one, so only an
+        # actual existing release of *this* version exits nonzero.
+        run: |
+          python - <<'PY'
+          import json, tomllib, urllib.request
+          declared = tomllib.load(open("pyproject.toml","rb"))["project"]["version"]
+          # The network read is the only part that may fail softly; the assertion
+          # must stay outside the try or its AssertionError is swallowed.
+          try:
+              with urllib.request.urlopen("https://pypi.org/pypi/selekyt/json",
+                                          timeout=20) as r:
+                  published = set(json.load(r)["releases"])
+          except Exception as exc:
+              print(f"could not reach PyPI ({exc}); skipping the published check")
+          else:
+              assert declared not in published, (
+                  f"version {declared} is already published to PyPI; bump "
+                  "pyproject.toml and retag rather than reusing a release")
+              print(f"version {declared} is not yet published "
+                    f"(existing: {sorted(published)})")
+          PY
 
   # ── build the artifact that will actually be uploaded ────────────────────
   build:
