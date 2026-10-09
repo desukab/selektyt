@@ -64,9 +64,15 @@ def _candidate_with_words(start: float, end: float) -> Candidate:
 
 
 def test_require_ffmpeg_raises_when_absent(monkeypatch):
+    # The resolver's own fallbacks are also stubbed: static-ffmpeg downloads a
+    # working pair on demand, so a missing system ffmpeg is not by itself an
+    # error. Only when nothing can supply a binary does the guard raise, and
+    # the diagnostic has to name the packaged remedy an install can provide.
     monkeypatch.setattr(shutil, "which", lambda name: None)
-    with pytest.raises(RuntimeError, match="ffmpeg is required"):
+    monkeypatch.setattr("providers.ffmpeg._static_ffmpeg_bin", lambda name: None)
+    with pytest.raises(RuntimeError, match="static-ffmpeg") as excinfo:
         require_ffmpeg()
+    assert "ffmpeg" in str(excinfo.value)
 
 
 def test_render_horizontal_clip(tmp_path):

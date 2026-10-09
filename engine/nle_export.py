@@ -966,10 +966,14 @@ def validate_edl(text: str, fps: float | None = None) -> list[str]:
 def independent_parse_edl(text: str) -> tuple[bool, list[str]]:
     """Parse an EDL with a third-party CMX 3600 reader, not our own.
 
-    Returns (ran, problems). ``ran`` is False when the reader is absent —
-    The reader is release-critical. A missing reader is therefore returned as
-    a problem, never as a successful-but-unverified result. ``ran`` remains in
-    the return shape for compatibility with callers, but is always True.
+    Returns (ran, problems). The reader is release-critical: a wheel that ships
+    timelines without it has no verification the EDL is readable by anything
+    but the code that wrote it. A missing reader is therefore returned as a
+    problem, never as a successful-but-unverified result — this is what makes
+    ``tools/nle_check.py`` fail the release gate rather than skipping a
+    validation it claims to have run. ``ran`` stays True in that case so the
+    caller reports the problem instead of treating it as a skip; the field is
+    kept in the return shape for callers that read the tuple positionally.
 
     ``validate_edl`` above and this function read the text with different
     parsers for the same reason: a single regex that both emits and checks a

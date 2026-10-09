@@ -260,11 +260,14 @@ class _ExplodingReader:
         raise ValueError("malformed CMX 3600 input")
 
 
-def test_a_missing_reader_is_reported_as_not_run_not_as_a_defect(monkeypatch):
-    """``pycmx`` is an optional extra. A base install must still be able to
-    export, so absence is ``(False, [])`` — not a problem. The runtime pipeline
-    turns that into an advisory line; ``tools/nle_check.py`` turns it into a
-    FAIL, and that difference is deliberate and documented at the function."""
+def test_a_missing_reader_fails_the_gate_not_the_export(monkeypatch):
+    """``pycmx`` is the independent CMX 3600 reader and it is release-critical:
+    a wheel that ships timelines without it has no third-party verification at
+    all, so its absence is returned as a problem rather than a clean not-run.
+    The runtime pipeline surfaces that as an advisory line;
+    ``tools/nle_check.py`` turns it into a FAIL — the difference is deliberate
+    and documented at the function. This is the check that makes a release
+    missing pycmx fail the gate instead of quietly skipping its validation."""
     import builtins
 
     real_import = builtins.__import__
@@ -276,9 +279,9 @@ def test_a_missing_reader_is_reported_as_not_run_not_as_a_defect(monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", refuse)
     ran, problems = independent_parse_edl("TITLE: x\nFCM: NON-DROP FRAME\n")
-    assert ran is True
-    assert problems and "pycmx" in problems[0]
-    assert problems == []
+    assert ran is True, "ran stays True so the caller reports a problem, not a skip"
+    assert problems, "a missing release-critical reader is not reported at all"
+    assert "pycmx" in problems[0], problems[0]
 
 
 # ------------------------------------------------------------------ FCPXML
@@ -416,12 +419,12 @@ class _ExplodingFcpxmlReader:
         raise ValueError("malformed FCPXML input")
 
 
-def test_a_missing_fcpxml_reader_is_reported_as_not_run_not_as_a_defect(monkeypatch):
-    """``opentimelineio`` is an optional extra, and the vendored reader imports
-    it. A base install must still be able to export, so absence is
-    ``(False, [])`` — not a problem. The runtime pipeline turns that into an
-    advisory line; ``tools/nle_check.py`` turns it into a FAIL, and that
-    difference is deliberate and documented at the function."""
+def test_a_missing_fcpxml_reader_fails_the_gate_not_the_export(monkeypatch):
+    """``opentimelineio`` is what the vendored FCPXML reader imports, and that
+    reader is release-critical for the same reason ``pycmx`` is: without it the
+    FCPXML SelekyT ships has been read only by the code that wrote it. Absence
+    is therefore a problem, not a clean not-run, so the release gate fails
+    rather than skipping a validation it claims to have run."""
     import builtins
 
     real_import = builtins.__import__
@@ -434,8 +437,9 @@ def test_a_missing_fcpxml_reader_is_reported_as_not_run_not_as_a_defect(monkeypa
 
     monkeypatch.setattr(builtins, "__import__", refuse)
     ran, problems = independent_parse_fcpxml("<fcpxml></fcpxml>")
-    assert ran is False, "the reader's absence is not a defect in this FCPXML"
-    assert problems == []
+    assert ran is True, "ran stays True so the caller reports a problem, not a skip"
+    assert problems, "a missing release-critical reader is not reported at all"
+    assert "reader" in problems[0], problems[0]
 
 
 def test_fcpxml_declares_one_asset_per_source_media():
