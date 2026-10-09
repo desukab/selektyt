@@ -8,7 +8,12 @@ import shutil
 import subprocess
 from pathlib import Path
 import pytest
-from providers.ffmpeg import FfmpegError, run_capture, probe_duration
+from providers.ffmpeg import (
+    FfmpegError,
+    _ensure_bundled_ffmpeg,
+    probe_duration,
+    run_capture,
+)
 
 
 class _FakeErrorProc:
@@ -80,8 +85,15 @@ def test_run_capture_missing_ffmpeg(monkeypatch):
     # A test of the terminal error must close both real lookups, otherwise it
     # passes on a machine where static-ffmpeg is installed and fails on one
     # where it is not — the opposite of what a "missing ffmpeg" test is for.
+    # Provisioning is neutralised for the same reason: patching ``shutil.which``
+    # rewrites the attribute on the shared ``shutil`` module, so
+    # ``_ensure_bundled_ffmpeg`` also sees ffmpeg as absent and tries to
+    # provision the wheel, whose own outcome depends on whether the platform zip
+    # has already been fetched. Letting it run would make this test's message
+    # depend on download state rather than on ``resolve``.
     monkeypatch.setattr("providers.ffmpeg.shutil.which", lambda _: None)
     monkeypatch.setattr("providers.ffmpeg._static_ffmpeg_bin", lambda _: None)
+    monkeypatch.setattr("providers.ffmpeg._ensure_bundled_ffmpeg", lambda: None)
     with pytest.raises(RuntimeError, match="ffmpeg was not found"):
         run_capture(["ffmpeg"], stage="render")
 
@@ -107,11 +119,42 @@ def test_probe_duration_empty_stdout_raises(monkeypatch):
 
 
 def test_probe_duration_missing_ffprobe(monkeypatch):
-    # Both real lookups closed, for the same reason as the ffmpeg case above.
+    # Both real lookups closed, for the same reason as the ffmpeg case above,
+    # and provisioning neutralised with them.
     monkeypatch.setattr("providers.ffmpeg.shutil.which", lambda _: None)
     monkeypatch.setattr("providers.ffmpeg._static_ffmpeg_bin", lambda _: None)
+    monkeypatch.setattr("providers.ffmpeg._ensure_bundled_ffmpeg", lambda: None)
     with pytest.raises(RuntimeError, match="ffprobe was not found"):
         probe_duration(Path("x.mp4"))
+
+
+def test_provisioning_chatter_goes_to_stderr_not_stdout(monkeypatch, capsys):
+    """``_ensure_bundled_ffmpeg`` runs at import time, so anything it lets
+    through to stdout lands in ``selekyt --version`` and in every JSON the CLI
+    emits on a host's first run — this was read back as ``'Downloading h'``
+    where a subprocess expected a JSON document. ``static_ffmpeg`` writes its
+    download and extract progress to *stdout*, so the call has to redirect it
+    to stderr, where a user running interactively still sees it."""
+    import sys as _sys
+
+    import static_ffmpeg
+
+    def _chatty_add_paths(*args, **kwargs):
+        # What static_ffmpeg does on a first-run download: progress on stdout.
+        _sys.stdout.write("Downloading https://github.com/zackees/ffmpeg_bins/\n")
+        _sys.stdout.flush()
+
+    monkeypatch.setattr("providers.ffmpeg.shutil.which", lambda _: None)
+    monkeypatch.setattr(static_ffmpeg, "add_paths", _chatty_add_paths)
+
+    _ensure_bundled_ffmpeg()
+
+    captured = capsys.readouterr()
+    assert captured.out == "", (
+        "bundled-ffmpeg provisioning wrote to stdout, which corrupts any "
+        "consumer parsing this process's output; progress belongs on stderr"
+    )
+    assert "Downloading" in captured.err
 
 
 # The tests above are mock-based, which cannot catch a container the real

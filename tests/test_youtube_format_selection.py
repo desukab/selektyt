@@ -272,20 +272,31 @@ def test_audio_the_host_cannot_decode_falls_back_to_a_muxed_stream():
 def test_without_ffmpeg_the_halves_are_not_joined():
     """``bv*+ba/b``'s silent fallthrough begins when there is no muxer. Without
     ffmpeg only streams that already carry audio are offered, so the failure is
-    a lower resolution, stated in the record, rather than a silent mismatch."""
+    a lower resolution, stated in the record, rather than a silent mismatch.
+
+    Both lookup rungs are closed: ``shutil.which`` is the system one, and
+    ``_static_ffmpeg_bin`` is the wheel's. A machine that has run an install
+    once has the platform zip already unpacked, and leaving that rung open makes
+    this test report "ffmpeg present" on a host where the format chooser would
+    in fact have merged the halves."""
     import shutil
+
+    import providers.ffmpeg as ffmpeg_mod
 
     formats = [
         _video("136", 720, tbr=191),
         _video("18", 360, acodec="mp4a.40.2", tbr=54),
     ]
     real_which = shutil.which
+    real_bundled = ffmpeg_mod._static_ffmpeg_bin
     shutil.which = lambda name: None
+    ffmpeg_mod._static_ffmpeg_bin = lambda name: None
     try:
         spec = _spec(formats)
         reason = _choice(formats)["reason"]
     finally:
         shutil.which = real_which
+        ffmpeg_mod._static_ffmpeg_bin = real_bundled
     assert spec.split("/")[0] == "18", (
         "without a muxer a video-only stream must not be offered as a merge"
     )

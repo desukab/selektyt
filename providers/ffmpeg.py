@@ -5,10 +5,12 @@ reproducible error message showing source/target paths and the command.
 """
 from __future__ import annotations
 
+import contextlib
 import math
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -34,7 +36,13 @@ def _ensure_bundled_ffmpeg() -> None:
         # ``selekyt --help`` on a machine that never touches media.
         return
     try:
-        static_ffmpeg.add_paths(weak=True)
+        # ``add_paths`` writes its download and extract progress to *stdout*,
+        # which would corrupt any consumer parsing this process's output — and
+        # this runs at import time, so it would pollute ``selekyt --version``
+        # and every JSON emitter on a host's first run. Progress is chatter, so
+        # it belongs on stderr, where a user running interactively still sees it.
+        with contextlib.redirect_stdout(sys.stderr):
+            static_ffmpeg.add_paths(weak=True)
     except Exception as exc:
         raise RuntimeError(
             "SelekyT could not initialize its bundled FFmpeg runtime; "
