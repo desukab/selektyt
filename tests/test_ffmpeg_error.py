@@ -75,8 +75,14 @@ def test_run_capture_success(monkeypatch):
 
 
 def test_run_capture_missing_ffmpeg(monkeypatch):
+    # ``resolve`` walks three steps: the SELEKYT_FFMPEG override (cleared by the
+    # conftest env isolation), ``shutil.which``, then the static-ffmpeg wheel.
+    # A test of the terminal error must close both real lookups, otherwise it
+    # passes on a machine where static-ffmpeg is installed and fails on one
+    # where it is not — the opposite of what a "missing ffmpeg" test is for.
     monkeypatch.setattr("providers.ffmpeg.shutil.which", lambda _: None)
-    with pytest.raises(RuntimeError, match="ffmpeg is required"):
+    monkeypatch.setattr("providers.ffmpeg._static_ffmpeg_bin", lambda _: None)
+    with pytest.raises(RuntimeError, match="ffmpeg was not found"):
         run_capture(["ffmpeg"], stage="render")
 
 
@@ -101,8 +107,10 @@ def test_probe_duration_empty_stdout_raises(monkeypatch):
 
 
 def test_probe_duration_missing_ffprobe(monkeypatch):
+    # Both real lookups closed, for the same reason as the ffmpeg case above.
     monkeypatch.setattr("providers.ffmpeg.shutil.which", lambda _: None)
-    with pytest.raises(RuntimeError, match="ffprobe is required"):
+    monkeypatch.setattr("providers.ffmpeg._static_ffmpeg_bin", lambda _: None)
+    with pytest.raises(RuntimeError, match="ffprobe was not found"):
         probe_duration(Path("x.mp4"))
 
 

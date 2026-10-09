@@ -13,11 +13,20 @@ from engine.reframe import (LANDSCAPE_DELIVERY, VERTICAL_DELIVERY, landscape_fil
                             vertical_reframe_filter)
 from engine.reframe_scenes import is_composed
 from models.core import Candidate
+from providers.ffmpeg import ffmpeg_bin, ffprobe_bin
 
 
 def require_ffmpeg() -> None:
-    if shutil.which("ffmpeg") is None:
-        raise RuntimeError("ffmpeg is required and must be on PATH")
+    """Delegate to the shared resolver so a wheel with bundled ffmpeg works."""
+    ffmpeg_bin()
+
+
+def _ffmpeg() -> str:
+    return ffmpeg_bin()
+
+
+def _ffprobe() -> str:
+    return ffprobe_bin()
 
 
 # ── script coverage: the burn must not draw placeholder boxes ─────────────
@@ -166,7 +175,7 @@ def _has_audio(path: Path) -> bool:
     """
     try:
         out = subprocess.run(
-            ["ffprobe", "-v", "error", "-select_streams", "a:0",
+            [_ffprobe(), "-v", "error", "-select_streams", "a:0",
              "-show_entries", "stream=index", "-of",
              "default=noprint_wrappers=1:nokey=1", str(path)],
             capture_output=True, text=True, check=True, encoding="utf-8",
@@ -191,7 +200,7 @@ def _audio_start(path: Path) -> float | None:
     """
     try:
         out = subprocess.run(
-            ["ffprobe", "-v", "error", "-select_streams", "a:0",
+            [_ffprobe(), "-v", "error", "-select_streams", "a:0",
              "-show_entries", "stream=start_time",
              "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
             capture_output=True, text=True, check=True, encoding="utf-8",
@@ -466,10 +475,10 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
     # warning-grade problem, so fall back to output seeking, which decodes and
     # discards and therefore cannot drop a stream.
     try:
-        subprocess.run(["ffmpeg", "-y", "-ss", f"{start:.3f}", "-i", str(source), *common],
+        subprocess.run([_ffmpeg(), "-y", "-ss", f"{start:.3f}", "-i", str(source), *common],
                        check=True)
         if _audio_is_unusable(out) and _has_audio(source):
-            subprocess.run(["ffmpeg", "-y", "-i", str(source), "-ss", f"{start:.3f}", *common],
+            subprocess.run([_ffmpeg(), "-y", "-i", str(source), "-ss", f"{start:.3f}", *common],
                            check=True)
     finally:
         # The canvas-aligned copy is burn-local: the shipped ASS is the package's
@@ -506,7 +515,7 @@ def concat_renders(
         audio = [_has_audio(p) for p in parts]
         if any(present != audio[0] for present in audio[1:]):
             raise RuntimeError("program reel parts do not agree on whether audio is present")
-        cmd = ["ffmpeg", "-y"]
+        cmd = [_ffmpeg(), "-y"]
         for part in parts:
             cmd += ["-i", str(part)]
         filters: list[str] = []
@@ -550,7 +559,7 @@ def concat_renders(
             "\n".join(f"file '{p.resolve().as_posix()}'" for p in parts),
             encoding="utf-8",
         )
-        cmd = ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(concat)]
+        cmd = [_ffmpeg(), "-y", "-f", "concat", "-safe", "0", "-i", str(concat)]
         cmd += ["-c", "copy", "-movflags", "+faststart", str(out)]
         subprocess.run(cmd, check=True)
     finally:

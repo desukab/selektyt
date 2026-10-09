@@ -6,6 +6,7 @@ reproducible error message showing source/target paths and the command.
 from __future__ import annotations
 
 import math
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -42,14 +43,85 @@ class FfmpegError(RuntimeError):
         super().__init__("\n".join(lines))
 
 
+def _static_ffmpeg_bin(name: str) -> str | None:
+    """Locate a binary inside the ``static-ffmpeg`` wheel, or None.
+
+    ``static-ffmpeg`` ships platform zips that it extracts into its own
+    ``bin/<platform>/`` directory at first use. The extraction happens on
+    ``add_paths()``, which is what puts the directory on ``PATH``; but a caller
+    that resolves the path directly rather than inheriting a mutated ``PATH``
+    still needs the file, and a zip that was never unpacked has no file to
+    find. Returns None in both the "not installed" and "not yet extracted"
+    cases, so the caller falls through to the next strategy instead of
+    raising from inside a lookup.
+    """
+    try:
+        import static_ffmpeg  # type: ignore[import-not-found]
+    except ImportError:
+        return None
+    root = Path(static_ffmpeg.__file__).parent / "bin"
+    if not root.is_dir():
+        return None
+    for platform_dir in sorted(root.iterdir()):
+        found = platform_dir / name
+        if found.is_file():
+            return str(found)
+    return None
+
+
+def resolve(name: str) -> str:
+    """Return the path to the ``ffmpeg``/``ffprobe`` binary to invoke.
+
+    Order, and why that order:
+
+    1. ``SELEKYT_FFMPEG`` / ``SELEKYT_FFPROBE``, when set — the staged desktop
+       installer and the CI parity matrix both point at a specific binary, and
+       an operator who set the variable did so because they want that one.
+    2. ``shutil.which`` — a system ffmpeg the user installed themselves is the
+       normal case and the one the corpus was measured against.
+    3. the ``static-ffmpeg`` wheel, when it is installed and has unpacked.
+
+    The third step is what makes ``pip install selekyt`` usable on a machine
+    with no system ffmpeg. It is deliberately last: the Rust sidecar and the
+    desktop bundle resolve the same way through ``SELEKYT_FFMPEG``, so an
+    install that carries its own ffmpeg names it explicitly rather than
+    relying on the fallback.
+
+    This function never downloads. ``static-ffmpeg`` downloads on first
+    ``add_paths()``; resolving from an unpacked directory keeps an import of
+    this module from reaching the network.
+    """
+    override = os.environ.get(f"SELEKYT_{name.upper()}")
+    if override:
+        return override
+    found = shutil.which(name)
+    if found:
+        return found
+    bundled = _static_ffmpeg_bin(name)
+    if bundled:
+        return bundled
+    raise RuntimeError(
+        f"{name} was not found. Install ffmpeg, or install the "
+        "'static-ffmpeg' package so SeleKyT can provide one"
+    )
+
+
+def ffmpeg_bin() -> str:
+    return resolve("ffmpeg")
+
+
+def ffprobe_bin() -> str:
+    return resolve("ffprobe")
+
+
 def require_ffmpeg() -> None:
-    if shutil.which("ffmpeg") is None:
-        raise RuntimeError("ffmpeg is required and must be on PATH")
+    """Keep the old name working: raise if ffmpeg cannot be resolved."""
+    ffmpeg_bin()
 
 
 def require_ffprobe() -> None:
-    if shutil.which("ffprobe") is None:
-        raise RuntimeError("ffprobe is required and must be on PATH")
+    """Keep the old name working: raise if ffprobe cannot be resolved."""
+    ffprobe_bin()
 
 
 def run_capture(
@@ -85,7 +157,7 @@ def probe_duration(media: Path) -> float:
     """Return media duration in seconds via ffprobe."""
     require_ffprobe()
     proc = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+        [ffprobe_bin(), "-v", "error", "-show_entries", "format=duration",
          "-of", "default=noprint_wrappers=1:nokey=1", str(media)],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -95,7 +167,7 @@ def probe_duration(media: Path) -> float:
     if proc.returncode != 0 or not proc.stdout.strip():
         raise FfmpegError(
             stage="probe-duration",
-            command=["ffprobe", "-v", "error", "-show_entries", "format=duration",
+            command=[ffprobe_bin(), "-v", "error", "-show_entries", "format=duration",
                      "-of", "default=noprint_wrappers=1:nokey=1", str(media)],
             stderr_tail=proc.stderr,
             source=str(media),
@@ -116,7 +188,7 @@ def probe_fps(media: Path) -> float:
     try:
         require_ffprobe()
         proc = subprocess.run(
-            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+            [ffprobe_bin(), "-v", "error", "-select_streams", "v:0",
              "-show_entries", "stream=r_frame_rate",
              "-of", "default=noprint_wrappers=1:nokey=1", str(media)],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
@@ -150,7 +222,7 @@ def probe_sample_aspect(media: Path) -> tuple[int, int]:
     try:
         require_ffprobe()
         proc = subprocess.run(
-            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+            [ffprobe_bin(), "-v", "error", "-select_streams", "v:0",
              "-show_entries", "stream=sample_aspect_ratio",
              "-of", "default=noprint_wrappers=1:nokey=1", str(media)],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
@@ -183,7 +255,7 @@ def remux(src: Path, dest: Path, timeout: float | None = None) -> Path:
     if dest.exists():
         dest.unlink()
     run_capture(
-        ["ffmpeg", "-y", "-loglevel", "error",
+        [ffmpeg_bin(), "-y", "-loglevel", "error",
          "-fflags", "+genpts",   # regenerate timestamps; the source's are the
                                  # thing being repaired, so trusting them
                                  # would carry the damage into the copy

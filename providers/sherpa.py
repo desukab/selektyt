@@ -40,15 +40,18 @@ _SIZE_TO_MODEL = {
 }
 
 
-def _require(name: str) -> None:
-    if shutil.which(name) is None:
-        raise RuntimeError(f"{name} is required and must be on PATH")
+def _require(name: str) -> str:
+    """Resolve through the shared provider so a wheel without a system ffmpeg
+    still works — sherpa-onnx is the fallback transcription engine precisely
+    for hosts that lack things, and it needs ffmpeg to extract audio too."""
+    from providers.ffmpeg import resolve
+    return resolve(name)
 
 
 def _duration(path: Path) -> float:
     _require("ffprobe")
     cmd = [
-        "ffprobe", "-v", "error", "-show_entries", "format=duration",
+        _require("ffprobe"), "-v", "error", "-show_entries", "format=duration",
         "-of", "default=noprint_wrappers=1:nokey=1", str(path),
     ]
     return float(subprocess.check_output(cmd, text=True, encoding="utf-8").strip())
@@ -59,7 +62,7 @@ def _extract_audio(media: Path, audio: Path) -> None:
     audio.parent.mkdir(parents=True, exist_ok=True)
     tmp = audio.with_suffix(".wav.tmp")
     cmd = [
-        "ffmpeg", "-y", "-i", str(media), "-vn", "-ac", "1", "-ar", "16000",
+        _require("ffmpeg"), "-y", "-i", str(media), "-vn", "-ac", "1", "-ar", "16000",
         "-c:a", "pcm_s16le", "-f", "wav", str(tmp),
     ]
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

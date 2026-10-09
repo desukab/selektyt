@@ -64,6 +64,7 @@ from engine.memory.evidence import Evidence, Modality, Source
 from engine.memory.intervals import MERGE_EPS, Interval, IntervalSet
 from providers.ffmpeg import (
     FfmpegError,
+    ffmpeg_bin,
     probe_duration,
     probe_fps,
     require_ffmpeg,
@@ -503,7 +504,7 @@ def decode_frame(video: Path, when: float, out_path: Path) -> tuple[int, int] | 
     """
     out_path.parent.mkdir(parents=True, exist_ok=True)
     command = [
-        "ffmpeg",
+        ffmpeg_bin(),
         "-y",
         "-nostdin",
         "-loglevel",

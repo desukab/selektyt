@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "selekyt"
-version = "0.3.1"
+version = "0.4.0"
 description = "Local-first long-form to publishable social video editorial engine"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,9 +16,21 @@ license-files = ["LICENSE"]
 # with an install hint naming this extra, so they belong to the group below
 # rather than to every install. A base install must reach ``selekyt --help``
 # and a full local run without any of them.
+#
+# ffmpeg is deliberately NOT a base dependency. ``providers.ffmpeg.resolve``
+# looks for a system ffmpeg first and falls back to the ``static-ffmpeg`` wheel
+# (see the ``media`` extra below), and a machine that already has ffmpeg must
+# not pay for a second one. Making it optional rather than unconditional is
+# what keeps that order meaningful.
 dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26", "yt-dlp>=2026.8.19"]
 
 [project.optional-dependencies]
+# ffmpeg/ffprobe without a manual install. ``static-ffmpeg`` downloads a
+# static build at first use into its own wheel directory, which
+# ``providers.ffmpeg`` resolves directly (no PATH mutation, no download at
+# import). Pulled into the extras that actually need media I/O rather than the
+# base install, so a host with a system ffmpeg installs nothing extra.
+media = ["static-ffmpeg>=2.7"]
 # faster-whisper is the preferred engine (attention-based, per-token
 # timestamps); sherpa-onnx is the fallback for hosts with no ctranslate2
 # wheel, e.g. Termux ARM64. Neither is a base dependency.
@@ -33,8 +45,11 @@ dependencies = ["opencv-python-headless>=4.9", "numpy>=1.26", "yt-dlp>=2026.8.19
 # project's own transcription runs and corpus WER measurements were made
 # against; lift the pin when faster-whisper releases a build that speaks the
 # PyAV 19 API.
-transcription = ["faster-whisper>=1.1", "av>=11,<19"]
-sherpa = ["sherpa-onnx>=1.10"]
+#
+# `media` is included because transcription cannot run without an audio
+# extractor, and a clean install of this extra must be able to transcribe.
+transcription = ["faster-whisper>=1.1", "av>=11,<19", "static-ffmpeg>=2.7"]
+sherpa = ["sherpa-onnx>=1.10", "static-ffmpeg>=2.7"]
 llm = ["requests>=2.31"]
 cloud-transcription = ["groq>=0.31", "google-genai>=2.0,<3", "keyring>=25"]
 # pycmx is an independent CMX 3600 reader, and the vendored
@@ -59,9 +74,9 @@ nle = ["pycmx>=1.5", "opentimelineio>=0.17.0"]
 # collapsed cache offline — a fixture imitating the format would only ever test
 # the imitation, so this extra keeps that check live in CI instead of skipping.
 dev = ["pytest>=8", "pycmx>=1.5", "opentimelineio>=0.17.0", "pyyaml>=6",
-       "huggingface_hub>=0.23"]
+       "huggingface_hub>=0.23", "static-ffmpeg>=2.7"]
 all = ["faster-whisper>=1.1", "av>=11,<19", "sherpa-onnx>=1.10", "requests>=2.31",
-       "groq>=0.31", "google-genai>=2.0,<3", "keyring>=25",
+       "groq>=0.31", "google-genai>=2.0,<3", "keyring>=25", "static-ffmpeg>=2.7",
        "pycmx>=1.5", "opentimelineio>=0.17.0"]
 
 [project.scripts]
@@ -84,8 +99,20 @@ include = ["selekyt*", "engine*", "models*", "providers*", "third_party*"]
 # is a wheel that silently degrades on first use, so they travel with the
 # package. Their licences and provenance ship beside them for the same reason
 # the FCPXML reader's do.
+#
+# engine/models/whisper_tiny/ is the same argument one level up: the tiny
+# whisper weights (75 MB, MIT) are the last entry in the transcription fallback
+# chain, so a run that has already given up on small and base lands on them.
+# Leaving that stop as a download means a run with audio already extracted can
+# still die on a connection error. See engine/models/whisper_tiny/PROVENANCE.md
+# for the origin record. model.bin is the overwhelming majority of the wheel;
+# the three sidecar files are needed to construct the model from a directory.
 [tool.setuptools.package-data]
 engine = ["assets/fonts/*.ttf", "assets/licenses/OFL-Fredoka.txt",
-          "models/*.onnx", "models/*.LICENSE", "models/*.PROVENANCE.md"]
+          "models/*.onnx", "models/*.LICENSE", "models/*.PROVENANCE.md",
+          "models/whisper_tiny/model.bin", "models/whisper_tiny/config.json",
+          "models/whisper_tiny/tokenizer.json", "models/whisper_tiny/vocabulary.txt",
+          "models/whisper_tiny/LICENSE", "models/whisper_tiny/PROVENANCE.md",
+          "bin/selekyt-mech"]
 third_party = ["PROVENANCE.md"]
 "third_party.otio_fcpxml_adapter" = ["LICENSE"]

@@ -1,32 +1,183 @@
 name: Publish to PyPI
 
+# Triggered by a version tag and nothing else. The tag is what a maintainer
+# types to ship a release, and the jobs below exist so that typing it cannot
+# reach PyPI unless the release actually builds and passes.
 on:
   push:
     tags:
       - "v*"
 
+# A tag pushed by mistake, or pushed before a fix landed, must not be able to
+# publish. Every job here is a gate the publish job waits on, and the publish
+# job itself only runs when all of them succeeded — `if: success()` is
+# belt-and-braces against a `needs:` graph that a future edit might loosen.
 jobs:
-  publish:
+  # ── the gate: the same acceptance the release claims ─────────────────────
+  #
+  # This is not a re-run of CI for politeness. A wheel that has never been
+  # installed in a clean environment has never been tested as a wheel: an
+  # editable install puts the source tree on sys.path, which hides a missing
+  # package-data file, a bad top_level, or an entry point that only resolves
+  # against the checkout. So the gate builds the wheel, installs it into a
+  # venv nothing else has touched, and runs the suite against that install.
+  acceptance:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build the Rust sidecar
+        # The wheel vendors the sidecar at engine/bin/selekyt-mech, and the
+        # parity test spawns the binary it resolves. Building here rather than
+        # trusting the checked-in copy means the release verifies the Cargo
+        # workspace in rust/ actually compiles from the tag's own source.
+        working-directory: rust
+        run: cargo build --release --locked
+
+      - name: Stage the release assets
+        # Copies the built sidecar to the path the wheel ships it from, and
+        # verifies the bundled models are present. `--check` fails the job with
+        # a message naming whatever is missing rather than building a wheel
+        # that silently lacks it.
+        run: python tools/prepare_release_assets.py
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install ffmpeg / ffprobe
+        # The acceptance run exercises the real render path, which needs a
+        # system ffmpeg to remain on PATH as the first-choice resolver.
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+
+      - name: Build the wheel and sdist
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+
+      - name: Install the wheel in a clean venv
+        # --no-deps because the dependencies are installed by name next, so a
+        # pinned bound in METADATA is what is exercised rather than whatever
+        # the build env happened to have.
+        run: |
+          python -m venv /tmp/acceptance
+          /tmp/acceptance/bin/pip install --upgrade pip
+          /tmp/acceptance/bin/pip install --no-deps dist/*.whl
+          # The extras the acceptance suite needs: transcription for the
+          # bundled-model path, nle for the independent timeline validators
+          # (a missing validator must fail the check, so it has to be
+          # installed for the failure to be meaningful), dev for pytest.
+          /tmp/acceptance/bin/pip install 'selekyt[transcription,nle,dev]'
+
+      - name: The installed package imports and its CLI answers
+        run: |
+          /tmp/acceptance/bin/python -c "import engine, providers, selekyt; print('imports ok')"
+          /tmp/acceptance/bin/selekyt --version
+
+      - name: The bundled whisper model resolves from the installed wheel
+        # The whole point of bundling: an installed copy must hand WhisperModel
+        # a directory, not a size name it would download.
+        run: |
+          /tmp/acceptance/bin/python - <<'PY'
+          import pathlib
+          from providers.whisper import resolve_model_path
+          resolved = pathlib.Path(resolve_model_path("tiny"))
+          assert resolved.is_dir(), f"tiny did not resolve to a directory: {resolved}"
+          assert (resolved / "model.bin").is_file(), "no model.bin beside it"
+          print(f"installed wheel resolves tiny -> {resolved}")
+          PY
+
+      - name: The bundled sidecar answers a ping from the installed wheel
+        run: |
+          /tmp/acceptance/bin/python - <<'PY'
+          from providers.sidecar import sidecar_path, ping
+          print("installed sidecar ->", sidecar_path())
+          data = ping()
+          assert data.get("pong") is True, f"sidecar did not answer a ping: {data}"
+          PY
+
+      - name: Run the suite against the installed wheel
+        # -rs so a skipped suite cannot pass as green without a reason printed.
+        # The acceptance runs from a directory the wheel was installed into,
+        # not from the checkout, so tests/ is copied alongside to be importable.
+        run: |
+          /tmp/acceptance/bin/pip install pytest
+          /tmp/acceptance/bin/python -m pytest tests/ -q -rs
+        env:
+          SELEKYT_MECH: ${{ github.workspace }}/engine/bin/selekyt-mech
+
+  # ── the version the tag claims is the version that ships ────────────────
+  #
+  # A tag pushed from a tree whose pyproject.toml disagrees ships a build
+  # whose METADATA lies about its own version, which is how a downstream
+  # resolves the wrong release. This fails before anything is uploaded.
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: The tag must match the declared version
+        run: |
+          python - <<'PY'
+          import re, sys, tomllib
+          declared = tomllib.load(open("pyproject.toml","rb"))["project"]["version"]
+          tag = re.sub(r"^v", "", sys.argv[1])
+          if tag != declared:
+              sys.exit(f"tag {sys.argv[1]!r} does not match pyproject.toml "
+                       f"version {declared!r}; the tag would publish a build "
+                       "whose METADATA disagrees with the tag")
+          print(f"tag matches declared version {declared}")
+          PY
+        env:
+          REF: ${{ github.ref_name }}
+
+  build:
+    needs: [acceptance, version]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Stage the release assets
+        run: python tools/prepare_release_assets.py --check
+      - name: Build the distribution
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+      - name: Record the built artifacts
+        run: ls -la dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    # Both guards: `needs` is the graph, `success()` survives a future edit
+    # that reorders it. No `continue-on-error` anywhere above makes a failure
+    # look like a pass.
+    if: success()
     environment:
       name: pypi
       url: https://pypi.org/p/selekyt
     permissions:
       id-token: write
-
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/download-artifact@v4
         with:
-          python-version: "3.12"
-
-      - name: Build distribution
-        run: |
-          python -m pip install --upgrade build
-          python -m build
-
+          name: dist
+          path: dist/
       - name: Publish distribution
         uses: pypa/gh-action-pypi-publish@release/v1

@@ -11,7 +11,7 @@ import numpy as np
 from engine.caption_director import PLAYRES_X, PLAYRES_Y
 from engine.reframe_perception import find_shot_boundaries, get_detector
 from providers.ffmpeg import (require_ffmpeg, require_ffprobe,
-                             probe_sample_aspect)
+                             probe_sample_aspect, ffmpeg_bin, ffprobe_bin)
 
 # The canvas the burned-in captions are laid out on is the only size the
 # delivery frame may be. The ASS declares ``PlayRes 1080x1920``
@@ -779,7 +779,7 @@ def _decode_one_frame(video: Path, t: float) -> bytes | None:
     except RuntimeError:
         return None
     proc = subprocess.run(
-        ["ffmpeg", "-v", "error", "-hide_banner", "-nostats",
+        [ffmpeg_bin(), "-v", "error", "-hide_banner", "-nostats",
          "-ss", f"{t:.3f}", "-i", str(video),
          "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "bgr24", "-"],
         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
@@ -802,7 +802,7 @@ def _ffmpeg_dimensions(video: Path) -> tuple[int, int]:
     try:
         require_ffprobe()
         proc = subprocess.run(
-            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+            [ffprobe_bin(), "-v", "error", "-select_streams", "v:0",
              "-show_entries", "stream=width,height",
              "-of", "default=noprint_wrappers=1:nokey=1", str(video)],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)

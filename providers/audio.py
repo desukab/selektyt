@@ -11,13 +11,13 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from providers.ffmpeg import run_capture, FfmpegError
+from providers.ffmpeg import run_capture, FfmpegError, ffmpeg_bin, ffprobe_bin
 
 
 def _duration(path: Path) -> float:
     return float(
         subprocess.check_output(
-            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+            [ffprobe_bin(), "-v", "error", "-show_entries", "format=duration",
              "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
             text=True,
             encoding="utf-8",
@@ -34,7 +34,7 @@ def extract_pcm_wav(media: Path, out: Path, sample_rate: int = 16000) -> Path:
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = out.with_suffix(".wav.tmp")
     cmd = [
-        "ffmpeg", "-y", "-i", str(media), "-vn",
+        ffmpeg_bin(), "-y", "-i", str(media), "-vn",
         "-ac", "1", "-ar", str(sample_rate),
         "-c:a", "pcm_s16le", "-f", "wav", str(tmp),
     ]

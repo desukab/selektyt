@@ -13,6 +13,41 @@ from providers.atomic import read_json, write_json_atomic
 
 FALLBACK_CHAIN = ["small", "base", "tiny"]
 
+# The tiny model ships inside the wheel (engine/models/whisper_tiny/, ~78 MB)
+# so a clean install can transcribe without a network. ``WhisperModel`` accepts
+# either a size name — which resolves through HuggingFace and downloads — or a
+# directory holding model.bin and its sidecar files. Passing the directory when
+# we have one is what makes the difference: a size name on an offline machine
+# dies at the first chunk with a connection error after the media is already
+# downloaded and the audio already extracted.
+#
+# Only tiny is bundled, so small and base still download. The fallback chain
+# below terminates at tiny, which means a machine that runs out of patience on
+# small and base always lands on the local copy rather than on a third
+# download.
+_ENGINE_ROOT = Path(__file__).resolve().parent.parent / "engine" / "models"
+BUNDLED_MODELS: dict[str, str] = {"tiny": "whisper_tiny"}
+
+
+def resolve_model_path(model_name: str) -> str:
+    """Return what ``WhisperModel`` should be given for ``model_name``.
+
+    A path to the bundled copy when we ship one, otherwise the size name itself
+    for faster-whisper to download. ``SELEKYT_WHISPER_MODEL`` overrides either,
+    which is how a staged desktop install points at its own weights.
+    """
+    override = os.environ.get("SELEKYT_WHISPER_MODEL")
+    if override:
+        return override
+    subdir = BUNDLED_MODELS.get(model_name)
+    if subdir is None:
+        return model_name
+    directory = _ENGINE_ROOT / subdir
+    if (directory / "model.bin").is_file():
+        return str(directory)
+    return model_name
+
+
 # Intra-chunk decode saturates well below the core count. Measured on a 4-core
 # machine with the small model over a 5-minute chunk: 1 thread 68.7 s, 2 threads
 # 40.3 s, 4 threads 40.8 s — flat past two. Chunks are decoded strictly in
@@ -193,15 +228,17 @@ def _load_chunk_checkpoint(path: Path) -> tuple[list[Segment], str, bool, str | 
     )
 
 
-def _require(name: str) -> None:
-    if shutil.which(name) is None:
-        raise RuntimeError(f"{name} is required and must be on PATH")
+def _require(name: str) -> str:
+    """Resolve ffmpeg/ffprobe through the shared provider so a wheel install
+    without a system ffmpeg still works."""
+    from providers.ffmpeg import resolve
+    return resolve(name)
 
 
 def _duration(path: Path) -> float:
     _require("ffprobe")
     cmd = [
-        "ffprobe", "-v", "error", "-show_entries", "format=duration",
+        _require("ffprobe"), "-v", "error", "-show_entries", "format=duration",
         "-of", "default=noprint_wrappers=1:nokey=1", str(path),
     ]
     return float(subprocess.check_output(cmd, text=True, encoding="utf-8").strip())
@@ -212,7 +249,7 @@ def _extract_audio(media: Path, audio: Path) -> None:
     audio.parent.mkdir(parents=True, exist_ok=True)
     tmp = audio.with_suffix(".wav.tmp")
     cmd = [
-        "ffmpeg", "-y", "-i", str(media), "-vn", "-ac", "1", "-ar", "16000",
+        _require("ffmpeg"), "-y", "-i", str(media), "-vn", "-ac", "1", "-ar", "16000",
         "-c:a", "pcm_s16le", "-f", "wav", str(tmp),
     ]
     subprocess.run(cmd, check=True)
@@ -307,7 +344,8 @@ def transcribe(
     fallback_consecutive = int(os.environ.get("SELEKYT_FALLBACK_CONSECUTIVE", "3"))
     chunk_timeout = int(os.environ.get("SELEKYT_CHUNK_TIMEOUT_MIN", "20")) * 60
     initial_model_name = model_name
-    model = WhisperModel(model_name, device="auto", compute_type="int8", cpu_threads=_threads)
+    model = WhisperModel(resolve_model_path(model_name), device="auto",
+                         compute_type="int8", cpu_threads=_threads)
     all_segments: list[Segment] = []
     detected_languages: list[str] = []
     running_wall = 0.0
@@ -497,7 +535,8 @@ def transcribe(
                             flush=True,
                         )
                         model = WhisperModel(
-                            model_name, device="auto", compute_type="int8", cpu_threads=_threads
+                            resolve_model_path(model_name), device="auto",
+                            compute_type="int8", cpu_threads=_threads
                         )
                         slow_count = 0
             else:

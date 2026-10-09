@@ -94,9 +94,11 @@ _CONSERVATIVE_CODECS = {"h264", "mpeg4", "aac", "mp3"}
 _DECODABLE_CODECS: set[str] | None = None
 
 
-def require(name: str) -> None:
-    if shutil.which(name) is None:
-        raise RuntimeError(f"{name} is required and must be on PATH")
+def require(name: str) -> str:
+    """Resolve ffmpeg/ffprobe through the shared provider so a wheel install
+    without a system ffmpeg still works."""
+    from providers.ffmpeg import resolve
+    return resolve(name)
 
 
 def _max_source_height() -> int:
@@ -167,7 +169,7 @@ def decodable_codecs() -> set[str]:
     found: set[str] = set()
     try:
         proc = subprocess.run(
-            ["ffmpeg", "-hide_banner", "-decoders"], capture_output=True,
+            [require("ffmpeg"), "-hide_banner", "-decoders"], capture_output=True,
             text=True, timeout=30)
         found = {fam for line in proc.stdout.splitlines()
                  for fam in _CODECS_IN_LINE.findall(line)}
@@ -270,7 +272,7 @@ def _select_source(
     """
     # Joining halves needs a muxer; without one only streams that already carry
     # audio are offered, which on YouTube means older and lower-resolution ones.
-    can_merge = shutil.which("ffmpeg") is not None
+    can_merge = _ffmpeg_available()
     native = _video_streams(formats, allow_super_resolution=False, decodable=decodable)
     audio_id = _best_audio_id(formats, decodable)
 

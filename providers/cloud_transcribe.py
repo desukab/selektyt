@@ -14,6 +14,7 @@ from typing import Callable
 
 from models.core import Segment, Word
 from providers.atomic import write_json_atomic
+from providers.ffmpeg import ffmpeg_bin
 from providers.whisper import _duration, _extract_audio
 
 CHUNK_OVERLAP_SECONDS = 8
@@ -305,7 +306,7 @@ def transcribe(
             with tempfile.TemporaryDirectory(prefix="selekyt-cloud-") as temp:
                 wav = Path(temp) / f"chunk_{index:04d}.wav"
                 subprocess.run([
-                    "ffmpeg", "-y", "-loglevel", "error", "-ss", f"{decode_start:.3f}",
+                    ffmpeg_bin(), "-y", "-loglevel", "error", "-ss", f"{decode_start:.3f}",
                     "-i", str(audio), "-t", f"{decode_end - decode_start:.3f}",
                     "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le", "-f", "wav", str(wav),
                 ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)

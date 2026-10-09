@@ -233,7 +233,14 @@ class FFmpegVADBackend(VADBackend):
         self.fallback_reason = fallback_reason
 
     def is_available(self) -> bool:
-        return shutil.which("ffmpeg") is not None
+        # Resolved through the shared provider rather than a bare ``which``, so
+        # an install that carries its own ffmpeg (the static-ffmpeg wheel, or a
+        # desktop bundle naming it via SELEKYT_FFMPEG) gets this backend at its
+        # measured place in the chain instead of falling through to energy.
+        # The order is unchanged: this only makes the ffmpeg rung *reachable*,
+        # it never promotes it above silero.
+        from providers.ffmpeg import _static_ffmpeg_bin
+        return shutil.which("ffmpeg") is not None or _static_ffmpeg_bin("ffmpeg") is not None
 
     def analyze(self, audio: Path) -> VADResult:
         wav = Path(str(audio))
@@ -241,10 +248,10 @@ class FFmpegVADBackend(VADBackend):
             probe = wav.parent / f"{wav.stem}_probe.wav"
             extract_pcm_wav(audio, probe, self.sample_rate)
             wav = probe
-        from providers.ffmpeg import probe_duration
+        from providers.ffmpeg import probe_duration, ffmpeg_bin
         duration = probe_duration(wav)
         cmd = [
-            "ffmpeg", "-hide_banner", "-nostats", "-i", str(wav),
+            ffmpeg_bin(), "-hide_banner", "-nostats", "-i", str(wav),
             "-af", f"silencedetect=noise={self.noise_db}dB:d=0.2", "-f", "null", "-",
         ]
         proc = run_capture(cmd, stage="vad-ffmpeg", source=str(wav))

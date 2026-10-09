@@ -36,11 +36,20 @@ def _doctor() -> int:
         primary, alternate = "python", "python3"
     else:
         primary, alternate = "python3", "python"
+    # ffmpeg/ffprobe are resolved through the shared provider rather than a bare
+    # ``which`` so an install that carries its own (the static-ffmpeg wheel) is
+    # reported as ready instead of told to install a system package it does not
+    # need. The distinction is what makes the [media] extra worth having.
+    from providers.ffmpeg import _static_ffmpeg_bin
+
+    def _have(name: str) -> bool:
+        return shutil.which(name) is not None or _static_ffmpeg_bin(name) is not None
+
     checks = [
         (primary, True, shutil.which(primary) is not None),
         (alternate, False, shutil.which(alternate) is not None),
-        ("ffmpeg", True, shutil.which("ffmpeg") is not None),
-        ("ffprobe", True, shutil.which("ffprobe") is not None),
+        ("ffmpeg", True, _have("ffmpeg")),
+        ("ffprobe", True, _have("ffprobe")),
         ("yt-dlp", False, shutil.which("yt-dlp") is not None),
     ]
     provider = default_transcription_provider()

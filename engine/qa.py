@@ -7,10 +7,9 @@ from pathlib import Path
 
 
 def probe(path: Path) -> dict:
-    if shutil.which("ffprobe") is None:
-        raise RuntimeError("ffprobe is required and must be on PATH")
+    from providers.ffmpeg import ffprobe_bin
     p = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_streams", "-show_format", "-of", "json", str(path)],
+        [ffprobe_bin(), "-v", "error", "-show_streams", "-show_format", "-of", "json", str(path)],
         check=True, text=True, encoding="utf-8", stdout=subprocess.PIPE,
     )
     return json.loads(p.stdout)
