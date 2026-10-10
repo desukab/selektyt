@@ -269,31 +269,46 @@ def wheel() -> pathlib.Path:
     report green having proven nothing. The one legitimate skip is a checkout
     without the ``build`` backend at all, which is an environment limitation
     rather than a packaging defect; and not even that under
-    SELEKYT_RELEASE_BUILD, where the backend is a release requirement."""
-    try:
-        import build  # noqa: F401
-    except ImportError:
+    SELEKYT_RELEASE_BUILD, where the backend is a release requirement.
+
+    Both the availability probe and the build itself run from an empty cwd
+    rather than the repo root. ``build/`` is gitignored because it is what
+    setuptools leaves behind after *any* wheel build, and it is a package the
+    interpreter can import — so with the repo root as cwd, or on ``sys.path``
+    as it is during this suite, ``import build`` and ``python -m build`` both
+    resolve the artifact directory instead of the frontend, and the build dies
+    with "No module named build.__main__; 'build' is a package and cannot be
+    directly executed". That looks like a broken backend and is really a stale
+    directory, so the frontend is resolved from a cwd that cannot contain it
+    and the source tree is passed as the frontend's own argument."""
+    import tempfile
+
+    workdir = pathlib.Path(tempfile.mkdtemp(prefix="selekyt-pkg-"))
+    probe = subprocess.run(
+        [sys.executable, "-c", "import build"],
+        cwd=str(workdir), capture_output=True,
+    )
+    if probe.returncode != 0:
         if os.environ.get("SELEKYT_RELEASE_BUILD"):
             pytest.fail("the `build` backend is not installed in a release build")
         pytest.skip("the `build` backend is not installed")
 
-    import tempfile
-
-    out = pathlib.Path(tempfile.mkdtemp(prefix="selekyt-pkg-"))
     # Isolation on: this venv does not carry setuptools, so a --no-isolation
     # build dies with "Backend 'setuptools.build_meta' is not available" before
     # it gets to the project's own metadata. Isolated builds fetch the backend
-    # themselves, which is also what a real release does.
+    # themselves, which is also what a real release does. ROOT is the frontend's
+    # source-directory argument, not its cwd, for the reason above.
     build_env = os.environ.copy()
     proc = subprocess.run(
-        [sys.executable, "-m", "build", "--wheel", "--outdir", str(out)],
-        cwd=str(ROOT), env=build_env, capture_output=True, text=True,
+        [sys.executable, "-m", "build", "--wheel",
+         "--outdir", str(workdir), str(ROOT)],
+        cwd=str(workdir), env=build_env, capture_output=True, text=True,
     )
     if proc.returncode != 0:
         pytest.fail(
             "the wheel does not build, so no packaging assertion in this "
             f"module can be trusted:\n{proc.stderr[-1200:]}")
-    wheels = sorted(out.glob("selekyt-*.whl"))
+    wheels = sorted(workdir.glob("selekyt-*.whl"))
     assert wheels, "build reported success but wrote no wheel"
     return wheels[-1]
 

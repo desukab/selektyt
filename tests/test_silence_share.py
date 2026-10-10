@@ -369,6 +369,18 @@ def test_the_two_over_bar_clips_are_reviewed_with_measured_figures(
         pytest.skip("ffmpeg is not installed; the render cannot be decoded")
 
     project_dir = ROOT / "corpus" / project / "project"
+    # The mp4 is what this test measures. ffmpeg alone is not enough: CI has
+    # ffmpeg but no renders, because .gitignore excludes them, and
+    # ``measure_clip_render`` returning None there is an undecodable window
+    # rather than a measured one. Materialised rather than ``any(...)``, since
+    # ``Path.glob`` yields a generator object that is truthy empty.
+    renders = [p for kind in ("facebook", "shorts")
+               for p in project_dir.glob(f"{kind}/*.mp4")]
+    if not renders:
+        pytest.skip(
+            "the shipped renders this decodes are gitignored; run the corpus "
+            "to produce them")
+
     selections = json.loads((project_dir / "selections.json").read_text())
     src = selections[index]
     cand = Candidate(
@@ -427,7 +439,14 @@ def test_review_does_not_clear_the_exit_code(project):
     # then reads as FAIL, the *other* nonzero state, which still clears nothing.
     # The exit-code assertion above is the part that holds everywhere; the
     # REVIEW content needs the media (see test_render.py for the same guard).
-    if not any(project_dir.glob(f"{kind}/*.mp4") for kind in ("facebook", "shorts")):
+    #
+    # The globs are materialised because ``Path.glob`` returns a lazy generator
+    # object, which is truthy whether or not it yields anything — so
+    # ``any(d.glob(...) for ...)`` tests the generator objects, never the files,
+    # and is always True.
+    renders = [p for kind in ("facebook", "shorts")
+               for p in project_dir.glob(f"{kind}/*.mp4")]
+    if not renders:
         pytest.skip(
             "the REVIEW findings this asserts need the shipped renders, which "
             ".gitignore excludes; run the corpus to produce them")

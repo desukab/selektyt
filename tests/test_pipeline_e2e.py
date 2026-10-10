@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -641,7 +642,11 @@ def test_regenerating_captions_is_byte_identical_to_a_fresh_run(
     assert before, "the run wrote no caption files"
 
     proc = subprocess.run(
-        [str(_REPO / ".venv" / "bin" / "python"),
+        # ``sys.executable`` rather than a hard-coded ``.venv/bin/python``: CI's
+        # source matrix runs off the setup-python interpreter and has no
+        # ``.venv``, so the hard-coded path raises FileNotFoundError there and
+        # reports a byte-identity claim that was never measured.
+        [sys.executable,
          str(_REPO / "tools" / "regenerate_captions.py"), str(project)],
         capture_output=True, text=True)
     assert proc.returncode == 0, f"regeneration failed: {proc.stderr}"

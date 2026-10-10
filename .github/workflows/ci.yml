@@ -53,6 +53,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install ffmpeg / ffprobe
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install the fonts the caption-burn coverage check resolves
+        # The render refuses to burn captions no installed font can draw
+        # (engine/render.py, _check_caption_coverage), and it resolves that
+        # question with the same `fc-list` fontconfig scan libass uses. The
+        # hosted image has no Indic font, so without this the Telugu end-to-end
+        # hits the refusal and the suite reports a host limitation as a product
+        # defect. fonts-noto-core is the package the refusal message itself
+        # names; it provides Noto Sans Telugu.
+        run: sudo apt-get install -y --no-install-recommends fonts-noto-core
       - name: Download the sidecar built by the rust job
         uses: actions/download-artifact@v4
         with:
@@ -225,7 +234,12 @@ jobs:
           python -m venv /tmp/selekyt-clean
           /tmp/selekyt-clean/bin/python -m pip install --upgrade pip
           /tmp/selekyt-clean/bin/python -m pip install dist/*.whl
-          /tmp/selekyt-clean/bin/python -m pip install "pytest>=8"
+          /tmp/selekyt-clean/bin/python -m pip install "pytest>=8" build
+          # `build` is what the release packaging contract test invokes to
+          # construct the wheel its assertions inspect. Under
+          # SELEKYT_RELEASE_BUILD a missing backend is a hard failure rather
+          # than a skip — the skip would publish a wheel whose contents were
+          # never checked — so it has to be in this venv.
       - name: Prove imports and installed paths are clean
         run: |
           cd /tmp

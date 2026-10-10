@@ -749,6 +749,33 @@ def test_the_audit_verdict_on_the_committed_corpus_is_the_recorded_baseline():
                 if not cok and name not in review]
         seen[project.parent.name] = {"fail": fail, "review": review}
 
+    # The corpus's shape is a property of the committed selections, so it holds
+    # on a clean checkout too: the eleven names are the table's keys, and the
+    # four sources selection never ran on still report the project-level
+    # failure that stopped them.
+    assert set(seen) == set(EXPECTED), (
+        "the corpus changed shape; the table above needs a verdict added or "
+        f"removed: {sorted(set(seen) ^ set(EXPECTED))}")
+    for name in ("alice-1903_run", "hindi-baiga-interview_run",
+                 "roman-portrait-trailer_run", "telugu-launch_run"):
+        assert any(f == "project" and d.startswith("no selections.json")
+                   for f, d in seen[name]["fail"]), (
+            f"{name}: the project-level failure selection never ran is gone")
+
+    # The REVIEW/fail split is not a property of the selections alone. An
+    # over-bar clip is REVIEW when the render decodes to content and FAIL when
+    # it cannot be decoded at all, and a clean checkout has no renders —
+    # .gitignore excludes them — so telugu clip 01 reads as a hard failure
+    # there and the table's states do not match anything real. Materialised
+    # rather than ``any(...)``, because ``Path.glob`` returns a generator object
+    # that is truthy whether or not it yields.
+    renders = [p for project in runs for kind in ("facebook", "shorts")
+               for p in project.glob(f"{kind}/*.mp4")]
+    if not renders:
+        pytest.skip(
+            "the pinned verdict table needs the shipped renders, which "
+            ".gitignore excludes; run the corpus to produce them")
+
     unexpected = []
     for name, got in sorted(seen.items()):
         want = EXPECTED.get(name)
@@ -952,8 +979,12 @@ def test_the_corpus_sweep_counts_every_run_and_every_clip():
     """
     from tools.editorial_audit import sweep
 
-    if not any(CORPUS.glob(f"*_run/project/{kind}/*.mp4")
-               for kind in ("facebook", "shorts")):
+    # Materialised rather than wrapped in ``any``: ``Path.glob`` returns a lazy
+    # generator object, which is truthy whether or not it yields anything, so
+    # ``any(CORPUS.glob(...) for ...)`` tests the objects and is always True.
+    renders = [p for kind in ("facebook", "shorts")
+               for p in CORPUS.glob(f"*_run/project/{kind}/*.mp4")]
+    if not renders:
         # ``measure_clip_render`` reads the facebook render and falls back to
         # shorts; without either it measures nothing, an undecidable clip reads
         # as FAIL, and the review/fail split this pins moves with it.
@@ -1081,8 +1112,12 @@ def test_the_recorded_baseline_sweep_is_the_current_corpus():
 
     if not BASELINE_SWEEP.is_file():
         pytest.skip("the recorded baseline sweep is not in this checkout")
-    if not any(CORPUS.glob(f"*_run/project/{kind}/*.mp4")
-               for kind in ("facebook", "shorts")):
+    # Materialised, not ``any(...)``: ``Path.glob`` yields a generator object
+    # that is truthy empty, so the lazy form would never skip (see the totals
+    # test above).
+    renders = [p for kind in ("facebook", "shorts")
+               for p in CORPUS.glob(f"*_run/project/{kind}/*.mp4")]
+    if not renders:
         # The recorded states include the acoustic decode of each shipped render,
         # which .gitignore excludes: without the renders the undecidable clips
         # read as failures and this reports a regression that is not one.
