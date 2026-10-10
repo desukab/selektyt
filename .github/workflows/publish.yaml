@@ -58,6 +58,14 @@ jobs:
         # The acceptance run exercises the real render path, which needs a
         # system ffmpeg to remain on PATH as the first-choice resolver.
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install the fonts the caption-burn coverage check resolves
+        # This job runs the full suite, including the Telugu end-to-end. The
+        # render refuses to burn captions no installed font can draw
+        # (engine/render.py, _check_caption_coverage), and the hosted image has
+        # no Indic font, so without this the gate fails on a host limitation
+        # rather than on the artifact it is there to judge. Same package the
+        # refusal message names; see the matching step in ci.yml.
+        run: sudo apt-get install -y --no-install-recommends fonts-noto-core
 
       - name: Build the wheel and sdist
         run: |
@@ -87,6 +95,12 @@ jobs:
           # which would turn a broken package-data glob into a green run.
           /tmp/acceptance/bin/pip install pytest build pyyaml huggingface_hub \
             requests "pillow>=10"
+      - name: Node (for the web shell harness tests)
+        # The acceptance run is the full suite, and 13 of its tests drive the
+        # desktop shell through web/server.mjs. The hosted image ships node, so
+        # this documents the requirement and fails here rather than as a wall of
+        # sidecar tracebacks if a future image drops it.
+        run: node --version
 
       - name: The installed package imports and its CLI answers
         run: |
