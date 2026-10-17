@@ -166,6 +166,52 @@ def test_a_speaker_alone_and_a_slide_alone():
     assert classify_scene(None, None, CROP_W, SRC_W, SRC_H) is SceneClass.SPEAKER
 
 
+def test_the_speakers_own_torso_is_not_a_slide():
+    """A detected region hanging under and overlapping the speaker's face,
+    barely larger than the face itself, is the speaker's body -- not content.
+
+    Measured on a real NASA interview where the dark polo shirt under the
+    subject's chin was detected as a 472x352 "slide" at (180, 352) while the
+    face box measured 224x321 at (543, 156): slide top 352 > face midline 317,
+    horizontal overlap 542..652, and the region's area is 2.31x the face box's.
+    The SPLIT layout that classification chose rendered the speaker at 1.55x
+    zoom in a top band and the subject's own shoulders as a "content" band
+    below -- a talking head that visibly loses its face for the length of the
+    SPLIT. The torso rejection collapses it back to a plain tracked speaker
+    crop.
+
+    The synthetic fixtures above stay correct: their slides begin at or above
+    the face's midline or cover so much area that no ratio cut them off, so
+    this check is only reached by the anatomy case.
+    """
+    from engine.reframe_scenes import FaceBox, SceneClass, SlideRect, classify_scene
+
+    face = FaceBox(542.6, 156.3, 223.9, 321.4)
+    torso = SlideRect(180.0, 352.0, 472.0, 352.0)
+    assert classify_scene(face, torso, CROP_W, SRC_W, SRC_H) is SceneClass.SPEAKER
+
+    # The same geometry moved UP beside the face is a backdrop, not anatomy:
+    # it no longer begins below the face's midline, so the strict SPLIT answer
+    # (one crop cannot hold both) still stands.
+    backdrop = SlideRect(180.0, 80.0, 472.0, 352.0)
+    assert classify_scene(face, backdrop, CROP_W, SRC_W, SRC_H) is SceneClass.SPLIT
+
+
+def test_a_trunk_sized_slide_beside_the_face_is_still_a_slide():
+    """The torso check is spatial, not a blanket small-region dismissal.
+
+    A laptop screen the speaker stands beside, beginning above the face's
+    midline and not overlapping the face box, must keep its geometry answer
+    regardless of its size -- only the below-and-overlapping pattern is
+    anatomy.
+    """
+    from engine.reframe_scenes import FaceBox, SceneClass, SlideRect, classify_scene
+
+    face = FaceBox(542.6, 156.3, 223.9, 321.4)
+    screen = SlideRect(430.0, 150.0, 120.0, 220.0)
+    assert classify_scene(face, screen, CROP_W, SRC_W, SRC_H) is SceneClass.SPEAKER
+
+
 # ── the plan: classes over time become held, contiguous segments ── #
 
 

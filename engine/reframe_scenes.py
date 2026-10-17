@@ -359,6 +359,44 @@ class SceneSegment:
     face: FaceBox | None = None
 
 
+def _is_speaker_trunk(face: FaceBox, slide: SlideRect) -> bool:
+    """Whether a detected slide region is the speaker's own body, not a slide.
+
+    Three measured signals separate a torso from real presentation content, all
+    from a real NASA interview render whose dark polo shirt was detected as a
+    472x352 "slide" at (180, 352) and turned a plain talking head into a SPLIT
+    two-band composition — speaker at 1.55x zoom above, the subject's own
+    shoulders as a "content" band below — the framing a viewer sees as a clip
+    that keeps losing its face:
+
+    1. the region begins *below the face's midline* (slide.top 352 > face
+       midline 317). Content sits beside or behind a speaker; a body hangs
+       under the head it belongs to.
+    2. the region overlaps the face box horizontally (slide 180..652 vs face
+       542..766 overlap). A projection surface sharing the face's column is
+       behind the speaker, not worn by them.
+    3. the region is small relative to the face box (166k px vs face 72k =
+       2.31x). Every true slide in the corpus is far larger relative to its
+       speaker's face box: the composited plate used for calibration is 5.6x
+       its speaker's, and the Royal Society wide shot's static region is
+       orders larger than its 52-66 px face. A region barely bigger than the
+       face that sits under it is anatomy.
+
+    The synthetic fixtures this module's regressions pin sit outside every
+    condition: their slides begin above or beside the face (top 32 or 200 vs
+    face midline 330) or dwarf the face (full-frame, 98%-of-frame), so the
+    check is inert there and only fires on this measured pattern.
+    """
+    _TRUNK_AREA_RATIO = 2.5
+    face_midline = face.y + 0.5 * face.h
+    if slide.y <= face_midline:
+        return False
+    if not (min(slide.x + slide.w, face.x + face.w) > face.x
+            and min(slide.x + slide.w, face.x + face.w) > slide.x):
+        return False
+    return slide.area < _TRUNK_AREA_RATIO * face.w * face.h
+
+
 def classify_scene(face: FaceBox | None, slide: SlideRect | None,
                    crop_w: float, src_w: float, src_h: float) -> SceneClass:
     """The scene class for one sample.
@@ -378,7 +416,15 @@ def classify_scene(face: FaceBox | None, slide: SlideRect | None,
     25 of 26. The geometry below records whether the speaker and content can
     share one crop. If they cannot, the vertical render still prioritizes the
     speaker crop rather than composing separate source regions.
+
+    Before that geometry runs, a detected region that is the speaker's own
+    body is dismissed: on a real interview render the dark polo shirt under the
+    subject's face was detected as a "slide" and composed a fake two-band frame
+    (speaker weakly zoomed above, the subject's own shoulders as content below).
+    :func:`_is_speaker_trunk` carries the measured geometry of that defect.
     """
+    if face is not None and slide is not None and _is_speaker_trunk(face, slide):
+        slide = None
     if face is not None and slide is not None:
         if both_fit_in_crop(face, slide, crop_w, src_w):
             return SceneClass.SPEAKER
