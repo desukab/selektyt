@@ -302,3 +302,96 @@ def test_fingerprints_bind_the_memory_to_its_inputs(tmp_path):
     # recorded from another source.
     with pytest.raises(StaleMemory):
         VideoMemory.load(path, fingerprint="a-different-file")
+
+
+# ── 6. a second run accumulates the first run's understanding ──────────────
+
+def test_a_previous_record_is_merged_not_overwritten():
+    """When the caller hands in the record a prior run wrote, the new build
+    keeps the prior evidence beside this run's: a topic the corpus failed to
+    produce today stays queryable from the day it was measured."""
+    prior, _ = populate.build(
+        _meta(duration=12.0),
+        speech_regions=(_region(0.0, 5.0), _region(7.0, 12.0)),
+        vad_backend="silero",
+        corpus=_corpus(topics=[_topic(2.0, 11.0)]),
+    )
+
+    # This run's corpus stage failed upstream (no corpus handed in): the build
+    # cannot re-derive the topic evidence the prior run recorded.
+    mem, summary = populate.build(
+        _meta(duration=12.0),
+        speech_regions=(_region(0.0, 5.0), _region(7.0, 12.0)),
+        vad_backend="silero",
+        previous=prior,
+    )
+
+    claims = {i.claim for i in mem.items}
+    prior_topic_claims = {i.claim for i in prior.items
+                          if i.modality is Modality.EDITORIAL}
+    assert prior_topic_claims.issubset(claims), \
+        "a corpus failure this run must not delete the topic evidence"
+    assert summary.carried > 0, "the summary must say evidence was carried"
+
+
+def test_rederived_identical_claims_are_carried_with_their_ids():
+    """VAD and corpus are deterministic instruments: a second identical run
+    re-derives the same claims. The claim is not duplicated -- and the item's
+    id, which an editor may have referenced, is not recast."""
+    kwargs = dict(
+        meta=_meta(duration=12.0),
+        speech_regions=(_region(0.0, 5.0), _region(7.0, 12.0)),
+        vad_backend="silero",
+        corpus=_corpus(topics=[_topic(2.0, 11.0)], beats=[_beat(2.0, 5.0)]),
+    )
+    prior, summary1 = populate.build(**kwargs)
+    mem, summary2 = populate.build(**kwargs, previous=prior)
+
+    assert len(mem.items) == len(prior.items), "an identical claim is not two claims"
+    assert summary2.carried == len(mem.items)
+    # byte-level: the same record content under stable ids round-trips equal
+    assert [i.id for i in mem.items if i.id] == [i.id for i in prior.items if i.id]
+    assert mem.to_dict() == prior.to_dict()
+
+
+def test_carried_ids_never_collide_with_new_ones():
+    """The store's generated-id counter starts past every id already present,
+    carried or not: the merged record must not fabricate a duplicate id."""
+    prior, _ = populate.build(
+        _meta(duration=12.0),
+        speech_regions=(_region(0.0, 5.0),),
+        vad_backend="silero",
+    )
+    mem, _ = populate.build(
+        _meta(duration=12.0),
+        speech_regions=(_region(0.0, 5.0),),
+        vad_backend="silero",
+        corpus=_corpus(topics=[_topic(2.0, 11.0)]),
+        previous=prior,
+    )
+    ids = [i.id for i in mem.items if i.id]
+    assert len(ids) == len(set(ids)), "duplicate ids in a merged record"
+    assert all(i.claim for i in mem.items)
+
+    findings = mem.validate()
+    assert not [f for f in findings if f.severity == "error"], findings
+
+
+def test_a_different_instrument_is_a_new_not_identical_claim():
+    """A coverage re-pass with a different VAD backend reports a different
+    claim even over the same seconds: an energy reading and a Silero detection
+    disagree about provenance, and memory keeps both rather than betting."""
+    prior, _ = populate.build(
+        _meta(duration=12.0),
+        speech_regions=(_region(0.0, 5.0),),
+        vad_backend="silero",
+    )
+    mem, _ = populate.build(
+        _meta(duration=12.0),
+        speech_regions=(_region(0.0, 5.0),),
+        vad_backend="energy",
+        previous=prior,
+    )
+    claims = [i for i in mem.items if "speech" in i.claim.lower()]
+    assert len({i.source.params_digest or i.source.method for i in claims}) >= 2, (
+        "the two backends must both survive as distinct observations")

@@ -1540,8 +1540,26 @@ def run(
             memory_summary = {"skipped": coverage.detail}
         else:
             try:
-                from engine.memory import SourceMeta, populate
+                from engine.memory import (
+                    SourceMeta, StaleMemory, VideoMemory, populate)
                 media_st = media.stat()
+                # Same digest ``SourceMeta`` carries below: the media
+                # fingerprint is pixel-identity, deliberately excluding the
+                # ASR parameters (a re-transcribe changes the words, not the
+                # pixels).
+                media_fingerprint = hashlib.sha256(
+                    f"{source}|{media.resolve()}|{media_st.st_size}"
+                    f"|{media_st.st_mtime_ns}".encode()
+                ).hexdigest()
+                try:
+                    previous_memory = VideoMemory.load(
+                        memory_path, fingerprint=media_fingerprint)
+                except (FileNotFoundError, StaleMemory):
+                    previous_memory = None
+                except Exception as exc:
+                    print(f"[selektyt] previous memory unreadable: {exc}",
+                          file=sys.stderr)
+                    previous_memory = None
                 memory, summary = populate.build(
                     SourceMeta(
                         path=str(media),
@@ -1550,10 +1568,7 @@ def run(
                         # re-transcribe changes the words and not the pixels; the
                         # transcript digest below includes them for exactly that
                         # reason.
-                        fingerprint=hashlib.sha256(
-                            f"{source}|{media.resolve()}|{media_st.st_size}"
-                            f"|{media_st.st_mtime_ns}".encode()
-                        ).hexdigest(),
+                        fingerprint=media_fingerprint,
                         transcript_fingerprint=fingerprint,
                         width=int(info.get("width", 0) or 0),
                         height=int(info.get("height", 0) or 0),
@@ -1562,6 +1577,7 @@ def run(
                     vad_backend=coverage.vad_backend,
                     corpus=corpus_report,
                     language=detected or "unknown",
+                    previous=previous_memory,
                 )
                 memory.save(memory_path)
                 memory_summary = summary.as_dict()

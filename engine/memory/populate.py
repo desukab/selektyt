@@ -42,6 +42,7 @@ rung, not "examined wherever speech happened to be".
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 
 from .evidence import Evidence
@@ -101,6 +102,7 @@ class PopulateSummary:
 
     stages: tuple[StageResult, ...]
     findings: tuple[Finding, ...] = ()
+    carried: int = 0
 
     @property
     def items(self) -> int:
@@ -119,6 +121,7 @@ class PopulateSummary:
             # here, because the shape a finding serialises to is the store's
             # contract and this summary must not drift from it.
             "findings": [f.to_dict() for f in self.findings],
+            "carried": self.carried,
         }
 
 
@@ -160,6 +163,21 @@ def _silences_between(speech, duration: float) -> list[_Span]:
     return out
 
 
+def _content_key(item: Evidence) -> str:
+    """The claim's content identity, independent of its stored id.
+
+    Ids are assigned by the store and carried forward, so two records of the
+    same claim must be compared without them. Everything else the item
+    serialises -- claim text, modality, instrument and parameter digest,
+    intervals, confidence, rationale, artifacts, links -- IS the claim: two
+    items with the same serialisation are the same observation, and one of
+    them is redundant, no matter which run wrote it.
+    """
+    d = item.to_dict()
+    d.pop("id", None)
+    return json.dumps(d, sort_keys=True, ensure_ascii=False)
+
+
 def build(
     meta: SourceMeta,
     *,
@@ -167,6 +185,7 @@ def build(
     vad_backend: str = "",
     corpus: object = None,
     language: str = "unknown",
+    previous: VideoMemory | None = None,
 ) -> tuple[VideoMemory, PopulateSummary]:
     """Turn the artifacts a run already holds into a populated memory.
 
@@ -184,6 +203,15 @@ def build(
     ``None`` means the corpus stage failed upstream, which the pipeline already
     reports; recording it here as no stage at all keeps that fact in the
     pipeline's report without duplicating the upstream diagnosis here.
+
+    ``previous`` is the record a prior run of the same source persisted (the
+    caller has already checked it against the live media fingerprint), merged
+    instead of overwritten. Understanding a video is cumulative: a stage that
+    failed this run keeps the evidence the previous run produced, and claims
+    this run re-derived identically are carried with their stable ids rather
+    than re-cast under fresh ones, so an editor's references between runs don't
+    rot. Claims under a *different* instrument or parameter digest are
+    different observations, not duplicates, and are kept alongside.
 
     Returns the memory and its summary rather than raising: the caller writes
     both, and a memory that is partially populated is still the most useful
@@ -221,7 +249,27 @@ def build(
     for stage in stages:
         items.extend(stage.items)
 
-    memory = VideoMemory.empty(meta).record(*items)
+    carried = 0
+    if previous is not None:
+        # Merge, deduplicated on content: a prior item this run re-derived
+        # identically keeps its settled id, and everything not re-derived --
+        # claims from a stage that failed this run, or from an instrument or
+        # parameter set this run did not use -- survives as evidence this run
+        # did not contradict. The store's ``record`` keeps prior ids and
+        # continues its generated counter past them, so the merged record's
+        # id space stays consistent.
+        known = {_content_key(i) for i in previous.items}
+        fresh = []
+        for item in items:
+            key = _content_key(item)
+            if key in known:
+                carried += 1
+                continue
+            known.add(key)
+            fresh.append(item)
+        memory = VideoMemory.empty(meta).record(*previous.items, *fresh)
+    else:
+        memory = VideoMemory.empty(meta).record(*items)
 
     # The rung records are *derived from the items*, not asserted from what was
     # asked for: an empty sweep is coverage, but only if the sweep ran, and the
@@ -245,4 +293,4 @@ def build(
 
     findings = memory.validate()
 
-    return memory, PopulateSummary(tuple(stages), tuple(findings))
+    return memory, PopulateSummary(tuple(stages), tuple(findings), carried)
