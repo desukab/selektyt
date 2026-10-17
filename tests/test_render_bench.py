@@ -88,21 +88,28 @@ def test_the_docstring_ladder_tables_agree_with_each_other():
     the decision rests on is orientation-independent."""
     from engine.render import _encoder_args
 
-    doc = (_encoder_args.__doc__ or "")
-    # The literal header row of each table. Anchoring on the full line rather
-    # than a body substring keeps the split off the entry rows, which also
-    # contain "dB" and "shipped".
-    header = "        entry          dB vs shipped   bitrate ratio   RTF ratio"
-    # Everything before the first header is prose, and is dropped by [1:]; each
-    # remaining fragment is one table's body.
-    tables = doc.split(header)[1:]
-    assert len(tables) == 2, f"expected one table per orientation, found {len(tables)}"
+    lines = (_encoder_args.__doc__ or "").splitlines()
+    # The header row of each table, matched token-for-token rather than on its
+    # indentation: the table body drops any literal-indented version of this —
+    # CPython 3.13 strips a docstring's common indent at compile time, and an
+    # indented anchor no longer matches there while the same table is intact.
+    # Token equality keeps the anchor off the entry rows, which also contain
+    # "dB" and "shipped": no entry row is a re-ordering of exactly these eight
+    # tokens.
+    header = ["entry", "dB", "vs", "shipped", "bitrate", "ratio", "RTF", "ratio"]
+    starts = [i + 1 for i, line in enumerate(lines) if line.split() == header]
+    assert len(starts) == 2, \
+        f"expected one table per orientation, found {len(starts)}"
     seen = []
-    for chunk in tables:
+    for start in starts:
         rows = []
-        for line in chunk.splitlines():
+        for line in lines[start:]:
             fields = line.split()
-            if fields and "/" in fields[0] and fields[0].split("/")[1].startswith("crf"):
+            # The table ends at the blank line after it, the same boundary
+            # ``_docstring_ladder`` reads: prose beyond it is not table state.
+            if not fields or "/" not in fields[0]:
+                break
+            if fields[0].split("/")[1].startswith("crf"):
                 name, _, crf = fields[0].partition("/")
                 if crf[3:].isdigit():
                     rows.append((name, int(crf[3:])))
