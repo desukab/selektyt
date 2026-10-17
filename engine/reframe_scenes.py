@@ -441,6 +441,9 @@ def classify_scene(face: FaceBox | None, slide: SlideRect | None,
     """
     if face is not None and slide is not None and _is_speaker_trunk(face, slide):
         slide = None
+    if face is not None and slide is not None and _is_closeup_camera(
+            face, slide, src_w, src_h):
+        slide = None
     if face is not None and slide is not None:
         if both_fit_in_crop(face, slide, crop_w, src_w):
             return SceneClass.SPEAKER
@@ -448,6 +451,25 @@ def classify_scene(face: FaceBox | None, slide: SlideRect | None,
     if slide is not None:
         return SceneClass.SLIDE
     return SceneClass.SPEAKER
+
+
+_CLOSEUP_FACE_H = 0.30
+
+
+def _is_closeup_camera(face: FaceBox, slide: SlideRect,
+                       src_w: float, src_h: float) -> bool:
+    """A full-bleed closeup cannot hold a content insert beside the speaker.
+
+    Measured on the Crew-8 re-run: a tight two-shot camera delivered a frame
+    where the speaker appeared twice -- the tracked crop above, and the same
+    shot's left half as the "content" band below. The tell is scale: the
+    measured closeup faces stood 118-125 px tall in a 360 px frame -- a third
+    of the shot -- so a face at 30% of frame height or more means the shot
+    *is* the speaker, and any region inside a frame the face dominates is
+    camera framing, not an insert. A real two-region scene can only exist in
+    a wide shot, where faces are small.
+    """
+    return face.h >= _CLOSEUP_FACE_H * src_h
 
 
 _MIN_HOLD_S = 2.0
@@ -1055,11 +1077,7 @@ def _carry_slides(segments: list[SceneSegment], times: list[float],
             i = next((j for j, t in enumerate(times) if t >= seg.start),
                      len(times) - 1)
         slide = per_shot.get(shot_of[i])
-        joint = (seg.cls is SceneClass.SPEAKER and slide is not None
-                 and faces and any(
-                     f is not None and both_fit_in_crop(f, slide, crop_w, src_w)
-                     for f in faces))
-        # ``faces`` is tolerated as empty by the joint test just above, so the
+        # ``faces`` is tolerated as empty by the joint test just below, so the
         # representative face is read with the same tolerance: a caller that
         # supplies detections for the slide question only must not crash on the
         # face field. ``SceneSegment.face`` defaults to None, and the layout
@@ -1070,6 +1088,15 @@ def _carry_slides(segments: list[SceneSegment], times: list[float],
                                src_w, src_h)
         if face is None:
             face = faces[i] if i < len(faces) else None
+        # The same veto the classifier applies decides whether a slide
+        # survives into the segment: a slide dismissed as the speaker's own
+        # body or as closeup camera framing must not return through the carry
+        # path, or the SPLIT layout composes the very double-presentation the
+        # classification was written to prevent.
+        if face is not None and slide is not None and (
+                _is_speaker_trunk(face, slide)
+                or _is_closeup_camera(face, slide, src_w, src_h)):
+            slide = None
         panel = bool(is_panel.get(shot_of[i])) if is_panel else False
         joint = (seg.cls is SceneClass.SPEAKER and slide is not None
                  and faces and any(

@@ -186,15 +186,26 @@ def test_the_speakers_own_torso_is_not_a_slide():
     """
     from engine.reframe_scenes import FaceBox, SceneClass, SlideRect, classify_scene
 
-    face = FaceBox(542.6, 156.3, 223.9, 321.4)
+    face = FaceBox(542.6, 236.3, 203.9, 241.4)
     torso = SlideRect(180.0, 352.0, 472.0, 352.0)
     assert classify_scene(face, torso, CROP_W, SRC_W, SRC_H) is SceneClass.SPEAKER
 
-    # The same geometry moved UP beside the face is a backdrop, not anatomy:
-    # it no longer begins below the face's midline, so the strict SPLIT answer
-    # (one crop cannot hold both) still stands.
+    # The same geometry moved UP beside the face is a backdrop, not anatomy.
+    # Even then this pair fits one crop window, so the honest class is the
+    # clamped SPEAKER, not a split: a backdrop of this size beside a
+    # mid-sized face is held, not composed. The committed SPLIT answer needs
+    # a backdrop the crop cannot reach -- the original NASA shaped-face at
+    # face-height 0.45 -- and a closeup-dominated face is retired outright.
     backdrop = SlideRect(180.0, 80.0, 472.0, 352.0)
-    assert classify_scene(face, backdrop, CROP_W, SRC_W, SRC_H) is SceneClass.SPLIT
+    assert classify_scene(face, backdrop, CROP_W, SRC_W, SRC_H) is SceneClass.SPEAKER
+
+    # The dominated closeup, from the measured Crew-8 re-run: a face standing
+    # 45% of frame height cannot share the shot with an "insert" -- the frame
+    # the face dominates is camera framing, and treating any region in it as
+    # content band delivered the same astronaut twice, stacked.
+    tall = FaceBox(542.6, 156.3, 223.9, 321.4)          # 0.45 of frame height
+    assert tall.h > 0.35 * SRC_H
+    assert classify_scene(tall, backdrop, CROP_W, SRC_W, SRC_H) is SceneClass.SPEAKER
 
 
 def test_a_trunk_sized_slide_beside_the_face_is_still_a_slide():
@@ -812,3 +823,33 @@ def test_a_panel_segment_renders_the_group_card_not_a_crop():
     # 1280-tall canvas.
     assert "scale=720:406" in graph, graph
     assert "overlay=0:438" in graph, graph
+
+
+def test_a_closeup_two_shot_is_not_split_into_the_same_person_twice():
+    """The closeup veto, from the measured defect.
+
+    On the Crew-8 re-run a tight two-shot camera of one astronaut delivered a
+    vertical frame where she appeared twice: the tracked crop above, and the
+    same shot's left half as a 'content' band below. The detector had found a
+    region (0, 0, 320, 352) inside that shot, and the SPLIT composition never
+    asks whether the shot could possibly be an insert wide. The tell is face
+    scale: a face standing a third of the frame high means the shot *is* the
+    speaker, so nothing inside it is content.
+    """
+    from engine.reframe_scenes import FaceBox, SceneClass, SlideRect, classify_scene
+
+    # The measured closeup: (303, 66, 93, 125) in a 640x360 frame is 0.35
+    # exactly; the composited run's face was (307, 50, 93, 118).
+    shot = SlideRect(0.0, 0.0, 320.0, 352.0)
+    assert classify_scene(
+        FaceBox(303.0, 66.0, 93.0, 125.0), shot, 233, 640, 360
+    ) is SceneClass.SPEAKER
+
+    # A wide shot's small face beside the same-sized region is not retired by
+    # the closeup veto: scale, not region area alone, is the deciding
+    # evidence. There the weakened speaker is folded into the content crop
+    # (the committed weak-speaker rule), so the honest class is still one
+    # crop -- SPEAKER, not the composed SPLIT.
+    assert classify_scene(
+        FaceBox(303.0, 66.0, 42.0, 30.0), shot, 233, 640, 360
+    ) is SceneClass.SPEAKER
