@@ -204,7 +204,7 @@ def test_the_speakers_own_torso_is_not_a_slide():
     # the face dominates is camera framing, and treating any region in it as
     # content band delivered the same astronaut twice, stacked.
     tall = FaceBox(542.6, 156.3, 223.9, 321.4)          # 0.45 of frame height
-    assert tall.h > 0.35 * SRC_H
+    assert tall.h > 0.27 * SRC_H
     assert classify_scene(tall, backdrop, CROP_W, SRC_W, SRC_H) is SceneClass.SPEAKER
 
 
@@ -833,16 +833,25 @@ def test_a_closeup_two_shot_is_not_split_into_the_same_person_twice():
     same shot's left half as a 'content' band below. The detector had found a
     region (0, 0, 320, 352) inside that shot, and the SPLIT composition never
     asks whether the shot could possibly be an insert wide. The tell is face
-    scale: a face standing a third of the frame high means the shot *is* the
-    speaker, so nothing inside it is content.
+    scale: a face standing roughly a third of the frame high means the shot
+    *is* the speaker, so nothing inside it is content.
     """
     from engine.reframe_scenes import FaceBox, SceneClass, SlideRect, classify_scene
 
-    # The measured closeup: (303, 66, 93, 125) in a 640x360 frame is 0.35
-    # exactly; the composited run's face was (307, 50, 93, 118).
+    # The measured closeup: (303, 66, 93, 125) in a 640x360 frame is 0.347;
+    # the composited run's face was (307, 50, 93, 118).
     shot = SlideRect(0.0, 0.0, 320.0, 352.0)
     assert classify_scene(
         FaceBox(303.0, 66.0, 93.0, 125.0), shot, 233, 640, 360
+    ) is SceneClass.SPEAKER
+
+    # The podium host, found by the next run's audit: a face at 29.3% of
+    # frame height against a full-height region on the frame's left edge --
+    # the same person again in both bands, above the old 30% bound and why
+    # the threshold reads 0.27.
+    assert classify_scene(
+        FaceBox(272.0, 65.0, 72.0, 105.0),
+        SlideRect(0.0, 0.0, 288.0, 352.0), 253, 640, 360,
     ) is SceneClass.SPEAKER
 
     # A wide shot's small face beside the same-sized region is not retired by

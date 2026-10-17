@@ -453,7 +453,7 @@ def classify_scene(face: FaceBox | None, slide: SlideRect | None,
     return SceneClass.SPEAKER
 
 
-_CLOSEUP_FACE_H = 0.30
+_CLOSEUP_FACE_H = 0.27
 
 
 def _is_closeup_camera(face: FaceBox, slide: SlideRect,
@@ -462,12 +462,15 @@ def _is_closeup_camera(face: FaceBox, slide: SlideRect,
 
     Measured on the Crew-8 re-run: a tight two-shot camera delivered a frame
     where the speaker appeared twice -- the tracked crop above, and the same
-    shot's left half as the "content" band below. The tell is scale: the
-    measured closeup faces stood 118-125 px tall in a 360 px frame -- a third
-    of the shot -- so a face at 30% of frame height or more means the shot
-    *is* the speaker, and any region inside a frame the face dominates is
-    camera framing, not an insert. A real two-region scene can only exist in
-    a wide shot, where faces are small.
+    shot's left half as the "content" band below. The next pass caught the
+    podium host with her face at 105 px in a 360 px frame (29.3%) against a
+    full-height region on the frame's left edge -- the same double
+    presentation, threshold-boundary close. The tell is scale: measured
+    closeup faces stood 105-125 px tall in 360 px frames, so a face at 27% of
+    frame height or more means the shot *is* the speaker, and any region
+    inside a frame the face dominates is camera framing, not an insert. A
+    real two-region scene can only exist in a wide shot, where faces are
+    small (panel shots here measure ~9% of frame height).
     """
     return face.h >= _CLOSEUP_FACE_H * src_h
 
