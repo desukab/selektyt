@@ -38,6 +38,10 @@ jobs:
           name: selekyt-mech
           path: rust/target/release/selekyt-mech
           if-no-files-found: error
+          # This artifact only travels between the rust and python jobs of this
+          # same run. One day of retention keeps it out of the repo's artifact
+          # storage accounting, which a fully-retained sidecar exhausted.
+          retention-days: 1
 
   python:
     runs-on: ubuntu-latest
