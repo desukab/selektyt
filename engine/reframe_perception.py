@@ -55,6 +55,14 @@ _MIN_FACE_PX = 48  # the previous Haar pass's floor; kept so small/false faces
 _YUNET_SCORE = 0.5
 _YUNET_NMS = 0.3
 
+# The multi-scale rescue: when a native-size pass finds nothing on a frame this
+# small, re-detect from a resampled copy. 3x is what the measured case needed
+# (panel faces of 22-31 px in a 640x360 source turn into 66-93 px, above the
+# 48 px floor, at scores of 0.91-0.94); the cap bounds the retry so it can never
+# upscale more than a 720p frame's worth of pixels.
+_RESCUE_SCALE = 3
+_RESCUE_MAX_NATIVE_H = 480
+
 
 def _candidate_paths() -> list[Path]:
     here = Path(__file__).resolve().parent / "models" / _MODEL_NAME
@@ -132,7 +140,32 @@ class FaceDetector:
         box area stands in — the caller uses score to rank candidates from one
         detector, never to compare across backends, and the Haar branch is a
         legacy host's fallback rather than a co-equal path.
+
+        Small sources get a multi-scale rescue: a panel wide shot in a 360p
+        source holds faces of 22-31 px, which today's YuNet misses entirely at
+        native size while finding every one of them at 0.9+ confidence from a
+        3x-resampled image (measured on the NASA Crew-8 media Q&A at 756s,
+        766s, 776s). A missed face is not a missing person: every caller reads
+        an empty result as "no subject anywhere" and degrades the layout to
+        full-bleed, which is exactly how a recognizable speaker becomes an
+        indistinct wide shot. The retry only runs when the native pass found
+        nothing, on frames small enough that the upscale stays bounded, and
+        boxes are divided back so the returned geometry stays in source pixels.
         """
+        out = self._detect_once(frame)
+        if out or self._yunet is None:
+            return out
+        h = frame.shape[0]
+        if h < _RESCUE_MAX_NATIVE_H:
+            scale = _RESCUE_SCALE
+            up = cv2.resize(frame, None, fx=scale, fy=scale,
+                            interpolation=cv2.INTER_CUBIC)
+            boxes = self._detect_once(up)
+            return [(x / scale, y / scale, w / scale, hh / scale, score)
+                    for x, y, w, hh, score in boxes]
+        return out
+
+    def _detect_once(self, frame: np.ndarray) -> list[tuple[float, float, float, float, float]]:
         if self._yunet is not None:
             h, w = frame.shape[:2]
             size = (w, h)
