@@ -170,6 +170,10 @@ class FaceBox:
     def cx(self) -> float:
         return self.x + 0.5 * self.w
 
+    @property
+    def cy(self) -> float:
+        return self.y + 0.5 * self.h
+
 
 def _cell_maps(frames: list[np.ndarray], w: int, h: int
                ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -346,6 +350,11 @@ class SceneSegment:
     ``joint`` marks a ``SPEAKER`` segment where a single crop holds the slide as
     well: the layout keeps its face tracking but clamps the crop to the joint
     window, so the content is not cut while the speaker moves.
+
+    ``panel`` marks a wide multi-person shot: the layout is a 16:9 card of the
+    whole scene floating on a blurred fill inside the 9:16 frame, the way an
+    editor treats a seated panel -- everyone in their chair, nobody's face
+    cropped away or blown up past recognition.
     """
 
     start: float
@@ -357,6 +366,7 @@ class SceneSegment:
     # with the segment lets the renderer compose the speaker and content rather
     # than throwing one side away.
     face: FaceBox | None = None
+    panel: bool = False
 
 
 def _is_speaker_trunk(face: FaceBox, slide: SlideRect) -> bool:
@@ -422,6 +432,12 @@ def classify_scene(face: FaceBox | None, slide: SlideRect | None,
     subject's face was detected as a "slide" and composed a fake two-band frame
     (speaker weakly zoomed above, the subject's own shoulders as content below).
     :func:`_is_speaker_trunk` carries the measured geometry of that defect.
+    Beside the torso, a detected region that *contains* the speaker's face
+    while covering a third of the frame or more is the scene's backdrop, not an
+    insert slide: measured on a NASA panel wide shot whose detection box was
+    (0, 0, 640, 352) -- 98% of the frame, the five seated panelists inside it.
+    Taking it for content composed a full-bleed frame where no face was
+    readable. A real insert does not surround the person talking to it.
     """
     if face is not None and slide is not None and _is_speaker_trunk(face, slide):
         slide = None
@@ -661,6 +677,15 @@ def _layout_chains(seg: SceneSegment, src_w: int, src_h: int, sar_w: int,
         pre = f"trim={trim[0]:.3f}:{trim[1]:.3f},setpts=PTS-STARTPTS,"
 
     if seg.cls is SceneClass.SLIDE:
+        if seg.slide is None:
+            # The carry path retired this segment's slide as scenery (it held
+            # the elected face while covering the frame). There is no content
+            # region left to crop: fall back to the tracked speaker chain the
+            # SPEAKER class would have produced, rather than crash on a box
+            # the layout was promised and then dismissed.
+            x_expr = _x_expression(src_w, crop_w, track_pts)
+            return [f"{src}{pre}crop={crop_w}:{src_h}:x='{x_expr}':y=0,"
+                    f"{_scale_to(out_w, out_h)},{_set_sar(sar_w, sar_h)}{tail}"]
         box = (seg.slide.x, seg.slide.y, seg.slide.w, seg.slide.h)
         bw, bh, bx, by = _band_geometry(src_w, src_h,
                                         out_w, out_h, box)
@@ -716,6 +741,20 @@ def _layout_chains(seg: SceneSegment, src_w: int, src_h: int, sar_w: int,
     # SPEAKER. The crop is the full height the subject tracker already planned
     # against; in the joint case the same tracking is clamped to the window that
     # also keeps the slide.
+    if seg.panel:
+        # The panel treatment: the whole scene as a 16:9 card, floating on a
+        # blurred fill of itself inside the 9:16 canvas. A crop that must fit
+        # every seated panelist in one 9:16 window does not exist, and cropping
+        # to the elected speaker alone deletes colleagues the caption may name;
+        # an editor runs the wide as a card with a designed fill instead.
+        card_h = _even(min(float(out_h), out_w * src_h / src_w))
+        y_off = _even(max(0.0, (out_h - card_h) / 2))
+        return [
+            f"{src}{pre}split=2[bgp][cdp];"
+            f"[bgp]scale={out_w}:{out_h},gblur=sigma=20[bgv];"
+            f"[cdp]scale={out_w}:{card_h},{_set_sar(sar_w, sar_h)}[cdv];"
+            f"[bgv][cdv]overlay=0:{y_off},{_set_sar(sar_w, sar_h)}{tail}"
+        ]
     if seg.joint and seg.slide is not None:
         # The clamp is the joint interval itself: any crop left-edge inside it
         # holds both regions by construction, and _x_expression centres the
@@ -895,14 +934,27 @@ _SCENE_CACHE: dict[_SceneCacheKey, str] = {}
 
 
 def _frame_area_slides(frames: list[np.ndarray | None], w: int, h: int,
-                       boundaries: set[int], kept: list[tuple[int, float, np.ndarray]]
-                       ) -> tuple[dict[int, SlideRect | None], list[SlideRect]]:
+                       boundaries: set[int], kept: list[tuple[int, float, np.ndarray]],
+                       detections: list[list[tuple[float, float, float, float, float]]] | None = None,
+                       ) -> tuple[dict[int, SlideRect | None], list[SlideRect], dict[int, bool]]:
     """Detect slides once per shot, and report every slide the interval holds.
 
     A slide's position does not move within a shot, so detecting per shot rather
     than per frame is the right granularity: it costs one pass per shot instead
     of one per sample, and it prevents a slide from flickering in and out of the
     plan when a single sample decodes poorly.
+
+    ``detections`` carries the face boxes of each kept sample, and with them the
+    shot-level scenery verdict: a detected region covering most of the frame
+    *and* holding faces that are spread across it is the seating the shot is
+    about -- a news-panel wide shot's backdrop -- not an insert slide. Measured
+    on the NASA Crew-8 media Q&A: five panelists at 22-31 px faces, spanning
+    ~72% of the frame width, under a backdrop region of (0, 0, 640, 352) --
+    composing that region as content delivered a full-bleed frame where no
+    panelist was readable. A single presenter (or two seated close together)
+    in front of a genuine full-frame presentation keeps the slide entirely:
+    that is the webinar setup the split layout exists for, and it needs the
+    content half the backdrop case must not have.
     """
     if not boundaries:
         boundaries = set()
@@ -912,27 +964,68 @@ def _frame_area_slides(frames: list[np.ndarray | None], w: int, h: int,
     # position in the decoded sample list, so it has to be matched against the
     # kept indices rather than against the shot's own counter.
     shots: dict[int, list[np.ndarray]] = {}
+    det_shots: dict[int, list[list[tuple[float, float, float, float, float]]]] = {}
     order: list[int] = []
     cur = 0
-    for idx, _t, frame in kept:
+    for kept_j, (idx, _t, frame) in enumerate(kept):
         if idx in boundaries and shots:
             cur += 1
         shots.setdefault(cur, []).append(frame)
+        det_shots.setdefault(cur, []).append(detections[kept_j] if detections else [])
         if cur not in order:
             order.append(cur)
+    is_panel: dict[int, bool] = {}
     for shot in order:
-        found = detect_slides(shots[shot], w, h)
+        dets = det_shots.get(shot, [])
+        panel = _panel_shot(dets, w, h) if detections is not None else False
+        # A panel shot never gets a content band: the group card already shows
+        # what a detected region there would re-show, and the band is how a
+        # backdrop turned into the fake split that made these shots sloppy.
+        found = () if panel else detect_slides(shots[shot], w, h)
+        is_panel[shot] = panel
         per_shot[shot] = found[0] if found else None
         if found:
             all_slides.extend(found)
-    return per_shot, all_slides
+    return per_shot, all_slides, is_panel
+
+
+_SPREAD_FRACTION = 0.5
+_PANEL_FACES = 3
+
+
+def _panel_shot(
+    shot_detections: list[list[tuple[float, float, float, float, float]]],
+    src_w: float, src_h: float,
+) -> bool:
+    """Whether a shot is a seated multi-person panel, wide and undecodable.
+
+    Three or more distinct faces spread across more than half the frame width
+    is a panel camera, and the right vertical treatment is the whole scene as a
+    16:9 card, not a crop that must drop whoever falls outside 9:16. Faces that
+    cluster within ~0.08 of the source width belong to one person -- two people
+    standing or seated close together did not make a panel.
+    """
+    centres: list[tuple[float, float]] = []
+    for dets in shot_detections:
+        for x, y, fw, fh, _s in dets:
+            cx, cy = x + fw / 2, y + fh / 2
+            if not any((cx - px) ** 2 + (cy - py) ** 2
+                       < (0.08 * src_w) ** 2 for px, py in centres):
+                centres.append((cx, cy))
+    if len(centres) < _PANEL_FACES:
+        return False
+    xs = [px for px, _py in centres]
+    return (max(xs) - min(xs)) >= _SPREAD_FRACTION * src_w
 
 
 def _carry_slides(segments: list[SceneSegment], times: list[float],
                   classes: list[SceneClass], shot_of: list[int],
                   per_shot: dict[int, SlideRect | None],
                   faces: list[FaceBox | None], crop_w: float,
-                  src_w: float) -> list[SceneSegment]:
+                  src_w: float,
+                  detections: list[list[tuple[float, float, float, float, float]]] | None = None,
+                  src_h: float = 0.0,
+                  is_panel: dict[int, bool] | None = None) -> list[SceneSegment]:
     """Carry the slide and the joint verdict into the segments.
 
     The slide comes from a sample *inside the segment* that the classifier saw
@@ -971,9 +1064,83 @@ def _carry_slides(segments: list[SceneSegment], times: list[float],
         # supplies detections for the slide question only must not crash on the
         # face field. ``SceneSegment.face`` defaults to None, and the layout
         # falls back to the tracked crop without it.
-        face = faces[i] if i < len(faces) else None
-        out.append(SceneSegment(seg.start, seg.end, seg.cls, slide, joint, face))
+        face = None
+        if detections is not None:
+            face = _elect_face(detections, times, seg.start, seg.end,
+                               src_w, src_h)
+        if face is None:
+            face = faces[i] if i < len(faces) else None
+        panel = bool(is_panel.get(shot_of[i])) if is_panel else False
+        joint = (seg.cls is SceneClass.SPEAKER and slide is not None
+                 and faces and any(
+                     f is not None and both_fit_in_crop(f, slide, crop_w, src_w)
+                     for f in faces))
+        out.append(SceneSegment(seg.start, seg.end, seg.cls, slide, joint,
+                                face, panel))
     return out
+
+
+def _elect_face(
+    detections: list[list[tuple[float, float, float, float, float]]],
+    times: list[float], start: float, end: float,
+    src_w: float, src_h: float,
+) -> FaceBox | None:
+    """The face a segment's layout is placed from, elected across its samples.
+
+    Until now the representative face was the top-scored box of one sample.
+    On a five-person panel wide shot every score sits in a 0.92-0.94 tie, so
+    that single-sample pick was whichever detection happened to rank first,
+    and both the SPLIT band placement and the classification evidence hopped
+    between panelists while the caption said the same person was speaking.
+
+    The election scores every detection inside the segment:
+
+    **persistence** -- how often the same position is seen across the
+    segment's samples. The person the shot is about stays at their seat; a
+    leaning or turning neighbor registers at a wandering centre, and score
+    ties are broken by the only stable signal available.
+
+    **centrality** -- a panel camera frames its speaker near the centre; the
+    moderator at the edge of a tripod panel shot is scenery, not story.
+    Weighted linearly, 1.0 at the centre to 0.25 at the edge, so persistence
+    stays dominant and centrality only separates equally-persistent faces.
+
+    Ties resolve toward persistence first, then centrality: a seat that is
+    consistently present is the subject, whoever currently has the highest
+    single-frame confidence.
+    """
+    if src_w <= 0 or src_h <= 0:
+        return None
+    cx_mid, cy_mid = src_w / 2, src_h / 2
+    best: tuple[float, float, tuple[float, float, float, float, float]] | None = None
+    for dets, t in zip(detections, times):
+        if t < start or t > end or not dets:
+            continue
+        for x, y, fw, fh, score in dets:
+            dcx, dcy = x + fw / 2, y + fh / 2
+            # The persistence probe: how many samples hold a detection whose
+            # centre sits within a quarter of a face-width of this centre, on
+            # the sample grid -- "the same person sighting" at panel scale.
+            radius = max(0.25 * fw, 1.0)
+            seen = 0
+            for dets_j, t_j in zip(detections, times):
+                if t_j < start or t_j > end:
+                    continue
+                for xj, yj, wj, hj, _s in dets_j:
+                    jcx, jcy = xj + wj / 2, yj + hj / 2
+                    if ((jcx - dcx) ** 2 + (jcy - dcy) ** 2) ** 0.5 <= radius:
+                        seen += 1
+                        break
+            dist = ((dcx - cx_mid) ** 2 + (dcy - cy_mid) ** 2) ** 0.5
+            corner = ((src_w / 2) ** 2 + (src_h / 2) ** 2) ** 0.5
+            centrality = 1.0 - 0.75 * (dist / corner if corner else 0.0)
+            key = (seen, score * centrality)
+            if best is None or key > best[:2]:
+                best = (seen, score * centrality, (x, y, fw, fh, score))
+    if best is None:
+        return None
+    x, y, fw, fh, _score = best[2]
+    return FaceBox(float(x), float(y), float(fw), float(fh))
 
 
 def analyse_scene(video: Path, start: float, end: float, samples: int = 28
@@ -1006,7 +1173,9 @@ def analyse_scene(video: Path, start: float, end: float, samples: int = 28
         return [], [], 0, 0
 
     boundaries = set(boundaries)
-    per_shot, all_slides = _frame_area_slides(frames, w, h, boundaries, kept)
+    kept_dets = [per_frame[i] for i, _, _ in kept]
+    per_shot, all_slides, is_panel = _frame_area_slides(
+        frames, w, h, boundaries, kept, detections=kept_dets)
 
     # One representative face per sample: the detector's top-ranked box. The
     # election that turns a stream of boxes into a subject is ``plan_crop``'s
@@ -1036,8 +1205,10 @@ def analyse_scene(video: Path, start: float, end: float, samples: int = 28
     segments = plan_scenes(kept_times, classes,
                            {j for j, (i, _, _) in enumerate(kept) if i in boundaries})
 
+    kept_dets = [per_frame[i] for i, _, _ in kept]
     out = _carry_slides(segments, kept_times, classes, shot_of, per_shot,
-                        faces, crop_w, w)
+                        faces, crop_w, w, detections=kept_dets, src_h=h,
+                        is_panel=is_panel)
 
     # The samples are evidence *for* the interval, not its boundary: the grid
     # sample landing exactly on ``end`` seeks past the final frame and comes back

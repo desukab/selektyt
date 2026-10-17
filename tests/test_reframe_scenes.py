@@ -756,3 +756,59 @@ def test_a_mid_clip_class_change_composes_and_keeps_the_interval(changing, tmp_p
     assert 0.2 < xs.mean() / w < 0.9, (
         f"the marker is inside the tracked window; got x fraction "
         f"{xs.mean() / w:.2f}, which is off-frame or in the slide's columns")
+
+
+def test_panel_detection_marks_a_spread_multi_person_shot():
+    """A shot holding three or more faces spread over most of the frame width
+    is a seated panel, and the scene planner marks it for the card layout.
+
+    Measured defect, on the NASA Crew-8 media Q&A: five panelists at 22-31 px
+    faces in a 640x360 source, spanning ~72% of the frame, whose backdrop
+    detection composed a full-bleed layout where no panelist was readable. The
+    spread rule is what says "this shot seats people side by side": a single
+    presenter in front of a real presentation (or two seated close together)
+    never fires it, so the split layout keeps its content half there.
+    """
+    import engine.reframe_scenes as rs
+
+    det = lambda x: [(x, 96.0, 24.0, 30.0, 0.93)]  # noqa: E731
+    spread = [
+        det(64.0), det(196.0), det(311.0), det(424.0), det(530.0),
+    ]
+    assert rs._panel_shot(spread, 640.0, 360.0), \
+        "five faces across 72% of the width is a panel"
+
+    clustered = [
+        [(196.0, 96.0, 24.0, 30.0, 0.93)],
+        [(205.0, 98.0, 24.0, 30.0, 0.93)] * 3,
+    ]
+    assert not rs._panel_shot(clustered, 1280.0, 720.0), \
+        "faces within ~8% of the source width are one person"
+
+    two_close = [
+        [(540.0, 96.0, 24.0, 30.0, 0.93)] * 2,
+        [(640.0, 98.0, 24.0, 30.0, 0.93)],
+    ]
+    assert not rs._panel_shot(two_close, 1280.0, 720.0), \
+        "two close presenters keep the split layout's content half"
+
+
+def test_a_panel_segment_renders_the_group_card_not_a_crop():
+    """The panel layout is a 16:9 card of the whole scene floating on a
+    blurred fill: full width, centred vertically, no speaker crop that has to
+    choose which seated panelist stays readable."""
+    from engine.reframe_scenes import SceneClass, _layout_chains
+
+    from engine.reframe_scenes import SceneSegment
+
+    s = SceneSegment(0.0, 2.0, SceneClass.SPEAKER, None, False, None, True)
+    chains = _layout_chains(s, 1280, 720, 1, 1, CROP_W, 720, 1280,
+                            [], "", None)
+    graph = "".join(chains)
+    # One layout, expressed as the labelled card-over-fill subgraph.
+    assert "overlay=" in graph and "gblur" in graph, \
+        "the panel card composes a blurred fill under a centred card"
+    # The card keeps the source's aspect: 720-wide card of a 720p source in a
+    # 1280-tall canvas.
+    assert "scale=720:406" in graph, graph
+    assert "overlay=0:438" in graph, graph
