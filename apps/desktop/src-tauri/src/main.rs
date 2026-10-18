@@ -672,6 +672,29 @@ mod tests {
     }
 
     #[cfg(unix)]
+    fn spawn_fake(path: &std::path::Path, name: &str) -> Result<(Sidecar, SidecarLogs), String> {
+        // The shell script being exec'd may itself still be busy for a moment
+        // on filesystems where the just-now write is not settled yet (ETXTBSY,
+        // seen on an overlayfs /tmp CI runner). That is a filesystem timing
+        // artifact, not a contract failure, so a bounded wait settles it; any
+        // other spawn error is returned as-is. Not a hidden failure: the
+        // error the test asserts on is produced by the sidecar *after* a
+        // successful spawn.
+        let mut last = String::from("spawn was never attempted");
+        for _ in 0..100 {
+            match Sidecar::spawn_in(path, name, &[]) {
+                Ok(pair) => return Ok(pair),
+                Err(e) if e.contains("Text file busy") => {
+                    last = e;
+                    std::thread::sleep(std::time::Duration::from_millis(10));
+                }
+                Err(e) => return Err(e),
+            }
+        }
+        Err(last)
+    }
+
+    #[cfg(unix)]
     #[test]
     fn rpc_reuses_one_child_across_many_calls() {
         // Regression: call() used to move child.stdout out of the Child, so the
@@ -686,7 +709,7 @@ mod tests {
             "n=0\nwhile IFS= read -r line; do\n  n=$((n + 1))\n  \
              echo \"{\\\"ok\\\": true, \\\"op\\\": \\\"ping\\\", \\\"data\\\": {\\\"calls\\\": $n}}\"\ndone\n",
         );
-        let (sidecar, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("fake sidecar spawns");
+        let (sidecar, _logs) = spawn_fake(&sidecar_binary(&dir, name), name).expect("fake sidecar spawns");
         for expected in 1..=3 {
             let reply = sidecar.call("ping", &serde_json::json!({})).expect("reply");
             assert_eq!(reply["data"]["calls"], expected, "call {expected} lost its pipe");
@@ -741,7 +764,7 @@ mod tests {
         let dir = tempfile_dir();
         let name = "selekyt-fake";
         fake_sidecar(&dir, name, "exit 0\n");
-        let (sidecar, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("fake sidecar spawns");
+        let (sidecar, _logs) = spawn_fake(&sidecar_binary(&dir, name), name).expect("fake sidecar spawns");
         let err = sidecar.call("ping", &serde_json::json!({})).unwrap_err();
         assert!(
             err.contains("closed the pipe before answering") || err.contains("Broken pipe"),
@@ -755,7 +778,7 @@ mod tests {
         let dir = tempfile_dir();
         let name = "selekyt-fake";
         fake_sidecar(&dir, name, "read line\necho 'this is not json'\n");
-        let (sidecar, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("fake sidecar spawns");
+        let (sidecar, _logs) = spawn_fake(&sidecar_binary(&dir, name), name).expect("fake sidecar spawns");
         let err = sidecar.call("ping", &serde_json::json!({})).unwrap_err();
         assert!(err.contains("non-JSON line"), "expected a parse error, got {err}");
     }
@@ -775,7 +798,7 @@ mod tests {
             "yes 'progress: still working' | head -c 262144 >&2\n\
              echo '{\"ok\": true, \"op\": \"ping\", \"data\": {}}'\n",
         );
-        let (sidecar, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("fake sidecar spawns");
+        let (sidecar, _logs) = spawn_fake(&sidecar_binary(&dir, name), name).expect("fake sidecar spawns");
         // Not reading stderr here would block on the write end; the caller
         // succeeds because the engine's stderr is drained elsewhere.
         let reply = sidecar.call("ping", &serde_json::json!({})).expect("reply");
@@ -812,7 +835,7 @@ mod tests {
         let dir = tempfile_dir();
         let name = "selekyt-fake";
         fake_sidecar(&dir, name, "while :; do :; done\n");
-        let (sidecar, _logs) = Sidecar::spawn_in(&sidecar_binary(&dir, name), name, &[]).expect("fake sidecar spawns");
+        let (sidecar, _logs) = spawn_fake(&sidecar_binary(&dir, name), name).expect("fake sidecar spawns");
         let sidecar: SharedSidecar = std::sync::Arc::new(sidecar);
 
         let cancel_handle: SharedSidecar = std::sync::Arc::clone(&sidecar);
