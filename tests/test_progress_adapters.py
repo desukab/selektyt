@@ -174,7 +174,7 @@ def _drive(
     monkeypatch.setattr(p, "check_coverage", lambda *a, **k: coverage)
 
     def fake_render_clip(source, candidate, out, ass=None, vertical=False,
-                         fps=30.0, progress=None):
+                         fps=30.0, progress=None, threads=None):
         n = parts[0] if not vertical else parts[1]
         render_calls.append({"out": out, "vertical": vertical, "parts": n})
         # The real loop reports a part before and after rendering it; the

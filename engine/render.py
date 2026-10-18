@@ -416,7 +416,7 @@ def _subtitle_terms(ass: Path | None) -> list[str]:
     return [f"subtitles='{safe}':fontsdir='{filter_path(font_dir)}'"]
 
 
-def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | None, vertical: bool, fps: float) -> None:
+def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | None, vertical: bool, fps: float, threads: int | None = None) -> None:
     vf: list[str] = []
     if not vertical:
         # Landscape fits the whole source into an exact 16:9 frame, padding
@@ -462,6 +462,12 @@ def _render_one(source: Path, start: float, end: float, out: Path, ass: Path | N
         video_opt = ["-vf", ",".join(vf)]
     common = ["-frames:v", str(frames), "-t", f"{span:.6f}",
               *video_opt, "-c:v", "libx264", *_encoder_args(),
+              # A same-settings encode produces a same-quality deliverable
+              # whatever the thread count, so a fan-out run that hands each
+              # ffmpeg process a fraction of the cores changes only wall
+              # clock. Only a fan-out passes this; the solo path keeps x264's
+              # own default so today's runs stay byte-for-byte what they were.
+              *([] if threads is None else ["-threads", str(threads)]),
               "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(out)]
 
     # Input seeking (``-ss`` before ``-i``) is the fast path: ffmpeg seeks
@@ -567,7 +573,7 @@ def concat_renders(
     return out
 
 
-def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None = None, vertical: bool = False, fps: float = 30.0, progress: Callable[[dict], None] | None = None) -> Path:
+def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None = None, vertical: bool = False, fps: float = 30.0, progress: Callable[[dict], None] | None = None, threads: int | None = None) -> Path:
     require_ffmpeg(); out.parent.mkdir(parents=True, exist_ok=True)
     intervals = retention_intervals(candidate)
     if not intervals: raise RuntimeError("candidate has no renderable intervals")
@@ -601,7 +607,8 @@ def render_clip(source: Path, candidate: Candidate, out: Path, ass: Path | None 
         # the render itself can count.
         if progress is not None:
             progress({"part": i, "parts": len(intervals), "vertical": vertical})
-        _render_one(source, start, end, part, part_ass, vertical, fps)
+        _render_one(source, start, end, part, part_ass, vertical, fps,
+                    threads=threads)
         parts.append(part)
         if progress is not None:
             progress({"part": i + 1, "parts": len(intervals), "vertical": vertical})

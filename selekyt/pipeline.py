@@ -12,6 +12,8 @@ from contextlib import contextmanager
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Callable
+from concurrent.futures import ThreadPoolExecutor
+import threading
 
 from providers.atomic import read_json, write_json_atomic
 from providers.audio import peak_dbfs, AudioReadError
@@ -931,6 +933,7 @@ def run(
     transcription_provider: str | None = None,
     progress: ProgressFn | None = None,
     make: str = "highlights",
+    render_jobs: int | None = None,
 ) -> Path:
     # Reject unusable parameters before touching the network or the disk: a
     # bad --limit used to survive download + transcription and then surface as
@@ -946,6 +949,8 @@ def run(
         raise ValueError(f"beam_size must be >= 1 (got {beam_size})")
     if cpu_threads is not None and cpu_threads < 1:
         raise ValueError(f"cpu_threads must be >= 1 (got {cpu_threads})")
+    if render_jobs is not None and render_jobs < 1:
+        raise ValueError(f"render_jobs must be >= 1 (got {render_jobs})")
     if silence_threshold < 0 or silence_padding < 0:
         raise ValueError("silence_threshold and silence_padding must be >= 0")
     if min_speech_ms < 0 or min_silence_ms < 0:
@@ -1828,6 +1833,28 @@ def run(
     # clip the loop re-rendered or re-captioned appears here, and a reel
     # assembled from the old parts is not reused.
     program_ass_digests: list[str] = []
+    # The fan-out width. ``render_jobs`` (the ``--render-jobs`` argument, with
+    # ``SELEKYT_RENDER_JOBS`` as an env fallback) is the number of clips whose
+    # encodes run concurrently; 1 is today's behavior, byte for byte. A width
+    # above 1 threads a fraction of the cores into each ffmpeg process
+    # (``render_threads``) so N concurrent encodes share the host's workers
+    # instead of piling x264's own defaults into each other, and the
+    # deliverable is unchanged: an x264 encode at fixed settings lands on the
+    # same frames whatever its thread feed is.
+    _jobs = render_jobs if render_jobs is not None else max(
+        1, int(os.environ.get("SELEKYT_RENDER_JOBS", "1")))
+    fanout = _jobs > 1
+    render_threads = max(1, (os.cpu_count() or 1) // _jobs) if fanout else None
+    # Every event the fan-out workers emit and every shared write they make is
+    # serialized through one lock each: a completion from clip 4 can never
+    # interleave the bar state of clip 5, and the state checkpoint writes one
+    # file at a time.
+    fanout_lock = threading.Lock()
+    # One future per submitted clip; failures from workers queue here with
+    # their clip's identity so the drain can raise the first one, which is
+    # what the sequential path would have raised first.
+    fanout_failures: list[BaseException] = []
+    _pool = ThreadPoolExecutor(max_workers=_jobs) if fanout else None
     with _stage(progress, "render",
                 detail=lambda: _render_detail(outputs, edit_report)):
         for idx, c in enumerate(program_order, 1):
@@ -1906,51 +1933,117 @@ def run(
                 # One sink per orientation: the bar for the orientation not
                 # currently rendering holds the fraction the completed one
                 # reached, so the pair reads as "16:9 done, 9:16 at part 2/3".
+                # In the fan-out these sinks run inside the worker thread, so
+                # every emit passes ``fanout_lock`` — completion of one clip's
+                # bar cannot interleave another clip's half.
                 done = {"16:9": 0.0, "9:16": 0.0}
 
                 def _sink(label: str, *, done=done, idx=idx) -> None:
                     def _send(payload: dict) -> None:
                         total = payload.get("parts") or 1
                         done[label] = (payload.get("part") or 0) / total
-                        _notify(progress, type="progress", stage="render",
-                                current=idx - 1, total=len(program_order),
-                                subprogress=[
-                                    {"label": "16:9", "fraction": done["16:9"]},
-                                    {"label": "9:16", "fraction": done["9:16"]},
-                                ])
+                        if fanout:
+                            with fanout_lock:
+                                _notify(progress, type="progress", stage="render",
+                                        current=idx - 1, total=len(program_order),
+                                        subprogress=[
+                                            {"label": "16:9", "fraction": done["16:9"]},
+                                            {"label": "9:16", "fraction": done["9:16"]},
+                                        ])
+                        else:
+                            _notify(progress, type="progress", stage="render",
+                                    current=idx - 1, total=len(program_order),
+                                    subprogress=[
+                                        {"label": "16:9", "fraction": done["16:9"]},
+                                        {"label": "9:16", "fraction": done["9:16"]},
+                                    ])
 
                     return _send
 
-                render_clip(media, c, fb, caption, vertical=False,
-                            fps=source_fps, progress=_sink("16:9"))
-                # The 16:9 render has finished and its bar should say so at this
-                # instant, not at the 9:16 render's first part event — otherwise
-                # the pair reads as "both in progress" through a render that is
-                # already half done. A note marks it so the UI can tell this
-                # announcement from a part payload, which is also what makes it
-                # read as a state change rather than a progress tick.
-                _notify(progress, type="progress", stage="render",
-                        current=idx - 1, total=len(program_order),
-                        subprogress=[
-                            {"label": "16:9", "fraction": 1.0},
-                            {"label": "9:16", "fraction": 0.0},
-                        ], note=f"clip {idx:02d} 16:9 rendered")
-                done["16:9"] = 1.0
-                render_clip(media, c, sh, caption, vertical=True,
-                            fps=source_fps, progress=_sink("9:16"))
-                renders[f"{idx:02d}"] = {
-                    "fingerprint": fingerprint,
-                    "selection_digest": sel_digest,
-                    "program_digest": program_digest,
-                    "caption_style": caption_style,
-                    "ass_digest": ass_digest,
-                    "facebook": str(fb),
-                    "shorts": str(sh),
-                }
-                # Checkpoint after each clip, not once at the end: this is what
-                # makes an interrupted run resume from the last finished clip.
-                state["renders"] = renders
-                _save_state(state_path, state)
+                def _checkpoint(*, idx=idx, fb=fb, sh=sh) -> None:
+                    renders[f"{idx:02d}"] = {
+                        "fingerprint": fingerprint,
+                        "selection_digest": sel_digest,
+                        "program_digest": program_digest,
+                        "caption_style": caption_style,
+                        "ass_digest": ass_digest,
+                        "facebook": str(fb),
+                        "shorts": str(sh),
+                    }
+                    # Checkpoint after each clip, not once at the end: this is
+                    # what makes an interrupted run resume from the last
+                    # finished clip.
+                    state["renders"] = renders
+                    _save_state(state_path, state)
+
+                def _render_pair() -> None:
+                    render_clip(media, c, fb, caption, vertical=False,
+                                fps=source_fps, progress=_sink("16:9"),
+                                threads=render_threads)
+                    # The 16:9 render has finished and its bar should say so at
+                    # this instant, not at the 9:16 render's first part event —
+                    # otherwise the pair reads as "both in progress" through a
+                    # render that is already half done. A note marks it so the
+                    # UI can tell this announcement from a part payload, which
+                    # is also what makes it read as a state change rather than
+                    # a progress tick.
+                    _announce_16x9()
+                    done["16:9"] = 1.0
+                    render_clip(media, c, sh, caption, vertical=True,
+                                fps=source_fps, progress=_sink("9:16"),
+                                threads=render_threads)
+
+                def _announce_16x9(*, idx=idx) -> None:
+                    with_announcement_note = f"clip {idx:02d} 16:9 rendered"
+                    if fanout:
+                        with fanout_lock:
+                            _notify(progress, type="progress", stage="render",
+                                    current=idx - 1, total=len(program_order),
+                                    subprogress=[
+                                        {"label": "16:9", "fraction": 1.0},
+                                        {"label": "9:16", "fraction": 0.0},
+                                    ], note=with_announcement_note)
+                    else:
+                        _notify(progress, type="progress", stage="render",
+                                current=idx - 1, total=len(program_order),
+                                subprogress=[
+                                    {"label": "16:9", "fraction": 1.0},
+                                    {"label": "9:16", "fraction": 0.0},
+                                ], note=with_announcement_note)
+
+                if fanout:
+                    # Submit both encodes; the checkpoint lands in the worker
+                    # under the lock the moment the pair finishes, so the run
+                    # can be killed while later clips encode and resume from
+                    # the last one that landed. Exceptions surface at the drain
+                    # below, exactly where the sequential path raises them.
+                    # The clip's values are bound at submission, deliberately:
+                    # a worker that read the loop's variables at run time would
+                    # render whichever clip the loop had reached by then --
+                    # measured: the first saturated worker rendered 02's shorts
+                    # twice and never 01's.
+                    def _fanned(
+                        c=c, idx=idx, caption=caption,
+                        fb=fb, sh=sh, done=done) -> None:
+                        try:
+                            render_clip(media, c, fb, caption, vertical=False,
+                                        fps=source_fps, progress=_sink("16:9"),
+                                        threads=render_threads)
+                            _sink("16:9")({"part": 1, "parts": 1})
+                            done["16:9"] = 1.0
+                            render_clip(media, c, sh, caption, vertical=True,
+                                        fps=source_fps, progress=_sink("9:16"),
+                                        threads=render_threads)
+                            with fanout_lock:
+                                _checkpoint()
+                        except BaseException as exc:  # noqa: BLE001
+                            with fanout_lock:
+                                fanout_failures.append(exc)
+                            raise
+                    _pool.submit(_fanned)
+                else:
+                    _render_pair()
+                    _checkpoint()
             # The editable interchange for this clip. The timeline is built from
             # the same retention_intervals the render just concatenated, so an NLE
             # relinking these clips gets the cut that was shipped — but note that
@@ -2044,6 +2137,17 @@ def run(
             # is what the bar should read.
             _notify(progress, type="progress", stage="render",
                     current=idx, total=len(program_order))
+
+        # The fan-out drain: every clip the loop submitted has a future here,
+        # and the reel the next block builds reads the files they produce, so
+        # the stage does not move on until all have landed. If the loop never
+        # threw by itself, the first worker failure surfaces now; the reel
+        # cannot be built when the clip it needs never finished, so this
+        # remains an error the run reports rather than one it hides.
+        if _pool is not None:
+            _pool.shutdown(wait=True)
+        if fanout_failures:
+            raise fanout_failures[0]
 
         # The assembled program as one watchable reel. ``program.edl`` sequences
         # these same clips in this same order on this same source, so the reel

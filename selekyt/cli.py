@@ -370,6 +370,8 @@ def _validate_args(parser: argparse.ArgumentParser, args: argparse.Namespace) ->
         problems.append(f"--beam-size must be >= 1 (got {args.beam_size})")
     if args.cpu_threads is not None and args.cpu_threads < 1:
         problems.append(f"--cpu-threads must be >= 1 (got {args.cpu_threads})")
+    if args.render_jobs is not None and args.render_jobs < 1:
+        problems.append(f"--render-jobs must be >= 1 (got {args.render_jobs})")
     if args.silence_threshold is not None and args.silence_threshold < 0:
         problems.append(f"--silence-threshold must be >= 0 (got {args.silence_threshold})")
     if args.silence_padding is not None and args.silence_padding < 0:
@@ -487,6 +489,17 @@ def main() -> None:
         type=int,
         default=None,
         help="CPU threads for Whisper (default: all available)",
+    )
+    p.add_argument(
+        "--render-jobs",
+        type=int,
+        default=None,
+        help="Number of clips to encode concurrently (default: 1 -- clip by "
+             "clip, exactly as always). Higher values fan the encodes out "
+             "across the host's cores: with N jobs, each ffmpeg gets "
+             "cores/N threads, so four jobs on sixteen cores encode four "
+             "clips four threads each. The deliverable is unchanged; only "
+             "wall clock moves. Falls back to SELEKYT_RENDER_JOBS.",
     )
     p.add_argument(
         "--caption-style",
@@ -643,6 +656,7 @@ def main() -> None:
         transcription_provider=args.transcription,
         progress=renderer.event,
         make=args.make,
+        render_jobs=args.render_jobs,
     )
     try:
         # ``--verbose`` wants the engine's own output on the terminal, so it

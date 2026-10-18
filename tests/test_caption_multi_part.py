@@ -257,7 +257,7 @@ def test_the_parts_carry_the_editors_document_not_a_regeneration(tmp_path,
     handed: list[str] = []
     real = render_mod._render_one
 
-    def spy(src, start, end, out, part_ass, vertical, fps):
+    def spy(src, start, end, out, part_ass, vertical, fps, threads=None):
         if part_ass is not None:
             handed.append(Path(part_ass).read_text(encoding="utf-8"))
         return real(src, start, end, out, part_ass, vertical, fps)
