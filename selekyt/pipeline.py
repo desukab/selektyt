@@ -9,7 +9,7 @@ import shutil
 import sys
 import time
 from contextlib import contextmanager
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any, Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -1345,9 +1345,79 @@ def run(
         for _c, ok, reason in gate_results:
             if not ok:
                 rejection_reasons[reason] = rejection_reasons.get(reason, 0) + 1
+        # The multimodal read: measure the footage and the sound of the
+        # clipping tier the selection is about to draw from, and let the
+        # measured reading carry most of each candidate's visual score. The
+        # text-based prediction stays at a third so what a transcript promises
+        # (a diagram, a demo) still counts where pixel statistics cannot see
+        # it; what changes is that a clip whose footage is a frozen dark
+        # screen no longer keeps the full visual borrow it never earned.
+        # Bounded: the call profiles the top of the passed pool only, which
+        # is the tier the selection reads, not every rejected candidate.
+        multimodal_notes: list[dict] = []
+        try:
+            from engine.multimodal import blend_visual, profile_candidates
+            tier = max(limit * 3, 12)
+            profiles = profile_candidates(media, passed, quota=tier)
+            for cand, prof in profiles:
+                before = cand.visual_potential
+                blended = blend_visual(prof, before)
+                cand.visual_potential = blended
+                if prof is None:
+                    multimodal_notes.append({
+                        "start": round(cand.start, 3),
+                        "end": round(cand.end, 3),
+                        "measured": None,
+                        "visual_potential": round(blended, 4),
+                    })
+                else:
+                    multimodal_notes.append({
+                        "start": round(cand.start, 3),
+                        "end": round(cand.end, 3),
+                        "measured": prof,
+                        "visual_potential": round(blended, 4),
+                    })
+            (project / "multimodal.json").write_text(
+                json.dumps({
+                    "candidates": multimodal_notes,
+                    "weights": {"measured": 0.65, "predictive": 0.35},
+                    "provenance": {
+                        "frames": "engine.reframe._sample_frames",
+                        "faces": "engine.reframe_perception.FaceDetector",
+                        "tier": tier,
+                    },
+                }, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        except Exception as exc:  # noqa: BLE001 - reported, not fatal
+            print(f"[selektyt] multimodal read unavailable: {exc}",
+                  file=sys.stderr)
+        else:
+            if multimodal_notes:
+                # The blend changed the tier's totals, so the pool's old rank
+                # order is stale; the bench and every policy that reads order
+                # as score re-derive it from the same evidence the selection
+                # now sees. Stable sort keeps ties where they were.
+                passed.sort(key=lambda c: -c.total_score)
         selection = _apply_selection_policy(passed, limit=limit,
                                             corpus=corpus_report)
         selected, policy_report = selection
+        if multimodal_notes and policy_report is not None:
+            # The notes list carries the measured line per profiled candidate
+            # so the selection's own record says who was judged on footage
+            # and how it read, not only on a number.
+            lines = []
+            for note in multimodal_notes:
+                prof = note.get("measured") or {}
+                lines.append(
+                    f"{note['start']:.1f}-{note['end']:.1f}s"
+                    f" motion={prof.get('motion_max_mean_px', 'n/a')}"
+                    f" cuts={prof.get('hard_cut_share', 'n/a')}"
+                    f" faces={prof.get('face_presence_fraction', 'n/a')}"
+                    f" -> visual={note['visual_potential']}"
+                )
+            policy_report = replace(policy_report, notes={
+                **policy_report.notes, "multimodal": lines})
 
         # The selection policy chooses strong material; the story composer now
         # chooses the *telling*.  It searches the full gate-passed pool rather
