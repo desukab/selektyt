@@ -1356,10 +1356,12 @@ def run(
         # is the tier the selection reads, not every rejected candidate.
         multimodal_notes: list[dict] = []
         try:
-            from engine.multimodal import blend_visual, profile_candidates
+            from engine.multimodal import blend_visual, read_spans
             tier = max(limit * 3, 12)
-            profiles = profile_candidates(media, passed, quota=tier)
-            for cand, prof in profiles:
+            tier_candidates = passed[:tier]
+            profiles = read_spans(
+                media, [(c.start, c.end) for c in tier_candidates])
+            for (cand, prof) in zip(tier_candidates, profiles):
                 before = cand.visual_potential
                 blended = blend_visual(prof, before)
                 cand.visual_potential = blended

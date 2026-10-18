@@ -7,7 +7,9 @@ allowed to judge on.
 """
 from pathlib import Path
 
-from engine.multimodal import blend_visual, profile_candidates, profile_clip
+from engine.multimodal import (
+    blend_visual, profile_candidates, profile_clip, read_spans,
+)
 
 
 def test_blend_keeps_the_predictive_score_when_nothing_was_measured():
@@ -85,3 +87,17 @@ def test_the_preselection_quota_binds(tmp_path: Path):
     pairs = profile_candidates(media, [Fake(i) for i in range(30)],
                                quota=12)
     assert len(pairs) == 12, "the tier is the discovery budget, not the pool"
+
+
+def test_the_reader_runs_in_a_child_and_preserves_unmeasurable_spans(
+    tmp_path: Path,
+):
+    # The reader is native code (OpenCV decode + DNN); a crash there took a
+    # whole editorial run down without a traceback once. The contract: the
+    # pipeline only ever talks to a child process, and a span the child cannot
+    # read comes back as None rather than poisoning the batch.
+    media = _tiny_media(tmp_path)
+    profiles = read_spans(media, [(0.0, 6.0), (1_000_000.0, 1_000_003.0)])
+    assert isinstance(profiles, list) and len(profiles) == 2
+    assert profiles[0] is not None and profiles[0]["samples"] > 0
+    assert profiles[1] is None

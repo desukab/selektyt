@@ -182,3 +182,45 @@ def print_profile(p: dict[str, Any] | None) -> str:
         f" faces={p['face_presence_fraction']}"
         f" bright={p['brightness_mean']}"
     )
+
+
+def read_spans(media: Path, spans: Sequence[tuple[float, float]]
+               ) -> list[dict[str, Any] | None] | None:
+    """The profiles as read by an isolated child process.
+
+    The reader is a stack of native libraries (OpenCV decode, DNN face
+    detection), and a native crash there used to take the whole editorial run
+    down without a traceback — measured once, on real footage, mid-run. A
+    child process contains that failure: the run degrades to the predictive
+    scores and records that the reading was unavailable, which is exactly
+    what it already does when cv2 cannot read the media at all.
+    """
+    import json
+    import subprocess
+    import sys
+    request = {"media": str(media), "spans": [(s, e) for s, e in spans]}
+    proc = subprocess.run(
+        [sys.executable, "-m", "engine.multimodal"],
+        input=json.dumps(request), capture_output=True, text=True,
+        timeout=1800,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"multimodal reader failed (exit {proc.returncode}): "
+            f"{proc.stderr.strip().splitlines()[-1] if proc.stderr.strip() else 'no stderr'}")
+    return json.loads(proc.stdout)
+
+
+def _serve() -> None:
+    """STDIN request -> STDOUT profiles, one line of JSON each way."""
+    import json
+    import sys
+    request = json.loads(sys.stdin.read())
+    media = Path(request["media"])
+    profiles = [profile_clip(media, s, e) for s, e in request["spans"]]
+    sys.stdout.write(json.dumps(profiles))
+    sys.stdout.flush()
+
+
+if __name__ == "__main__":  # pragma: no cover - exercised via read_spans
+    _serve()
